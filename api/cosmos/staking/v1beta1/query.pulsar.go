@@ -4,6 +4,7 @@ package stakingv1beta1
 import (
 	_ "cosmossdk.io/api/amino"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	v1beta11 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/query/v1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
@@ -13683,6 +13684,5015 @@ func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods 
 	}
 }
 
+var (
+	md_QueryTokenizeShareRecordByIdRequest    protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordByIdRequest_id protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordByIdRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordByIdRequest")
+	fd_QueryTokenizeShareRecordByIdRequest_id = md_QueryTokenizeShareRecordByIdRequest.Fields().ByName("id")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordByIdRequest)(nil)
+
+type fastReflection_QueryTokenizeShareRecordByIdRequest QueryTokenizeShareRecordByIdRequest
+
+func (x *QueryTokenizeShareRecordByIdRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByIdRequest)(x)
+}
+
+func (x *QueryTokenizeShareRecordByIdRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordByIdRequest_messageType fastReflection_QueryTokenizeShareRecordByIdRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordByIdRequest_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordByIdRequest_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordByIdRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByIdRequest)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordByIdRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByIdRequest)
+}
+func (x fastReflection_QueryTokenizeShareRecordByIdRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByIdRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByIdRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordByIdRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByIdRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordByIdRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Id)
+		if !f(fd_QueryTokenizeShareRecordByIdRequest_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		return x.Id != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		x.Id = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		value := x.Id
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		x.Id = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		panic(fmt.Errorf("field id of message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest.id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordByIdRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Id != 0 {
+			n += 1 + runtime.Sov(uint64(x.Id))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Id != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByIdRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				x.Id = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Id |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTokenizeShareRecordByIdResponse        protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordByIdResponse_record protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordByIdResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordByIdResponse")
+	fd_QueryTokenizeShareRecordByIdResponse_record = md_QueryTokenizeShareRecordByIdResponse.Fields().ByName("record")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordByIdResponse)(nil)
+
+type fastReflection_QueryTokenizeShareRecordByIdResponse QueryTokenizeShareRecordByIdResponse
+
+func (x *QueryTokenizeShareRecordByIdResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByIdResponse)(x)
+}
+
+func (x *QueryTokenizeShareRecordByIdResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordByIdResponse_messageType fastReflection_QueryTokenizeShareRecordByIdResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordByIdResponse_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordByIdResponse_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordByIdResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByIdResponse)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordByIdResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByIdResponse)
+}
+func (x fastReflection_QueryTokenizeShareRecordByIdResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByIdResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByIdResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordByIdResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByIdResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordByIdResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Record != nil {
+		value := protoreflect.ValueOfMessage(x.Record.ProtoReflect())
+		if !f(fd_QueryTokenizeShareRecordByIdResponse_record, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		return x.Record != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		x.Record = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		value := x.Record
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		x.Record = value.Message().Interface().(*TokenizeShareRecord)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		if x.Record == nil {
+			x.Record = new(TokenizeShareRecord)
+		}
+		return protoreflect.ValueOfMessage(x.Record.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record":
+		m := new(TokenizeShareRecord)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordByIdResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Record != nil {
+			l = options.Size(x.Record)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Record != nil {
+			encoded, err := options.Marshal(x.Record)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByIdResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByIdResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Record == nil {
+					x.Record = &TokenizeShareRecord{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Record); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTokenizeShareRecordByDenomRequest       protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordByDenomRequest_denom protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordByDenomRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordByDenomRequest")
+	fd_QueryTokenizeShareRecordByDenomRequest_denom = md_QueryTokenizeShareRecordByDenomRequest.Fields().ByName("denom")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordByDenomRequest)(nil)
+
+type fastReflection_QueryTokenizeShareRecordByDenomRequest QueryTokenizeShareRecordByDenomRequest
+
+func (x *QueryTokenizeShareRecordByDenomRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByDenomRequest)(x)
+}
+
+func (x *QueryTokenizeShareRecordByDenomRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[30]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByDenomRequest)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByDenomRequest)
+}
+func (x fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByDenomRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByDenomRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordByDenomRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByDenomRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordByDenomRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_QueryTokenizeShareRecordByDenomRequest_denom, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		return x.Denom != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		x.Denom = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		x.Denom = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		panic(fmt.Errorf("field denom of message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest.denom":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByDenomRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTokenizeShareRecordByDenomResponse        protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordByDenomResponse_record protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordByDenomResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordByDenomResponse")
+	fd_QueryTokenizeShareRecordByDenomResponse_record = md_QueryTokenizeShareRecordByDenomResponse.Fields().ByName("record")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordByDenomResponse)(nil)
+
+type fastReflection_QueryTokenizeShareRecordByDenomResponse QueryTokenizeShareRecordByDenomResponse
+
+func (x *QueryTokenizeShareRecordByDenomResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByDenomResponse)(x)
+}
+
+func (x *QueryTokenizeShareRecordByDenomResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[31]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordByDenomResponse)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByDenomResponse)
+}
+func (x fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByDenomResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordByDenomResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordByDenomResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordByDenomResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordByDenomResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Record != nil {
+		value := protoreflect.ValueOfMessage(x.Record.ProtoReflect())
+		if !f(fd_QueryTokenizeShareRecordByDenomResponse_record, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		return x.Record != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		x.Record = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		value := x.Record
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		x.Record = value.Message().Interface().(*TokenizeShareRecord)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		if x.Record == nil {
+			x.Record = new(TokenizeShareRecord)
+		}
+		return protoreflect.ValueOfMessage(x.Record.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record":
+		m := new(TokenizeShareRecord)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordByDenomResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Record != nil {
+			l = options.Size(x.Record)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Record != nil {
+			encoded, err := options.Marshal(x.Record)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordByDenomResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByDenomResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordByDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Record == nil {
+					x.Record = &TokenizeShareRecord{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Record); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTokenizeShareRecordsOwnedRequest       protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordsOwnedRequest_owner protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordsOwnedRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordsOwnedRequest")
+	fd_QueryTokenizeShareRecordsOwnedRequest_owner = md_QueryTokenizeShareRecordsOwnedRequest.Fields().ByName("owner")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordsOwnedRequest)(nil)
+
+type fastReflection_QueryTokenizeShareRecordsOwnedRequest QueryTokenizeShareRecordsOwnedRequest
+
+func (x *QueryTokenizeShareRecordsOwnedRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordsOwnedRequest)(x)
+}
+
+func (x *QueryTokenizeShareRecordsOwnedRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[32]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordsOwnedRequest)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordsOwnedRequest)
+}
+func (x fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordsOwnedRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordsOwnedRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordsOwnedRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordsOwnedRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordsOwnedRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_QueryTokenizeShareRecordsOwnedRequest_owner, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		return x.Owner != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		x.Owner = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		x.Owner = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		panic(fmt.Errorf("field owner of message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest.owner":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryTokenizeShareRecordsOwnedResponse_1_list)(nil)
+
+type _QueryTokenizeShareRecordsOwnedResponse_1_list struct {
+	list *[]*TokenizeShareRecord
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) NewElement() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryTokenizeShareRecordsOwnedResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryTokenizeShareRecordsOwnedResponse         protoreflect.MessageDescriptor
+	fd_QueryTokenizeShareRecordsOwnedResponse_records protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTokenizeShareRecordsOwnedResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTokenizeShareRecordsOwnedResponse")
+	fd_QueryTokenizeShareRecordsOwnedResponse_records = md_QueryTokenizeShareRecordsOwnedResponse.Fields().ByName("records")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTokenizeShareRecordsOwnedResponse)(nil)
+
+type fastReflection_QueryTokenizeShareRecordsOwnedResponse QueryTokenizeShareRecordsOwnedResponse
+
+func (x *QueryTokenizeShareRecordsOwnedResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordsOwnedResponse)(x)
+}
+
+func (x *QueryTokenizeShareRecordsOwnedResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[33]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType{}
+
+type fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType struct{}
+
+func (x fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTokenizeShareRecordsOwnedResponse)(nil)
+}
+func (x fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordsOwnedResponse)
+}
+func (x fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordsOwnedResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTokenizeShareRecordsOwnedResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTokenizeShareRecordsOwnedResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryTokenizeShareRecordsOwnedResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryTokenizeShareRecordsOwnedResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Records) != 0 {
+		value := protoreflect.ValueOfList(&_QueryTokenizeShareRecordsOwnedResponse_1_list{list: &x.Records})
+		if !f(fd_QueryTokenizeShareRecordsOwnedResponse_records, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		return len(x.Records) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		x.Records = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		if len(x.Records) == 0 {
+			return protoreflect.ValueOfList(&_QueryTokenizeShareRecordsOwnedResponse_1_list{})
+		}
+		listValue := &_QueryTokenizeShareRecordsOwnedResponse_1_list{list: &x.Records}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		lv := value.List()
+		clv := lv.(*_QueryTokenizeShareRecordsOwnedResponse_1_list)
+		x.Records = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		if x.Records == nil {
+			x.Records = []*TokenizeShareRecord{}
+		}
+		value := &_QueryTokenizeShareRecordsOwnedResponse_1_list{list: &x.Records}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records":
+		list := []*TokenizeShareRecord{}
+		return protoreflect.ValueOfList(&_QueryTokenizeShareRecordsOwnedResponse_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTokenizeShareRecordsOwnedResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Records) > 0 {
+			for _, e := range x.Records {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Records) > 0 {
+			for iNdEx := len(x.Records) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Records[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTokenizeShareRecordsOwnedResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTokenizeShareRecordsOwnedResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Records = append(x.Records, &TokenizeShareRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Records[len(x.Records)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryAllTokenizeShareRecordsRequest protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryAllTokenizeShareRecordsRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryAllTokenizeShareRecordsRequest")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryAllTokenizeShareRecordsRequest)(nil)
+
+type fastReflection_QueryAllTokenizeShareRecordsRequest QueryAllTokenizeShareRecordsRequest
+
+func (x *QueryAllTokenizeShareRecordsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAllTokenizeShareRecordsRequest)(x)
+}
+
+func (x *QueryAllTokenizeShareRecordsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[34]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryAllTokenizeShareRecordsRequest_messageType fastReflection_QueryAllTokenizeShareRecordsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAllTokenizeShareRecordsRequest_messageType{}
+
+type fastReflection_QueryAllTokenizeShareRecordsRequest_messageType struct{}
+
+func (x fastReflection_QueryAllTokenizeShareRecordsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAllTokenizeShareRecordsRequest)(nil)
+}
+func (x fastReflection_QueryAllTokenizeShareRecordsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAllTokenizeShareRecordsRequest)
+}
+func (x fastReflection_QueryAllTokenizeShareRecordsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllTokenizeShareRecordsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllTokenizeShareRecordsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAllTokenizeShareRecordsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryAllTokenizeShareRecordsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryAllTokenizeShareRecordsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryAllTokenizeShareRecordsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllTokenizeShareRecordsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllTokenizeShareRecordsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryAllTokenizeShareRecordsResponse_1_list)(nil)
+
+type _QueryAllTokenizeShareRecordsResponse_1_list struct {
+	list *[]*TokenizeShareRecord
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) NewElement() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryAllTokenizeShareRecordsResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryAllTokenizeShareRecordsResponse         protoreflect.MessageDescriptor
+	fd_QueryAllTokenizeShareRecordsResponse_records protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryAllTokenizeShareRecordsResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryAllTokenizeShareRecordsResponse")
+	fd_QueryAllTokenizeShareRecordsResponse_records = md_QueryAllTokenizeShareRecordsResponse.Fields().ByName("records")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryAllTokenizeShareRecordsResponse)(nil)
+
+type fastReflection_QueryAllTokenizeShareRecordsResponse QueryAllTokenizeShareRecordsResponse
+
+func (x *QueryAllTokenizeShareRecordsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAllTokenizeShareRecordsResponse)(x)
+}
+
+func (x *QueryAllTokenizeShareRecordsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[35]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryAllTokenizeShareRecordsResponse_messageType fastReflection_QueryAllTokenizeShareRecordsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAllTokenizeShareRecordsResponse_messageType{}
+
+type fastReflection_QueryAllTokenizeShareRecordsResponse_messageType struct{}
+
+func (x fastReflection_QueryAllTokenizeShareRecordsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAllTokenizeShareRecordsResponse)(nil)
+}
+func (x fastReflection_QueryAllTokenizeShareRecordsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAllTokenizeShareRecordsResponse)
+}
+func (x fastReflection_QueryAllTokenizeShareRecordsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllTokenizeShareRecordsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllTokenizeShareRecordsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAllTokenizeShareRecordsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryAllTokenizeShareRecordsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryAllTokenizeShareRecordsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Records) != 0 {
+		value := protoreflect.ValueOfList(&_QueryAllTokenizeShareRecordsResponse_1_list{list: &x.Records})
+		if !f(fd_QueryAllTokenizeShareRecordsResponse_records, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		return len(x.Records) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		x.Records = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		if len(x.Records) == 0 {
+			return protoreflect.ValueOfList(&_QueryAllTokenizeShareRecordsResponse_1_list{})
+		}
+		listValue := &_QueryAllTokenizeShareRecordsResponse_1_list{list: &x.Records}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		lv := value.List()
+		clv := lv.(*_QueryAllTokenizeShareRecordsResponse_1_list)
+		x.Records = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		if x.Records == nil {
+			x.Records = []*TokenizeShareRecord{}
+		}
+		value := &_QueryAllTokenizeShareRecordsResponse_1_list{list: &x.Records}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records":
+		list := []*TokenizeShareRecord{}
+		return protoreflect.ValueOfList(&_QueryAllTokenizeShareRecordsResponse_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryAllTokenizeShareRecordsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Records) > 0 {
+			for _, e := range x.Records {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Records) > 0 {
+			for iNdEx := len(x.Records) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Records[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllTokenizeShareRecordsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllTokenizeShareRecordsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllTokenizeShareRecordsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Records = append(x.Records, &TokenizeShareRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Records[len(x.Records)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryLastTokenizeShareRecordIdRequest protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryLastTokenizeShareRecordIdRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryLastTokenizeShareRecordIdRequest")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryLastTokenizeShareRecordIdRequest)(nil)
+
+type fastReflection_QueryLastTokenizeShareRecordIdRequest QueryLastTokenizeShareRecordIdRequest
+
+func (x *QueryLastTokenizeShareRecordIdRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryLastTokenizeShareRecordIdRequest)(x)
+}
+
+func (x *QueryLastTokenizeShareRecordIdRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[36]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType{}
+
+type fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType struct{}
+
+func (x fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryLastTokenizeShareRecordIdRequest)(nil)
+}
+func (x fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryLastTokenizeShareRecordIdRequest)
+}
+func (x fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryLastTokenizeShareRecordIdRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryLastTokenizeShareRecordIdRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryLastTokenizeShareRecordIdRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryLastTokenizeShareRecordIdRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryLastTokenizeShareRecordIdRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryLastTokenizeShareRecordIdRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryLastTokenizeShareRecordIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryLastTokenizeShareRecordIdResponse    protoreflect.MessageDescriptor
+	fd_QueryLastTokenizeShareRecordIdResponse_id protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryLastTokenizeShareRecordIdResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryLastTokenizeShareRecordIdResponse")
+	fd_QueryLastTokenizeShareRecordIdResponse_id = md_QueryLastTokenizeShareRecordIdResponse.Fields().ByName("id")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryLastTokenizeShareRecordIdResponse)(nil)
+
+type fastReflection_QueryLastTokenizeShareRecordIdResponse QueryLastTokenizeShareRecordIdResponse
+
+func (x *QueryLastTokenizeShareRecordIdResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryLastTokenizeShareRecordIdResponse)(x)
+}
+
+func (x *QueryLastTokenizeShareRecordIdResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[37]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType{}
+
+type fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType struct{}
+
+func (x fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryLastTokenizeShareRecordIdResponse)(nil)
+}
+func (x fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryLastTokenizeShareRecordIdResponse)
+}
+func (x fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryLastTokenizeShareRecordIdResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryLastTokenizeShareRecordIdResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryLastTokenizeShareRecordIdResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryLastTokenizeShareRecordIdResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryLastTokenizeShareRecordIdResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Id)
+		if !f(fd_QueryLastTokenizeShareRecordIdResponse_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		return x.Id != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		x.Id = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		value := x.Id
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		x.Id = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		panic(fmt.Errorf("field id of message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse.id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryLastTokenizeShareRecordIdResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Id != 0 {
+			n += 1 + runtime.Sov(uint64(x.Id))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Id != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryLastTokenizeShareRecordIdResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryLastTokenizeShareRecordIdResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryLastTokenizeShareRecordIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				x.Id = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Id |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTotalTokenizeSharedAssetsRequest protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTotalTokenizeSharedAssetsRequest = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTotalTokenizeSharedAssetsRequest")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTotalTokenizeSharedAssetsRequest)(nil)
+
+type fastReflection_QueryTotalTokenizeSharedAssetsRequest QueryTotalTokenizeSharedAssetsRequest
+
+func (x *QueryTotalTokenizeSharedAssetsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTotalTokenizeSharedAssetsRequest)(x)
+}
+
+func (x *QueryTotalTokenizeSharedAssetsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[38]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType{}
+
+type fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType struct{}
+
+func (x fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTotalTokenizeSharedAssetsRequest)(nil)
+}
+func (x fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalTokenizeSharedAssetsRequest)
+}
+func (x fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalTokenizeSharedAssetsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalTokenizeSharedAssetsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTotalTokenizeSharedAssetsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalTokenizeSharedAssetsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryTotalTokenizeSharedAssetsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryTotalTokenizeSharedAssetsResponse       protoreflect.MessageDescriptor
+	fd_QueryTotalTokenizeSharedAssetsResponse_value protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_staking_v1beta1_query_proto_init()
+	md_QueryTotalTokenizeSharedAssetsResponse = File_cosmos_staking_v1beta1_query_proto.Messages().ByName("QueryTotalTokenizeSharedAssetsResponse")
+	fd_QueryTotalTokenizeSharedAssetsResponse_value = md_QueryTotalTokenizeSharedAssetsResponse.Fields().ByName("value")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTotalTokenizeSharedAssetsResponse)(nil)
+
+type fastReflection_QueryTotalTokenizeSharedAssetsResponse QueryTotalTokenizeSharedAssetsResponse
+
+func (x *QueryTotalTokenizeSharedAssetsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTotalTokenizeSharedAssetsResponse)(x)
+}
+
+func (x *QueryTotalTokenizeSharedAssetsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[39]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType{}
+
+type fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType struct{}
+
+func (x fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTotalTokenizeSharedAssetsResponse)(nil)
+}
+func (x fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalTokenizeSharedAssetsResponse)
+}
+func (x fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalTokenizeSharedAssetsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalTokenizeSharedAssetsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTotalTokenizeSharedAssetsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalTokenizeSharedAssetsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryTotalTokenizeSharedAssetsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Value != nil {
+		value := protoreflect.ValueOfMessage(x.Value.ProtoReflect())
+		if !f(fd_QueryTotalTokenizeSharedAssetsResponse_value, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		return x.Value != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		x.Value = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		value := x.Value
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		x.Value = value.Message().Interface().(*v1beta11.Coin)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		if x.Value == nil {
+			x.Value = new(v1beta11.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.Value.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value":
+		m := new(v1beta11.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTotalTokenizeSharedAssetsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Value != nil {
+			l = options.Size(x.Value)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Value != nil {
+			encoded, err := options.Marshal(x.Value)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalTokenizeSharedAssetsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalTokenizeSharedAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Value == nil {
+					x.Value = &v1beta11.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Value); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -14897,13 +19907,444 @@ func (x *QueryParamsResponse) GetParams() *Params {
 	return nil
 }
 
+// QueryTokenizeShareRecordByIdRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordByIdRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordByIdRequest) Reset() {
+	*x = QueryTokenizeShareRecordByIdRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordByIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordByIdRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordByIdRequest.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordByIdRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *QueryTokenizeShareRecordByIdRequest) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+// QueryTokenizeShareRecordByIdResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordByIdResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Record *TokenizeShareRecord `protobuf:"bytes,1,opt,name=record,proto3" json:"record,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordByIdResponse) Reset() {
+	*x = QueryTokenizeShareRecordByIdResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordByIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordByIdResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordByIdResponse.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordByIdResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *QueryTokenizeShareRecordByIdResponse) GetRecord() *TokenizeShareRecord {
+	if x != nil {
+		return x.Record
+	}
+	return nil
+}
+
+// QueryTokenizeShareRecordByDenomRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordByDenomRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordByDenomRequest) Reset() {
+	*x = QueryTokenizeShareRecordByDenomRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[30]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordByDenomRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordByDenomRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordByDenomRequest.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordByDenomRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *QueryTokenizeShareRecordByDenomRequest) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
+// QueryTokenizeShareRecordByDenomResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordByDenomResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Record *TokenizeShareRecord `protobuf:"bytes,1,opt,name=record,proto3" json:"record,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordByDenomResponse) Reset() {
+	*x = QueryTokenizeShareRecordByDenomResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[31]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordByDenomResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordByDenomResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordByDenomResponse.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordByDenomResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *QueryTokenizeShareRecordByDenomResponse) GetRecord() *TokenizeShareRecord {
+	if x != nil {
+		return x.Record
+	}
+	return nil
+}
+
+// QueryTokenizeShareRecordsOwnedRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordsOwnedRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordsOwnedRequest) Reset() {
+	*x = QueryTokenizeShareRecordsOwnedRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[32]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordsOwnedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordsOwnedRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordsOwnedRequest.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordsOwnedRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *QueryTokenizeShareRecordsOwnedRequest) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+// QueryTokenizeShareRecordsOwnedResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTokenizeShareRecordsOwnedResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Records []*TokenizeShareRecord `protobuf:"bytes,1,rep,name=records,proto3" json:"records,omitempty"`
+}
+
+func (x *QueryTokenizeShareRecordsOwnedResponse) Reset() {
+	*x = QueryTokenizeShareRecordsOwnedResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[33]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTokenizeShareRecordsOwnedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTokenizeShareRecordsOwnedResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryTokenizeShareRecordsOwnedResponse.ProtoReflect.Descriptor instead.
+func (*QueryTokenizeShareRecordsOwnedResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *QueryTokenizeShareRecordsOwnedResponse) GetRecords() []*TokenizeShareRecord {
+	if x != nil {
+		return x.Records
+	}
+	return nil
+}
+
+// QueryAllTokenizeShareRecordsRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryAllTokenizeShareRecordsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *QueryAllTokenizeShareRecordsRequest) Reset() {
+	*x = QueryAllTokenizeShareRecordsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[34]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryAllTokenizeShareRecordsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryAllTokenizeShareRecordsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryAllTokenizeShareRecordsRequest.ProtoReflect.Descriptor instead.
+func (*QueryAllTokenizeShareRecordsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{34}
+}
+
+// QueryAllTokenizeShareRecordsResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryAllTokenizeShareRecordsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Records []*TokenizeShareRecord `protobuf:"bytes,1,rep,name=records,proto3" json:"records,omitempty"`
+}
+
+func (x *QueryAllTokenizeShareRecordsResponse) Reset() {
+	*x = QueryAllTokenizeShareRecordsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[35]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryAllTokenizeShareRecordsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryAllTokenizeShareRecordsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryAllTokenizeShareRecordsResponse.ProtoReflect.Descriptor instead.
+func (*QueryAllTokenizeShareRecordsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *QueryAllTokenizeShareRecordsResponse) GetRecords() []*TokenizeShareRecord {
+	if x != nil {
+		return x.Records
+	}
+	return nil
+}
+
+// QueryLastTokenizeShareRecordIdRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryLastTokenizeShareRecordIdRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *QueryLastTokenizeShareRecordIdRequest) Reset() {
+	*x = QueryLastTokenizeShareRecordIdRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[36]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryLastTokenizeShareRecordIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryLastTokenizeShareRecordIdRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryLastTokenizeShareRecordIdRequest.ProtoReflect.Descriptor instead.
+func (*QueryLastTokenizeShareRecordIdRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{36}
+}
+
+// QueryLastTokenizeShareRecordIdResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryLastTokenizeShareRecordIdResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *QueryLastTokenizeShareRecordIdResponse) Reset() {
+	*x = QueryLastTokenizeShareRecordIdResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[37]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryLastTokenizeShareRecordIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryLastTokenizeShareRecordIdResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryLastTokenizeShareRecordIdResponse.ProtoReflect.Descriptor instead.
+func (*QueryLastTokenizeShareRecordIdResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *QueryLastTokenizeShareRecordIdResponse) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+// QueryTotalTokenizeSharedAssetsRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTotalTokenizeSharedAssetsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *QueryTotalTokenizeSharedAssetsRequest) Reset() {
+	*x = QueryTotalTokenizeSharedAssetsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[38]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTotalTokenizeSharedAssetsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTotalTokenizeSharedAssetsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryTotalTokenizeSharedAssetsRequest.ProtoReflect.Descriptor instead.
+func (*QueryTotalTokenizeSharedAssetsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{38}
+}
+
+// QueryTotalTokenizeSharedAssetsResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+type QueryTotalTokenizeSharedAssetsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Value *v1beta11.Coin `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (x *QueryTotalTokenizeSharedAssetsResponse) Reset() {
+	*x = QueryTotalTokenizeSharedAssetsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_staking_v1beta1_query_proto_msgTypes[39]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTotalTokenizeSharedAssetsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTotalTokenizeSharedAssetsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryTotalTokenizeSharedAssetsResponse.ProtoReflect.Descriptor instead.
+func (*QueryTotalTokenizeSharedAssetsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_staking_v1beta1_query_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *QueryTotalTokenizeSharedAssetsResponse) GetValue() *v1beta11.Coin {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
 var File_cosmos_staking_v1beta1_query_proto protoreflect.FileDescriptor
 
 var file_cosmos_staking_v1beta1_query_proto_rawDesc = []byte{
 	0x0a, 0x22, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
 	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x16, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x2a, 0x63, 0x6f,
+	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x1e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x2a, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
 	0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72,
@@ -15183,200 +20624,343 @@ var file_cosmos_staking_v1beta1_query_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
 	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61,
 	0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52,
-	0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x32, 0xb0, 0x16, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x12, 0x9e, 0x01, 0x0a, 0x0a, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73,
-	0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x2f, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x24, 0x12, 0x22,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x73, 0x12, 0xac, 0x01, 0x0a, 0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x35, 0x0a, 0x23, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e,
+	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x71,
+	0x0a, 0x24, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a, 0x06, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x72, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x22, 0x3e, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69,
+	0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x22, 0x74, 0x0a, 0x27, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69,
+	0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a, 0x06,
+	0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68,
+	0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x06, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x22, 0x3d, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x73, 0x4f, 0x77, 0x6e, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x75, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x73, 0x4f, 0x77, 0x6e, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x4b, 0x0a, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e,
+	0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x22, 0x25, 0x0a,
+	0x23, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a,
+	0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x22, 0x73, 0x0a, 0x24, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4b, 0x0a, 0x07,
+	0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x22, 0x27, 0x0a, 0x25, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x4c, 0x61, 0x73, 0x74, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68,
+	0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x22, 0x38, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x61, 0x73, 0x74, 0x54,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x27, 0x0a, 0x25,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69,
+	0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x5f, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f,
+	0x74, 0x61, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65,
+	0x64, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x35, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32, 0xfc, 0x20, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x12, 0x9e, 0x01, 0x0a, 0x0a, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12,
 	0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
 	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x40, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x35, 0x12, 0x33, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73,
-	0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x7d, 0x12, 0xd9, 0x01, 0x0a, 0x14, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x44,
-	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x4c, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x41, 0x12, 0x3f, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73,
-	0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x7d, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xfe, 0x01,
-	0x0a, 0x1d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e,
-	0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12,
-	0x41, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
 	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67,
-	0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x42, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
-	0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x56, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x4b, 0x12, 0x49, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69,
-	0x6e, 0x67, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xcc,
-	0x01, 0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d,
-	0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x52, 0x12, 0x50, 0x2f, 0x63, 0x6f,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x2f, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x24, 0x12, 0x22, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x73, 0x12, 0xac, 0x01, 0x0a, 0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12,
+	0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40,
+	0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x35, 0x12, 0x33, 0x2f, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f,
 	0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d,
-	0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x12, 0xfc, 0x01,
-	0x0a, 0x13, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x38,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x62,
-	0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x72, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82,
-	0xd3, 0xe4, 0x93, 0x02, 0x67, 0x12, 0x65, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
-	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e,
-	0x67, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0xce, 0x01, 0x0a,
-	0x14, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x88, 0xe7, 0xb0, 0x2a,
-	0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12, 0x34, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x12, 0xfe, 0x01,
-	0x0a, 0x1d, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e,
-	0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12,
-	0x41, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67,
-	0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x42, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
-	0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x56, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x4b, 0x12, 0x49, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69,
-	0x6e, 0x67, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xc6,
-	0x01, 0x0a, 0x0d, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
-	0x12, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52,
-	0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
+	0x12, 0xd9, 0x01, 0x0a, 0x14, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65,
+	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
 	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4e, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x43, 0x12, 0x41, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x72, 0x65, 0x64, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xd5, 0x01, 0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65,
-	0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12,
-	0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x4b, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x40, 0x12,
-	0x3e, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
-	0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61,
-	0x64, 0x64, 0x72, 0x7d, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12,
-	0xe3, 0x01, 0x0a, 0x12, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37,
+	0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4c,
+	0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x41, 0x12, 0x3f, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f,
+	0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d,
+	0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xfe, 0x01, 0x0a,
+	0x1d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
+	0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x41,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x42, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x56, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x4b, 0x12, 0x49, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xcc, 0x01,
+	0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d, 0x88,
+	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x52, 0x12, 0x50, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f,
+	0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x12, 0xfc, 0x01, 0x0a,
+	0x13, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x38, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x62, 0x6f,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x72, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x67, 0x12, 0x65, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67,
+	0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0xce, 0x01, 0x0a, 0x14,
+	0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x73, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x39,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5c, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x51, 0x12, 0x4f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x7d, 0x12, 0xb8, 0x01, 0x0a, 0x0e, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72,
-	0x69, 0x63, 0x61, 0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61,
-	0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x69, 0x73, 0x74, 0x6f,
-	0x72, 0x69, 0x63, 0x61, 0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x3d, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x88, 0xe7, 0xb0, 0x2a, 0x01,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12, 0x34, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
+	0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x12, 0xfe, 0x01, 0x0a,
+	0x1d, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
+	0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x41,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x42, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x56, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x4b, 0x12, 0x49, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xc6, 0x01,
+	0x0a, 0x0d, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12,
+	0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x65,
+	0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4e, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x43, 0x12, 0x41, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61,
+	0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x72, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0xd5, 0x01, 0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x37,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x4b, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x40, 0x12, 0x3e,
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x68, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69, 0x63,
-	0x61, 0x6c, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x2f, 0x7b, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x7d,
-	0x12, 0x86, 0x01, 0x0a, 0x04, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29,
-	0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1e, 0x12, 0x1c, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x6f, 0x6f, 0x6c, 0x12, 0x8e, 0x01, 0x0a, 0x06, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2b, 0x88,
-	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x20, 0x12, 0x1e, 0x2f, 0x63, 0x6f, 0x73,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x7d, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0xe3,
+	0x01, 0x0a, 0x12, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x6f, 0x72, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5c, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x51, 0x12, 0x4f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61,
+	0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x7d, 0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x7d, 0x12, 0xb8, 0x01, 0x0a, 0x0e, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69,
+	0x63, 0x61, 0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c,
+	0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72,
+	0x69, 0x63, 0x61, 0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x3d, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x68, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61,
+	0x6c, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x2f, 0x7b, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x7d, 0x12,
+	0x86, 0x01, 0x0a, 0x04, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29, 0x88,
+	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1e, 0x12, 0x1c, 0x2f, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63,
-	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2,
-	0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02,
-	0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c,
-	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a,
-	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x61, 0x31, 0x2f, 0x70, 0x6f, 0x6f, 0x6c, 0x12, 0x8e, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
+	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2b, 0x88, 0xe7,
+	0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x20, 0x12, 0x1e, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xdb, 0x01, 0x0a, 0x17, 0x54, 0x6f,
+	0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x42, 0x79, 0x49, 0x64, 0x12, 0x3b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72,
+	0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x3c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x45, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3a, 0x12, 0x38, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f,
+	0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x5f, 0x62, 0x79, 0x5f,
+	0x69, 0x64, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xea, 0x01, 0x0a, 0x1a, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42,
+	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x3e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61,
+	0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61,
+	0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4b, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x40, 0x12, 0x3e, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f,
+	0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x5f, 0x62, 0x79, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x2f, 0x7b, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x7d, 0x12, 0xe5, 0x01, 0x0a, 0x19, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a,
+	0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x4f, 0x77, 0x6e,
+	0x65, 0x64, 0x12, 0x3d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x73, 0x4f, 0x77, 0x6e, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x3e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x73, 0x4f, 0x77, 0x6e, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x49, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3e, 0x12, 0x3c,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65,
+	0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x5f, 0x6f,
+	0x77, 0x6e, 0x65, 0x64, 0x2f, 0x7b, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x7d, 0x12, 0xd5, 0x01, 0x0a,
+	0x17, 0x41, 0x6c, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72,
+	0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x12, 0x3b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69,
+	0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x3f, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34,
+	0x12, 0x32, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x6c, 0x6c, 0x5f, 0x74, 0x6f,
+	0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x73, 0x12, 0xde, 0x01, 0x0a, 0x19, 0x4c, 0x61, 0x73, 0x74, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x49, 0x64, 0x12, 0x3d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x4c, 0x61, 0x73, 0x74, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61,
+	0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x3e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x4c, 0x61, 0x73, 0x74, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72,
+	0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x42, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x37, 0x12, 0x35,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x5f, 0x69, 0x64, 0x12, 0xdd, 0x01, 0x0a, 0x19, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x54,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x41, 0x73, 0x73,
+	0x65, 0x74, 0x73, 0x12, 0x3d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
+	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x64, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x3e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68,
+	0x61, 0x72, 0x65, 0x64, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x41, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12,
+	0x34, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x74,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x5f, 0x61,
+	0x73, 0x73, 0x65, 0x74, 0x73, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58,
+	0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x3a, 0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -15391,7 +20975,7 @@ func file_cosmos_staking_v1beta1_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_staking_v1beta1_query_proto_rawDescData
 }
 
-var file_cosmos_staking_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_cosmos_staking_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_cosmos_staking_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryValidatorsRequest)(nil),                     // 0: cosmos.staking.v1beta1.QueryValidatorsRequest
 	(*QueryValidatorsResponse)(nil),                    // 1: cosmos.staking.v1beta1.QueryValidatorsResponse
@@ -15421,78 +21005,109 @@ var file_cosmos_staking_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryPoolResponse)(nil),                          // 25: cosmos.staking.v1beta1.QueryPoolResponse
 	(*QueryParamsRequest)(nil),                         // 26: cosmos.staking.v1beta1.QueryParamsRequest
 	(*QueryParamsResponse)(nil),                        // 27: cosmos.staking.v1beta1.QueryParamsResponse
-	(*v1beta1.PageRequest)(nil),                        // 28: cosmos.base.query.v1beta1.PageRequest
-	(*Validator)(nil),                                  // 29: cosmos.staking.v1beta1.Validator
-	(*v1beta1.PageResponse)(nil),                       // 30: cosmos.base.query.v1beta1.PageResponse
-	(*DelegationResponse)(nil),                         // 31: cosmos.staking.v1beta1.DelegationResponse
-	(*UnbondingDelegation)(nil),                        // 32: cosmos.staking.v1beta1.UnbondingDelegation
-	(*RedelegationResponse)(nil),                       // 33: cosmos.staking.v1beta1.RedelegationResponse
-	(*HistoricalInfo)(nil),                             // 34: cosmos.staking.v1beta1.HistoricalInfo
-	(*Pool)(nil),                                       // 35: cosmos.staking.v1beta1.Pool
-	(*Params)(nil),                                     // 36: cosmos.staking.v1beta1.Params
+	(*QueryTokenizeShareRecordByIdRequest)(nil),        // 28: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest
+	(*QueryTokenizeShareRecordByIdResponse)(nil),       // 29: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse
+	(*QueryTokenizeShareRecordByDenomRequest)(nil),     // 30: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest
+	(*QueryTokenizeShareRecordByDenomResponse)(nil),    // 31: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse
+	(*QueryTokenizeShareRecordsOwnedRequest)(nil),      // 32: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest
+	(*QueryTokenizeShareRecordsOwnedResponse)(nil),     // 33: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse
+	(*QueryAllTokenizeShareRecordsRequest)(nil),        // 34: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest
+	(*QueryAllTokenizeShareRecordsResponse)(nil),       // 35: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse
+	(*QueryLastTokenizeShareRecordIdRequest)(nil),      // 36: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest
+	(*QueryLastTokenizeShareRecordIdResponse)(nil),     // 37: cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse
+	(*QueryTotalTokenizeSharedAssetsRequest)(nil),      // 38: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest
+	(*QueryTotalTokenizeSharedAssetsResponse)(nil),     // 39: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse
+	(*v1beta1.PageRequest)(nil),                        // 40: cosmos.base.query.v1beta1.PageRequest
+	(*Validator)(nil),                                  // 41: cosmos.staking.v1beta1.Validator
+	(*v1beta1.PageResponse)(nil),                       // 42: cosmos.base.query.v1beta1.PageResponse
+	(*DelegationResponse)(nil),                         // 43: cosmos.staking.v1beta1.DelegationResponse
+	(*UnbondingDelegation)(nil),                        // 44: cosmos.staking.v1beta1.UnbondingDelegation
+	(*RedelegationResponse)(nil),                       // 45: cosmos.staking.v1beta1.RedelegationResponse
+	(*HistoricalInfo)(nil),                             // 46: cosmos.staking.v1beta1.HistoricalInfo
+	(*Pool)(nil),                                       // 47: cosmos.staking.v1beta1.Pool
+	(*Params)(nil),                                     // 48: cosmos.staking.v1beta1.Params
+	(*TokenizeShareRecord)(nil),                        // 49: cosmos.staking.v1beta1.TokenizeShareRecord
+	(*v1beta11.Coin)(nil),                              // 50: cosmos.base.v1beta1.Coin
 }
 var file_cosmos_staking_v1beta1_query_proto_depIdxs = []int32{
-	28, // 0: cosmos.staking.v1beta1.QueryValidatorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	29, // 1: cosmos.staking.v1beta1.QueryValidatorsResponse.validators:type_name -> cosmos.staking.v1beta1.Validator
-	30, // 2: cosmos.staking.v1beta1.QueryValidatorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	29, // 3: cosmos.staking.v1beta1.QueryValidatorResponse.validator:type_name -> cosmos.staking.v1beta1.Validator
-	28, // 4: cosmos.staking.v1beta1.QueryValidatorDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	31, // 5: cosmos.staking.v1beta1.QueryValidatorDelegationsResponse.delegation_responses:type_name -> cosmos.staking.v1beta1.DelegationResponse
-	30, // 6: cosmos.staking.v1beta1.QueryValidatorDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	28, // 7: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	32, // 8: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse.unbonding_responses:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
-	30, // 9: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	31, // 10: cosmos.staking.v1beta1.QueryDelegationResponse.delegation_response:type_name -> cosmos.staking.v1beta1.DelegationResponse
-	32, // 11: cosmos.staking.v1beta1.QueryUnbondingDelegationResponse.unbond:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
-	28, // 12: cosmos.staking.v1beta1.QueryDelegatorDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	31, // 13: cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse.delegation_responses:type_name -> cosmos.staking.v1beta1.DelegationResponse
-	30, // 14: cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	28, // 15: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	32, // 16: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse.unbonding_responses:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
-	30, // 17: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	28, // 18: cosmos.staking.v1beta1.QueryRedelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	33, // 19: cosmos.staking.v1beta1.QueryRedelegationsResponse.redelegation_responses:type_name -> cosmos.staking.v1beta1.RedelegationResponse
-	30, // 20: cosmos.staking.v1beta1.QueryRedelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	28, // 21: cosmos.staking.v1beta1.QueryDelegatorValidatorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	29, // 22: cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse.validators:type_name -> cosmos.staking.v1beta1.Validator
-	30, // 23: cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	29, // 24: cosmos.staking.v1beta1.QueryDelegatorValidatorResponse.validator:type_name -> cosmos.staking.v1beta1.Validator
-	34, // 25: cosmos.staking.v1beta1.QueryHistoricalInfoResponse.hist:type_name -> cosmos.staking.v1beta1.HistoricalInfo
-	35, // 26: cosmos.staking.v1beta1.QueryPoolResponse.pool:type_name -> cosmos.staking.v1beta1.Pool
-	36, // 27: cosmos.staking.v1beta1.QueryParamsResponse.params:type_name -> cosmos.staking.v1beta1.Params
-	0,  // 28: cosmos.staking.v1beta1.Query.Validators:input_type -> cosmos.staking.v1beta1.QueryValidatorsRequest
-	2,  // 29: cosmos.staking.v1beta1.Query.Validator:input_type -> cosmos.staking.v1beta1.QueryValidatorRequest
-	4,  // 30: cosmos.staking.v1beta1.Query.ValidatorDelegations:input_type -> cosmos.staking.v1beta1.QueryValidatorDelegationsRequest
-	6,  // 31: cosmos.staking.v1beta1.Query.ValidatorUnbondingDelegations:input_type -> cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsRequest
-	8,  // 32: cosmos.staking.v1beta1.Query.Delegation:input_type -> cosmos.staking.v1beta1.QueryDelegationRequest
-	10, // 33: cosmos.staking.v1beta1.Query.UnbondingDelegation:input_type -> cosmos.staking.v1beta1.QueryUnbondingDelegationRequest
-	12, // 34: cosmos.staking.v1beta1.Query.DelegatorDelegations:input_type -> cosmos.staking.v1beta1.QueryDelegatorDelegationsRequest
-	14, // 35: cosmos.staking.v1beta1.Query.DelegatorUnbondingDelegations:input_type -> cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsRequest
-	16, // 36: cosmos.staking.v1beta1.Query.Redelegations:input_type -> cosmos.staking.v1beta1.QueryRedelegationsRequest
-	18, // 37: cosmos.staking.v1beta1.Query.DelegatorValidators:input_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorsRequest
-	20, // 38: cosmos.staking.v1beta1.Query.DelegatorValidator:input_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorRequest
-	22, // 39: cosmos.staking.v1beta1.Query.HistoricalInfo:input_type -> cosmos.staking.v1beta1.QueryHistoricalInfoRequest
-	24, // 40: cosmos.staking.v1beta1.Query.Pool:input_type -> cosmos.staking.v1beta1.QueryPoolRequest
-	26, // 41: cosmos.staking.v1beta1.Query.Params:input_type -> cosmos.staking.v1beta1.QueryParamsRequest
-	1,  // 42: cosmos.staking.v1beta1.Query.Validators:output_type -> cosmos.staking.v1beta1.QueryValidatorsResponse
-	3,  // 43: cosmos.staking.v1beta1.Query.Validator:output_type -> cosmos.staking.v1beta1.QueryValidatorResponse
-	5,  // 44: cosmos.staking.v1beta1.Query.ValidatorDelegations:output_type -> cosmos.staking.v1beta1.QueryValidatorDelegationsResponse
-	7,  // 45: cosmos.staking.v1beta1.Query.ValidatorUnbondingDelegations:output_type -> cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse
-	9,  // 46: cosmos.staking.v1beta1.Query.Delegation:output_type -> cosmos.staking.v1beta1.QueryDelegationResponse
-	11, // 47: cosmos.staking.v1beta1.Query.UnbondingDelegation:output_type -> cosmos.staking.v1beta1.QueryUnbondingDelegationResponse
-	13, // 48: cosmos.staking.v1beta1.Query.DelegatorDelegations:output_type -> cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse
-	15, // 49: cosmos.staking.v1beta1.Query.DelegatorUnbondingDelegations:output_type -> cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse
-	17, // 50: cosmos.staking.v1beta1.Query.Redelegations:output_type -> cosmos.staking.v1beta1.QueryRedelegationsResponse
-	19, // 51: cosmos.staking.v1beta1.Query.DelegatorValidators:output_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse
-	21, // 52: cosmos.staking.v1beta1.Query.DelegatorValidator:output_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorResponse
-	23, // 53: cosmos.staking.v1beta1.Query.HistoricalInfo:output_type -> cosmos.staking.v1beta1.QueryHistoricalInfoResponse
-	25, // 54: cosmos.staking.v1beta1.Query.Pool:output_type -> cosmos.staking.v1beta1.QueryPoolResponse
-	27, // 55: cosmos.staking.v1beta1.Query.Params:output_type -> cosmos.staking.v1beta1.QueryParamsResponse
-	42, // [42:56] is the sub-list for method output_type
-	28, // [28:42] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	40, // 0: cosmos.staking.v1beta1.QueryValidatorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	41, // 1: cosmos.staking.v1beta1.QueryValidatorsResponse.validators:type_name -> cosmos.staking.v1beta1.Validator
+	42, // 2: cosmos.staking.v1beta1.QueryValidatorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 3: cosmos.staking.v1beta1.QueryValidatorResponse.validator:type_name -> cosmos.staking.v1beta1.Validator
+	40, // 4: cosmos.staking.v1beta1.QueryValidatorDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	43, // 5: cosmos.staking.v1beta1.QueryValidatorDelegationsResponse.delegation_responses:type_name -> cosmos.staking.v1beta1.DelegationResponse
+	42, // 6: cosmos.staking.v1beta1.QueryValidatorDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	40, // 7: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	44, // 8: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse.unbonding_responses:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
+	42, // 9: cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	43, // 10: cosmos.staking.v1beta1.QueryDelegationResponse.delegation_response:type_name -> cosmos.staking.v1beta1.DelegationResponse
+	44, // 11: cosmos.staking.v1beta1.QueryUnbondingDelegationResponse.unbond:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
+	40, // 12: cosmos.staking.v1beta1.QueryDelegatorDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	43, // 13: cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse.delegation_responses:type_name -> cosmos.staking.v1beta1.DelegationResponse
+	42, // 14: cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	40, // 15: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	44, // 16: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse.unbonding_responses:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
+	42, // 17: cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	40, // 18: cosmos.staking.v1beta1.QueryRedelegationsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	45, // 19: cosmos.staking.v1beta1.QueryRedelegationsResponse.redelegation_responses:type_name -> cosmos.staking.v1beta1.RedelegationResponse
+	42, // 20: cosmos.staking.v1beta1.QueryRedelegationsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	40, // 21: cosmos.staking.v1beta1.QueryDelegatorValidatorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	41, // 22: cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse.validators:type_name -> cosmos.staking.v1beta1.Validator
+	42, // 23: cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 24: cosmos.staking.v1beta1.QueryDelegatorValidatorResponse.validator:type_name -> cosmos.staking.v1beta1.Validator
+	46, // 25: cosmos.staking.v1beta1.QueryHistoricalInfoResponse.hist:type_name -> cosmos.staking.v1beta1.HistoricalInfo
+	47, // 26: cosmos.staking.v1beta1.QueryPoolResponse.pool:type_name -> cosmos.staking.v1beta1.Pool
+	48, // 27: cosmos.staking.v1beta1.QueryParamsResponse.params:type_name -> cosmos.staking.v1beta1.Params
+	49, // 28: cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse.record:type_name -> cosmos.staking.v1beta1.TokenizeShareRecord
+	49, // 29: cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse.record:type_name -> cosmos.staking.v1beta1.TokenizeShareRecord
+	49, // 30: cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse.records:type_name -> cosmos.staking.v1beta1.TokenizeShareRecord
+	49, // 31: cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse.records:type_name -> cosmos.staking.v1beta1.TokenizeShareRecord
+	50, // 32: cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse.value:type_name -> cosmos.base.v1beta1.Coin
+	0,  // 33: cosmos.staking.v1beta1.Query.Validators:input_type -> cosmos.staking.v1beta1.QueryValidatorsRequest
+	2,  // 34: cosmos.staking.v1beta1.Query.Validator:input_type -> cosmos.staking.v1beta1.QueryValidatorRequest
+	4,  // 35: cosmos.staking.v1beta1.Query.ValidatorDelegations:input_type -> cosmos.staking.v1beta1.QueryValidatorDelegationsRequest
+	6,  // 36: cosmos.staking.v1beta1.Query.ValidatorUnbondingDelegations:input_type -> cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsRequest
+	8,  // 37: cosmos.staking.v1beta1.Query.Delegation:input_type -> cosmos.staking.v1beta1.QueryDelegationRequest
+	10, // 38: cosmos.staking.v1beta1.Query.UnbondingDelegation:input_type -> cosmos.staking.v1beta1.QueryUnbondingDelegationRequest
+	12, // 39: cosmos.staking.v1beta1.Query.DelegatorDelegations:input_type -> cosmos.staking.v1beta1.QueryDelegatorDelegationsRequest
+	14, // 40: cosmos.staking.v1beta1.Query.DelegatorUnbondingDelegations:input_type -> cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsRequest
+	16, // 41: cosmos.staking.v1beta1.Query.Redelegations:input_type -> cosmos.staking.v1beta1.QueryRedelegationsRequest
+	18, // 42: cosmos.staking.v1beta1.Query.DelegatorValidators:input_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorsRequest
+	20, // 43: cosmos.staking.v1beta1.Query.DelegatorValidator:input_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorRequest
+	22, // 44: cosmos.staking.v1beta1.Query.HistoricalInfo:input_type -> cosmos.staking.v1beta1.QueryHistoricalInfoRequest
+	24, // 45: cosmos.staking.v1beta1.Query.Pool:input_type -> cosmos.staking.v1beta1.QueryPoolRequest
+	26, // 46: cosmos.staking.v1beta1.Query.Params:input_type -> cosmos.staking.v1beta1.QueryParamsRequest
+	28, // 47: cosmos.staking.v1beta1.Query.TokenizeShareRecordById:input_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdRequest
+	30, // 48: cosmos.staking.v1beta1.Query.TokenizeShareRecordByDenom:input_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomRequest
+	32, // 49: cosmos.staking.v1beta1.Query.TokenizeShareRecordsOwned:input_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest
+	34, // 50: cosmos.staking.v1beta1.Query.AllTokenizeShareRecords:input_type -> cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest
+	36, // 51: cosmos.staking.v1beta1.Query.LastTokenizeShareRecordId:input_type -> cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest
+	38, // 52: cosmos.staking.v1beta1.Query.TotalTokenizeSharedAssets:input_type -> cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest
+	1,  // 53: cosmos.staking.v1beta1.Query.Validators:output_type -> cosmos.staking.v1beta1.QueryValidatorsResponse
+	3,  // 54: cosmos.staking.v1beta1.Query.Validator:output_type -> cosmos.staking.v1beta1.QueryValidatorResponse
+	5,  // 55: cosmos.staking.v1beta1.Query.ValidatorDelegations:output_type -> cosmos.staking.v1beta1.QueryValidatorDelegationsResponse
+	7,  // 56: cosmos.staking.v1beta1.Query.ValidatorUnbondingDelegations:output_type -> cosmos.staking.v1beta1.QueryValidatorUnbondingDelegationsResponse
+	9,  // 57: cosmos.staking.v1beta1.Query.Delegation:output_type -> cosmos.staking.v1beta1.QueryDelegationResponse
+	11, // 58: cosmos.staking.v1beta1.Query.UnbondingDelegation:output_type -> cosmos.staking.v1beta1.QueryUnbondingDelegationResponse
+	13, // 59: cosmos.staking.v1beta1.Query.DelegatorDelegations:output_type -> cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse
+	15, // 60: cosmos.staking.v1beta1.Query.DelegatorUnbondingDelegations:output_type -> cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse
+	17, // 61: cosmos.staking.v1beta1.Query.Redelegations:output_type -> cosmos.staking.v1beta1.QueryRedelegationsResponse
+	19, // 62: cosmos.staking.v1beta1.Query.DelegatorValidators:output_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse
+	21, // 63: cosmos.staking.v1beta1.Query.DelegatorValidator:output_type -> cosmos.staking.v1beta1.QueryDelegatorValidatorResponse
+	23, // 64: cosmos.staking.v1beta1.Query.HistoricalInfo:output_type -> cosmos.staking.v1beta1.QueryHistoricalInfoResponse
+	25, // 65: cosmos.staking.v1beta1.Query.Pool:output_type -> cosmos.staking.v1beta1.QueryPoolResponse
+	27, // 66: cosmos.staking.v1beta1.Query.Params:output_type -> cosmos.staking.v1beta1.QueryParamsResponse
+	29, // 67: cosmos.staking.v1beta1.Query.TokenizeShareRecordById:output_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordByIdResponse
+	31, // 68: cosmos.staking.v1beta1.Query.TokenizeShareRecordByDenom:output_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordByDenomResponse
+	33, // 69: cosmos.staking.v1beta1.Query.TokenizeShareRecordsOwned:output_type -> cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse
+	35, // 70: cosmos.staking.v1beta1.Query.AllTokenizeShareRecords:output_type -> cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse
+	37, // 71: cosmos.staking.v1beta1.Query.LastTokenizeShareRecordId:output_type -> cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse
+	39, // 72: cosmos.staking.v1beta1.Query.TotalTokenizeSharedAssets:output_type -> cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse
+	53, // [53:73] is the sub-list for method output_type
+	33, // [33:53] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_staking_v1beta1_query_proto_init() }
@@ -15838,6 +21453,150 @@ func file_cosmos_staking_v1beta1_query_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordByIdRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordByIdResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordByDenomRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordByDenomResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordsOwnedRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTokenizeShareRecordsOwnedResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryAllTokenizeShareRecordsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryAllTokenizeShareRecordsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryLastTokenizeShareRecordIdRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryLastTokenizeShareRecordIdResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTotalTokenizeSharedAssetsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_staking_v1beta1_query_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryTotalTokenizeSharedAssetsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -15845,7 +21604,7 @@ func file_cosmos_staking_v1beta1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_staking_v1beta1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

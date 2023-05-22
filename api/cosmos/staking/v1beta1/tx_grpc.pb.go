@@ -19,13 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_CreateValidator_FullMethodName           = "/cosmos.staking.v1beta1.Msg/CreateValidator"
-	Msg_EditValidator_FullMethodName             = "/cosmos.staking.v1beta1.Msg/EditValidator"
-	Msg_Delegate_FullMethodName                  = "/cosmos.staking.v1beta1.Msg/Delegate"
-	Msg_BeginRedelegate_FullMethodName           = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
-	Msg_Undelegate_FullMethodName                = "/cosmos.staking.v1beta1.Msg/Undelegate"
-	Msg_CancelUnbondingDelegation_FullMethodName = "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation"
-	Msg_UpdateParams_FullMethodName              = "/cosmos.staking.v1beta1.Msg/UpdateParams"
+	Msg_CreateValidator_FullMethodName             = "/cosmos.staking.v1beta1.Msg/CreateValidator"
+	Msg_EditValidator_FullMethodName               = "/cosmos.staking.v1beta1.Msg/EditValidator"
+	Msg_Delegate_FullMethodName                    = "/cosmos.staking.v1beta1.Msg/Delegate"
+	Msg_BeginRedelegate_FullMethodName             = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
+	Msg_Undelegate_FullMethodName                  = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	Msg_CancelUnbondingDelegation_FullMethodName   = "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation"
+	Msg_UpdateParams_FullMethodName                = "/cosmos.staking.v1beta1.Msg/UpdateParams"
+	Msg_UnbondValidator_FullMethodName             = "/cosmos.staking.v1beta1.Msg/UnbondValidator"
+	Msg_TokenizeShares_FullMethodName              = "/cosmos.staking.v1beta1.Msg/TokenizeShares"
+	Msg_RedeemTokens_FullMethodName                = "/cosmos.staking.v1beta1.Msg/RedeemTokens"
+	Msg_TransferTokenizeShareRecord_FullMethodName = "/cosmos.staking.v1beta1.Msg/TransferTokenizeShareRecord"
+	Msg_ValidatorBond_FullMethodName               = "/cosmos.staking.v1beta1.Msg/ValidatorBond"
 )
 
 // MsgClient is the client API for Msg service.
@@ -52,8 +57,32 @@ type MsgClient interface {
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
 	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
+	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// UnbondValidator defines a method for performing the status transition for a validator
+	// from bonded to unbonded
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	UnbondValidator(ctx context.Context, in *MsgUnbondValidator, opts ...grpc.CallOption) (*MsgUnbondValidatorResponse, error)
+	// TokenizeShares defines a method for tokenizing shares from a validator.
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TokenizeShares(ctx context.Context, in *MsgTokenizeShares, opts ...grpc.CallOption) (*MsgTokenizeSharesResponse, error)
+	// RedeemTokens defines a method for redeeming tokens from a validator for
+	// shares.
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	RedeemTokens(ctx context.Context, in *MsgRedeemTokensForShares, opts ...grpc.CallOption) (*MsgRedeemTokensForSharesResponse, error)
+	// TransferTokenizeShareRecord defines a method to transfer ownership of
+	// TokenizeShareRecord
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TransferTokenizeShareRecord(ctx context.Context, in *MsgTransferTokenizeShareRecord, opts ...grpc.CallOption) (*MsgTransferTokenizeShareRecordResponse, error)
+	// ValidatorBond defines a method for performing a validator self-bond
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	ValidatorBond(ctx context.Context, in *MsgValidatorBond, opts ...grpc.CallOption) (*MsgValidatorBondResponse, error)
 }
 
 type msgClient struct {
@@ -127,6 +156,51 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) UnbondValidator(ctx context.Context, in *MsgUnbondValidator, opts ...grpc.CallOption) (*MsgUnbondValidatorResponse, error) {
+	out := new(MsgUnbondValidatorResponse)
+	err := c.cc.Invoke(ctx, Msg_UnbondValidator_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) TokenizeShares(ctx context.Context, in *MsgTokenizeShares, opts ...grpc.CallOption) (*MsgTokenizeSharesResponse, error) {
+	out := new(MsgTokenizeSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_TokenizeShares_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RedeemTokens(ctx context.Context, in *MsgRedeemTokensForShares, opts ...grpc.CallOption) (*MsgRedeemTokensForSharesResponse, error) {
+	out := new(MsgRedeemTokensForSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_RedeemTokens_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) TransferTokenizeShareRecord(ctx context.Context, in *MsgTransferTokenizeShareRecord, opts ...grpc.CallOption) (*MsgTransferTokenizeShareRecordResponse, error) {
+	out := new(MsgTransferTokenizeShareRecordResponse)
+	err := c.cc.Invoke(ctx, Msg_TransferTokenizeShareRecord_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ValidatorBond(ctx context.Context, in *MsgValidatorBond, opts ...grpc.CallOption) (*MsgValidatorBondResponse, error) {
+	out := new(MsgValidatorBondResponse)
+	err := c.cc.Invoke(ctx, Msg_ValidatorBond_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -151,8 +225,32 @@ type MsgServer interface {
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
 	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
+	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// UnbondValidator defines a method for performing the status transition for a validator
+	// from bonded to unbonded
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	UnbondValidator(context.Context, *MsgUnbondValidator) (*MsgUnbondValidatorResponse, error)
+	// TokenizeShares defines a method for tokenizing shares from a validator.
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TokenizeShares(context.Context, *MsgTokenizeShares) (*MsgTokenizeSharesResponse, error)
+	// RedeemTokens defines a method for redeeming tokens from a validator for
+	// shares.
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	RedeemTokens(context.Context, *MsgRedeemTokensForShares) (*MsgRedeemTokensForSharesResponse, error)
+	// TransferTokenizeShareRecord defines a method to transfer ownership of
+	// TokenizeShareRecord
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TransferTokenizeShareRecord(context.Context, *MsgTransferTokenizeShareRecord) (*MsgTransferTokenizeShareRecordResponse, error)
+	// ValidatorBond defines a method for performing a validator self-bond
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	ValidatorBond(context.Context, *MsgValidatorBond) (*MsgValidatorBondResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -180,6 +278,21 @@ func (UnimplementedMsgServer) CancelUnbondingDelegation(context.Context, *MsgCan
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) UnbondValidator(context.Context, *MsgUnbondValidator) (*MsgUnbondValidatorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnbondValidator not implemented")
+}
+func (UnimplementedMsgServer) TokenizeShares(context.Context, *MsgTokenizeShares) (*MsgTokenizeSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShares not implemented")
+}
+func (UnimplementedMsgServer) RedeemTokens(context.Context, *MsgRedeemTokensForShares) (*MsgRedeemTokensForSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RedeemTokens not implemented")
+}
+func (UnimplementedMsgServer) TransferTokenizeShareRecord(context.Context, *MsgTransferTokenizeShareRecord) (*MsgTransferTokenizeShareRecordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferTokenizeShareRecord not implemented")
+}
+func (UnimplementedMsgServer) ValidatorBond(context.Context, *MsgValidatorBond) (*MsgValidatorBondResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorBond not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -320,6 +433,96 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UnbondValidator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnbondValidator)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnbondValidator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UnbondValidator_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnbondValidator(ctx, req.(*MsgUnbondValidator))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_TokenizeShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgTokenizeShares)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).TokenizeShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_TokenizeShares_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).TokenizeShares(ctx, req.(*MsgTokenizeShares))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RedeemTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRedeemTokensForShares)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RedeemTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RedeemTokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RedeemTokens(ctx, req.(*MsgRedeemTokensForShares))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_TransferTokenizeShareRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgTransferTokenizeShareRecord)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).TransferTokenizeShareRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_TransferTokenizeShareRecord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).TransferTokenizeShareRecord(ctx, req.(*MsgTransferTokenizeShareRecord))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ValidatorBond_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgValidatorBond)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ValidatorBond(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ValidatorBond_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ValidatorBond(ctx, req.(*MsgValidatorBond))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -354,6 +557,26 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "UnbondValidator",
+			Handler:    _Msg_UnbondValidator_Handler,
+		},
+		{
+			MethodName: "TokenizeShares",
+			Handler:    _Msg_TokenizeShares_Handler,
+		},
+		{
+			MethodName: "RedeemTokens",
+			Handler:    _Msg_RedeemTokens_Handler,
+		},
+		{
+			MethodName: "TransferTokenizeShareRecord",
+			Handler:    _Msg_TransferTokenizeShareRecord_Handler,
+		},
+		{
+			MethodName: "ValidatorBond",
+			Handler:    _Msg_ValidatorBond_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

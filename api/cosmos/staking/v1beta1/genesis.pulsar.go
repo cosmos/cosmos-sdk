@@ -270,16 +270,69 @@ func (x *_GenesisState_7_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_9_list)(nil)
+
+type _GenesisState_9_list struct {
+	list *[]*TokenizeShareRecord
+}
+
+func (x *_GenesisState_9_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_9_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_9_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TokenizeShareRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_9_list) AppendMutable() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_9_list) NewElement() protoreflect.Value {
+	v := new(TokenizeShareRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState                       protoreflect.MessageDescriptor
-	fd_GenesisState_params                protoreflect.FieldDescriptor
-	fd_GenesisState_last_total_power      protoreflect.FieldDescriptor
-	fd_GenesisState_last_validator_powers protoreflect.FieldDescriptor
-	fd_GenesisState_validators            protoreflect.FieldDescriptor
-	fd_GenesisState_delegations           protoreflect.FieldDescriptor
-	fd_GenesisState_unbonding_delegations protoreflect.FieldDescriptor
-	fd_GenesisState_redelegations         protoreflect.FieldDescriptor
-	fd_GenesisState_exported              protoreflect.FieldDescriptor
+	md_GenesisState                               protoreflect.MessageDescriptor
+	fd_GenesisState_params                        protoreflect.FieldDescriptor
+	fd_GenesisState_last_total_power              protoreflect.FieldDescriptor
+	fd_GenesisState_last_validator_powers         protoreflect.FieldDescriptor
+	fd_GenesisState_validators                    protoreflect.FieldDescriptor
+	fd_GenesisState_delegations                   protoreflect.FieldDescriptor
+	fd_GenesisState_unbonding_delegations         protoreflect.FieldDescriptor
+	fd_GenesisState_redelegations                 protoreflect.FieldDescriptor
+	fd_GenesisState_exported                      protoreflect.FieldDescriptor
+	fd_GenesisState_tokenize_share_records        protoreflect.FieldDescriptor
+	fd_GenesisState_last_tokenize_share_record_id protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -293,6 +346,8 @@ func init() {
 	fd_GenesisState_unbonding_delegations = md_GenesisState.Fields().ByName("unbonding_delegations")
 	fd_GenesisState_redelegations = md_GenesisState.Fields().ByName("redelegations")
 	fd_GenesisState_exported = md_GenesisState.Fields().ByName("exported")
+	fd_GenesisState_tokenize_share_records = md_GenesisState.Fields().ByName("tokenize_share_records")
+	fd_GenesisState_last_tokenize_share_record_id = md_GenesisState.Fields().ByName("last_tokenize_share_record_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -408,6 +463,18 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.TokenizeShareRecords) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_9_list{list: &x.TokenizeShareRecords})
+		if !f(fd_GenesisState_tokenize_share_records, value) {
+			return
+		}
+	}
+	if x.LastTokenizeShareRecordId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.LastTokenizeShareRecordId)
+		if !f(fd_GenesisState_last_tokenize_share_record_id, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -439,6 +506,10 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.Redelegations) != 0
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		return x.Exported != false
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		return len(x.TokenizeShareRecords) != 0
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		return x.LastTokenizeShareRecordId != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -471,6 +542,10 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Redelegations = nil
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		x.Exported = false
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		x.TokenizeShareRecords = nil
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		x.LastTokenizeShareRecordId = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -526,6 +601,15 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		value := x.Exported
 		return protoreflect.ValueOfBool(value)
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		if len(x.TokenizeShareRecords) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_9_list{})
+		}
+		listValue := &_GenesisState_9_list{list: &x.TokenizeShareRecords}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		value := x.LastTokenizeShareRecordId
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -572,6 +656,12 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		x.Redelegations = *clv.list
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		x.Exported = value.Bool()
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		lv := value.List()
+		clv := lv.(*_GenesisState_9_list)
+		x.TokenizeShareRecords = *clv.list
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		x.LastTokenizeShareRecordId = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -627,10 +717,18 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_7_list{list: &x.Redelegations}
 		return protoreflect.ValueOfList(value)
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		if x.TokenizeShareRecords == nil {
+			x.TokenizeShareRecords = []*TokenizeShareRecord{}
+		}
+		value := &_GenesisState_9_list{list: &x.TokenizeShareRecords}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.staking.v1beta1.GenesisState.last_total_power":
 		panic(fmt.Errorf("field last_total_power of message cosmos.staking.v1beta1.GenesisState is not mutable"))
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		panic(fmt.Errorf("field exported of message cosmos.staking.v1beta1.GenesisState is not mutable"))
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		panic(fmt.Errorf("field last_tokenize_share_record_id of message cosmos.staking.v1beta1.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -666,6 +764,11 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
 	case "cosmos.staking.v1beta1.GenesisState.exported":
 		return protoreflect.ValueOfBool(false)
+	case "cosmos.staking.v1beta1.GenesisState.tokenize_share_records":
+		list := []*TokenizeShareRecord{}
+		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+	case "cosmos.staking.v1beta1.GenesisState.last_tokenize_share_record_id":
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.GenesisState"))
@@ -776,6 +879,15 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.Exported {
 			n += 2
 		}
+		if len(x.TokenizeShareRecords) > 0 {
+			for _, e := range x.TokenizeShareRecords {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.LastTokenizeShareRecordId != 0 {
+			n += 1 + runtime.Sov(uint64(x.LastTokenizeShareRecordId))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -804,6 +916,27 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.LastTokenizeShareRecordId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.LastTokenizeShareRecordId))
+			i--
+			dAtA[i] = 0x50
+		}
+		if len(x.TokenizeShareRecords) > 0 {
+			for iNdEx := len(x.TokenizeShareRecords) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.TokenizeShareRecords[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x4a
+			}
 		}
 		if x.Exported {
 			i--
@@ -1225,6 +1358,59 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.Exported = bool(v != 0)
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TokenizeShareRecords", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TokenizeShareRecords = append(x.TokenizeShareRecords, &TokenizeShareRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TokenizeShareRecords[len(x.TokenizeShareRecords)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 10:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastTokenizeShareRecordId", wireType)
+				}
+				x.LastTokenizeShareRecordId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.LastTokenizeShareRecordId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1764,6 +1950,14 @@ type GenesisState struct {
 	// redelegations defines the redelegations active at genesis.
 	Redelegations []*Redelegation `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations,omitempty"`
 	Exported      bool            `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
+	// store tokenize share records to provide reward to record owners
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TokenizeShareRecords []*TokenizeShareRecord `protobuf:"bytes,9,rep,name=tokenize_share_records,json=tokenizeShareRecords,proto3" json:"tokenize_share_records,omitempty"`
+	// last tokenize share record id, used for next share record id calculation
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	LastTokenizeShareRecordId uint64 `protobuf:"varint,10,opt,name=last_tokenize_share_record_id,json=lastTokenizeShareRecordId,proto3" json:"last_tokenize_share_record_id,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1842,6 +2036,20 @@ func (x *GenesisState) GetExported() bool {
 	return false
 }
 
+func (x *GenesisState) GetTokenizeShareRecords() []*TokenizeShareRecord {
+	if x != nil {
+		return x.TokenizeShareRecords
+	}
+	return nil
+}
+
+func (x *GenesisState) GetLastTokenizeShareRecordId() uint64 {
+	if x != nil {
+		return x.LastTokenizeShareRecordId
+	}
+	return 0
+}
+
 // LastValidatorPower required for validator set update logic.
 type LastValidatorPower struct {
 	state         protoimpl.MessageState
@@ -1901,7 +2109,7 @@ var file_cosmos_staking_v1beta1_genesis_proto_rawDesc = []byte{
 	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69,
-	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x9a, 0x05, 0x0a, 0x0c, 0x47, 0x65, 0x6e,
+	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xca, 0x06, 0x0a, 0x0c, 0x47, 0x65, 0x6e,
 	0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x41, 0x0a, 0x06, 0x70, 0x61, 0x72,
 	0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
@@ -1943,7 +2151,18 @@ var file_cosmos_staking_v1beta1_genesis_proto_rawDesc = []byte{
 	0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0d, 0x72, 0x65, 0x64, 0x65,
 	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x70,
 	0x6f, 0x72, 0x74, 0x65, 0x64, 0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x65, 0x78, 0x70,
-	0x6f, 0x72, 0x74, 0x65, 0x64, 0x22, 0x68, 0x0a, 0x12, 0x4c, 0x61, 0x73, 0x74, 0x56, 0x61, 0x6c,
+	0x6f, 0x72, 0x74, 0x65, 0x64, 0x12, 0x6c, 0x0a, 0x16, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a,
+	0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18,
+	0x09, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x14, 0x74,
+	0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x73, 0x12, 0x40, 0x0a, 0x1d, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x74, 0x6f, 0x6b, 0x65,
+	0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x5f, 0x69, 0x64, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x04, 0x52, 0x19, 0x6c, 0x61, 0x73, 0x74,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x49, 0x64, 0x22, 0x68, 0x0a, 0x12, 0x4c, 0x61, 0x73, 0x74, 0x56, 0x61, 0x6c,
 	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x07, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
@@ -1988,6 +2207,7 @@ var file_cosmos_staking_v1beta1_genesis_proto_goTypes = []interface{}{
 	(*Delegation)(nil),          // 4: cosmos.staking.v1beta1.Delegation
 	(*UnbondingDelegation)(nil), // 5: cosmos.staking.v1beta1.UnbondingDelegation
 	(*Redelegation)(nil),        // 6: cosmos.staking.v1beta1.Redelegation
+	(*TokenizeShareRecord)(nil), // 7: cosmos.staking.v1beta1.TokenizeShareRecord
 }
 var file_cosmos_staking_v1beta1_genesis_proto_depIdxs = []int32{
 	2, // 0: cosmos.staking.v1beta1.GenesisState.params:type_name -> cosmos.staking.v1beta1.Params
@@ -1996,11 +2216,12 @@ var file_cosmos_staking_v1beta1_genesis_proto_depIdxs = []int32{
 	4, // 3: cosmos.staking.v1beta1.GenesisState.delegations:type_name -> cosmos.staking.v1beta1.Delegation
 	5, // 4: cosmos.staking.v1beta1.GenesisState.unbonding_delegations:type_name -> cosmos.staking.v1beta1.UnbondingDelegation
 	6, // 5: cosmos.staking.v1beta1.GenesisState.redelegations:type_name -> cosmos.staking.v1beta1.Redelegation
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	7, // 6: cosmos.staking.v1beta1.GenesisState.tokenize_share_records:type_name -> cosmos.staking.v1beta1.TokenizeShareRecord
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_staking_v1beta1_genesis_proto_init() }

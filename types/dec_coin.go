@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // ----------------------------------------------------------------------------
@@ -632,7 +632,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 
 	amount, err := NewDecFromStr(amountStr)
 	if err != nil {
-		return DecCoin{}, errors.Wrap(err, fmt.Sprintf("failed to parse decimal coin amount: %s", amountStr))
+		return DecCoin{}, errorsmod.Wrap(err, fmt.Sprintf("failed to parse decimal coin amount: %s", amountStr))
 	}
 
 	if err := ValidateDenom(denomStr); err != nil {

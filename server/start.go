@@ -354,18 +354,19 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 }
 
 func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
-	traceWriter, cleanupFn, err := setupTraceWriter(svrCtx)
+	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
 	if err != nil {
-		return app, cleanupFn, err
+		return app, traceCleanupFn, err
 	}
 
 	home := svrCtx.Config.RootDir
 	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
-		return app, cleanupFn, err
+		return app, traceCleanupFn, err
 	}
 
 	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	cleanupFn = func() { traceCleanupFn(); app.Close() }
 	return app, cleanupFn, nil
 }
 

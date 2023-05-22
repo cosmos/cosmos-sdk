@@ -6,7 +6,7 @@ managed:
     except:
       - buf.build/cosmos/cosmos-proto
     override:
-      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
+      buf.build/persistence/cosmos-sdk-lsm: cosmossdk.io/api
 plugins:
   - name: go-pulsar
     out: .

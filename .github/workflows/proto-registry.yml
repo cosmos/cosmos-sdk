@@ -1,5 +1,5 @@
 name: Buf-Push
-# Protobuf runs buf (https://buf.build/) push updated proto files to https://buf.build/cosmos/cosmos-sdk
+# Protobuf runs buf (https://buf.build/) push updated proto files to https://buf.build/persistence/cosmos-sdk-lsm
 # This workflow is only run when a .proto file has been changed
 on:
   push:

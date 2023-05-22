@@ -4,7 +4,7 @@ managed:
   go_package_prefix:
     default: github.com/cosmos/cosmos-sdk/orm/internal
     override:
-      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
+      buf.build/persistence/cosmos-sdk-lsm: cosmossdk.io/api
 plugins:
   - name: go-cosmos-orm-proto
     out: .

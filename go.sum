@@ -162,8 +162,8 @@ github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOC
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/celestiaorg/celestia-core v1.19.0-tm-v0.34.27 h1:GLdDJRu1fRSMft4IqQz4/x/H1U3eN2TFlYbAycbSiN4=
 github.com/celestiaorg/celestia-core v1.19.0-tm-v0.34.27/go.mod h1:8PbX2OIPehldawXWAzNWPxBPnfFtcYtjHecE45b2Beg=
-github.com/celestiaorg/nmt v0.15.0 h1:ID9QlMIeP6WK/iiGcfnYLu2qqVIq0UYe/dc3TVPt6EA=
-github.com/celestiaorg/nmt v0.15.0/go.mod h1:GfwIvQPhUakn1modWxJ+rv8dUjJzuXg5H+MLFM1o7nY=
+github.com/celestiaorg/nmt v0.16.0 h1:4CX6d1Uwf1C+tGcAWskPve0HCDTnI4Ey8ffjiDwcGH0=
+github.com/celestiaorg/nmt v0.16.0/go.mod h1:GfwIvQPhUakn1modWxJ+rv8dUjJzuXg5H+MLFM1o7nY=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=

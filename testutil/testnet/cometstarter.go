@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"cosmossdk.io/log"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
@@ -18,7 +17,9 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -29,7 +30,7 @@ import (
 // the number of available methods on CometStarter will grow.
 type CometStarter struct {
 	logger         log.Logger
-	app            abcitypes.Application
+	app            servertypes.ABCI
 	cfg            *cmtcfg.Config
 	valPrivKey     cmted25519.PrivKey
 	genesis        []byte
@@ -44,7 +45,7 @@ type CometStarter struct {
 //
 //	NewCometStarter(...).Logger(...).Start()
 func NewCometStarter(
-	app abcitypes.Application,
+	app servertypes.ABCI,
 	cfg *cmtcfg.Config,
 	valPrivKey cmted25519.PrivKey,
 	genesis []byte,
@@ -144,6 +145,7 @@ func (s *CometStarter) Start() (n *node.Node, err error) {
 		return appGenesis.ToGenesisDoc()
 	}
 
+	cmtApp := server.NewCometABCIWrapper(s.app)
 	for i := 0; i < s.startTries; i++ {
 		s.cfg.P2P.ListenAddress = s.likelyAvailableAddress()
 		if s.rpcListen {
@@ -154,7 +156,7 @@ func (s *CometStarter) Start() (n *node.Node, err error) {
 			s.cfg,
 			fpv,
 			nodeKey,
-			proxy.NewLocalClientCreator(s.app),
+			proxy.NewLocalClientCreator(cmtApp),
 			appGenesisProvider,
 			cmtcfg.DefaultDBProvider,
 			node.DefaultMetricsProvider(s.cfg.Instrumentation),

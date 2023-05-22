@@ -1,7 +1,6 @@
 package rootmulti_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -31,16 +30,16 @@ func TestRollback(t *testing.T) {
 			AppHash: app.LastCommitID().Hash,
 		}
 
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
 		ctx := app.NewContext(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit(context.TODO(), nil)
+		app.Commit()
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
@@ -63,14 +62,14 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: header.Height})
+		app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
 		ctx := app.NewContext(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+		app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit(context.TODO(), nil)
+		app.Commit()
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())

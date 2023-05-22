@@ -172,10 +172,8 @@ func TestHaltIfTooNew(t *testing.T) {
 
 func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 	t.Log("Verify that the upgrade plan has been cleared")
-	plan, _, err := s.keeper.GetUpgradePlan(newCtx)
-	expected := types.Plan{}
-	require.Equal(t, plan, expected)
-	require.NoError(t, err)
+	_, err := s.keeper.GetUpgradePlan(newCtx)
+	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 }
 
 func TestCanClear(t *testing.T) {
@@ -529,9 +527,8 @@ func TestDowngradeVerification(t *testing.T) {
 		require.Equal(t, planName, lastAppliedPlan)
 		require.False(t, k.HasHandler(planName))
 		require.False(t, k.DowngradeVerified())
-		_, found, err := k.GetUpgradePlan(ctx)
-		require.NoError(t, err)
-		require.False(t, found)
+		_, err = k.GetUpgradePlan(ctx)
+		require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 
 		if tc.preRun != nil {
 			tc.preRun(k, ctx, name)

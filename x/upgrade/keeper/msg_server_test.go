@@ -74,11 +74,9 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)
-				plan, found, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
+				plan, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
 				s.Require().NoError(err)
-				s.Require().Equal(true, found)
 				s.Require().Equal(tc.req.Plan, plan)
-
 			}
 		})
 	}
@@ -133,9 +131,8 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)
-				_, found, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
-				s.Require().NoError(err)
-				s.Require().Equal(false, found)
+				_, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().ErrorIs(err, types.ErrNoUpgradePlanFound)
 			}
 		})
 	}

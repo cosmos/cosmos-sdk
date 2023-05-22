@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -16,13 +16,13 @@ var _ types.QueryServer = Keeper{}
 func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	plan, found, err := k.GetUpgradePlan(ctx)
+	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil {
-		return nil, err
-	}
+		if errors.Is(err, types.ErrNoUpgradePlanFound) {
+			return &types.QueryCurrentPlanResponse{}, nil
+		}
 
-	if !found {
-		return &types.QueryCurrentPlanResponse{}, nil
+		return nil, err
 	}
 
 	return &types.QueryCurrentPlanResponse{Plan: &plan}, nil
@@ -41,13 +41,13 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consState, found, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	consState, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
 	if err != nil {
-		return nil, err
-	}
+		if errors.Is(err, types.ErrNoUpgradedConsensusStateFound) {
+			return &types.QueryUpgradedConsensusStateResponse{}, nil
+		}
 
-	if !found {
-		return &types.QueryUpgradedConsensusStateResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
+		return nil, err
 	}
 
 	return &types.QueryUpgradedConsensusStateResponse{ //nolint:staticcheck // we're using a deprecated call for compatibility
@@ -61,18 +61,15 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
-		version, ok, err := k.getModuleVersion(ctx, req.ModuleName)
+		version, err := k.getModuleVersion(ctx, req.ModuleName)
 		if err != nil {
-			return nil, err
+			// module requested, but not found or error happened
+			return nil, errorsmod.Wrapf(err, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
 		}
 
-		if ok {
-			// return the requested module
-			res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
-			return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
-		}
-		// module requested, but not found
-		return nil, errorsmod.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
+		// return the requested module
+		res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
+		return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
 	}
 
 	// if no module requested return all module versions from state

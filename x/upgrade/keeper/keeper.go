@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -201,23 +202,28 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 }
 
 // getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
-func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, bool, error) {
+func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
-		return 0, false, err
+		return 0, err
 	}
 
 	for ; it.Valid(); it.Next() {
 		moduleName := string(it.Key()[1:])
 		if moduleName == name {
 			version := binary.BigEndian.Uint64(it.Value())
-			return version, true, nil
+			return version, nil
 		}
 	}
 
-	return 0, false, it.Close()
+	err = it.Close()
+	if err != nil {
+		return 0, err
+	}
+
+	return 0, types.ErrNoModuleVersionFound
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -248,12 +254,15 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 	store := k.storeService.OpenKVStore(ctx)
 
 	// clear any old IBC state stored by previous plan
-	oldPlan, found, err := k.GetUpgradePlan(ctx)
+	oldPlan, err := k.GetUpgradePlan(ctx)
+	// if there's an error but it's not ErrNoUpgradePlanFound, return error
 	if err != nil {
-		return err
+		if !errors.Is(err, types.ErrNoUpgradePlanFound) {
+			return err
+		}
 	}
 
-	if found {
+	if err == nil {
 		err = k.ClearIBCState(ctx, oldPlan.Height)
 		if err != nil {
 			return err
@@ -282,14 +291,18 @@ func (k Keeper) SetUpgradedClient(ctx context.Context, planHeight int64, bz []by
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx context.Context, height int64) ([]byte, bool, error) {
+func (k Keeper) GetUpgradedClient(ctx context.Context, height int64) ([]byte, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedClientKey(height))
-	if len(bz) == 0 || err != nil {
-		return nil, false, err
+	if err != nil {
+		return nil, err
 	}
 
-	return bz, true, nil
+	if bz == nil {
+		return nil, types.ErrNoUpgradedClientFound
+	}
+
+	return bz, nil
 }
 
 // SetUpgradedConsensusState sets the expected upgraded consensus state for the next version of this chain
@@ -299,15 +312,19 @@ func (k Keeper) SetUpgradedConsensusState(ctx context.Context, planHeight int64,
 	return store.Set(types.UpgradedConsStateKey(planHeight), bz)
 }
 
-// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain
-func (k Keeper) GetUpgradedConsensusState(ctx context.Context, lastHeight int64) ([]byte, bool, error) {
+// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain.
+func (k Keeper) GetUpgradedConsensusState(ctx context.Context, lastHeight int64) ([]byte, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedConsStateKey(lastHeight))
-	if len(bz) == 0 || err != nil {
-		return nil, false, err
+	if err != nil {
+		return nil, err
 	}
 
-	return bz, true, nil
+	if bz == nil {
+		return nil, types.ErrNoUpgradedConsensusStateFound
+	}
+
+	return bz, nil
 }
 
 // GetLastCompletedUpgrade returns the last applied upgrade name and height.
@@ -377,17 +394,19 @@ func (k Keeper) ClearIBCState(ctx context.Context, lastHeight int64) error {
 
 // ClearUpgradePlan clears any schedule upgrade and associated IBC states.
 func (k Keeper) ClearUpgradePlan(ctx context.Context) error {
-	// clear IBC states everytime upgrade plan is removed
-	oldPlan, found, err := k.GetUpgradePlan(ctx)
+	// clear IBC states every time upgrade plan is removed
+	oldPlan, err := k.GetUpgradePlan(ctx)
 	if err != nil {
+		// if there's no upgrade plan, return nil to match previous behavior
+		if errors.Is(err, types.ErrNoUpgradePlanFound) {
+			return nil
+		}
 		return err
 	}
 
-	if found {
-		err := k.ClearIBCState(ctx, oldPlan.Height)
-		if err != nil {
-			return err
-		}
+	err = k.ClearIBCState(ctx, oldPlan.Height)
+	if err != nil {
+		return err
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
@@ -400,21 +419,25 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
-// upgrade or false if there is none
-func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, havePlan bool, err error) {
+// GetUpgradePlan returns the currently scheduled Plan if any, setting err to nil if there is a scheduled
+// upgrade or to ErrNoUpgradePlanFound if there is none. If err is any other than ErrNoUpgradePlanFound, an error occurred.
+func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.PlanKey())
-	if bz == nil || err != nil {
-		return plan, false, err
+	if err != nil {
+		return plan, err
+	}
+
+	if bz == nil {
+		return plan, types.ErrNoUpgradePlanFound
 	}
 
 	err = k.cdc.Unmarshal(bz, &plan)
 	if err != nil {
-		return plan, false, err
+		return plan, err
 	}
 
-	return plan, true, err
+	return plan, err
 }
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally

@@ -190,13 +190,13 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		name   string
 		height int64
 		setup  func()
-		exists bool
+		err    bool
 	}{
 		{
 			name:   "no upgraded client exists",
 			height: 10,
 			setup:  func() {},
-			exists: false,
+			err:    true,
 		},
 		{
 			name:   "success",
@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			setup: func() {
 				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
 			},
-			exists: true,
+			err: false,
 		},
 	}
 
@@ -215,15 +215,14 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		// setup test case
 		tc.setup()
 
-		gotCs, exists, err := s.upgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
-		s.Require().NoError(err)
+		gotCs, err := s.upgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 
-		if tc.exists {
-			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
-			s.Require().True(exists, "valid case: %s did not retrieve client state", tc.name)
-		} else {
+		if tc.err {
 			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
-			s.Require().False(exists, "invalid case: %s retrieved valid client state", tc.name)
+			s.Require().Error(err, "invalid case: %s retrieved valid client state", tc.name)
+		} else {
+			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
+			s.Require().NoError(err, "valid case: %s did not retrieve client state", tc.name)
 		}
 	}
 }
@@ -243,8 +242,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 func (s *KeeperTestSuite) TestUpgradedConsensusState() {
 	cs := []byte("IBC consensus state")
 	s.Require().NoError(s.upgradeKeeper.SetUpgradedConsensusState(s.ctx, 10, cs))
-	bz, ok, err := s.upgradeKeeper.GetUpgradedConsensusState(s.ctx, 10)
-	s.Require().True(ok)
+	bz, err := s.upgradeKeeper.GetUpgradedConsensusState(s.ctx, 10)
 	s.Require().Equal(cs, bz)
 	s.Require().NoError(err)
 }

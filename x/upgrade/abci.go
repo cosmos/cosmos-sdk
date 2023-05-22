@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,9 +10,8 @@ import (
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlock will check if there is a scheduled plan and if it is ready to be executed.
@@ -27,10 +27,11 @@ func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
-	plan, found, err := k.GetUpgradePlan(ctx)
-	if err != nil {
+	plan, err := k.GetUpgradePlan(ctx)
+	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
 		return err
 	}
+	found := err == nil
 
 	if !k.DowngradeVerified() {
 		k.SetDowngradeVerified(true)
@@ -94,7 +95,6 @@ func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
-		// TODO: figure out how to pass a block gas meter to the ApplyUpgradeFunction
 		return k.ApplyUpgrade(sdkCtx, plan)
 	}
 

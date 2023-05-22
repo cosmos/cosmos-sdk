@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
@@ -18,7 +17,7 @@ import (
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, validator types.MessageValidator, ac address.Codec) *cobra.Command {
+func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, validator types.MessageValidator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",

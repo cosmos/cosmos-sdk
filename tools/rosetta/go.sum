@@ -35,8 +35,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
-cosmossdk.io/api v0.4.1 h1:0ikaYM6GyxTYYcfBiyR8YnLCfhNnhKpEFnaSepCTmqg=
-cosmossdk.io/api v0.4.1/go.mod h1:jR7k5ok90LxW2lFUXvd8Vpo/dr4PpiyVegxdm7b1ZdE=
+cosmossdk.io/api v0.3.1 h1:NNiOclKRR0AOlO4KIqeaG6PS6kswOMhHD0ir0SscNXE=
+cosmossdk.io/api v0.3.1/go.mod h1:DfHfMkiNA2Uhy8fj0JJlOCYOBp4eWUUJ1te5zBGNyIw=
 cosmossdk.io/core v0.7.0 h1:GFss3qt2P9p23Cz24NnqLkslzb8n+B75A24x1JgJJp0=
 cosmossdk.io/core v0.7.0/go.mod h1:36hP0ZH/8ipsjzfcp0yKU4bqQXUGhS0/m1krWFCtwCc=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
@@ -133,7 +133,8 @@ github.com/cosmos/rosetta-sdk-go v0.10.0 h1:E5RhTruuoA7KTIXUcMicL76cffyeoyvNybzU
 github.com/cosmos/rosetta-sdk-go v0.10.0/go.mod h1:SImAZkb96YbwvoRkzSMQB6noNJXFgWl/ENIznEoYQI4=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/creachadair/taskgroup v0.3.2 h1:zlfutDS+5XG40AOxcHDSThxKzns8Tnr9jnr6VqkYlkM=
+github.com/creachadair/taskgroup v0.4.2 h1:jsBLdAJE42asreGss2xZGZ8fJra7WtwnHWeJFxv2Li8=
+github.com/creachadair/taskgroup v0.4.2/go.mod h1:qiXUOSrbwAY3u0JPGTzObbE3yf9hcXHDKBZ2ZjpCbgM=
 github.com/cucumber/common/gherkin/go/v22 v22.0.0 h1:4K8NqptbvdOrjL9DEea6HFjSpbdT9+Q5kgLpmmsHYl0=
 github.com/cucumber/common/messages/go/v17 v17.1.1 h1:RNqopvIFyLWnKv0LfATh34SWBhXeoFTJnSrgm9cT/Ts=
 github.com/danieljoos/wincred v1.1.2 h1:QLdCxFs1/Yl4zduvBdcHB8goaYk9RARS2SgLLRuAyr0=

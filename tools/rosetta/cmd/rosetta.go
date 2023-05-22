@@ -32,7 +32,7 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 
 			// load module
 			// 1. open the so file to load the symbols
-			plug, err := plugin.Open("./plugins/osmosis.so")
+			plug, err := plugin.Open("./plugins/osmosis/osmosis.so")
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

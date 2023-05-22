@@ -366,7 +366,12 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-	cleanupFn = func() { traceCleanupFn(); app.Close() }
+	cleanupFn = func() {
+		traceCleanupFn()
+		if localErr := app.Close(); localErr != nil {
+			svrCtx.Logger.Error(localErr.Error())
+		}
+	}
 	return app, cleanupFn, nil
 }
 

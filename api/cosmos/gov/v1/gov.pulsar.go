@@ -7118,6 +7118,7 @@ type Proposal struct {
 	// voting_end_time is the end time of voting on a proposal.
 	VotingEndTime *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#proposal-3
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// title is the title of the proposal
 	//
@@ -7332,7 +7333,8 @@ type Vote struct {
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// options is the weighted vote options.
 	Options []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
-	// metadata is any  arbitrary metadata to attached to the vote.
+	// metadata is any arbitrary metadata to attached to the vote.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#vote-5
 	Metadata string `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 

@@ -58,6 +58,10 @@ type (
 
 		// Return the snapshot manager
 		SnapshotManager() *snapshots.Manager
+
+		// Close is called in start cmd to gracefully cleanup resources.
+		// Must be safe to be called multiple times.
+		Close() error
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

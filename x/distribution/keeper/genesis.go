@@ -18,11 +18,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := k.authKeeper.StringToBytes(dwi.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		withdrawAddress, err := k.authKeeper.StringToBytes(dwi.WithdrawAddress)
+		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -74,7 +74,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := k.authKeeper.StringToBytes(del.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}

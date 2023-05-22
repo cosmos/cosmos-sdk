@@ -117,7 +117,7 @@ func (am AppModule) IsAppModule() {}
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.GetAddressCodec()},
+		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		legacySubspace:    ss,

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -92,12 +93,9 @@ func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 // WeightedVoteOptions describes array of WeightedVoteOptions
 type WeightedVoteOptions []*WeightedVoteOption
 
-func (v WeightedVoteOptions) String() (out string) {
-	for _, opt := range v {
-		out += opt.String() + "\n"
-	}
-
-	return strings.TrimSpace(out)
+func (v WeightedVoteOptions) String() string {
+	out, _ := json.Marshal(v)
+	return string(out)
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error

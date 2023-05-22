@@ -1,7 +1,6 @@
 package bank_test
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -75,7 +74,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	baseApp.Commit()
 
 	txGen := moduletestutil.MakeTestTxConfig()
 	txEncoder := txGen.TxEncoder()
@@ -99,14 +98,13 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		baseApp.FinalizeBlock(
-			context.TODO(),
 			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
 		)
 
-		baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		baseApp.Commit()
 
 		height++
 	}
@@ -127,7 +125,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
-	baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	baseApp.Commit()
 
 	txGen := moduletestutil.MakeTestTxConfig()
 	txEncoder := txGen.TxEncoder()
@@ -151,14 +149,13 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		baseApp.FinalizeBlock(
-			context.TODO(),
 			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
 		)
 
-		baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+		baseApp.Commit()
 
 		height++
 	}

@@ -1,7 +1,6 @@
 package gov_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -28,7 +27,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -88,7 +87,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -177,7 +176,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -255,7 +254,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			SortAddresses(addrs)
 
-			app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
@@ -364,7 +363,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
@@ -423,7 +422,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-	app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -507,7 +506,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			app.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})

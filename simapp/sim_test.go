@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -289,7 +288,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.Equal(t, "SimApp", newApp.Name())
 
-	newApp.InitChain(context.TODO(), &abci.RequestInitChain{
+	newApp.InitChain(&abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
 		ChainId:       SimAppChainID,
 	})

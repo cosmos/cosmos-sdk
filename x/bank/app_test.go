@@ -1,7 +1,6 @@
 package bank_test
 
 import (
-	"context"
 	"testing"
 
 	"cosmossdk.io/depinject"
@@ -153,9 +152,9 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
@@ -192,9 +191,9 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
@@ -276,9 +275,9 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err := baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	testCases := []appTestCase{
@@ -321,9 +320,9 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err = baseApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	_, err = baseApp.Commit(context.TODO(), &abci.RequestCommit{})
+	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	testCases := []appTestCase{

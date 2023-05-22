@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -35,7 +34,7 @@ type (
 	// The interface defines the necessary contracts to be implemented in order
 	// to fully bootstrap and start an application.
 	Application interface {
-		abci.Application
+		ABCI
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 

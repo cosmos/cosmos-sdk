@@ -124,7 +124,7 @@ func SignCheckDeliver(
 	bz, err := txCfg.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	resBlock, err := app.FinalizeBlock(context.TODO(), &types2.RequestFinalizeBlock{
+	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
 		Height: header.Height,
 		Txs:    [][]byte{bz},
 	})
@@ -139,7 +139,7 @@ func SignCheckDeliver(
 		require.False(t, finalizeSuccess)
 	}
 
-	app.Commit(context.TODO(), &types2.RequestCommit{})
+	app.Commit()
 
 	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
 	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}

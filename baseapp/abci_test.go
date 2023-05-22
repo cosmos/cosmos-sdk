@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -75,7 +76,7 @@ func TestABCI_InitChain(t *testing.T) {
 	// initChain is nil - nothing happens
 	_, err = app.InitChain(&abci.RequestInitChain{ChainId: "test-chain-id"})
 	require.NoError(t, err)
-	resQ, err := app.Query(&query)
+	resQ, err := app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resQ.Value))
 
@@ -112,7 +113,7 @@ func TestABCI_InitChain(t *testing.T) {
 	})
 
 	app.Commit()
-	resQ, err = app.Query(&query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, resQ.Value)
@@ -126,7 +127,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
-	resQ, err = app.Query(&query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, value, resQ.Value)
 
@@ -134,7 +135,7 @@ func TestABCI_InitChain(t *testing.T) {
 	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	app.Commit()
 
-	resQ, err = app.Query(&query)
+	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, value, resQ.Value)
 }
@@ -192,7 +193,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
-	resQuery, err := suite.baseApp.Query(&abci.RequestQuery{
+	resQuery, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testpb.Query/SayHello",
 	})
@@ -208,7 +209,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 		Path: "/testpb.Query/SayHello",
 	}
 
-	resQuery, err = suite.baseApp.Query(&reqQuery)
+	resQuery, err = suite.baseApp.Query(context.TODO(), &reqQuery)
 	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
 
@@ -237,14 +238,14 @@ func TestABCI_P2PQuery(t *testing.T) {
 	addrQuery := abci.RequestQuery{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
 	}
-	res, err := suite.baseApp.Query(&addrQuery)
+	res, err := suite.baseApp.Query(context.TODO(), &addrQuery)
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), res.Code)
 
 	idQuery := abci.RequestQuery{
 		Path: "/p2p/filter/id/testid",
 	}
-	res, err = suite.baseApp.Query(&idQuery)
+	res, err = suite.baseApp.Query(context.TODO(), &idQuery)
 	require.NoError(t, err)
 	require.Equal(t, uint32(4), res.Code)
 }
@@ -514,7 +515,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 			Path: "/app/simulate",
 			Data: txBytes,
 		}
-		queryResult, err := suite.baseApp.Query(&query)
+		queryResult, err := suite.baseApp.Query(context.TODO(), &query)
 		require.NoError(t, err)
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
@@ -907,7 +908,7 @@ func TestABCI_Query(t *testing.T) {
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
 
 	// query is empty before we do anything
-	res, err := suite.baseApp.Query(&query)
+	res, err := suite.baseApp.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
@@ -916,7 +917,7 @@ func TestABCI_Query(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 
-	res, err = suite.baseApp.Query(&query)
+	res, err = suite.baseApp.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
@@ -929,14 +930,14 @@ func TestABCI_Query(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.Query(&query)
+	res, err = suite.baseApp.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(res.Value))
 
 	// query returns correct value after Commit
 	suite.baseApp.Commit()
 
-	res, err = suite.baseApp.Query(&query)
+	res, err = suite.baseApp.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, value, res.Value)
 }

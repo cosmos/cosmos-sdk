@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -52,7 +53,7 @@ func TestInitApp(t *testing.T) {
 		Data: []byte("foo"),
 	}
 
-	qres, err := app.Query(&query)
+	qres, err := app.Query(context.Background(), &query)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte("bar"), qres.Value)
@@ -87,7 +88,7 @@ func TestDeliverTx(t *testing.T) {
 		Data: []byte(key),
 	}
 
-	qres, err := app.Query(&query)
+	qres, err := app.Query(context.Background(), &query)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte(value), qres.Value)

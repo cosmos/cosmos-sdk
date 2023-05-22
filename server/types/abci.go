@@ -10,8 +10,8 @@ import (
 // to be driven by a blockchain-based replication engine via the ABCI.
 type ABCI interface {
 	// Info/Query Connection
-	Info(*abci.RequestInfo) (*abci.ResponseInfo, error)    // Return application info
-	Query(*abci.RequestQuery) (*abci.ResponseQuery, error) // Query for state
+	Info(*abci.RequestInfo) (*abci.ResponseInfo, error)                     // Return application info
+	Query(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error) // Query for state
 
 	// Mempool Connection
 	CheckTx(*abci.RequestCheckTx) (*abci.ResponseCheckTx, error) // Validate a tx for the mempool

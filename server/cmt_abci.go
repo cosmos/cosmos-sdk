@@ -19,8 +19,8 @@ func (w cometABCIWrapper) Info(_ context.Context, req *abci.RequestInfo) (*abci.
 	return w.app.Info(req)
 }
 
-func (w cometABCIWrapper) Query(_ context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	return w.app.Query(req)
+func (w cometABCIWrapper) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+	return w.app.Query(ctx, req)
 }
 
 func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {

@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -318,7 +319,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
-	res, err := app.Query(&abci.RequestQuery{Path: "app/version"})
+	res, err := app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
 	require.Equal(t, "", string(res.Value))
@@ -327,7 +328,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	app.SetVersion(versionString)
 	require.Equal(t, versionString, app.Version())
 
-	res, err = app.Query(&abci.RequestQuery{Path: "app/version"})
+	res, err = app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
 	require.Equal(t, versionString, string(res.Value))

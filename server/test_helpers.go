@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // Get a free address for a test tendermint server
@@ -16,7 +16,7 @@ func FreeTCPAddr() (addr, port string, err error) {
 	}
 
 	if err := l.Close(); err != nil {
-		return "", "", sdkerrors.Wrap(err, "couldn't close the listener")
+		return "", "", errorsmod.Wrap(err, "couldn't close the listener")
 	}
 
 	portI := l.Addr().(*net.TCPAddr).Port

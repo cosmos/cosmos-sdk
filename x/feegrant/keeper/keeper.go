@@ -8,6 +8,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -78,7 +79,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return err
 
 	case newExp != nil && newExp.Before(ctx.BlockTime()):
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 
 	case oldExp == nil && newExp != nil:
 		// when old oldExp is nil there won't be any key added before to queue.

@@ -6,11 +6,11 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -391,12 +391,12 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group policy")
+			return errorsmod.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group")
+			return errorsmod.Wrap(err, "group")
 		}
 
 		proposalID := proposal.Id
@@ -409,11 +409,11 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			}
 		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
-				return sdkerrors.Wrap(err, "doTallyAndUpdate")
+				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}
 
 			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-				return sdkerrors.Wrap(err, "proposal update")
+				return errorsmod.Wrap(err, "proposal update")
 			}
 		}
 		// Note: We do nothing if the proposal has been marked as ACCEPTED or

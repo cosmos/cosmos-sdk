@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -27,10 +28,10 @@ func (p Plan) ValidateBasic() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("upgrade logic for IBC has been moved to the IBC module")
 	}
 	if len(p.Name) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
 	if p.Height <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "height must be greater than 0")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "height must be greater than 0")
 	}
 
 	return nil

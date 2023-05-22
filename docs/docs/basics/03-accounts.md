@@ -199,7 +199,7 @@ First a new function to create a private key from a secret number is needed in t
 func NewPrivKeyFromSecret(secret []byte) (*PrivKey, error) {
 	var d = new(big.Int).SetBytes(secret)
 	if d.Cmp(secp256r1.Params().N) >= 1 {
-		return nil, sdkerrors.Wrap(errors.ErrInvalidRequest, "secret not in the curve base field")
+		return nil, errorsmod.Wrap(errors.ErrInvalidRequest, "secret not in the curve base field")
 	}
 	sk := new(ecdsa.PrivKey)
 	return &PrivKey{&ecdsaSK{*sk}}, nil

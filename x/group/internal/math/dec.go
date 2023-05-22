@@ -6,7 +6,7 @@ import (
 
 	"github.com/cockroachdb/apd/v2"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -76,7 +76,7 @@ func NewDecFromInt64(x int64) Dec {
 func (x Dec) Add(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
-	return z, sdkerrors.Wrap(err, "decimal addition error")
+	return z, errorsmod.Wrap(err, "decimal addition error")
 }
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
@@ -84,7 +84,7 @@ func (x Dec) Add(y Dec) (Dec, error) {
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-	return z, sdkerrors.Wrap(err, "decimal subtraction error")
+	return z, errorsmod.Wrap(err, "decimal subtraction error")
 }
 
 func (x Dec) Int64() (int64, error) {
@@ -120,7 +120,7 @@ var dec128Context = apd.Context{
 func (x Dec) Quo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
-	return z, sdkerrors.Wrap(err, "decimal quotient error")
+	return z, errorsmod.Wrap(err, "decimal quotient error")
 }
 
 func (x Dec) IsZero() bool {

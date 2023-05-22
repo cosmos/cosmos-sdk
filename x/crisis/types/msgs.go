@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -78,15 +79,15 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.Wrap(err, "invalid authority address")
+		return errorsmod.Wrap(err, "invalid authority address")
 	}
 
 	if !msg.ConstantFee.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "invalid costant fee")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "invalid costant fee")
 	}
 
 	if msg.ConstantFee.IsNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "negative costant fee")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "negative costant fee")
 	}
 
 	return nil

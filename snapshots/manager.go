@@ -12,6 +12,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -110,10 +111,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't begin a none operation")
+		return errorsmod.Wrap(sdkerrors.ErrLogic, "can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return sdkerrors.Wrapf(sdkerrors.ErrConflict, "a %v operation is in progress", m.operation)
+		return errorsmod.Wrapf(sdkerrors.ErrConflict, "a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -159,7 +160,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "no snapshot store configured")
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "no snapshot store configured")
 	}
 
 	defer m.multistore.PruneSnapshotHeight(int64(height))
@@ -172,10 +173,10 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 
 	latest, err := m.store.GetLatest()
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to examine latest snapshot")
+		return nil, errorsmod.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
+		return nil, errorsmod.Wrapf(sdkerrors.ErrConflict,
 			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
@@ -262,10 +263,10 @@ func (m *Manager) Prune(retain uint32) (uint64, error) {
 // via RestoreChunk() until the restore is complete or a chunk fails.
 func (m *Manager) Restore(snapshot types.Snapshot) error {
 	if snapshot.Chunks == 0 {
-		return sdkerrors.Wrap(types.ErrInvalidMetadata, "no chunks")
+		return errorsmod.Wrap(types.ErrInvalidMetadata, "no chunks")
 	}
 	if uint32(len(snapshot.Metadata.ChunkHashes)) != snapshot.Chunks {
-		return sdkerrors.Wrapf(types.ErrInvalidMetadata, "snapshot has %v chunk hashes, but %v chunks",
+		return errorsmod.Wrapf(types.ErrInvalidMetadata, "snapshot has %v chunk hashes, but %v chunks",
 			uint32(len(snapshot.Metadata.ChunkHashes)),
 			snapshot.Chunks)
 	}
@@ -274,13 +275,13 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 
 	// check multistore supported format preemptive
 	if snapshot.Format != types.CurrentFormat {
-		return sdkerrors.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
+		return errorsmod.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
+		return errorsmod.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if snapshot.Height > uint64(math.MaxInt64) {
-		return sdkerrors.Wrapf(types.ErrInvalidMetadata,
+		return errorsmod.Wrapf(types.ErrInvalidMetadata,
 			"snapshot height %v cannot exceed %v", snapshot.Height, int64(math.MaxInt64))
 	}
 
@@ -334,7 +335,7 @@ func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.Re
 
 	nextItem, err = m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
 	if err != nil {
-		return sdkerrors.Wrap(err, "multistore restore")
+		return errorsmod.Wrap(err, "multistore restore")
 	}
 
 	for {
@@ -344,22 +345,22 @@ func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.Re
 		}
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", nextItem.Item)
+			return errorsmod.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", nextItem.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+			return errorsmod.Wrapf(sdkerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
 		}
 		if !IsFormatSupported(extension, metadata.Format) {
-			return sdkerrors.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
+			return errorsmod.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
 		}
 
 		if err := extension.RestoreExtension(snapshot.Height, metadata.Format, payloadReader); err != nil {
-			return sdkerrors.Wrapf(err, "extension %s restore", metadata.Name)
+			return errorsmod.Wrapf(err, "extension %s restore", metadata.Name)
 		}
 
 		if nextItem.GetExtensionPayload() != nil {
-			return sdkerrors.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
+			return errorsmod.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
 		}
 	}
 	return nil
@@ -371,11 +372,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "no restore operation in progress")
+		return false, errorsmod.Wrap(sdkerrors.ErrLogic, "no restore operation in progress")
 	}
 
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "received unexpected chunk")
+		return false, errorsmod.Wrap(sdkerrors.ErrLogic, "received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -385,7 +386,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
+		return false, errorsmod.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
 	default:
 	}
 
@@ -393,7 +394,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	hash := sha256.Sum256(chunk)
 	expected := m.restoreChunkHashes[m.restoreChunkIndex]
 	if !bytes.Equal(hash[:], expected) {
-		return false, sdkerrors.Wrapf(types.ErrChunkHashMismatch,
+		return false, errorsmod.Wrapf(types.ErrChunkHashMismatch,
 			"expected %x, got %x", hash, expected)
 	}
 
@@ -410,7 +411,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended prematurely")
+			return false, errorsmod.Wrap(sdkerrors.ErrLogic, "restore ended prematurely")
 		}
 		return true, nil
 	}

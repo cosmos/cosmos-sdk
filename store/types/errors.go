@@ -1,9 +1,9 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 const StoreCodespace = "store"
 
-var ErrInvalidProof = sdkerrors.Register(StoreCodespace, 2, "invalid proof")
+var ErrInvalidProof = errorsmod.Register(StoreCodespace, 2, "invalid proof")

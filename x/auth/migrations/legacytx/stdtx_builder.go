@@ -3,6 +3,7 @@ package legacytx
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -188,14 +189,14 @@ type Unmarshaler func(bytes []byte, ptr interface{}) error
 func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
 		}
 		tx := StdTx{}
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
 		err := unmarshaler(txBytes, &tx)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 		return tx, nil
 	}

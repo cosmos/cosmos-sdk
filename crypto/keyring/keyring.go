@@ -14,6 +14,7 @@ import (
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/pkg/errors"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -511,7 +512,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 
 func wrapKeyNotFound(err error, msg string) error {
 	if err == keyring.ErrKeyNotFound {
-		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
+		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
 	return err
 }
@@ -916,7 +917,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	}
 
 	if len(item.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
 	// 2. Try to deserialize using proto

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -55,7 +56,7 @@ func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupID uint64) (group.
 		}
 
 		if err := tallyResult.Add(vote, member.Member.Weight); err != nil {
-			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
+			return group.TallyResult{}, errorsmod.Wrap(err, "add new vote")
 		}
 	}
 

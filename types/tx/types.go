@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,21 +55,21 @@ func (t *Tx) ValidateBasic() error {
 	}
 
 	if fee.GasLimit > MaxGasWanted {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted,
 		)
 	}
 
 	if fee.Amount.IsAnyNil() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			sdkerrors.ErrInsufficientFee,
 			"invalid fee provided: null",
 		)
 	}
 
 	if fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			sdkerrors.ErrInsufficientFee,
 			"invalid fee provided: %s", fee.Amount,
 		)
@@ -77,7 +78,7 @@ func (t *Tx) ValidateBasic() error {
 	if fee.Payer != "" {
 		_, err := sdk.AccAddressFromBech32(fee.Payer)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
 		}
 	}
 
@@ -88,7 +89,7 @@ func (t *Tx) ValidateBasic() error {
 	}
 
 	if len(sigs) != len(t.GetSigners()) {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
 			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
 		)

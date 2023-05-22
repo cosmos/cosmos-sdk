@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -23,7 +23,7 @@ func (k Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRe
 	groupID := request.GroupId
 	groupInfo, err := k.getGroupInfo(ctx, groupID)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "group")
+		return nil, errorsmod.Wrap(err, "group")
 	}
 
 	return &group.QueryGroupInfoResponse{Info: &groupInfo}, nil
@@ -41,7 +41,7 @@ func (k Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "group policy")
+		return nil, errorsmod.Wrap(err, "group policy")
 	}
 
 	return &group.QueryGroupPolicyInfoResponse{Info: &groupPolicyInfo}, nil
@@ -209,7 +209,7 @@ func (k Keeper) getProposalsByGroupPolicy(ctx sdk.Context, account sdk.AccAddres
 func (k Keeper) getProposal(ctx sdk.Context, proposalID uint64) (group.Proposal, error) {
 	var p group.Proposal
 	if _, err := k.proposalTable.GetOne(ctx.KVStore(k.key), proposalID, &p); err != nil {
-		return group.Proposal{}, sdkerrors.Wrap(err, "load proposal")
+		return group.Proposal{}, errorsmod.Wrap(err, "load proposal")
 	}
 	return p, nil
 }
@@ -341,12 +341,12 @@ func (k Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 	}
 
 	if proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN || proposal.Status == group.PROPOSAL_STATUS_ABORTED {
-		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "can't get the tally of a proposal with status %s", proposal.Status)
+		return nil, errorsmod.Wrapf(errors.ErrInvalid, "can't get the tally of a proposal with status %s", proposal.Status)
 	}
 
 	var policyInfo group.GroupPolicyInfo
 	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress); err != nil {
-		return nil, sdkerrors.Wrap(err, "load group policy")
+		return nil, errorsmod.Wrap(err, "load group policy")
 	}
 
 	tallyResult, err := k.Tally(ctx, proposal, policyInfo.GroupId)

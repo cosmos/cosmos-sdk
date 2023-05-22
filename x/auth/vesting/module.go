@@ -88,7 +88,7 @@ type AppModule struct {
 
 func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{ac: ak},
+		AppModuleBasic: AppModuleBasic{ac: ak.AddressCodec()},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 	}

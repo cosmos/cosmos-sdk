@@ -82,6 +82,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/evidence`
 * `x/feegrant`
 * `x/gov`
+* `x/mint`
 * `x/nft`
 
 User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
@@ -99,6 +100,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 
 * `x/authz`
 * `x/bank`
+* `x/mint`
 * `x/crisis`
 * `x/distribution`
 * `x/evidence`

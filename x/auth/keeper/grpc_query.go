@@ -84,7 +84,7 @@ func (s queryServer) Account(c context.Context, req *types.QueryAccountRequest) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	addr, err := s.k.StringToBytes(req.Address)
+	addr, err := s.k.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (s queryServer) AddressBytesToString(ctx context.Context, req *types.Addres
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := s.k.BytesToString(req.AddressBytes)
+	text, err := s.k.addressCodec.BytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (s queryServer) AddressStringToBytes(ctx context.Context, req *types.Addres
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := s.k.StringToBytes(req.AddressString)
+	bz, err := s.k.addressCodec.StringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (s queryServer) AccountInfo(goCtx context.Context, req *types.QueryAccountI
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := s.k.StringToBytes(req.Address)
+	addr, err := s.k.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}

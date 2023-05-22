@@ -29,6 +29,6 @@ func NewKeeper(storeService store.KVStoreService,
 		cdc:          cdc,
 		storeService: storeService,
 		bk:           bk,
-		ac:           ak,
+		ac:           ak.AddressCodec(),
 	}
 }

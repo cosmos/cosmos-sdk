@@ -190,13 +190,13 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		name   string
 		height int64
 		setup  func()
-		err    bool
+		exists bool
 	}{
 		{
 			name:   "no upgraded client exists",
 			height: 10,
 			setup:  func() {},
-			err:    true,
+			exists: false,
 		},
 		{
 			name:   "success",
@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			setup: func() {
 				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
 			},
-			err: false,
+			exists: true,
 		},
 	}
 
@@ -217,12 +217,12 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 
 		gotCs, err := s.upgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 
-		if tc.err {
-			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
-			s.Require().Error(err, "invalid case: %s retrieved valid client state", tc.name)
-		} else {
+		if tc.exists {
 			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
 			s.Require().NoError(err, "valid case: %s did not retrieve client state", tc.name)
+		} else {
+			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
+			s.Require().Error(err, "invalid case: %s retrieved valid client state", tc.name)
 		}
 	}
 }

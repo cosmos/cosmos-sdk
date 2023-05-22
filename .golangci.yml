@@ -2,6 +2,8 @@ run:
   tests: false
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+  skip-files:
+    - server/grpc/gogoreflection/serverreflection.go
 
 linters:
   disable-all: true

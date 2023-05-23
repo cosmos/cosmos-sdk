@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -21,40 +20,16 @@ const (
 	RouterKey = ModuleName
 )
 
-// Keys for governance store
-// Items are stored with the following key: values
-//
-// - 0x00<proposalID_Bytes>: Proposal
-//
-// - 0x01<endTime_Bytes><proposalID_Bytes>: activeProposalID
-//
-// - 0x02<endTime_Bytes><proposalID_Bytes>: inactiveProposalID
-//
-// - 0x03: nextProposalID
-//
-// - 0x04<proposalID_Bytes>: []byte{0x01} if proposalID is in the voting period
-//
-// - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
-//
-// - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
-//
-// - 0x30: Params
 var (
-	ProposalsKeyPrefix            = collections.NewPrefix(0)
-	ActiveProposalQueuePrefix     = []byte{0x01}
-	InactiveProposalQueuePrefix   = []byte{0x02}
-	ProposalIDKey                 = collections.NewPrefix(3)
-	VotingPeriodProposalKeyPrefix = []byte{0x04}
-
-	DepositsKeyPrefix = collections.NewPrefix(16)
-
-	VotesKeyPrefix = collections.NewPrefix(32)
-
-	// ParamsKey is the key to query all gov params
-	ParamsKey = collections.NewPrefix(48)
-
-	// ConstitutionKey is the key string used to store the chain's constitution
-	ConstitutionKey = collections.NewPrefix(49)
+	ProposalsKeyPrefix            = collections.NewPrefix(0)  // ProposalsKeyPrefix stores the proposals raw bytes.
+	ActiveProposalQueuePrefix     = collections.NewPrefix(1)  // ActiveProposalQueuePrefix stores the active proposals.
+	InactiveProposalQueuePrefix   = collections.NewPrefix(2)  // InactiveProposalQueuePrefix stores the inactive proposals.
+	ProposalIDKey                 = collections.NewPrefix(3)  // ProposalIDKey stores the sequence representing the next proposal ID.
+	VotingPeriodProposalKeyPrefix = collections.NewPrefix(4)  // VotingPeriodProposalKeyPrefix stores which proposals are on voting period.
+	DepositsKeyPrefix             = collections.NewPrefix(16) // DepositsKeyPrefix stores deposits.
+	VotesKeyPrefix                = collections.NewPrefix(32) // VotesKeyPrefix stores the votes of proposals.
+	ParamsKey                     = collections.NewPrefix(48) // ParamsKey stores the module's params.
+	ConstitutionKey               = collections.NewPrefix(49) // ConstitutionKey stores a chain's constitution.
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -211,7 +212,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 		}
 	}
 	if proposal.VotingEndTime != nil {
-		err := keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
+		err := keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposalID))
 		if err != nil {
 			return err
 		}

@@ -48,7 +48,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -131,7 +131,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -231,7 +231,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -351,7 +351,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -446,7 +446,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -519,7 +519,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -631,7 +631,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	valPower := int64(100)
 
@@ -763,7 +763,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
@@ -959,7 +959,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)

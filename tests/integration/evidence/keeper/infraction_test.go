@@ -247,7 +247,8 @@ func TestHandleDoubleSign(t *testing.T) {
 	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
 
 	// query evidence from store
-	evidences := f.evidenceKeeper.GetAllEvidence(ctx)
+	evidences, err := f.evidenceKeeper.GetAllEvidence(ctx)
+	assert.NilError(t, err)
 	assert.Assert(t, len(evidences) == 1)
 }
 

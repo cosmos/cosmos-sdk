@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -37,6 +38,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx
 
@@ -50,7 +52,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
@@ -106,8 +108,9 @@ func (s *IntegrationTestSuite) TestParams() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			expected := s.mintKeeper.GetParams(s.ctx)
-			err := s.mintKeeper.SetParams(s.ctx, tc.input)
+			expected, err := s.mintKeeper.GetParams(s.ctx)
+			s.Require().NoError(err)
+			err = s.mintKeeper.SetParams(s.ctx, tc.input)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -115,7 +118,8 @@ func (s *IntegrationTestSuite) TestParams() {
 				s.Require().NoError(err)
 			}
 
-			p := s.mintKeeper.GetParams(s.ctx)
+			p, err := s.mintKeeper.GetParams(s.ctx)
+			s.Require().NoError(err)
 			s.Require().Equal(expected, p)
 		})
 	}

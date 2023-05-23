@@ -39,8 +39,8 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 }
 
 // Context with current {check, deliver}State of the app used by tests.
-func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	if isCheckTx {
+func (app *BaseApp) NewContext(outOfConsensus bool, header cmtproto.Header) sdk.Context {
+	if outOfConsensus {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}
@@ -48,8 +48,8 @@ func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Conte
 	return sdk.NewContext(app.deliverState.ms, header, false, app.logger)
 }
 
-func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+func (app *BaseApp) NewUncachedContext(outOfConsensus bool, header cmtproto.Header) sdk.Context {
+	return sdk.NewContext(app.cms, header, outOfConsensus, app.logger)
 }
 
 func (app *BaseApp) GetContextForDeliverTx(txBytes []byte) sdk.Context {

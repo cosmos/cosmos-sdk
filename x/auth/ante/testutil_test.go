@@ -57,7 +57,7 @@ type AnteTestSuite struct {
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+func SetupTestSuite(t *testing.T, outOfConsensus bool) *AnteTestSuite {
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
@@ -66,7 +66,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) // app.BaseApp.NewContext(isCheckTx, cmtproto.Header{}).WithBlockHeight(1)
+	suite.ctx = testCtx.Ctx.WithInConsensus(outOfConsensus).WithBlockHeight(1) // app.BaseApp.NewContext(outOfConsensus, cmtproto.Header{}).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	maccPerms := map[string][]string{

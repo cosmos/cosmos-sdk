@@ -339,7 +339,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 		expectedSeq uint64
 	}{
 		{suite.ctx.WithIsReCheckTx(true), false, 1},
-		{suite.ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 2},
+		{suite.ctx.WithInConsensus(true).WithIsReCheckTx(false), false, 2},
 		{suite.ctx.WithIsReCheckTx(true), false, 3},
 		{suite.ctx.WithIsReCheckTx(true), false, 4},
 		{suite.ctx.WithIsReCheckTx(true), true, 5},

@@ -54,7 +54,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 }
 
 // NewSimappWithCustomOptions initializes a new SimApp with custom options.
-func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
+func NewSimappWithCustomOptions(t *testing.T, outOfConsensus bool, options SetupOptions) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -77,7 +77,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
 
-	if !isCheckTx {
+	if !outOfConsensus {
 		// init chain must be called to stop deliverState from being nil
 		stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 		require.NoError(t, err)
@@ -96,7 +96,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
-func Setup(t *testing.T, isCheckTx bool) *SimApp {
+func Setup(t *testing.T, outOfConsensus bool) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()

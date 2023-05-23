@@ -160,7 +160,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
+	ctx := f.sdkCtx.WithInConsensus(false).WithBlockHeight(1)
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -239,7 +239,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithBlockTime(time.Now())
+	ctx := f.sdkCtx.WithInConsensus(false).WithBlockHeight(1).WithBlockTime(time.Now())
 	populateValidators(t, f)
 
 	power := int64(100)

@@ -36,8 +36,8 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	// Set IsCheckTx to true
-	s.ctx = s.ctx.WithIsCheckTx(true)
+	// Set InConsensus to true
+	s.ctx = s.ctx.WithInConsensus(true)
 
 	_, err = antehandler(s.ctx, tx, false)
 	require.Error(t, err)
@@ -76,8 +76,8 @@ func TestEnsureMempoolFees(t *testing.T) {
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
-	// Set IsCheckTx to true
-	s.ctx = s.ctx.WithIsCheckTx(true)
+	// Set InConsensus to true
+	s.ctx = s.ctx.WithInConsensus(true)
 
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
@@ -88,15 +88,15 @@ func TestEnsureMempoolFees(t *testing.T) {
 	_, err = antehandler(cacheCtx, tx, true)
 	require.Nil(t, err, "Decorator should not have errored in simulation mode")
 
-	// Set IsCheckTx to false
-	s.ctx = s.ctx.WithIsCheckTx(false)
+	// Set InConsensus to false
+	s.ctx = s.ctx.WithInConsensus(false)
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
 	_, err = antehandler(s.ctx, tx, false)
 	require.Nil(t, err, "MempoolFeeDecorator returned error in DeliverTx")
 
-	// Set IsCheckTx back to true for testing sufficient mempool fee
-	s.ctx = s.ctx.WithIsCheckTx(true)
+	// Set InConsensus back to true for testing sufficient mempool fee
+	s.ctx = s.ctx.WithInConsensus(true)
 
 	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(0).Quo(math.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}

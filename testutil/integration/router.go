@@ -92,7 +92,7 @@ func NewIntegrationApp(sdkCtx sdk.Context, logger log.Logger, keys map[string]*s
 
 	bApp.Commit()
 
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
+	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithInConsensus(true)
 
 	return &App{
 		BaseApp: bApp,

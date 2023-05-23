@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
-	ctx := suite.ctx.WithIsCheckTx(false)
+	ctx := suite.ctx.WithInConsensus(false)
 	pk := ed25519.GenPrivKey()
 
 	e := &types.Equivocation{
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
-	ctx := suite.ctx.WithIsCheckTx(false)
+	ctx := suite.ctx.WithInConsensus(false)
 	pk := ed25519.GenPrivKey()
 
 	e := &types.Equivocation{
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 }
 
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
-	ctx := suite.ctx.WithIsCheckTx(false)
+	ctx := suite.ctx.WithInConsensus(false)
 	pk := ed25519.GenPrivKey()
 	e := &types.Equivocation{
 		Height:           0,
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestIterateEvidence() {
-	ctx := suite.ctx.WithIsCheckTx(false)
+	ctx := suite.ctx.WithInConsensus(false)
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 

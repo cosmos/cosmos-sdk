@@ -114,7 +114,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
-	s.Require().Equal(ischeck, ctx.IsCheckTx())
+	s.Require().Equal(ischeck, ctx.InConsensus())
 	s.Require().Equal(txbytes, ctx.TxBytes())
 	s.Require().Equal(logger, ctx.Logger())
 	s.Require().Equal(voteinfos, ctx.VoteInfos())
@@ -122,15 +122,15 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
 	s.Require().Equal(headerHash, ctx.HeaderHash())
-	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
+	s.Require().False(ctx.WithInConsensus(false).InConsensus())
 	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
 	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())
 
 	// test IsReCheckTx
 	s.Require().False(ctx.IsReCheckTx())
-	ctx = ctx.WithIsCheckTx(false)
+	ctx = ctx.WithInConsensus(false)
 	ctx = ctx.WithIsReCheckTx(true)
-	s.Require().True(ctx.IsCheckTx())
+	s.Require().True(ctx.InConsensus())
 	s.Require().True(ctx.IsReCheckTx())
 
 	// test consensus param

@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.
+
 ## [math/v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.1) - 2023-05-15
 
 ### Improvements
@@ -46,7 +50,6 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ### Bug Fixes
 
 * [#15714](https://github.com/cosmos/cosmos-sdk/pull/15714) `FormatInt` returns an error on empty string.
-* [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.
 
 ## [math/v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0) - 2023-03-23
 

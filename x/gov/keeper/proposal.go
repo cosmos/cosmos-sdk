@@ -183,7 +183,7 @@ func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) erro
 	store := keeper.storeService.OpenKVStore(ctx)
 
 	if proposal.Status == v1.StatusVotingPeriod {
-		err := store.Set(types.VotingPeriodProposalKey(proposal.Id), []byte{1})
+		err := keeper.VotingPeriodProposals.Set(ctx, proposal.Id, []byte{1})
 		if err != nil {
 			return err
 		}

@@ -301,3 +301,23 @@ message MsgDeployPredictable {
 And then the address becomes `bechify(concat(sender, nonce))`
 
 `x/accounts` would still use the monotonically increasing sequence as account number.
+
+#### Joining Multiple Accounts
+
+As developers are building new kinds of accounts, it becomes necessary to provide a default way to combine the
+functionalities of different account types. This allows developers to avoid duplicating code and enables end-users to
+create or migrate to accounts with multiple functionalities without requiring custom development.
+
+To address this need, we propose the inclusion of a default account type called "MultiAccount". The MultiAccount type is
+designed to merge the functionalities of other accounts by combining their execution, query, and migration APIs.
+The account joining process would only fail in the case of API (intended as non-state Schema APIs) conflicts, ensuring
+compatibility and consistency.
+
+With the introduction of the MultiAccount type, users would have the option to either migrate their existing accounts to
+a MultiAccount type or extend an existing MultiAccount with newer APIs. This flexibility empowers users to leverage
+various account functionalities without compromising compatibility or resorting to manual code duplication.
+
+The MultiAccount type serves as a standardized solution for combining different account functionalities within the
+cosmos-sdk ecosystem. By adopting this approach, developers can streamline the development process and users can benefit
+from a modular and extensible account system.
+

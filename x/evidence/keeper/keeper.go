@@ -165,13 +165,13 @@ func (k Keeper) IterateEvidence(ctx context.Context, cb func(exported.Evidence) 
 }
 
 // GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx context.Context) (evidence []exported.Evidence) {
-	k.IterateEvidence(ctx, func(e exported.Evidence) error {
+func (k Keeper) GetAllEvidence(ctx context.Context) (evidence []exported.Evidence, err error) {
+	err = k.IterateEvidence(ctx, func(e exported.Evidence) error {
 		evidence = append(evidence, e)
 		return nil
 	})
 
-	return evidence
+	return evidence, err
 }
 
 // MustUnmarshalEvidence attempts to decode and return an Evidence object from

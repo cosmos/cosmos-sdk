@@ -7,7 +7,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
-	//	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibcLightClient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

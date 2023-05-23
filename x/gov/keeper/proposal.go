@@ -209,7 +209,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 	}
 
 	if proposal.DepositEndTime != nil {
-		err := keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+		err := keeper.InactiveProposalsQueue.Remove(ctx, collections.Join(*proposal.DepositEndTime, proposalID))
 		if err != nil {
 			return err
 		}
@@ -253,7 +253,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 		return err
 	}
 
-	err = keeper.RemoveFromInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
+	err = keeper.InactiveProposalsQueue.Remove(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id))
 	if err != nil {
 		return err
 	}

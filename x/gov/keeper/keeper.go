@@ -221,12 +221,6 @@ func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.
 	return nil
 }
 
-// ActiveProposalQueueIterator returns an corestoretypes.Iterator for all the proposals in the Active Queue that expire by endTime
-func (k Keeper) ActiveProposalQueueIterator(ctx context.Context, endTime time.Time) (corestoretypes.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Iterator(types.ActiveProposalQueuePrefix, storetypes.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
-}
-
 // InactiveProposalQueueIterator returns an corestoretypes.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (k Keeper) InactiveProposalQueueIterator(ctx context.Context, endTime time.Time) (corestoretypes.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)

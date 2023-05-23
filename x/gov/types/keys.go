@@ -51,11 +51,6 @@ func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
-// VotingPeriodProposalKey gets if a proposal is in voting period.
-func VotingPeriodProposalKey(proposalID uint64) []byte {
-	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
 // InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
 func InactiveProposalByTimeKey(endTime time.Time) []byte {
 	return append(InactiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)

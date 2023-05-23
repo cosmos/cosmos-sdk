@@ -99,8 +99,14 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
-	keeper.SetProposal(ctx, proposal)
-	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+	err = keeper.SetProposal(ctx, proposal)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+	err = keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
 
 	// called right after a proposal is submitted
 	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
@@ -180,15 +186,13 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 
 // SetProposal sets a proposal to store.
 func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) error {
-	store := keeper.storeService.OpenKVStore(ctx)
-
 	if proposal.Status == v1.StatusVotingPeriod {
 		err := keeper.VotingPeriodProposals.Set(ctx, proposal.Id, []byte{1})
 		if err != nil {
 			return err
 		}
 	} else {
-		err := store.Delete(types.VotingPeriodProposalKey(proposal.Id))
+		err := keeper.VotingPeriodProposals.Remove(ctx, proposal.Id)
 		if err != nil {
 			return err
 		}
@@ -199,7 +203,6 @@ func (keeper Keeper) SetProposal(ctx context.Context, proposal v1.Proposal) erro
 
 // DeleteProposal deletes a proposal from store.
 func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
-	store := keeper.storeService.OpenKVStore(ctx)
 	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
 		return err
@@ -217,7 +220,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 			return err
 		}
 
-		err = store.Delete(types.VotingPeriodProposalKey(proposalID))
+		err = keeper.VotingPeriodProposals.Remove(ctx, proposalID)
 		if err != nil {
 			return err
 		}

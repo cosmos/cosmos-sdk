@@ -103,7 +103,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	if err != nil {
 		return v1.Proposal{}, err
 	}
-	err = keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+	err = keeper.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposalID), proposalID)
 	if err != nil {
 		return v1.Proposal{}, err
 	}

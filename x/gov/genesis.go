@@ -58,7 +58,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case v1.StatusDepositPeriod:
-			err := k.InsertInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
+			err := k.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id), proposal.Id)
 			if err != nil {
 				panic(err)
 			}

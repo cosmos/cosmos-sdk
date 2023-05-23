@@ -170,17 +170,6 @@ func (k Keeper) GetGovernanceAccount(ctx context.Context) sdk.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// ProposalQueues
-
-// InsertInactiveProposalQueue inserts a proposalID into the inactive proposal queue at endTime
-func (k Keeper) InsertInactiveProposalQueue(ctx context.Context, proposalID uint64, endTime time.Time) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz := types.GetProposalIDBytes(proposalID)
-	return store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
-}
-
-// Iterators
-
 // ModuleAccountAddress returns gov module account address
 func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 	return k.authKeeper.GetModuleAddress(types.ModuleName)

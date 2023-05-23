@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -66,12 +67,18 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	}
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	return keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) error {
+	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	err = keeper.ActiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+		proposal, err := keeper.Proposals.Get(ctx, key.K2())
+		if err != nil {
+			return false, err
+		}
+
 		var tagValue, logMsg string
 
 		passes, burnDeposits, tallyResults, err := keeper.Tally(ctx, proposal)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// If an expedited proposal fails, we do not want to update
@@ -86,13 +93,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			}
 
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 
 		err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		switch {
@@ -155,14 +162,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			proposal.Expedited = false
 			params, err := keeper.Params.Get(ctx)
 			if err != nil {
-				return err
+				return false, err
 			}
 			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
 			proposal.VotingEndTime = &endTime
 
 			err = keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			tagValue = types.AttributeValueExpeditedProposalRejected
@@ -177,7 +184,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		err = keeper.SetProposal(ctx, proposal)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// when proposal become active
@@ -201,6 +208,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			),
 		)
 
-		return nil
+		return false, nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return err
+	}
+	return nil
 }

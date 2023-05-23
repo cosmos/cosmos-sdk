@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"plugin"
 
 	"github.com/spf13/cobra"
 
@@ -27,6 +29,22 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 				return fmt.Errorf("exoected *codec.ProtoMarshaler, got: %T", cdc)
 			}
 			conf.WithCodec(ir, protoCodec)
+
+			// load module
+			// 1. open the so file to load the symbols
+			plug, err := plugin.Open("./plugins/osmosis/osmosis.so")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			// 2. look up a symbol (an exported function or variable)
+			initZone, err := plug.Lookup("InitZone")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			initZone.(func())()
 
 			rosettaSrv, err := rosetta.ServerFromConfig(conf)
 			if err != nil {

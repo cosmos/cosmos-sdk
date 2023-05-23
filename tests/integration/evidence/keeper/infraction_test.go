@@ -232,7 +232,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// query evidence from store
 	evidences, err := f.evidenceKeeper.GetAllEvidence(ctx)
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Assert(t, len(evidences) == 1)
 }
 

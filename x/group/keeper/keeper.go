@@ -97,7 +97,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		addr, err := accKeeper.StringToBytes(val.(*group.GroupInfo).Admin)
+		addr, err := accKeeper.AddressCodec().StringToBytes(val.(*group.GroupInfo).Admin)
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val interface{}) ([]interface{}, error) {
 		memberAddr := val.(*group.GroupMember).Member.Address
-		addr, err := accKeeper.StringToBytes(memberAddr)
+		addr, err := accKeeper.AddressCodec().StringToBytes(memberAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +147,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
 		admin := value.(*group.GroupPolicyInfo).Admin
-		addr, err := accKeeper.StringToBytes(admin)
+		addr, err := accKeeper.AddressCodec().StringToBytes(admin)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
 		account := value.(*group.Proposal).GroupPolicyAddress
-		addr, err := accKeeper.StringToBytes(account)
+		addr, err := accKeeper.AddressCodec().StringToBytes(account)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +195,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		addr, err := accKeeper.StringToBytes(value.(*group.Vote).Voter)
+		addr, err := accKeeper.AddressCodec().StringToBytes(value.(*group.Vote).Voter)
 		if err != nil {
 			return nil, err
 		}

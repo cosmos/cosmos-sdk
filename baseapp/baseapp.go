@@ -1051,3 +1051,8 @@ func NoOpProcessProposal() sdk.ProcessProposalHandler {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }
+
+// Close is called in start cmd to gracefully cleanup resources.
+func (app *BaseApp) Close() error {
+	return nil
+}

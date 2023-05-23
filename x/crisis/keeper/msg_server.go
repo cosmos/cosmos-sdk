@@ -25,7 +25,11 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
+	params, err := k.GetConstantFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	constantFee := sdk.NewCoins(params)
 
 	if err := k.SendCoinsFromAccountToFeeCollector(ctx, sender, constantFee); err != nil {
 		return nil, err

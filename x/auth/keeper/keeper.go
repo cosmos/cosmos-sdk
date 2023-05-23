@@ -23,8 +23,6 @@ import (
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
-	address.Codec
-
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
 
@@ -64,7 +62,7 @@ type AccountKeeperI interface {
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	address.Codec
+	addressCodec address.Codec
 
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
@@ -103,7 +101,7 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return AccountKeeper{
-		Codec:         authcodec.NewBech32Codec(bech32Prefix),
+		addressCodec:  authcodec.NewBech32Codec(bech32Prefix),
 		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
@@ -120,10 +118,10 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
-// GetAddressCodec returns the x/auth module's address.
+// AddressCodec returns the x/auth module's address.
 // x/auth is tied to bech32 encoded user accounts
-func (ak AccountKeeper) GetAddressCodec() address.Codec {
-	return ak.Codec
+func (ak AccountKeeper) AddressCodec() address.Codec {
+	return ak.addressCodec
 }
 
 // Logger returns a module-specific logger.

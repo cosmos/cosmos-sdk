@@ -214,8 +214,9 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 
-	evidence := suite.evidenceKeeper.GetAllEvidence(ctx)
+	evidence, err := suite.evidenceKeeper.GetAllEvidence(ctx)
 	suite.Len(evidence, numEvidence)
+	suite.NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {

@@ -102,7 +102,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	)
 
 	// reset fee pool & set params
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	// create validator with 50% commission
@@ -235,7 +235,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
-	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+	distrKeeper.Params.Set(ctx, disttypes.DefaultParams())
 
 	// create validator with 10% commission
 	valAddr0 := sdk.ValAddress(valConsAddr0)

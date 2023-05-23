@@ -499,8 +499,8 @@ func (d Dec) Power(power uint64) Dec {
 func (d Dec) PowerMut(power uint64) Dec {
 	// TODO: use mutable functions here
 	if power == 0 {
-		d.i.SetInt64(1)
-		return d
+		// Set to 1 with the correct precision.
+		d.i.Set(precisionReuse)
 	} else if power == 1 {
 		return d
 	}

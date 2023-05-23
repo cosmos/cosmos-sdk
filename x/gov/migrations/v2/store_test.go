@@ -52,7 +52,7 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"ActiveProposalQueue",
 			v1.ActiveProposalQueueKey(proposalID, now), dummyValue,
-			types.ActiveProposalQueueKey(proposalID, now), dummyValue,
+			activeProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"InactiveProposalQueue",
@@ -106,4 +106,9 @@ func depositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
 
 func voteKey(proposalID uint64, addr sdk.AccAddress) []byte {
 	return append(append(types.VotesKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(addr.Bytes())...)
+}
+
+// todo(tip): legacy, remove me evetually
+func activeProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
+	return append(append(types.ActiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...), sdk.Uint64ToBigEndian(proposalID)...)
 }

@@ -171,13 +171,6 @@ func (k Keeper) GetGovernanceAccount(ctx context.Context) sdk.ModuleAccountI {
 
 // ProposalQueues
 
-// InsertActiveProposalQueue inserts a proposalID into the active proposal queue at endTime
-func (k Keeper) InsertActiveProposalQueue(ctx context.Context, proposalID uint64, endTime time.Time) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz := types.GetProposalIDBytes(proposalID)
-	return store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
-}
-
 // InsertInactiveProposalQueue inserts a proposalID into the inactive proposal queue at endTime
 func (k Keeper) InsertInactiveProposalQueue(ctx context.Context, proposalID uint64, endTime time.Time) error {
 	store := k.storeService.OpenKVStore(ctx)

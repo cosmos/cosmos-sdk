@@ -56,16 +56,6 @@ func VotingPeriodProposalKey(proposalID uint64) []byte {
 	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
-// ActiveProposalByTimeKey gets the active proposal queue key by endTime
-func ActiveProposalByTimeKey(endTime time.Time) []byte {
-	return append(ActiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)
-}
-
-// ActiveProposalQueueKey returns the key for a proposalID in the activeProposalQueue
-func ActiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
-	return append(ActiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
-}
-
 // InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
 func InactiveProposalByTimeKey(endTime time.Time) []byte {
 	return append(InactiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)
@@ -74,13 +64,6 @@ func InactiveProposalByTimeKey(endTime time.Time) []byte {
 // InactiveProposalQueueKey returns the key for a proposalID in the inactiveProposalQueue
 func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
-}
-
-// Split keys function; used for iterators
-
-// SplitActiveProposalQueueKey split the active proposal key and returns the proposal id and endTime
-func SplitActiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Time) {
-	return splitKeyWithTime(key)
 }
 
 // SplitInactiveProposalQueueKey split the inactive proposal key and returns the proposal id and endTime

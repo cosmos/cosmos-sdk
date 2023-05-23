@@ -255,5 +255,5 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 		return err
 	}
 
-	return keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+	return keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
 }

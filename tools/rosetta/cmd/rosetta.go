@@ -30,9 +30,15 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 			}
 			conf.WithCodec(ir, protoCodec)
 
+			pluginPathMain := fmt.Sprintf("./plugins/%s/main.so", conf.Blockchain)
+			if _, err := os.Stat(pluginPathMain); os.IsNotExist(err) {
+				fmt.Printf("Plugin folder '%s' does not exist, loading default plugin (cosmos-hub)'\n", pluginPathMain)
+				pluginPathMain = fmt.Sprintf("./plugins/%s/main.so", "default")
+			}
+
 			// load module
 			// 1. open the so file to load the symbols
-			plug, err := plugin.Open("./plugins/osmosis/osmosis.so")
+			plug, err := plugin.Open(pluginPathMain)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -45,6 +51,13 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 				os.Exit(1)
 			}
 			initZone.(func())()
+
+			registerInterfaces, err := plug.Lookup("RegisterInterfaces")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			registerInterfaces.(func(codectypes.InterfaceRegistry))(ir)
 
 			rosettaSrv, err := rosetta.ServerFromConfig(conf)
 			if err != nil {

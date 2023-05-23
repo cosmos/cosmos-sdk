@@ -3,7 +3,7 @@
 all: build
 
 rosetta:
-	go build -mod=readonly - ./cmd/rosetta
+	go build -mod=readonly -buildmode=plugin ./cmd/rosetta
 
 build:
 	go build ./cmd/rosetta.go

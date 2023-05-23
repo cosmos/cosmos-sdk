@@ -68,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (tx) [#15992](https://github.com/cosmos/cosmos-sdk/pull/15992) Add `WithExtensionOptions` in tx Factory to allow `SetExtensionOptions` with given extension options.
 * (types/simulation) [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) Add generic SimulationStoreDecoder for modules using collections.
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Make `StartCmd` more customizable.
+* (types) [#16257](https://github.com/cosmos/cosmos-sdk/pull/16257) Allow setting the base denom
 
 ### Improvements
 

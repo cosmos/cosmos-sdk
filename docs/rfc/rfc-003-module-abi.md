@@ -6,8 +6,13 @@
 
 ## Background
 
-See the background discussed in [RFC 002: Zero Copy Encoding](https://github.com/cosmos/cosmos-sdk/pull/15404) for the
-motivation for this proposal.
+This document aims to propose a scope of work that introduces support for different programming languages within the Cosmos SDK. Unlike traditional RFCs, it will also provide a high-level overview of why this proposal is being made and how it will impact users.
+
+Currently, the Cosmos SDK allows developers to write modules in Golang, which has been a popular choice. However, the broader Cosmos ecosystem has witnessed the widespread adoption of other languages through virtual machines (VMs) such as Cosmwasm (Wasm), Agoric (JS), Polaris (Solidity), and Ethermint (Solidity). Additionally, within the wider blockchain ecosystem, Rust and various Rust subset VMs have gained significant traction.
+
+Given this landscape, the question arises: should the Cosmos SDK support different languages and offer better support for their usage? To address this question, it's helpful to view the SDK as consisting of two distinct layers: the kernel space and the user space. In this perspective, modules represent the kernel space, while VMs constitute the user space. When discussing the support for different languages, both spaces need to be considered.
+
+The primary objective is to enable modules to be written in different programming languages, allowing them to serve as core components of a node. Simultaneously, users should have the ability to write VMs in Rust and connect them to a general interface that provides similar, albeit limited, functionality as a module. This approach ensures flexibility in language choice for both core development and user customization within the Cosmos ecosystem.
 
 ## Proposal
 
@@ -40,6 +45,7 @@ Before doing any other sort of initialization the host runtime and guest modules
 This would be exposed through the function `cosmos_read_file_descriptors`:
 
 **Rust**
+
 ```rust!
 #[no_mangle]
 pub extern fn cosmos_read_file_descriptors(callback: extern fn(size: u32, gzipped_bytes: *const u8) -> i32) -> i32
@@ -52,10 +58,12 @@ When the host calls `cosmos_read_file_descriptors` the module should call `callb
 A single code unit may register one or more modules. Each module is identified by a unique protobuf configuration type as with Cosmos SDK `appconfig` modules, ex. `cosmos.bank.module.v1.Module`. Module registration happens similarly to `depinject` registration in the SDK where each module can define one or more provider functions. Each provider is described statically by a `ProviderInfo` (see below) so that the framework can build the dependency graph in the correct order.
 
 The `cosmos_register_modules` function is called to register module providers. Each module should call the `register` function that is passed in with:
+
 * a `ModuleInfo` message (as described below) encoded with [Cosmos Proto Zero-Copy Encoding DRAFT Spec](/6ICE-uQpTDSF1PxiJbPUXw) is passed as `module_info_data` with its size set to `module_info_size`
 * `providers`: an array of provider callback functions whose size must be equal to the number of providers described in `ModuleInfo`
 
 A provider function is called with:
+
 * `config_data`:
 * `inputs`: an array of inputs which are cast to the type expected by each input type with size equal to that specified in `ProviderInfo`
 * `register_output`: a callback function that should be called once for each output specified in `ProviderInfo` with a value of corresponding to expected output type
@@ -119,6 +127,7 @@ are described by `service` definitions in .proto files. These correspond to the 
 type.
 
 The following types of services are supported:
+
 * transaction services which are annotated by the `cosmos.msg.v1.service` annotation and contain state machine logic that can be invoked via transactions and inter-module calls
 * query services which are un-annotated and are executed in a read-only context. Only service methods annotated with `cosmos.query.v1.module_query_safe` can be called from other modules
 * internal services which can only be called from other modules annotated with `cosmos.msg.v1.internal_service` (TBD). Internal services also receive the name of the calling module in their context pointer to do authentication. In this way, even a service like storage could be managed in this way because it knows which module called it.
@@ -142,11 +151,13 @@ A service when passed as an input or output to a `ProviderFn` is represented as 
 The same ABI can be used for modules to both implement service methods and call service methods as a client.
 
 **Rust**
+
 ```rust!
 type UnaryMethodFn = extern fn(ctx: *const u8, req_size: u32, req: *const u8, res_size: u32, res: *mut u8) -> i32;
 ```
 
 Unary methods takes the following parameters:
+
 * `ctx`: an opaque context pointer
 * `req`: a pointer to memory representing the request data encoded with [Cosmos Proto Zero-Copy Encoding DRAFT Spec](/6ICE-uQpTDSF1PxiJbPUXw) whose size is `req_size`
 * `res` a pointer to a block of memory with size `res_size` where the response data is to be written, either:

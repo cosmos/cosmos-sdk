@@ -296,7 +296,9 @@ func TestRotateConsPubKey(t *testing.T) {
 				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 				// this shouldn't remove the existing keys from waiting queue since unbonding time isn't reached
-				stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time)
+				_, err = stakingKeeper.EndBlocker(ctx)
+				require.NoError(t, err)
+				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time)
 
 				msg, err = types.NewMsgRotateConsPubKey(
 					validators[3].GetOperator(),
@@ -312,7 +314,9 @@ func TestRotateConsPubKey(t *testing.T) {
 				newCtx := ctx.WithBlockTime(ctx.BlockHeader().Time.Add(stakingKeeper.UnbondingTime(ctx)))
 				newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
 				// this should remove keys from waiting queue since unbonding time is reached
-				stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockHeader().Time)
+				_, err = stakingKeeper.EndBlocker(newCtx)
+				require.NoError(t, err)
+				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockHeader().Time)
 
 				return newCtx
 			},
@@ -338,6 +342,9 @@ func TestRotateConsPubKey(t *testing.T) {
 			_, err = msgServer.RotateConsPubKey(newCtx, msg)
 
 			if testCase.pass {
+				require.NoError(t, err)
+
+				_, err = stakingKeeper.EndBlocker(newCtx)
 				require.NoError(t, err)
 
 				// rotation fee payment from sender to distrtypes

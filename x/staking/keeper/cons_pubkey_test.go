@@ -16,11 +16,7 @@ import (
 func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
 
-	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
+	_, addrVals := createValAddrs(2)
 
 	// create a validator with a self-delegation
 	val := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -193,6 +189,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)
+				_, err = stakingKeeper.EndBlocker(newCtx)
+				s.Require().NoError(err)
+
 				valInfo, found := stakingKeeper.GetValidator(newCtx, tc.validator)
 				s.Require().True(found)
 				s.Require().Equal(valInfo.ConsensusPubkey, req.NewPubkey)
@@ -204,11 +203,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 func (s *KeeperTestSuite) setValidators(n int) {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
 
-	addrDels, addrVals := createValAddrs(n)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
+	_, addrVals := createValAddrs(n)
 
 	for i := 0; i < n; i++ {
 		val := testutil.NewValidator(s.T(), addrVals[i], PKs[i])

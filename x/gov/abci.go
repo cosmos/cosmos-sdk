@@ -20,15 +20,20 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	err := keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) error {
-		err := keeper.DeleteProposal(ctx, proposal.Id)
+	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	err := keeper.InactiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
-			return err
+			return false, err
+		}
+		err = keeper.DeleteProposal(ctx, proposal.Id)
+		if err != nil {
+			return false, err
 		}
 
 		params, err := keeper.Params.Get(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 		if !params.BurnProposalDepositPrevote {
 			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
@@ -37,7 +42,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// called when proposal become inactive
@@ -60,14 +65,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
-		return nil
+		return false, nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return err
 	}
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
 	err = keeper.ActiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {

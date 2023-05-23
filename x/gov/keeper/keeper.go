@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections"
 
 	corestoretypes "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -183,34 +182,6 @@ func (k Keeper) InsertInactiveProposalQueue(ctx context.Context, proposalID uint
 }
 
 // Iterators
-
-// IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
-// and performs a callback function
-func (k Keeper) IterateInactiveProposalsQueue(ctx context.Context, endTime time.Time, cb func(proposal v1.Proposal) error) error {
-	iterator, err := k.InactiveProposalQueueIterator(ctx, endTime)
-	if err != nil {
-		return err
-	}
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, err := k.Proposals.Get(ctx, proposalID)
-		if err != nil {
-			return err
-		}
-
-		err = cb(proposal)
-		// exit early without error if cb returns ErrStopIterating
-		if errors.IsOf(err, errors.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 // InactiveProposalQueueIterator returns an corestoretypes.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (k Keeper) InactiveProposalQueueIterator(ctx context.Context, endTime time.Time) (corestoretypes.Iterator, error) {

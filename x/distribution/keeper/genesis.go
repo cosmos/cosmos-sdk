@@ -13,7 +13,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 	k.SetFeePool(ctx, data.FeePool)
 
-	if err := k.SetParams(ctx, data.Params); err != nil {
+	if err := k.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 
@@ -114,7 +114,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

@@ -217,7 +217,7 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
 
-	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
@@ -235,9 +235,9 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(f.ctx, addr).GetBondedTokens())
 
 	// Now a validator, for two blocks
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, true)
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, true))
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, false)
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, false))
 
 	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()))
 	assert.Assert(t, found)
@@ -269,7 +269,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	assert.NilError(t, err)
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info))
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -311,7 +311,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// another block missed
 	f.ctx = f.ctx.WithBlockHeight(height)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false)
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, false))
 
 	// validator should not have been slashed twice
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
@@ -338,10 +338,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	valAddr := sdk.ValAddress(addr)
 
-	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info))
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)
 	validatorUpdates, err := f.stakingKeeper.EndBlocker(f.ctx)
@@ -353,7 +353,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height := int64(0)
 	for ; height < int64(100); height++ {
 		f.ctx = f.ctx.WithBlockHeight(height)
-		f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true)
+		assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), power, true))
 	}
 
 	// kick first validator out of validator set
@@ -378,7 +378,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newPower := power + 50
 
 	// validator misses a block
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false)
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, false))
 	height++
 
 	// shouldn't be jailed/kicked yet

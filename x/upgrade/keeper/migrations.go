@@ -11,6 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// LegacyProtocolVersionByte was the prefix to look up Protocol Version (AppVersion)
+	LegacyProtocolVersionByte = 0x3
+)
+
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
 	keeper *Keeper
@@ -54,16 +59,16 @@ func migrateAppVersion(ctx sdk.Context, keeper *Keeper) error {
 	}
 	store := ctx.KVStore(keeper.storeKey)
 	// if the key was never set then we don't need to
-	if !store.Has([]byte{types.LegacyProtocolVersionByte}) {
+	if !store.Has([]byte{LegacyProtocolVersionByte}) {
 		return nil
 	}
-	versionBytes := store.Get([]byte{types.LegacyProtocolVersionByte})
+	versionBytes := store.Get([]byte{LegacyProtocolVersionByte})
 	appVersion := binary.BigEndian.Uint64(versionBytes)
 
 	if err := keeper.versionModifier.SetAppVersion(ctx, appVersion); err != nil {
 		return fmt.Errorf("error migration app version: %w", err)
 	}
 
-	store.Delete([]byte{types.LegacyProtocolVersionByte})
+	store.Delete([]byte{LegacyProtocolVersionByte})
 	return nil
 }

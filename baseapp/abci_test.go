@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 
@@ -34,6 +34,8 @@ import (
 
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
+	ctx := suite.baseApp.NewContext(true, cmtproto.Header{})
+	suite.baseApp.StoreConsensusParams(ctx, cmttypes.DefaultConsensusParams().ToProto())
 
 	reqInfo := abci.RequestInfo{}
 	res := suite.baseApp.Info(reqInfo)
@@ -42,7 +44,9 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-	require.Equal(t, suite.baseApp.AppVersion(context.Background()), res.AppVersion)
+	appVersion, err := suite.baseApp.AppVersion(ctx)
+	require.NoError(t, err)
+	require.Equal(t, appVersion, res.AppVersion)
 }
 
 func TestABCI_InitChain(t *testing.T) {

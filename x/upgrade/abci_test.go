@@ -1,6 +1,7 @@
 package upgrade_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -52,6 +54,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)
+	s.baseApp.SetParamStore(&paramStore{params: cmttypes.DefaultConsensusParams().ToProto()})
 
 	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
@@ -548,4 +551,23 @@ func TestDowngradeVerification(t *testing.T) {
 			}, name)
 		}
 	}
+}
+
+type paramStore struct {
+	params cmtproto.ConsensusParams
+}
+
+var _ baseapp.ParamStore = (*paramStore)(nil)
+
+func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
+	ps.params = value
+	return nil
+}
+
+func (ps paramStore) Has(_ context.Context) (bool, error) {
+	return true, nil
+}
+
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
+	return ps.params, nil
 }

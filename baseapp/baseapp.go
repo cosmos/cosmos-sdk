@@ -196,19 +196,19 @@ func (app *BaseApp) Name() string {
 }
 
 // AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion(ctx context.Context) uint64 {
+func (app *BaseApp) AppVersion(ctx context.Context) (uint64, error) {
 	if app.paramStore == nil {
-		return 0
+		return 0, errors.New("app.paramStore is nil")
 	}
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(err)
+		return 0, fmt.Errorf("getting consensus params: %w", err)
 	}
 	if cp.Version == nil {
-		return 0
+		return 0, nil
 	}
-	return cp.Version.App
+	return cp.Version.App, nil
 }
 
 // Version returns the application's version string.

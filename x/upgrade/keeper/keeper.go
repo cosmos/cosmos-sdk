@@ -343,9 +343,17 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	k.SetModuleVersionMap(ctx, updatedVM)
 
-	// incremement the protocol version and set it in state and baseapp
-	nextProtocolVersion := k.versionModifier.AppVersion(ctx) + 1
-	k.versionModifier.SetAppVersion(ctx, nextProtocolVersion)
+	// incremement the app version and set it in state and baseapp
+	if k.versionModifier != nil {
+		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := k.versionModifier.SetAppVersion(ctx, currentAppVersion + 1); err != nil {
+			panic(err)
+		}
+	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

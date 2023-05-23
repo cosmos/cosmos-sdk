@@ -8,5 +8,5 @@ import "context"
 // consensus engine in EndBlock
 type AppVersionModifier interface {
 	SetAppVersion(context.Context, uint64) error
-	AppVersion(context.Context) uint64
+	AppVersion(context.Context) (uint64, error)
 }

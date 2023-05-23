@@ -2,11 +2,13 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
@@ -43,6 +45,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	s.key = key
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
@@ -50,6 +53,10 @@ func (s *KeeperTestSuite) SetupTest() {
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)
+	s.baseApp.SetParamStore(&paramStore{params: cmttypes.DefaultConsensusParams().ToProto()})
+	appVersion, err := s.baseApp.AppVersion(context.Background())
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(0), appVersion)
 
 	skipUpgradeHeights := make(map[int64]bool)
 
@@ -59,7 +66,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)
@@ -247,7 +253,8 @@ func (s *KeeperTestSuite) TestDowngradeVerified() {
 // Test that the protocol version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
-	oldProtocolVersion := s.baseApp.AppVersion(context.Background())
+	oldProtocolVersion, err := s.baseApp.AppVersion(context.Background())
+	s.Require().NoError(err)
 	res := s.upgradeKeeper.HasHandler("dummy")
 	s.Require().False(res)
 	dummyPlan := types.Plan{
@@ -262,8 +269,10 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	)
 
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	fmt.Println("TestIncrementProtocolVersion")
 	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	upgradedProtocolVersion := s.baseApp.AppVersion(context.Background())
+	upgradedProtocolVersion, err := s.baseApp.AppVersion(context.Background())
+	s.Require().NoError(err)
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
 }
@@ -367,4 +376,23 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+type paramStore struct {
+	params cmtproto.ConsensusParams
+}
+
+var _ baseapp.ParamStore = (*paramStore)(nil)
+
+func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
+	ps.params = value
+	return nil
+}
+
+func (ps paramStore) Has(_ context.Context) (bool, error) {
+	return true, nil
+}
+
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
+	return ps.params, nil
 }

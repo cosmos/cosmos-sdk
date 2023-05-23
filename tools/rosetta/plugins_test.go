@@ -11,7 +11,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-type CodecTestSuite struct {
+type PluginTestSuite struct {
 	suite.Suite
 
 	ir  codectypes.InterfaceRegistry
@@ -20,7 +20,7 @@ type CodecTestSuite struct {
 	requiredInterfaces []string
 }
 
-func (s *CodecTestSuite) SetupTest() {
+func (s *PluginTestSuite) SetupTest() {
 	s.ir = codectypes.NewInterfaceRegistry()
 	s.cdc = codec.NewProtoCodec(s.ir)
 	s.requiredInterfaces = []string{
@@ -35,9 +35,9 @@ func (s *CodecTestSuite) SetupTest() {
 	}
 }
 
-func (s *CodecTestSuite) TestInterfaceRegistry() {
-	s.Run("Required interfaces", func() {
-		rosetta.RegisterInterfaces(s.ir)
+func (s *PluginTestSuite) TestLoadPlugin() {
+	s.Run("Load default plugin", func() {
+		rosetta.LoadPlugin(s.ir, "cosmos")
 		interfaceList := s.ir.ListAllInterfaces()
 
 		interfaceListMap := make(map[string]bool)
@@ -51,6 +51,6 @@ func (s *CodecTestSuite) TestInterfaceRegistry() {
 	})
 }
 
-func TestCodecTestSuite(t *testing.T) {
-	suite.Run(t, new(CodecTestSuite))
+func TestPluginTestSuite(t *testing.T) {
+	suite.Run(t, new(PluginTestSuite))
 }

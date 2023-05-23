@@ -14,23 +14,15 @@ import (
 )
 
 func InitZone() {
-
-	fmt.Println("Init Cosmos-hub Zone")
-
 	config := sdk.GetConfig()
-
 	prefix := "cosmos"
 	config.SetBech32PrefixForAccount(prefix, prefix+"pub")
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	fmt.Println("Registering Cosmos-hub interfaces")
-
 	ibcclienttypes.RegisterInterfaces(registry)
 	ibcLightClient.RegisterInterfaces(registry)
 	sdk.RegisterInterfaces(registry)
 	txtypes.RegisterInterfaces(registry)
 	cryptocodec.RegisterInterfaces(registry)
-	
-	
 }

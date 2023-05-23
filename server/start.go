@@ -262,8 +262,7 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
-	ctx := getCtx(svrCtx)
-	g, ctx := errgroup.WithContext(ctx)
+	g, ctx := getCtx(svrCtx, false)
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -315,8 +314,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		}
 	}
 
-	ctx := getCtx(svrCtx)
-	g, ctx := errgroup.WithContext(ctx)
+	g, ctx := getCtx(svrCtx, true)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -334,22 +332,8 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		}
 	}
 
-	// At this point it is safe to block the process if we're in gRPC-only mode as
-	// we do not need to handle any CometBFT related processes.
-	if gRPCOnly {
-		// wait for signal capture and gracefully return
-		return g.Wait()
-	}
-
-	// In case the operator has both gRPC and API servers disabled, there is
-	// nothing blocking this root process, so we need to block manually, so we'll
-	// create an empty blocking loop.
-	g.Go(func() error {
-		<-ctx.Done()
-		return nil
-	})
-
 	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
@@ -375,11 +359,12 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	return app, cleanupFn, nil
 }
 
-func getCtx(svrCtx *Context) context.Context {
+func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
 	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
-	return ctx
+	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+	return g, ctx
 }
 
 func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, cleanupFn func(), err error) {

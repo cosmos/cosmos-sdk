@@ -39,6 +39,7 @@ type Context struct {
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
+	outOfConsensus       bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
@@ -65,7 +66,8 @@ func (c Context) Logger() log.Logger                            { return c.logge
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
-func (c Context) InConsensus() bool                             { return c.checkTx }
+func (c Context) IsCheckTx() bool                               { return c.checkTx }
+func (c Context) InConsensus() bool                             { return c.outOfConsensus }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
@@ -106,7 +108,7 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header cmtproto.Header, InConsensus bool, logger log.Logger) Context {
+func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, outOfConsensus bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -114,7 +116,8 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, InConsensus bo
 		ms:                   ms,
 		header:               header,
 		chainID:              header.ChainID,
-		checkTx:              InConsensus,
+		checkTx:              isCheckTx,
+		outOfConsensus:       outOfConsensus,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
 		minGasPrice:          DecCoins{},
@@ -227,8 +230,14 @@ func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Contex
 }
 
 // WithInConsensus enables or disables CheckTx value for verifying transactions and returns an updated Context
+func (c Context) WithIsCheckTx(isCheckTx bool) Context {
+	c.checkTx = isCheckTx
+	return c
+}
+
+// WithInConsensus enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithInConsensus(outOfConsensus bool) Context {
-	c.checkTx = outOfConsensus
+	c.outOfConsensus = outOfConsensus
 	return c
 }
 

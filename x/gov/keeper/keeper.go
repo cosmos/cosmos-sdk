@@ -9,8 +9,6 @@ import (
 
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -182,12 +180,6 @@ func (k Keeper) InsertInactiveProposalQueue(ctx context.Context, proposalID uint
 }
 
 // Iterators
-
-// InactiveProposalQueueIterator returns an corestoretypes.Iterator for all the proposals in the Inactive Queue that expire by endTime
-func (k Keeper) InactiveProposalQueueIterator(ctx context.Context, endTime time.Time) (corestoretypes.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Iterator(types.InactiveProposalQueuePrefix, storetypes.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
-}
 
 // ModuleAccountAddress returns gov module account address
 func (k Keeper) ModuleAccountAddress() sdk.AccAddress {

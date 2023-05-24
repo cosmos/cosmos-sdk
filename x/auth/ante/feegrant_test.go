@@ -98,9 +98,9 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				accs := suite.CreateTestAccounts(2)
+
 				suite.feeGrantKeeper.EXPECT().UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[1].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
-
 				return accs[0], accs[1].acc.GetAddress()
 			},
 		},
@@ -242,7 +242,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			PubKey:        p.PubKey(),
 		}
 		signBytes, err := authsign.GetSignBytesAdapter(
-			context.Background(), gen.TxEncoder(), gen.SignModeHandler(), signMode, signerData, tx.GetTx())
+			context.Background(), gen.SignModeHandler(), signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

@@ -15,8 +15,8 @@ import (
 
 	"cosmossdk.io/depinject"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -114,7 +114,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -173,12 +173,12 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Key              *store.KVStoreKey
 	Cdc              codec.Codec
 	AccountKeeper    authz.AccountKeeper
 	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter baseapp.MessageRouter
+	StoreService     store.KVStoreService
 }
 
 type ModuleOutputs struct {
@@ -189,7 +189,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
+	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return ModuleOutputs{AuthzKeeper: k, Module: m}
 }

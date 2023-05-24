@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/golang/mock/gomock"
 )
@@ -34,8 +35,7 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
-		s.accountKeeper.EXPECT().StringToBytes(addressPool[i].String()).Return(addressPool[i].Bytes(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addressPool[i].Bytes()).Return(addressPool[i].String(), nil).AnyTimes()
+		s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	}
 
 	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -290,7 +290,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "empty address string is not allowed",
 		},
 		"invalid member metadata too long": {
 			req: &group.MsgUpdateGroupMembers{
@@ -887,7 +887,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "decoding bech32 failed",
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -1633,8 +1633,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	s.accountKeeper.EXPECT().StringToBytes(res.Address).Return(sdk.MustAccAddressFromBech32(res.Address).Bytes(), nil).AnyTimes()
-	noMinExecPeriodPolicyAddr, err := s.accountKeeper.StringToBytes(res.Address)
+	noMinExecPeriodPolicyAddr, err := s.accountKeeper.AddressCodec().StringToBytes(res.Address)
 	s.Require().NoError(err)
 
 	// Create a new group policy with super high threshold
@@ -1696,6 +1695,30 @@ func (s *TestSuite) TestSubmitProposal() {
 			expProposal: defaultProposal,
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
+		"title != metadata.title": {
+			req: &group.MsgSubmitProposal{
+				GroupPolicyAddress: accountAddr.String(),
+				Proposers:          []string{addr2.String()},
+				Metadata:           "{\"title\":\"title\",\"summary\":\"description\"}",
+				Title:              "title2",
+				Summary:            "description",
+			},
+			expErr:    true,
+			expErrMsg: "metadata title 'title' must equal proposal title 'title2'",
+			postRun:   func(sdkCtx sdk.Context) {},
+		},
+		"summary != metadata.summary": {
+			req: &group.MsgSubmitProposal{
+				GroupPolicyAddress: accountAddr.String(),
+				Proposers:          []string{addr2.String()},
+				Metadata:           "{\"title\":\"title\",\"summary\":\"description of proposal\"}",
+				Title:              "title",
+				Summary:            "description",
+			},
+			expErr:    true,
+			expErrMsg: "metadata summary 'description of proposal' must equal proposal summary 'description'",
+			postRun:   func(sdkCtx sdk.Context) {},
+		},
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: accountAddr.String(),
@@ -1711,7 +1734,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Proposers: []string{addr2.String()},
 			},
 			expErr:    true,
-			expErrMsg: "unable to decode",
+			expErrMsg: "empty address string is not allowed",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"existing group policy required": {
@@ -2001,10 +2024,7 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
 	// module account will be created and returned
-	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(accountAddr)
-	s.Require().NoError(err)
-	s.accountKeeper.EXPECT().StringToBytes(accountAddr).Return(addrbz, nil).AnyTimes()
-	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
+	groupPolicy, err := s.accountKeeper.AddressCodec().StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
@@ -2893,11 +2913,6 @@ func (s *TestSuite) TestLeaveGroup() {
 	admin2 := addrs[5]
 	admin3 := addrs[6]
 
-	for _, addr := range addrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr.Bytes(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
-
 	members := []group.MemberRequest{
 		{
 			Address:  member1.String(),
@@ -2980,7 +2995,7 @@ func (s *TestSuite) TestLeaveGroup() {
 				Address: "invalid",
 			},
 			true,
-			"unable to decode",
+			"decoding bech32 failed",
 			0,
 			math.NewDecFromInt64(0),
 		},
@@ -3073,6 +3088,227 @@ func (s *TestSuite) TestLeaveGroup() {
 				s.Require().NoError(err)
 				s.Require().Equal(rWeight.Cmp(groupWeight2), 0)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
+	proposers := []string{s.addrs[1].String()}
+
+	specs := map[string]struct {
+		votes         []group.VoteOption
+		members       []group.MemberRequest
+		setupProposal func(ctx context.Context, groupPolicyAddr string) uint64
+		malleate      func(ctx context.Context, k keeper.Keeper, groupPolicyAddr string, groupID uint64) error
+		expErrMsg     string
+	}{
+		"member leaves while all others vote yes: proposal accepted": {
+			members: []group.MemberRequest{
+				{Address: s.addrs[4].String(), Weight: "1"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "1"},
+				{Address: s.addrs[5].String(), Weight: "2"},
+				{Address: s.addrs[2].String(), Weight: "2"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+				group.VOTE_OPTION_YES,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
+				msgSend1 := &banktypes.MsgSend{
+					FromAddress: groupPolicyAddr,
+					ToAddress:   s.addrs[1].String(),
+					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+				}
+
+				// the proposal will pass and be executed
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(1)
+
+				msgs := []sdk.Msg{msgSend1}
+				proposalReq := &group.MsgSubmitProposal{
+					GroupPolicyAddress: groupPolicyAddr,
+					Proposers:          proposers,
+				}
+				err := proposalReq.SetMsgs(msgs)
+				s.Require().NoError(err)
+
+				proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
+				s.Require().NoError(err)
+
+				return proposalRes.ProposalId
+			},
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[5].String()})
+				return err
+			},
+		},
+		"member leaves while all others vote yes and no: proposal rejected": {
+			members: []group.MemberRequest{
+				{Address: s.addrs[4].String(), Weight: "2"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[3].String(), Weight: "2"},
+				{Address: s.addrs[2].String(), Weight: "2"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_NO, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
+				msgSend1 := &banktypes.MsgSend{
+					FromAddress: groupPolicyAddr,
+					ToAddress:   s.addrs[1].String(),
+					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+				}
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+
+				proposalReq := &group.MsgSubmitProposal{
+					GroupPolicyAddress: groupPolicyAddr,
+					Proposers:          proposers,
+				}
+				err := proposalReq.SetMsgs(msgs)
+				s.Require().NoError(err)
+
+				proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
+				s.Require().NoError(err)
+
+				return proposalRes.ProposalId
+			},
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
+				return err
+			},
+		},
+		"member that leaves does affect the threshold policy outcome": {
+			members: []group.MemberRequest{
+				{Address: s.addrs[3].String(), Weight: "6"},
+				{Address: s.addrs[1].String(), Weight: "1"},
+				{Address: s.addrs[5].String(), Weight: "1"},
+				{Address: s.addrs[2].String(), Weight: "1"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
+			},
+			setupProposal: func(ctx context.Context, addr string) uint64 {
+				msgSend1 := &banktypes.MsgSend{
+					FromAddress: addr,
+					ToAddress:   s.addrs[1].String(),
+					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+				}
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+
+				proposalReq := &group.MsgSubmitProposal{
+					GroupPolicyAddress: addr,
+					Proposers:          proposers,
+				}
+				err := proposalReq.SetMsgs(msgs)
+				s.Require().NoError(err)
+
+				proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
+				s.Require().NoError(err)
+
+				return proposalRes.ProposalId
+			},
+			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
+				return err
+			},
+		},
+		"update group policy voids the proposal": {
+			members: []group.MemberRequest{
+				{Address: s.addrs[3].String(), Weight: "2"},
+				{Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrs[1].String(), Weight: "2"},
+				{Address: s.addrs[4].String(), Weight: "2"},
+			},
+			votes: []group.VoteOption{
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
+			},
+			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
+				msgSend1 := &banktypes.MsgSend{
+					FromAddress: groupPolicyAddr,
+					ToAddress:   s.addrs[1].String(),
+					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+				}
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+				proposalReq := &group.MsgSubmitProposal{
+					GroupPolicyAddress: groupPolicyAddr,
+					Proposers:          proposers,
+				}
+				err := proposalReq.SetMsgs(msgs)
+				s.Require().NoError(err)
+
+				proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
+				s.Require().NoError(err)
+
+				return proposalRes.ProposalId
+			},
+			malleate: func(ctx context.Context, k keeper.Keeper, groupPolicyAddr string, groupID uint64) error {
+				newGroupPolicy := &group.MsgUpdateGroupPolicyDecisionPolicy{
+					Admin:              s.addrs[0].String(),
+					GroupPolicyAddress: groupPolicyAddr,
+				}
+				newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
+
+				_, err := k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
+				return err
+			},
+			expErrMsg: "PROPOSAL_STATUS_ABORTED",
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+
+			s.setNextAccount()
+			groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+				Admin:   s.addrs[0].String(),
+				Members: spec.members,
+			})
+			s.Require().NoError(err)
+			groupID := groupRes.GroupId
+
+			policy := group.NewThresholdDecisionPolicy("4", time.Second, minExecutionPeriod)
+			policyReq := &group.MsgCreateGroupPolicy{
+				Admin:   s.addrs[0].String(),
+				GroupId: groupID,
+			}
+			err = policyReq.SetDecisionPolicy(policy)
+			s.Require().NoError(err)
+
+			s.setNextAccount()
+
+			s.groupKeeper.GetGroupSequence(s.sdkCtx)
+			policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+			s.Require().NoError(err)
+
+			// Setup and submit proposal
+			proposalID := spec.setupProposal(sdkCtx, policyRes.Address)
+
+			// vote on the proposals
+			for i, vote := range spec.votes {
+				_, err := s.groupKeeper.Vote(sdkCtx, &group.MsgVote{
+					ProposalId: proposalID,
+					Voter:      spec.members[i].Address,
+					Option:     vote,
+				})
+				s.Require().NoError(err)
+			}
+
+			err = spec.malleate(sdkCtx, s.groupKeeper, policyRes.Address, groupID)
+			s.Require().NoError(err)
+
+			// travel in time
+			sdkCtx = sdkCtx.WithBlockTime(s.blockTime.Add(minExecutionPeriod + 1))
+			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
+			if spec.expErrMsg != "" {
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+			s.Require().NoError(err)
 		})
 	}
 }

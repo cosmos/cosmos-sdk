@@ -182,7 +182,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	if err := depinject.Inject(appConfig,
+	if err := depinject.Inject(
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&appBuilder,
 		&txConfig,
 		&cdc,
@@ -203,11 +207,15 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
-		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
+		if err := depinject.Inject(
+			depinject.Configs(
+				appConfig,
+				depinject.Supply(val.GetCtx().Logger),
+			),
+			&appBuilder); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(
-			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
@@ -669,9 +677,21 @@ func (n *Network) LatestHeight() (int64, error) {
 		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
-			if err == nil && res != nil {
-				return res.SdkBlock.Header.Height, nil
+			done := make(chan struct{})
+			go func() {
+				res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
+				if err == nil && res != nil {
+					latestHeight = res.SdkBlock.Header.Height
+				}
+				done <- struct{}{}
+			}()
+			select {
+			case <-timeout.C:
+				return latestHeight, errors.New("timeout exceeded waiting for block")
+			case <-done:
+				if latestHeight != 0 {
+					return latestHeight, nil
+				}
 			}
 		}
 	}

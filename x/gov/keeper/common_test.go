@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -12,6 +14,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,6 +62,7 @@ func setupGovKeeper(t *testing.T) (
 	sdk.Context,
 ) {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -79,8 +84,7 @@ func setupGovKeeper(t *testing.T) (
 	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	acctKeeper.EXPECT().StringToBytes(govAcct.String()).Return(govAcct, nil).AnyTimes()
-	acctKeeper.EXPECT().BytesToString(govAcct).Return(govAcct.String(), nil).AnyTimes()
+	acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	trackMockBalances(bankKeeper, distributionKeeper)
 	stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {
@@ -94,12 +98,14 @@ func setupGovKeeper(t *testing.T) (
 	distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	// Gov keeper initializations
-	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
-	govKeeper.SetProposalID(ctx, 1)
+
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
+	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
-	govKeeper.SetParams(ctx, v1.DefaultParams())
+	err := govKeeper.Params.Set(ctx, v1.DefaultParams())
+	require.NoError(t, err)
 
 	// Register all handlers for the MegServiceRouter.
 	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)

@@ -8,6 +8,9 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -60,7 +63,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	s1 := suite{}
 	s1.app, err = simtestutil.SetupWithConfiguration(
-		appConfig,
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		simtestutil.DefaultStartUpConfig(),
 		&s1.AccountKeeper, &s1.BankKeeper, &s1.DistrKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
 	)
@@ -82,14 +88,16 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
-	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], s1.GovKeeper.GetParams(ctx).MinDeposit)
+	params, err := s1.GovKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
+	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], params.MinDeposit)
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)
 
-	proposal1, ok := s1.GovKeeper.GetProposal(ctx, proposalID1)
-	assert.Assert(t, ok)
-	proposal2, ok = s1.GovKeeper.GetProposal(ctx, proposalID2)
-	assert.Assert(t, ok)
+	proposal1, err = s1.GovKeeper.Proposals.Get(ctx, proposalID1)
+	assert.NilError(t, err)
+	proposal2, err = s1.GovKeeper.Proposals.Get(ctx, proposalID2)
+	assert.NilError(t, err)
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
@@ -99,7 +107,7 @@ func TestImportExportQueues(t *testing.T) {
 	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
 	genesisState := s1.appBuilder.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)
@@ -113,7 +121,10 @@ func TestImportExportQueues(t *testing.T) {
 
 	s2 := suite{}
 	s2.app, err = simtestutil.SetupWithConfiguration(
-		appConfig,
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		simtestutil.DefaultStartUpConfig(),
 		&s2.AccountKeeper, &s2.BankKeeper, &s2.DistrKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
 	)
@@ -135,27 +146,30 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 
+	params, err = s2.GovKeeper.Params.Get(ctx2)
+	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*s2.GovKeeper.GetParams(ctx2).MaxDepositPeriod).Add(*s2.GovKeeper.GetParams(ctx2).VotingPeriod))
+	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
-	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
-	assert.Assert(t, ok)
-	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2)
-	assert.Assert(t, ok)
+	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
+	assert.NilError(t, err)
+	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
+	assert.NilError(t, err)
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(s2.GovKeeper.GetParams(ctx2).MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
-	gov.EndBlocker(ctx2, s2.GovKeeper)
+	err = gov.EndBlocker(ctx2, s2.GovKeeper)
+	assert.NilError(t, err)
 
-	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
-	assert.Assert(t, ok == false)
+	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)
+	assert.ErrorContains(t, err, "not found")
 
-	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2)
-	assert.Assert(t, ok)
+	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
+	assert.NilError(t, err)
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }

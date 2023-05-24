@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -29,7 +31,12 @@ type GenesisTestSuite struct {
 func (suite *GenesisTestSuite) SetupTest() {
 	var evidenceKeeper keeper.Keeper
 
-	app, err := simtestutil.Setup(testutil.AppConfig, &evidenceKeeper)
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			depinject.Supply(log.NewNopLogger()),
+			testutil.AppConfig,
+		),
+		&evidenceKeeper)
 	require.NoError(suite.T(), err)
 
 	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
@@ -66,8 +73,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			true,
 			func() {
 				for _, e := range testEvidence {
-					_, ok := suite.keeper.GetEvidence(suite.ctx, e.Hash())
-					suite.True(ok)
+					_, err := suite.keeper.GetEvidence(suite.ctx, e.Hash())
+					suite.NoError(err)
 				}
 			},
 		},

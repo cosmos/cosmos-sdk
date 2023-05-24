@@ -10,7 +10,7 @@ import (
 
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
-	address.Codec
+	AddressCodec() address.Codec
 
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
@@ -22,6 +22,6 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected supply Keeper (noalias)
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }

@@ -13,7 +13,9 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -42,6 +44,7 @@ type GenesisTestSuite struct {
 
 func (suite *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
@@ -49,11 +52,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
-
-	suite.accountKeeper.EXPECT().StringToBytes(granteeAddr.String()).Return(granteeAddr, nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(granterAddr.String()).Return(granterAddr, nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(granterAddr).Return(granterAddr.String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
@@ -68,7 +67,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
-	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
+	suite.keeper = keeper.NewKeeper(storeService, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 
 func (suite *GenesisTestSuite) TestImportExportGenesis() {

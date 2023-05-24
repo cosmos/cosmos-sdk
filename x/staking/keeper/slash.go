@@ -30,7 +30,7 @@ import (
 //
 //	Infraction was committed at the current height or at a past height,
 //	not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor sdk.Dec) math.Int {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) math.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -39,7 +39,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := k.TokensFromConsensusPower(ctx, power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
+	slashAmountDec := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
@@ -54,7 +54,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return sdk.NewInt(0)
+		return math.NewInt(0)
 	}
 
 	// should not be slashing an unbonded validator
@@ -114,12 +114,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
-	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
+	tokensToBurn := math.MinInt(remainingSlashAmount, validator.Tokens)
+	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
-		effectiveFraction := sdk.NewDecFromInt(tokensToBurn).QuoRoundUp(sdk.NewDecFromInt(validator.Tokens))
+		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
 		// possible if power has changed
 		if effectiveFraction.GT(math.LegacyOneDec()) {
 			effectiveFraction = math.LegacyOneDec()
@@ -157,7 +157,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 }
 
 // SlashWithInfractionReason implementation doesn't require the infraction (types.Infraction) to work but is required by Interchain Security.
-func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor sdk.Dec, _ types.Infraction) math.Int {
+func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) math.Int {
 	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
@@ -183,7 +183,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec,
+	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = math.ZeroInt()
@@ -210,7 +210,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// Possible since the unbonding delegation may already
 		// have been slashed, and slash amounts are calculated
 		// according to stake held at time of infraction
-		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance)
+		unbondingSlashAmount := math.MinInt(slashAmount, entry.Balance)
 
 		// Update unbonding delegation if necessary
 		if unbondingSlashAmount.IsZero() {
@@ -237,7 +237,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
 func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec,
+	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = math.ZeroInt()
@@ -271,7 +271,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			panic(err)
 		}
 
-		delegatorAddress, err := k.authKeeper.StringToBytes(redelegation.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}

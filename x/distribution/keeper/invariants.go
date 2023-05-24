@@ -88,7 +88,12 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 				}
 			}
 
-			remaining = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+			var err error
+			remaining, err = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+			if err != nil {
+				panic(err)
+			}
+
 			if len(remaining) > 0 && remaining[0].Amount.IsNegative() {
 				return true
 			}
@@ -141,7 +146,11 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		communityPool := k.GetFeePoolCommunityCoins(ctx)
+		communityPool, err := k.GetFeePoolCommunityCoins(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		expectedInt, _ := expectedCoins.Add(communityPool...).TruncateDecimal()
 
 		macc := k.GetDistributionAccount(ctx)

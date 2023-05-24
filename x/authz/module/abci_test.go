@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +27,7 @@ import (
 
 func TestExpiredGrantsQueue(t *testing.T) {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(types.Header{})
@@ -59,10 +62,9 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
 
-	accountKeeper.EXPECT().StringToBytes(granter.String()).Return(granter, nil).AnyTimes()
-	accountKeeper.EXPECT().BytesToString(granter).Return(granter.String(), nil).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	authzKeeper := keeper.NewKeeper(key, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
+	authzKeeper := keeper.NewKeeper(storeService, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)

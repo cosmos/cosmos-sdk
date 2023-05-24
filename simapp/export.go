@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,10 +108,18 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	// reinitialize all validators
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
-		feePool := app.DistrKeeper.GetFeePool(ctx)
+		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		feePool, err := app.DistrKeeper.GetFeePool(ctx)
+		if err != nil {
+			panic(err)
+		}
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
-		app.DistrKeeper.SetFeePool(ctx, feePool)
+		if err := app.DistrKeeper.SetFeePool(ctx, feePool); err != nil {
+			panic(err)
+		}
 
 		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator()); err != nil {
 			panic(err)

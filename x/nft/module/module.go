@@ -86,9 +86,10 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	}
 }
 
-// GetQueryCmd returns the cli query commands for the nft module
+// GetQueryCmd returns a no-op command for the nft module.
+// Queries for NFT are registered by autocli.
 func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
+	return nil
 }
 
 // GetTxCmd returns the transaction commands for the nft module
@@ -109,7 +110,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,

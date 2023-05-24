@@ -3,6 +3,7 @@ package v3
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -49,7 +50,7 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 		return v1beta1.Proposal{}, err
 	}
 	if len(msgs) != 1 {
-		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages is more than one")
+		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages not exactly one")
 	}
 	if legacyMsg, ok := msgs[0].(*v1.MsgExecLegacyContent); ok {
 		// check that the content struct can be unmarshalled
@@ -70,19 +71,19 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 }
 
 func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, error) {
-	yes, ok := types.NewIntFromString(tally.YesCount)
+	yes, ok := sdkmath.NewIntFromString(tally.YesCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.YesCount)
 	}
-	no, ok := types.NewIntFromString(tally.NoCount)
+	no, ok := sdkmath.NewIntFromString(tally.NoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.NoCount)
 	}
-	veto, ok := types.NewIntFromString(tally.NoWithVetoCount)
+	veto, ok := sdkmath.NewIntFromString(tally.NoWithVetoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVetoCount)
 	}
-	abstain, ok := types.NewIntFromString(tally.AbstainCount)
+	abstain, ok := sdkmath.NewIntFromString(tally.AbstainCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.AbstainCount)
 	}
@@ -163,7 +164,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
 
 		default:
-			return nil, fmt.Errorf("vote does not have neither Options nor Option")
+			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}
 
 		newVotes[i] = &v1.Vote{

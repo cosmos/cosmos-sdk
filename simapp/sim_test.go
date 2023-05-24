@@ -325,6 +325,11 @@ func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRunPerSeed := 3 // This used to be set to 5, but we've temporarily reduced it to 3 for the sake of faster CI.
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
+	// We will be overriding the random seed and just run a single simulation on the provided seed value
+	if config.Seed != simcli.DefaultSeedValue {
+		numSeeds = 1
+	}
+
 	appOptions := viper.New()
 	if FlagEnableStreamingValue {
 		m := make(map[string]interface{})
@@ -342,7 +347,11 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 
 	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
+		if config.Seed == simcli.DefaultSeedValue {
+			config.Seed = rand.Int63()
+		}
+
+		fmt.Println("config.Seed: ", config.Seed)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger

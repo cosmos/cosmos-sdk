@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/math"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -107,7 +108,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 			MaxRate:       sdk.MustNewDecFromStr("0.2"),
 			MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
 		},
-		sdk.OneInt(),
+		math.OneInt(),
 	)
 	if err != nil {
 		panic(err)
@@ -143,7 +144,6 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 	// Generate bytes to be signed.
 	bytesToSign, err := authsigning.GetSignBytesAdapter(
 		context.Background(),
-		txConf.TxEncoder(),
 		txConf.SignModeHandler(),
 		signing.SignMode_SIGN_MODE_DIRECT,
 		authsigning.SignerData{

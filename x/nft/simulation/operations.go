@@ -113,7 +113,7 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 

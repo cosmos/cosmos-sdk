@@ -10,10 +10,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/registry"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -239,7 +237,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -300,22 +298,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 					Value:   anyPk.Value,
 				},
 			}
-			decodeCtx, err := decode.NewDecoder(decode.Options{ProtoFiles: registry.MergedProtoRegistry()})
-			if err != nil {
-				return ctx, err
+			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+			if !ok {
+				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 			}
-			// note: this is performance hit is temporary. Ultimately, the tx will be decoded once in BaseApp,
-			// but for now we need double decoding to support both SignModeHandlers.
-			decodedTx, err := decodeCtx.Decode(ctx.TxBytes())
-			if err != nil {
-				return ctx, err
-			}
-			txData := txsigning.TxData{
-				Body:          decodedTx.Tx.Body,
-				AuthInfo:      decodedTx.Tx.AuthInfo,
-				AuthInfoBytes: decodedTx.TxRaw.AuthInfoBytes,
-				BodyBytes:     decodedTx.TxRaw.BodyBytes,
-			}
+			txData := adaptableTx.GetSigningTxData()
 			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 			if err != nil {
 				var errMsg string

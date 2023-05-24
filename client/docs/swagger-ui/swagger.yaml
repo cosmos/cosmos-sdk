@@ -24956,7 +24956,7 @@ paths:
             TxSearch RPC method. The query must be valid.
 
 
-            Since Cosmos SDK 0.48
+            Since cosmos-sdk 0.50
           in: query
           required: false
           type: string

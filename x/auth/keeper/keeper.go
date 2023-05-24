@@ -277,7 +277,3 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	}
 	return params
 }
-
-func (ak AccountKeeper) AddressCodec() address.Codec {
-	return ak.Codec
-}

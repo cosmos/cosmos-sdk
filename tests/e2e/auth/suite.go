@@ -561,6 +561,7 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 				s.Require().Contains(err.Error(), tc.expectErrStr)
 			} else {
 				var result sdk.TxResponse
+				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
 			}

@@ -55,3 +55,7 @@ func (app *BaseApp) NewUncachedContext(outOfConsensus bool, header cmtproto.Head
 func (app *BaseApp) GetContextForDeliverTx(txBytes []byte) sdk.Context {
 	return app.getContextForTx(runTxModeDeliver, txBytes)
 }
+
+func (app *BaseApp) GetContextForCheckTx(txBytes []byte) sdk.Context {
+	return app.getContextForTx(runTxModeCheck, txBytes)
+}

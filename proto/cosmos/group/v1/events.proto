@@ -81,12 +81,12 @@ message EventLeaveGroup {
 }
 
 // EventProposalTallyFinalized is an event emitted when a proposal tally is finalized.
-message EventProposalFinalized {
+message EventProposalPruned {
 
   // proposal_id is the unique ID of the proposal.
   uint64 proposal_id = 1;
 
-  // result is the proposal tally result.
+  // status is the proposal status (UNSPECIFIED, SUBMITTED, ACCEPTED, REJECTED, ABORTED, WITHDRAWN).
   ProposalStatus status = 2;
 
   // tally_result is the proposal tally result.

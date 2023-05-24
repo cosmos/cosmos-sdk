@@ -14,47 +14,47 @@ based on configurable decision policies.
 ## Contents
 
 * [Concepts](#concepts)
-  * [Group](#group)
-  * [Group Policy](#group-policy)
-  * [Decision Policy](#decision-policy)
-  * [Proposal](#proposal)
-  * [Pruning](#pruning)
+    * [Group](#group)
+    * [Group Policy](#group-policy)
+    * [Decision Policy](#decision-policy)
+    * [Proposal](#proposal)
+    * [Pruning](#pruning)
 * [State](#state)
-  * [Group Table](#group-table)
-  * [Group Member Table](#group-member-table)
-  * [Group Policy Table](#group-policy-table)
-  * [Proposal Table](#proposal-table)
-  * [Vote Table](#vote-table)
+    * [Group Table](#group-table)
+    * [Group Member Table](#group-member-table)
+    * [Group Policy Table](#group-policy-table)
+    * [Proposal Table](#proposal-table)
+    * [Vote Table](#vote-table)
 * [Msg Service](#msg-service)
-  * [Msg/CreateGroup](#msgcreategroup)
-  * [Msg/UpdateGroupMembers](#msgupdategroupmembers)
-  * [Msg/UpdateGroupAdmin](#msgupdategroupadmin)
-  * [Msg/UpdateGroupMetadata](#msgupdategroupmetadata)
-  * [Msg/CreateGroupPolicy](#msgcreategrouppolicy)
-  * [Msg/CreateGroupWithPolicy](#msgcreategroupwithpolicy)
-  * [Msg/UpdateGroupPolicyAdmin](#msgupdategrouppolicyadmin)
-  * [Msg/UpdateGroupPolicyDecisionPolicy](#msgupdategrouppolicydecisionpolicy)
-  * [Msg/UpdateGroupPolicyMetadata](#msgupdategrouppolicymetadata)
-  * [Msg/SubmitProposal](#msgsubmitproposal)
-  * [Msg/WithdrawProposal](#msgwithdrawproposal)
-  * [Msg/Vote](#msgvote)
-  * [Msg/Exec](#msgexec)
-  * [Msg/LeaveGroup](#msgleavegroup)
+    * [Msg/CreateGroup](#msgcreategroup)
+    * [Msg/UpdateGroupMembers](#msgupdategroupmembers)
+    * [Msg/UpdateGroupAdmin](#msgupdategroupadmin)
+    * [Msg/UpdateGroupMetadata](#msgupdategroupmetadata)
+    * [Msg/CreateGroupPolicy](#msgcreategrouppolicy)
+    * [Msg/CreateGroupWithPolicy](#msgcreategroupwithpolicy)
+    * [Msg/UpdateGroupPolicyAdmin](#msgupdategrouppolicyadmin)
+    * [Msg/UpdateGroupPolicyDecisionPolicy](#msgupdategrouppolicydecisionpolicy)
+    * [Msg/UpdateGroupPolicyMetadata](#msgupdategrouppolicymetadata)
+    * [Msg/SubmitProposal](#msgsubmitproposal)
+    * [Msg/WithdrawProposal](#msgwithdrawproposal)
+    * [Msg/Vote](#msgvote)
+    * [Msg/Exec](#msgexec)
+    * [Msg/LeaveGroup](#msgleavegroup)
 * [Events](#events)
-  * [EventCreateGroup](#eventcreategroup)
-  * [EventUpdateGroup](#eventupdategroup)
-  * [EventCreateGroupPolicy](#eventcreategrouppolicy)
-  * [EventUpdateGroupPolicy](#eventupdategrouppolicy)
-  * [EventCreateProposal](#eventcreateproposal)
-  * [EventWithdrawProposal](#eventwithdrawproposal)
-  * [EventVote](#eventvote)
-  * [EventExec](#eventexec)
-  * [EventLeaveGroup](#eventleavegroup)
-  * [EventProposalFinalized](#eventProposalFinalized)
+    * [EventCreateGroup](#eventcreategroup)
+    * [EventUpdateGroup](#eventupdategroup)
+    * [EventCreateGroupPolicy](#eventcreategrouppolicy)
+    * [EventUpdateGroupPolicy](#eventupdategrouppolicy)
+    * [EventCreateProposal](#eventcreateproposal)
+    * [EventWithdrawProposal](#eventwithdrawproposal)
+    * [EventVote](#eventvote)
+    * [EventExec](#eventexec)
+    * [EventLeaveGroup](#eventleavegroup)
+    * [EventProposalPruned](#eventProposalPruned)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 * [Metadata](#metadata)
 
 ## Concepts
@@ -598,14 +598,14 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
-### EventProposalFinalized
+### EventProposalPruned
 
-| Type                                   | Attribute Key | Attribute Value                 |
-|----------------------------------------|---------------|---------------------------------|
-| message                                | action        | /cosmos.group.v1.Msg/LeaveGroup |
-| cosmos.group.v1.EventProposalFinalized | proposal_id   | {proposalId}                    |
-| cosmos.group.v1.EventProposalFinalized | status        | {ProposalStatus}                |
-| cosmos.group.v1.EventProposalFinalized | tally_result  | {TallyResult}                   |
+| Type                                | Attribute Key | Attribute Value                 |
+|-------------------------------------|---------------|---------------------------------|
+| message                             | action        | /cosmos.group.v1.Msg/LeaveGroup |
+| cosmos.group.v1.EventProposalPruned | proposal_id   | {proposalId}                    |
+| cosmos.group.v1.EventProposalPruned | status        | {ProposalStatus}                |
+| cosmos.group.v1.EventProposalPruned | tally_result  | {TallyResult}                   |
 
 ## Client
 

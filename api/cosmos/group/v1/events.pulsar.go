@@ -3858,29 +3858,29 @@ func (x *fastReflection_EventLeaveGroup) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventProposalFinalized              protoreflect.MessageDescriptor
-	fd_EventProposalFinalized_proposal_id  protoreflect.FieldDescriptor
-	fd_EventProposalFinalized_status       protoreflect.FieldDescriptor
-	fd_EventProposalFinalized_tally_result protoreflect.FieldDescriptor
+	md_EventProposalPruned              protoreflect.MessageDescriptor
+	fd_EventProposalPruned_proposal_id  protoreflect.FieldDescriptor
+	fd_EventProposalPruned_status       protoreflect.FieldDescriptor
+	fd_EventProposalPruned_tally_result protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1_events_proto_init()
-	md_EventProposalFinalized = File_cosmos_group_v1_events_proto.Messages().ByName("EventProposalFinalized")
-	fd_EventProposalFinalized_proposal_id = md_EventProposalFinalized.Fields().ByName("proposal_id")
-	fd_EventProposalFinalized_status = md_EventProposalFinalized.Fields().ByName("status")
-	fd_EventProposalFinalized_tally_result = md_EventProposalFinalized.Fields().ByName("tally_result")
+	md_EventProposalPruned = File_cosmos_group_v1_events_proto.Messages().ByName("EventProposalPruned")
+	fd_EventProposalPruned_proposal_id = md_EventProposalPruned.Fields().ByName("proposal_id")
+	fd_EventProposalPruned_status = md_EventProposalPruned.Fields().ByName("status")
+	fd_EventProposalPruned_tally_result = md_EventProposalPruned.Fields().ByName("tally_result")
 }
 
-var _ protoreflect.Message = (*fastReflection_EventProposalFinalized)(nil)
+var _ protoreflect.Message = (*fastReflection_EventProposalPruned)(nil)
 
-type fastReflection_EventProposalFinalized EventProposalFinalized
+type fastReflection_EventProposalPruned EventProposalPruned
 
-func (x *EventProposalFinalized) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EventProposalFinalized)(x)
+func (x *EventProposalPruned) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventProposalPruned)(x)
 }
 
-func (x *EventProposalFinalized) slowProtoReflect() protoreflect.Message {
+func (x *EventProposalPruned) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1_events_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3892,43 +3892,43 @@ func (x *EventProposalFinalized) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_EventProposalFinalized_messageType fastReflection_EventProposalFinalized_messageType
-var _ protoreflect.MessageType = fastReflection_EventProposalFinalized_messageType{}
+var _fastReflection_EventProposalPruned_messageType fastReflection_EventProposalPruned_messageType
+var _ protoreflect.MessageType = fastReflection_EventProposalPruned_messageType{}
 
-type fastReflection_EventProposalFinalized_messageType struct{}
+type fastReflection_EventProposalPruned_messageType struct{}
 
-func (x fastReflection_EventProposalFinalized_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EventProposalFinalized)(nil)
+func (x fastReflection_EventProposalPruned_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventProposalPruned)(nil)
 }
-func (x fastReflection_EventProposalFinalized_messageType) New() protoreflect.Message {
-	return new(fastReflection_EventProposalFinalized)
+func (x fastReflection_EventProposalPruned_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventProposalPruned)
 }
-func (x fastReflection_EventProposalFinalized_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventProposalFinalized
+func (x fastReflection_EventProposalPruned_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventProposalPruned
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_EventProposalFinalized) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventProposalFinalized
+func (x *fastReflection_EventProposalPruned) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventProposalPruned
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EventProposalFinalized) Type() protoreflect.MessageType {
-	return _fastReflection_EventProposalFinalized_messageType
+func (x *fastReflection_EventProposalPruned) Type() protoreflect.MessageType {
+	return _fastReflection_EventProposalPruned_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EventProposalFinalized) New() protoreflect.Message {
-	return new(fastReflection_EventProposalFinalized)
+func (x *fastReflection_EventProposalPruned) New() protoreflect.Message {
+	return new(fastReflection_EventProposalPruned)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_EventProposalFinalized) Interface() protoreflect.ProtoMessage {
-	return (*EventProposalFinalized)(x)
+func (x *fastReflection_EventProposalPruned) Interface() protoreflect.ProtoMessage {
+	return (*EventProposalPruned)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -3936,22 +3936,22 @@ func (x *fastReflection_EventProposalFinalized) Interface() protoreflect.ProtoMe
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_EventProposalFinalized) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EventProposalPruned) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
-		if !f(fd_EventProposalFinalized_proposal_id, value) {
+		if !f(fd_EventProposalPruned_proposal_id, value) {
 			return
 		}
 	}
 	if x.Status != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Status))
-		if !f(fd_EventProposalFinalized_status, value) {
+		if !f(fd_EventProposalPruned_status, value) {
 			return
 		}
 	}
 	if x.TallyResult != nil {
 		value := protoreflect.ValueOfMessage(x.TallyResult.ProtoReflect())
-		if !f(fd_EventProposalFinalized_tally_result, value) {
+		if !f(fd_EventProposalPruned_tally_result, value) {
 			return
 		}
 	}
@@ -3968,19 +3968,19 @@ func (x *fastReflection_EventProposalFinalized) Range(f func(protoreflect.FieldD
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_EventProposalFinalized) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EventProposalPruned) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
 		return x.ProposalId != uint64(0)
-	case "cosmos.group.v1.EventProposalFinalized.status":
+	case "cosmos.group.v1.EventProposalPruned.status":
 		return x.Status != 0
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		return x.TallyResult != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3990,19 +3990,19 @@ func (x *fastReflection_EventProposalFinalized) Has(fd protoreflect.FieldDescrip
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventProposalFinalized) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EventProposalPruned) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
 		x.ProposalId = uint64(0)
-	case "cosmos.group.v1.EventProposalFinalized.status":
+	case "cosmos.group.v1.EventProposalPruned.status":
 		x.Status = 0
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		x.TallyResult = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4012,22 +4012,22 @@ func (x *fastReflection_EventProposalFinalized) Clear(fd protoreflect.FieldDescr
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EventProposalFinalized) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventProposalPruned) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1.EventProposalFinalized.status":
+	case "cosmos.group.v1.EventProposalPruned.status":
 		value := x.Status
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		value := x.TallyResult
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4041,19 +4041,19 @@ func (x *fastReflection_EventProposalFinalized) Get(descriptor protoreflect.Fiel
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventProposalFinalized) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EventProposalPruned) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
 		x.ProposalId = value.Uint()
-	case "cosmos.group.v1.EventProposalFinalized.status":
+	case "cosmos.group.v1.EventProposalPruned.status":
 		x.Status = (ProposalStatus)(value.Enum())
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		x.TallyResult = value.Message().Interface().(*TallyResult)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4067,52 +4067,52 @@ func (x *fastReflection_EventProposalFinalized) Set(fd protoreflect.FieldDescrip
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventProposalFinalized) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventProposalPruned) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		if x.TallyResult == nil {
 			x.TallyResult = new(TallyResult)
 		}
 		return protoreflect.ValueOfMessage(x.TallyResult.ProtoReflect())
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
-		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1.EventProposalFinalized is not mutable"))
-	case "cosmos.group.v1.EventProposalFinalized.status":
-		panic(fmt.Errorf("field status of message cosmos.group.v1.EventProposalFinalized is not mutable"))
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1.EventProposalPruned is not mutable"))
+	case "cosmos.group.v1.EventProposalPruned.status":
+		panic(fmt.Errorf("field status of message cosmos.group.v1.EventProposalPruned is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EventProposalFinalized) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventProposalPruned) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.EventProposalFinalized.proposal_id":
+	case "cosmos.group.v1.EventProposalPruned.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1.EventProposalFinalized.status":
+	case "cosmos.group.v1.EventProposalPruned.status":
 		return protoreflect.ValueOfEnum(0)
-	case "cosmos.group.v1.EventProposalFinalized.tally_result":
+	case "cosmos.group.v1.EventProposalPruned.tally_result":
 		m := new(TallyResult)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalFinalized"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.EventProposalPruned"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.EventProposalFinalized does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1.EventProposalPruned does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EventProposalFinalized) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EventProposalPruned) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1.EventProposalFinalized", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1.EventProposalPruned", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4120,7 +4120,7 @@ func (x *fastReflection_EventProposalFinalized) WhichOneof(d protoreflect.OneofD
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EventProposalFinalized) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EventProposalPruned) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -4131,7 +4131,7 @@ func (x *fastReflection_EventProposalFinalized) GetUnknown() protoreflect.RawFie
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventProposalFinalized) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EventProposalPruned) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -4143,7 +4143,7 @@ func (x *fastReflection_EventProposalFinalized) SetUnknown(fields protoreflect.R
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_EventProposalFinalized) IsValid() bool {
+func (x *fastReflection_EventProposalPruned) IsValid() bool {
 	return x != nil
 }
 
@@ -4153,9 +4153,9 @@ func (x *fastReflection_EventProposalFinalized) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_EventProposalFinalized) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EventProposalPruned) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EventProposalFinalized)
+		x := input.Message.Interface().(*EventProposalPruned)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4187,7 +4187,7 @@ func (x *fastReflection_EventProposalFinalized) ProtoMethods() *protoiface.Metho
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EventProposalFinalized)
+		x := input.Message.Interface().(*EventProposalPruned)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4241,7 +4241,7 @@ func (x *fastReflection_EventProposalFinalized) ProtoMethods() *protoiface.Metho
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EventProposalFinalized)
+		x := input.Message.Interface().(*EventProposalPruned)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4273,10 +4273,10 @@ func (x *fastReflection_EventProposalFinalized) ProtoMethods() *protoiface.Metho
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventProposalFinalized: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventProposalPruned: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventProposalFinalized: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventProposalPruned: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -4764,21 +4764,21 @@ func (x *EventLeaveGroup) GetAddress() string {
 }
 
 // EventProposalTallyFinalized is an event emitted when a proposal tally is finalized.
-type EventProposalFinalized struct {
+type EventProposalPruned struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// proposal_id is the unique ID of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	// result is the proposal tally result.
+	// status is the proposal status (UNSPECIFIED, SUBMITTED, ACCEPTED, REJECTED, ABORTED, WITHDRAWN).
 	Status ProposalStatus `protobuf:"varint,2,opt,name=status,proto3,enum=cosmos.group.v1.ProposalStatus" json:"status,omitempty"`
 	// tally_result is the proposal tally result.
 	TallyResult *TallyResult `protobuf:"bytes,3,opt,name=tally_result,json=tallyResult,proto3" json:"tally_result,omitempty"`
 }
 
-func (x *EventProposalFinalized) Reset() {
-	*x = EventProposalFinalized{}
+func (x *EventProposalPruned) Reset() {
+	*x = EventProposalPruned{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1_events_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4786,32 +4786,32 @@ func (x *EventProposalFinalized) Reset() {
 	}
 }
 
-func (x *EventProposalFinalized) String() string {
+func (x *EventProposalPruned) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EventProposalFinalized) ProtoMessage() {}
+func (*EventProposalPruned) ProtoMessage() {}
 
-// Deprecated: Use EventProposalFinalized.ProtoReflect.Descriptor instead.
-func (*EventProposalFinalized) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventProposalPruned.ProtoReflect.Descriptor instead.
+func (*EventProposalPruned) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1_events_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *EventProposalFinalized) GetProposalId() uint64 {
+func (x *EventProposalPruned) GetProposalId() uint64 {
 	if x != nil {
 		return x.ProposalId
 	}
 	return 0
 }
 
-func (x *EventProposalFinalized) GetStatus() ProposalStatus {
+func (x *EventProposalPruned) GetStatus() ProposalStatus {
 	if x != nil {
 		return x.Status
 	}
 	return ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED
 }
 
-func (x *EventProposalFinalized) GetTallyResult() *TallyResult {
+func (x *EventProposalPruned) GetTallyResult() *TallyResult {
 	if x != nil {
 		return x.TallyResult
 	}
@@ -4867,30 +4867,29 @@ var file_cosmos_group_v1_events_proto_rawDesc = []byte{
 	0x70, 0x49, 0x64, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xb3, 0x01, 0x0a, 0x16, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a,
-	0x65, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x49, 0x64, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0e, 0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
-	0x75, 0x70, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x3f, 0x0a, 0x0c,
-	0x74, 0x61, 0x6c, 0x6c, 0x79, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
-	0x52, 0x0b, 0x74, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x42, 0xaa, 0x01,
-	0x0a, 0x13, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
-	0x75, 0x70, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
-	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0xa2, 0x02,
-	0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
-	0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xb0, 0x01, 0x0a, 0x13, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x50, 0x72, 0x75, 0x6e, 0x65, 0x64, 0x12,
+	0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64,
+	0x12, 0x37, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e,
+	0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x3f, 0x0a, 0x0c, 0x74, 0x61, 0x6c,
+	0x6c, 0x79, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
+	0x31, 0x2e, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x0b, 0x74,
+	0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x42, 0xaa, 0x01, 0x0a, 0x13, 0x63,
+	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x28, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2f, 0x76, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47,
+	0x58, 0xaa, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x56, 0x31, 0xca, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x11, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4916,15 +4915,15 @@ var file_cosmos_group_v1_events_proto_goTypes = []interface{}{
 	(*EventVote)(nil),              // 6: cosmos.group.v1.EventVote
 	(*EventExec)(nil),              // 7: cosmos.group.v1.EventExec
 	(*EventLeaveGroup)(nil),        // 8: cosmos.group.v1.EventLeaveGroup
-	(*EventProposalFinalized)(nil), // 9: cosmos.group.v1.EventProposalFinalized
+	(*EventProposalPruned)(nil),    // 9: cosmos.group.v1.EventProposalPruned
 	(ProposalExecutorResult)(0),    // 10: cosmos.group.v1.ProposalExecutorResult
 	(ProposalStatus)(0),            // 11: cosmos.group.v1.ProposalStatus
 	(*TallyResult)(nil),            // 12: cosmos.group.v1.TallyResult
 }
 var file_cosmos_group_v1_events_proto_depIdxs = []int32{
 	10, // 0: cosmos.group.v1.EventExec.result:type_name -> cosmos.group.v1.ProposalExecutorResult
-	11, // 1: cosmos.group.v1.EventProposalFinalized.status:type_name -> cosmos.group.v1.ProposalStatus
-	12, // 2: cosmos.group.v1.EventProposalFinalized.tally_result:type_name -> cosmos.group.v1.TallyResult
+	11, // 1: cosmos.group.v1.EventProposalPruned.status:type_name -> cosmos.group.v1.ProposalStatus
+	12, // 2: cosmos.group.v1.EventProposalPruned.tally_result:type_name -> cosmos.group.v1.TallyResult
 	3,  // [3:3] is the sub-list for method output_type
 	3,  // [3:3] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -5048,7 +5047,7 @@ func file_cosmos_group_v1_events_proto_init() {
 			}
 		}
 		file_cosmos_group_v1_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EventProposalFinalized); i {
+			switch v := v.(*EventProposalPruned); i {
 			case 0:
 				return &v.state
 			case 1:

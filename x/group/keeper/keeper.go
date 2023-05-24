@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+
 	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -377,7 +378,7 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 		}
 		// Emit event for proposal finalized with its result
 		if err := ctx.EventManager().EmitTypedEvent(
-			&group.EventProposalFinalized{
+			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,
@@ -419,7 +420,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			}
 			// Emit event for proposal finalized with its result
 			if err := ctx.EventManager().EmitTypedEvent(
-				&group.EventProposalFinalized{
+				&group.EventProposalPruned{
 					ProposalId: proposal.Id,
 					Status:     proposal.Status,
 				}); err != nil {

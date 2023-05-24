@@ -7,13 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/stretchr/testify/require"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
@@ -21,6 +14,11 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -43,6 +41,21 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
 	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
+}
+
+func TestABCI_First_block_Height(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
+	app := suite.baseApp
+
+	app.InitChain(abci.RequestInitChain{
+		ChainId:         "test-chain-id",
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}},
+		InitialHeight:   1,
+	})
+	_ = app.Commit()
+
+	ctx := app.GetContextForCheckTx(nil)
+	require.Equal(t, int64(1), ctx.BlockHeight())
 }
 
 func TestABCI_InitChain(t *testing.T) {

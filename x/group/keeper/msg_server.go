@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -16,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var _ group.MsgServer = Keeper{}
@@ -25,7 +28,7 @@ var _ group.MsgServer = Keeper{}
 const gasCostPerIteration = uint64(20)
 
 func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
-	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Admin); err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid admin address: %s", msg.Admin)
 	}
 
@@ -225,11 +228,11 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGrou
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are the same")
 	}
 
-	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Admin); err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "admin address")
 	}
 
-	if _, err := k.accKeeper.StringToBytes(msg.NewAdmin); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.NewAdmin); err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin address")
 	}
 
@@ -257,7 +260,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateG
 		return nil, err
 	}
 
-	if _, err := k.accKeeper.StringToBytes(msg.Admin); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Admin); err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "admin address")
 	}
 
@@ -341,7 +344,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		return nil, errorsmod.Wrap(err, "decision policy")
 	}
 
-	reqGroupAdmin, err := k.accKeeper.StringToBytes(msg.GetAdmin())
+	reqGroupAdmin, err := k.accKeeper.AddressCodec().StringToBytes(msg.GetAdmin())
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "request admin")
 	}
@@ -352,7 +355,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		return nil, err
 	}
 
-	groupAdmin, err := k.accKeeper.StringToBytes(groupInfo.Admin)
+	groupAdmin, err := k.accKeeper.AddressCodec().StringToBytes(groupInfo.Admin)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group admin")
 	}
@@ -510,7 +513,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	groupPolicyAddr, err := k.accKeeper.StringToBytes(msg.GroupPolicyAddress)
+	groupPolicyAddr, err := k.accKeeper.AddressCodec().StringToBytes(msg.GroupPolicyAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "request account address of group policy")
 	}
@@ -525,6 +528,23 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 
 	if err := k.assertMetadataLength(msg.Metadata, "metadata"); err != nil {
 		return nil, err
+	}
+
+	// verify that if present, the metadata title and summary equals the proposal title and summary
+	if len(msg.Metadata) != 0 {
+		proposalMetadata := govtypes.ProposalMetadata{}
+		if err := json.Unmarshal([]byte(msg.Metadata), &proposalMetadata); err == nil {
+			if proposalMetadata.Title != msg.Title {
+				return nil, fmt.Errorf("metadata title '%s' must equal proposal title '%s'", proposalMetadata.Title, msg.Title)
+			}
+
+			if proposalMetadata.Summary != msg.Summary {
+				return nil, fmt.Errorf("metadata summary '%s' must equal proposal summary '%s'", proposalMetadata.Summary, msg.Summary)
+			}
+		}
+
+		// if we can't unmarshal the metadata, this means the client didn't use the recommended metadata format
+		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
 	msgs, err := msg.GetMsgs()
@@ -633,7 +653,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
-	if _, err := k.accKeeper.StringToBytes(msg.Address); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Address); err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid group policy admin / proposer address: %s", msg.Address)
 	}
 
@@ -692,7 +712,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 		return nil, err
 	}
 
-	if _, err := k.accKeeper.StringToBytes(msg.Voter); err != nil {
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Voter); err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid voter address: %s", msg.Voter)
 	}
 
@@ -837,7 +857,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 		// Caching context so that we don't update the store in case of failure.
 		cacheCtx, flush := ctx.CacheContext()
 
-		addr, err := k.accKeeper.StringToBytes(policyInfo.Address)
+		addr, err := k.accKeeper.AddressCodec().StringToBytes(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
@@ -900,7 +920,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group-id")
 	}
 
-	_, err := k.accKeeper.StringToBytes(msg.Address)
+	_, err := k.accKeeper.AddressCodec().StringToBytes(msg.Address)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group member")
 	}
@@ -984,12 +1004,12 @@ type (
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.
 func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, reqGroupPolicy, reqAdmin string, action groupPolicyActionFn, note string) error {
-	groupPolicyAddr, err := k.accKeeper.StringToBytes(reqGroupPolicy)
+	groupPolicyAddr, err := k.accKeeper.AddressCodec().StringToBytes(reqGroupPolicy)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy address")
 	}
 
-	_, err = k.accKeeper.StringToBytes(reqAdmin)
+	_, err = k.accKeeper.AddressCodec().StringToBytes(reqAdmin)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy admin")
 	}
@@ -1088,7 +1108,7 @@ func (k Keeper) validateProposers(proposers []string) error {
 			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", proposer)
 		}
 
-		_, err := k.accKeeper.StringToBytes(proposer)
+		_, err := k.accKeeper.AddressCodec().StringToBytes(proposer)
 		if err != nil {
 			return errorsmod.Wrapf(err, "proposer address %s", proposer)
 		}
@@ -1113,7 +1133,7 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", member.Address)
 		}
 
-		_, err := k.accKeeper.StringToBytes(member.Address)
+		_, err := k.accKeeper.AddressCodec().StringToBytes(member.Address)
 		if err != nil {
 			return errorsmod.Wrapf(err, "member address %s", member.Address)
 		}

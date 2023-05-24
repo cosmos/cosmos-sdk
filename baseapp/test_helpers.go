@@ -68,5 +68,5 @@ func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {
 }
 
 func (app *BaseApp) GetContextForCheckTx(txBytes []byte) sdk.Context {
-	return app.getContextForTx(runTxModeCheck, txBytes)
+	return app.getContextForTx(execModeCheck, txBytes)
 }

@@ -82,7 +82,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
 		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader)
-		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(initHeader)
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader)
 	}()
 
 	if app.initChainer == nil {
@@ -129,7 +129,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.
-	return abci.ResponseInitChain{
+	return &abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
 		AppHash:         appHash,

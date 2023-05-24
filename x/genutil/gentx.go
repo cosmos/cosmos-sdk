@@ -3,6 +3,7 @@ package genutil
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -53,9 +54,8 @@ func ValidateAccountInGenesis(
 		func(bal bankexported.GenesisBalance) (stop bool) {
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
-
 			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
+			if strings.EqualFold(accAddress, addr.String()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(

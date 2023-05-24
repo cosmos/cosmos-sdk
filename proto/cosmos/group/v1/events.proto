@@ -89,6 +89,6 @@ message EventProposalPruned {
   // status is the proposal status (UNSPECIFIED, SUBMITTED, ACCEPTED, REJECTED, ABORTED, WITHDRAWN).
   ProposalStatus status = 2;
 
-  // tally_result is the proposal tally result.
+  // tally_result is the proposal tally result (when applicable).
   TallyResult tally_result = 3;
 }

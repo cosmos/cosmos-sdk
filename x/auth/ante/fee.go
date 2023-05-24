@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"bytes"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -88,7 +89,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
+		} else if !bytes.Equal(feeGranter, feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
 				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
@@ -115,7 +116,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, string(deductFeesFrom[:])),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)

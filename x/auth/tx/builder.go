@@ -138,7 +138,7 @@ func (w *wrapper) GetFee() sdk.Coins {
 	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (w *wrapper) FeePayer() sdk.AccAddress {
+func (w *wrapper) FeePayer() []byte {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
 		return sdk.MustAccAddressFromBech32(feePayer)
@@ -147,7 +147,7 @@ func (w *wrapper) FeePayer() sdk.AccAddress {
 	return w.GetSigners()[0]
 }
 
-func (w *wrapper) FeeGranter() sdk.AccAddress {
+func (w *wrapper) FeeGranter() []byte {
 	feePayer := w.tx.AuthInfo.Fee.Granter
 	if feePayer != "" {
 		return sdk.MustAccAddressFromBech32(feePayer)

@@ -79,8 +79,9 @@ func TestDirectAuxHandler(t *testing.T) {
 
 	modeHandler := signModeDirectAuxHandler{}
 
-	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
+	// t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
 	_, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, feePayerSigningData, txBuilder.GetTx())
+
 	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized", feePayerAddr.String(), signingtypes.SignMode_SIGN_MODE_DIRECT_AUX))
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")

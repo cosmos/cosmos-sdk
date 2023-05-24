@@ -683,10 +683,6 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 		return nil, err
 	}
 
-	if err := ctx.EventManager().EmitTypedEvent(&group.EventProposalFinalized{ProposalId: proposal.Id, Status: proposal.Status}); err != nil {
-		return nil, err
-	}
-
 	if err := ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: msg.ProposalId}); err != nil {
 		return nil, err
 	}

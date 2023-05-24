@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/mock/gomock"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -17,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/golang/mock/gomock"
 )
 
 var EventTallyResult = "cosmos.group.v1.EventProposalFinalized"
@@ -1831,14 +1834,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -1979,15 +1975,15 @@ func (s *TestSuite) TestWithdrawProposal() {
 			proposalID: proposalID,
 			admin:      proposers[0],
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
+				resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				vpe := resp.Proposal.VotingPeriodEnd
+				timeDiff := vpe.Sub(s.sdkCtx.BlockTime())
+				ctxVPE := sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(timeDiff).Add(time.Second * 1))
+				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
+				events := ctxVPE.EventManager().ABCIEvents()
+
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
 		},
 	}
@@ -2553,14 +2549,7 @@ func (s *TestSuite) TestExecProposal() {
 			expToBalances:     sdk.NewInt64Coin("test", 100),
 			checkEvents: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"proposal with multiple messages executed when accepted": {
@@ -2578,14 +2567,7 @@ func (s *TestSuite) TestExecProposal() {
 			expToBalances:     sdk.NewInt64Coin("test", 200),
 			checkEvents: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"proposal not executed when rejected": {
@@ -2598,14 +2580,7 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			checkEvents: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().False(tallyEventFound)
+				s.Require().False(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"open proposal must not fail": {
@@ -2616,14 +2591,7 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			checkEvents: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().False(tallyEventFound)
+				s.Require().False(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"invalid proposal id": {
@@ -2978,14 +2946,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
 				events := sdkCtx.EventManager().ABCIEvents()
-				tallyEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						tallyEventFound = true
-						break
-					}
-				}
-				s.Require().True(tallyEventFound)
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 
 			} else {
 				// Check that proposal and votes exists
@@ -3412,4 +3373,15 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 		})
 	}
+}
+
+func eventTypeFound(events []abci.Event, eventType string) bool {
+	eventTypeFound := false
+	for _, e := range events {
+		if e.Type == eventType {
+			eventTypeFound = true
+			break
+		}
+	}
+	return eventTypeFound
 }

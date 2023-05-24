@@ -48,12 +48,12 @@ func TestABCI_First_block_Height(t *testing.T) {
 	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
 	app := suite.baseApp
 
-	app.InitChain(abci.RequestInitChain{
+	app.InitChain(&abci.RequestInitChain{
 		ChainId:         "test-chain-id",
 		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}},
 		InitialHeight:   1,
 	})
-	_ = app.Commit()
+	app.Commit()
 
 	ctx := app.GetContextForCheckTx(nil)
 	require.Equal(t, int64(1), ctx.BlockHeight())

@@ -1,12 +1,7 @@
 package types
 
 import (
-	"encoding/binary"
-	"time"
-
 	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -31,51 +26,3 @@ var (
 	ParamsKey                     = collections.NewPrefix(48) // ParamsKey stores the module's params.
 	ConstitutionKey               = collections.NewPrefix(49) // ConstitutionKey stores a chain's constitution.
 )
-
-var lenTime = len(sdk.FormatTimeBytes(time.Now()))
-
-// GetProposalIDBytes returns the byte representation of the proposalID
-func GetProposalIDBytes(proposalID uint64) (proposalIDBz []byte) {
-	proposalIDBz = make([]byte, 8)
-	binary.BigEndian.PutUint64(proposalIDBz, proposalID)
-	return
-}
-
-// GetProposalIDFromBytes returns proposalID in uint64 format from a byte array
-func GetProposalIDFromBytes(bz []byte) (proposalID uint64) {
-	return binary.BigEndian.Uint64(bz)
-}
-
-// ProposalKey gets a specific proposal from the store
-func ProposalKey(proposalID uint64) []byte {
-	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
-}
-
-// InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
-func InactiveProposalByTimeKey(endTime time.Time) []byte {
-	return append(InactiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)
-}
-
-// InactiveProposalQueueKey returns the key for a proposalID in the inactiveProposalQueue
-func InactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
-	return append(InactiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
-}
-
-// SplitInactiveProposalQueueKey split the inactive proposal key and returns the proposal id and endTime
-func SplitInactiveProposalQueueKey(key []byte) (proposalID uint64, endTime time.Time) {
-	return splitKeyWithTime(key)
-}
-
-// private functions
-
-func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
-	kv.AssertKeyLength(key[1:], 8+lenTime)
-
-	endTime, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
-	if err != nil {
-		panic(err)
-	}
-
-	proposalID = GetProposalIDFromBytes(key[1+lenTime:])
-	return
-}

@@ -51,15 +51,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
-	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[0].String()).Return(suite.addrs[0], nil).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[1].String()).Return(suite.addrs[1], nil).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[2].String()).Return(suite.addrs[2], nil).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(suite.addrs[3].String()).Return(suite.addrs[3], nil).AnyTimes()
-
-	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[0]).Return(suite.addrs[0].String(), nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[1]).Return(suite.addrs[1].String(), nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[2]).Return(suite.addrs[2].String(), nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(suite.addrs[3]).Return(suite.addrs[3].String(), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().AddressCodec().Return(codecaddress.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
@@ -182,8 +174,6 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	accAddr, err := codecaddress.NewBech32Codec("cosmos").StringToBytes(address)
 	suite.Require().NoError(err)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(address).Return(accAddr, nil).AnyTimes()
-	suite.accountKeeper.EXPECT().BytesToString(accAddr).Return(address, nil).AnyTimes()
 
 	// let's grant and revoke authorization to non existing account
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[3], accAddr, basic2)

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -66,12 +67,9 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	k.GetAllEvidence(ctx)
 
 	var evidence []*codectypes.Any
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
 	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
 	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key, value []byte) error {

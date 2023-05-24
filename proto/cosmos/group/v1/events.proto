@@ -80,7 +80,7 @@ message EventLeaveGroup {
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventProposalTallyFinalized is an event emitted when a proposal tally is finalized.
+// EventProposalPruned is an event emitted when a proposal is pruned.
 message EventProposalPruned {
 
   // proposal_id is the unique ID of the proposal.

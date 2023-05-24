@@ -58,7 +58,7 @@ type MsgSubmitProposal struct {
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 	// expedided defines if the proposal is expedited or not
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 
@@ -705,7 +705,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgCancelProposal struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
 	Proposer   string `protobuf:"bytes,2,opt,name=proposer,proto3" json:"proposer,omitempty"`
@@ -761,7 +761,7 @@ func (m *MsgCancelProposal) GetProposer() string {
 // MsgCancelProposalResponse defines the response structure for executing a
 // MsgCancelProposal message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgCancelProposalResponse struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
 	// canceled_time is the time when proposal is canceled.
@@ -943,7 +943,7 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CancelProposal defines a method to cancel governance proposal
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 }
 
@@ -1038,7 +1038,7 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CancelProposal defines a method to cancel governance proposal
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 }
 

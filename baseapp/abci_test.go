@@ -47,6 +47,13 @@ func TestABCI_Info(t *testing.T) {
 	appVersion, err := suite.baseApp.AppVersion(ctx)
 	require.NoError(t, err)
 	require.Equal(t, appVersion, res.AppVersion)
+
+	header := cmtproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.baseApp.Commit()
+	require.NoError(t, suite.baseApp.SetAppVersion(ctx, 1))
+	res = suite.baseApp.Info(reqInfo)
+	require.Equal(t, uint64(1), res.AppVersion)
 }
 
 func TestABCI_InitChain(t *testing.T) {

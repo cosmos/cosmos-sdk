@@ -17,10 +17,10 @@ import (
 
 	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/client/cli"
-	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -184,7 +184,7 @@ type ModuleInputs struct {
 	Key                *store.KVStoreKey
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
-	AppVersionModifier xp.AppVersionModifier
+	AppVersionModifier baseapp.AppVersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }

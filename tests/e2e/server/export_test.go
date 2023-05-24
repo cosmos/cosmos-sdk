@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -96,7 +95,9 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
+				app.FinalizeBlock(&abci.RequestFinalizeBlock{
+					Height: i,
+				})
 				app.Commit()
 			}
 
@@ -181,13 +182,15 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
-			AppStateBytes:   appGenesis.AppState,
-		},
+	app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: simtestutil.DefaultConsensusParams,
+		AppStateBytes:   appGenesis.AppState,
+	},
 	)
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
 	app.Commit()
 
 	cmd := server.ExportCmd(

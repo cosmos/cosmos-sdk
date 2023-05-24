@@ -302,6 +302,22 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	app.prepareProposal = handler
 }
 
+func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
+	if app.sealed {
+		panic("SetExtendVoteHandler() on sealed BaseApp")
+	}
+
+	app.extendVote = handler
+}
+
+func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensionHandler) {
+	if app.sealed {
+		panic("SetVerifyVoteExtensionHandler() on sealed BaseApp")
+	}
+
+	app.verifyVoteExt = handler
+}
+
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.
 func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 	if app.sealed {

@@ -28,8 +28,10 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -77,8 +79,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -146,8 +150,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -209,8 +215,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			SortAddresses(addrs)
 
-			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-			app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: app.LastBlockHeight() + 1,
+				Hash:   app.LastCommitID().Hash,
+			})
 
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -301,8 +309,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-			app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: app.LastBlockHeight() + 1,
+				Hash:   app.LastCommitID().Hash,
+			})
 
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
@@ -357,8 +367,11 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	SortAddresses(addrs)
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
 
 	valAddr := sdk.ValAddress(addrs[0])
 	proposer := addrs[0]
@@ -439,8 +452,10 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
-			app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: app.LastBlockHeight() + 1,
+				Hash:   app.LastCommitID().Hash,
+			})
 
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]

@@ -571,7 +571,7 @@ var xxx_messageInfo_MsgCommunityPoolSpendResponse proto.InternalMessageInfo
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgDepositValidatorRewardsPool struct {
 	Depositor        string                                   `protobuf:"bytes,1,opt,name=depositor,proto3" json:"depositor,omitempty"`
 	ValidatorAddress string                                   `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -614,7 +614,7 @@ var xxx_messageInfo_MsgDepositValidatorRewardsPool proto.InternalMessageInfo
 // MsgDepositValidatorRewardsPoolResponse defines the response to executing a
 // MsgDepositValidatorRewardsPool message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgDepositValidatorRewardsPoolResponse struct {
 }
 
@@ -1001,7 +1001,7 @@ type MsgClient interface {
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error)
 }
 
@@ -1105,7 +1105,7 @@ type MsgServer interface {
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error)
 }
 

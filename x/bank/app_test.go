@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -136,7 +137,8 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
 	ctxCheck := baseApp.NewContext(true, cmtproto.Header{})
-	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
+	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
+	require.True(t, balances.Equal(keeperBalances))
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -150,8 +152,10 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-
-	baseApp.Commit()
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
@@ -163,7 +167,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
@@ -187,8 +191,10 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-
-	baseApp.Commit()
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
 
 	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
@@ -238,6 +244,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		t.Logf("testing %s", tc.desc)
 		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestTxConfig()
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
@@ -267,10 +274,11 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
-	baseApp.Commit()
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{
@@ -312,8 +320,10 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
-	baseApp.Commit()
+	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{

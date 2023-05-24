@@ -39,7 +39,10 @@ func initChain(
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
 	}
-	res := app.InitChain(req)
+	res, err := app.InitChain(&req)
+	if err != nil {
+		panic(err)
+	}
 	validators := newMockValidators(r, res.Validators, params)
 
 	return validators, genesisTimestamp, accounts, chainID
@@ -47,7 +50,6 @@ func initChain(
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
-// TODO: split this monster function up
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
@@ -62,9 +64,10 @@ func SimulateFromSeed(
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 	r := rand.New(rand.NewSource(config.Seed))
 	params := RandomParams(r)
+
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
@@ -97,13 +100,16 @@ func SimulateFromSeed(
 	accs = tmpAccs
 	nextValidators := validators
 
-	header := cmtproto.Header{
-		ChainID:         config.ChainID,
-		Height:          1,
-		Time:            genesisTimestamp,
-		ProposerAddress: validators.randomProposer(r),
-	}
-	opCount := 0
+	var (
+		pastTimes          []time.Time
+		pastVoteInfos      [][]abci.VoteInfo
+		timeOperationQueue []simulation.FutureOperation
+
+		blockHeight     int64 = 1
+		blockTime             = genesisTimestamp
+		proposerAddress       = validators.randomProposer(r)
+		opCount               = 0
+	)
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal, 1)
@@ -111,29 +117,39 @@ func SimulateFromSeed(
 
 	go func() {
 		receivedSignal := <-c
-		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
+		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, blockHeight, opCount)
 		err = fmt.Errorf("exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
 
-	var (
-		pastTimes     []time.Time
-		pastVoteInfos [][]abci.VoteInfo
+	finalizeBlockReq := RandomRequestFinalizeBlock(
+		r,
+		params,
+		validators,
+		pastTimes,
+		pastVoteInfos,
+		eventStats.Tally,
+		1,
+		genesisTimestamp,
+		validators.randomProposer(r),
 	)
-
-	request := RandomRequestBeginBlock(r, params,
-		validators, pastTimes, pastVoteInfos, eventStats.Tally, header)
 
 	// These are operations which have been queued by previous operations
 	operationQueue := NewOperationQueue()
-
-	var timeOperationQueue []simulation.FutureOperation
-
 	logWriter := NewLogWriter(testingMode)
 
 	blockSimulator := createBlockSimulator(
-		testingMode, tb, w, params, eventStats.Tally,
-		ops, operationQueue, timeOperationQueue, logWriter, config)
+		testingMode,
+		tb,
+		w,
+		params,
+		eventStats.Tally,
+		ops,
+		operationQueue,
+		timeOperationQueue,
+		logWriter,
+		config,
+	)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -141,7 +157,7 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", header.Height)
+				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", blockHeight)
 				logWriter.PrintLogs()
 				panic(r)
 			}
@@ -153,27 +169,33 @@ func SimulateFromSeed(
 		exportedParams = params
 	}
 
-	// TODO: split up the contents of this for loop into new functions
 	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
-
-		// Log the header time for future lookup
-		pastTimes = append(pastTimes, header.Time)
-		pastVoteInfos = append(pastVoteInfos, request.LastCommitInfo.Votes)
+		pastTimes = append(pastTimes, blockTime)
+		pastVoteInfos = append(pastVoteInfos, finalizeBlockReq.DecidedLastCommit.Votes)
 
 		// Run the BeginBlock handler
 		logWriter.AddEntry(BeginBlockEntry(int64(height)))
-		app.BeginBlock(request)
 
-		ctx := app.NewContext(false, header)
+		res, err := app.FinalizeBlock(finalizeBlockReq)
+		if err != nil {
+			return true, params, err
+		}
 
-		// Run queued operations. Ignores blocksize if blocksize is too small
+		ctx := app.NewContext(false, cmtproto.Header{
+			Height:          blockHeight,
+			Time:            genesisTimestamp,
+			ProposerAddress: proposerAddress,
+			ChainID:         config.ChainID,
+		})
+
+		// run queued operations; ignores block size if block size is too small
 		numQueuedOpsRan, futureOps := runQueuedOperations(
-			operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter,
+			operationQueue, int(blockHeight), tb, r, app, ctx, accs, logWriter,
 			eventStats.Tally, config.Lean, config.ChainID,
 		)
 
 		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(
-			timeOperationQueue, int(header.Height), header.Time,
+			timeOperationQueue, int(blockHeight), blockTime,
 			tb, r, app, ctx, accs, logWriter, eventStats.Tally,
 			config.Lean, config.ChainID,
 		)
@@ -182,16 +204,19 @@ func SimulateFromSeed(
 		queueOperations(operationQueue, timeOperationQueue, futureOps)
 
 		// run standard operations
-		operations := blockSimulator(r, app, ctx, accs, header)
+		operations := blockSimulator(r, app, ctx, accs, cmtproto.Header{
+			Height:          blockHeight,
+			Time:            genesisTimestamp,
+			ProposerAddress: proposerAddress,
+			ChainID:         config.ChainID,
+		})
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
-		res := app.EndBlock(abci.RequestEndBlock{})
-		header.Height++
-		header.Time = header.Time.Add(
-			time.Duration(minTimePerBlock) * time.Second)
-		header.Time = header.Time.Add(
-			time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		header.ProposerAddress = validators.randomProposer(r)
+		blockHeight++
+
+		blockTime = blockTime.Add(time.Duration(minTimePerBlock) * time.Second)
+		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+		proposerAddress = validators.randomProposer(r)
 
 		logWriter.AddEntry(EndBlockEntry(int64(height)))
 
@@ -199,7 +224,7 @@ func SimulateFromSeed(
 			app.Commit()
 		}
 
-		if header.ProposerAddress == nil {
+		if proposerAddress == nil {
 			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
 			stopEarly = true
 			break
@@ -207,7 +232,7 @@ func SimulateFromSeed(
 
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
-		request = RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, header)
+		finalizeBlockReq = RandomRequestFinalizeBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, genesisTimestamp, proposerAddress)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block
@@ -234,7 +259,7 @@ func SimulateFromSeed(
 	fmt.Fprintf(
 		w,
 		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-		header.Height, header.Time, opCount,
+		blockHeight, blockTime, opCount,
 	)
 
 	if config.ExportStatsPath != "" {
@@ -247,8 +272,13 @@ func SimulateFromSeed(
 	return false, exportedParams, nil
 }
 
-type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []simulation.Account, header cmtproto.Header) (opCount int)
+type blockSimFn func(
+	r *rand.Rand,
+	app *baseapp.BaseApp,
+	ctx sdk.Context,
+	accounts []simulation.Account,
+	header cmtproto.Header,
+) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.

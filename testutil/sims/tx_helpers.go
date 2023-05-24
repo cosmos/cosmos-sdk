@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/errors"
 	types2 "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
@@ -120,20 +121,33 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(types2.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	bz, err := txCfg.TxEncoder()(tx)
+	require.NoError(t, err)
 
+	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
+		Height: header.Height,
+		Txs:    [][]byte{bz},
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, 1, len(resBlock.TxResults))
+	txResult := resBlock.TxResults[0]
+	finalizeSuccess := txResult.Code == 0
 	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		require.True(t, finalizeSuccess)
 	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
+		require.False(t, finalizeSuccess)
 	}
 
-	app.EndBlock(types2.RequestEndBlock{})
 	app.Commit()
 
-	return gInfo, res, err
+	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
+	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
+	if finalizeSuccess {
+		err = nil
+	} else {
+		err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
+	}
+
+	return gInfo, &txRes, err
 }

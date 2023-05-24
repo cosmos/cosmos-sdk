@@ -32,9 +32,9 @@ var (
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) abci.ResponseQuery {
+func QueryResult(err error, debug bool) *abci.ResponseQuery {
 	space, code, log := errors.ABCIInfo(err, debug)
-	return abci.ResponseQuery{
+	return &abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,
 		Log:       log,

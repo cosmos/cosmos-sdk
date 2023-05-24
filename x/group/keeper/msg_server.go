@@ -803,10 +803,6 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, groupInfo g
 			p.Status = group.PROPOSAL_STATUS_REJECTED
 		}
 
-		if err != nil {
-			return err
-		}
-
 	}
 
 	return nil
@@ -883,7 +879,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 
 		// Emit event for proposal finalized with its result
 		if err := ctx.EventManager().EmitTypedEvent(
-			&group.EventProposalFinalized{
+			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,

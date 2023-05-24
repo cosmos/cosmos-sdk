@@ -23,7 +23,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var EventTallyResult = "cosmos.group.v1.EventProposalFinalized"
+var EventTallyResult = "cosmos.group.v1.EventProposalPruned"
 
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 	for i := 50; i < 70; i++ {
@@ -2533,7 +2533,7 @@ func (s *TestSuite) TestExecProposal() {
 		expBalance        bool
 		expFromBalances   sdk.Coin
 		expToBalances     sdk.Coin
-		checkEvents       func(sdkCtx sdk.Context)
+		postRun           func(sdkCtx sdk.Context)
 	}{
 		"proposal executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2547,7 +2547,7 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
-			checkEvents: func(sdkCtx sdk.Context) {
+			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
 				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
@@ -2565,7 +2565,7 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
-			checkEvents: func(sdkCtx sdk.Context) {
+			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
 				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
@@ -2578,7 +2578,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			checkEvents: func(sdkCtx sdk.Context) {
+			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
 				s.Require().False(eventTypeFound(events, EventTallyResult))
 			},
@@ -2589,7 +2589,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			checkEvents: func(sdkCtx sdk.Context) {
+			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
 				s.Require().False(eventTypeFound(events, EventTallyResult))
 			},
@@ -2616,7 +2616,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"Decision policy also applied after voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2626,7 +2626,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal before MinExecutionPeriod should fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2636,7 +2636,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(4 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE, // Because MinExecutionPeriod has not passed
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal at exactly MinExecutionPeriod should pass": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2647,16 +2647,9 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			checkEvents: func(sdkCtx sdk.Context) {
+			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				execEventFound := false
-				for _, e := range events {
-					if e.Type == EventTallyResult {
-						execEventFound = true
-						break
-					}
-				}
-				s.Require().True(execEventFound)
+				s.Require().True(eventTypeFound(events, EventTallyResult))
 			},
 		},
 		"prevent double execution when successful": {
@@ -2679,7 +2672,7 @@ func (s *TestSuite) TestExecProposal() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2692,7 +2685,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2714,7 +2707,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			checkEvents:       func(sdkCtx sdk.Context) {},
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 	}
 	for msg, spec := range specs {
@@ -2760,7 +2753,7 @@ func (s *TestSuite) TestExecProposal() {
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
 			}
-			spec.checkEvents(sdkCtx)
+			spec.postRun(sdkCtx)
 		})
 
 	}

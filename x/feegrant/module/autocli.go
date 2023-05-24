@@ -1,19 +1,12 @@
 package module
 
 import (
+	"fmt"
+	"strings"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	feegrantv1beta1 "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/version"
-	"strings"
-)
-
-const (
-	FlagExpiration  = "expiration"
-	FlagPeriod      = "period"
-	FlagPeriodLimit = "period-limit"
-	FlagSpendLimit  = "spend-limit"
-	FlagAllowedMsgs = "allowed-messages"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {

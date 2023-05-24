@@ -75,6 +75,16 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
+	defer func() {
+		// InitChain represents the state of the application BEFORE the first block,
+		// i.e. the genesis block. This means that when processing the app's InitChain
+		// handler, the block height is zero by default. However, after Commit is called
+		// the height needs to reflect the true block height.
+		initHeader.Height = req.InitialHeight
+		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader)
+		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(initHeader)
+	}()
+
 	if app.initChainer == nil {
 		return &abci.ResponseInitChain{}, nil
 	}
@@ -117,9 +127,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		appHash = emptyHash[:]
 	}
 
-	// NOTE: We don't commit, since FinalizeBlock for a block at height
-	// initial_height starts from this state.
-	return &abci.ResponseInitChain{
+	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
+	// this FinalizeBlockState.
+	return abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
 		AppHash:         appHash,

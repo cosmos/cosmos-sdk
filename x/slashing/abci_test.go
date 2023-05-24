@@ -63,8 +63,8 @@ func TestBeginBlocker(t *testing.T) {
 	}
 
 	ctx = ctx.WithVoteInfos([]abci.VoteInfo{{
-		Validator:       val,
-		SignedLastBlock: true,
+		Validator:   val,
+		BlockIdFlag: cmtproto.BlockIDFlagCommit,
 	}})
 
 	slashing.BeginBlocker(ctx, slashingKeeper)
@@ -78,23 +78,23 @@ func TestBeginBlocker(t *testing.T) {
 
 	height := int64(0)
 
-	// for 1000 blocks, mark the validator as having signed
+	// for 100 blocks, mark the validator as having signed
 	for ; height < slashingKeeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
-				Validator:       val,
-				SignedLastBlock: true,
+				Validator:   val,
+				BlockIdFlag: cmtproto.BlockIDFlagCommit,
 			}})
 
 		slashing.BeginBlocker(ctx, slashingKeeper)
 	}
 
-	// for 500 blocks, mark the validator as having not signed
+	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((slashingKeeper.SignedBlocksWindow(ctx) * 2) - slashingKeeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
-				Validator:       val,
-				SignedLastBlock: false,
+				Validator:   val,
+				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
 			}})
 
 		slashing.BeginBlocker(ctx, slashingKeeper)

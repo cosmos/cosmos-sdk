@@ -355,7 +355,7 @@ Open a new terminal window and submit an upgrade proposal along with a deposit a
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```
 
-**>= v0.48+**:
+**>= v0.50+**:
 
 ```shell
 ./build/simd tx upgrade software-upgrade test1 --title upgrade --summary upgrade --upgrade-height 200 --from validator --yes

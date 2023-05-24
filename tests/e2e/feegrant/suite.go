@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,10 +17,12 @@ import (
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -597,6 +600,187 @@ func (s *E2ETestSuite) TestTxWithFeeGrant() {
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			s.Require().Equal(tc.expErrCode, resp.Code, resp)
+		})
+	}
+}
+
+func (s *E2ETestSuite) TestFilteredFeeAllowance() {
+	s.T().Skip() // TODO to re-enable in #12274
+
+	val := s.network.Validators[0]
+
+	granter := val.Address
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	pub, err := k.GetPubKey()
+	s.Require().NoError(err)
+	grantee := sdk.AccAddress(pub.Address())
+
+	clientCtx := val.ClientCtx
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+	}
+	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
+
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"invalid granter address",
+			append(
+				[]string{
+					"not an address",
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"invalid grantee address",
+			append(
+				[]string{
+					granter.String(),
+					"not an address",
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid filter fee grant",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+			}
+		})
+	}
+
+	// get filtered fee allowance and check info
+	grantAllowneceURL := val.APIAddress + "/cosmos/feegrant/v1beta1/allowance/%s/%s"
+	uri := fmt.Sprintf(grantAllowneceURL, granter.String(), grantee.String())
+	respBytes, err := testutil.GetRequest(uri)
+	//cmd := cli.GetCmdQueryFeeGrant(codecaddress.NewBech32Codec("cosmos"))
+	//out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	respAllow := &feegrant.QueryAllowanceResponse{}
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(respBytes, respAllow), string(respBytes))
+	resp := respAllow.GetAllowance()
+	s.Require().Equal(resp.Grantee, resp.Grantee)
+	s.Require().Equal(resp.Granter, resp.Granter)
+
+	grant, err := resp.GetGrant()
+	s.Require().NoError(err)
+
+	filteredFeeGrant, err := grant.(*feegrant.AllowedMsgAllowance).GetAllowance()
+	s.Require().NoError(err)
+
+	s.Require().Equal(
+		filteredFeeGrant.(*feegrant.BasicAllowance).SpendLimit.String(),
+		spendLimit.String(),
+	)
+
+	// exec filtered fee allowance
+	cases := []struct {
+		name         string
+		malleate     func() (testutil.BufferWriter, error)
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"valid proposal tx",
+			func() (testutil.BufferWriter, error) {
+				return govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
+					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+				)
+			},
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"valid weighted_vote tx",
+			func() (testutil.BufferWriter, error) {
+				return govtestutil.MsgVote(val.ClientCtx, grantee.String(), "0", "yes",
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+				)
+			},
+			&sdk.TxResponse{},
+			2,
+		},
+		{
+			"should fail with unauthorized msgs",
+			func() (testutil.BufferWriter, error) {
+				args := append(
+					[]string{
+						grantee.String(),
+						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
+					},
+					commonFlags...,
+				)
+				cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
+				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			},
+			&sdk.TxResponse{},
+			7,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out, err := tc.malleate()
+			s.Require().NoError(err)
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			txResp := tc.respType.(*sdk.TxResponse)
+			s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 		})
 	}
 }

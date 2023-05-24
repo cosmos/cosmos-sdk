@@ -37,13 +37,13 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 }
 
 func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
-	val.ConsensusPubkey = newPubKey
-
 	if err := k.DeleteValidatorByConsAddr(ctx, val); err != nil {
 		return err
 	}
 
 	k.DeleteValidatorByPowerIndex(ctx, val)
+
+	val.ConsensusPubkey = newPubKey
 	k.SetValidator(ctx, val)
 	if err := k.SetValidatorByConsAddr(ctx, val); err != nil {
 		return err

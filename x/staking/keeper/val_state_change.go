@@ -236,7 +236,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			return nil, err
 		}
 
-		if !validator.Jailed {
+		if !(validator.Jailed || validator.Status != types.Bonded) {
 			updates = append(updates, abci.ValidatorUpdate{
 				PubKey: oldTmPk,
 				Power:  0,

@@ -10,12 +10,12 @@ import (
 )
 
 // GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool sdk.ModuleAccountI) {
+func (k Keeper) GetBondedPool(ctx context.Context) (bondedPool sdk.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool sdk.ModuleAccountI) {
+func (k Keeper) GetNotBondedPool(ctx context.Context) (notBondedPool sdk.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 
@@ -42,7 +42,7 @@ func (k Keeper) notBondedTokensToBonded(ctx context.Context, tokens math.Int) er
 }
 
 // burnBondedTokens removes coins from the bonded pool module account
-func (k Keeper) burnBondedTokens(ctx sdk.Context, amt math.Int) error {
+func (k Keeper) burnBondedTokens(ctx context.Context, amt math.Int) error {
 	if !amt.IsPositive() {
 		// skip as no coins need to be burned
 		return nil
@@ -59,7 +59,7 @@ func (k Keeper) burnBondedTokens(ctx sdk.Context, amt math.Int) error {
 }
 
 // burnNotBondedTokens removes coins from the not bonded pool module account
-func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt math.Int) error {
+func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 	if !amt.IsPositive() {
 		// skip as no coins need to be burned
 		return nil

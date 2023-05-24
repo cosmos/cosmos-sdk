@@ -12,16 +12,21 @@ import (
 // Validator Set
 
 // iterate through the validator set and perform the provided function
-func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsKey)
+func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
+	if err != nil {
+		return err
+	}
 	defer iterator.Close()
 
 	i := int64(0)
 
 	for ; iterator.Valid(); iterator.Next() {
-		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
+		validator, err := types.UnmarshalValidator(k.cdc, iterator.Value())
+		if err != nil {
+			return err
+		}
 		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 
 		if stop {
@@ -29,6 +34,8 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 		}
 		i++
 	}
+
+	return nil
 }
 
 // iterate through the bonded validator set and perform the provided function
@@ -39,7 +46,10 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 		return err
 	}
 
-	iterator := storetypes.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator, err := store.ReverseIterator(types.ValidatorsByPowerIndexKey, storetypes.PrefixEndBytes(types.ValidatorsByPowerIndexKey))
+	if err != nil {
+		return err
+	}
 	defer iterator.Close()
 
 	i := int64(0)
@@ -55,12 +65,17 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 			i++
 		}
 	}
+
+	return nil
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
-	iterator := k.LastValidatorsIterator(ctx)
+func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
+	iterator, err := k.LastValidatorsIterator(ctx)
 	defer iterator.Close()
+	if err != nil {
+		return err
+	}
 
 	i := int64(0)
 
@@ -78,6 +93,7 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 		}
 		i++
 	}
+	return nil
 }
 
 // Validator gets the Validator interface for a particular address
@@ -98,27 +114,32 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 }
 
 // Delegation get the delegation interface for a particular set of delegator and validator addresses
-func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.DelegationI {
-	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
-	if !ok {
-		return nil
+func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
+	bond, err := k.GetDelegation(ctx, addrDel, addrVal)
+	if err != nil {
+		return nil, err
 	}
 
-	return bond
+	return bond, nil
 }
 
 // iterate through all of the delegations from a delegator
-func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
+func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
-) {
-	store := ctx.KVStore(k.storeKey)
+) error {
+	store := k.storeService.OpenKVStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
-
-	iterator := storetypes.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
+	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
+	if err != nil {
+		return err
+	}
 	defer iterator.Close()
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
-		del := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		del, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
+		if err != nil {
+			return err
+		}
 
 		stop := fn(i, del)
 		if stop {
@@ -126,18 +147,25 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 		}
 		i++
 	}
+
+	return nil
 }
 
 // return all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
-func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Delegation) {
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
+func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.Delegation, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.DelegationKey, storetypes.PrefixEndBytes(types.DelegationKey))
+	if err != nil {
+		return delegations, err
+	}
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		delegation, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
+		if err != nil {
+			return delegations, err
+		}
 		delegations = append(delegations, delegation)
 	}
 

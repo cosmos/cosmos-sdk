@@ -8,8 +8,8 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	store "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -213,7 +213,7 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
-	Key           *store.KVStoreKey
+	StoreService  store.KVStoreService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -236,7 +236,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 		authority.String(),

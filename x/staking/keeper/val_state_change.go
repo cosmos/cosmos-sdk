@@ -253,7 +253,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 // Validator state transitions
 
-func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k Keeper) bondedToUnbonding(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsBonded() {
 		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
 	}
@@ -261,7 +261,7 @@ func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (t
 	return k.BeginUnbondingValidator(ctx, validator)
 }
 
-func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k Keeper) unbondingToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
@@ -269,7 +269,7 @@ func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (t
 	return k.bondValidator(ctx, validator)
 }
 
-func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k Keeper) unbondedToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
@@ -315,7 +315,7 @@ func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) 
 }
 
 // perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
@@ -420,7 +420,7 @@ func (k Keeper) completeUnbondingValidator(ctx context.Context, validator types.
 type validatorsByAddr map[string][]byte
 
 // get the last validator set
-func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, error) {
+func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
 	iterator, err := k.LastValidatorsIterator(ctx)

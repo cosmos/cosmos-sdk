@@ -367,7 +367,8 @@ func (k Keeper) redelegationEntryCanComplete(ctx context.Context, id uint64) err
 	}
 	red.Entries[i].UnbondingOnHoldRefCount--
 
-	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(ctx.BlockHeader().Time) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(sdkCtx.BlockHeader().Time) {
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
@@ -379,13 +380,10 @@ func (k Keeper) redelegationEntryCanComplete(ctx context.Context, id uint64) err
 
 	// set the redelegation or remove it if there are no more entries
 	if len(red.Entries) == 0 {
-		k.RemoveRedelegation(ctx, red)
-	} else {
-		k.SetRedelegation(ctx, red)
+		return k.RemoveRedelegation(ctx, red)
 	}
 
-	// Successfully completed unbonding
-	return nil
+	return k.SetRedelegation(ctx, red)
 }
 
 func (k Keeper) validatorUnbondingCanComplete(ctx context.Context, id uint64) error {

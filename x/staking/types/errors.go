@@ -3,11 +3,6 @@ package types
 import "cosmossdk.io/errors"
 
 // x/staking module sentinel errors
-//
-// TODO: Many of these errors are redundant. They should be removed and replaced
-// by sdkerrors.ErrInvalidRequest.
-//
-// REF: https://github.com/cosmos/cosmos-sdk/issues/5450
 var (
 	ErrEmptyValidatorAddr              = errors.Register(ModuleName, 2, "empty validator address")
 	ErrNoValidatorFound                = errors.Register(ModuleName, 3, "validator does not exist")

@@ -32,18 +32,18 @@ message WeightedVoteOption {
   VoteOption option = 1;
 
   // weight is the vote weight associated with the vote option.
-  string     weight = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  string weight = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }
 
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 message Deposit {
   // proposal_id defines the unique id of the proposal.
-  uint64   proposal_id                     = 1;
-  
+  uint64 proposal_id = 1;
+
   // depositor defines the deposit addresses from the proposals.
-  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // amount to be deposited by depositor.
   repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
@@ -51,33 +51,33 @@ message Deposit {
 // Proposal defines the core field members of a governance proposal.
 message Proposal {
   // id defines the unique id of the proposal.
-  uint64   id                           = 1;
+  uint64 id = 1;
 
   // messages are the arbitrary messages to be executed if the proposal passes.
   repeated google.protobuf.Any messages = 2;
 
   // status defines the proposal status.
-  ProposalStatus               status   = 3;
+  ProposalStatus status = 3;
 
   // final_tally_result is the final tally result of the proposal. When
   // querying a proposal via gRPC, this field is not populated until the
   // proposal's voting period has ended.
-  TallyResult               final_tally_result        = 4;
-  
+  TallyResult final_tally_result = 4;
+
   // submit_time is the time of proposal submission.
-  google.protobuf.Timestamp submit_time               = 5 [(gogoproto.stdtime) = true];
-  
+  google.protobuf.Timestamp submit_time = 5 [(gogoproto.stdtime) = true];
+
   // deposit_end_time is the end time for deposition.
-  google.protobuf.Timestamp deposit_end_time          = 6 [(gogoproto.stdtime) = true];
- 
+  google.protobuf.Timestamp deposit_end_time = 6 [(gogoproto.stdtime) = true];
+
   // total_deposit is the total deposit on the proposal.
-  repeated cosmos.base.v1beta1.Coin total_deposit     = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
+  repeated cosmos.base.v1beta1.Coin total_deposit = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
   // voting_start_time is the starting time to vote on a proposal.
-  google.protobuf.Timestamp         voting_start_time = 8 [(gogoproto.stdtime) = true];
- 
+  google.protobuf.Timestamp voting_start_time = 8 [(gogoproto.stdtime) = true];
+
   // voting_end_time is the end time of voting on a proposal.
-  google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp voting_end_time = 9 [(gogoproto.stdtime) = true];
 
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 10;
@@ -122,11 +122,11 @@ enum ProposalStatus {
 // TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
   // yes_count is the number of yes votes on a proposal.
-  string yes_count          = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string yes_count = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
   // abstain_count is the number of abstain votes on a proposal.
-  string abstain_count      = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string abstain_count = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
   // no_count is the number of no votes on a proposal.
-  string no_count           = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
   // no_with_veto_count is the number of no with veto votes on a proposal.
   string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
@@ -138,8 +138,8 @@ message Vote {
   uint64 proposal_id = 1;
 
   // voter is the voter address of the proposal.
-  string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   reserved 3;
 
   // options is the weighted vote options.
@@ -214,7 +214,7 @@ message Params {
 
   // burn deposits if the proposal does not enter voting period
   bool burn_proposal_deposit_prevote = 14;
-  
+
   // burn deposits if quorum with vote type no_veto is met
   bool burn_vote_veto = 15;
 }

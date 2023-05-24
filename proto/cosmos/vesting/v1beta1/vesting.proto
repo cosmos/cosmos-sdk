@@ -44,7 +44,7 @@ message ContinuousVestingAccount {
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
   // Vesting start time, as unix timestamp (in seconds).
-  int64              start_time           = 2;
+  int64 start_time = 2;
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all

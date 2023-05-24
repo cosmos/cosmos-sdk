@@ -30,7 +30,7 @@ type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExt
 // pre-commit vote extension.
 type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
 
-// LegacyBeginBlocker defines a function type alias for executing application
+// BeginBlocker defines a function type alias for executing application
 // business logic before transactions are executed.
 //
 // Note: The BeginBlock ABCI method no longer exists in the ABCI specification
@@ -39,7 +39,7 @@ type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) 
 // and allows for existing BeginBlock functionality within applications.
 type BeginBlocker func(Context) (BeginBlock, error)
 
-// LegacyEndBlocker defines a function type alias for executing application
+// EndBlocker defines a function type alias for executing application
 // business logic after transactions are executed but before committing.
 //
 // Note: The EndBlock ABCI method no longer exists in the ABCI specification

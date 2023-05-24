@@ -156,5 +156,9 @@ require (
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 
-// TODO: remove after 0.7.0 release
-replace cosmossdk.io/x/tx => ../../x/tx
+replace (
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/core => ../../core
+	cosmossdk.io/x/tx => ../../x/tx
+	github.com/cosmos/cosmos-sdk => ../../
+)

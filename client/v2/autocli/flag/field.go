@@ -9,8 +9,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/internal/util"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+
+	"cosmossdk.io/client/v2/internal/util"
 )
 
 // namingOptions specifies internal naming options for flags.
@@ -64,8 +65,7 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
-	}
-	if field.IsMap() {
+	} else if field.IsMap() {
 		keyKind := field.MapKey().Kind()
 		valKind := field.MapValue().Kind()
 		val = bindSimpleMapFlag(flagSet, keyKind, valKind, name, shorthand, usage)

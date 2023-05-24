@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"sort"
 	"sync"
 
@@ -54,13 +55,36 @@ type Manager struct {
 	multistore types.Snapshotter
 	extensions map[string]types.ExtensionSnapshotter
 
-	mtx                sync.Mutex
-	operation          operation
-	chRestore          chan<- io.ReadCloser
-	chRestoreDone      <-chan restoreDone
-	restoreChunkHashes [][]byte
-	restoreChunkIndex  uint32
+	mtx               sync.Mutex
+	operation         operation
+	chRestore         chan<- uint32
+	chRestoreDone     <-chan restoreDone
+	restoreSnapshot   *types.Snapshot
+	restoreChunkIndex uint32
 }
+
+// operation represents a Manager operation. Only one operation can be in progress at a time.
+type operation string
+
+// restoreDone represents the result of a restore operation.
+type restoreDone struct {
+	complete bool  // if true, restore completed successfully (not prematurely)
+	err      error // if non-nil, restore errored
+}
+
+const (
+	opNone     operation = ""
+	opSnapshot operation = "snapshot"
+	opPrune    operation = "prune"
+	opRestore  operation = "restore"
+
+	chunkBufferSize   = 4
+	chunkIDBufferSize = 1024
+
+	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
+)
+
+var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
 func NewManager(store *Store, multistore types.Snapshotter) *Manager {
@@ -132,7 +156,7 @@ func (m *Manager) endLocked() {
 		m.chRestore = nil
 	}
 	m.chRestoreDone = nil
-	m.restoreChunkHashes = nil
+	m.restoreSnapshot = nil
 	m.restoreChunkIndex = 0
 }
 
@@ -273,11 +297,18 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	}
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
-	chChunks := make(chan io.ReadCloser, chunkBufferSize)
+	chChunkIDs := make(chan uint32, chunkIDBufferSize)
 	chDone := make(chan restoreDone, 1)
 
+	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
+	}
+
+	chChunks := m.loadChunkStream(snapshot.Height, snapshot.Format, chChunkIDs)
+
 	go func() {
-		err := m.restoreSnapshot(snapshot, chChunks)
+		err := m.doRestoreSnapshot(snapshot, chChunks)
 		chDone <- restoreDone{
 			complete: err == nil,
 			err:      err,
@@ -285,16 +316,37 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		close(chDone)
 	}()
 
-	m.chRestore = chChunks
+	m.chRestore = chChunkIDs
 	m.chRestoreDone = chDone
-	m.restoreChunkHashes = snapshot.Metadata.ChunkHashes
+	m.restoreSnapshot = &snapshot
 	m.restoreChunkIndex = 0
 	return nil
 }
 
-// restoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
-func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
-	var nextItem types.SnapshotItem
+func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan uint32) <-chan io.ReadCloser {
+	chunks := make(chan io.ReadCloser, chunkBufferSize)
+	go func() {
+		defer close(chunks)
+
+		for chunkID := range chunkIDs {
+			chunk, err := m.store.loadChunkFile(height, format, chunkID)
+			if err != nil {
+				m.logger.Error("load chunk file failed", "height", height, "format", format, "chunk", chunkID, "err", err)
+				break
+			}
+			chunks <- chunk
+		}
+	}()
+
+	return chunks
+}
+
+// doRestoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
+func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
+	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
+	}
 
 	streamReader, err := NewStreamReader(chChunks)
 	if err != nil {
@@ -357,7 +409,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "no restore operation in progress")
 	}
 
-	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
+	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
 		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "received unexpected chunk")
 	}
 
@@ -374,19 +426,30 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 
 	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
-	expected := m.restoreChunkHashes[m.restoreChunkIndex]
+	expected := m.restoreSnapshot.Metadata.ChunkHashes[m.restoreChunkIndex]
 	if !bytes.Equal(hash[:], expected) {
 		return false, sdkerrors.Wrapf(types.ErrChunkHashMismatch,
 			"expected %x, got %x", hash, expected)
 	}
 
+	if err := m.store.saveChunkContent(chunk, m.restoreChunkIndex, m.restoreSnapshot); err != nil {
+		return false, sdkerrors.Wrapf(err, "save chunk content %d", m.restoreChunkIndex)
+	}
+
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
-	m.chRestore <- io.NopCloser(bytes.NewReader(chunk))
+	m.chRestore <- m.restoreChunkIndex
 	m.restoreChunkIndex++
 
-	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
+	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
 		close(m.chRestore)
 		m.chRestore = nil
+
+		// the chunks are all written into files, we can save the snapshot to the db,
+		// even if the restoration may not completed yet.
+		if err := m.store.saveSnapshot(m.restoreSnapshot); err != nil {
+			return false, sdkerrors.Wrap(err, "save restoring snapshot")
+		}
+
 		done := <-m.chRestoreDone
 		m.endLocked()
 		if done.err != nil {
@@ -395,6 +458,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if !done.complete {
 			return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended prematurely")
 		}
+
 		return true, nil
 	}
 	return false, nil
@@ -420,7 +484,7 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	}
 	defer m.endLocked()
 
-	return m.restoreSnapshot(*snapshot, ch)
+	return m.doRestoreSnapshot(*snapshot, ch)
 }
 
 // sortedExtensionNames sort extension names for deterministic iteration.

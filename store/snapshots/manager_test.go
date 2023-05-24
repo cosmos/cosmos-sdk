@@ -214,6 +214,13 @@ func TestManager_Restore(t *testing.T) {
 	assert.Equal(t, expectItems, target.items)
 	assert.Equal(t, 10, len(extSnapshotter.state))
 
+	// The snapshot is saved in local snapshot store
+	snapshots, err := store.List()
+	require.NoError(t, err)
+	snapshot := snapshots[0]
+	require.Equal(t, uint64(3), snapshot.Height)
+	require.Equal(t, types.CurrentFormat, snapshot.Format)
+
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{
 		Height:   3,

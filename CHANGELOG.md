@@ -216,13 +216,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#16171](https://github.com/cosmos/cosmos-sdk/pull/16171) Use collections for proposal state management (part 1):
     * Removed: keeper: `GetProposal`, `UnmarshalProposal`, `MarshalProposal`, `IterateProposal`, `GetProposal`, `GetProposalFiltered`, `GetProposals`, `GetProposalID`, `SetProposalID`
     * Remove: errors unused errors
-
 * (sims) [#16155](https://github.com/cosmos/cosmos-sdk/pull/16155) 
-    * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
-    * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
-    * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
-* (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Add API `StartCmdWithOptions` to create customized start command.
-
     * `simulation.NewOperationMsg` now marshals the operation msg as proto bytes instead of legacy amino JSON bytes.
     * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
     * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.

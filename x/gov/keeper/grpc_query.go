@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
@@ -19,9 +20,9 @@ import (
 
 var _ v1.QueryServer = queryServer{}
 
-type queryServer struct{ k Keeper }
+type queryServer struct{ k *Keeper }
 
-func NewQueryServer(k Keeper) v1.QueryServer {
+func NewQueryServer(k *Keeper) v1.QueryServer {
 	return queryServer{k: k}
 }
 
@@ -67,7 +68,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
-			voter, err := q.k.authKeeper.StringToBytes(req.Voter)
+			voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 			if err != nil {
 				return false, err
 			}
@@ -79,7 +80,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
+			depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 			if err != nil {
 				return false, err
 			}
@@ -116,7 +117,7 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
-	voter, err := q.k.authKeeper.StringToBytes(req.Voter)
+	voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +205,7 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
-	depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
+	depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +284,7 @@ type legacyQueryServer struct{ qs v1.QueryServer }
 
 // NewLegacyQueryServer returns an implementation of the v1beta1 legacy QueryServer interface.
 func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
-	return &legacyQueryServer{qs: NewQueryServer(*k)}
+	return &legacyQueryServer{qs: NewQueryServer(k)}
 }
 
 func (q legacyQueryServer) Proposal(ctx context.Context, req *v1beta1.QueryProposalRequest) (*v1beta1.QueryProposalResponse, error) {

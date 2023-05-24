@@ -229,30 +229,25 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	testCases := map[string]struct {
 		snapshot *abci.Snapshot
 		result   abci.ResponseOfferSnapshot_Result
-		isErr    bool
 	}{
-		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT, false},
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
 		"invalid format": {&abci.Snapshot{
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT_FORMAT, true},
+		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 2, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT, true},
+		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT, true},
+		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
 			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
-		}, abci.ResponseOfferSnapshot_REJECT, true},
+		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			resp, err := suite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
-			if tc.isErr {
-				require.Error(t, err)
-				return
-			}
 			require.NoError(t, err)
 			require.Equal(t, tc.result, resp.Result)
 		})

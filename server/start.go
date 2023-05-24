@@ -289,12 +289,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
-	genDocProvider := getGenDocProvider(cmtCfg)
-	genDoc, err := genDocProvider()
-	if err != nil {
-		return err
-	}
-
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
@@ -305,7 +299,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		if err != nil {
 			return err
 		}
-
 		defer cleanupFn()
 
 		// Add the tx service to the gRPC router. We only need to register this
@@ -329,7 +322,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return err
 	}
 
-	clientCtx = clientCtx.WithChainID(genDoc.ChainID)
 	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err

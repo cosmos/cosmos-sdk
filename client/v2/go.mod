@@ -125,3 +125,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.7 // indirect
 )
+
+// TODO: remove after 0.7.0 release
+replace cosmossdk.io/x/tx => ../../x/tx

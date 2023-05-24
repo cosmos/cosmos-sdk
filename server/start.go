@@ -166,14 +166,10 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
-
-				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator, opts)
-				})
 			}
 
 			return wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator, opts)
+				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 		},
 	}
@@ -230,40 +226,34 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	return cmd
 }
 
-func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) error {
-	addr := svrCtx.Viper.GetString(flagAddress)
-	transport := svrCtx.Viper.GetString(flagTransport)
-	home := svrCtx.Viper.GetString(flags.FlagHome)
-
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
+	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Should we be using startTraceServer, and defer closing the traceWriter?
-	// right now its left unclosed
-	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
-	traceWriter, err := openTraceWriter(traceWriterFile)
+	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
 		return err
 	}
+	defer appCleanupFn()
 
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	config, err := serverconfig.GetConfig(svrCtx.Viper)
+	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
-		return err
-	}
-
-	if err := config.ValidateBasic(); err != nil {
-		return err
-	}
-
-	if _, err := startTelemetry(config); err != nil {
 		return err
 	}
 
 	emitServerInfoMetrics()
+
+	if !withCmt {
+		return startStandAlone(svrCtx, app, opts)
+	}
+	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+}
+
+func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOptions) error {
+	addr := svrCtx.Viper.GetString(flagAddress)
+	transport := svrCtx.Viper.GetString(flagTransport)
 
 	cmtApp := NewCometABCIWrapper(app)
 	svr, err := server.NewServer(addr, transport, cmtApp)
@@ -273,11 +263,7 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	g, ctx := errgroup.WithContext(ctx)
-
-	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+	g, ctx := getCtx(svrCtx, false)
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -295,32 +281,13 @@ func startStandAlone(svrCtx *Context, appCreator types.AppCreator, opts StartCmd
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, opts StartCmdOptions) error {
+func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
+	metrics *telemetry.Metrics, opts StartCmdOptions,
+) error {
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
-	if err != nil {
-		return err
-	}
-
-	svrCfg, err := getAndValidateConfig(svrCtx)
-	if err != nil {
-		return err
-	}
-
-	traceWriter, traceWriterCleanup, err := setupTraceWriter(svrCtx)
-	if err != nil {
-		return err
-	}
-
-	app := appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-
-	// TODO: Move this to only be done if were launching the node. (So not in GRPC-only mode)
-	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
+	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	genDocProvider := getGenDocProvider(cmtCfg)
 	genDoc, err := genDocProvider()
@@ -328,20 +295,18 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		return err
 	}
 
-	var (
-		tmNode   *node.Node
-		gRPCOnly = svrCtx.Viper.GetBool(flagGRPCOnly)
-	)
-
 	if gRPCOnly {
+		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, err = startCmtNode(cmtCfg, genDocProvider, nodeKey, app, svrCtx)
+		tmNode, cleanupFn, err := startCmtNode(cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
+
+		defer cleanupFn()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
@@ -357,18 +322,7 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		}
 	}
 
-	metrics, err := startTelemetry(svrCfg)
-	if err != nil {
-		return err
-	}
-
-	emitServerInfoMetrics()
-
-	ctx, cancelFn := context.WithCancel(context.Background())
-	g, ctx := errgroup.WithContext(ctx)
-
-	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
+	g, ctx := getCtx(svrCtx, true)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -387,66 +341,49 @@ func startInProcess(svrCtx *Context, clientCtx client.Context, appCreator types.
 		}
 	}
 
-	// At this point it is safe to block the process if we're in gRPC-only mode as
-	// we do not need to handle any CometBFT related processes.
-	if gRPCOnly {
-		// wait for signal capture and gracefully return
-		return g.Wait()
-	}
-
-	// In case the operator has both gRPC and API servers disabled, there is
-	// nothing blocking this root process, so we need to block manually, so we'll
-	// create an empty blocking loop.
-	g.Go(func() error {
-		<-ctx.Done()
-		return nil
-	})
-
-	// deferred cleanup function
-	// TODO: Make a generic cleanup function that takes in several func(), and runs them all.
-	// then we defer that.
-	defer func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
-			_ = app.Close()
-		}
-
-		if traceWriterCleanup != nil {
-			traceWriterCleanup()
-		}
-	}()
-
 	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
 // TODO: Move nodeKey into being created within the function.
 func startCmtNode(
 	cfg *cmtcfg.Config,
-	genDocProvider node.GenesisDocProvider,
-	nodeKey *p2p.NodeKey,
 	app types.Application,
 	svrCtx *Context,
-) (tmNode *node.Node, err error) {
+) (tmNode *node.Node, cleanupFn func(), err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, cleanupFn, err
+	}
+
 	cmtApp := NewCometABCIWrapper(app)
 	tmNode, err = node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
-		genDocProvider,
+		getGenDocProvider(cfg),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
 	if err != nil {
-		return tmNode, err
+		return tmNode, cleanupFn, err
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return tmNode, err
+		return tmNode, cleanupFn, err
 	}
-	return tmNode, nil
+
+	cleanupFn = func() {
+		if tmNode != nil && tmNode.IsRunning() {
+			_ = tmNode.Stop()
+			_ = app.Close()
+		}
+	}
+
+	return tmNode, cleanupFn, nil
 }
 
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
@@ -474,14 +411,14 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {
+	// clean up the traceWriter when the server is shutting down
+	cleanup = func() {}
+
 	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err = openTraceWriter(traceWriterFile)
 	if err != nil {
 		return traceWriter, cleanup, err
 	}
-
-	// clean up the traceWriter when the server is shutting down
-	cleanup = func() {}
 
 	// if flagTraceStore is not used then traceWriter is nil
 	if traceWriter != nil {
@@ -646,4 +583,34 @@ func emitServerInfoMetrics() {
 	}
 
 	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
+}
+
+func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+	return g, ctx
+}
+
+func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
+	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
+	if err != nil {
+		return app, traceCleanupFn, err
+	}
+
+	home := svrCtx.Config.RootDir
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+	if err != nil {
+		return app, traceCleanupFn, err
+	}
+
+	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	cleanupFn = func() {
+		traceCleanupFn()
+		if localErr := app.Close(); localErr != nil {
+			svrCtx.Logger.Error(localErr.Error())
+		}
+	}
+	return app, cleanupFn, nil
 }

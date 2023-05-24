@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -22,8 +23,7 @@ var (
 )
 
 func (s *KeeperTestSuite) execExpectCalls() {
-	s.accountKeeper.EXPECT().StringToBytes(Addr.String()).Return(Addr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(Addr).Return(Addr.String(), nil).AnyTimes()
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 }
 
@@ -467,7 +467,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -556,9 +556,6 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
-
-	s.accountKeeper.EXPECT().StringToBytes(addr2.String()).Return(addr2, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(addr2).Return(addr2.String(), nil).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr2, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
 	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
@@ -611,7 +608,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			name: "invalid destination validator",
@@ -762,7 +759,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: shares.RoundInt()},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -839,9 +836,6 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	s.accountKeeper.EXPECT().StringToBytes(Addr.String()).Return(Addr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(Addr).Return(Addr.String(), nil).AnyTimes()
-
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
 	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
@@ -900,7 +894,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 				CreationHeight:   10,
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "entry not found at height",

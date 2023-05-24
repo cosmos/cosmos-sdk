@@ -2,7 +2,7 @@
 
 This document outlines the process for releasing a new version of Cosmos SDK, which involves major release and patch releases as well as maintenance for the major release.
 
-> Note, the SDK went directly from v0.47 to v0.50 and skipped the v0.48 and v0.49 versions.
+> **Note, the Cosmos SDK went directly from v0.47 to v0.50 and skipped the v0.48 and v0.49 versions.**
 
 ## Major Release Procedure
 

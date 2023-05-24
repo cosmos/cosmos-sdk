@@ -76,7 +76,14 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return sdk.Context{}, err
 	}
 
+	signerStrs := make([]string, len(signers))
 	for i, pk := range pubkeys {
+		var err error
+		signerStrs[i], err = spkd.ak.AddressCodec().BytesToString(signers[i])
+		if err != nil {
+			return sdk.Context{}, err
+		}
+
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
 			if !simulate {
@@ -86,15 +93,8 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
-			var signerStr string
-			var err error
-			signerStr, err = spkd.ak.AddressCodec().BytesToString(signers[i])
-			if err != nil {
-				return sdk.Context{}, err
-			}
-
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signerStr, i)
+				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
@@ -124,7 +124,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	var events sdk.Events
 	for i, sig := range sigs {
 		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
 		))
 
 		sigBzs, err := signatureDataToBz(sig.Data)
@@ -539,10 +539,10 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 			sigs = append(sigs, nestedSigs...)
 		}
 
-		multisig := cryptotypes.MultiSignature{
+		multiSignature := cryptotypes.MultiSignature{
 			Signatures: sigs,
 		}
-		aggregatedSig, err := multisig.Marshal()
+		aggregatedSig, err := multiSignature.Marshal()
 		if err != nil {
 			return nil, err
 		}

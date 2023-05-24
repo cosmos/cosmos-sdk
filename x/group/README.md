@@ -8,8 +8,7 @@ sidebar_position: 1
 
 The following documents specify the group module.
 
-This module allows the creation and management of on-chain multisig accounts and enables voting for message execution
-based on configurable decision policies.
+This module allows the creation and management of on-chain multisig accounts and enables voting for message execution based on configurable decision policies.
 
 ## Contents
 
@@ -50,7 +49,7 @@ based on configurable decision policies.
     * [EventVote](#eventvote)
     * [EventExec](#eventexec)
     * [EventLeaveGroup](#eventleavegroup)
-    * [EventProposalPruned](#eventProposalPruned)
+    * [EventProposalPruned](#eventproposalpruned)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -102,7 +101,7 @@ custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
 ```
 
 #### Threshold decision policy
@@ -213,8 +212,7 @@ Votes are pruned:
 * either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
   `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
-* or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted`
-  or `withdrawn` too.
+* or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
 
 whichever happens first.
 
@@ -230,8 +228,7 @@ whichever happens first.
 ## State
 
 The `group` module uses the `orm` package which provides table storage with support for
-primary keys and secondary indexes. `orm` also defines `Sequence` which is a persistent unique key generator based on a
-counter that can be used along with `Table`s.
+primary keys and secondary indexes. `orm` also defines `Sequence` which is a persistent unique key generator based on a counter that can be used along with `Table`s.
 
 Here's the list of tables and associated sequences and indexes stored as part of the `group` module.
 
@@ -241,8 +238,7 @@ The `groupTable` stores `GroupInfo`: `0x0 | BigEndian(GroupId) -> ProtocolBuffer
 
 #### groupSeq
 
-The value of `groupSeq` is incremented when creating a new group and corresponds to the
-new `GroupId`: `0x1 | 0x1 -> BigEndian`.
+The value of `groupSeq` is incremented when creating a new group and corresponds to the new `GroupId`: `0x1 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
@@ -253,8 +249,7 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
 ### Group Member Table
 
-The `groupMemberTable` stores `GroupMember`
-s: `0x10 | BigEndian(GroupId) | []byte(member.Address) -> ProtocolBuffer(GroupMember)`.
+The `groupMemberTable` stores `GroupMember`s: `0x10 | BigEndian(GroupId) | []byte(member.Address) -> ProtocolBuffer(GroupMember)`.
 
 The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
 `BigEndian(GroupId) | []byte(member.Address)` which is used by the following indexes.
@@ -271,16 +266,14 @@ The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
 
 ### Group Policy Table
 
-The `groupPolicyTable`
-stores `GroupPolicyInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
+The `groupPolicyTable` stores `GroupPolicyInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
 
 The `groupPolicyTable` is a primary key table and its `PrimaryKey` is given by
 `len([]byte(Address)) | []byte(Address)` which is used by the following indexes.
 
 #### groupPolicySeq
 
-The value of `groupPolicySeq` is incremented when creating a new group policy and is used to generate the new group
-policy account `Address`:
+The value of `groupPolicySeq` is incremented when creating a new group policy and is used to generate the new group policy account `Address`:
 `0x21 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
@@ -301,8 +294,7 @@ The `proposalTable` stores `Proposal`s: `0x30 | BigEndian(ProposalId) -> Protoco
 
 #### proposalSeq
 
-The value of `proposalSeq` is incremented when creating a new proposal and corresponds to the
-new `ProposalId`: `0x31 | 0x1 -> BigEndian`.
+The value of `proposalSeq` is incremented when creating a new proposal and corresponds to the new `ProposalId`: `0x31 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
@@ -316,8 +308,7 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 `proposalsByVotingPeriodEndIndex` allows to retrieve proposals sorted by chronological `voting_period_end`:
 `0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
 
-This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals
-at `VotingPeriodEnd + MaxExecutionPeriod`.
+This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals at `VotingPeriodEnd + MaxExecutionPeriod`.
 
 ### Vote Table
 
@@ -340,14 +331,13 @@ The `voteTable` is a primary key table and its `PrimaryKey` is given by
 
 ### Msg/CreateGroup
 
-A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional
-metadata.
+A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata.
 
 The metadata has a maximum length that is chosen by the app developer, and
 passed into the group keeper as a config.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
 ```
 
 It's expected to fail if
@@ -360,7 +350,7 @@ It's expected to fail if
 Group members can be updated with the `UpdateGroupMembers`.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
 ```
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
@@ -368,15 +358,14 @@ In the list of `MemberUpdates`, an existing member can be removed by setting its
 It's expected to fail if:
 
 * the signer is not the admin of the group.
-* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated
-  group.
+* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
 ### Msg/UpdateGroupAdmin
 
 The `UpdateGroupAdmin` can be used to update a group admin.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
 ```
 
 It's expected to fail if the signer is not the admin of the group.
@@ -386,7 +375,7 @@ It's expected to fail if the signer is not the admin of the group.
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
 ```
 
 It's expected to fail if:
@@ -396,11 +385,10 @@ It's expected to fail if:
 
 ### Msg/CreateGroupPolicy
 
-A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision
-policy and some optional metadata.
+A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
 ```
 
 It's expected to fail if:
@@ -411,12 +399,10 @@ It's expected to fail if:
 
 ### Msg/CreateGroupWithPolicy
 
-A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of
-members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group
-policy address and some optional metadata for group and group policy.
+A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
 ```
 
 It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
@@ -426,7 +412,7 @@ It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateG
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
 ```
 
 It's expected to fail if the signer is not the admin of the group policy.
@@ -436,7 +422,7 @@ It's expected to fail if the signer is not the admin of the group policy.
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
 ```
 
 It's expected to fail if:
@@ -449,7 +435,7 @@ It's expected to fail if:
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
 ```
 
 It's expected to fail if:
@@ -459,13 +445,11 @@ It's expected to fail if:
 
 ### Msg/SubmitProposal
 
-A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of
-proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
-An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers
-signatures are considered as yes votes in this case.
+A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
+An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
 ```
 
 It's expected to fail if:
@@ -475,11 +459,10 @@ It's expected to fail if:
 
 ### Msg/WithdrawProposal
 
-A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group
-policy admin) and a `proposal_id` (which has to be withdrawn).
+A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
 ```
 
 It's expected to fail if:
@@ -489,12 +472,11 @@ It's expected to fail if:
 
 ### Msg/Vote
 
-A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain)
-and some optional metadata.
+A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
 ```
 
 It's expected to fail if:
@@ -507,7 +489,7 @@ It's expected to fail if:
 A proposal can be executed with the `MsgExec`.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
 ```
 
 The messages that are part of this proposal won't be executed if:
@@ -520,14 +502,13 @@ The messages that are part of this proposal won't be executed if:
 The `MsgLeaveGroup` allows group member to leave a group.
 
 ```go reference
-https: //github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
 ```
 
 It's expected to fail if:
 
 * the group member is not part of the group.
-* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated
-  group.
+* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
 ## Events
 
@@ -536,56 +517,56 @@ The group module emits the following events:
 ### EventCreateGroup
 
 | Type                             | Attribute Key | Attribute Value                  |
-|----------------------------------|---------------|----------------------------------|
+| -------------------------------- | ------------- | -------------------------------- |
 | message                          | action        | /cosmos.group.v1.Msg/CreateGroup |
 | cosmos.group.v1.EventCreateGroup | group_id      | {groupId}                        |
 
 ### EventUpdateGroup
 
 | Type                             | Attribute Key | Attribute Value                                            |
-|----------------------------------|---------------|------------------------------------------------------------|
+| -------------------------------- | ------------- | ---------------------------------------------------------- |
 | message                          | action        | /cosmos.group.v1.Msg/UpdateGroup{Admin\|Metadata\|Members} |
 | cosmos.group.v1.EventUpdateGroup | group_id      | {groupId}                                                  |
 
 ### EventCreateGroupPolicy
 
 | Type                                   | Attribute Key | Attribute Value                        |
-|----------------------------------------|---------------|----------------------------------------|
+| -------------------------------------- | ------------- | -------------------------------------- |
 | message                                | action        | /cosmos.group.v1.Msg/CreateGroupPolicy |
 | cosmos.group.v1.EventCreateGroupPolicy | address       | {groupPolicyAddress}                   |
 
 ### EventUpdateGroupPolicy
 
 | Type                                   | Attribute Key | Attribute Value                                                         |
-|----------------------------------------|---------------|-------------------------------------------------------------------------|
+| -------------------------------------- | ------------- | ----------------------------------------------------------------------- |
 | message                                | action        | /cosmos.group.v1.Msg/UpdateGroupPolicy{Admin\|Metadata\|DecisionPolicy} |
 | cosmos.group.v1.EventUpdateGroupPolicy | address       | {groupPolicyAddress}                                                    |
 
 ### EventCreateProposal
 
 | Type                                | Attribute Key | Attribute Value                     |
-|-------------------------------------|---------------|-------------------------------------|
+| ----------------------------------- | ------------- | ----------------------------------- |
 | message                             | action        | /cosmos.group.v1.Msg/CreateProposal |
 | cosmos.group.v1.EventCreateProposal | proposal_id   | {proposalId}                        |
 
 ### EventWithdrawProposal
 
 | Type                                  | Attribute Key | Attribute Value                       |
-|---------------------------------------|---------------|---------------------------------------|
+| ------------------------------------- | ------------- | ------------------------------------- |
 | message                               | action        | /cosmos.group.v1.Msg/WithdrawProposal |
 | cosmos.group.v1.EventWithdrawProposal | proposal_id   | {proposalId}                          |
 
 ### EventVote
 
 | Type                      | Attribute Key | Attribute Value           |
-|---------------------------|---------------|---------------------------|
+| ------------------------- | ------------- | ------------------------- |
 | message                   | action        | /cosmos.group.v1.Msg/Vote |
 | cosmos.group.v1.EventVote | proposal_id   | {proposalId}              |
 
 ## EventExec
 
 | Type                      | Attribute Key | Attribute Value           |
-|---------------------------|---------------|---------------------------|
+| ------------------------- | ------------- | ------------------------- |
 | message                   | action        | /cosmos.group.v1.Msg/Exec |
 | cosmos.group.v1.EventExec | proposal_id   | {proposalId}              |
 | cosmos.group.v1.EventExec | logs          | {logs_string}             |
@@ -593,7 +574,7 @@ The group module emits the following events:
 ### EventLeaveGroup
 
 | Type                            | Attribute Key | Attribute Value                 |
-|---------------------------------|---------------|---------------------------------|
+| ------------------------------- | ------------- | ------------------------------- |
 | message                         | action        | /cosmos.group.v1.Msg/LeaveGroup |
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
@@ -606,6 +587,7 @@ The group module emits the following events:
 | cosmos.group.v1.EventProposalPruned | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventProposalPruned | status        | {ProposalStatus}                |
 | cosmos.group.v1.EventProposalPruned | tally_result  | {TallyResult}                   |
+
 
 ## Client
 
@@ -788,8 +770,7 @@ pagination:
 
 ##### group-policies-by-admin
 
-The `group-policies-by-admin` command allows users to query for group policies by admin account address with pagination
-flags.
+The `group-policies-by-admin` command allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
 simd query group group-policies-by-admin [admin] [flags]
@@ -882,8 +863,7 @@ proposal:
 
 ##### proposals-by-group-policy
 
-The `proposals-by-group-policy` command allows users to query for proposals by account address of group policy with
-pagination flags.
+The `proposals-by-group-policy` command allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
 simd query group proposals-by-group-policy [group-policy-account] [flags]
@@ -1023,8 +1003,7 @@ simd tx group --help
 
 #### create-group
 
-The `create-group` command allows users to create a group which is an aggregation of member accounts with associated
-weights and
+The `create-group` command allows users to create a group which is an aggregation of member accounts with associated weights and
 an administrator account.
 
 ```bash
@@ -1081,8 +1060,7 @@ simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 
 #### create-group-policy
 
-The `create-group-policy` command allows users to create a group policy which is an account associated with a group and
-a decision policy.
+The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy.
 
 ```bash
 simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy] [flags]
@@ -1096,9 +1074,7 @@ simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1
 
 #### create-group-with-policy
 
-The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with
-associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set
-to `true`, the group policy address becomes the group and group policy admin.
+The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
 
 ```bash
 simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
@@ -1409,8 +1385,7 @@ Example Output:
 
 #### GroupPoliciesByAdmin
 
-The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination
-flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
 cosmos.group.v1.Query/GroupPoliciesByAdmin
@@ -1501,8 +1476,7 @@ Example Output:
 
 #### ProposalsByGroupPolicy
 
-The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with
-pagination flags.
+The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
 cosmos.group.v1.Query/ProposalsByGroupPolicy
@@ -1859,8 +1833,7 @@ Example Output:
 
 #### GroupPoliciesByAdmin
 
-The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination
-flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
 /cosmos/group/v1/group_policies_by_admin/{admin}
@@ -1976,8 +1949,7 @@ Example Output:
 
 #### ProposalsByGroupPolicy
 
-The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with
-pagination flags.
+The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
 /cosmos/group/v1/proposals_by_group_policy/{address}
@@ -2137,13 +2109,7 @@ Example Output:
 
 ## Metadata
 
-The group module has four locations for metadata where users can provide further context about the on-chain actions they
-are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json
-format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the
-json structure and where the data should be stored. There are two important factors in making these recommendations.
-First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups
-may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence
-in the consistency of metadata structure accross chains.
+The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
 
 ### Proposal
 
@@ -2152,20 +2118,17 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 ```json
 {
   "title": "",
-  "authors": [
-    ""
-  ],
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
-  "vote_option_context": ""
+  "vote_option_context": "",
 }
 ```
 
 :::note
 The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
-In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for
-backwards compatibility.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
 :::
 
 ### Vote
@@ -2174,7 +2137,7 @@ Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov
 
 ```json
 {
-  "justification": ""
+  "justification": "",
 }
 ```
 
@@ -2187,7 +2150,7 @@ Location: off-chain as json object stored on IPFS
   "name": "",
   "description": "",
   "group_website_url": "",
-  "group_forum_url": ""
+  "group_forum_url": "",
 }
 ```
 
@@ -2198,6 +2161,6 @@ Location: on-chain as json within 255 character limit
 ```json
 {
   "name": "",
-  "description": ""
+  "description": "",
 }
 ```

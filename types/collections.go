@@ -200,6 +200,7 @@ func (timeKeyCodec) KeyType() string                { return "sdk/time.Time" }
 func (t timeKeyCodec) EncodeNonTerminal(buffer []byte, key time.Time) (int, error) {
 	return t.Encode(buffer, key)
 }
+
 func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	if len(buffer) < timeSize {
 		return 0, time.Time{}, fmt.Errorf("invalid time buffer size, wanted: %d at least, got: %d", timeSize, len(buffer))

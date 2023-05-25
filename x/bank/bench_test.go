@@ -73,8 +73,13 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(b, err)
+
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
-	baseApp.Commit()
+
+	_, err = baseApp.Commit()
+	require.NoError(b, err)
 
 	txGen := moduletestutil.MakeTestTxConfig()
 	txEncoder := txGen.TxEncoder()
@@ -84,7 +89,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 	b.ResetTimer()
 
-	height := int64(3)
+	height := int64(2)
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
@@ -97,14 +102,16 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		bz, err := txEncoder(txs[i])
 		require.NoError(b, err)
 
-		baseApp.FinalizeBlock(
+		_, err = baseApp.FinalizeBlock(
 			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
 		)
+		require.NoError(b, err)
 
-		baseApp.Commit()
+		_, err = baseApp.Commit()
+		require.NoError(b, err)
 
 		height++
 	}
@@ -124,8 +131,13 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(b, err)
+
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
-	baseApp.Commit()
+
+	_, err = baseApp.Commit()
+	require.NoError(b, err)
 
 	txGen := moduletestutil.MakeTestTxConfig()
 	txEncoder := txGen.TxEncoder()
@@ -135,7 +147,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 	b.ResetTimer()
 
-	height := int64(3)
+	height := int64(2)
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
@@ -148,14 +160,16 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		bz, err := txEncoder(txs[i])
 		require.NoError(b, err)
 
-		baseApp.FinalizeBlock(
+		_, err = baseApp.FinalizeBlock(
 			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
 		)
+		require.NoError(b, err)
 
-		baseApp.Commit()
+		_, err = baseApp.Commit()
+		require.NoError(b, err)
 
 		height++
 	}

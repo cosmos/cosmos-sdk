@@ -229,6 +229,12 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 
+// SetCircuitBreaker sets the circuit breaker for the BaseApp.
+// The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
+func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
+	app.msgServiceRouter.SetCircuit(cb)
+}
+
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {

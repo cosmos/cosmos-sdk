@@ -13,9 +13,11 @@ import (
 	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/client/cli"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -162,8 +164,9 @@ type Inputs struct {
 type Outputs struct {
 	depinject.Out
 
-	CircuitKeeper keeper.Keeper
-	Module        appmodule.AppModule
+	CircuitKeeper  keeper.Keeper
+	Module         appmodule.AppModule
+	baseappOptions runtime.BaseAppOption
 }
 
 func ProvideModule(in Inputs) Outputs {
@@ -180,5 +183,9 @@ func ProvideModule(in Inputs) Outputs {
 	)
 	m := NewAppModule(in.Cdc, circuitkeeper)
 
-	return Outputs{CircuitKeeper: circuitkeeper, Module: m}
+	baseappOpt := func(app *baseapp.BaseApp) {
+		app.SetCircuitBreaker(&circuitkeeper)
+	}
+
+	return Outputs{CircuitKeeper: circuitkeeper, Module: m, baseappOptions: baseappOpt}
 }

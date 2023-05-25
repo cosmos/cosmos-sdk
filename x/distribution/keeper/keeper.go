@@ -26,8 +26,9 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema collections.Schema
-	Params collections.Item[types.Params]
+	Schema  collections.Schema
+	Params  collections.Item[types.Params]
+	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -53,6 +54,7 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
 	}
 
 	schema, err := sb.Build()

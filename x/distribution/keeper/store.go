@@ -66,13 +66,7 @@ func (k Keeper) GetFeePool(ctx context.Context) (feePool types.FeePool, err erro
 
 // set the global fee pool distribution info
 func (k Keeper) SetFeePool(ctx context.Context, feePool types.FeePool) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&feePool)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.FeePoolKey, b)
+	return k.FeePool.Set(ctx, feePool)
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the

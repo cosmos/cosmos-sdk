@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/nft"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 

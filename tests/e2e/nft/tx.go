@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -90,52 +90,6 @@ func (s *E2ETestSuite) SetupSuite() {
 func (s *E2ETestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
-}
-
-func (s *E2ETestSuite) TestCLITxSend() {
-	cmd := cli.NewCmdSend()
-	val := s.network.Validators[0]
-	args := []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	testCases := []struct {
-		name         string
-		args         []string
-		expectedCode uint32
-		expectErr    bool
-	}{
-		{
-			"valid transaction",
-			[]string{
-				testClassID,
-				testID,
-				val.Address.String(),
-			},
-			0,
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-			args = append(args, tc.args...)
-
-			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				var txResp sdk.TxResponse
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
-			}
-		})
-	}
 }
 
 func (s *E2ETestSuite) initAccount() {

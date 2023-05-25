@@ -76,7 +76,7 @@ func SimulateFromSeed(
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config, cdc)
+	validators, blockTime, accs, chainID := initChain(r, params, accs, app, appStateFn, config, cdc)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
@@ -85,7 +85,7 @@ func SimulateFromSeed(
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+		blockTime.UTC().Format(time.UnixDate), blockTime.Unix(),
 	)
 
 	// remove module account address if they exist in accs
@@ -105,10 +105,9 @@ func SimulateFromSeed(
 		pastVoteInfos      [][]abci.VoteInfo
 		timeOperationQueue []simulation.FutureOperation
 
-		blockHeight     int64 = 1
-		blockTime             = genesisTimestamp
-		proposerAddress       = validators.randomProposer(r)
-		opCount               = 0
+		blockHeight     = int64(config.InitialBlockHeight)
+		proposerAddress = validators.randomProposer(r)
+		opCount         = 0
 	)
 
 	// Setup code to catch SIGTERM's
@@ -129,7 +128,7 @@ func SimulateFromSeed(
 		pastTimes,
 		pastVoteInfos,
 		eventStats.Tally,
-		1,
+		blockHeight,
 		blockTime,
 		validators.randomProposer(r),
 	)
@@ -169,12 +168,12 @@ func SimulateFromSeed(
 		exportedParams = params
 	}
 
-	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
+	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) && !stopEarly {
 		pastTimes = append(pastTimes, blockTime)
 		pastVoteInfos = append(pastVoteInfos, finalizeBlockReq.DecidedLastCommit.Votes)
 
 		// Run the BeginBlock handler
-		logWriter.AddEntry(BeginBlockEntry(int64(height)))
+		logWriter.AddEntry(BeginBlockEntry(blockHeight))
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
@@ -218,7 +217,7 @@ func SimulateFromSeed(
 		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 		proposerAddress = validators.randomProposer(r)
 
-		logWriter.AddEntry(EndBlockEntry(int64(height)))
+		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
 		if config.Commit {
 			app.Commit()
@@ -240,7 +239,7 @@ func SimulateFromSeed(
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 
 		// update the exported params
-		if config.ExportParamsPath != "" && config.ExportParamsHeight == height {
+		if config.ExportParamsPath != "" && int64(config.ExportParamsHeight) == blockHeight {
 			exportedParams = params
 		}
 	}

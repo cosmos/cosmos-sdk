@@ -43,38 +43,13 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 	return nil
 }
 
-func (a *FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-	a.BlockHeight = req.Header.Height
-	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
-	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
-	if err := a.writeToFile("begin-block-req", d1); err != nil {
-		return err
-	}
-	if err := a.writeToFile("begin-block-res", d2); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *FilePlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
-	if err := a.writeToFile("end-block-req", d1); err != nil {
+	if err := a.writeToFile("finalize-block-req", d1); err != nil {
 		return err
 	}
-	if err := a.writeToFile("end-block-res", d2); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *FilePlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
-	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
-	if err := a.writeToFile("deliver-tx-req", d1); err != nil {
-		return err
-	}
-	if err := a.writeToFile("deliver-tx-res", d2); err != nil {
+	if err := a.writeToFile("finalize-block-res", d2); err != nil {
 		return err
 	}
 	return nil

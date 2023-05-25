@@ -41,7 +41,7 @@ service Msg {
 
   // CancelProposal defines a method to cancel governance proposal
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   rpc CancelProposal(MsgCancelProposal) returns (MsgCancelProposalResponse);
 }
 
@@ -75,7 +75,7 @@ message MsgSubmitProposal {
 
   // expedided defines if the proposal is expedited or not
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   bool expedited = 7;
 }
 
@@ -184,7 +184,7 @@ message MsgUpdateParamsResponse {}
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgCancelProposal {
   option (cosmos.msg.v1.signer) = "proposer";
 
@@ -195,7 +195,7 @@ message MsgCancelProposal {
 // MsgCancelProposalResponse defines the response structure for executing a
 // MsgCancelProposal message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgCancelProposalResponse {
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   // canceled_time is the time when proposal is canceled.

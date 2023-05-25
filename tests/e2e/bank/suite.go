@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,7 +154,7 @@ func (s *E2ETestSuite) TestGetBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetBalancesCmd()
+			cmd := cli.GetBalancesCmd(addresscodec.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -384,7 +385,7 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
-	bz, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	bz, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, addresscodec.NewBech32Codec("cosmos"), args...)
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
@@ -413,7 +414,7 @@ func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	_, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	_, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, addresscodec.NewBech32Codec("cosmos"), args...)
 	s.Require().NoError(err)
 
 	w.Close()
@@ -511,7 +512,7 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, addresscodec.NewBech32Codec("cosmos"), tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -674,5 +675,5 @@ func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.Ac
 	args = append(args, amount.String())
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(addresscodec.NewBech32Codec("cosmos")), args)
 }

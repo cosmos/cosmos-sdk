@@ -299,9 +299,9 @@ func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
 	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
 }
 
-func getDeliverStateCtx(app *baseapp.BaseApp) sdk.Context {
+func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
 	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("deliverState")
+	f := v.FieldByName("finalizeBlockState")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
 	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
 }

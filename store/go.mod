@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
 	github.com/armon/go-metrics v0.4.1
-	github.com/cometbft/cometbft v0.37.1
+	github.com/cometbft/cometbft v0.38.0-alpha.2
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.21.0
@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.9
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
@@ -39,7 +39,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -54,9 +53,10 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.15.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
-	github.com/prometheus/common v0.43.0 // indirect
+	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect

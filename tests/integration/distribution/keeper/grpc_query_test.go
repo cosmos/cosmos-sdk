@@ -18,7 +18,7 @@ func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams())
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -51,7 +51,7 @@ func TestGRPCParams(t *testing.T) {
 					WithdrawAddrEnabled: true,
 				}
 
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 				expParams = params
 			},
 			msg: &types.QueryParamsRequest{},
@@ -369,7 +369,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams())
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)

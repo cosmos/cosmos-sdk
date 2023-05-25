@@ -14,7 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -180,8 +180,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return BeginBlocker(c, am.keeper, am.inflationCalculator)
+	return BeginBlocker(ctx, am.keeper, am.inflationCalculator)
 }
 
 // AppModuleSimulation functions
@@ -221,12 +220,12 @@ type ModuleInputs struct {
 
 	ModuleKey              depinject.OwnModuleKey
 	Config                 *modulev1.Module
-	Key                    *store.KVStoreKey
+	StoreService           store.KVStoreService
 	Cdc                    codec.Codec
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -254,7 +253,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,

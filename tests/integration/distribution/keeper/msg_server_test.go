@@ -116,7 +116,7 @@ func initFixture(t testing.TB) *fixture {
 				Address: valAddr,
 				Power:   100,
 			},
-			SignedLastBlock: true,
+			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
 
@@ -149,7 +149,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
-	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams())
 	initFeePool, err := f.distrKeeper.GetFeePool(f.sdkCtx)
 	assert.NilError(t, err)
 
@@ -268,7 +268,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 
@@ -316,7 +316,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams())
 
 	delAddr := sdk.AccAddress(PKS[0].Address())
 	withdrawAddr := sdk.AccAddress(PKS[1].Address())
@@ -331,9 +331,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "empty delegator address",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: emptyDelAddr.String(),
@@ -345,9 +345,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "empty withdraw address",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: delAddr.String(),
@@ -359,9 +359,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "both empty addresses",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: emptyDelAddr.String(),
@@ -373,9 +373,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "withdraw address disabled",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = false
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: delAddr.String(),
@@ -387,9 +387,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "valid msg with same delegator and withdraw address",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: delAddr.String(),
@@ -400,9 +400,9 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "valid msg",
 			preRun: func() {
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				params.WithdrawAddrEnabled = true
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 			},
 			msg: &distrtypes.MsgSetWithdrawAddress{
 				DelegatorAddress: delAddr.String(),
@@ -417,7 +417,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -510,7 +510,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -612,7 +612,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -739,7 +739,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -754,7 +754,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				assert.NilError(t, err)
 
 				// query the params and verify it has been updated
-				params, _ := f.distrKeeper.GetParams(f.sdkCtx)
+				params, _ := f.distrKeeper.Params.Get(f.sdkCtx)
 				assert.DeepEqual(t, distrtypes.DefaultParams(), params)
 			}
 		})
@@ -765,7 +765,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams())
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)}),
 	})
@@ -817,7 +817,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -845,7 +845,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, distrtypes.DefaultParams())
+	f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams())
 	f.distrKeeper.SetFeePool(f.sdkCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(100)}),
 	})
@@ -914,7 +914,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticBeginEndBlock(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {

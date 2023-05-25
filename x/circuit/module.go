@@ -151,7 +151,7 @@ func init() {
 	)
 }
 
-type Inputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -161,15 +161,15 @@ type Inputs struct {
 	AddressCodec address.Codec
 }
 
-type Outputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	CircuitKeeper  keeper.Keeper
 	Module         appmodule.AppModule
-	baseappOptions runtime.BaseAppOption
+	BaseappOptions runtime.BaseAppOption
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
@@ -187,5 +187,5 @@ func ProvideModule(in Inputs) Outputs {
 		app.SetCircuitBreaker(&circuitkeeper)
 	}
 
-	return Outputs{CircuitKeeper: circuitkeeper, Module: m, baseappOptions: baseappOpt}
+	return ModuleOutputs{CircuitKeeper: circuitkeeper, Module: m, BaseappOptions: baseappOpt}
 }

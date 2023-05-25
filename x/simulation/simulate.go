@@ -130,7 +130,7 @@ func SimulateFromSeed(
 		pastVoteInfos,
 		eventStats.Tally,
 		1,
-		genesisTimestamp,
+		blockTime,
 		validators.randomProposer(r),
 	)
 
@@ -183,7 +183,7 @@ func SimulateFromSeed(
 
 		ctx := app.NewContext(false, cmtproto.Header{
 			Height:          blockHeight,
-			Time:            genesisTimestamp,
+			Time:            blockTime,
 			ProposerAddress: proposerAddress,
 			ChainID:         config.ChainID,
 		})
@@ -206,7 +206,7 @@ func SimulateFromSeed(
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, cmtproto.Header{
 			Height:          blockHeight,
-			Time:            genesisTimestamp,
+			Time:            blockTime,
 			ProposerAddress: proposerAddress,
 			ChainID:         config.ChainID,
 		})
@@ -232,7 +232,7 @@ func SimulateFromSeed(
 
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
-		finalizeBlockReq = RandomRequestFinalizeBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, genesisTimestamp, proposerAddress)
+		finalizeBlockReq = RandomRequestFinalizeBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, blockTime, proposerAddress)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block

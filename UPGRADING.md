@@ -32,7 +32,7 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
 
 ```bash
-simd config migrate v0.48
+simd config migrate v0.50
 ```
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
@@ -82,6 +82,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/evidence`
 * `x/feegrant`
 * `x/gov`
+* `x/mint`
 * `x/nft`
 * `x/upgrade`
 
@@ -100,6 +101,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 
 * `x/authz`
 * `x/bank`
+* `x/mint`
 * `x/crisis`
 * `x/distribution`
 * `x/evidence`
@@ -245,7 +247,7 @@ Due to the import changes, this is a breaking change. Chains need to remove **en
 * Run `make proto-gen`
 
 Other than that, the migration should be seamless.
-On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.50 (part 2).
 
 Note: It is possible that these steps must first be performed by your dependencies before you can perform them on your own codebase.
 
@@ -402,7 +404,7 @@ In case a module does not follow the standard message path, (e.g. IBC), it is ad
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.
-The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.

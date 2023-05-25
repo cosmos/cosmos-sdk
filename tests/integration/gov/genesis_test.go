@@ -75,8 +75,9 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := s1.app.BaseApp.NewContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	header := cmtproto.Header{Height: s1.app.LastBlockHeight() + 1}
-	s1.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s1.app.LastBlockHeight() + 1,
+	})
 
 	ctx = s1.app.BaseApp.NewContext(false, cmtproto.Header{})
 	// Create two proposals, put the second into the voting period
@@ -130,19 +131,19 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	s2.app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	s2.app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: simtestutil.DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	})
 
-	s2.app.Commit()
-	s2.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}})
+	s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s2.app.LastBlockHeight() + 1,
+	})
 
-	header = cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}
-	s2.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s2.app.LastBlockHeight() + 1,
+	})
 
 	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
 

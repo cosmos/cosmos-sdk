@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -371,18 +372,27 @@ func ExternalIP() (string, error) {
 // the cleanup function is called, indicating the caller can gracefully exit or
 // return.
 //
-// Note, this performs a non-blocking process so the caller must ensure the
-// corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(cancelFn context.CancelFunc, logger log.Logger) {
+// Note, the blocking behavior of this depends on the block argument.
+// The caller must ensure the corresponding context derived from the cancelFn is used correctly.
+func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
+	f := func() {
 		sig := <-sigCh
 		cancelFn()
 
 		logger.Info("caught signal", "signal", sig.String())
-	}()
+	}
+
+	if block {
+		g.Go(func() error {
+			f()
+			return nil
+		})
+	} else {
+		go f()
+	}
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.

@@ -16,7 +16,7 @@ import (
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
-	depositor, err := keeper.authKeeper.StringToBytes(deposit.Depositor)
+	depositor, err := keeper.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	}
 
 	for _, deposit := range deposits {
-		depositerAddress, err := keeper.authKeeper.StringToBytes(deposit.Depositor)
+		depositerAddress, err := keeper.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
 		if err != nil {
 			return err
 		}
@@ -202,7 +202,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		default:
-			destAccAddress, err := keeper.authKeeper.StringToBytes(destAddress)
+			destAccAddress, err := keeper.authKeeper.AddressCodec().StringToBytes(destAddress)
 			if err != nil {
 				return err
 			}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -25,6 +26,9 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
+	Schema collections.Schema
+	Params collections.Item[types.Params]
+
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
@@ -39,7 +43,8 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	return Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		storeService:     storeService,
 		cdc:              cdc,
 		authKeeper:       ak,
@@ -47,7 +52,15 @@ func NewKeeper(
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
+		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/distribution module's authority.

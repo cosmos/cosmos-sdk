@@ -37,7 +37,7 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	addresscodec.Codec
+	AddressCodec() addresscodec.Codec
 
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 

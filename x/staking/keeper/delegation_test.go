@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -27,10 +28,7 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	addrDels, valAddrs := createValAddrs(3)
 
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// construct the validators
 	amts := []math.Int{math.NewInt(9), math.NewInt(8), math.NewInt(7)}
@@ -151,10 +149,9 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	addrDels, valAddrs := createValAddrs(3)
 
 	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
 		s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	}
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// construct the validators
 	amts := []math.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
@@ -228,10 +225,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 
 	delAddrs, valAddrs := createValAddrs(2)
 
-	for _, addr := range delAddrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	ubd := stakingtypes.NewUnbondingDelegation(
 		delAddrs[0],
@@ -283,11 +277,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsFromValidator() {
 	require := s.Require()
 
 	delAddrs, valAddrs := createValAddrs(2)
-
-	for _, addr := range delAddrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	ubd := stakingtypes.NewUnbondingDelegation(
 		delAddrs[0],
@@ -346,10 +335,6 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 
 	delAddrs, valAddrs := createValAddrs(1)
 
-	for _, addr := range delAddrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 	startTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	validator := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
 
@@ -385,10 +370,6 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(1)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 
 	// create a validator with a self-delegation
@@ -438,10 +419,6 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -517,10 +494,6 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -597,10 +570,6 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -668,11 +637,6 @@ func (s *KeeperTestSuite) TestGetRedelegationsFromSrcValidator() {
 
 	addrDels, addrVals := createValAddrs(2)
 
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
-
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), math.NewInt(5),
 		math.LegacyNewDec(5), 0)
@@ -699,10 +663,6 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0).UTC(), math.NewInt(5),
@@ -779,9 +739,6 @@ func (s *KeeperTestSuite) TestRedelegateToSameValidator() {
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 
-	s.accountKeeper.EXPECT().StringToBytes(val0AccAddr.String()).Return(val0AccAddr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(val0AccAddr).Return(val0AccAddr.String(), nil).AnyTimes()
-
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, selfDelegation)
 
@@ -804,8 +761,6 @@ func (s *KeeperTestSuite) TestRedelegationMaxEntries() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	_ = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	s.accountKeeper.EXPECT().StringToBytes(val0AccAddr.String()).Return(val0AccAddr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(val0AccAddr).Return(val0AccAddr.String(), nil).AnyTimes()
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, selfDelegation)
 
@@ -847,15 +802,6 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
-
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -907,10 +853,6 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -991,15 +933,6 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	require := s.Require()
 
 	addrDels, addrVals := createValAddrs(2)
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
-
-	for _, addr := range addrDels {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	// create a validator with a self-delegation
 	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
@@ -1068,10 +1001,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {
 	require := s.Require()
 
 	delAddrs, valAddrs := createValAddrs(1)
-	for _, addr := range delAddrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	delAddr := delAddrs[0]
 	valAddr := valAddrs[0]
@@ -1113,10 +1042,6 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	require := s.Require()
 
 	delAddrs, valAddrs := createValAddrs(1)
-	for _, addr := range delAddrs {
-		s.accountKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-	}
 
 	delAddr := delAddrs[0]
 	valAddr := valAddrs[0]

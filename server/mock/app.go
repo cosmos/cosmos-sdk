@@ -17,6 +17,7 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -24,7 +25,7 @@ import (
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results.
-func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
+func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		return nil, err
@@ -96,21 +97,21 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) (abci.ResponseInitChain, error) {
-	return func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	return func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 		stateJSON := req.AppStateBytes
 
 		genesisState := new(GenesisJSON)
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
-			return abci.ResponseInitChain{}, err
+			return &abci.ResponseInitChain{}, err
 		}
 
 		for _, val := range genesisState.Values {
 			store := ctx.KVStore(key)
 			store.Set([]byte(val.Key), []byte(val.Value))
 		}
-		return abci.ResponseInitChain{}, nil
+		return &abci.ResponseInitChain{}, nil
 	}
 }
 

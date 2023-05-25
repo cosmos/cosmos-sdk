@@ -113,7 +113,7 @@ func NewAppModule(
 	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
@@ -230,7 +230,7 @@ type ModuleInputs struct {
 	StakingKeeper types.StakingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type ModuleOutputs struct {

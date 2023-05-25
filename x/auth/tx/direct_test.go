@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -156,8 +157,9 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 
 type nonProtoTx int
 
-func (npt *nonProtoTx) GetMsgs() []sdk.Msg   { return nil }
-func (npt *nonProtoTx) ValidateBasic() error { return nil }
+func (npt *nonProtoTx) GetMsgs() []sdk.Msg                    { return nil }
+func (npt *nonProtoTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (npt *nonProtoTx) ValidateBasic() error                  { return nil }
 
 var _ sdk.Tx = (*nonProtoTx)(nil)
 

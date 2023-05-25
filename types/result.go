@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -182,15 +183,15 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
-		var tx Tx
+		var tx HasMsgs
 		return unpacker.UnpackAny(r.Tx, &tx)
 	}
 	return nil
 }
 
 // GetTx unpacks the Tx from within a TxResponse and returns it
-func (r TxResponse) GetTx() Tx {
-	if tx, ok := r.Tx.GetCachedValue().(Tx); ok {
+func (r TxResponse) GetTx() HasMsgs {
+	if tx, ok := r.Tx.GetCachedValue().(HasMsgs); ok {
 		return tx
 	}
 	return nil

@@ -115,9 +115,14 @@ func TestMsgService(t *testing.T) {
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},
 	)
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
 
-	msg := testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
+	_, _, addr := testdata.KeyTestPubAddr()
+	msg := testdata.MsgCreateDog{
+		Dog:   &testdata.Dog{Name: "Spot"},
+		Owner: addr.String(),
+	}
 
 	txBuilder := txConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())

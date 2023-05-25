@@ -34,7 +34,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 
 // ExportGenesis returns the evidence module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	e := k.GetAllEvidence(ctx)
+	e, err := k.GetAllEvidence(ctx)
+	if err != nil {
+		panic(err)
+	}
 	evidence := make([]*codectypes.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)

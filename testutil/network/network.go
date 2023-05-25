@@ -677,9 +677,21 @@ func (n *Network) LatestHeight() (int64, error) {
 		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
-			if err == nil && res != nil {
-				return res.SdkBlock.Header.Height, nil
+			done := make(chan struct{})
+			go func() {
+				res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
+				if err == nil && res != nil {
+					latestHeight = res.SdkBlock.Header.Height
+				}
+				done <- struct{}{}
+			}()
+			select {
+			case <-timeout.C:
+				return latestHeight, errors.New("timeout exceeded waiting for block")
+			case <-done:
+				if latestHeight != 0 {
+					return latestHeight, nil
+				}
 			}
 		}
 	}

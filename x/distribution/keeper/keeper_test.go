@@ -56,13 +56,13 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	params := types.DefaultParams()
 	params.WithdrawAddrEnabled = false
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
 	err := distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	require.NotNil(t, err)
 
 	params.WithdrawAddrEnabled = true
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	require.Nil(t, err)

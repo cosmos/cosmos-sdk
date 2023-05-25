@@ -70,7 +70,7 @@ func (s *resultTestSuite) TestNewSearchTxsResult() {
 }
 
 func (s *resultTestSuite) TestResponseResultTx() {
-	deliverTxResult := abci.ResponseDeliverTx{
+	deliverTxResult := abci.ExecTxResult{
 		Codespace: "codespace",
 		Code:      1,
 		Data:      []byte("data"),

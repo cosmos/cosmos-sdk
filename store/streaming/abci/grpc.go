@@ -17,52 +17,18 @@ type GRPCClient struct {
 	client ABCIListenerServiceClient
 }
 
-// ListenBeginBlock listens to begin block request and responses.
-// In addition, it retrieves a types.Context from a context.Context instance.
-// It panics if a types.Context was not properly attached.
-// When the node is configured to stop on listening errors,
-// it will terminate immediately and exit with a non-zero code.
-func (m *GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-	ctx := goCtx.(storetypes.Context)
-	sm := ctx.StreamingManager()
-	request := &ListenBeginBlockRequest{Req: &req, Res: &res}
-	_, err := m.client.ListenBeginBlock(goCtx, request)
-	if err != nil && sm.StopNodeOnErr {
-		ctx.Logger().Error("BeginBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		cleanupAndExit()
-	}
-	return err
-}
-
 // ListenEndBlock listens to end block request and responses.
 // In addition, it retrieves a types.Context from a context.Context instance.
 // It panics if a types.Context was not properly attached.
 // When the node is configured to stop on listening errors,
 // it will terminate immediately and exit with a non-zero code.
-func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
-	request := &ListenEndBlockRequest{Req: &req, Res: &res}
-	_, err := m.client.ListenEndBlock(goCtx, request)
+	request := &ListenFinalizeBlockRequest{Req: &req, Res: &res}
+	_, err := m.client.ListenFinalizeBlock(goCtx, request)
 	if err != nil && sm.StopNodeOnErr {
-		ctx.Logger().Error("EndBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		cleanupAndExit()
-	}
-	return err
-}
-
-// ListenDeliverTx listens to deliver tx request and responses.
-// In addition, it retrieves a types.Context from a context.Context instance.
-// It panics if a types.Context was not properly attached.
-// When the node is configured to stop on listening errors,
-// it will terminate immediately and exit with a non-zero code.
-func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-	ctx := goCtx.(storetypes.Context)
-	sm := ctx.StreamingManager()
-	request := &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: &req, Res: &res}
-	_, err := m.client.ListenDeliverTx(goCtx, request)
-	if err != nil && sm.StopNodeOnErr {
-		ctx.Logger().Error("DeliverTx listening hook failed", "height", ctx.BlockHeight(), "err", err)
+		ctx.Logger().Error("FinalizeBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
 		cleanupAndExit()
 	}
 	return err
@@ -98,25 +64,11 @@ type GRPCServer struct {
 	Impl storetypes.ABCIListener
 }
 
-func (m GRPCServer) ListenBeginBlock(ctx context.Context, request *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error) {
-	if err := m.Impl.ListenBeginBlock(ctx, *request.Req, *request.Res); err != nil {
+func (m GRPCServer) ListenFinalizeBlock(ctx context.Context, request *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error) {
+	if err := m.Impl.ListenFinalizeBlock(ctx, *request.Req, *request.Res); err != nil {
 		return nil, err
 	}
-	return &ListenBeginBlockResponse{}, nil
-}
-
-func (m GRPCServer) ListenEndBlock(ctx context.Context, request *ListenEndBlockRequest) (*ListenEndBlockResponse, error) {
-	if err := m.Impl.ListenEndBlock(ctx, *request.Req, *request.Res); err != nil {
-		return nil, err
-	}
-	return &ListenEndBlockResponse{}, nil
-}
-
-func (m GRPCServer) ListenDeliverTx(ctx context.Context, request *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error) {
-	if err := m.Impl.ListenDeliverTx(ctx, *request.Req, *request.Res); err != nil {
-		return nil, err
-	}
-	return &ListenDeliverTxResponse{}, nil
+	return &ListenFinalizeBlockResponse{}, nil
 }
 
 func (m GRPCServer) ListenCommit(ctx context.Context, request *ListenCommitRequest) (*ListenCommitResponse, error) {

@@ -74,7 +74,7 @@ func NewBaseSendKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseSendKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -147,7 +147,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	inAddress, err := sdk.AccAddressFromBech32(input.Address)
+	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	)
 
 	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}

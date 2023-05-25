@@ -40,7 +40,7 @@ type CommitStore interface {
 //
 // This is an optional, but useful extension to any CommitStore
 type Queryable interface {
-	Query(abci.RequestQuery) abci.ResponseQuery
+	Query(*abci.RequestQuery) *abci.ResponseQuery
 }
 
 //----------------------------------------

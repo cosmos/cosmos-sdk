@@ -460,6 +460,7 @@ func (s *CLITestSuite) TestCLIMultisignInsufficientCosigners() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -548,6 +549,7 @@ func (s *CLITestSuite) TestCLIMultisignSortSignatures() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -621,6 +623,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -662,6 +665,7 @@ func (s *CLITestSuite) TestCLIMultisign() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -735,6 +739,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		sdk.NewCoins(
 			sdk.NewCoin("stake", math.NewInt(1)),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -1270,7 +1275,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 }
 
 func (s *CLITestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr, s.ac)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -1289,5 +1294,5 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 	}
 
 	flags = append(flags, extraFlags...)
-	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, s.ac, flags...)
 }

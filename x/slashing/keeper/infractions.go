@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/comet"
 	"github.com/cockroachdb/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -13,7 +14,7 @@ import (
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
-func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed bool) error {
+func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
 	height := sdkCtx.BlockHeight()
@@ -51,7 +52,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		return errors.Wrap(err, "failed to get the validator's bitmap value")
 	}
 
-	missed := !signed
+	missed := signed == comet.BlockIDFlagAbsent
 	switch {
 	case !previous && missed:
 		// Bitmap value has changed from not missed to missed, so we flip the bit

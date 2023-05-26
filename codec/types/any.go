@@ -3,10 +3,11 @@ package types
 import (
 	fmt "fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	proto "google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -58,18 +59,18 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(v gogoproto.Message) (*Any, error) {
+func NewAnyWithValue(v proto.Message) (*Any, error) {
 	if v == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
 
-	bz, err := gogoproto.Marshal(v)
+	bz, err := proto.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Any{
-		TypeUrl:     "/" + gogoproto.MessageName(v),
+		TypeUrl:     "/" + proto.MessageName(v),
 		Value:       bz,
 		cachedValue: v,
 	}, nil
@@ -81,7 +82,7 @@ func NewAnyWithValue(v gogoproto.Message) (*Any, error) {
 // values can safely be packed using this method when they will only be
 // marshaled with amino and not protobuf.
 func UnsafePackAny(x interface{}) *Any {
-	if msg, ok := x.(gogoproto.Message); ok {
+	if msg, ok := x.(proto.Message); ok {
 		any, err := NewAnyWithValue(msg)
 		if err == nil {
 			return any
@@ -93,9 +94,9 @@ func UnsafePackAny(x interface{}) *Any {
 // pack packs the value x in the Any or returns an error. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func (any *Any) pack(x gogoproto.Message) error {
-	any.TypeUrl = "/" + gogoproto.MessageName(x)
-	bz, err := gogoproto.Marshal(x)
+func (any *Any) pack(x proto.Message) error {
+	any.TypeUrl = "/" + proto.MessageName(x)
+	bz, err := proto.Marshal(x)
 	if err != nil {
 		return err
 	}
@@ -134,24 +135,19 @@ func (any *Any) String() string {
 		any.TypeUrl, any.Value, any.XXX_unrecognized)
 }
 
-func PulsarToGogoSlow(from proto.Message, to gogoproto.Message) error {
-	if from == nil {
-		return nil
+// AnyV2ToGogoAny converts AnyV2 to Any
+// NOTE: It does not set the cached value.
+func AnyV2ToGogoAny(any *anypb.Any) *Any {
+	return &Any{
+		TypeUrl: any.GetTypeUrl(),
+		Value:   any.GetValue(),
 	}
-
-	bz, err := proto.Marshal(from)
-	if err != nil {
-		return err
-	}
-
-	return gogoproto.Unmarshal(bz, to)
 }
 
-func GogoToPulsarSlow(from gogoproto.Message, to proto.Message) error {
-	bz, err := gogoproto.Marshal(from)
-	if err != nil {
-		return err
+// GoGoAnyToAnyV2 converts Any to AnyV2
+func GogoAnyToAnyV2(any *Any) *anypb.Any {
+	return &anypb.Any{
+		TypeUrl: any.GetTypeUrl(),
+		Value:   any.GetValue(),
 	}
-
-	return proto.Unmarshal(bz, to)
 }

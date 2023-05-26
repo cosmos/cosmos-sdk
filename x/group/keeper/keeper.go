@@ -95,7 +95,7 @@ func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals 
 			return proposals, err
 		}
 
-		proposals = append(proposals, group.ProposalFromPulsar(proposal))
+		proposals = append(proposals, group.ProposalFromPulsar(k.cdc, proposal))
 	}
 
 	return proposals, nil

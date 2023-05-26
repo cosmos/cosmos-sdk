@@ -1099,7 +1099,7 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 			return err
 		}
 
-		gp := group.GroupPolicyInfoFromPulsar(groupPolicy)
+		gp := group.GroupPolicyInfoFromPulsar(k.cdc, groupPolicy)
 		if err = gp.DecisionPolicy.GetCachedValue().(group.DecisionPolicy).Validate(g, k.config); err != nil {
 			return err
 		}

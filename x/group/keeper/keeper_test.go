@@ -283,8 +283,8 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			}
 
 			s.Require().NoError(err)
-			s.Require().Equal(resp.GetProposal().FinalTallyResult, spec.tallyRes)
-			s.Require().Equal(resp.GetProposal().Status, spec.expStatus)
+			s.Require().Equal(spec.tallyRes, resp.GetProposal().FinalTallyResult)
+			s.Require().Equal(spec.expStatus, resp.GetProposal().Status)
 		})
 	}
 }

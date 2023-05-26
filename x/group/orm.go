@@ -9,6 +9,7 @@ import (
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -25,11 +26,7 @@ var ORMSchema = &ormv1alpha1.ModuleSchemaDescriptor{
 func ProposalToPulsar(proposal Proposal) *groupv1.Proposal {
 	var messages []*anypb.Any
 	for _, msg := range proposal.Messages {
-		m := new(anypb.Any)
-		if err := codectypes.GogoToPulsarSlow(msg, m); err != nil {
-			panic(fmt.Sprintf("failed to transform proposal msg: %s", err))
-		}
-		messages = append(messages, m)
+		messages = append(messages, codectypes.GogoAnyToAnyV2(msg))
 	}
 
 	return &groupv1.Proposal{
@@ -49,14 +46,10 @@ func ProposalToPulsar(proposal Proposal) *groupv1.Proposal {
 	}
 }
 
-func ProposalFromPulsar(proposal *groupv1.Proposal) Proposal {
+func ProposalFromPulsar(cdc codec.Codec, proposal *groupv1.Proposal) Proposal {
 	var messages []*codectypes.Any
 	for _, msg := range proposal.Messages {
-		m := new(codectypes.Any)
-		if err := codectypes.PulsarToGogoSlow(msg, proposal); err != nil {
-			panic(fmt.Sprintf("failed to transform proposal msg: %s", err))
-		}
-		messages = append(messages, m)
+		messages = append(messages, codectypes.AnyV2ToGogoAny(msg))
 	}
 
 	return Proposal{
@@ -98,7 +91,7 @@ func GroupInfoToPulsar(groupInfo GroupInfo) *groupv1.GroupInfo { //nolint:revive
 	}
 }
 
-func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo { //nolint:revive // naming is ok
+func GroupPolicyInfoFromPulsar(cdc codec.Codec, groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPolicyInfo { //nolint:revive // naming is ok
 	result := GroupPolicyInfo{
 		Address:             groupPolicyInfo.Address,
 		GroupId:             groupPolicyInfo.GroupId,
@@ -109,11 +102,16 @@ func GroupPolicyInfoFromPulsar(groupPolicyInfo *groupv1.GroupPolicyInfo) GroupPo
 	}
 
 	if groupPolicyInfo.DecisionPolicy != nil {
-		decisionPolicy := new(codectypes.Any)
-		if err := codectypes.PulsarToGogoSlow(groupPolicyInfo.DecisionPolicy, decisionPolicy); err != nil {
+		decisionPolicy := DecisionPolicy(nil)
+		err := cdc.UnpackAny(codectypes.AnyV2ToGogoAny(groupPolicyInfo.DecisionPolicy), &decisionPolicy)
+		if err != nil {
 			panic(fmt.Sprintf("failed to transform decision policy: %s", err))
 		}
-		result.DecisionPolicy = decisionPolicy
+
+		result.DecisionPolicy, err = codectypes.NewAnyWithValue(decisionPolicy)
+		if err != nil {
+			panic(fmt.Sprintf("failed to transform decision policy: %s", err))
+		}
 	}
 
 	return result
@@ -130,11 +128,7 @@ func GroupPolicyInfoToPulsar(groupPolicyInfo GroupPolicyInfo) *groupv1.GroupPoli
 	}
 
 	if groupPolicyInfo.DecisionPolicy != nil {
-		decisionPolicy := new(anypb.Any)
-		if err := codectypes.GogoToPulsarSlow(groupPolicyInfo.DecisionPolicy, decisionPolicy); err != nil {
-			panic(fmt.Sprintf("failed to transform decision policy: %s", err))
-		}
-		result.DecisionPolicy = decisionPolicy
+		result.DecisionPolicy = codectypes.GogoAnyToAnyV2(groupPolicyInfo.DecisionPolicy)
 	}
 
 	return result

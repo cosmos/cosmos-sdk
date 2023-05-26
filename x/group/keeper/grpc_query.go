@@ -61,7 +61,7 @@ func (k Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (grou
 		return group.GroupPolicyInfo{}, err
 	}
 
-	return group.GroupPolicyInfoFromPulsar(groupPolicyInfo), nil
+	return group.GroupPolicyInfoFromPulsar(k.cdc, groupPolicyInfo), nil
 }
 
 // GroupMembers queries all members of a group.
@@ -164,7 +164,7 @@ func (k Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.Query
 			return nil, err
 		}
 
-		p := group.GroupPolicyInfoFromPulsar(policy)
+		p := group.GroupPolicyInfoFromPulsar(k.cdc, policy)
 		res.GroupPolicies = append(res.GroupPolicies, &p)
 	}
 
@@ -208,7 +208,7 @@ func (k Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.Query
 			return nil, err
 		}
 
-		p := group.GroupPolicyInfoFromPulsar(policy)
+		p := group.GroupPolicyInfoFromPulsar(k.cdc, policy)
 		res.GroupPolicies = append(res.GroupPolicies, &p)
 	}
 
@@ -263,7 +263,7 @@ func (k Keeper) ProposalsByGroupPolicy(goCtx context.Context, request *group.Que
 			return nil, err
 		}
 
-		p := group.ProposalFromPulsar(proposal)
+		p := group.ProposalFromPulsar(k.cdc, proposal)
 		res.Proposals = append(res.Proposals, &p)
 	}
 
@@ -292,7 +292,7 @@ func (k Keeper) getProposal(ctx sdk.Context, proposalID uint64) (group.Proposal,
 		return group.Proposal{}, errorsmod.Wrap(err, "load proposal")
 	}
 
-	return group.ProposalFromPulsar(proposal), nil
+	return group.ProposalFromPulsar(k.cdc, proposal), nil
 }
 
 // VoteByProposalVoter queries a vote given a voter and a proposal ID.

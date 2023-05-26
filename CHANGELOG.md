@@ -233,6 +233,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `SigVerifiableTx.GetSigners()` now returns `([][]byte, error)` instead of `[]sdk.AccAddress`.
 * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 * (x/gov) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
+* (x/distribution) [](https://github.com/cosmos/cosmos-sdk/pull/16302) Use collections for FeePool state management.
+  * removed: keeper `GetFeePool`, `SetFeePool`, `GetFeePoolCommunityCoins
 
 ### Client Breaking Changes
 

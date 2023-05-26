@@ -33,7 +33,7 @@ type Keeper struct {
 	storeService corestoretypes.KVStoreService
 
 	// The codec for binary encoding/decoding.
-	cdc codec.BinaryCodec
+	cdc codec.Codec
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -72,7 +72,7 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
+	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {

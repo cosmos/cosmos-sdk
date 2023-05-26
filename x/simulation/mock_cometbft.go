@@ -187,11 +187,11 @@ func RandomRequestFinalizeBlock(
 	for r.Float64() < params.EvidenceFraction() {
 		vals := voteInfos
 		height := blockHeight
-
+		misbehaviorTime := time
 		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
 			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
 			// array indices offset by one
-			time = pastTimes[height-1]
+			misbehaviorTime = pastTimes[height-1]
 			vals = pastVoteInfos[height-1]
 		}
 
@@ -207,7 +207,7 @@ func RandomRequestFinalizeBlock(
 				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
-				Time:             time,
+				Time:             misbehaviorTime,
 				TotalVotingPower: totalVotingPower,
 			},
 		)

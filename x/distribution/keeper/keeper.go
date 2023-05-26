@@ -201,11 +201,11 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 		return err
 	}
 
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	return k.SetFeePool(ctx, feePool)
+	return k.FeePool.Set(ctx, feePool)
 }

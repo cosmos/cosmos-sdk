@@ -4763,7 +4763,7 @@ func (x *EventLeaveGroup) GetAddress() string {
 	return ""
 }
 
-// EventProposalTallyFinalized is an event emitted when a proposal tally is finalized.
+// EventProposalPruned is an event emitted when a proposal is pruned.
 type EventProposalPruned struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4773,7 +4773,7 @@ type EventProposalPruned struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	// status is the proposal status (UNSPECIFIED, SUBMITTED, ACCEPTED, REJECTED, ABORTED, WITHDRAWN).
 	Status ProposalStatus `protobuf:"varint,2,opt,name=status,proto3,enum=cosmos.group.v1.ProposalStatus" json:"status,omitempty"`
-	// tally_result is the proposal tally result.
+	// tally_result is the proposal tally result (when applicable).
 	TallyResult *TallyResult `protobuf:"bytes,3,opt,name=tally_result,json=tallyResult,proto3" json:"tally_result,omitempty"`
 }
 

@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"context"
 	"encoding/binary"
-	"errors"
 	"testing"
 	"time"
 
@@ -61,13 +60,8 @@ func (s *TestSuite) SetupTest() {
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
-		s.accountKeeper.EXPECT().BytesToString(s.addrs[i]).Return(s.addrs[i].String(), nil).AnyTimes()
-		s.accountKeeper.EXPECT().StringToBytes(s.addrs[i].String()).Return(s.addrs[i], nil).AnyTimes()
 	}
-
-	// add empty string to the list of expected calls
-	s.accountKeeper.EXPECT().StringToBytes("").Return(nil, errors.New("unable to decode")).AnyTimes()
-	s.accountKeeper.EXPECT().StringToBytes("invalid").Return(nil, errors.New("unable to decode")).AnyTimes()
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
@@ -146,15 +140,11 @@ func (s *TestSuite) setNextAccount() {
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 
-	addrcdc := address.NewBech32Codec("cosmos")
-	addrst, err := addrcdc.BytesToString(ac.Address())
 	s.Require().NoError(err)
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
 	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
-	s.accountKeeper.EXPECT().StringToBytes(addrst).Return(ac.Address().Bytes(), nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(ac.Address().Bytes()).Return(addrst, nil).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -437,7 +427,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
-	groupPolicy, err := s.accountKeeper.StringToBytes(accountAddr)
+	groupPolicy, err := s.accountKeeper.AddressCodec().StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 

@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,7 @@ import (
 // Keeper of the mint store
 type Keeper struct {
 	cdc              codec.BinaryCodec
-	storeKey         storetypes.StoreKey
+	storeService     storetypes.KVStoreService
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
@@ -29,7 +30,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
+	storeService storetypes.KVStoreService,
 	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -43,7 +44,7 @@ func NewKeeper(
 
 	return Keeper{
 		cdc:              cdc,
-		storeKey:         key,
+		storeService:     storeService,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
@@ -57,65 +58,81 @@ func (k Keeper) GetAuthority() string {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetMinter returns the minter.
-func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.MinterKey)
-	if bz == nil {
-		panic("stored minter should not have been nil")
+func (k Keeper) GetMinter(ctx context.Context) (types.Minter, error) {
+	var minter types.Minter
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.MinterKey)
+	if err != nil {
+		return minter, err
 	}
 
-	k.cdc.MustUnmarshal(bz, &minter)
-	return
+	if bz == nil {
+		return minter, fmt.Errorf("stored minter should not have been nil")
+	}
+
+	err = k.cdc.Unmarshal(bz, &minter)
+	return minter, err
 }
 
 // SetMinter sets the minter.
-func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&minter)
-	store.Set(types.MinterKey, bz)
+func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := k.cdc.Marshal(&minter)
+	if err != nil {
+		return err
+	}
+	return store.Set(types.MinterKey, bz)
 }
 
 // SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.ParamsKey, bz)
-
-	return nil
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	return store.Set(types.ParamsKey, bz)
 }
 
 // GetParams returns the current x/mint module parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return p
+func (k Keeper) GetParams(ctx context.Context) (p types.Params, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.ParamsKey)
+	if err != nil {
+		return p, err
 	}
 
-	k.cdc.MustUnmarshal(bz, &p)
-	return p
+	if bz == nil {
+		return p, nil
+	}
+
+	err = k.cdc.Unmarshal(bz, &p)
+	return p, err
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) math.Int {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
+func (k Keeper) StakingTokenSupply(ctx context.Context) math.Int {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.stakingKeeper.StakingTokenSupply(sdkCtx)
 }
 
 // BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx sdk.Context) math.LegacyDec {
-	return k.stakingKeeper.BondedRatio(ctx)
+func (k Keeper) BondedRatio(ctx context.Context) math.LegacyDec {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.stakingKeeper.BondedRatio(sdkCtx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
-func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
+func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted
 		return nil
@@ -126,6 +143,6 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
-func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
+func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }

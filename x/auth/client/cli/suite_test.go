@@ -7,11 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -385,7 +386,7 @@ func (s *CLITestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Test validate-signatures
 	res, err := authtestutil.TxValidateSignaturesExec(s.clientCtx, unsignedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
-	s.Require().True(strings.Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", s.val.String())))
+	s.Require().Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", s.val.String()))
 
 	// Test sign
 
@@ -409,7 +410,9 @@ func (s *CLITestSuite) TestCLISendGenerateSignAndBroadcast() {
 	sigs, err = txBuilder.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(sigs))
-	s.Require().Equal(s.val.String(), txBuilder.GetTx().GetSigners()[0].String())
+	signers, err := txBuilder.GetTx().GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([]byte(s.val), signers[0])
 
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
@@ -460,6 +463,7 @@ func (s *CLITestSuite) TestCLIMultisignInsufficientCosigners() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -548,6 +552,7 @@ func (s *CLITestSuite) TestCLIMultisignSortSignatures() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -621,6 +626,7 @@ func (s *CLITestSuite) TestSignWithMultisig() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -662,6 +668,7 @@ func (s *CLITestSuite) TestCLIMultisign() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 5),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -735,6 +742,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 		sdk.NewCoins(
 			sdk.NewCoin("stake", math.NewInt(1)),
 		),
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -917,7 +925,9 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
-	s.Require().Equal([]sdk.AccAddress{val0, val1}, txBuilder.GetTx().GetSigners())
+	signers, err := txBuilder.GetTx().GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{val0, val1}, signers)
 
 	// Write the unsigned tx into a file.
 	txJSON, err := s.clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
@@ -1270,7 +1280,7 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 }
 
 func (s *CLITestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr, s.ac)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -1289,5 +1299,5 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 	}
 
 	flags = append(flags, extraFlags...)
-	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, s.ac, flags...)
 }

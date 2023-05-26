@@ -73,7 +73,7 @@ func NewBaseSendKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseSendKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -125,7 +125,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	inAddress, err := sdk.AccAddressFromBech32(input.Address)
+	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	)
 
 	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -376,7 +376,12 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx context.Context, denoms ...string)
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(denom string, sendEnabled bool) bool) {
-	_ = k.SendEnabled.Walk(ctx, nil, cb)
+	err := k.SendEnabled.Walk(ctx, nil, func(key string, value bool) (stop bool, err error) {
+		return cb(key, value), nil
+	})
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 }
 
 // GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.

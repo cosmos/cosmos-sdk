@@ -89,9 +89,9 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
 		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
-		require.NoError(suite.T(), err)
-		require.True(suite.T(), has)
-		require.NoError(suite.T(), suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
+		suite.Require().NoError(err)
+		suite.Require().True(has)
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
 	}
 }
 
@@ -111,22 +111,22 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 		suite.Require().NoError(err)
 		suite.Require().Nil(proposal.VotingStartTime)
 
-		require.NoError(suite.T(), suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
+		suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
 
 		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
 		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
-		require.NoError(suite.T(), err)
-		require.True(suite.T(), has)
+		suite.Require().NoError(err)
+		suite.Require().True(has)
 
 		// add vote
 		voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
 		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")
 		suite.Require().NoError(err)
 
-		require.NoError(suite.T(), suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
 
 		// add vote but proposal is deleted along with its VotingPeriodProposalKey
 		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")

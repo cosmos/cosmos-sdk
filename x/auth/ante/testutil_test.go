@@ -82,7 +82,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
-	err := suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
+	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	require.NoError(t, err)
 
 	// We're using TestMsg encoding in some tests, so register it here.

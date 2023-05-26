@@ -4,15 +4,7 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/cometbft/cometbft/libs/log"
-=======
-	"cosmossdk.io/log"
-
-	storetypes "cosmossdk.io/store/types"
-
-	errorsmod "cosmossdk.io/errors"
->>>>>>> be2003e58 (feat(group): add group event tally result (#16191))
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

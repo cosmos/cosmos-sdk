@@ -223,24 +223,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Add API `StartCmdWithOptions` to create customized start command.
 * (x/auth) [#16016](https://github.com/cosmos/cosmos-sdk/pull/16016) Use collections for accounts state management:
-  - removed: keeper `HasAccountByID`, `AccountAddressByID`, `SetParams
+    * removed: keeper `HasAccountByID`, `AccountAddressByID`, `SetParams
 * (x/distribution) [#16211](https://github.com/cosmos/cosmos-sdk/pull/16211) Use collections for params state management.
 * [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284)
-  * `sdk.Msg.GetSigners` was deprecated and is no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.
-  * `sdk.Tx` now requires a new method `GetMsgsV2()`.
-  * `types/tx.Tx` no longer implements `sdk.Tx`.
-  * `TxConfig` has a new method `SigningContext() *signing.Context`.
-  * `AccountKeeper` now has an `AddressCodec() address.Codec` method and the expected `AccountKeeper` for `x/auth/ante` expects this method.
-  * `SigVerifiableTx.GetSigners()` now returns `([][]byte, error)` instead of `[]sdk.AccAddress`.
+    * `sdk.Msg.GetSigners` was deprecated and is no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.
+    * `sdk.Tx` now requires a new method `GetMsgsV2()`.
+    * `types/tx.Tx` no longer implements `sdk.Tx`.
+    * `TxConfig` has a new method `SigningContext() *signing.Context`.
+    * `AccountKeeper` now has an `AddressCodec() address.Codec` method and the expected `AccountKeeper` for `x/auth/ante` expects this method.
+    * `SigVerifiableTx.GetSigners()` now returns `([][]byte, error)` instead of `[]sdk.AccAddress`.
 * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 * (x/gov) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `NewKeeper` now requires `codec.Codec`.
 * (x/distribution) [](https://github.com/cosmos/cosmos-sdk/pull/16302) Use collections for FeePool state management.
-  * removed: keeper `GetFeePool`, `SetFeePool`, `GetFeePoolCommunityCoins`
+    * removed: keeper `GetFeePool`, `SetFeePool`, `GetFeePoolCommunityCoins`
 
 * (x/gov) [#16268](https://github.com/cosmos/cosmos-sdk/pull/16268) Use collections for proposal state management (part 2):
-   * this finalizes the gov collections migration
-   * Removed: keeper `InsertActiveProposalsQueue`, `RemoveActiveProposalsQueue`, `InsertInactiveProposalsQueue`, `RemoveInactiveProposalsQueue`, `IterateInactiveProposalsQueue`, `IterateActiveProposalsQueue`, `ActiveProposalsQueueIterator`, `InactiveProposalsQueueIterator`
-   * Remove: types all the key related functions
+    * this finalizes the gov collections migration
+    * Removed: keeper `InsertActiveProposalsQueue`, `RemoveActiveProposalsQueue`, `InsertInactiveProposalsQueue`, `RemoveInactiveProposalsQueue`, `IterateInactiveProposalsQueue`, `IterateActiveProposalsQueue`, `ActiveProposalsQueueIterator`, `InactiveProposalsQueueIterator`
+    * Remove: types all the key related functions
+* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) BeginBlock and EndBlock are now internal to baseapp. For testing, user must call `FinalizeBlock`. BeginBlock and EndBlock calls are internal to Baseapp. 
+* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) Writing of state to the multistore was moved to FinalizeBlock. Commit still handles the commiting values to disk. 
+* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) `runTxMode`s were renamed to `execMode`. ModeDeliver as changed to `ModeFinalize` and a new `ModeVoteExtension` was added for vote extensions.
+* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) All calls to ABCI methods now accept a pointer of the abci request and response types
+
 
 ### Client Breaking Changes
 
@@ -248,6 +253,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Use same port for gRPC-Web and the API server.
 * (abci) [#15845](https://github.com/cosmos/cosmos-sdk/pull/15845) Add `msg_index` to all event attributes to associate events and messages
 * (abci) [#15845](https://github.com/cosmos/cosmos-sdk/pull/15845) Remove duplicating events in `logs`
+* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) BeginBlock & EndBlock events have begin or endblock in the events in order to identify which stage they are emitted from since they are returned to comet as FinalizeBlock events, 
 
 ### CLI Breaking Changes
 

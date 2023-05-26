@@ -32,6 +32,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	tmrpc "github.com/cometbft/cometbft/rpc/client"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -71,14 +72,12 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	var supportedOperations []string
 	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {
-		resolvedMsg, err := cfg.InterfaceRegistry.Resolve(ii)
+		_, err := cfg.InterfaceRegistry.Resolve(ii)
 		if err != nil {
 			continue
 		}
 
-		if _, ok := resolvedMsg.(sdk.Msg); ok {
-			supportedOperations = append(supportedOperations, ii)
-		}
+		supportedOperations = append(supportedOperations, ii)
 	}
 
 	supportedOperations = append(

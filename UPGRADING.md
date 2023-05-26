@@ -27,6 +27,10 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
+### Baseapp
+
+All ABCI calls accept a pointer to the request and response types defined by Comet. 
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -41,6 +45,8 @@ More information about [confix](https://docs.cosmos.network/main/tooling/confix)
 
 The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
 
+BeginBlock & EndBlock Events are now emitted through FinalizeBlock but have an added attribute to identify if it belongs to Begin or EndBlock
+
 #### gRPC-Web
 
 gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
@@ -53,7 +59,7 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 ### Protobuf
 
-The SDK is in the process of removing all `gogoproto` annotations.
+The SDK is in the process of removing all `gogoproto` annotations. It is recommended to not introduce new types and add gogoproto annotations
 
 #### Stringer
 

@@ -640,7 +640,13 @@ type GroupPolicyInfo struct {
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+<<<<<<< HEAD
 	// metadata is any arbitrary metadata to attached to the group policy.
+=======
+	// metadata is any arbitrary metadata attached to the group policy.
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
+>>>>>>> be2003e58 (feat(group): add group event tally result (#16191))
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's GroupPolicyInfo structure that
 	// would create a different result on a running proposal.
@@ -693,7 +699,13 @@ type Proposal struct {
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,2,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
+<<<<<<< HEAD
 	// metadata is any arbitrary metadata to attached to the proposal.
+=======
+	// metadata is any arbitrary metadata attached to the proposal.
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/group#proposal-4
+>>>>>>> be2003e58 (feat(group): add group event tally result (#16191))
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposers are the account addresses of the proposers.
 	Proposers []string `protobuf:"bytes,4,rep,name=proposers,proto3" json:"proposers,omitempty"`

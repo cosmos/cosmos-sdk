@@ -1102,7 +1102,9 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
-	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
+	signers, err := txBuilder.GetTx().GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{val.Address}, signers)
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
@@ -1112,7 +1114,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	err = authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder

@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -256,6 +257,7 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
+	app.cdc = codec.NewProtoCodec(registry)
 }
 
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.

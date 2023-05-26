@@ -736,11 +736,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			return nil, sdkerrors.Wrap(err, "load group")
 		}
 
-<<<<<<< HEAD
 		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
-=======
-		if err = k.doTallyAndUpdate(ctx, &proposal, groupInfo, policyInfo); err != nil {
->>>>>>> be2003e58 (feat(group): add group event tally result (#16191))
 			return nil, err
 		}
 	}

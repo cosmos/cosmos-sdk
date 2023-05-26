@@ -44,7 +44,7 @@ func TestSetPubKey(t *testing.T) {
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i+1000)))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
@@ -153,12 +153,14 @@ func TestSigVerification(t *testing.T) {
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 
 	msgs := make([]sdk.Msg, len(addrs))
+	accs := make([]sdk.AccountI, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
+		accs[i] = acc
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
@@ -190,11 +192,11 @@ func TestSigVerification(t *testing.T) {
 	validSigs := false
 	testCases := []testCase{
 		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, validSigs, false, true},
-		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, validSigs, false, true},
-		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, validSigs, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber()}, []uint64{0, 0}, validSigs, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{accs[2].GetAccountNumber(), accs[1].GetAccountNumber(), accs[0].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, true},
 		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, validSigs, false, true},
-		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, validSigs, false, true},
-		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, validSigs, false, false},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{3, 4, 5}, validSigs, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, false},
 		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 0, 0}, []uint64{0, 0, 0}, !validSigs, true, false},
 	}
 
@@ -265,7 +267,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	err := suite.accountKeeper.SetParams(suite.ctx, params)
+	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	require.NoError(t, err)
 
 	msgs := make([]sdk.Msg, len(privs))
@@ -275,10 +277,10 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
-		accNums[i] = uint64(i)
+		accNums[i] = acc.GetAccountNumber()
 		accSeqs[i] = uint64(0)
 	}
 	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))

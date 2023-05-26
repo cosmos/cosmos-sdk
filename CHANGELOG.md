@@ -221,6 +221,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `simulation.NewOperationMsg` is now 2-arity instead of 3-arity with the obsolete argument `codec.ProtoCodec` removed.
     * The field `OperationMsg.Msg` is now of type `[]byte` instead of `json.RawMessage`.
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Add API `StartCmdWithOptions` to create customized start command.
+* (x/auth) [#16016](https://github.com/cosmos/cosmos-sdk/pull/16016) Use collections for accounts state management:
+  - removed: keeper `HasAccountByID`, `AccountAddressByID`, `SetParams
 * (x/distribution) [#16211](https://github.com/cosmos/cosmos-sdk/pull/16211) Use collections for params state management.
 * [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284)
   * `sdk.Msg.GetSigners` was deprecated and is no longer supported. Use the `cosmos.msg.v1.signer` protobuf annotation instead.

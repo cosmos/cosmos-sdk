@@ -210,7 +210,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetStakingHooks),
+		appmodule.Invoke(InvokeSetSendCoinsHooks),
 	)
 }
 
@@ -270,7 +270,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
 }
 
-func InvokeSetStakingHooks(
+func InvokeSetSendCoinsHooks(
 	config *modulev1.Module,
 	keeper *keeper.BaseSendKeeper,
 	sendCoinsHooks map[string]types.SendCoinsHooksWrapper,
@@ -300,7 +300,7 @@ func InvokeSetStakingHooks(
 	for _, modName := range order {
 		hook, ok := sendCoinsHooks[modName]
 		if !ok {
-			return fmt.Errorf("can't find staking hooks for module %s", modName)
+			return fmt.Errorf("can't find sendcoins hooks for module %s", modName)
 		}
 
 		multiHooks = append(multiHooks, hook)

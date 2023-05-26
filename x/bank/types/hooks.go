@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// combine multiple sendcoins hooks, all hook functions are run in array sequence
 var _ SendCoinsHooks = &MultiSendCoinsHooks{}
 
 type MultiSendCoinsHooks []SendCoinsHooks

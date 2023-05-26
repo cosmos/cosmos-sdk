@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -630,6 +632,43 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
 	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))
+}
+
+func (suite *KeeperTestSuite) TestSendCoinsHooks() {
+	ctx := suite.ctx
+	require := suite.Require()
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+
+	hookCalled := new(bool)
+	mockCtrl := gomock.NewController(suite.T())
+	mockSendCoinsHooks := banktestutil.NewMockSendCoinsHooks(mockCtrl)
+	mockSendCoinsHooks.EXPECT().AfterSendCoins(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).DoAndReturn(
+		func(
+			ctx sdk.Context,
+			fromAddr sdktypes.AccAddress,
+			toAddr sdktypes.AccAddress,
+			amount sdktypes.Coins,
+		) error {
+			*hookCalled = true
+			return nil
+		},
+	).AnyTimes()
+
+	suite.bankKeeper.SetHooks(types.NewMultiSendCoinsHooks(mockSendCoinsHooks))
+
+	suite.mockFundAccount(accAddrs[0])
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
+	suite.mockSendCoins(ctx, acc0, accAddrs[1])
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
+
+	require.True(*hookCalled)
 }
 
 func (suite *KeeperTestSuite) TestValidateBalance() {

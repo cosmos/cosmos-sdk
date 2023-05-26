@@ -242,3 +242,46 @@ func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
 }
+
+
+// MockSendCoinsHooks is a mock of SendCoinsHooks interface.
+type MockSendCoinsHooks struct {
+	ctrl     *gomock.Controller
+	recorder *MockSendCoinsHooksMockRecorder
+}
+
+// MockSendCoinsHooksMockRecorder is the mock recorder for MockSendCoinsHooks.
+type MockSendCoinsHooksMockRecorder struct {
+	mock *MockSendCoinsHooks
+}
+
+// NewMockSendCoinsHooks creates a new mock instance.
+func NewMockSendCoinsHooks(ctrl *gomock.Controller) *MockSendCoinsHooks {
+	mock := &MockSendCoinsHooks{ctrl: ctrl}
+	mock.recorder = &MockSendCoinsHooksMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSendCoinsHooks) EXPECT() *MockSendCoinsHooksMockRecorder {
+	return m.recorder
+}
+
+// AfterSendCoins mocks base method.
+func (m *MockSendCoinsHooks) AfterSendCoins(		
+	ctx context.Context,
+	fromAddr types.AccAddress,
+	toAddr types.AccAddress,
+	amount types.Coins,
+) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterSendCoins", ctx, fromAddr, toAddr, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterSendCoins indicates an expected call of AfterSendCoins.
+func (mr *MockSendCoinsHooksMockRecorder) AfterSendCoins(ctx, fromAddr, toAddr, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSendCoins", reflect.TypeOf((*MockSendCoinsHooks)(nil).AfterSendCoins), ctx, fromAddr, toAddr, amount)
+}

@@ -382,7 +382,7 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	member, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
+	_, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +392,7 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 		return nil, fmt.Errorf("invalid page request: %w", err)
 	}
 
-	it, err := k.state.GroupMemberTable().List(ctx, groupv1.GroupMemberMemberAddressIndexKey{}.WithMemberAddress(member.String()), ormlist.Paginate(pg))
+	it, err := k.state.GroupMemberTable().List(ctx, groupv1.GroupMemberMemberAddressIndexKey{}.WithMemberAddress(request.Address), ormlist.Paginate(pg))
 	if err != nil {
 		return nil, err
 	}

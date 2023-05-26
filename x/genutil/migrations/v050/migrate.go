@@ -1,11 +1,11 @@
-package v048
+package v050
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// Migrate migrates exported state from v0.47 to a v0.48 genesis state.
+// Migrate migrates exported state from v0.47 to a v0.50 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) (types.AppMap, error) {
 	// v0.47 group genesis
 	// "group": {
@@ -19,7 +19,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) (types.AppMap, err
 	// 	"votes": []
 	//   },
 
-	// v0.48 group genesis
+	// v0.50 group genesis
 	// "group": {
 	// 	"cosmos.group.v1.GroupInfo": [],
 	// 	"cosmos.group.v1.GroupMember": [],

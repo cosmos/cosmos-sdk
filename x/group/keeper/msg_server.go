@@ -715,6 +715,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		} else {
 			p.Status = group.PROPOSAL_STATUS_REJECTED
 		}
+
 	}
 
 	return nil
@@ -748,7 +749,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			return nil, sdkerrors.Wrap(err, "load group")
 		}
 
+<<<<<<< HEAD
 		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
+=======
+		if err = k.doTallyAndUpdate(ctx, &proposal, groupInfo, policyInfo); err != nil {
+>>>>>>> be2003e58 (feat(group): add group event tally result (#16191))
 			return nil, err
 		}
 	}
@@ -784,6 +789,16 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	// If proposal has successfully run, delete it from state.
 	if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		if err := k.pruneProposal(ctx, proposal.Id); err != nil {
+			return nil, err
+		}
+
+		// Emit event for proposal finalized with its result
+		if err := ctx.EventManager().EmitTypedEvent(
+			&group.EventProposalPruned{
+				ProposalId:  proposal.Id,
+				Status:      proposal.Status,
+				TallyResult: &proposal.FinalTallyResult,
+			}); err != nil {
 			return nil, err
 		}
 	} else {

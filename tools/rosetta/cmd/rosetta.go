@@ -30,22 +30,12 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 			}
 			conf.WithCodec(ir, protoCodec)
 
-			// load module
-			// 1. open the so file to load the symbols
-			plug, err := plugin.Open("./plugins/osmosis/osmosis.so")
+			err = rosetta.LoadPlugin(ir, conf.Blockchain)
 			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+				fmt.Printf("[Rosetta]- Error while loading the plugin: %s", err.Error())
+				return err
 			}
-
-			// 2. look up a symbol (an exported function or variable)
-			initZone, err := plug.Lookup("InitZone")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			initZone.(func())()
-
+			
 			rosettaSrv, err := rosetta.ServerFromConfig(conf)
 			if err != nil {
 				fmt.Printf("[Rosetta]- Error while creating server: %s", err.Error())

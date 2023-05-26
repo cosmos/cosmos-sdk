@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/math v1.0.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.38.0-alpha.2
-	github.com/cosmos/cosmos-db v1.0.0-rc.1
+	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.21.0
 	github.com/cosmos/ics23/go v0.10.0

@@ -26,8 +26,9 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema collections.Schema
-	Params collections.Item[types.Params]
+	Schema  collections.Schema
+	Params  collections.Item[types.Params]
+	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -53,6 +54,7 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -199,11 +201,11 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 		return err
 	}
 
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	return k.SetFeePool(ctx, feePool)
+	return k.FeePool.Set(ctx, feePool)
 }

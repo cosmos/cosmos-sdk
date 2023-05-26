@@ -30,14 +30,14 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	if totalPreviousPower == 0 {
 		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected...)
-		return k.SetFeePool(ctx, feePool)
+		return k.FeePool.Set(ctx, feePool)
 	}
 
 	// calculate fraction allocated to validators
@@ -78,7 +78,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
-	return k.SetFeePool(ctx, feePool)
+	return k.FeePool.Set(ctx, feePool)
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator,

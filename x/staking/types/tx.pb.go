@@ -415,7 +415,7 @@ type MsgUndelegateResponse struct {
 	CompletionTime time.Time `protobuf:"bytes,1,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time"`
 	// amount returns the amount of undelegated coins
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	Amount types1.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
 }
 

@@ -42,7 +42,7 @@ func TestValidateGenesis(t *testing.T) {
 			true,
 		},
 		{
-			"valid 0.48 genesis file",
+			"valid 0.50 genesis file",
 			func() string {
 				bz, err := os.ReadFile("../../types/testdata/app_genesis.json")
 				require.NoError(t, err)

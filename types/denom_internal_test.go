@@ -36,6 +36,13 @@ func (s *internalDenomTestSuite) TestRegisterDenom() {
 	s.Require().False(ok)
 	s.Require().Equal(math.LegacyZeroDec(), res)
 
+	err := SetBaseDenom(atom)
+	s.Require().NoError(err)
+
+	res, ok = GetDenomUnit(atom)
+	s.Require().True(ok)
+	s.Require().Equal(atomUnit, res)
+
 	// reset registration
 	baseDenom = ""
 	denomUnits = map[string]Dec{}
@@ -187,6 +194,15 @@ func (s *internalDenomTestSuite) TestDecOperationOrder() {
 	coin, err := ConvertCoin(NewCoin("unit1", NewInt(100000011)), "unit2")
 	s.Require().NoError(err)
 	s.Require().Equal(coin, NewCoin("unit2", NewInt(11)))
+
+	// reset registration
+	baseDenom = ""
+	denomUnits = map[string]Dec{}
+}
+
+func (s *internalDenomTestSuite) TestSetBaseDenomError() {
+	err := SetBaseDenom(atom)
+	s.Require().Error(err)
 
 	// reset registration
 	baseDenom = ""

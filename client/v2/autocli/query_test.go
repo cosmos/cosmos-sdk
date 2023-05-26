@@ -82,6 +82,9 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"bz": {
 					Usage: "some bytes",
 				},
+				"map_string_string": {
+					Usage: "some map of string to string",
+				},
 				"map_string_uint32": {
 					Usage: "some map of string to int32",
 				},
@@ -135,6 +138,7 @@ func TestMap(t *testing.T) {
 		"1234foo",
 		"4321bar",
 		"--map-string-uint32", "bar=123",
+		"--map-string-string", "val=foo",
 		"--map-string-coin", "baz=100000foo",
 		"--map-string-coin", "sec=100000bar",
 		"--map-string-coin", "multi=100000bar,flag=100000foo",

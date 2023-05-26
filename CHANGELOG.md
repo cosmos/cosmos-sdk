@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (cli) [#16312](https://github.com/cosmos/cosmos-sdk/pull/16312) Allow any addresses in `client.ValidatePromptAddress`.
 * (store/iavl) [#15717](https://github.com/cosmos/cosmos-sdk/pull/15717) Upstream error on empty version (this change was present on all version but v0.46).
 
 ## [v0.46.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.12) - 2022-04-04
@@ -269,7 +270,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 ### API Breaking Changes
 
-* (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
+* (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
 * (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) `NewRollbackCmd` now takes an `appCreator types.AppCreator`.
 
 ### Features
@@ -288,7 +289,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 * (x/group) [#13214](https://github.com/cosmos/cosmos-sdk/pull/13214) Add `withdraw-proposal` command to group module's CLI transaction commands.
 * (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.
 * (simapp) [#13108](https://github.com/cosmos/cosmos-sdk/pull/13108) Call `SetIAVLCacheSize` with the configured value in simapp.
-* [#13318](https://github.com/cosmos/cosmos-sdk/pull/13318) Keep the balance query endpoint compatible with legacy blocks.
+* [#13318](https://github.com/cosmos/cosmos-sdk/pull/13318) Keep the balance query endpoint compatible with legacy blocks.
 * [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage. 
 
 ### Bug Fixes
@@ -297,15 +298,15 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 * (x/auth) [#13200](https://github.com/cosmos/cosmos-sdk/pull/13200) Fix wrong sequences in `sign-batch`.
 * (export) [#13029](https://github.com/cosmos/cosmos-sdk/pull/13029) Fix exporting the blockParams regression.
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
-* (store) [#13336](https://github.com/cosmos/cosmos-sdk/pull/13336) Call streaming listeners for deliver tx event, it was removed accidentally, backport #13334.
-* (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
+* (store) [#13336](https://github.com/cosmos/cosmos-sdk/pull/13336) Call streaming listeners for deliver tx event, it was removed accidentally, backport #13334.
+* (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
 * (grpc) [#13418](https://github.com/cosmos/cosmos-sdk/pull/13418) Add close for grpc only mode.
 
 ## [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) - 2022-08-24
 
 ### Improvements
 
-* [#12953](https://github.com/cosmos/cosmos-sdk/pull/12953) Change the default priority mechanism to be based on gas price.
+* [#12953](https://github.com/cosmos/cosmos-sdk/pull/12953) Change the default priority mechanism to be based on gas price.
 * [#12981](https://github.com/cosmos/cosmos-sdk/pull/12981) Return proper error when parsing telemetry configuration.
 * [#12969](https://github.com/cosmos/cosmos-sdk/pull/12969) Bump Tendermint to `v0.34.21` and IAVL to `v0.19.1`.
 * [#12885](https://github.com/cosmos/cosmos-sdk/pull/12885) Amortize cost of processing cache KV store.
@@ -318,7 +319,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 ### Bug Fixes
 
 * (x/group) [#12888](https://github.com/cosmos/cosmos-sdk/pull/12888) Fix event propagation to the current context of `x/group` message execution `[]sdk.Result`.
-* (x/upgrade) [#12906](https://github.com/cosmos/cosmos-sdk/pull/12906) Fix upgrade failure by moving downgrade verification logic after store migration.
+* (x/upgrade) [#12906](https://github.com/cosmos/cosmos-sdk/pull/12906) Fix upgrade failure by moving downgrade verification logic after store migration.
 * (store) [#12945](https://github.com/cosmos/cosmos-sdk/pull/12945) Fix nil end semantics in store/cachekv/iterator when iterating a dirty cache.
 
 ## [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0) - 2022-07-26
@@ -459,7 +460,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 * (x/auth) [\#11482](https://github.com/cosmos/cosmos-sdk/pull/11482) Improve panic message when attempting to register a method handler for a message that does not implement sdk.Msg
 * (x/staking) [\#11596](https://github.com/cosmos/cosmos-sdk/pull/11596) Add (re)delegation getters
 * (errors) [\#11960](https://github.com/cosmos/cosmos-sdk/pull/11960) Removed 'redacted' error message from defaultErrEncoder
-* (ante) [#12013](https://github.com/cosmos/cosmos-sdk/pull/12013) Index ante events for failed tx.
+* (ante) [#12013](https://github.com/cosmos/cosmos-sdk/pull/12013) Index ante events for failed tx.
 * [#12668](https://github.com/cosmos/cosmos-sdk/pull/12668) Add `authz_msg_index` event attribute to message events emitted when executing via `MsgExec` through `x/authz`.
 * [#12626](https://github.com/cosmos/cosmos-sdk/pull/12626) Upgrade IAVL to v0.19.0 with fast index and error propagation. NOTE: first start will take a while to propagate into new model.
 * [#12649](https://github.com/cosmos/cosmos-sdk/pull/12649) Bump tendermint to v0.34.20.
@@ -622,7 +623,7 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
 * [\#10422](https://github.com/cosmos/cosmos-sdk/pull/10422) and [\#10529](https://github.com/cosmos/cosmos-sdk/pull/10529) Add `MinCommissionRate` param to `x/staking` module.
 * (x/gov) [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
-* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
+* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
 * (x/gov) [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1beta2. Both v1beta1 and v1beta2 queries and Msgs are accepted.
 * [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met.
 * [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account

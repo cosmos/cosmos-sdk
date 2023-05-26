@@ -79,6 +79,8 @@ type Keeper struct {
 	router baseapp.MessageRouter
 
 	config group.Config
+
+	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
@@ -87,6 +89,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		key:       storeKey,
 		router:    router,
 		accKeeper: accKeeper,
+		cdc:       cdc,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)

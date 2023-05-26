@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
@@ -32,6 +33,8 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"
 
 const minExecutionPeriod = 5 * time.Second
 
@@ -1673,6 +1676,8 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -1761,6 +1766,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		proposalId uint64
 		admin      string
 		expErrMsg  string
+		postRun    func(sdkCtx sdk.Context)
 	}{
 		"wrong admin": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1768,6 +1774,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"wrong proposalId": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1775,6 +1782,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			admin:     proposers[0],
 			expErrMsg: "not found",
+			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"happy case with proposer": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1782,6 +1790,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			proposalId: proposalID,
 			admin:      proposers[0],
+			postRun:    func(sdkCtx sdk.Context) {},
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1796,6 +1805,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			proposalId: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
+			postRun:    func(sdkCtx sdk.Context) {},
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1803,6 +1813,17 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			proposalId: proposalID,
 			admin:      proposers[0],
+			postRun: func(sdkCtx sdk.Context) {
+				resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				vpe := resp.Proposal.VotingPeriodEnd
+				timeDiff := vpe.Sub(s.sdkCtx.BlockTime())
+				ctxVPE := sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(timeDiff).Add(time.Second * 1))
+				s.Require().NoError(s.keeper.TallyProposalsAtVPEnd(ctxVPE))
+				events := ctxVPE.EventManager().ABCIEvents()
+
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 	}
 	for msg, spec := range specs {
@@ -1825,6 +1846,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
+			spec.postRun(s.sdkCtx)
 		})
 	}
 }
@@ -2287,6 +2309,7 @@ func (s *TestSuite) SetupTest() {
 		expBalance        bool
 		expFromBalances   sdk.Coin
 		expToBalances     sdk.Coin
+		postRun           func(sdkCtx sdk.Context)
 	}{
 		"proposal executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2299,6 +2322,10 @@ func (s *TestSuite) SetupTest() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 		"proposal with multiple messages executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2311,6 +2338,10 @@ func (s *TestSuite) SetupTest() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 		"proposal not executed when rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2320,6 +2351,7 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"open proposal must not fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2327,12 +2359,14 @@ func (s *TestSuite) SetupTest() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"existing proposal required": {
 			setupProposal: func(ctx context.Context) uint64 {
 				return 9999
 			},
-			expErr: true,
+			expErr:  true,
+			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"Decision policy also applied on exactly voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2342,6 +2376,7 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"Decision policy also applied after voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2351,6 +2386,7 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal before MinExecutionPeriod should fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2360,6 +2396,7 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(4 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE, // Because MinExecutionPeriod has not passed
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"exec proposal at exactly MinExecutionPeriod should pass": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2369,6 +2406,10 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2390,6 +2431,10 @@ func (s *TestSuite) SetupTest() {
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2399,6 +2444,7 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2415,6 +2461,10 @@ func (s *TestSuite) SetupTest() {
 			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			postRun: func(sdkCtx sdk.Context) {
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
+			},
 		},
 	}
 	err = policyReq.SetDecisionPolicy(policy)
@@ -2427,18 +2477,16 @@ func (s *TestSuite) SetupTest() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	addrbz, err := addressCodec.StringToBytes(policyRes.Address)
-	s.Require().NoError(err)
-	s.policy = policy
-	s.groupPolicyAddr = addrbz
-	s.groupPolicyStrAddr, err = addressCodec.BytesToString(s.groupPolicyAddr)
-	s.Require().NoError(err)
-	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
-	err = s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
-	s.Require().NoError(err)
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
-	s.Require().NoError(err)
+			if spec.expBalance {
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
+				s.Require().Contains(fromBalances, spec.expFromBalances)
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, spec.expToBalances)
+			}
+
+			spec.postRun(sdkCtx)
+		})
+	}
 }
 
 func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
@@ -2571,10 +2619,15 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			}
 			s.Require().NoError(err)
 
-	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
-	s.Require().NoError(err)
-	err = groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
-	s.Require().NoError(err)
+			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				// Make sure proposal is deleted from state
+				_, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				res, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				s.Require().Empty(res.GetVotes())
+				events := sdkCtx.EventManager().ABCIEvents()
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
@@ -3133,4 +3186,15 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 
 	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
+}
+
+func eventTypeFound(events []abci.Event, eventType string) bool {
+	eventTypeFound := false
+	for _, e := range events {
+		if e.Type == eventType {
+			eventTypeFound = true
+			break
+		}
+	}
+	return eventTypeFound
 }

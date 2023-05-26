@@ -888,7 +888,7 @@ func (k Keeper) Exec(ctx context.Context, msg *group.MsgExec) (*group.MsgExecRes
 		}
 
 		// Emit event for proposal finalized with its result
-		if err := k.EventService.EventManager(ctx).Emit(
+		if err := ctx.EventManager().EmitTypedEvent(
 			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,

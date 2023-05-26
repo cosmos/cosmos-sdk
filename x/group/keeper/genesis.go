@@ -45,7 +45,7 @@ func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.
 }
 
 // ExportGenesis returns the group module's exported genesis.
-func (k Keeper) ExportGenesis(ctx context.Context, _ codec.JSONCodec) (*group.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group.GenesisState {
 	genesisState := group.NewGenesisState()
 
 	var groups []*group.GroupInfo

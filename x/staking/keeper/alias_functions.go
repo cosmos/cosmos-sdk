@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"fmt"
+	"context"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -32,9 +32,12 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 }
 
 // iterate through the bonded validator set and perform the provided function
-func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	maxValidators := k.MaxValidators(ctx)
+func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
+	store := k.storeService.OpenKVStore(ctx)
+	maxValidators, err := k.MaxValidators(ctx)
+	if err != nil {
+		return err
+	}
 
 	iterator := storetypes.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
@@ -64,9 +67,9 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 	for ; iterator.Valid(); iterator.Next() {
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
 
-		validator, found := k.GetValidator(ctx, address)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		validator, err := k.GetValidator(ctx, address)
+		if err != nil {
+			return err
 		}
 
 		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
@@ -78,23 +81,13 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 }
 
 // Validator gets the Validator interface for a particular address
-func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) types.ValidatorI {
-	val, found := k.GetValidator(ctx, address)
-	if !found {
-		return nil
-	}
-
-	return val
+func (k Keeper) Validator(ctx context.Context, address sdk.ValAddress) (types.ValidatorI, error) {
+	return k.GetValidator(ctx, address)
 }
 
 // ValidatorByConsAddr gets the validator interface for a particular pubkey
-func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) types.ValidatorI {
-	val, found := k.GetValidatorByConsAddr(ctx, addr)
-	if !found {
-		return nil
-	}
-
-	return val
+func (k Keeper) ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (types.ValidatorI, error) {
+	return k.GetValidatorByConsAddr(ctx, addr)
 }
 
 // Delegation Set

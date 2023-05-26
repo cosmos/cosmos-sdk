@@ -59,16 +59,16 @@ type ValidatorSet interface {
 	IterateLastValidators(sdk.Context,
 		func(index int64, validator ValidatorI) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) math.Int                      // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) math.Int                     // total staking token supply
+	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (ValidatorI, error) // get a particular validator by consensus address
+	TotalBondedTokens(context.Context) (math.Int, error)                      // total bonded tokens within the validator set
+	StakingTokenSupply(context.Context) (math.Int, error)                     // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) math.Int
-	SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) math.Int
-	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
-	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
+	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) math.Int
+	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) math.Int
+	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
+	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.

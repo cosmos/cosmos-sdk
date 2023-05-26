@@ -17,8 +17,8 @@ func (s *KeeperTestSuite) TestRevocation() {
 	// initial state
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByConsAddr(ctx, validator)
-	val, found := keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	val, err := keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.False(val.IsJailed())
 
 	// test jail

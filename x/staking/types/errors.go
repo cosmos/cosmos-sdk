@@ -50,4 +50,6 @@ var (
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
 	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")
 	ErrUnbondingOnHoldRefCountNegative = errors.Register(ModuleName, 42, "cannot un-hold unbonding operation that is not on hold")
+	ErrBadRedelegationSrc              = errors.Register(ModuleName, 43, "redelegation source validator not found")
+	ErrNoUnbondingType                 = errors.Register(ModuleName, 44, "unbonding type not found")
 )

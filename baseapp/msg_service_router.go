@@ -34,8 +34,6 @@ type MessageRouter interface {
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	responseByMsgName map[string]string
 	circuitBreaker    CircuitBreaker
 }
 
@@ -56,6 +54,10 @@ func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
 
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
+
+func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	msr.circuitBreaker = cb
+}
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
@@ -226,6 +228,13 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 					}
 				} else {
 					return nil, err
+				}
+
+				if msr.circuitBreaker != nil {
+					msgURL := sdk.MsgTypeURL(req)
+					if !msr.circuitBreaker.IsAllowed(ctx, msgURL) {
+						return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
+					}
 				}
 			}
 			// Call the method handler from the service description with the handler object.

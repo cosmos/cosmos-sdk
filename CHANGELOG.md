@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Features 
 
+* (baseapp) [#16290](https://github.com/cosmos/cosmos-sdk/pull/16290) Add circuit breaker setter in baseapp.
 * [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving restoring snapshot locally.
 
 ### Improvements

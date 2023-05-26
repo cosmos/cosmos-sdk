@@ -137,6 +137,7 @@ func TestMap(t *testing.T) {
 		"--map-string-uint32", "bar=123",
 		"--map-string-coin", "baz=100000foo",
 		"--map-string-coin", "sec=100000bar",
+		"--map-string-coin", "multi=100000bar,flag=100000foo",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 

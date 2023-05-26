@@ -195,31 +195,35 @@ func (m compositeMapType[T]) NewValue(ctx context.Context, opts *Builder) Value 
 }
 
 func (m *compositeMapValue[T]) Set(s string) error {
-	parts := strings.SplitN(s, "=", 2)
-	if len(parts) != 2 {
-		return errors.New("invalid format, expected key=value")
-	}
-	key, val := parts[0], parts[1]
+	comaArgs := strings.Split(s, ",")
+	for _, arg := range comaArgs {
+		parts := strings.SplitN(arg, "=", 2)
+		if len(parts) != 2 {
+			return errors.New("invalid format, expected key=value")
+		}
+		key, val := parts[0], parts[1]
 
-	keyValue, err := m.keyValueResolver(key)
-	if err != nil {
-		return err
+		keyValue, err := m.keyValueResolver(key)
+		if err != nil {
+			return err
+		}
+
+		simpleVal := m.valueType.NewValue(m.ctx, m.opts)
+		err = simpleVal.Set(val)
+		if err != nil {
+			return err
+		}
+		protoValue, err := simpleVal.Get(protoreflect.Value{})
+		if err != nil {
+			return err
+		}
+		if m.values == nil {
+			m.values = make(map[T]protoreflect.Value)
+		}
+
+		m.values[keyValue] = protoValue
 	}
 
-	simpleVal := m.valueType.NewValue(m.ctx, m.opts)
-	err = simpleVal.Set(val)
-	if err != nil {
-		return err
-	}
-	protoValue, err := simpleVal.Get(protoreflect.Value{})
-	if err != nil {
-		return err
-	}
-	if m.values == nil {
-		m.values = make(map[T]protoreflect.Value)
-	}
-
-	m.values[keyValue] = protoValue
 	return nil
 }
 

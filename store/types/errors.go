@@ -2,7 +2,6 @@ package types
 
 import (
 	"cosmossdk.io/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 const StoreCodespace = "store"
@@ -32,9 +31,9 @@ var (
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) *abci.ResponseQuery {
+func QueryResult(err error, debug bool) ResponseQuery {
 	space, code, log := errors.ABCIInfo(err, debug)
-	return &abci.ResponseQuery{
+	return ResponseQuery{
 		Codespace: space,
 		Code:      code,
 		Log:       log,

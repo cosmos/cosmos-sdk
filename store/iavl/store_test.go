@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
@@ -138,7 +137,7 @@ func TestGetImmutable(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, newStore.Get([]byte("hello")), []byte("adios"))
 
-	res := newStore.Query(&abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
+	res := newStore.Query(types.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
 	require.Equal(t, res.Value, []byte("adios"))
 	require.NotNil(t, res.ProofOps)
 
@@ -501,11 +500,11 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
-	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver}
-	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
+	query := types.RequestQuery{Path: "/key", Data: k1, Height: ver}
+	querySub := types.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
 
 	// query subspace before anything set
-	qres := iavlStore.Query(&querySub)
+	qres := iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
@@ -514,24 +513,24 @@ func TestIAVLStoreQuery(t *testing.T) {
 	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-	qres = iavlStore.Query(&query)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
-	qres = iavlStore.Query(&query)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
-	qres = iavlStore.Query(&query)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// and for the subspace
-	qres = iavlStore.Query(&querySub)
+	qres = iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub1, qres.Value)
 
@@ -540,28 +539,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
-	qres = iavlStore.Query(&query)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
-	qres = iavlStore.Query(&query)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v3, qres.Value)
-	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+	query2 := types.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 
-	qres = iavlStore.Query(&query2)
+	qres = iavlStore.Query(query2)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
-	qres = iavlStore.Query(&querySub)
+	qres = iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
-	query0 := abci.RequestQuery{Path: "/key", Data: k1}
-	qres = iavlStore.Query(&query0)
+	query0 := types.RequestQuery{Path: "/key", Data: k1}
+	qres = iavlStore.Query(query0)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 }

@@ -4,13 +4,11 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
@@ -23,7 +21,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res := store.Query(&abci.RequestQuery{
+	res := store.Query(types.RequestQuery{
 		Path:  "/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
@@ -70,7 +68,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res := store.Query(&abci.RequestQuery{
+	res := store.Query(types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
@@ -126,7 +124,7 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	cid := store.Commit() // Commit with empty iavl store.
 
 	// Get Proof
-	res := store.Query(&abci.RequestQuery{
+	res := store.Query(types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,

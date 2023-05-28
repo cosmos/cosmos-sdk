@@ -65,8 +65,8 @@ type ValidatorSet interface {
 	StakingTokenSupply(context.Context) (math.Int, error)                     // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
-	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) math.Int
-	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) math.Int
+	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
+	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) (math.Int, error)
 	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
 	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
 
@@ -75,7 +75,7 @@ type ValidatorSet interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint32
+	MaxValidators(context.Context) (uint32, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)
@@ -84,8 +84,8 @@ type DelegationSet interface {
 
 	// iterate through all delegations from one delegator by validator-AccAddress,
 	//   execute func for each validator
-	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation DelegationI) (stop bool))
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
+		fn func(index int64, delegation DelegationI) (stop bool)) error
 }
 
 // Event Hooks

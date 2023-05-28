@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -11,7 +12,9 @@ import (
 
 func (s *KeeperTestSuite) TestIncrementUnbondingID() {
 	for i := 1; i < 10; i++ {
-		s.Require().Equal(uint64(i), s.stakingKeeper.IncrementUnbondingID(s.ctx))
+		id, err := s.stakingKeeper.IncrementUnbondingID(s.ctx)
+		s.Require().NoError(err)
+		s.Require().Equal(uint64(i), id)
 	}
 }
 
@@ -43,12 +46,12 @@ func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
 				s.stakingKeeper.SetUnbondingType(s.ctx, uint64(i), tc.expected)
 			}
 
-			unbondingType, found := s.stakingKeeper.GetUnbondingType(s.ctx, uint64(i))
+			unbondingType, err := s.stakingKeeper.GetUnbondingType(s.ctx, uint64(i))
 			if tc.exists {
-				s.Require().True(found)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.expected, unbondingType)
 			} else {
-				s.Require().False(found)
+				s.Require().ErrorIs(err, types.ErrNoUnbondingType)
 			}
 		})
 	}
@@ -115,12 +118,12 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, tc.expected, uint64(i))
 			}
 
-			ubd, found := s.stakingKeeper.GetUnbondingDelegationByUnbondingID(s.ctx, uint64(i))
+			ubd, err := s.stakingKeeper.GetUnbondingDelegationByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setUnbondingDelegation && tc.exists.setUnbondingDelegationByUnbondingID {
-				s.Require().True(found)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.expected, ubd)
 			} else {
-				s.Require().False(found)
+				s.Require().ErrorIs(err, types.ErrNoUnbondingDelegation)
 			}
 		})
 	}
@@ -193,12 +196,12 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, tc.expected, uint64(i))
 			}
 
-			red, found := s.stakingKeeper.GetRedelegationByUnbondingID(s.ctx, uint64(i))
+			red, err := s.stakingKeeper.GetRedelegationByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setRedelegation && tc.exists.setRedelegationByUnbondingID {
-				s.Require().True(found)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.expected, red)
 			} else {
-				s.Require().False(found)
+				s.Require().ErrorIs(err, types.ErrNoRedelegation)
 			}
 		})
 	}
@@ -244,12 +247,12 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 				s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, tc.validator, uint64(i))
 			}
 
-			val, found := s.stakingKeeper.GetValidatorByUnbondingID(s.ctx, uint64(i))
+			val, err := s.stakingKeeper.GetValidatorByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setValidator && tc.exists.setValidatorByUnbondingID {
-				s.Require().True(found)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.validator, val)
 			} else {
-				s.Require().False(found)
+				s.Require().ErrorIs(err, types.ErrNoValidatorFound)
 			}
 		})
 	}

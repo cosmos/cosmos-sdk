@@ -174,7 +174,11 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 			broken bool
 		)
 
-		validators := k.GetAllValidators(ctx)
+		validators, err := k.GetAllValidators(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		validatorsDelegationShares := map[string]math.LegacyDec{}
 
 		// initialize a map: validator -> its delegation shares

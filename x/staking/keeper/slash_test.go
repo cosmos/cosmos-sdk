@@ -23,14 +23,14 @@ func (s *KeeperTestSuite) TestRevocation() {
 
 	// test jail
 	keeper.Jail(ctx, consAddr)
-	val, found = keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	val, err = keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.True(val.IsJailed())
 
 	// test unjail
 	keeper.Unjail(ctx, consAddr)
-	val, found = keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	val, err = keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.False(val.IsJailed())
 }
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +44,7 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
@@ -57,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		accountKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -82,13 +84,15 @@ func (s *KeeperTestSuite) TestParams() {
 
 	expParams := stakingtypes.DefaultParams()
 	// check that the empty keeper loads the default
-	resParams := keeper.GetParams(ctx)
+	resParams, err := keeper.GetParams(ctx)
+	require.NoError(err)
 	require.Equal(expParams, resParams)
 
 	expParams.MaxValidators = 555
 	expParams.MaxEntries = 111
 	keeper.SetParams(ctx, expParams)
-	resParams = keeper.GetParams(ctx)
+	resParams, err = keeper.GetParams(ctx)
+	require.NoError(err)
 	require.True(expParams.Equal(resParams))
 }
 
@@ -98,7 +102,8 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 
 	expTotalPower := math.NewInt(10 ^ 9)
 	keeper.SetLastTotalPower(ctx, expTotalPower)
-	resTotalPower := keeper.GetLastTotalPower(ctx)
+	resTotalPower, err := keeper.GetLastTotalPower(ctx)
+	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))
 }
 

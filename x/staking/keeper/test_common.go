@@ -2,6 +2,7 @@ package keeper // noalias
 
 import (
 	"bytes"
+	"context"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -10,9 +11,13 @@ import (
 )
 
 // does a certain by-power index record exist
-func ValidatorByPowerIndexExists(ctx sdk.Context, keeper *Keeper, power []byte) bool {
-	store := ctx.KVStore(keeper.storeKey)
-	return store.Has(power)
+func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []byte) bool {
+	store := keeper.storeService.OpenKVStore(ctx)
+	has, err := store.Has(power)
+	if err != nil {
+		panic(err)
+	}
+	return has
 }
 
 // update validator for testing
@@ -20,10 +25,13 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	keeper.SetValidator(ctx, validator)
 
 	// Remove any existing power key for validator.
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.storeService.OpenKVStore(ctx)
 	deleted := false
 
-	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator, err := store.Iterator(types.ValidatorsByPowerIndexKey, storetypes.PrefixEndBytes(types.ValidatorsByPowerIndexKey))
+	if err != nil {
+		panic(err)
+	}
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -35,22 +43,26 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 				deleted = true
 			}
 
-			store.Delete(iterator.Key())
+			if err = store.Delete(iterator.Key()); err != nil {
+				panic(err)
+			}
 		}
 	}
 
-	keeper.SetValidatorByPowerIndex(ctx, validator)
+	if err = keeper.SetValidatorByPowerIndex(ctx, validator); err != nil {
+		panic(err)
+	}
 
 	if !apply {
 		ctx, _ = ctx.CacheContext()
 	}
-	_, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	_, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	validator, found := keeper.GetValidator(ctx, validator.GetOperator())
-	if !found {
+	validator, err = keeper.GetValidator(ctx, validator.GetOperator())
+	if err != nil {
 		panic("validator expected but not found")
 	}
 

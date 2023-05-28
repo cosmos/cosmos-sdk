@@ -56,7 +56,10 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, vote.Validator.Address)
+		validator, err := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, vote.Validator.Address)
+		if err != nil {
+			return err
+		}
 
 		// TODO: Consider micro-slashing for missing votes.
 		//
@@ -64,7 +67,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 		reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-		err := k.AllocateTokensToValidator(ctx, validator, reward)
+		err = k.AllocateTokensToValidator(ctx, validator, reward)
 		if err != nil {
 			return err
 		}

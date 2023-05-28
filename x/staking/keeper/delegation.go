@@ -338,11 +338,15 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 func (k Keeper) SetUnbondingDelegationEntry(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int,
-) types.UnbondingDelegation {
-	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	id := k.IncrementUnbondingID(ctx)
+) (types.UnbondingDelegation, error) {
+	id, err := k.IncrementUnbondingID(ctx)
+	if err != nil {
+		return types.UnbondingDelegation{}, err
+	}
+
 	isNewUbdEntry := true
-	if found {
+	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if err == nil {
 		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
 		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
@@ -540,10 +544,14 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
 	minTime time.Time, balance math.Int,
 	sharesSrc, sharesDst math.LegacyDec,
-) types.Redelegation {
-	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
-	id := k.IncrementUnbondingID(ctx)
-	if found {
+) (types.Redelegation, error) {
+	id, err := k.IncrementUnbondingID(ctx)
+	if err != nil {
+		return types.Redelegation{}, err
+	}
+
+	red, err := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
+	if err == nil {
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,

@@ -189,10 +189,7 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-
-	am.keeper.BeginBlocker(c)
-	return nil
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator

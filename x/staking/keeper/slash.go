@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -31,8 +32,9 @@ import (
 //
 //	Infraction was committed at the current height or at a past height,
 //	not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
+func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
 	logger := k.Logger(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
@@ -78,13 +80,13 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	remainingSlashAmount := slashAmount
 
 	switch {
-	case infractionHeight > ctx.BlockHeight():
+	case infractionHeight > sdkCtx.BlockHeight():
 		// Can't slash infractions in the future
 		panic(fmt.Sprintf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, ctx.BlockHeight()))
+			infractionHeight, sdkCtx.BlockHeight()))
 
-	case infractionHeight == ctx.BlockHeight():
+	case infractionHeight == sdkCtx.BlockHeight():
 		// Special-case slash at current height for efficiency - we don't need to
 		// look through unbonding delegations or redelegations.
 		logger.Info(
@@ -92,7 +94,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"height", infractionHeight,
 		)
 
-	case infractionHeight < ctx.BlockHeight():
+	case infractionHeight < sdkCtx.BlockHeight():
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations, err := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		if err != nil {
@@ -100,7 +102,10 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		}
 
 		for _, unbondingDelegation := range unbondingDelegations {
-			amountSlashed := k.SlashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
+			amountSlashed, err := k.SlashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
+			if err != nil {
+				return math.ZeroInt(), err
+			}
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -172,24 +177,31 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 }
 
 // SlashWithInfractionReason implementation doesn't require the infraction (types.Infraction) to work but is required by Interchain Security.
-func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) (math.Int, error) {
+func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) (math.Int, error) {
 	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
 // jail a validator
-func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
-	k.jailValidator(ctx, validator)
+	if err := k.jailValidator(ctx, validator); err != nil {
+		return err
+	}
+
 	logger := k.Logger(ctx)
 	logger.Info("validator jailed", "validator", consAddr)
+	return nil
 }
 
 // unjail a validator
-func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
-	k.unjailValidator(ctx, validator)
+	if err := k.unjailValidator(ctx, validator); err != nil {
+		return err
+	}
 	logger := k.Logger(ctx)
 	logger.Info("validator un-jailed", "validator", consAddr)
+	return nil
 }
 
 // slash an unbonding delegation and update the pool
@@ -197,10 +209,11 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
-func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
+func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
-) (totalSlashAmount math.Int) {
-	now := ctx.BlockHeader().Time
+) (totalSlashAmount math.Int, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	now := sdkCtx.BlockHeader().Time
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
@@ -235,14 +248,16 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
 		unbondingDelegation.Entries[i] = entry
-		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+		if err = k.SetUnbondingDelegation(ctx, unbondingDelegation); err != nil {
+			return math.ZeroInt(), err
+		}
 	}
 
 	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
-		panic(err)
+		return math.ZeroInt(), err
 	}
 
-	return totalSlashAmount
+	return totalSlashAmount, nil
 }
 
 // slash a redelegation and update the pool
@@ -251,10 +266,11 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
-	now := ctx.BlockHeader().Time
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	now := sdkCtx.BlockHeader().Time
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 

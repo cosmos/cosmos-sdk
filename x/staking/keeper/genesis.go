@@ -226,11 +226,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	allValidators, err := k.GetAllValidators(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &types.GenesisState{
 		Params:               params,
 		LastTotalPower:       totalPower,
 		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           k.GetAllValidators(ctx),
+		Validators:           allValidators,
 		Delegations:          allDelegations,
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,

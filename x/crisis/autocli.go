@@ -12,7 +12,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: crisisv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "NewMsgVerifyInvariant",
+					RpcMethod:      "VerifyInvariant",
 					Use:            "invariant-broken [module-name] [invariant-route]",
 					Short:          "Submit proof that an invariant broken to halt the chain",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "senderAddr"}, {ProtoField: "moduleName"}, {ProtoField: "route"}},

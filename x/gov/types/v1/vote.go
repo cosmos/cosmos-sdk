@@ -83,7 +83,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
 func ValidWeightedVoteOption(option WeightedVoteOption) bool {
-	weight, err := sdk.NewDecFromStr(option.Weight)
+	weight, err := math.LegacyNewDecFromStr(option.Weight)
 	if err != nil || !weight.IsPositive() || weight.GT(math.LegacyNewDec(1)) {
 		return false
 	}

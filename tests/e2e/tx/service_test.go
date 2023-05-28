@@ -2,6 +2,7 @@ package tx_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -73,12 +74,12 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -91,7 +92,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -99,7 +100,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -603,7 +604,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
@@ -624,7 +625,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)

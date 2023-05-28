@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"io"
 	"testing"
@@ -134,7 +135,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	}
 
 	testCases := []struct {
@@ -226,13 +227,13 @@ func (s *CLITestSuite) initAccount() {
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	}
 
 	s.owner, err = keyinfo.GetAddress()
 	s.Require().NoError(err)
 
-	amount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200)))
+	amount := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200)))
 	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, s.ac, args...)
 	s.Require().NoError(err)
 }

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"
@@ -45,7 +46,7 @@ func TestDecode(t *testing.T) {
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 
-	fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	fee := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
 	gas := uint64(200)
 	memo := "memo"
 	accSeq := uint64(2)

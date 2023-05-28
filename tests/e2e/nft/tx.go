@@ -151,13 +151,13 @@ func (s *E2ETestSuite) initAccount() {
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	}
 
 	s.owner, err = keyinfo.GetAddress()
 	s.Require().NoError(err)
 
-	amount := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200)))
+	amount := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(200)))
 	_, err = clitestutil.MsgSendExec(ctx, val.Address, s.owner, amount, addresscodec.NewBech32Codec("cosmos"), args...)
 	s.Require().NoError(err)
 }

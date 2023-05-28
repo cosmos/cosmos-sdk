@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
@@ -63,7 +64,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(5))
 
 	// unbonding the amount
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
@@ -105,9 +106,9 @@ func (s *E2ETestSuite) TestBlockResults() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(200))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
@@ -116,11 +117,11 @@ func (s *E2ETestSuite) TestBlockResults() {
 	cmd := cli.NewDelegateCmd()
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(150)).String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())

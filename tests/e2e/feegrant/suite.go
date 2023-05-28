@@ -67,7 +67,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.createGrant(granter, grantee)
 
 	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
 	})
 	s.Require().NoError(err)
 
@@ -84,10 +84,10 @@ func (s *E2ETestSuite) createGrant(granter, grantee sdk.Address) {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(100))).String()),
 	}
 
-	fee := sdk.NewCoin("stake", sdk.NewInt(100))
+	fee := sdk.NewCoin("stake", sdkmath.NewInt(100))
 
 	args := append(
 		[]string{
@@ -324,7 +324,7 @@ func (s *E2ETestSuite) TestNewCmdFeeGrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	}
 
 	testCases := []struct {
@@ -615,7 +615,7 @@ func (s *E2ETestSuite) TestNewCmdRevokeFeegrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	}
 
 	address := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
@@ -731,10 +731,10 @@ func (s *E2ETestSuite) TestTxWithFeeGrant() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	}
 
-	fee := sdk.NewCoin("stake", sdk.NewInt(100))
+	fee := sdk.NewCoin("stake", sdkmath.NewInt(100))
 
 	args := append(
 		[]string{
@@ -821,9 +821,9 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(100))).String()),
 	}
-	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
+	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
 
 	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
@@ -938,7 +938,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 				return govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
 					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -949,7 +949,7 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgVote(val.ClientCtx, grantee.String(), "0", "yes",
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
 			&sdk.TxResponse{},

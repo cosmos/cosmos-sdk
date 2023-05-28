@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -69,7 +70,7 @@ func (s *SimTestSuite) SetupTest() {
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
-		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))},
+		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))},
 	}
 
 	// create validator set with single validator

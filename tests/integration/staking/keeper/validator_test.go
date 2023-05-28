@@ -93,7 +93,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// validator and next in line cliff validator
 	f.stakingKeeper.DeleteValidatorByPowerIndex(f.sdkCtx, nextCliffVal)
 	shares := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 21)
-	nextCliffVal, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
+	nextCliffVal, _ = nextCliffVal.RemoveDelShares(math.LegacyNewDecFromInt(shares))
 	_ = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, nextCliffVal, true)
 
 	expectedValStatus := map[int]types.BondStatus{
@@ -163,18 +163,18 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 		validators[i] = testutil.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
-		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
+		validators[i].DelegatorShares = math.LegacyNewDecFromInt(amt)
 		keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[i], true)
 	}
 
 	// first make sure everything made it in to the gotValidator group
 	resValidators := f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.Equal(t, n, len(resValidators))
-	assert.DeepEqual(t, sdk.NewInt(400).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[0].BondedTokens())
-	assert.DeepEqual(t, sdk.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[1].BondedTokens())
-	assert.DeepEqual(t, sdk.NewInt(100).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[2].BondedTokens())
-	assert.DeepEqual(t, sdk.NewInt(1).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[3].BondedTokens())
-	assert.DeepEqual(t, sdk.NewInt(0), resValidators[4].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(400).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[0].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[1].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(100).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[2].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(1).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[3].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(0), resValidators[4].BondedTokens())
 	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[1].OperatorAddress, resValidators[2].OperatorAddress, "%v", resValidators)
@@ -182,14 +182,14 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.Equal(t, validators[0].OperatorAddress, resValidators[4].OperatorAddress, "%v", resValidators)
 
 	// test a basic increase in voting power
-	validators[3].Tokens = sdk.NewInt(500).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
+	validators[3].Tokens = math.NewInt(500).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
 	resValidators = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.Equal(t, len(resValidators), n)
 	assert.Assert(ValEq(t, validators[3], resValidators[0]))
 
 	// test a decrease in voting power
-	validators[3].Tokens = sdk.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
+	validators[3].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
 	resValidators = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.Equal(t, len(resValidators), n)
@@ -197,7 +197,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.Assert(ValEq(t, validators[4], resValidators[1]))
 
 	// test equal voting power, different age
-	validators[3].Tokens = sdk.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
+	validators[3].Tokens = math.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(10)
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
 	resValidators = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
@@ -214,8 +214,8 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.Assert(ValEq(t, validators[4], resValidators[1]))
 
 	// change in voting power of both validators, both still in v-set, no age change
-	validators[3].Tokens = sdk.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
-	validators[4].Tokens = sdk.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
+	validators[3].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
+	validators[4].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
 	resValidators = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.Equal(t, len(resValidators), n)
@@ -255,7 +255,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	var validators [5]types.Validator
 	for i, amt := range amts {
 		validators[i] = testutil.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
-		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
+		validators[i].DelegatorShares = math.LegacyNewDecFromInt(amt)
 		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
 		keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[i], true)
@@ -281,8 +281,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	resValidators := f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	// The validators returned should match the max validators
 	assert.Equal(t, 2, len(resValidators))
-	assert.DeepEqual(t, sdk.NewInt(400).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[0].BondedTokens())
-	assert.DeepEqual(t, sdk.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[1].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(400).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[0].BondedTokens())
+	assert.DeepEqual(t, math.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx)), resValidators[1].BondedTokens())
 	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
 }
@@ -385,10 +385,10 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 3 does not get spot back
 	f.stakingKeeper.DeleteValidatorByPowerIndex(f.sdkCtx, validators[3])
-	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
+	validators[3], _ = validators[3].AddTokensFromDel(math.NewInt(200))
 
 	notBondedPool = f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
-	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, math.NewInt(200)))))
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
@@ -706,14 +706,14 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	// zero power
 	valPubKey := PKs[len(validators)+1]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	amt := sdk.NewInt(100)
+	amt := math.NewInt(100)
 
 	validator := testutil.NewValidator(t, valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(amt)
 
 	f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 
-	validator, _ = validator.RemoveDelShares(sdk.NewDecFromInt(amt))
+	validator, _ = validator.RemoveDelShares(math.LegacyNewDecFromInt(amt))
 	f.stakingKeeper.SetValidator(f.sdkCtx, validator)
 	f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validator)
 

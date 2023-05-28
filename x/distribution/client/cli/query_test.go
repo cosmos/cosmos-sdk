@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"io"
 	"strings"
@@ -67,7 +68,7 @@ func (s *CLITestSuite) SetupSuite() {
 	var mintData minttypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
 
-	inflation := sdk.MustNewDecFromStr("1.0")
+	inflation := sdkmath.LegacyMustNewDecFromStr("1.0")
 	mintData.Minter.Inflation = inflation
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation

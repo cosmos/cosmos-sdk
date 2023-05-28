@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -44,7 +45,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	createValidators(t, f, []int64{2, 5, 0})
 
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, sdk.NewInt(10000000))
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 1, sdkmath.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := f.govKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)

@@ -6,12 +6,11 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestParams_ValidateBasic(t *testing.T) {
-	toDec := sdk.MustNewDecFromStr
+	toDec := sdkmath.LegacyMustNewDecFromStr
 
 	type fields struct {
 		CommunityTax        sdkmath.LegacyDec

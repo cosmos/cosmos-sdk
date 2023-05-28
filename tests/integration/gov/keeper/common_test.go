@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -34,7 +35,7 @@ func getTestProposal() []sdk.Msg {
 }
 
 func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, sdkmath.NewInt(30000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
 

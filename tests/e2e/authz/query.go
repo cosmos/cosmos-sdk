@@ -30,7 +30,7 @@ func (s *E2ETestSuite) TestQueryAuthorizations() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		},
 	)
 	s.Require().NoError(err)
@@ -109,7 +109,7 @@ func (s *E2ETestSuite) TestQueryAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		},
 	)
 	s.Require().NoError(err)

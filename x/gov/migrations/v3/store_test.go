@@ -1,6 +1,7 @@
 package v3_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -43,8 +44,8 @@ func TestMigrateStore(t *testing.T) {
 
 	// Vote on prop 1
 	options := []v1beta1.WeightedVoteOption{
-		{Option: v1beta1.OptionNo, Weight: sdk.MustNewDecFromStr("0.3")},
-		{Option: v1beta1.OptionYes, Weight: sdk.MustNewDecFromStr("0.7")},
+		{Option: v1beta1.OptionNo, Weight: sdkmath.LegacyMustNewDecFromStr("0.3")},
+		{Option: v1beta1.OptionYes, Weight: sdkmath.LegacyMustNewDecFromStr("0.7")},
 	}
 	vote1 := v1beta1.NewVote(1, voter, options)
 	vote1Bz := cdc.MustMarshal(&vote1)

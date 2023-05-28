@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -32,7 +33,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	assert.DeepEqual(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, sdk.NewInt(10000))
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, sdkmath.NewInt(10000))
 	valAddr := sdk.ValAddress(addrs[0])
 	delegatorAddr := addrs[1]
 
@@ -72,7 +73,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdkmath.NewInt(4)),
 				CreationHeight:   11,
 			},
 			expErrMsg: "unbonding delegation entry is not found at block height",
@@ -83,7 +84,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdkmath.NewInt(4)),
 				CreationHeight:   0,
 			},
 			expErrMsg: "invalid height",
@@ -94,7 +95,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
+				Amount:           sdk.NewCoin("dump_coin", sdkmath.NewInt(4)),
 				CreationHeight:   10,
 			},
 			expErrMsg: "invalid coin denomination",

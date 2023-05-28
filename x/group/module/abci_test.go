@@ -2,6 +2,7 @@ package module_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -65,7 +66,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	s.ctx = ctx
 
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdkmath.NewInt(30000000))
 
 	s.addressCodec = codecaddress.NewBech32Codec("cosmos")
 }

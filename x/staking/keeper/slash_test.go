@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
@@ -45,6 +46,6 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	err := keeper.SetValidatorByConsAddr(ctx, validator)
 	require.NoError(err)
 
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := sdkmath.LegacyNewDecWithPrec(5, 1)
 	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
 }

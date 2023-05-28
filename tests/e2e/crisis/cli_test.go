@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -57,7 +58,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 			},
 			"invalid module name", 0, nil,
 		},
@@ -68,7 +69,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 			},
 			"invalid invariant route", 0, nil,
 		},
@@ -79,7 +80,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 			},
 			"", 0, &sdk.TxResponse{},
 		},

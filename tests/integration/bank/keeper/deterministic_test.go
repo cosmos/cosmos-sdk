@@ -8,6 +8,7 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -34,7 +35,7 @@ import (
 var (
 	denomRegex   = sdk.DefaultCoinDenomRegex()
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
-	coin1        = sdk.NewCoin("denom", sdk.NewInt(10))
+	coin1        = sdk.NewCoin("denom", sdkmath.NewInt(10))
 	metadataAtom = banktypes.Metadata{
 		Description: "The native staking token of the Cosmos Hub.",
 		DenomUnits: []*banktypes.DenomUnit{
@@ -127,7 +128,7 @@ func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin)
 func getCoin(rt *rapid.T) sdk.Coin {
 	return sdk.NewCoin(
 		rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-		sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+		sdkmath.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 	)
 }
 
@@ -173,8 +174,8 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(10)),
-		sdk.NewCoin("denom", sdk.NewInt(100)),
+		sdk.NewCoin("stake", sdkmath.NewInt(10)),
+		sdk.NewCoin("denom", sdkmath.NewInt(100)),
 	)
 
 	fundAccount(f, addr1, coins...)
@@ -196,7 +197,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 		for _, denom := range denoms {
 			coin := sdk.NewCoin(
 				denom,
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				sdkmath.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			// NewCoins sorts the denoms
@@ -211,8 +212,8 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(10)),
-		sdk.NewCoin("denom", sdk.NewInt(100)),
+		sdk.NewCoin("stake", sdkmath.NewInt(10)),
+		sdk.NewCoin("denom", sdkmath.NewInt(100)),
 	)
 
 	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
@@ -237,7 +238,7 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
 				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				sdkmath.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			coins = coins.Add(coin)
@@ -257,8 +258,8 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10)),
-		sdk.NewCoin("bar", sdk.NewInt(100)),
+		sdk.NewCoin("foo", sdkmath.NewInt(10)),
+		sdk.NewCoin("bar", sdkmath.NewInt(100)),
 	)
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
@@ -274,7 +275,7 @@ func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		coin := sdk.NewCoin(
 			rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-			sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			sdkmath.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 		)
 
 		assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
@@ -283,7 +284,7 @@ func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SupplyOf, 0, true)
 	})
 
-	coin := sdk.NewCoin("bar", sdk.NewInt(100))
+	coin := sdk.NewCoin("bar", sdkmath.NewInt(100))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
@@ -476,7 +477,7 @@ func TestGRPCDenomOwners(t *testing.T) {
 
 			coin := sdk.NewCoin(
 				denom,
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				sdkmath.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin))

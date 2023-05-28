@@ -45,7 +45,7 @@ func TestGRPCParams(t *testing.T) {
 			name: "valid request",
 			malleate: func() {
 				params = types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(3, 1),
+					CommunityTax:        math.LegacyNewDecWithPrec(3, 1),
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: true,
@@ -96,8 +96,8 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	// set outstanding rewards
 	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -168,8 +168,8 @@ func TestGRPCValidatorCommission(t *testing.T) {
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
 	assert.NilError(t, f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
@@ -227,10 +227,10 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	valAddr2 := sdk.ValAddress(addr2)
 
 	slashes := []types.ValidatorSlashEvent{
-		types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(5, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(9, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(3, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(5, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(7, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(9, math.LegacyNewDecWithPrec(5, 1)),
 	}
 
 	for i, slash := range slashes {
@@ -498,8 +498,8 @@ func TestGRPCDelegationRewards(t *testing.T) {
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
 	assert.Assert(t, found)

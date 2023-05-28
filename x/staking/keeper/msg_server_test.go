@@ -49,8 +49,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -69,8 +69,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -89,8 +89,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -109,8 +109,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -129,8 +129,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -149,8 +149,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(0),
@@ -169,8 +169,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(-1),
@@ -189,8 +189,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Moniker: "NewValidator",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(100),
@@ -213,8 +213,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Details:         "details",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          sdk.NewDecWithPrec(5, 1),
-					MaxRate:       sdk.NewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(pk)
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -945,7 +945,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 			input: &stakingtypes.MsgCancelUnbondingDelegation{
 				DelegatorAddress: Addr.String(),
 				ValidatorAddress: ValAddr.String(),
-				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
 				CreationHeight:   10,
 			},
 			expErr:    true,
@@ -956,7 +956,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 			input: &stakingtypes.MsgCancelUnbondingDelegation{
 				DelegatorAddress: Addr.String(),
 				ValidatorAddress: ValAddr.String(),
-				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 				CreationHeight:   10,
 			},
 			expErr:    true,

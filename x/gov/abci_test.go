@@ -1,15 +1,15 @@
 package gov_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -379,7 +379,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	suite.StakingKeeper.EndBlocker(ctx)
 
-	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
 	require.NoError(t, err)
 

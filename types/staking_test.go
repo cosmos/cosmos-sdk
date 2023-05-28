@@ -23,5 +23,5 @@ func (s *stakingTestSuite) SetupSuite() {
 
 func (s *stakingTestSuite) TestTokensToConsensusPower() {
 	s.Require().Equal(int64(0), sdk.TokensToConsensusPower(sdkmath.NewInt(999_999), sdk.DefaultPowerReduction))
-	s.Require().Equal(int64(1), sdk.TokensToConsensusPower(sdkmaths.NewInt(1_000_000), sdk.DefaultPowerReduction))
+	s.Require().Equal(int64(1), sdk.TokensToConsensusPower(sdkmath.NewInt(1_000_000), sdk.DefaultPowerReduction))
 }

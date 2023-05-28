@@ -31,6 +31,10 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 
 All ABCI calls accept a pointer to the request and response types defined by Comet. 
 
+Baseapp calls of BeginBlock & Endblock are now private. FinalizeBlock is public and should be used in order to test and run operations.
+
+VoteExtensions were added and can be used in a variety of locations. Please see [TODO DOCS LINK FOR VOTE EXTENSIONS]()
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:

@@ -54,14 +54,22 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 	}
 
 	// self-delegation rewards
-	val := k.stakingKeeper.Validator(ctx, valAdr)
+	val, err := k.stakingKeeper.Validator(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if val == nil {
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delAdr := sdk.AccAddress(valAdr)
 
-	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	del, err := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if del == nil {
 		return nil, types.ErrNoDelegationExists
 	}
@@ -106,7 +114,11 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 		return nil, err
 	}
 
-	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	validator, err := k.stakingKeeper.Validator(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
@@ -136,7 +148,11 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 		return nil, err
 	}
 
-	validator := k.stakingKeeper.Validator(ctx, valAdr)
+	validator, err := k.stakingKeeper.Validator(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
@@ -212,7 +228,11 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, err
 	}
 
-	val := k.stakingKeeper.Validator(ctx, valAdr)
+	val, err := k.stakingKeeper.Validator(ctx, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if val == nil {
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
@@ -221,7 +241,11 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 	if err != nil {
 		return nil, err
 	}
-	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	del, err := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	if del == nil {
 		return nil, types.ErrNoDelegationExists
 	}
@@ -259,11 +283,15 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 		return nil, err
 	}
 
-	k.stakingKeeper.IterateDelegations(
+	err = k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
-			val := k.stakingKeeper.Validator(ctx, valAddr)
+			val, err := k.stakingKeeper.Validator(ctx, valAddr)
+			if err != nil {
+				panic(err)
+			}
+
 			endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
 			if err != nil {
 				panic(err)
@@ -279,6 +307,9 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 			return false
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryDelegationTotalRewardsResponse{Rewards: delRewards, Total: total}, nil
 }

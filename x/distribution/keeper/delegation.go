@@ -32,7 +32,10 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 		return err
 	}
 
-	delegation := k.stakingKeeper.Delegation(sdkCtx, del, val)
+	delegation, err := k.stakingKeeper.Delegation(sdkCtx, del, val)
+	if err != nil {
+		return err
+	}
 
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)

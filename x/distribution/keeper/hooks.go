@@ -24,7 +24,10 @@ func (k Keeper) Hooks() Hooks {
 
 // initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
 	return h.k.initializeValidator(ctx, val)
 }
 
@@ -120,15 +123,26 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 
 // increment period
 func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	_, err := h.k.IncrementValidatorPeriod(ctx, val)
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	_, err = h.k.IncrementValidatorPeriod(ctx, val)
 	return err
 }
 
 // withdraw delegation rewards (which also increments period)
 func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	del, err := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if err != nil {
+		return err
+	}
 
 	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		return err

@@ -33,7 +33,7 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := ms.ak.SetParams(ctx, msg.Params); err != nil {
+	if err := ms.ak.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 

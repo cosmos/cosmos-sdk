@@ -240,6 +240,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * this finalizes the gov collections migration
     * Removed: keeper `InsertActiveProposalsQueue`, `RemoveActiveProposalsQueue`, `InsertInactiveProposalsQueue`, `RemoveInactiveProposalsQueue`, `IterateInactiveProposalsQueue`, `IterateActiveProposalsQueue`, `ActiveProposalsQueueIterator`, `InactiveProposalsQueueIterator`
     * Remove: types all the key related functions
+* (types/math) [#16320](https://github.com/cosmos/cosmos-sdk/pull/16320) Remove aliases from `types/math.go`.
 
 ### Client Breaking Changes
 

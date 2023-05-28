@@ -4,8 +4,6 @@ import (
 	"crypto/sha256"
 	"hash"
 	"math/bits"
-
-	"github.com/cometbft/cometbft/crypto/tmhash"
 )
 
 var (
@@ -41,16 +39,7 @@ func leafHashOpt(s hash.Hash, leaf []byte) []byte {
 	return s.Sum(nil)
 }
 
-// returns tmhash(0x01 || left || right)
-func innerHash(left []byte, right []byte) []byte {
-	data := make([]byte, len(innerPrefix)+len(left)+len(right))
-	n := copy(data, innerPrefix)
-	n += copy(data[n:], left)
-	copy(data[n:], right)
-	return tmhash.Sum(data)
-}
-
-func innerHashOpt(s hash.Hash, left []byte, right []byte) []byte {
+func innerHashOpt(s hash.Hash, left, right []byte) []byte {
 	s.Reset()
 	s.Write(innerPrefix)
 	s.Write(left)
@@ -61,12 +50,6 @@ func innerHashOpt(s hash.Hash, left []byte, right []byte) []byte {
 // returns tmhash(<empty>)
 func emptyHash() []byte {
 	h := sha256.Sum256([]byte{})
-	return h[:]
-}
-
-// returns tmhash(0x00 || leaf)
-func leafHash(leaf []byte) []byte {
-	h := sha256.Sum256(append(leafPrefix, leaf...))
 	return h[:]
 }
 

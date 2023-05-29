@@ -25,7 +25,10 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	addrDel := sdk.AccAddress([]byte("addr"))
 	accAmt := sdk.NewInt(10000)
-	initCoins := sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), accAmt))
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
+	assert.NilError(t, err)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 	if err := f.bankKeeper.MintCoins(ctx, types.ModuleName, initCoins); err != nil {
 		panic(err)
 	}
@@ -37,7 +40,6 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
 
-	bondDenom := f.stakingKeeper.BondDenom(ctx)
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 
 	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
@@ -56,7 +58,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	delegation := types.NewDelegation(addrDel, addrVal, issuedShares)
 	f.stakingKeeper.SetDelegation(ctx, delegation)
 
-	maxEntries := f.stakingKeeper.MaxEntries(ctx)
+	maxEntries, err := f.stakingKeeper.MaxEntries(ctx)
+	assert.NilError(t, err)
 
 	oldBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -69,8 +72,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 		ctx = ctx.WithBlockHeight(i)
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
-		totalUnbonded = totalUnbonded.Add(amount)
 		assert.NilError(t, err)
+		totalUnbonded = totalUnbonded.Add(amount)
 	}
 
 	newBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -84,7 +87,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	oldNotBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	// an additional unbond should fail due to max entries
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 	assert.Error(t, err, "too many unbonding delegation entries for (delegator, validator) tuple")
 
 	newBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount

@@ -126,8 +126,10 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	params := f.stakingKeeper.GetParams(ctx)
-	delValidators := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	delValidators, err := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	assert.NilError(t, err)
 	var req *types.QueryDelegatorValidatorsRequest
 	testCases := []struct {
 		msg       string
@@ -712,7 +714,9 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	assert.NilError(t, err)
-	assert.DeepEqual(t, f.stakingKeeper.GetParams(ctx), resp.Params)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, params, resp.Params)
 }
 
 func TestGRPCQueryHistoricalInfo(t *testing.T) {

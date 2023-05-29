@@ -102,7 +102,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
-				err := accountKeeper.Params.Set(ctx, authtypes.DefaultParams())
+				err = accountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)

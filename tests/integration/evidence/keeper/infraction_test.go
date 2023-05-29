@@ -117,7 +117,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
 
@@ -164,11 +164,12 @@ func TestHandleDoubleSign(t *testing.T) {
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams := f.stakingKeeper.GetParams(ctx)
-	operatorAddr, val := valAddresses[0], pubkeys[0]
+	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
 
-	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
 	f.stakingKeeper.EndBlocker(f.sdkCtx)
@@ -176,22 +177,26 @@ func TestHandleDoubleSign(t *testing.T) {
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
 	)
-	assert.DeepEqual(t, selfDelegation, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
+	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, selfDelegation, val.GetBondedTokens())
 
-	f.slashingKeeper.AddPubkey(f.sdkCtx, val)
+	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, valpubkey))
 
-	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(val.Address()), info)
+	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
 
 	// handle a signature to set signing info
-	f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
+	f.slashingKeeper.HandleValidatorSignature(ctx, valpubkey.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
 
 	// double sign less than max age
-	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
+	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	oldTokens := val.GetTokens()
 
 	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{
-			Validator: abci.Validator{Address: val.Address(), Power: power},
+			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Now().UTC(),
 			Height:    1,
@@ -199,21 +204,26 @@ func TestHandleDoubleSign(t *testing.T) {
 	})
 
 	ctx = ctx.WithCometInfo(nci)
-	f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci)))
 
 	// should be jailed and tombstoned
-	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed())
-	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())))
+	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, val.IsJailed())
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(valpubkey.Address())))
 
 	// tokens should be decreased
-	newTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
+	newTokens := val.GetTokens()
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	f.evidenceKeeper.BeginBlocker(ctx)
+	err = f.evidenceKeeper.BeginBlocker(ctx)
+	assert.NilError(t, err)
 
 	// tokens should be the same (capped slash)
-	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
+	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, val.GetTokens().Equal(newTokens))
 
 	// jump to past the unbonding period
 	ctx = ctx.WithBlockTime(time.Unix(1, 0).Add(stakingParams.UnbondingTime))
@@ -244,12 +254,13 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams := f.stakingKeeper.GetParams(ctx)
-	operatorAddr, val := valAddresses[0], pubkeys[0]
+	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
 
-	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
+	amt := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
 	f.stakingKeeper.EndBlocker(f.sdkCtx)
@@ -257,11 +268,13 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(amt))),
 	)
-	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
+	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
 	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{
-			Validator: abci.Validator{Address: val.Address(), Power: power},
+			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
@@ -278,8 +291,10 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	f.evidenceKeeper.BeginBlocker(ctx)
 
-	assert.Assert(t, f.stakingKeeper.Validator(ctx, operatorAddr).IsJailed() == false)
-	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())) == false)
+	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, val.IsJailed() == false)
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(valpubkey.Address())) == false)
 }
 
 func populateValidators(t assert.TestingT, f *fixture) {

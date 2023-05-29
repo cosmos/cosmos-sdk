@@ -95,7 +95,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
@@ -244,7 +244,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "no delegation distribution info",
+			expErrMsg: "no delegation for (address, validator) tuple",
 		},
 		{
 			name: "validator with no delegations",
@@ -253,7 +253,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: sdk.ValAddress(sdk.AccAddress(PKS[2].Address())).String(),
 			},
 			expErr:    true,
-			expErrMsg: "no validator distribution info",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name: "valid msg",
@@ -888,6 +888,9 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt)
 	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt)
 
+	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
+	require.NoError(t, err)
+
 	testCases := []struct {
 		name      string
 		msg       *distrtypes.MsgDepositValidatorRewardsPool
@@ -899,7 +902,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Depositor:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(100))),
 			},
 		},
 		{
@@ -915,7 +918,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Depositor:        addr.String(),
 				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(100))),
 			},
 			expErr:    true,
 			expErrMsg: "validator does not exist",

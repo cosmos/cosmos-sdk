@@ -29,7 +29,10 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	logger := k.Logger(sdkCtx)
 	consAddr := evidence.GetConsensusAddress()
 
-	validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
+	validator, err := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
+	if err != nil {
+		return err
+	}
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.

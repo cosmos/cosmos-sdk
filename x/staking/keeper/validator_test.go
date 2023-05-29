@@ -176,14 +176,12 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// remove a record
 
 	// shouldn't be able to remove if status is not unbonded
-	require.PanicsWithValue("cannot call RemoveValidator on bonded or unbonding validators",
-		func() { keeper.RemoveValidator(ctx, validators[1].GetOperator()) })
+	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "cannot call RemoveValidator on bonded or unbonding validators: failed to remove validator")
 
 	// shouldn't be able to remove if there are still tokens left
 	validators[1].Status = stakingtypes.Unbonded
 	keeper.SetValidator(ctx, validators[1])
-	require.PanicsWithValue("attempting to remove a validator which still contains tokens",
-		func() { keeper.RemoveValidator(ctx, validators[1].GetOperator()) })
+	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "attempting to remove a validator which still contains tokens: failed to remove validator")
 
 	validators[1].Tokens = math.ZeroInt()                    // ...remove all tokens
 	keeper.SetValidator(ctx, validators[1])                  // ...set the validator
@@ -411,15 +409,14 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 
 	// check unbonding mature validators
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
-	require.PanicsWithValue("validator in the unbonding queue was not found", func() {
-		keeper.UnbondAllMatureValidators(ctx)
-	})
+	err = keeper.UnbondAllMatureValidators(ctx)
+	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	keeper.SetValidator(ctx, validator)
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
-	require.PanicsWithValue("unexpected validator in unbonding queue; status was not unbonding", func() {
-		keeper.UnbondAllMatureValidators(ctx)
-	})
+
+	err = keeper.UnbondAllMatureValidators(ctx)
+	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")
 
 	validator.Status = stakingtypes.Unbonding
 	err = keeper.SetValidator(ctx, validator)

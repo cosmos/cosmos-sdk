@@ -356,7 +356,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 // HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	if err != nil {
+	if err != nil && !errors.Is(err, types.ErrNoUnbondingDelegation) {
 		return false, err
 	}
 
@@ -1091,15 +1091,18 @@ func (k Keeper) Undelegate(
 
 	// transfer the validator tokens to the not bonded pool
 	if validator.IsBonded() {
-		k.bondedTokensToNotBonded(ctx, returnAmount)
+		err = k.bondedTokensToNotBonded(ctx, returnAmount)
+		if err != nil {
+			return time.Time{}, math.Int{}, err
+		}
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	completionTime := sdkCtx.BlockHeader().Time.Add(unbondingTime)
 	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
 	if err != nil {

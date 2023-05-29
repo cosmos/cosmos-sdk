@@ -88,7 +88,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
 
@@ -133,7 +133,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	p := f.stakingKeeper.GetParams(f.ctx)
+	p, err := f.stakingKeeper.GetParams(f.ctx)
+	assert.NilError(t, err)
 	p.MaxValidators = 5
 	f.stakingKeeper.SetParams(f.ctx, p)
 
@@ -212,31 +213,39 @@ func TestHandleNewValidator(t *testing.T) {
 	f := initFixture(t)
 
 	pks := simtestutil.CreateTestPubKeys(1)
-	addr, val := f.valAddrs[0], pks[0]
+	addr, valpubkey := f.valAddrs[0], pks[0]
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 1)
 
 	f.slashingKeeper.AddPubkey(f.ctx, pks[0])
 
-	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
+	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()), info)
 
 	// Validator created
-	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err := f.stakingKeeper.EndBlocker(f.ctx)
+	require.NoError(t, err)
+
+	bondDenom, err := f.stakingKeeper.BondDenom(f.ctx)
+	require.NoError(t, err)
+
 	assert.DeepEqual(
 		t, f.bankKeeper.GetAllBalances(f.ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.GetParams(f.ctx).BondDenom, testutil.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(bondDenom, testutil.InitTokens.Sub(amt))),
 	)
-	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(f.ctx, addr).GetBondedTokens())
+
+	val, err := f.stakingKeeper.Validator(f.ctx, addr)
+	require.NoError(t, err)
+	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
 	// Now a validator, for two blocks
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagCommit)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagCommit)
 	f.ctx = f.ctx.WithBlockHeight(f.slashingKeeper.SignedBlocksWindow(f.ctx) + 2)
-	f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagAbsent)
+	f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagAbsent)
 
-	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()))
+	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()))
 	assert.Assert(t, found)
 	assert.Equal(t, f.slashingKeeper.SignedBlocksWindow(f.ctx)+1, info.StartHeight)
 	assert.Equal(t, int64(2), info.IndexOffset)
@@ -244,11 +253,11 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed
-	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
+	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(valpubkey))
 	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(f.ctx)
 	expTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 100)
-	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), f.stakingKeeper.BondDenom(f.ctx)).Amount))
+	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), bondDenom).Amount))
 }
 
 // Test a jailed validator being "down" twice
@@ -311,7 +320,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	params := f.stakingKeeper.GetParams(f.ctx)
+	params, err := f.stakingKeeper.GetParams(f.ctx)
+	require.NoError(t, err)
 	params.MaxValidators = 1
 	f.stakingKeeper.SetParams(f.ctx, params)
 	power := int64(100)

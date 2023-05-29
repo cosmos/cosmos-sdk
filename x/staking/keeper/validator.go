@@ -544,7 +544,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 				}
 				val, err := k.GetValidator(ctx, addr)
 				if err != nil {
-					errorsmod.Wrap(err, "validator in the unbonding queue was not found")
+					return errorsmod.Wrap(err, "validator in the unbonding queue was not found")
 				}
 
 				if !val.IsUnbonding() {

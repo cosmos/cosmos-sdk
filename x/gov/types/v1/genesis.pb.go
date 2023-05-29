@@ -50,7 +50,7 @@ type GenesisState struct {
 	// There are no amendments, to go outside of scope, just fork.
 	// constitution is an immutable string in genesis for a chain builder to lay out their vision, ideas and ideals.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	Constitution string `protobuf:"bytes,9,opt,name=constitution,proto3" json:"constitution,omitempty"`
 }
 

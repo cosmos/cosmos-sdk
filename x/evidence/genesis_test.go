@@ -93,7 +93,9 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			},
 			false,
 			func() {
-				suite.Empty(suite.keeper.GetAllEvidence(suite.ctx))
+				ev, err := suite.keeper.GetAllEvidence(suite.ctx)
+				suite.Empty(ev)
+				suite.NoError(err)
 			},
 		},
 	}

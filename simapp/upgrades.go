@@ -9,12 +9,12 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v047 to v048.
+// from v047 to v050.
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.47.x to v0.48.x.
-const UpgradeName = "v047-to-v048"
+// v0.47.x to v0.50.x.
+const UpgradeName = "v047-to-v050"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(

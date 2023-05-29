@@ -49,32 +49,6 @@ func (k Keeper) IterateDelegatorWithdrawAddrs(ctx context.Context, handler func(
 	}
 }
 
-// get the global fee pool distribution info
-func (k Keeper) GetFeePool(ctx context.Context) (feePool types.FeePool, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.FeePoolKey)
-	if err != nil {
-		return
-	}
-
-	if b == nil {
-		panic("Stored fee pool should not have been nil")
-	}
-	err = k.cdc.Unmarshal(b, &feePool)
-	return feePool, err
-}
-
-// set the global fee pool distribution info
-func (k Keeper) SetFeePool(ctx context.Context, feePool types.FeePool) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&feePool)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.FeePoolKey, b)
-}
-
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
 // current block.
 func (k Keeper) GetPreviousProposerConsAddr(ctx context.Context) (sdk.ConsAddress, error) {

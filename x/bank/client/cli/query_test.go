@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -20,8 +21,7 @@ import (
 
 func (s *CLITestSuite) TestGetBalancesCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	cmd := cli.GetBalancesCmd()
+	cmd := cli.GetBalancesCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	testCases := []struct {
@@ -119,7 +119,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 func (s *CLITestSuite) TestGetSpendableBalancesCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
-	cmd := cli.GetSpendableBalancesCmd()
+	cmd := cli.GetSpendableBalancesCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	testCases := []struct {

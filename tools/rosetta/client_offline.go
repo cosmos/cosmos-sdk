@@ -79,12 +79,20 @@ func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.Con
 	}
 
 	// get the signers
-	signers := tx.GetSigners()
+	signers, err := tx.GetSigners()
+	if err != nil {
+		return nil, err
+	}
+
 	signersStr := make([]string, len(signers))
 	accountIdentifiers := make([]*types.AccountIdentifier, len(signers))
 
 	for i, sig := range signers {
-		addr := sig.String()
+		addr, err := c.config.InterfaceRegistry.SigningContext().AddressCodec().BytesToString(sig)
+		if err != nil {
+			return nil, err
+		}
+
 		signersStr[i] = addr
 		accountIdentifiers[i] = &types.AccountIdentifier{
 			Address: addr,

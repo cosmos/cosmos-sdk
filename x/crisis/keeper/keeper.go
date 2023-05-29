@@ -42,7 +42,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
-
 	sb := collections.NewSchemaBuilder(storeService)
 	k := &Keeper{
 		storeService:     storeService,

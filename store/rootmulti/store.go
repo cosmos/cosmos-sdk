@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -73,7 +73,7 @@ type Store struct {
 	interBlockCache     types.MultiStorePersistentCache
 	listeners           map[types.StoreKey]*types.MemoryListener
 	metrics             metrics.StoreMetrics
-	commitHeader        cmtproto.Header
+	headerInfo          *header.Info
 }
 
 var (
@@ -466,12 +466,12 @@ func (rs *Store) Commit() types.CommitID {
 		version = previousHeight + 1
 	}
 
-	if rs.commitHeader.Height != version {
-		rs.logger.Debug("commit header and version mismatch", "header_height", rs.commitHeader.Height, "version", version)
+	if rs.headerInfo.Height != version {
+		rs.logger.Debug("commit header and version mismatch", "header_height", rs.headerInfo.Height, "version", version)
 	}
 
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
-	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
+	rs.lastCommitInfo.Timestamp = rs.headerInfo.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
 	// remove remnants of removed stores
@@ -1105,8 +1105,8 @@ func (rs *Store) RollbackToVersion(target int64) error {
 }
 
 // SetCommitHeader sets the commit block header of the store.
-func (rs *Store) SetCommitHeader(h cmtproto.Header) {
-	rs.commitHeader = h
+func (rs *Store) SetHeaderInfo(h *header.Info) {
+	rs.headerInfo = h
 }
 
 // GetCommitInfo attempts to retrieve CommitInfo for a given version/height. It

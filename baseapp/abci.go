@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -82,7 +83,16 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
 		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader)
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader)
+		.WithHeaderInfo(coreheader.Info{
+			ChainID: req.ChainId, 
+			Height: req.InitialHeight, 
+			Time: req.Time})
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: 
+			req.ChainId, 
+			Height: req.InitialHeight, 
+			Time: req.Time})
 	}()
 
 	if app.initChainer == nil {
@@ -651,7 +661,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		// by InitChain. Context is now updated with Header information.
 		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
 			WithBlockHeader(header).
-			WithBlockHeight(req.Height)
+			WithBlockHeight(req.Height).
+			WithHeaderInfo(coreheader.Info{
+				ChainID: app.chainID,
+				Height:  req.Height,
+				Time:    req.Time})
 	}
 
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
@@ -661,7 +675,18 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithExecMode(sdk.ExecModeFinalize)
+		WithExecMode(sdk.ExecModeFinalize).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+			Hash:    req.Hash}).
+		WithCometInfo(cometInfo{
+			Misbehavior:     req.Misbehavior,
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      req.DecidedLastCommit,
+		})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
@@ -722,7 +747,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	rms, ok := app.cms.(*rootmulti.Store)
 	if ok {
-		rms.SetCommitHeader(header)
+		headerInfo := app.finalizeBlockState.ctx.HeaderInfo()
+		rms.SetHeaderInfo(&headerInfo)
 	}
 
 	app.cms.Commit()

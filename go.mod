@@ -164,6 +164,8 @@ replace (
 	cosmossdk.io/core => ./core
 	// TODO: remove after 0.7.0 release
 	cosmossdk.io/x/tx => ./x/tx
+    // Added api here because it has changed. Not sure the appropriate way to handle the releases
+	cosmossdk.io/api => ./api
 )
 
 // Below are the long-lived replace of the Cosmos SDK

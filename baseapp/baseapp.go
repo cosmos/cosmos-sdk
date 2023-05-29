@@ -919,7 +919,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		}
 		err = app.validateNonAtomicSignMode(tx)
 		if err != nil {
-			return gInfo, nil, anteEvents, priority,
+			return gInfo, nil, anteEvents,
 				fmt.Errorf("invalid signature: %w", err)
 		}
 	}
@@ -1050,7 +1050,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 	}
 
-	if (mode == runTxModeDeliver || mode == runTxModeSimulate) && !txSuccess {
+	if (mode == execModeFinalize || mode == execModeSimulate) && !txSuccess {
 		return nil, ErrMultiMsgFailure.Wrapf("failed to execute all messages in a non-atomic multi-message")
 	}
 

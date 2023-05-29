@@ -494,7 +494,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(abci.RequestInitChain{
+	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 
@@ -503,17 +503,19 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 
 	// run a multi-msg tx
 	// with all msgs the same route
-	header := cmtproto.Header{Height: 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-
 	tx := newTxCounter(t, suite.txConfig, NonAtomic, 0, 0, 1, 2)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
 
-	store := getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+
+	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -522,6 +524,8 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 	// msg counter incremented three times
 	msgCounter := getIntFromStore(t, store, deliverKey)
 	require.Equal(t, int64(3), msgCounter)
+
+	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		name         string
@@ -546,7 +550,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 
 			extra := 0
 			for _, success := range tc.succeed {
-				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(extra), FailOnHandler: !success})
+				msgs = append(msgs, &baseapptestutil.MsgCounter{Counter: msgCounter + int64(extra), FailOnHandler: !success, Signer: addr.String()})
 				if success {
 					extra++
 				}
@@ -559,17 +563,22 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 			txBytes, err = suite.txConfig.TxEncoder()(builder.GetTx())
 			require.NoError(t, err)
 
-			res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: 1,
+				Txs:    [][]byte{txBytes},
+			})
+			require.NoError(t, err)
+
 			if tc.expErr {
-				require.True(t, res.IsErr(), fmt.Sprintf("%v", res))
+				require.True(t, res.TxResults[0].IsErr(), fmt.Sprintf("%v", res))
 			} else {
-				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+				require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 			}
 
 			resData := sdk.TxMsgData{}
-			err = proto.Unmarshal(res.Data, &resData)
+			err = suite.cdc.Unmarshal(res.TxResults[0].Data, &resData)
 			require.NoError(t, err)
-			if res.IsOK() {
+			if res.TxResults[0].IsOK() {
 				// If the whole tx fails, there are no msg responses in the result.
 				// We could include them, but it would be a breaking change.
 				for i, success := range tc.succeed {
@@ -581,7 +590,7 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 				}
 			}
 
-			store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+			store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 			// original counter increments by one
 			// new counter increments by two

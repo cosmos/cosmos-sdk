@@ -9,7 +9,7 @@ import (
 func (keeper Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, data *types.GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
 
-	if err := keeper.SetParams(ctx, data.Params); err != nil {
+	if err := keeper.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 

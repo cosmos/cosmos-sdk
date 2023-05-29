@@ -115,7 +115,7 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
-	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
+	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
 	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
 }
 

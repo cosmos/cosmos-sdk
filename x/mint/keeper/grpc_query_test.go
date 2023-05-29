@@ -55,7 +55,7 @@ func (suite *MintTestSuite) SetupTest() {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	err := suite.mintKeeper.SetParams(suite.ctx, types.DefaultParams())
+	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	suite.Require().NoError(err)
 	suite.mintKeeper.SetMinter(suite.ctx, types.DefaultInitialMinter())
 

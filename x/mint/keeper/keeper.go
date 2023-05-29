@@ -103,11 +103,6 @@ func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
 	return store.Set(types.MinterKey, bz)
 }
 
-// SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
-	return k.Params.Set(ctx, params)
-}
-
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx context.Context) math.Int {

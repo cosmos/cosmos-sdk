@@ -323,11 +323,11 @@ func getHeight(tree Tree, req types.RequestQuery) int64 {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *Store) Query(req types.RequestQuery) (res types.ResponseQuery) {
+func (st *Store) Query(req types.RequestQuery) (res types.ResponseQuery, err error) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return types.ResponseQuery{}, errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length")
 	}
 
 	tree := st.tree
@@ -394,10 +394,10 @@ func (st *Store) Query(req types.RequestQuery) (res types.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path)
 	}
 
-	return res
+	return res, err
 }
 
 // TraverseStateChanges traverses the state changes between two versions and calls the given function.

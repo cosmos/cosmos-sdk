@@ -21,11 +21,12 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res := store.Query(types.RequestQuery{
+	res, err := store.Query(types.RequestQuery{
 		Path:  "/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
+	require.NoError(t, err)
 	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.

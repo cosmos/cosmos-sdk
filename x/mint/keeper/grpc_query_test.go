@@ -74,7 +74,7 @@ func (suite *MintTestSuite) TestGRPCParams() {
 
 	inflation, err := suite.queryClient.Inflation(gocontext.Background(), &types.QueryInflationRequest{})
 	suite.Require().NoError(err)
-	minter, err := suite.mintKeeper.GetMinter(suite.ctx)
+	minter, err := suite.mintKeeper.Minter.Get(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(inflation.Inflation, minter.Inflation)
 

@@ -31,7 +31,7 @@ func (q queryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*ty
 // Inflation returns minter.Inflation of the mint module.
 func (q queryServer) Inflation(c context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	minter, err := q.k.GetMinter(ctx)
+	minter, err := q.k.Minter.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (q queryServer) Inflation(c context.Context, _ *types.QueryInflationRequest
 // AnnualProvisions returns minter.AnnualProvisions of the mint module.
 func (q queryServer) AnnualProvisions(c context.Context, _ *types.QueryAnnualProvisionsRequest) (*types.QueryAnnualProvisionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	minter, err := q.k.GetMinter(ctx)
+	minter, err := q.k.Minter.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

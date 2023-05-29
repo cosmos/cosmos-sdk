@@ -78,11 +78,6 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetMinter returns the minter.
-func (k Keeper) GetMinter(ctx context.Context) (types.Minter, error) {
-	return k.Minter.Get(ctx)
-}
-
 // SetMinter sets the minter.
 func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
 	store := k.storeService.OpenKVStore(ctx)

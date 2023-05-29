@@ -15,7 +15,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalcul
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored minter & params
-	minter, err := k.GetMinter(ctx)
+	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
 	}

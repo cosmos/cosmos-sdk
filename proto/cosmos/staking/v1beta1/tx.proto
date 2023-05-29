@@ -220,7 +220,7 @@ message MsgRotateConsPubKey {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  string validator_address        = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address        = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   google.protobuf.Any new_pubkey = 3 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
 }
 

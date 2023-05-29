@@ -60,7 +60,7 @@ func (suite *MintTestSuite) SetupTest() {
 	suite.mintKeeper.SetMinter(suite.ctx, types.DefaultInitialMinter())
 
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.mintKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServerImpl(suite.mintKeeper))
 
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }

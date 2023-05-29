@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
@@ -25,6 +26,9 @@ type Keeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	Schema collections.Schema
+	Params collections.Item[types.Params]
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -42,14 +46,23 @@ func NewKeeper(
 		panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
 	}
 
-	return Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		cdc:              cdc,
 		storeService:     storeService,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
+		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/mint module's authority.
@@ -92,12 +105,7 @@ func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
 
 // SetParams sets the x/mint module parameters.
 func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ParamsKey, bz)
+	return k.Params.Set(ctx, params)
 }
 
 // GetParams returns the current x/mint module parameters.

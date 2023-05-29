@@ -1,8 +1,10 @@
 package types
 
+import "cosmossdk.io/collections"
+
 var (
 	// MinterKey is the key to use for the keeper store.
-	MinterKey = []byte{0x00}
+	MinterKey = collections.NewPrefix(0)
 	ParamsKey = []byte{0x01}
 )
 

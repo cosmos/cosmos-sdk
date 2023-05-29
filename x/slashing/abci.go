@@ -3,6 +3,7 @@ package slashing
 import (
 	"time"
 
+	"cosmossdk.io/core/comet"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -18,6 +19,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// store whether or not they have actually signed it and slash/unbond any
 	// which have missed too many blocks in a row (downtime slashing)
 	for _, voteInfo := range ctx.VoteInfos() {
-		k.HandleValidatorSignature(ctx, voteInfo.Validator.Address, voteInfo.Validator.Power, voteInfo.SignedLastBlock)
+		k.HandleValidatorSignature(ctx, voteInfo.Validator.Address, voteInfo.Validator.Power, comet.BlockIDFlag(voteInfo.BlockIdFlag))
 	}
 }

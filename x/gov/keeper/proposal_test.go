@@ -88,17 +88,10 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-		activeIterator, _ := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
-		suite.Require().True(activeIterator.Valid())
-
-		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-		suite.Require().Equal(proposalID, proposal.Id)
-		activeIterator.Close()
-
-		// delete the proposal to avoid issues with other tests
-		suite.Require().NotPanics(func() {
-			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
-		}, "")
+		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+		suite.Require().NoError(err)
+		suite.Require().True(has)
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
 	}
 }
 
@@ -118,27 +111,22 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 		suite.Require().NoError(err)
 		suite.Require().Nil(proposal.VotingStartTime)
 
-		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
 
 		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-		activeIterator, _ := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
-		suite.Require().True(activeIterator.Valid())
-
-		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-		suite.Require().Equal(proposalID, proposal.Id)
-		activeIterator.Close()
+		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+		suite.Require().NoError(err)
+		suite.Require().True(has)
 
 		// add vote
 		voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
 		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")
 		suite.Require().NoError(err)
 
-		suite.Require().NotPanics(func() {
-			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
-		}, "")
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
 
 		// add vote but proposal is deleted along with its VotingPeriodProposalKey
 		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")

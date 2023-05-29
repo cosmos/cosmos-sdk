@@ -20,6 +20,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,7 +136,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.bankKeeper = keeper.NewBaseKeeper(
@@ -244,7 +245,7 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 		return keeper.NewBaseKeeper(
 			moduletestutil.MakeTestEncodingConfig().Codec,
 			storeService,
-			nil,
+			suite.authKeeper,
 			nil,
 			authority,
 			log.NewNopLogger(),

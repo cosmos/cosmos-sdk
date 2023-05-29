@@ -75,10 +75,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "DelegationRewards",
 					Use:       "rewards [delegator-addr] [validator-addr]",
 					Short:     "Query all distribution delegator rewards or rewards from a particular validator",
+					Long:      "Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.",
 					Example: strings.TrimSpace(
-						fmt.Sprintf(`Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.
-
-Examples:
+						fmt.Sprintf(`
 $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,

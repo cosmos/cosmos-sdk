@@ -127,7 +127,7 @@ func initFixture(t testing.TB) *fixture {
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
-	distrKeeper.SetFeePool(newCtx, distrtypes.FeePool{
+	distrKeeper.FeePool.Set(newCtx, distrtypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
 	})
 
@@ -287,12 +287,12 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.NilError(t, err)
 
 	// handle a signature to set signing info
-	f.slashingKeeper.HandleValidatorSignature(ctx, NewPubkey.Address(), selfDelegation.Int64(), true)
+	f.slashingKeeper.HandleValidatorSignature(ctx, NewPubkey.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
 
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	nci := NewCometInfo(abci.RequestBeginBlock{
-		ByzantineValidators: []abci.Misbehavior{{
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: val.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Unix(0, 0),

@@ -21,7 +21,12 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	consAddr := sdk.ConsAddress(addr)
 
 	// don't update missed blocks when validator's jailed
-	if k.sk.IsValidatorJailed(ctx, consAddr) {
+	isJailed, err := k.sk.IsValidatorJailed(ctx, consAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	if isJailed {
 		return
 	}
 
@@ -95,7 +100,10 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		if err != nil {
+			panic(err)
+		}
 		if validator != nil && !validator.IsJailed() {
 			// Downtime confirmed: slash and jail the validator
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
@@ -105,7 +113,10 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx), stakingtypes.Infraction_INFRACTION_DOWNTIME)
+			coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx), stakingtypes.Infraction_INFRACTION_DOWNTIME)
+			if err != nil {
+				panic(err)
+			}
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,

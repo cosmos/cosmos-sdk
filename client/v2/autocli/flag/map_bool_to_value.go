@@ -1,8 +1,9 @@
 package flag
 
 import (
-	"github.com/spf13/pflag"
 	"strconv"
+
+	"github.com/spf13/pflag"
 )
 
 func newBoolToString[K bool, V string](val map[K]V, p *map[K]V) *genericMapValue[K, V] {

@@ -1,8 +1,9 @@
 package flag
 
 import (
-	"github.com/spf13/pflag"
 	"strconv"
+
+	"github.com/spf13/pflag"
 )
 
 func newStringToInt32[K string, V int32](val map[K]V, p *map[K]V) *genericMapValue[K, V] {

@@ -116,7 +116,7 @@ func (suite *SimTestSuite) SetupTest() {
 	}
 
 	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
-	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
+	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
 
 func TestSimTestSuite(t *testing.T) {

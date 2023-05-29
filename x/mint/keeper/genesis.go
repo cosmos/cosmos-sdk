@@ -7,7 +7,9 @@ import (
 
 // InitGenesis new mint genesis
 func (keeper Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, data *types.GenesisState) {
-	keeper.SetMinter(ctx, data.Minter)
+	if err := keeper.Minter.Set(ctx, data.Minter); err != nil {
+		panic(err)
+	}
 
 	if err := keeper.Params.Set(ctx, data.Params); err != nil {
 		panic(err)

@@ -102,7 +102,7 @@ func (s *SimTestSuite) SetupTest() {
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
-	mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))

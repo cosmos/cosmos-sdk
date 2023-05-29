@@ -78,16 +78,6 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// SetMinter sets the minter.
-func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&minter)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.MinterKey, bz)
-}
-
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx context.Context) math.Int {

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -78,7 +79,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 
 	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
 	_, err = s.keeper.GetMinter(invalidCtx.Ctx)
-	s.Require().EqualError(err, "stored minter should not have been nil")
+	s.Require().ErrorIs(err, collections.ErrNotFound)
 
 	params, err := s.keeper.Params.Get(s.sdkCtx)
 	s.Require().Equal(genesisState.Params, params)

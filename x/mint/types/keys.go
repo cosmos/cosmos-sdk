@@ -5,7 +5,7 @@ import "cosmossdk.io/collections"
 var (
 	// MinterKey is the key to use for the keeper store.
 	MinterKey = collections.NewPrefix(0)
-	ParamsKey = []byte{0x01}
+	ParamsKey = collections.NewPrefix(1)
 )
 
 const (

@@ -29,6 +29,7 @@ type Keeper struct {
 
 	Schema collections.Schema
 	Params collections.Item[types.Params]
+	Minter collections.Item[types.Minter]
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -55,6 +56,7 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -78,19 +80,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 
 // GetMinter returns the minter.
 func (k Keeper) GetMinter(ctx context.Context) (types.Minter, error) {
-	var minter types.Minter
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.MinterKey)
-	if err != nil {
-		return minter, err
-	}
-
-	if bz == nil {
-		return minter, fmt.Errorf("stored minter should not have been nil")
-	}
-
-	err = k.cdc.Unmarshal(bz, &minter)
-	return minter, err
+	return k.Minter.Get(ctx)
 }
 
 // SetMinter sets the minter.

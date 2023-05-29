@@ -75,10 +75,16 @@ func (m Migrator) V45SetAccount(ctx sdk.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	bz, err := m.keeper.MarshalAccount(acc)
+	bz, err := m.keeper.Accounts.ValueCodec().Encode(acc)
 	if err != nil {
 		return err
 	}
 
-	return store.Set(types.AddressStoreKey(addr), bz)
+	return store.Set(addressStoreKey(addr), bz)
+}
+
+// addressStoreKey turn an address to key used to get it from the account store
+// NOTE(tip): exists for legacy compatibility
+func addressStoreKey(addr sdk.AccAddress) []byte {
+	return append(types.AddressStoreKeyPrefix, addr.Bytes()...)
 }

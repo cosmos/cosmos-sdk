@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,7 @@ import (
 var FlagSplit = "split"
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
-func NewTxCmd() *cobra.Command {
+func NewTxCmd(ac address.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
@@ -26,15 +27,15 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewSendTxCmd(),
-		NewMultiSendTxCmd(),
+		NewSendTxCmd(ac),
+		NewMultiSendTxCmd(ac),
 	)
 
 	return txCmd
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
-func NewSendTxCmd() *cobra.Command {
+func NewSendTxCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",
 		Short: "Send funds from one account to another.",
@@ -49,8 +50,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			if err != nil {
 				return err
 			}
-
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
+			toAddr, err := ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -77,7 +77,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
 // For a better UX this command is limited to send funds from one account to two or more accounts.
-func NewMultiSendTxCmd() *cobra.Command {
+func NewMultiSendTxCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",
 		Short: "Send funds from one account to two or more accounts.",
@@ -118,7 +118,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 			var output []types.Output
 			for _, arg := range args[1 : len(args)-1] {
-				toAddr, err := sdk.AccAddressFromBech32(arg)
+				toAddr, err := ac.StringToBytes(arg)
 				if err != nil {
 					return err
 				}

@@ -162,14 +162,17 @@ func (v mapValue[K, V]) Get(mutable protoreflect.Value) (protoreflect.Value, err
 	return mutable, nil
 }
 
+// keyValueResolver is a function that converts a string to a key that is primitive Type T
 type keyValueResolver[T comparable] func(string) (T, error)
 
+// compositeMapType is a map type that is composed of a key and value type that are both primitive types
 type compositeMapType[T comparable] struct {
 	keyValueResolver keyValueResolver[T]
 	keyType          string
 	valueType        Type
 }
 
+// compositeMapValue is a map value that is composed of a key and value type that are both primitive types
 type compositeMapValue[T comparable] struct {
 	keyValueResolver keyValueResolver[T]
 	keyType          string

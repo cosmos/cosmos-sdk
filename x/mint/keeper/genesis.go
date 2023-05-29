@@ -23,7 +23,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

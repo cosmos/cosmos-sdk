@@ -20,7 +20,7 @@ type queryServer struct {
 // Params returns params of the mint module.
 func (q queryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := q.k.GetParams(ctx)
+	params, err := q.k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

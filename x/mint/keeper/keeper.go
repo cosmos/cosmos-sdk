@@ -108,22 +108,6 @@ func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 	return k.Params.Set(ctx, params)
 }
 
-// GetParams returns the current x/mint module parameters.
-func (k Keeper) GetParams(ctx context.Context) (p types.Params, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ParamsKey)
-	if err != nil {
-		return p, err
-	}
-
-	if bz == nil {
-		return p, nil
-	}
-
-	err = k.cdc.Unmarshal(bz, &p)
-	return p, err
-}
-
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx context.Context) math.Int {

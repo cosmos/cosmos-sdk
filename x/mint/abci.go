@@ -20,7 +20,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalcul
 		return err
 	}
 
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}

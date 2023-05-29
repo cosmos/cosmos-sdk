@@ -80,7 +80,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	_, err = s.keeper.GetMinter(invalidCtx.Ctx)
 	s.Require().EqualError(err, "stored minter should not have been nil")
 
-	params, err := s.keeper.GetParams(s.sdkCtx)
+	params, err := s.keeper.Params.Get(s.sdkCtx)
 	s.Require().Equal(genesisState.Params, params)
 	s.Require().NoError(err)
 

@@ -108,7 +108,7 @@ func (s *IntegrationTestSuite) TestParams() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			expected, err := s.mintKeeper.GetParams(s.ctx)
+			expected, err := s.mintKeeper.Params.Get(s.ctx)
 			s.Require().NoError(err)
 			err = s.mintKeeper.SetParams(s.ctx, tc.input)
 			if tc.expectErr {
@@ -118,7 +118,7 @@ func (s *IntegrationTestSuite) TestParams() {
 				s.Require().NoError(err)
 			}
 
-			p, err := s.mintKeeper.GetParams(s.ctx)
+			p, err := s.mintKeeper.Params.Get(s.ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(expected, p)
 		})

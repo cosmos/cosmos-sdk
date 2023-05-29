@@ -68,7 +68,7 @@ func (suite *MintTestSuite) SetupTest() {
 func (suite *MintTestSuite) TestGRPCParams() {
 	params, err := suite.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
-	kparams, err := suite.mintKeeper.GetParams(suite.ctx)
+	kparams, err := suite.mintKeeper.Params.Get(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(params.Params, kparams)
 

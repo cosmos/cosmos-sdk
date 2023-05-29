@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// This is an empty message to be added as a response for failed messages
+// This is a message to be added as a response for failed messages
 // when dealing with non-atomic multi-msg txs.
 type MsgFailureResponse struct {
 	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`

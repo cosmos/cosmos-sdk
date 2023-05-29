@@ -446,7 +446,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// This is an empty message to be added as a response for failed messages
+// This is a message to be added as a response for failed messages
 // when dealing with non-atomic multi-msg txs.
 type MsgFailureResponse struct {
 	state         protoimpl.MessageState

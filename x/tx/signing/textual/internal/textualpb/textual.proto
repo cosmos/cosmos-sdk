@@ -85,5 +85,5 @@ message Envelope {
   repeated google.protobuf.Any extension_options              = 16;
   repeated google.protobuf.Any non_critical_extension_options = 17;
   string                       hash_of_raw_bytes              = 18;
-  bool                 non_atomic                             = 19;
+  bool                         non_atomic                     = 19;
 }

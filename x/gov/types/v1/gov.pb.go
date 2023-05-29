@@ -264,6 +264,8 @@ type Proposal struct {
 	// voting_end_time is the end time of voting on a proposal.
 	VotingEndTime *time.Time `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/gov#proposal-3
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// title is the title of the proposal
 	//
@@ -279,7 +281,7 @@ type Proposal struct {
 	Proposer string `protobuf:"bytes,13,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// expedited defines if the proposal is expedited
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	Expedited bool `protobuf:"varint,14,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 
@@ -496,7 +498,8 @@ type Vote struct {
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// options is the weighted vote options.
 	Options []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
-	// metadata is any  arbitrary metadata to attached to the vote.
+	// metadata is any arbitrary metadata to attached to the vote.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#vote-5
 	Metadata string `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
@@ -758,20 +761,20 @@ type Params struct {
 	MinInitialDepositRatio string `protobuf:"bytes,7,opt,name=min_initial_deposit_ratio,json=minInitialDepositRatio,proto3" json:"min_initial_deposit_ratio,omitempty"`
 	// The cancel ratio which will not be returned back to the depositors when a proposal is cancelled.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	ProposalCancelRatio string `protobuf:"bytes,8,opt,name=proposal_cancel_ratio,json=proposalCancelRatio,proto3" json:"proposal_cancel_ratio,omitempty"`
 	// The address which will receive (proposal_cancel_ratio * deposit) proposal deposits.
 	// If empty, the (proposal_cancel_ratio * deposit) proposal deposits will be burned.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	ProposalCancelDest string `protobuf:"bytes,9,opt,name=proposal_cancel_dest,json=proposalCancelDest,proto3" json:"proposal_cancel_dest,omitempty"`
 	// Duration of the voting period of an expedited proposal.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	ExpeditedVotingPeriod *time.Duration `protobuf:"bytes,10,opt,name=expedited_voting_period,json=expeditedVotingPeriod,proto3,stdduration" json:"expedited_voting_period,omitempty"`
 	// Minimum proportion of Yes votes for proposal to pass. Default value: 0.67.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	ExpeditedThreshold string `protobuf:"bytes,11,opt,name=expedited_threshold,json=expeditedThreshold,proto3" json:"expedited_threshold,omitempty"`
 	// Minimum expedited deposit for a proposal to enter voting period.
 	ExpeditedMinDeposit []types.Coin `protobuf:"bytes,12,rep,name=expedited_min_deposit,json=expeditedMinDeposit,proto3" json:"expedited_min_deposit"`

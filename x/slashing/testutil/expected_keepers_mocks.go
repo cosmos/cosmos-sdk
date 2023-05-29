@@ -347,18 +347,6 @@ func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxValidators", reflect.TypeOf((*MockStakingKeeper)(nil).MaxValidators), arg0)
 }
 
-// SetMappedConskey mocks base method.
-func (m *MockStakingKeeper) SetMappedConskey(ctx types.Context, oldConsAddr, newConsAddr types.ConsAddress) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMappedConskey", ctx, oldConsAddr, newConsAddr)
-}
-
-// SetMappedConskey indicates an expected call of SetMappedConskey.
-func (mr *MockStakingKeeperMockRecorder) SetMappedConskey(ctx, oldConsAddr, newConsAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMappedConskey", reflect.TypeOf((*MockStakingKeeper)(nil).SetMappedConskey), ctx, oldConsAddr, newConsAddr)
-}
-
 // Slash mocks base method.
 func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec) math.Int {
 	m.ctrl.T.Helper()

@@ -30,14 +30,6 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	logger := k.Logger(sdkCtx)
 	consAddr := evidence.GetConsensusAddress()
 
-	if val := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr.Bytes()); val == nil {
-		newConsAddr := k.stakingKeeper.GetMappedConsKey(sdkCtx, consAddr.Bytes())
-		if newConsAddr != nil {
-			// take the rotated key
-			consAddr = newConsAddr
-		}
-	}
-
 	validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
@@ -46,6 +38,14 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	}
 
 	if !validator.GetOperator().Empty() {
+
+		// get the consAddr again, this is because validator might've rotated it's key.
+		valConsAddr, err := validator.GetConsAddr()
+		if err != nil {
+			panic(err)
+		}
+		consAddr = valConsAddr
+
 		if _, err := k.slashingKeeper.GetPubkey(sdkCtx, consAddr.Bytes()); err != nil {
 			// Ignore evidence that cannot be handled.
 			//

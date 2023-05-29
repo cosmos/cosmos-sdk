@@ -41,7 +41,11 @@ func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress
 
 	opAddr := store.Get(types.GetValidatorByConsAddrKey(consAddr))
 	if opAddr == nil {
-		return validator, false
+		if mappedConsAddr := k.GetMappedConsKey(ctx, consAddr); mappedConsAddr != nil {
+			if opAddr = store.Get(types.GetValidatorByConsAddrKey(mappedConsAddr)); opAddr == nil {
+				return validator, false
+			}
+		}
 	}
 
 	return k.GetValidator(ctx, opAddr)

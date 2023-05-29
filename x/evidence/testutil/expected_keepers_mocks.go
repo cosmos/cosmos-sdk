@@ -40,20 +40,6 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 	return m.recorder
 }
 
-// GetMappedConsKey mocks base method.
-func (m *MockStakingKeeper) GetMappedConsKey(ctx types0.Context, consAddr types0.ConsAddress) types0.ConsAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMappedConsKey", ctx, consAddr)
-	ret0, _ := ret[0].(types0.ConsAddress)
-	return ret0
-}
-
-// GetMappedConsKey indicates an expected call of GetMappedConsKey.
-func (mr *MockStakingKeeperMockRecorder) GetMappedConsKey(ctx, consAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedConsKey", reflect.TypeOf((*MockStakingKeeper)(nil).GetMappedConsKey), ctx, consAddr)
-}
-
 // GetParams mocks base method.
 func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
 	m.ctrl.T.Helper()

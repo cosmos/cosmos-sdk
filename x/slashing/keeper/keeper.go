@@ -71,13 +71,6 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 	return pk, k.cdc.UnmarshalInterface(bz, &pk)
 }
 
-// GetMappedPubkey returns the pubkey from the adddress-pubkey relation of rotated consensus key
-func (k Keeper) GetMappedPubkey(ctx sdk.Context, a cryptotypes.Address) (sdk.ConsAddress, cryptotypes.PubKey, error) {
-	newConsAddr := k.sk.GetMappedConsKey(ctx, a.Bytes())
-	pk, err := k.GetPubkey(ctx, newConsAddr.Bytes())
-	return newConsAddr, pk, err
-}
-
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes. It specifies no intraction reason.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) {

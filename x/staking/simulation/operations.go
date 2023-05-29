@@ -676,11 +676,6 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
 		}
 
-		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
-		if addr := k.GetMappedConsKey(ctx, newConsAddr); addr != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "can't be rotated to a consAddr already rotated"), nil, nil
-		}
-
 		valAddr := val.GetOperator()
 		if k.CheckLimitOfMaxRotationsExceed(ctx, valAddr) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbonding period"), nil, nil
@@ -691,6 +686,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator not found"), nil, nil
 		}
 
+		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
 		_, found = k.GetValidatorByConsAddr(ctx, newConsAddr)
 		if found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil

@@ -212,9 +212,6 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubK
 		}
 	}
 
-	// Sets a map to newly rotated consensus key with old consensus key
-	k.sk.SetMappedConskey(ctx, sdk.ConsAddress(oldPubKey.Address()), sdk.ConsAddress(newPubKey.Address()))
-
 	return nil
 }
 

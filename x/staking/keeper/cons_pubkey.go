@@ -54,6 +54,9 @@ func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKe
 	oldPk := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
 	newPk := newPubKey.GetCachedValue().(cryptotypes.PubKey)
 
+	// Sets a map to newly rotated consensus key with old consensus key
+	k.setMappedConskey(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address()))
+
 	if err := k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee); err != nil {
 		return err
 	}
@@ -181,14 +184,14 @@ func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValA
 	return false
 }
 
-// SetMappedConskey maps the old consensus key to rotated new consensus key
-func (k Keeper) SetMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) {
+// setMappedConskey maps the old consensus key to rotated new consensus key
+func (k Keeper) setMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetKeyRotatedConsKey(oldConsAddr.Bytes())
 	store.Set(key, newConsAddr.Bytes())
 }
 
-// SetMappedConskey gets the rotated consensus key with the old consensus key
+// GetMappedConskey gets the rotated consensus key with the old consensus key
 func (k Keeper) GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetKeyRotatedConsKey(consAddr.Bytes())

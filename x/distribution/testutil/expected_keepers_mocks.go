@@ -291,20 +291,6 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
 
-// GetMappedConsKey mocks base method.
-func (m *MockStakingKeeper) GetMappedConsKey(ctx types.Context, consAddr types.ConsAddress) types.ConsAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMappedConsKey", ctx, consAddr)
-	ret0, _ := ret[0].(types.ConsAddress)
-	return ret0
-}
-
-// GetMappedConsKey indicates an expected call of GetMappedConsKey.
-func (mr *MockStakingKeeperMockRecorder) GetMappedConsKey(ctx, consAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMappedConsKey", reflect.TypeOf((*MockStakingKeeper)(nil).GetMappedConsKey), ctx, consAddr)
-}
-
 // IterateDelegations mocks base method.
 func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types0.DelegationI) bool) {
 	m.ctrl.T.Helper()

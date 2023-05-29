@@ -59,7 +59,6 @@ type StakingKeeper interface {
 	// IsValidatorJailed returns if the validator is jailed.
 	IsValidatorJailed(ctx sdk.Context, addr sdk.ConsAddress) bool
 
-	SetMappedConskey(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress)
 	GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress
 }
 

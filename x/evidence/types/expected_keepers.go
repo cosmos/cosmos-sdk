@@ -18,7 +18,6 @@ type (
 	StakingKeeper interface {
 		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
 		GetParams(ctx sdk.Context) (params stakingtypes.Params)
-		GetMappedConsKey(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.ConsAddress
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the

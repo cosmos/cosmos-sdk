@@ -57,10 +57,6 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, vote.Validator.Address)
-		if validator == nil {
-			newConsKey := k.stakingKeeper.GetMappedConsKey(sdkCtx, vote.Validator.Address)
-			validator = k.stakingKeeper.ValidatorByConsAddr(sdkCtx, newConsKey)
-		}
 
 		// TODO: Consider micro-slashing for missing votes.
 		//

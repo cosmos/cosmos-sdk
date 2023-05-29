@@ -238,7 +238,7 @@ func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
 	_ = s.getTestingValidator2(ctx)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgRotateConsPubKey(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)

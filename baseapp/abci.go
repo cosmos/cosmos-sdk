@@ -882,7 +882,10 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.
 	}
 
 	sdkReq := storetypes.RequestQuery(req)
-	resp := queryable.Query(sdkReq)
+	resp, err := queryable.Query(sdkReq)
+	if err != nil {
+		return sdkerrors.QueryResult(err, app.trace)
+	}
 	resp.Height = req.Height
 
 	abciResp := abci.ResponseQuery(resp)

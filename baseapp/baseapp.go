@@ -1002,7 +1002,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		// ADR 031 request type routing
 		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
-			wrappedErr := errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+			space, code, logInfo := errorsmod.ABCIInfo(err, mode != execModeFinalize)
+			safeErr := errorsmod.ABCIError(space, code, logInfo)
+			wrappedErr := errorsmod.Wrapf(safeErr, "failed to execute message; message index: %d", i)
 			if isNonAtomic {
 				value, err := codectypes.NewAnyWithValue(&msgservice.MsgFailureResponse{Error: wrappedErr.Error()})
 				if err != nil {

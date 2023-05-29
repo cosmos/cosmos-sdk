@@ -59,6 +59,15 @@ func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Conte
 	return sdk.NewContext(app.finalizeBlockState.ms, header, false, app.logger)
 }
 
+func (app *BaseApp) NewContextWithoutHeader(isCheckTx bool) sdk.Context {
+	if isCheckTx {
+		return sdk.NewContext(app.checkState.ms, cmtproto.Header{}, true, app.logger).
+			WithMinGasPrices(app.minGasPrices)
+	}
+
+	return sdk.NewContext(app.finalizeBlockState.ms, cmtproto.Header{}, false, app.logger)
+}
+
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

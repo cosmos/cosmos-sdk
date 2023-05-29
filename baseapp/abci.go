@@ -82,17 +82,16 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// handler, the block height is zero by default. However, after Commit is called
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
-		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader)
-		.WithHeaderInfo(coreheader.Info{
-			ChainID: req.ChainId, 
-			Height: req.InitialHeight, 
-			Time: req.Time})
+		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader).
+			WithHeaderInfo(coreheader.Info{
+				ChainID: req.ChainId,
+				Height:  req.InitialHeight,
+				Time:    req.Time})
 		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader).
-		WithHeaderInfo(coreheader.Info{
-			ChainID: 
-			req.ChainId, 
-			Height: req.InitialHeight, 
-			Time: req.Time})
+			WithHeaderInfo(coreheader.Info{
+				ChainID: req.ChainId,
+				Height:  req.InitialHeight,
+				Time:    req.Time})
 	}()
 
 	if app.initChainer == nil {

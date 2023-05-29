@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -58,7 +57,7 @@ func (s *PluginTestSuite) SetupTest() {
 	abciListener, ok := raw.(storetypes.ABCIListener)
 	require.True(s.T(), ok, "should pass type check")
 
-	header := tmproto.Header{Height: 1, Time: time.Now()}
+	header := header.Info{Height: 1, Time: time.Now()}
 	logger := log.NewNopLogger()
 	streamingService := storetypes.StreamingManager{
 		ABCIListeners: []storetypes.ABCIListener{abciListener},
@@ -76,9 +75,7 @@ func (s *PluginTestSuite) SetupTest() {
 		DecidedLastCommit: abci.CommitInfo{},
 	}
 	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
-		Events:                []abci.Event{},
-		ConsensusParamUpdates: &tmproto.ConsensusParams{},
-		ValidatorUpdates:      []abci.ValidatorUpdate{},
+		ValidatorUpdates: []abci.ValidatorUpdate{},
 		TxResults: []*abci.ExecTxResult{{
 			Events:    []abci.Event{},
 			Code:      1,
@@ -138,7 +135,7 @@ var (
 
 type MockContext struct {
 	baseCtx          context.Context
-	header           tmproto.Header
+	header           header.Info
 	logger           log.Logger
 	streamingManager storetypes.StreamingManager
 }
@@ -147,12 +144,11 @@ func (m MockContext) BlockHeight() int64                            { return m.h
 func (m MockContext) Logger() log.Logger                            { return m.logger }
 func (m MockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
 
-func (m MockContext) BlockHeader() tmproto.Header {
-	msg := proto.Clone(&m.header).(*tmproto.Header)
-	return *msg
+func (m MockContext) BlockHeader() header.Info {
+	return m.header
 }
 
-func NewMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) MockContext {
+func NewMockContext(header header.Info, logger log.Logger, sm storetypes.StreamingManager) MockContext {
 	header.Time = header.Time.UTC()
 	return MockContext{
 		baseCtx:          context.Background(),

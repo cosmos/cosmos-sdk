@@ -12,9 +12,4 @@ const (
 
 	// StoreKey is the default store key for mint
 	StoreKey = ModuleName
-
-	// Query endpoints supported by the minting querier
-	QueryParameters       = "parameters"
-	QueryInflation        = "inflation"
-	QueryAnnualProvisions = "annual_provisions"
 )

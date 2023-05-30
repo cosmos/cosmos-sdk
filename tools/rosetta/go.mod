@@ -142,7 +142,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v0.5.7 // indirect
+	pgregory.net/rapid v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
@@ -151,5 +151,6 @@ replace (
 	cosmossdk.io/collections => ../../collections // TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../..
 )

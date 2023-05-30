@@ -140,10 +140,10 @@ func initFixture(t testing.TB) *fixture {
 	evidencetypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), keeper.NewMsgServerImpl(*evidenceKeeper))
 	evidencetypes.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQuerier(evidenceKeeper))
 
-	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
+	assert.NilError(t, slashingKeeper.SetParams(sdkCtx, testutil.TestParams()))
 
 	// set default staking params
-	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(t, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
 
 	return &fixture{
 		app:            integrationApp,
@@ -172,7 +172,8 @@ func TestHandleDoubleSign(t *testing.T) {
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
-	f.stakingKeeper.EndBlocker(f.sdkCtx)
+	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	assert.NilError(t, err)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
@@ -217,8 +218,8 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	err = f.evidenceKeeper.BeginBlocker(ctx)
-	assert.NilError(t, err)
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+
 
 	// tokens should be the same (capped slash)
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -241,9 +242,11 @@ func TestHandleDoubleSign(t *testing.T) {
 	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
 
 	// query evidence from store
-	evidences, err := f.evidenceKeeper.GetAllEvidence(ctx)
+	iter, err := f.evidenceKeeper.Evidences.Iterate(ctx, nil)
 	assert.NilError(t, err)
-	assert.Assert(t, len(evidences) == 1)
+	values, err := iter.Values()
+	assert.NilError(t, err)
+	assert.Assert(t, len(values) == 1)
 }
 
 func TestHandleDoubleSign_TooOld(t *testing.T) {
@@ -263,7 +266,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
-	f.stakingKeeper.EndBlocker(f.sdkCtx)
+	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	assert.NilError(t, err)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(amt))),
@@ -281,7 +285,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	})
 
-	f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams)
+	assert.NilError(t, f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
 	ctx = ctx.WithCometInfo(nci)
@@ -289,7 +293,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
-	f.evidenceKeeper.BeginBlocker(ctx)
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
 
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)

@@ -147,5 +147,5 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	if err != nil {
 		return err
 	}
-	return k.SetEvidence(ctx, evidence)
+	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }

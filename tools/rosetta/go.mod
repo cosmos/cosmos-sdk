@@ -151,5 +151,6 @@ replace (
 	cosmossdk.io/collections => ../../collections // TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../..
 )

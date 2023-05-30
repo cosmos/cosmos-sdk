@@ -457,27 +457,27 @@ func TestMultiStoreQuery(t *testing.T) {
 
 	// Test bad path.
 	query := types.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres, err := multi.Query(query)
+	_, err = multi.Query(query)
 	codespace, code, _ := errors.ABCIInfo(err, false)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres, err = multi.Query(query)
+	_, err = multi.Query(query)
 	codespace, code, _ = errors.ABCIInfo(err, false)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres, err = multi.Query(query)
+	_, err = multi.Query(query)
 	codespace, code, _ = errors.ABCIInfo(err, false)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres, err = multi.Query(query)
+	qres, err := multi.Query(query)
 	require.NoError(t, err)
 	require.Equal(t, v, qres.Value)
 

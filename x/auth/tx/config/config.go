@@ -70,8 +70,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
 	sdkConfig := sdk.GetConfig()
-	// Append SIGN_MODE_TEXTUAL to the default sign modes.
-	enabledSignModes := append(tx.DefaultSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+
+	// append SIGN_MODE_TEXTUAL to the default sign modes only if bank keeper is available
+	enabledSignModes := tx.DefaultSignModes
+	if in.BankKeeper != nil {
+		enabledSignModes = append(enabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+	}
+
 	txConfigOptions := tx.ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		SigningOptions: &txsigning.Options{

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -56,7 +56,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.keeper.SetVersionSetter(s.baseApp)
 
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: height})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
 	s.module = upgrade.NewAppModule(s.keeper, addresscodec.NewBech32Codec("cosmos"))
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
@@ -189,7 +189,7 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	height := s.ctx.BlockHeader().Height + 1
+	height := s.ctx.HeaderInfo().Height + 1
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	VerifyDoUpgrade(t)
@@ -471,7 +471,7 @@ func TestDowngradeVerification(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}
 	tempDir := t.TempDir()

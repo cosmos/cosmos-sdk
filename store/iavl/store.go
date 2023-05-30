@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
@@ -280,7 +279,7 @@ func (st *Store) Import(version int64) (*iavl.Importer, error) {
 }
 
 // Handle gatest the latest height, if height is 0
-func getHeight(tree Tree, req *abci.RequestQuery) int64 {
+func getHeight(tree Tree, req *types.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
 		latest := tree.Version()
@@ -300,18 +299,18 @@ func getHeight(tree Tree, req *abci.RequestQuery) int64 {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *Store) Query(req *abci.RequestQuery) (res *abci.ResponseQuery) {
+func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err error) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return &types.ResponseQuery{}, errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length")
 	}
 
 	tree := st.tree
 
 	// store the height we chose in the response, with 0 being changed to the
 	// latest height
-	res = &abci.ResponseQuery{
+	res = &types.ResponseQuery{
 		Height: getHeight(tree, req),
 	}
 
@@ -371,10 +370,10 @@ func (st *Store) Query(req *abci.RequestQuery) (res *abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path)
 	}
 
-	return res
+	return res, err
 }
 
 // TraverseStateChanges traverses the state changes between two versions and calls the given function.

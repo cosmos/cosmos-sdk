@@ -79,7 +79,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b // indirect
 	github.com/cockroachdb/redact v1.1.4 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
-	github.com/cosmos/iavl v1.0.0-alpha.1.0.20230519201238-f706bdeefb1f // indirect
+	github.com/cosmos/iavl v1.0.0-beta.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

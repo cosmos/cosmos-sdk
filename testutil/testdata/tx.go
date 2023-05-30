@@ -1,7 +1,6 @@
 package testdata
 
 import (
-	"encoding/json"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -77,14 +76,6 @@ func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 }
 
 var _ sdk.Msg = (*TestMsg)(nil)
-
-func (msg *TestMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg.Signers)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
 
 func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	signers := make([]sdk.AccAddress, 0, len(msg.Signers))

@@ -2,17 +2,12 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg = &MsgCreateVestingAccount{}
 	_ sdk.Msg = &MsgCreatePermanentLockedAccount{}
 	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
-
-	_ legacytx.LegacyMsg = &MsgCreateVestingAccount{}
-	_ legacytx.LegacyMsg = &MsgCreatePermanentLockedAccount{}
-	_ legacytx.LegacyMsg = &MsgCreatePeriodicVestingAccount{}
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
@@ -24,12 +19,6 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 		EndTime:     endTime,
 		Delayed:     delayed,
 	}
-}
-
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreateVestingAccount.
@@ -45,12 +34,6 @@ func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount 
 		ToAddress:   toAddr.String(),
 		Amount:      amount,
 	}
-}
-
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreatePermanentLockedAccount.
-func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
@@ -76,10 +59,4 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{from}
-}
-
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreatePeriodicVestingAccount.
-func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

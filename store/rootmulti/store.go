@@ -725,21 +725,21 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *Store) Query(req types.RequestQuery) (types.ResponseQuery, error) {
+func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return types.ResponseQuery{}, err
+		return &types.ResponseQuery{}, err
 	}
 
 	store := rs.GetStoreByName(storeName)
 	if store == nil {
-		return types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "no such store: %s", storeName)
+		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "no such store: %s", storeName)
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store)
+		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store)
 	}
 
 	// trim the path and make the query
@@ -751,7 +751,7 @@ func (rs *Store) Query(req types.RequestQuery) (types.ResponseQuery, error) {
 	}
 
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
-		return types.ResponseQuery{}, errorsmod.Wrap(types.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
+		return &types.ResponseQuery{}, errorsmod.Wrap(types.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
 	}
 
 	// If the request's height is the latest height we've committed, then utilize
@@ -764,7 +764,7 @@ func (rs *Store) Query(req types.RequestQuery) (types.ResponseQuery, error) {
 	} else {
 		commitInfo, err = rs.GetCommitInfo(res.Height)
 		if err != nil {
-			return types.ResponseQuery{}, err
+			return &types.ResponseQuery{}, err
 		}
 	}
 

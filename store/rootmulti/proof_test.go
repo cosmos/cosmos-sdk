@@ -21,7 +21,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res, err := store.Query(types.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
@@ -69,7 +69,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res, err := store.Query(types.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
@@ -126,7 +126,7 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	cid := store.Commit() // Commit with empty iavl store.
 
 	// Get Proof
-	res, err := store.Query(types.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,

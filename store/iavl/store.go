@@ -303,7 +303,7 @@ func (st *Store) Import(version int64) (*iavl.Importer, error) {
 }
 
 // Handle gatest the latest height, if height is 0
-func getHeight(tree Tree, req types.RequestQuery) int64 {
+func getHeight(tree Tree, req *types.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
 		latest := tree.Version()
@@ -323,18 +323,18 @@ func getHeight(tree Tree, req types.RequestQuery) int64 {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *Store) Query(req types.RequestQuery) (res types.ResponseQuery, err error) {
+func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err error) {
 	defer st.metrics.MeasureSince("store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.ResponseQuery{}, errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length")
+		return &types.ResponseQuery{}, errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length")
 	}
 
 	tree := st.tree
 
 	// store the height we chose in the response, with 0 being changed to the
 	// latest height
-	res = types.ResponseQuery{
+	res = &types.ResponseQuery{
 		Height: getHeight(tree, req),
 	}
 
@@ -394,7 +394,7 @@ func (st *Store) Query(req types.RequestQuery) (res types.ResponseQuery, err err
 		res.Value = bz
 
 	default:
-		return types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path)
+		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path)
 	}
 
 	return res, err

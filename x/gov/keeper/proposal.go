@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -117,10 +116,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			cacheCtx, _ := ctx.CacheContext()
 			if _, err := handler(cacheCtx, msg); err != nil {
-				if errors.Is(types.ErrNoProposalHandlerExists, err) {
-					return v1.Proposal{}, err
-				}
-				return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+				return v1.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, err.Error())
 			}
 		}
 

@@ -280,7 +280,7 @@ func (k Keeper) unbondedToBonded(ctx context.Context, validator types.Validator)
 // UnbondingToUnbonded switches a validator from unbonding state to unbonded state
 func (k Keeper) UnbondingToUnbonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
-		return types.Validator{}, fmt.Errorf("bad state transition unbondingToUnbonded, validator: %v\n", validator)
+		return types.Validator{}, fmt.Errorf("bad state transition unbondingToUnbonded, validator: %v", validator)
 	}
 
 	return k.completeUnbondingValidator(ctx, validator)
@@ -289,7 +289,7 @@ func (k Keeper) UnbondingToUnbonded(ctx context.Context, validator types.Validat
 // send a validator to jail
 func (k Keeper) jailValidator(ctx context.Context, validator types.Validator) error {
 	if validator.Jailed {
-		return types.ErrValidatorJailed.Wrapf("cannot jail already jailed validator, validator: %v\n", validator)
+		return types.ErrValidatorJailed.Wrapf("cannot jail already jailed validator, validator: %v", validator)
 	}
 
 	validator.Jailed = true
@@ -303,7 +303,7 @@ func (k Keeper) jailValidator(ctx context.Context, validator types.Validator) er
 // remove a validator from jail
 func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) error {
 	if !validator.Jailed {
-		return fmt.Errorf("cannot unjail already unjailed validator, validator: %v\n", validator)
+		return fmt.Errorf("cannot unjail already unjailed validator, validator: %v", validator)
 	}
 
 	validator.Jailed = false

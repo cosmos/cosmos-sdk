@@ -827,10 +827,10 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	redelegationTimesliceIterator, err := k.RedelegationQueueIterator(ctx, sdkCtx.BlockHeader().Time)
-	defer redelegationTimesliceIterator.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer redelegationTimesliceIterator.Close()
 
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := types.DVVTriplets{}

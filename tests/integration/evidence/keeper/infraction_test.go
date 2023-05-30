@@ -172,7 +172,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
-	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	_, err = f.stakingKeeper.EndBlocker(f.sdkCtx)
 	assert.NilError(t, err)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
@@ -220,7 +220,6 @@ func TestHandleDoubleSign(t *testing.T) {
 	// submit duplicate evidence
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
 
-
 	// tokens should be the same (capped slash)
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
@@ -266,7 +265,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
 	// execute end-blocker and verify validator attributes
-	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	_, err = f.stakingKeeper.EndBlocker(f.sdkCtx)
 	assert.NilError(t, err)
 	assert.DeepEqual(t,
 		f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)),

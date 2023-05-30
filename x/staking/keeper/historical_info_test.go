@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -44,7 +43,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 	keeper.DeleteHistoricalInfo(ctx, 2)
 
 	recv, err = keeper.GetHistoricalInfo(ctx, 2)
-	require.ErrorIs(err, types.ErrNoHistoricalInfo, "HistoricalInfo found after delete")
+	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "HistoricalInfo found after delete")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
 }
 
@@ -119,10 +118,10 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, err = keeper.GetHistoricalInfo(ctx, 4)
-	require.ErrorIs(err, types.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune earlier height")
+	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune earlier height")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
 	recv, err = keeper.GetHistoricalInfo(ctx, 5)
-	require.ErrorIs(err, types.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune first prune height")
+	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune first prune height")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
 

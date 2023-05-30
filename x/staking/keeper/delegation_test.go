@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -46,7 +45,7 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	// check the empty keeper first
 	_, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.ErrorIs(err, types.ErrNoDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
 
 	// set and retrieve a record
 	keeper.SetDelegation(ctx, bond1to1)
@@ -132,23 +131,26 @@ func (s *KeeperTestSuite) TestDelegation() {
 	// delete a record
 	keeper.RemoveDelegation(ctx, bond2to3)
 	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
-	require.ErrorIs(err, types.ErrNoDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	require.NoError(err)
 	require.Equal(2, len(resBonds))
 	require.Equal(bond2to1, resBonds[0])
 	require.Equal(bond2to2, resBonds[1])
 
 	resBonds, err = keeper.GetAllDelegatorDelegations(ctx, addrDels[1])
+	require.NoError(err)
 	require.Equal(2, len(resBonds))
 
 	// delete all the records from delegator 2
 	keeper.RemoveDelegation(ctx, bond2to1)
 	keeper.RemoveDelegation(ctx, bond2to2)
 	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.ErrorIs(err, types.ErrNoDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
 	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
-	require.ErrorIs(err, types.ErrNoDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	require.NoError(err)
 	require.Equal(0, len(resBonds))
 }
 
@@ -282,7 +284,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 	// delete a record
 	keeper.RemoveUnbondingDelegation(ctx, ubd)
 	_, err = keeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
-	require.ErrorIs(err, types.ErrNoUnbondingDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoUnbondingDelegation)
 
 	resUnbonds, err = keeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
 	require.NoError(err)
@@ -342,7 +344,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsFromValidator() {
 	// delete a record
 	keeper.RemoveUnbondingDelegation(ctx, ubd)
 	_, err = keeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
-	require.ErrorIs(err, types.ErrNoUnbondingDelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoUnbondingDelegation)
 
 	resUnbonds, err = keeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
 	require.NoError(err)
@@ -604,7 +606,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 
 	//  now validator should be deleted from state
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, types.ErrNoValidatorFound)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
 func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
@@ -675,7 +677,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 
 	// validator should now be deleted from state
 	_, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, types.ErrNoValidatorFound)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state
@@ -773,7 +775,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	err = keeper.RemoveRedelegation(ctx, rd)
 	require.NoError(err)
 	_, err = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	require.ErrorIs(err, types.ErrNoRedelegation)
+	require.ErrorIs(err, stakingtypes.ErrNoRedelegation)
 
 	redelegations, err = keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.NoError(err)
@@ -1061,7 +1063,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 
 	// no red should have been found
 	red, err := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	require.ErrorIs(err, types.ErrNoRedelegation, "%v", red)
+	require.ErrorIs(err, stakingtypes.ErrNoRedelegation, "%v", red)
 }
 
 func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {

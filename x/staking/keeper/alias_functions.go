@@ -72,10 +72,10 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 // iterate through the active validator set and perform the provided function
 func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	iterator, err := k.LastValidatorsIterator(ctx)
-	defer iterator.Close()
 	if err != nil {
 		return err
 	}
+	defer iterator.Close()
 
 	i := int64(0)
 

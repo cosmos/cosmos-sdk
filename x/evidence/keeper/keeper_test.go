@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -125,7 +126,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper = accountKeeper
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, evidenceKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
 
@@ -205,7 +206,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
 	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.ErrorIs(err, types.ErrNoEvidenceExists)
+	suite.ErrorIs(err, collections.ErrNotFound)
 	suite.Nil(res)
 }
 

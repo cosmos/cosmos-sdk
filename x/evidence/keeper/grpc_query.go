@@ -20,15 +20,15 @@ import (
 var _ types.QueryServer = Querier{}
 
 type Querier struct {
-	*Keeper
+	k *Keeper
 }
 
 func NewQuerier(keeper *Keeper) Querier {
-	return Querier{Keeper: keeper}
+	return Querier{k: keeper}
 }
 
 // Evidence implements the Query/Evidence gRPC method
-func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
+func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -44,7 +44,7 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 		return nil, fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	evidence, _ := k.GetEvidence(ctx, decodedHash)
+	evidence, _ := k.k.GetEvidence(ctx, decodedHash)
 	if evidence == nil {
 		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.Hash)
 	}
@@ -63,17 +63,17 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 }
 
 // AllEvidence implements the Query/AllEvidence gRPC method
-func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
+func (k Querier) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	var evidence []*codectypes.Any
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
+	store := runtime.KVStoreAdapter(k.k.storeService.OpenKVStore(c))
 	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
 	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key, value []byte) error {
-		result, err := k.UnmarshalEvidence(value)
+		result, err := k.k.UnmarshalEvidence(value)
 		if err != nil {
 			return err
 		}

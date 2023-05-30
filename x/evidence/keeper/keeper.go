@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -34,6 +35,9 @@ type Keeper struct {
 	addressCodec   address.Codec
 
 	cometInfo comet.BlockInfoService
+
+	Schema    collections.Schema
+	Evidences collections.Map[[]byte, exported.Evidence]
 }
 
 // NewKeeper creates a new Keeper object.
@@ -41,14 +45,22 @@ func NewKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper, ac address.Codec, ci comet.BlockInfoService,
 ) *Keeper {
-	return &Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := &Keeper{
 		cdc:            cdc,
 		storeService:   storeService,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		addressCodec:   ac,
 		cometInfo:      ci,
+		Evidences:      collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.
@@ -124,17 +136,7 @@ func (k Keeper) SetEvidence(ctx context.Context, evidence exported.Evidence) err
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, types.ErrNoEvidenceExists) is returned.
 func (k Keeper) GetEvidence(ctx context.Context, hash []byte) (exported.Evidence, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.EvidenceKey(hash))
-	if len(bz) == 0 {
-		return nil, types.ErrNoEvidenceExists
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return k.UnmarshalEvidence(bz)
+	return k.Evidences.Get(ctx, hash)
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For

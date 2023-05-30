@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "evidence"
@@ -13,7 +15,7 @@ const (
 
 // KVStore key prefixes
 var (
-	KeyPrefixEvidence = []byte{0x00}
+	KeyPrefixEvidence = collections.NewPrefix(0)
 )
 
 func EvidenceKey(hash []byte) (key []byte) {

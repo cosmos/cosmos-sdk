@@ -15,11 +15,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -122,74 +118,7 @@ func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) 
 		),
 	)
 
-	return k.SetEvidence(ctx, evidence)
-}
-
-// SetEvidence sets Evidence by hash in the module's KVStore.
-func (k Keeper) SetEvidence(ctx context.Context, evidence exported.Evidence) error {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.KeyPrefixEvidence)
-	prefixStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
-	return nil
-}
-
-// IterateEvidence provides an interator over all stored Evidence objects. For
-// each Evidence object, cb will be called. If the cb returns true, the iterator
-// will close and stop.
-func (k Keeper) IterateEvidence(ctx context.Context, cb func(exported.Evidence) error) error {
-	store := k.storeService.OpenKVStore(ctx)
-	iterator, err := store.Iterator(types.KeyPrefixEvidence, storetypes.PrefixEndBytes(types.KeyPrefixEvidence))
-	if err != nil {
-		return err
-	}
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		evidence, err := k.UnmarshalEvidence(iterator.Value())
-		if err != nil {
-			return err
-		}
-
-		err = cb(evidence)
-		if errors.IsOf(err, errors.ErrStopIterating) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx context.Context) (evidence []exported.Evidence, err error) {
-	err = k.IterateEvidence(ctx, func(e exported.Evidence) error {
-		evidence = append(evidence, e)
-		return nil
-	})
-
-	return evidence, err
-}
-
-// MustUnmarshalEvidence attempts to decode and return an Evidence object from
-// raw encoded bytes. It panics on error.
-func (k Keeper) MustUnmarshalEvidence(bz []byte) exported.Evidence {
-	evidence, err := k.UnmarshalEvidence(bz)
-	if err != nil {
-		panic(fmt.Errorf("failed to decode evidence: %w", err))
-	}
-
-	return evidence
-}
-
-// MustMarshalEvidence attempts to encode an Evidence object and returns the
-// raw encoded bytes. It panics on error.
-func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
-	bz, err := k.MarshalEvidence(evidence)
-	if err != nil {
-		panic(fmt.Errorf("failed to encode evidence: %w", err))
-	}
-
-	return bz
+	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }
 
 // MarshalEvidence protobuf serializes an Evidence interface

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
@@ -93,9 +94,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			},
 			false,
 			func() {
-				ev, err := suite.keeper.GetAllEvidence(suite.ctx)
-				suite.Empty(ev)
-				suite.NoError(err)
+				_, err := suite.keeper.Evidences.Iterate(suite.ctx, nil)
+				suite.Require().ErrorIs(err, collections.ErrInvalidIterator)
 			},
 		},
 	}
@@ -133,12 +133,13 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 		{
 			"success",
 			func() {
-				suite.keeper.SetEvidence(suite.ctx, &types.Equivocation{
+				ev := &types.Equivocation{
 					Height:           1,
 					Power:            100,
 					Time:             time.Now().UTC(),
 					ConsensusAddress: pk.PubKey().Address().String(),
-				})
+				}
+				suite.Require().NoError(suite.keeper.Evidences.Set(suite.ctx, ev.Hash(), ev))
 			},
 			true,
 			func() {},

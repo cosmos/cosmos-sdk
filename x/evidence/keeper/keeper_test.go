@@ -215,9 +215,12 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 
-	evidence, err := suite.evidenceKeeper.GetAllEvidence(ctx)
-	suite.Len(evidence, numEvidence)
-	suite.NoError(err)
+	var evidences []exported.Evidence
+	suite.Require().NoError(suite.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+		evidences = append(evidences, value)
+		return false, nil
+	}))
+	suite.Len(evidences, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {

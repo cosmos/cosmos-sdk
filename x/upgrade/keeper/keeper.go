@@ -207,7 +207,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
 	// as a strategy for emergency hard fork recoveries
-	if plan.Height < ctx.BlockHeight() {
+	if plan.Height < ctx.HeaderInfo().Height {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -352,7 +352,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
+	store.Set(encodeDoneKey(name, ctx.HeaderInfo().Height), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name

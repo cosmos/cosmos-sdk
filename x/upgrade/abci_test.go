@@ -143,7 +143,7 @@ func TestHaltIfTooNew(t *testing.T) {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: (s.ctx.HeaderInfo().Height + 1), Time: time.Now()})
 	require.NotPanics(t, func() {
 		s.module.BeginBlock(newCtx)
 	})
@@ -159,7 +159,7 @@ func TestHaltIfTooNew(t *testing.T) {
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
-	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
+	futCtx := s.ctx.WithHeaderInfo(header.Info{Height: (s.ctx.HeaderInfo().Height + 3), Time: time.Now()})
 	require.NotPanics(t, func() {
 		s.module.BeginBlock(futCtx)
 	})

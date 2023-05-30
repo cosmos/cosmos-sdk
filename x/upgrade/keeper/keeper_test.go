@@ -321,7 +321,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(15)
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
 	keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test1",
 		Height: 15,
@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(15)
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
 	keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test-v0.10",
 		Height: 15,

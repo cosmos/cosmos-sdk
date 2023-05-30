@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Application upgrade
+# Application Upgrade
 
 :::note
 This document describes how to upgrade your application. If you are looking specifically for the changes to perform between SDK versions, see the [SDK migrations documentation](https://docs.cosmos.network/main/migrations/intro).
@@ -10,6 +10,14 @@ This document describes how to upgrade your application. If you are looking spec
 
 :::warning
 This section is currently incomplete. Track the progress of this document [here](https://github.com/cosmos/cosmos-sdk/issues/11504).
+:::
+
+:::note
+
+### Pre-requisite Reading
+
+* [`x/upgrade` Documentation](https://docs.cosmos.network/main/modules/upgrade)
+
 :::
 
 ## General Workflow
@@ -50,10 +58,10 @@ Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls 
 keeper's BeginBlocker method:
 
 ```go
-	func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
-		app.upgradeKeeper.BeginBlocker(ctx, req)
-		return abci.ResponseBeginBlock{}, nil
-	}
+ func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+  app.upgradeKeeper.BeginBlocker(ctx, req)
+  return abci.ResponseBeginBlock{}, nil
+ }
 ```
 
 The app must then integrate the upgrade keeper with its governance module as appropriate. The governance module
@@ -69,7 +77,7 @@ Here is an example handler for an upgrade named "my-fancy-upgrade":
 
 ```go
 app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx sdk.Context, plan upgrade.Plan) {
-	// Perform any migrations of the state store needed for this upgrade
+ // Perform any migrations of the state store needed for this upgrade
 })
 ```
 
@@ -83,22 +91,22 @@ Here is a sample code to set store migrations with an upgrade:
 ```go
 // this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
 app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx sdk.Context, plan upgrade.Plan) {
-	// upgrade changes here
+ // upgrade changes here
 })
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 if err != nil {
-	// handle error
+ // handle error
 }
 if upgradeInfo.Name == "my-fancy-upgrade" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-	storeUpgrades := store.StoreUpgrades{
-		Renamed: []store.StoreRename{{
-			OldKey: "foo",
-			NewKey: "bar",
-		}},
-		Deleted: []string{},
-	}
-	// configure store loader that checks if version == upgradeHeight and applies store upgrades
-	app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+ storeUpgrades := store.StoreUpgrades{
+  Renamed: []store.StoreRename{{
+   OldKey: "foo",
+   NewKey: "bar",
+  }},
+  Deleted: []string{},
+ }
+ // configure store loader that checks if version == upgradeHeight and applies store upgrades
+ app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 }
 ```
 
@@ -108,7 +116,7 @@ Before halting the ABCI state machine in the BeginBlocker method, the upgrade mo
 that looks like:
 
 ```text
-	UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
+ UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
 ```
 
 where `Name` and `Info` are the values of the respective fields on the upgrade Plan.
@@ -172,24 +180,24 @@ Here is a sample structure of the `pre-upgrade` command:
 
 ```go
 func preUpgradeCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pre-upgrade",
-		Short: "Pre-upgrade command",
+ cmd := &cobra.Command{
+  Use:   "pre-upgrade",
+  Short: "Pre-upgrade command",
         Long: "Pre-upgrade command to implement custom pre-upgrade handling",
-		Run: func(cmd *cobra.Command, args []string) {
+  Run: func(cmd *cobra.Command, args []string) {
 
-			err := HandlePreUpgrade()
+   err := HandlePreUpgrade()
 
-			if err != nil {
-				os.Exit(30)
-			}
+   if err != nil {
+    os.Exit(30)
+   }
 
-			os.Exit(0)
+   os.Exit(0)
 
-		},
-	}
+  },
+ }
 
-	return cmd
+ return cmd
 }
 ```
 
@@ -197,10 +205,10 @@ Ensure that the pre-upgrade command has been registered in the application:
 
 ```go
 rootCmd.AddCommand(
-		// ..
-		preUpgradeCommand(),
-		// ..
-	)
+  // ..
+  preUpgradeCommand(),
+  // ..
+ )
 ```
 
 When not using Cosmovisor, ensure to run `<appd> pre-upgrade` before starting the application binary.

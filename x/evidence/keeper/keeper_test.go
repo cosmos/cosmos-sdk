@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.NoError(err)
 	suite.Equal(e, res)
 }
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.NoError(err)
 	suite.Equal(e, res)
 }
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
 	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.ErrorIs(err, collections.ErrNotFound)
 	suite.Nil(res)
 }

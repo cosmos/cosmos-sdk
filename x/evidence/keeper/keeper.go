@@ -102,7 +102,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
 func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) error {
-	if _, err := k.GetEvidence(ctx, evidence.Hash()); err == nil {
+	if _, err := k.Evidences.Get(ctx, evidence.Hash()); err == nil {
 		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
 	}
 	if !k.router.HasRoute(evidence.Route()) {
@@ -131,12 +131,6 @@ func (k Keeper) SetEvidence(ctx context.Context, evidence exported.Evidence) err
 	prefixStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 	prefixStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 	return nil
-}
-
-// GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
-// the given hash, (nil, types.ErrNoEvidenceExists) is returned.
-func (k Keeper) GetEvidence(ctx context.Context, hash []byte) (exported.Evidence, error) {
-	return k.Evidences.Get(ctx, hash)
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For

@@ -44,7 +44,7 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 		return nil, fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	evidence, _ := k.k.GetEvidence(ctx, decodedHash)
+	evidence, _ := k.k.Evidences.Get(ctx, decodedHash)
 	if evidence == nil {
 		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.Hash)
 	}

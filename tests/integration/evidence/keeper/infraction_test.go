@@ -119,7 +119,7 @@ func initFixture(t testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
-	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authority.String())
+	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
 	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, address.NewBech32Codec("cosmos"), runtime.ProvideCometInfoService())
 	router := evidencetypes.NewRouter()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
@@ -25,6 +26,10 @@ type Keeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	Schema collections.Schema
+	Params collections.Item[types.Params]
+	Minter collections.Item[types.Minter]
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -42,14 +47,24 @@ func NewKeeper(
 		panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
 	}
 
-	return Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		cdc:              cdc,
 		storeService:     storeService,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
+		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/mint module's authority.
@@ -61,59 +76,6 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-// GetMinter returns the minter.
-func (k Keeper) GetMinter(ctx context.Context) (types.Minter, error) {
-	var minter types.Minter
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.MinterKey)
-	if err != nil {
-		return minter, err
-	}
-
-	if bz == nil {
-		return minter, fmt.Errorf("stored minter should not have been nil")
-	}
-
-	err = k.cdc.Unmarshal(bz, &minter)
-	return minter, err
-}
-
-// SetMinter sets the minter.
-func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&minter)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.MinterKey, bz)
-}
-
-// SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ParamsKey, bz)
-}
-
-// GetParams returns the current x/mint module parameters.
-func (k Keeper) GetParams(ctx context.Context) (p types.Params, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ParamsKey)
-	if err != nil {
-		return p, err
-	}
-
-	if bz == nil {
-		return p, nil
-	}
-
-	err = k.cdc.Unmarshal(bz, &p)
-	return p, err
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

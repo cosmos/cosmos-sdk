@@ -65,64 +65,11 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
 		s.mintKeeper.Logger(testCtx.Ctx))
 
-	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
+	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
-	s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())
+	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
-}
-
-func (s *IntegrationTestSuite) TestParams() {
-	testCases := []struct {
-		name      string
-		input     types.Params
-		expectErr bool
-	}{
-		{
-			name: "set invalid params (⚠️ not validated in keeper)",
-			input: types.Params{
-				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: math.LegacyNewDecWithPrec(-13, 2),
-				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-				InflationMin:        math.LegacyNewDecWithPrec(7, 2),
-				GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
-				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
-			},
-			expectErr: false,
-		},
-		{
-			name: "set full valid params",
-			input: types.Params{
-				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: math.LegacyNewDecWithPrec(8, 2),
-				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-				InflationMin:        math.LegacyNewDecWithPrec(2, 2),
-				GoalBonded:          math.LegacyNewDecWithPrec(37, 2),
-				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
-			},
-			expectErr: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			expected, err := s.mintKeeper.GetParams(s.ctx)
-			s.Require().NoError(err)
-			err = s.mintKeeper.SetParams(s.ctx, tc.input)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				expected = tc.input
-				s.Require().NoError(err)
-			}
-
-			p, err := s.mintKeeper.GetParams(s.ctx)
-			s.Require().NoError(err)
-			s.Require().Equal(expected, p)
-		})
-	}
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {

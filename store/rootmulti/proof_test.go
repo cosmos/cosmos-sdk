@@ -21,13 +21,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-<<<<<<< HEAD
-	res := store.Query(types.RequestQuery{
-||||||| 0360c3d87f
-	res := store.Query(&abci.RequestQuery{
-=======
 	res, err := store.Query(&types.RequestQuery{
->>>>>>> main
 		Path:  "/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,

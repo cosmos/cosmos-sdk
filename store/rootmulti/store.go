@@ -11,13 +11,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
-<<<<<<< HEAD
-||||||| 0360c3d87f
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-=======
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
->>>>>>> main
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"

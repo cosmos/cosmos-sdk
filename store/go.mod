@@ -3,6 +3,7 @@ module cosmossdk.io/store
 go 1.20
 
 require (
+	cosmossdk.io/core v0.7.0
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
@@ -26,8 +27,6 @@ require (
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
 )
-
-require cosmossdk.io/core v0.7.0
 
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect

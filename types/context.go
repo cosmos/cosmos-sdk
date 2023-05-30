@@ -153,7 +153,7 @@ func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
 }
 
 // WithBlockHeader returns a Context with an updated CometBFT block header in UTC time.
-// Depreacted: use WithHeaderInfo and WithCometInfo (if using CometBFT) instead
+// Deprecated: use WithHeaderInfo and WithCometInfo (if using CometBFT) instead
 func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -162,7 +162,7 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 }
 
 // WithHeaderHash returns a Context with an updated CometBFT block header hash.
-// Depreacted: use WithHeaderInfo instead
+// Deprecated: use WithHeaderInfo instead
 func (c Context) WithHeaderHash(hash []byte) Context {
 	temp := make([]byte, len(hash))
 	copy(temp, hash)
@@ -173,7 +173,7 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 
 // WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
 // Stripping the monotonic component is for time equality.
-// Depreacted: use WithHeaderInfo instead
+// Deprecated: use WithHeaderInfo instead
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
@@ -182,7 +182,7 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 }
 
 // WithProposer returns a Context with an updated proposer consensus address.
-// Depreacted: use WithCometInfo instead
+// Deprecated: use WithCometInfo instead
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
 	newHeader.ProposerAddress = addr.Bytes()
@@ -190,7 +190,7 @@ func (c Context) WithProposer(addr ConsAddress) Context {
 }
 
 // WithBlockHeight returns a Context with an updated block height.
-// Depreacted: use WithHeaderInfo instead
+// Deprecated: use WithHeaderInfo instead
 func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
@@ -198,7 +198,7 @@ func (c Context) WithBlockHeight(height int64) Context {
 }
 
 // WithChainID returns a Context with an updated chain identifier.
-// Depreacted: use WithHeaderInfo instead
+// Deprecated: use WithHeaderInfo instead
 func (c Context) WithChainID(chainID string) Context {
 	c.chainID = chainID
 	return c

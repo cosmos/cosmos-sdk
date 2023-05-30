@@ -86,12 +86,14 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
-				Time:    req.Time})
+				Time:    req.Time,
+			})
 		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader).
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
-				Time:    req.Time})
+				Time:    req.Time,
+			})
 	}()
 
 	if app.initChainer == nil {
@@ -664,7 +666,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			WithHeaderInfo(coreheader.Info{
 				ChainID: app.chainID,
 				Height:  req.Height,
-				Time:    req.Time})
+				Time:    req.Time,
+			})
 	}
 
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
@@ -679,7 +682,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Time:    req.Time,
-			Hash:    req.Hash}).
+			Hash:    req.Hash,
+		}).
 		WithCometInfo(cometInfo{
 			Misbehavior:     req.Misbehavior,
 			ValidatorsHash:  req.NextValidatorsHash,

@@ -505,14 +505,8 @@ func TestIAVLStoreQuery(t *testing.T) {
 	querySub := types.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
 
 	// query subspace before anything set
-<<<<<<< HEAD
-	qres := iavlStore.Query(querySub)
-||||||| 0360c3d87f
-	qres := iavlStore.Query(&querySub)
-=======
 	qres, err := iavlStore.Query(&querySub)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
@@ -521,52 +515,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-<<<<<<< HEAD
-	qres = iavlStore.Query(query)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query)
-=======
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
-<<<<<<< HEAD
-	qres = iavlStore.Query(query)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query)
-=======
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
-<<<<<<< HEAD
-	qres = iavlStore.Query(query)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query)
-=======
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// and for the subspace
-<<<<<<< HEAD
-	qres = iavlStore.Query(querySub)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&querySub)
-=======
 	qres, err = iavlStore.Query(&querySub)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub1, qres.Value)
 
@@ -575,65 +545,33 @@ func TestIAVLStoreQuery(t *testing.T) {
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
-<<<<<<< HEAD
-	qres = iavlStore.Query(query)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query)
-=======
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
-<<<<<<< HEAD
-	qres = iavlStore.Query(query)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query)
-=======
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v3, qres.Value)
 	query2 := types.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 
-<<<<<<< HEAD
-	qres = iavlStore.Query(query2)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&query2)
-=======
 	qres, err = iavlStore.Query(&query2)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
-<<<<<<< HEAD
-	qres = iavlStore.Query(querySub)
-||||||| 0360c3d87f
-	qres = iavlStore.Query(&querySub)
-=======
 	qres, err = iavlStore.Query(&querySub)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
-<<<<<<< HEAD
-	query0 := types.RequestQuery{Path: "/key", Data: k1}
-	qres = iavlStore.Query(query0)
-||||||| 0360c3d87f
-	query0 := abci.RequestQuery{Path: "/key", Data: k1}
-	qres = iavlStore.Query(&query0)
-=======
 	query0 := types.RequestQuery{Path: "/key", Data: k1}
 	qres, err = iavlStore.Query(&query0)
 	require.NoError(t, err)
->>>>>>> main
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 }

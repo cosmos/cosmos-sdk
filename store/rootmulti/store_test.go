@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
@@ -80,6 +81,8 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
+	ms.SetHeaderInfo(&header.Info{})
+
 	cID := ms.Commit()
 	require.Equal(t, int64(1), cID.Version)
 
@@ -128,6 +131,8 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
+	ms.SetHeaderInfo(&header.Info{})
+
 	workingHash := ms.WorkingHash()
 	cID := ms.Commit()
 	require.Equal(t, int64(1), cID.Version)
@@ -163,6 +168,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	// Make a few commits and check them.
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
+		store.SetHeaderInfo(&header.Info{})
 		workingHash := store.WorkingHash()
 		commitID = store.Commit()
 		require.Equal(t, workingHash, commitID.Hash)
@@ -176,6 +182,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
 	checkStore(t, store, commitID, commitID)
+	store.SetHeaderInfo(&header.Info{})
 
 	// Commit and check version.
 	workingHash := store.WorkingHash()

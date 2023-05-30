@@ -3,6 +3,7 @@ package rootmulti
 import (
 	"testing"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"
@@ -64,6 +65,8 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	require.NoError(t, store.LoadVersion(0))
 
+	store.SetHeaderInfo(&header.Info{Height: 0})
+
 	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit()
@@ -120,6 +123,8 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	err := store.LoadVersion(0)
 	require.NoError(t, err)
+
+	store.SetHeaderInfo(&header.Info{})
 
 	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))

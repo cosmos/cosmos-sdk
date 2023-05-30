@@ -156,6 +156,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../tx
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../
 )
 

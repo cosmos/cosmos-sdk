@@ -317,5 +317,5 @@ func TestBuilderFeeGranter(t *testing.T) {
 
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
-	require.Equal(t, addr1.String(), txBuilder.GetTx().FeeGranter())
+	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
 }

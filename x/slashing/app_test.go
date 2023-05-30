@@ -72,7 +72,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	baseApp := app.BaseApp
 
-	ctxCheck := baseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck := baseApp.NewContext(true)
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 
-	ctxCheck = baseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = baseApp.NewContext(true)
 	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.True(t, found)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
@@ -101,7 +101,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
-	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = app.BaseApp.NewContext(true)
 	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))
 	require.NoError(t, err)
 

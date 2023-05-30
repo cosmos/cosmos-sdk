@@ -607,7 +607,7 @@ func TestSetMinGasPrices(t *testing.T) {
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 	suite.baseApp.InitChain(&abci.RequestInitChain{})
-	ctx := suite.baseApp.NewContext(true, cmtproto.Header{}) // TODO remove header here
+	ctx := suite.baseApp.NewContext(true)
 
 	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))

@@ -180,7 +180,7 @@ func SimulateFromSeed(
 			return true, params, err
 		}
 
-		ctx := app.NewContext(false, cmtproto.Header{
+		ctx := app.NewContextLegacy(false, cmtproto.Header{
 			Height:          blockHeight,
 			Time:            blockTime,
 			ProposerAddress: proposerAddress,

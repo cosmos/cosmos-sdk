@@ -50,13 +50,22 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-func (app *BaseApp) NewContext(isCheckTx bool, header cmtproto.Header) sdk.Context { // todo discuss how to remove header, wrapper or no
+func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context { // todo discuss how to remove header, wrapper or no
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}
 
 	return sdk.NewContext(app.finalizeBlockState.ms, header, false, app.logger)
+}
+
+func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context { // todo discuss how to remove header, wrapper or no
+	if isCheckTx {
+		return sdk.NewContext(app.checkState.ms, cmtproto.Header{}, true, app.logger).
+			WithMinGasPrices(app.minGasPrices)
+	}
+
+	return sdk.NewContext(app.finalizeBlockState.ms, cmtproto.Header{}, false, app.logger)
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {

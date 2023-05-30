@@ -5,14 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -63,35 +62,23 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 }
 
 // AllEvidence implements the Query/AllEvidence gRPC method
-func (k Querier) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
+func (k Querier) AllEvidence(ctx context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-
 	var evidence []*codectypes.Any
-	store := runtime.KVStoreAdapter(k.k.storeService.OpenKVStore(c))
-	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
-	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key, value []byte) error {
-		result, err := k.k.UnmarshalEvidence(value)
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.k.Evidences, req.Pagination, func(_ []byte, value exported.Evidence) (include bool, err error) {
+		evidenceAny, err := codectypes.NewAnyWithValue(value)
 		if err != nil {
-			return err
-		}
-
-		msg, ok := result.(proto.Message)
-		if !ok {
-			return status.Errorf(codes.Internal, "can't protomarshal %T", msg)
-		}
-
-		evidenceAny, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return err
+			return false, err
 		}
 		evidence = append(evidence, evidenceAny)
-		return nil
+		return false, nil // we don't include results because we're appending them
 	})
+
 	if err != nil {
-		return &types.QueryAllEvidenceResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryAllEvidenceResponse{Evidence: evidence, Pagination: pageRes}, nil

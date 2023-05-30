@@ -120,15 +120,3 @@ func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) 
 
 	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }
-
-// MarshalEvidence protobuf serializes an Evidence interface
-func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
-	return k.cdc.MarshalInterface(evidenceI)
-}
-
-// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type
-func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
-	var evi exported.Evidence
-	return evi, k.cdc.UnmarshalInterface(bz, &evi)
-}

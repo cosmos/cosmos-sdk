@@ -544,11 +544,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		interval    uint64 = 10
 	)
 
-	expectedHeights := []int64{}
-	for i := int64(1); i < numVersions-int64(keepRecent); i++ {
-		expectedHeights = append(expectedHeights, i)
-	}
-
 	db := dbm.NewMemDB()
 
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(keepRecent, interval))

@@ -123,7 +123,7 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 		return pruneHeight
 	}
 
-	if len(m.pruneSnapshotHeights) <= 0 { // the length should be greater than zero
+	if len(m.pruneSnapshotHeights) == 0 { // the length should be greater than zero
 		return 0
 	}
 

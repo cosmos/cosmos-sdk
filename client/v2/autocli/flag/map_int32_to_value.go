@@ -27,7 +27,7 @@ func Int32ToStringP(flagSet *pflag.FlagSet, name, shorthand string, value map[in
 	return &p
 }
 
-func newInt32ToInt32[K int32, V int32](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
+func newInt32ToInt32[K, V int32](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
 	newInt32Int32Map := newGenericMapValue(val, p)
 	newInt32Int32Map.Options = genericMapValueOptions[K, V]{
 		genericType: "int32ToInt32",

@@ -71,7 +71,7 @@ func Uint32ToInt64P(flagSet *pflag.FlagSet, name, shorthand string, value map[ui
 	return &p
 }
 
-func newUint32ToUint32[K uint32, V uint32](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
+func newUint32ToUint32[K, V uint32](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
 	newUint32Uint32Map := newGenericMapValue(val, p)
 	newUint32Uint32Map.Options = genericMapValueOptions[K, V]{
 		genericType: "uint32ToUint32",

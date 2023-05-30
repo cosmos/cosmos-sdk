@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind protoreflect.Kind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
+func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
 	switch keyKind {
 	case protoreflect.StringKind:
 		switch valueKind {

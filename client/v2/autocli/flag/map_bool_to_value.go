@@ -115,7 +115,7 @@ func BoolToUint64P(flagSet *pflag.FlagSet, name, shorthand string, value map[boo
 	return &p
 }
 
-func newBoolToBool[K bool, V bool](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
+func newBoolToBool[K, V bool](val map[K]V, p *map[K]V) *genericMapValue[K, V] {
 	newBoolBoolMap := newGenericMapValue(val, p)
 	newBoolBoolMap.Options = genericMapValueOptions[K, V]{
 		genericType: "boolToBool",

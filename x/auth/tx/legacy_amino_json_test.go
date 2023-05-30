@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,6 +155,9 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 
 	modeHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
 	mode, _ := signing.APISignModeToInternal(modeHandler.Mode())
+	legacyAmino := codec.NewLegacyAmino()
+	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
+	legacytx.RegressionTestingAminoCodec = legacyAmino
 
 	testcases := []struct {
 		name           string
@@ -223,6 +227,8 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 			require.Equal(t, string(tc.expectedSignBz), string(newSignBz))
 		})
 	}
+
+	legacytx.RegressionTestingAminoCodec = nil
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {

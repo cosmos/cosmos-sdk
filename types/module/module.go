@@ -657,13 +657,6 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			toVersion = module.ConsensusVersion()
 		}
 
-		if toVersion > 0 && toVersion != fromVersion {
-			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		// We run migration if the module is specified in `fromVM`.
 		// Otherwise we run InitGenesis.
 		//
@@ -673,7 +666,10 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
-
+			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			if module, ok := m.Modules[moduleName].(HasGenesis); ok {

@@ -64,7 +64,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	}
 
 	for _, delegation := range data.Delegations {
-		delegatorAddress, err := k.authKeeper.StringToBytes(delegation.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
 			panic(fmt.Errorf("invalid delegator address: %s", err))
 		}

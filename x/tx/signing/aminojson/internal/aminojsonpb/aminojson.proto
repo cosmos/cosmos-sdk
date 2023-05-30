@@ -18,13 +18,14 @@ message AminoSignFee {
 
 // AminoSignDoc is a message container used to generate the SIGN_MODE_LEGACY_AMINO_JSON sign bytes with proto3 API.
 // Note: This is only used for generated JSON in signing, see x/tx/signing/aminojson.go for more details.
+// We allow omitempty based on what is already defined in the legacy StdSignDoc.
 message AminoSignDoc {
-  uint64 account_number = 1;
-  uint64 sequence = 2;
+  uint64 account_number = 1 [(amino.dont_omitempty) = true];
+  uint64 sequence = 2 [(amino.dont_omitempty) = true];
   uint64 timeout_height = 3;
-  string chain_id = 4;
-  string memo = 5;
-  AminoSignFee fee = 6;
-  repeated google.protobuf.Any msgs = 7;
+  string chain_id = 4 [(amino.dont_omitempty) = true];
+  string memo = 5 [(amino.dont_omitempty) = true];
+  AminoSignFee fee = 6 [(amino.dont_omitempty) = true];
+  repeated google.protobuf.Any msgs = 7 [(amino.dont_omitempty) = true];
   cosmos.tx.v1beta1.Tip tip = 8;
 }

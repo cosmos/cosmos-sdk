@@ -3,26 +3,31 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var _ v1.QueryServer = Keeper{}
+var _ v1.QueryServer = queryServer{}
 
-func (q Keeper) Constitution(ctx context.Context, req *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
-	constitution, err := q.GetConstitution(ctx)
+type queryServer struct{ k *Keeper }
+
+func NewQueryServer(k *Keeper) v1.QueryServer {
+	return queryServer{k: k}
+}
+
+func (q queryServer) Constitution(ctx context.Context, _ *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
+	constitution, err := q.k.Constitution.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +35,7 @@ func (q Keeper) Constitution(ctx context.Context, req *v1.QueryConstitutionReque
 }
 
 // Proposal returns proposal details based on ProposalID
-func (q Keeper) Proposal(ctx context.Context, req *v1.QueryProposalRequest) (*v1.QueryProposalResponse, error) {
+func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest) (*v1.QueryProposalResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -39,9 +44,9 @@ func (q Keeper) Proposal(ctx context.Context, req *v1.QueryProposalRequest) (*v1
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, types.ErrProposalNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -51,54 +56,47 @@ func (q Keeper) Proposal(ctx context.Context, req *v1.QueryProposalRequest) (*v1
 }
 
 // Proposals implements the Query/Proposals gRPC method
-func (q Keeper) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	store := q.storeService.OpenKVStore(ctx)
-	proposalStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.ProposalsKeyPrefix)
+func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
+	var filteredProposals []*v1.Proposal
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (bool, error) {
+		matchVoter, matchDepositor, matchStatus := true, true, true
 
-	filteredProposals, pageRes, err := query.GenericFilteredPaginate(
-		q.cdc,
-		proposalStore,
-		req.Pagination,
-		func(key []byte, p *v1.Proposal) (*v1.Proposal, error) {
-			matchVoter, matchDepositor, matchStatus := true, true, true
+		// match status (if supplied/valid)
+		if v1.ValidProposalStatus(req.ProposalStatus) {
+			matchStatus = p.Status == req.ProposalStatus
+		}
 
-			// match status (if supplied/valid)
-			if v1.ValidProposalStatus(req.ProposalStatus) {
-				matchStatus = p.Status == req.ProposalStatus
+		// match voter address (if supplied)
+		if len(req.Voter) > 0 {
+			voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
+			if err != nil {
+				return false, err
 			}
 
-			// match voter address (if supplied)
-			if len(req.Voter) > 0 {
-				voter, err := q.authKeeper.StringToBytes(req.Voter)
-				if err != nil {
-					return nil, err
-				}
+			has, err := q.k.Votes.Has(ctx, collections.Join(p.Id, sdk.AccAddress(voter)))
+			// if no error, vote found, matchVoter = true
+			matchVoter = err == nil && has
+		}
 
-				_, err = q.GetVote(ctx, p.Id, voter)
-				// if no error, vote found, matchVoter = true
-				matchVoter = err == nil
+		// match depositor (if supplied)
+		if len(req.Depositor) > 0 {
+			depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
+			if err != nil {
+				return false, err
 			}
+			has, err := q.k.Deposits.Has(ctx, collections.Join(p.Id, sdk.AccAddress(depositor)))
+			// if no error, deposit found, matchDepositor = true
+			matchDepositor = err == nil && has
+		}
 
-			// match depositor (if supplied)
-			if len(req.Depositor) > 0 {
-				depositor, err := q.authKeeper.StringToBytes(req.Depositor)
-				if err != nil {
-					return nil, err
-				}
-				_, err = q.GetDeposit(ctx, p.Id, depositor)
-				// if no error, deposit found, matchDepositor = true
-				matchDepositor = err == nil
-			}
-
-			if matchVoter && matchDepositor && matchStatus {
-				return p, nil
-			}
-
-			return nil, nil
-		}, func() *v1.Proposal {
-			return &v1.Proposal{}
-		})
-	if err != nil {
+		// if all match, append to results
+		if matchVoter && matchDepositor && matchStatus {
+			filteredProposals = append(filteredProposals, &p)
+		}
+		// continue to next item, do not include because we're appending results above.
+		return false, nil
+	})
+	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -106,7 +104,7 @@ func (q Keeper) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*
 }
 
 // Vote returns Voted information based on proposalID, voterAddr
-func (q Keeper) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error) {
+func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -119,13 +117,13 @@ func (q Keeper) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVo
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
-	voter, err := q.authKeeper.StringToBytes(req.Voter)
+	voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
-	vote, err := q.GetVote(ctx, req.ProposalId, voter)
+	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrVoteNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}
@@ -136,7 +134,7 @@ func (q Keeper) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVo
 }
 
 // Votes returns single proposal's votes
-func (q Keeper) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.QueryVotesResponse, error) {
+func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.QueryVotesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -146,18 +144,10 @@ func (q Keeper) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.Query
 	}
 
 	var votes v1.Votes
-	store := q.storeService.OpenKVStore(ctx)
-	votesStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.VotesKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key, value []byte) error {
-		var vote v1.Vote
-		if err := q.cdc.Unmarshal(value, &vote); err != nil {
-			return err
-		}
-
-		votes = append(votes, &vote)
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
+		votes = append(votes, &value)
+		return false, nil // not including results because they're being appended.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -166,12 +156,12 @@ func (q Keeper) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.Query
 }
 
 // Params queries all params
-func (q Keeper) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v1.QueryParamsResponse, error) {
+func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v1.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	params, err := q.GetParams(ctx)
+	params, err := q.k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +192,7 @@ func (q Keeper) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v1.Que
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
-func (q Keeper) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (*v1.QueryDepositResponse, error) {
+func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (*v1.QueryDepositResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -215,24 +205,20 @@ func (q Keeper) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (*v1.Q
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
-	depositor, err := q.authKeeper.StringToBytes(req.Depositor)
+	depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}
-	deposit, err := q.GetDeposit(ctx, req.ProposalId, depositor)
+	deposit, err := q.k.Deposits.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(depositor)))
 	if err != nil {
-		if errors.IsOf(err, types.ErrDepositNotFound) {
-			return nil, status.Errorf(codes.InvalidArgument,
-				"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
-		}
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	return &v1.QueryDepositResponse{Deposit: &deposit}, nil
 }
 
 // Deposits returns single proposal's all deposits
-func (q Keeper) Deposits(ctx context.Context, req *v1.QueryDepositsRequest) (*v1.QueryDepositsResponse, error) {
+func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest) (*v1.QueryDepositsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -242,19 +228,10 @@ func (q Keeper) Deposits(ctx context.Context, req *v1.QueryDepositsRequest) (*v1
 	}
 
 	var deposits []*v1.Deposit
-
-	store := q.storeService.OpenKVStore(ctx)
-	depositStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.DepositsKey(req.ProposalId))
-
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
-		var deposit v1.Deposit
-		if err := q.cdc.Unmarshal(value, &deposit); err != nil {
-			return err
-		}
-
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
 		deposits = append(deposits, &deposit)
-		return nil
-	})
+		return false, nil // we don't include results as they're being appended to the slice above.
+	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -263,7 +240,7 @@ func (q Keeper) Deposits(ctx context.Context, req *v1.QueryDepositsRequest) (*v1
 }
 
 // TallyResult queries the tally of a proposal vote
-func (q Keeper) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest) (*v1.QueryTallyResultResponse, error) {
+func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest) (*v1.QueryTallyResultResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -272,9 +249,9 @@ func (q Keeper) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	proposal, err := q.GetProposal(ctx, req.ProposalId)
+	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, types.ErrProposalNotFound) {
+		if errors.IsOf(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -292,7 +269,7 @@ func (q Keeper) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest
 	default:
 		// proposal is in voting period
 		var err error
-		_, _, tallyResult, err = q.Tally(ctx, proposal)
+		_, _, tallyResult, err = q.k.Tally(ctx, proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -303,17 +280,15 @@ func (q Keeper) TallyResult(ctx context.Context, req *v1.QueryTallyResultRequest
 
 var _ v1beta1.QueryServer = legacyQueryServer{}
 
-type legacyQueryServer struct {
-	keeper *Keeper
-}
+type legacyQueryServer struct{ qs v1.QueryServer }
 
 // NewLegacyQueryServer returns an implementation of the v1beta1 legacy QueryServer interface.
 func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
-	return &legacyQueryServer{keeper: k}
+	return &legacyQueryServer{qs: NewQueryServer(k)}
 }
 
 func (q legacyQueryServer) Proposal(ctx context.Context, req *v1beta1.QueryProposalRequest) (*v1beta1.QueryProposalResponse, error) {
-	resp, err := q.keeper.Proposal(ctx, &v1.QueryProposalRequest{
+	resp, err := q.qs.Proposal(ctx, &v1.QueryProposalRequest{
 		ProposalId: req.ProposalId,
 	})
 	if err != nil {
@@ -329,7 +304,7 @@ func (q legacyQueryServer) Proposal(ctx context.Context, req *v1beta1.QueryPropo
 }
 
 func (q legacyQueryServer) Proposals(ctx context.Context, req *v1beta1.QueryProposalsRequest) (*v1beta1.QueryProposalsResponse, error) {
-	resp, err := q.keeper.Proposals(ctx, &v1.QueryProposalsRequest{
+	resp, err := q.qs.Proposals(ctx, &v1.QueryProposalsRequest{
 		ProposalStatus: v1.ProposalStatus(req.ProposalStatus),
 		Voter:          req.Voter,
 		Depositor:      req.Depositor,
@@ -354,7 +329,7 @@ func (q legacyQueryServer) Proposals(ctx context.Context, req *v1beta1.QueryProp
 }
 
 func (q legacyQueryServer) Vote(ctx context.Context, req *v1beta1.QueryVoteRequest) (*v1beta1.QueryVoteResponse, error) {
-	resp, err := q.keeper.Vote(ctx, &v1.QueryVoteRequest{
+	resp, err := q.qs.Vote(ctx, &v1.QueryVoteRequest{
 		ProposalId: req.ProposalId,
 		Voter:      req.Voter,
 	})
@@ -371,7 +346,7 @@ func (q legacyQueryServer) Vote(ctx context.Context, req *v1beta1.QueryVoteReque
 }
 
 func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesRequest) (*v1beta1.QueryVotesResponse, error) {
-	resp, err := q.keeper.Votes(ctx, &v1.QueryVotesRequest{
+	resp, err := q.qs.Votes(ctx, &v1.QueryVotesRequest{
 		ProposalId: req.ProposalId,
 		Pagination: req.Pagination,
 	})
@@ -395,7 +370,7 @@ func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesReq
 
 //nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
-	resp, err := q.keeper.Params(ctx, &v1.QueryParamsRequest{
+	resp, err := q.qs.Params(ctx, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
 	})
 	if err != nil {
@@ -434,7 +409,7 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 }
 
 func (q legacyQueryServer) Deposit(ctx context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {
-	resp, err := q.keeper.Deposit(ctx, &v1.QueryDepositRequest{
+	resp, err := q.qs.Deposit(ctx, &v1.QueryDepositRequest{
 		ProposalId: req.ProposalId,
 		Depositor:  req.Depositor,
 	})
@@ -447,7 +422,7 @@ func (q legacyQueryServer) Deposit(ctx context.Context, req *v1beta1.QueryDeposi
 }
 
 func (q legacyQueryServer) Deposits(ctx context.Context, req *v1beta1.QueryDepositsRequest) (*v1beta1.QueryDepositsResponse, error) {
-	resp, err := q.keeper.Deposits(ctx, &v1.QueryDepositsRequest{
+	resp, err := q.qs.Deposits(ctx, &v1.QueryDepositsRequest{
 		ProposalId: req.ProposalId,
 		Pagination: req.Pagination,
 	})
@@ -463,7 +438,7 @@ func (q legacyQueryServer) Deposits(ctx context.Context, req *v1beta1.QueryDepos
 }
 
 func (q legacyQueryServer) TallyResult(ctx context.Context, req *v1beta1.QueryTallyResultRequest) (*v1beta1.QueryTallyResultResponse, error) {
-	resp, err := q.keeper.TallyResult(ctx, &v1.QueryTallyResultRequest{
+	resp, err := q.qs.TallyResult(ctx, &v1.QueryTallyResultRequest{
 		ProposalId: req.ProposalId,
 	})
 	if err != nil {

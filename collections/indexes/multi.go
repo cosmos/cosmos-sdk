@@ -82,9 +82,9 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ra
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],
-	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) (stop bool, err error),
 ) error {
-	return m.refKeys.Walk(ctx, ranger, func(key collections.Pair[ReferenceKey, PrimaryKey]) bool {
+	return m.refKeys.Walk(ctx, ranger, func(key collections.Pair[ReferenceKey, PrimaryKey]) (bool, error) {
 		return walkFunc(key.K1(), key.K2())
 	})
 }

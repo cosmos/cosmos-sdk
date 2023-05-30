@@ -16,7 +16,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 
-	store "cosmossdk.io/store/types"
+	store "cosmossdk.io/core/store"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"
@@ -144,7 +144,7 @@ func (am AppModule) Name() string {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, am.keeper)
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(&am.keeper))
 	return nil
 }
 
@@ -171,9 +171,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	am.keeper.BeginBlocker(ctx)
-
-	return nil
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions
@@ -185,7 +183,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
+	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
@@ -206,8 +204,8 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Key *store.KVStoreKey
-	Cdc codec.Codec
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
@@ -224,7 +222,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
 	m := NewAppModule(*k)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

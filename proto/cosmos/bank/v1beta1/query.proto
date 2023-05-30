@@ -146,7 +146,7 @@ message QueryAllBalancesRequest {
 
   // resolve_denom is the flag to resolve the denom into a human-readable form from the metadata.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   bool resolve_denom = 3;
 }
 

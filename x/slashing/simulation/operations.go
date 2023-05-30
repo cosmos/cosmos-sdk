@@ -84,9 +84,9 @@ func SimulateMsgUnjail(
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, err
 		}
-		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
-		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, nil // skip
+		info, err := k.GetValidatorSigningInfo(ctx, consAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}
 
 		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
@@ -130,23 +130,23 @@ func SimulateMsgUnjail(
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			if res != nil && err == nil {
 				if info.Tombstoned {
-					return simtypes.NewOperationMsg(msg, true, "", nil), nil, errors.New("validator should not have been unjailed if validator tombstoned")
+					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
 				}
 				if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-					return simtypes.NewOperationMsg(msg, true, "", nil), nil, errors.New("validator unjailed while validator still in jail period")
+					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
 				}
 				if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-					return simtypes.NewOperationMsg(msg, true, "", nil), nil, errors.New("validator unjailed even though self-delegation too low")
+					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed even though self-delegation too low")
 				}
 			}
 			// msg failed as expected
-			return simtypes.NewOperationMsg(msg, false, "", nil), nil, nil
+			return simtypes.NewOperationMsg(msg, false, ""), nil, nil
 		}
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, errors.New(res.Log)
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

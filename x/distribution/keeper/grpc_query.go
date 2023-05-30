@@ -28,7 +28,7 @@ func NewQuerier(keeper Keeper) Querier {
 
 // Params queries params of distribution module
 func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.GetParams(c)
+	params, err := k.Keeper.Params.Get(c)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +320,7 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := k.authKeeper.StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -335,10 +335,10 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	pool, err := k.GetFeePoolCommunityCoins(c)
+	pool, err := k.FeePool.Get(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
+	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
 }

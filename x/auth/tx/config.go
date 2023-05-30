@@ -19,12 +19,13 @@ import (
 )
 
 type config struct {
-	handler     *txsigning.HandlerMap
-	decoder     sdk.TxDecoder
-	encoder     sdk.TxEncoder
-	jsonDecoder sdk.TxDecoder
-	jsonEncoder sdk.TxEncoder
-	protoCodec  codec.ProtoCodecMarshaler
+	handler        *txsigning.HandlerMap
+	decoder        sdk.TxDecoder
+	encoder        sdk.TxEncoder
+	jsonDecoder    sdk.TxDecoder
+	jsonEncoder    sdk.TxEncoder
+	protoCodec     codec.ProtoCodecMarshaler
+	signingContext *txsigning.Context
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -119,6 +120,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			panic(err)
 		}
 	}
+	txConfig.signingContext = opts.SigningContext
 
 	lenSignModes := len(configOptions.EnabledSignModes)
 	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
@@ -136,11 +138,9 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 				panic(err)
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			aminoJSONEncoder := aminojson.NewAminoJSON()
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
-				Encoder:      &aminoJSONEncoder,
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
@@ -196,4 +196,8 @@ func (g config) TxJSONEncoder() sdk.TxEncoder {
 
 func (g config) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
+}
+
+func (g config) SigningContext() *txsigning.Context {
+	return g.signingContext
 }

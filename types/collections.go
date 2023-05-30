@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"time"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
@@ -28,6 +31,12 @@ var (
 
 	// IntValue represents a collections.ValueCodec to work with Int.
 	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
+
+	// TimeKey represents a collections.KeyCodec to work with time.Time
+	// Deprecated: exists only for state compatibility reasons, should not
+	// be used for new storage keys using time. Please use the time KeyCodec
+	// provided in the collections package.
+	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
 )
 
 type addressUnion interface {
@@ -156,3 +165,46 @@ func (i intValueCodec) Stringify(value Int) string {
 func (i intValueCodec) ValueType() string {
 	return "math.Int"
 }
+
+type timeKeyCodec struct{}
+
+func (timeKeyCodec) Encode(buffer []byte, key time.Time) (int, error) {
+	return copy(buffer, FormatTimeBytes(key)), nil
+}
+
+var timeSize = len(FormatTimeBytes(time.Time{}))
+
+func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
+	if len(buffer) != timeSize {
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer buffer size")
+	}
+	t, err := ParseTimeBytes(buffer)
+	if err != nil {
+		return 0, time.Time{}, err
+	}
+	return timeSize, t, nil
+}
+
+func (timeKeyCodec) Size(key time.Time) int { return timeSize }
+
+func (timeKeyCodec) EncodeJSON(value time.Time) ([]byte, error) { return value.MarshalJSON() }
+
+func (timeKeyCodec) DecodeJSON(b []byte) (time.Time, error) {
+	t := time.Time{}
+	err := t.UnmarshalJSON(b)
+	return t, err
+}
+
+func (timeKeyCodec) Stringify(key time.Time) string { return key.String() }
+func (timeKeyCodec) KeyType() string                { return "sdk/time.Time" }
+func (t timeKeyCodec) EncodeNonTerminal(buffer []byte, key time.Time) (int, error) {
+	return t.Encode(buffer, key)
+}
+
+func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
+	if len(buffer) < timeSize {
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer size, wanted: %d at least, got: %d", timeSize, len(buffer))
+	}
+	return t.Decode(buffer[:timeSize])
+}
+func (t timeKeyCodec) SizeNonTerminal(key time.Time) int { return t.Size(key) }

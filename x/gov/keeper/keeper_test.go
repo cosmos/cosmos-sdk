@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -56,7 +57,7 @@ func (suite *KeeperTestSuite) reset() {
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(*govKeeper))
+	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(govKeeper))
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
@@ -76,20 +77,17 @@ func (suite *KeeperTestSuite) reset() {
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
 	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdkmath.NewInt(30000000))
 
-	for _, addr := range suite.addrs {
-		suite.acctKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		suite.acctKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-	}
+	suite.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
 	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
 
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
 	ac := address.NewBech32Codec("cosmos")
 	addrBz, err := ac.StringToBytes(address1)
 	require.NoError(t, err)
-	authKeeper.EXPECT().StringToBytes(address1).Return(addrBz, nil).AnyTimes()
-	authKeeper.EXPECT().BytesToString(addrBz).Return(address1, nil).AnyTimes()
 
 	tp := TestProposal
 	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
@@ -114,33 +112,25 @@ func TestProposalQueues(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
 	addrBz, err := ac.StringToBytes(address1)
 	require.NoError(t, err)
-	authKeeper.EXPECT().StringToBytes(address1).Return(addrBz, nil).AnyTimes()
-	authKeeper.EXPECT().BytesToString(addrBz).Return(address1, nil).AnyTimes()
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// create test proposals
 	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
 
-	inactiveIterator, _ := govKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
-	require.True(t, inactiveIterator.Valid())
+	has, err := govKeeper.InactiveProposalsQueue.Has(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id))
+	require.NoError(t, err)
+	require.True(t, has)
 
-	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
-	require.Equal(t, proposalID, proposal.Id)
-	inactiveIterator.Close()
-
-	govKeeper.ActivateVotingPeriod(ctx, proposal)
+	require.NoError(t, govKeeper.ActivateVotingPeriod(ctx, proposal))
 
 	proposal, err = govKeeper.Proposals.Get(ctx, proposal.Id)
 	require.Nil(t, err)
 
-	activeIterator, _ := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
-	require.True(t, activeIterator.Valid())
-
-	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())
-	require.Equal(t, proposalID, proposal.Id)
-
-	activeIterator.Close()
+	has, err = govKeeper.ActiveProposalsQueue.Has(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+	require.NoError(t, err)
+	require.True(t, has)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

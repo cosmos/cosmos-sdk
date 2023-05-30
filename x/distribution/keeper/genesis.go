@@ -11,22 +11,28 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	k.SetFeePool(ctx, data.FeePool)
+	err := k.FeePool.Set(ctx, data.FeePool)
+	if err != nil {
+		panic(err)
+	}
 
-	if err := k.SetParams(ctx, data.Params); err != nil {
+	if err := k.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := k.authKeeper.StringToBytes(dwi.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		withdrawAddress, err := k.authKeeper.StringToBytes(dwi.WithdrawAddress)
+		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+		err = k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	var previousProposer sdk.ConsAddress
@@ -45,7 +51,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		if err != nil {
+			panic(err)
+		}
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
@@ -53,40 +62,55 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
 		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
 		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		err = k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
 		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := k.authKeeper.StringToBytes(del.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
 		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+		err = k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
@@ -109,12 +133,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

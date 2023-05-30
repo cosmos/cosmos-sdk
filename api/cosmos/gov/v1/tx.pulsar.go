@@ -7038,7 +7038,7 @@ type MsgSubmitProposal struct {
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 	// expedided defines if the proposal is expedited or not
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 
@@ -7568,7 +7568,7 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgCancelProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7615,7 +7615,7 @@ func (x *MsgCancelProposal) GetProposer() string {
 // MsgCancelProposalResponse defines the response structure for executing a
 // MsgCancelProposal message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgCancelProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -136,7 +136,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
-				gogoMsg, ok := gogo.(types.Msg)
+				gogoMsg, ok := gogo.(legacytx.LegacyMsg)
 				if !ok {
 					// not signable
 					return
@@ -450,7 +450,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 
 			// test amino json signer handler equivalence
-			msg, ok := tc.gogo.(types.Msg)
+			msg, ok := tc.gogo.(legacytx.LegacyMsg)
 			if !ok {
 				// not signable
 				return

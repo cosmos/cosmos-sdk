@@ -1,8 +1,11 @@
 package tx
 
 import (
+	"context"
 	"testing"
 
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +16,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -21,7 +25,7 @@ var (
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
-	msg     = testdata.NewTestMsg(addr1, addr2)
+	msg     = banktypes.NewMsgSend(addr1, addr2, coins)
 	memo    = "foo"
 	timeout = uint64(10)
 )
@@ -138,6 +142,87 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	tx = bldr.GetTx()
 	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
+}
+
+func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
+	var (
+		chainID = "test-chain"
+		accNum  uint64
+		seqNum  uint64 = 7
+		tip            = &tx.Tip{Tipper: addr1.String(), Amount: coins}
+	)
+
+	modeHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
+	mode, _ := signing.APISignModeToInternal(modeHandler.Mode())
+
+	testcases := []struct {
+		name           string
+		signer         string
+		malleate       func(*wrapper)
+		expectedSignBz []byte
+	}{
+		{
+			"signer which is also fee payer (no tips)", addr1.String(),
+			func(w *wrapper) {},
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, nil),
+		},
+		{
+			"signer which is also fee payer (with tips)", addr2.String(),
+			func(w *wrapper) { w.SetTip(tip) },
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, tip),
+		},
+		{
+			"explicit fee payer", addr1.String(),
+			func(w *wrapper) { w.SetFeePayer(addr2) },
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo, nil),
+		},
+		{
+			"explicit fee granter", addr1.String(),
+			func(w *wrapper) { w.SetFeeGranter(addr2) },
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
+		},
+		{
+			"explicit fee payer and fee granter", addr1.String(),
+			func(w *wrapper) {
+				w.SetFeePayer(addr2)
+				w.SetFeeGranter(addr2)
+			},
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
+		},
+		{
+			"signer which is also tipper", addr1.String(),
+			func(w *wrapper) { w.SetTip(tip) },
+			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{}, []sdk.Msg{msg}, memo, tip),
+		},
+	}
+
+	handler := signModeLegacyAminoJSONHandler{}
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			bldr := newBuilder(nil)
+			buildTx(t, bldr)
+			tx := bldr.GetTx()
+			tc.malleate(bldr)
+
+			signingData := signing.SignerData{
+				Address:       tc.signer,
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      seqNum,
+				PubKey:        pubkey1,
+			}
+			signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+			require.NoError(t, err)
+
+			// compare with new signing
+			newSignBz, err := signing.GetSignBytesAdapter(context.Background(), txsigning.NewHandlerMap(modeHandler), mode, signingData, tx)
+			require.NoError(t, err)
+
+			require.Equal(t, string(tc.expectedSignBz), string(signBz))
+			require.Equal(t, string(tc.expectedSignBz), string(newSignBz))
+		})
+	}
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {

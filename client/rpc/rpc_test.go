@@ -56,7 +56,6 @@ func (s *IntegrationTestSuite) TestStatusCommand() {
 }
 
 func (s *IntegrationTestSuite) TestCLIQueryConn() {
-	s.T().Skip("data race in comet is causing this to fail")
 	var header metadata.MD
 
 	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)

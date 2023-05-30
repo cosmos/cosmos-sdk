@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -239,6 +240,10 @@ func TestSetLoader(t *testing.T) {
 		err := rs.LoadLatestVersion()
 		require.Nil(t, err)
 		require.Equal(t, int64(0), rs.LastCommitID().Version)
+
+		rs.SetHeaderInfo(&header.Info{
+			Height: 1,
+		})
 
 		// write some data in substore
 		kv, _ := rs.GetStore(key).(storetypes.KVStore)

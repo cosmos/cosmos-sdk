@@ -19,22 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	ABCIListenerService_ListenBeginBlock_FullMethodName = "/cosmos.store.streaming.abci.ABCIListenerService/ListenBeginBlock"
-	ABCIListenerService_ListenEndBlock_FullMethodName   = "/cosmos.store.streaming.abci.ABCIListenerService/ListenEndBlock"
-	ABCIListenerService_ListenDeliverTx_FullMethodName  = "/cosmos.store.streaming.abci.ABCIListenerService/ListenDeliverTx"
-	ABCIListenerService_ListenCommit_FullMethodName     = "/cosmos.store.streaming.abci.ABCIListenerService/ListenCommit"
+	ABCIListenerService_ListenFinalizeBlock_FullMethodName = "/cosmos.store.streaming.abci.ABCIListenerService/ListenFinalizeBlock"
+	ABCIListenerService_ListenCommit_FullMethodName        = "/cosmos.store.streaming.abci.ABCIListenerService/ListenCommit"
 )
 
 // ABCIListenerServiceClient is the client API for ABCIListenerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ABCIListenerServiceClient interface {
-	// ListenBeginBlock is the corresponding endpoint for ABCIListener.ListenBeginBlock
-	ListenBeginBlock(ctx context.Context, in *ListenBeginBlockRequest, opts ...grpc.CallOption) (*ListenBeginBlockResponse, error)
-	// ListenEndBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
-	ListenEndBlock(ctx context.Context, in *ListenEndBlockRequest, opts ...grpc.CallOption) (*ListenEndBlockResponse, error)
-	// ListenDeliverTx is the corresponding endpoint for ABCIListener.ListenDeliverTx
-	ListenDeliverTx(ctx context.Context, in *ListenDeliverTxRequest, opts ...grpc.CallOption) (*ListenDeliverTxResponse, error)
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
+	ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(ctx context.Context, in *ListenCommitRequest, opts ...grpc.CallOption) (*ListenCommitResponse, error)
 }
@@ -47,27 +41,9 @@ func NewABCIListenerServiceClient(cc grpc.ClientConnInterface) ABCIListenerServi
 	return &aBCIListenerServiceClient{cc}
 }
 
-func (c *aBCIListenerServiceClient) ListenBeginBlock(ctx context.Context, in *ListenBeginBlockRequest, opts ...grpc.CallOption) (*ListenBeginBlockResponse, error) {
-	out := new(ListenBeginBlockResponse)
-	err := c.cc.Invoke(ctx, ABCIListenerService_ListenBeginBlock_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aBCIListenerServiceClient) ListenEndBlock(ctx context.Context, in *ListenEndBlockRequest, opts ...grpc.CallOption) (*ListenEndBlockResponse, error) {
-	out := new(ListenEndBlockResponse)
-	err := c.cc.Invoke(ctx, ABCIListenerService_ListenEndBlock_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aBCIListenerServiceClient) ListenDeliverTx(ctx context.Context, in *ListenDeliverTxRequest, opts ...grpc.CallOption) (*ListenDeliverTxResponse, error) {
-	out := new(ListenDeliverTxResponse)
-	err := c.cc.Invoke(ctx, ABCIListenerService_ListenDeliverTx_FullMethodName, in, out, opts...)
+func (c *aBCIListenerServiceClient) ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error) {
+	out := new(ListenFinalizeBlockResponse)
+	err := c.cc.Invoke(ctx, ABCIListenerService_ListenFinalizeBlock_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +63,8 @@ func (c *aBCIListenerServiceClient) ListenCommit(ctx context.Context, in *Listen
 // All implementations must embed UnimplementedABCIListenerServiceServer
 // for forward compatibility
 type ABCIListenerServiceServer interface {
-	// ListenBeginBlock is the corresponding endpoint for ABCIListener.ListenBeginBlock
-	ListenBeginBlock(context.Context, *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error)
-	// ListenEndBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
-	ListenEndBlock(context.Context, *ListenEndBlockRequest) (*ListenEndBlockResponse, error)
-	// ListenDeliverTx is the corresponding endpoint for ABCIListener.ListenDeliverTx
-	ListenDeliverTx(context.Context, *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error)
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
+	ListenFinalizeBlock(context.Context, *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(context.Context, *ListenCommitRequest) (*ListenCommitResponse, error)
 	mustEmbedUnimplementedABCIListenerServiceServer()
@@ -102,14 +74,8 @@ type ABCIListenerServiceServer interface {
 type UnimplementedABCIListenerServiceServer struct {
 }
 
-func (UnimplementedABCIListenerServiceServer) ListenBeginBlock(context.Context, *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenBeginBlock not implemented")
-}
-func (UnimplementedABCIListenerServiceServer) ListenEndBlock(context.Context, *ListenEndBlockRequest) (*ListenEndBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenEndBlock not implemented")
-}
-func (UnimplementedABCIListenerServiceServer) ListenDeliverTx(context.Context, *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenDeliverTx not implemented")
+func (UnimplementedABCIListenerServiceServer) ListenFinalizeBlock(context.Context, *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListenFinalizeBlock not implemented")
 }
 func (UnimplementedABCIListenerServiceServer) ListenCommit(context.Context, *ListenCommitRequest) (*ListenCommitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListenCommit not implemented")
@@ -127,56 +93,20 @@ func RegisterABCIListenerServiceServer(s grpc.ServiceRegistrar, srv ABCIListener
 	s.RegisterService(&ABCIListenerService_ServiceDesc, srv)
 }
 
-func _ABCIListenerService_ListenBeginBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenBeginBlockRequest)
+func _ABCIListenerService_ListenFinalizeBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListenFinalizeBlockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenBeginBlock(ctx, in)
+		return srv.(ABCIListenerServiceServer).ListenFinalizeBlock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ABCIListenerService_ListenBeginBlock_FullMethodName,
+		FullMethod: ABCIListenerService_ListenFinalizeBlock_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenBeginBlock(ctx, req.(*ListenBeginBlockRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ABCIListenerService_ListenEndBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenEndBlockRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenEndBlock(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ABCIListenerService_ListenEndBlock_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenEndBlock(ctx, req.(*ListenEndBlockRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ABCIListenerService_ListenDeliverTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenDeliverTxRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenDeliverTx(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ABCIListenerService_ListenDeliverTx_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenDeliverTx(ctx, req.(*ListenDeliverTxRequest))
+		return srv.(ABCIListenerServiceServer).ListenFinalizeBlock(ctx, req.(*ListenFinalizeBlockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -207,16 +137,8 @@ var ABCIListenerService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ABCIListenerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListenBeginBlock",
-			Handler:    _ABCIListenerService_ListenBeginBlock_Handler,
-		},
-		{
-			MethodName: "ListenEndBlock",
-			Handler:    _ABCIListenerService_ListenEndBlock_Handler,
-		},
-		{
-			MethodName: "ListenDeliverTx",
-			Handler:    _ABCIListenerService_ListenDeliverTx_Handler,
+			MethodName: "ListenFinalizeBlock",
+			Handler:    _ABCIListenerService_ListenFinalizeBlock_Handler,
 		},
 		{
 			MethodName: "ListenCommit",

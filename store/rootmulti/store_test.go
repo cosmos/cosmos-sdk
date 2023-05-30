@@ -457,37 +457,39 @@ func TestMultiStoreQuery(t *testing.T) {
 
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(query)
+	qres := multi.Query(&query)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(query)
+	qres = multi.Query(&query)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres = multi.Query(query)
+	qres = multi.Query(&query)
 	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
 	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres = multi.Query(query)
+	qres = multi.Query(&query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres = multi.Query(query)
+	qres = multi.Query(&query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
+	// Since we are using the request as a reference, the path will be modified.
 	query.Data = k2
-	qres = multi.Query(query)
+	query.Path = "/store2/key"
+	qres = multi.Query(&query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)
 }

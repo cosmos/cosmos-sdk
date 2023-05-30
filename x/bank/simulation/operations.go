@@ -177,7 +177,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -385,7 +385,7 @@ func sendMsgMultiSend(
 	if err != nil {
 		return err
 	}
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

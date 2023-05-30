@@ -27,6 +27,8 @@ require (
 	gotest.tools/v3 v3.4.0
 )
 
+require cosmossdk.io/core v0.7.0
+
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.1
+	cosmossdk.io/collections v0.1.0
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
@@ -25,7 +26,6 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/x/tx v0.6.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -48,7 +48,6 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v0.21.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -155,8 +154,8 @@ replace (
 	// TODO: remove me when collections v0.2.0 is released
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )
 

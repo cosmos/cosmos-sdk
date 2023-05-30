@@ -227,7 +227,7 @@ func TestHandleNewValidator(t *testing.T) {
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
 
-	_, err := f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	require.NoError(t, err)
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.ctx)

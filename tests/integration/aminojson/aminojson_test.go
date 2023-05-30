@@ -36,6 +36,7 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -94,7 +95,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
@@ -203,7 +204,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{})
 
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 

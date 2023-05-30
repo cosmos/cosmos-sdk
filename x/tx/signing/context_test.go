@@ -145,6 +145,28 @@ func TestGetSigners(t *testing.T) {
 	}
 }
 
+func TestDefineCustomGetSigners(t *testing.T) {
+	customMsg := &testpb.CustomSignedMessage{}
+	signers := [][]byte{[]byte("foo")}
+
+	context, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	})
+	require.NoError(t, err)
+
+	_, err = context.GetSigners(customMsg)
+	// before calling DefineCustomGetSigners, we should get an error
+	require.ErrorContains(t, err, "need custom signers function")
+	DefineCustomGetSigners(context, func(msg *testpb.CustomSignedMessage) ([][]byte, error) {
+		return signers, nil
+	})
+	// after calling DefineCustomGetSigners, we should get the signers
+	gotSigners, err := context.GetSigners(customMsg)
+	require.NoError(t, err)
+	require.Equal(t, signers, gotSigners)
+}
+
 type dummyAddressCodec struct{}
 
 func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {

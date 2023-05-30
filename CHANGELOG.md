@@ -242,6 +242,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove: types all the key related functions
 * (x/crisis) [#16328](https://github.com/cosmos/cosmos-sdk/pull/16328) Use collections for state management:
     * Removed: keeper `GetConstantFee`, `SetConstantFee` 
+* (x/mint) [#16329](https://github.com/cosmos/cosmos-sdk/pull/16329) Use collections for state management:
+  * Removed: keeper `GetParams`, `SetParams`, `GetMinter`, `SetMinter`.
 
 ### Client Breaking Changes
 

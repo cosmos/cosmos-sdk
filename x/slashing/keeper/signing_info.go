@@ -95,7 +95,7 @@ func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	}
 
 	if signInfo.Tombstoned {
-		types.ErrValidatorTombstoned.Wrap("cannot tombstone validator that is already tombstoned")
+		return types.ErrValidatorTombstoned.Wrap("cannot tombstone validator that is already tombstoned")
 	}
 
 	signInfo.Tombstoned = true

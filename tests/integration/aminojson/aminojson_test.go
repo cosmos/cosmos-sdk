@@ -8,6 +8,7 @@ import (
 	"time"
 
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -101,7 +102,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
-		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
+		desc := tt.Pulsar.ProtoReflect().Descriptor()
+		name := string(desc.FullName())
 		t.Run(name, func(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			fmt.Printf("testing %s\n", tt.Pulsar.ProtoReflect().Descriptor().FullName())
@@ -136,8 +138,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
-				gogoMsg, ok := gogo.(legacytx.LegacyMsg)
-				if !ok {
+				if !proto.HasExtension(desc.Options(), msgv1.E_Signer) {
 					// not signable
 					return
 				}
@@ -167,7 +168,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 
 				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
-				require.NoError(t, txBuilder.SetMsgs([]types.Msg{gogoMsg}...))
+				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
 				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
 				txBuilder.SetTip(&txtypes.Tip{

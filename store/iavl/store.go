@@ -52,10 +52,7 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion}, disableFastNode, logger)
-	if err != nil {
-		return nil, err
-	}
+	tree := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion}, disableFastNode, logger)
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {
@@ -139,24 +136,14 @@ func (st *Store) Commit() types.CommitID {
 
 // WorkingHash returns the hash of the current working tree.
 func (st *Store) WorkingHash() []byte {
-	hash, err := st.tree.WorkingHash()
-	if err != nil {
-		panic(fmt.Errorf("failed to retrieve working hash: %w", err))
-	}
-
-	return hash
+	return st.tree.WorkingHash()
 }
 
 // LastCommitID implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
-	hash, err := st.tree.Hash()
-	if err != nil {
-		panic(err)
-	}
-
 	return types.CommitID{
 		Version: st.tree.Version(),
-		Hash:    hash,
+		Hash:    st.tree.Hash(),
 	}
 }
 

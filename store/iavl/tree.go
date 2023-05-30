@@ -24,8 +24,8 @@ type (
 		Remove(key []byte) ([]byte, bool, error)
 		SaveVersion() ([]byte, int64, error)
 		Version() int64
-		Hash() ([]byte, error)
-		WorkingHash() ([]byte, error)
+		Hash() []byte
+		WorkingHash() []byte
 		VersionExists(version int64) bool
 		DeleteVersionsTo(version int64) error
 		GetVersioned(key []byte, version int64) ([]byte, error)
@@ -98,7 +98,7 @@ func (it *immutableTree) LazyLoadVersionForOverwriting(targetVersion int64) (int
 	panic("cannot call 'LazyLoadVersionForOverwriting' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) WorkingHash() ([]byte, error) {
+func (it *immutableTree) WorkingHash() []byte {
 	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
 }
 

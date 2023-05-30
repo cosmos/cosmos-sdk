@@ -71,14 +71,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 	sdkConfig := sdk.GetConfig()
 
-	// append SIGN_MODE_TEXTUAL to the default sign modes only if bank keeper is available
-	enabledSignModes := tx.DefaultSignModes
-	if in.BankKeeper != nil {
-		enabledSignModes = append(enabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
-	}
-
 	txConfigOptions := tx.ConfigOptions{
-		EnabledSignModes: enabledSignModes,
+		EnabledSignModes: tx.DefaultSignModes,
 		SigningOptions: &txsigning.Options{
 			FileResolver: in.ProtoFileResolver,
 			// From static config? But this is already in auth config.
@@ -88,9 +82,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
 			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
 		},
-		CustomSignModes:            customSignModeHandlers,
-		TextualCoinMetadataQueryFn: NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper),
+		CustomSignModes: customSignModeHandlers,
 	}
+
+	// enable SIGN_MODE_TEXTUAL only if bank keeper is available
+	if in.MetadataBankKeeper != nil {
+		txConfigOptions.EnabledSignModes = append(txConfigOptions.EnabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
+	}
+
 	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
 
 	baseAppOption := func(app *baseapp.BaseApp) {

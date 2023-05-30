@@ -84,8 +84,9 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/gov`
 * `x/mint`
 * `x/nft`
+* `x/slashing`
 
-User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
+Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -105,6 +106,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 * `x/distribution`
 * `x/evidence`
 * `x/gov`
+* `x/slashing`
 
 **Users using depinject do not need any changes, this is automatically done for them.**
 

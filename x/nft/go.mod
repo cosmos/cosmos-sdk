@@ -155,6 +155,7 @@ replace (
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/store => ../../store
 	// TODO remove once https://github.com/cosmos/cosmos-sdk/pull/16155 is merged
 	github.com/cosmos/cosmos-sdk => ../..
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0

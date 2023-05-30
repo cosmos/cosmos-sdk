@@ -164,6 +164,7 @@ replace (
 	cosmossdk.io/core => ./core
 	// TODO: remove after 0.7.0 release
 	cosmossdk.io/x/tx => ./x/tx
+	cosmossdk.io/store => ./store
 )
 
 // Below are the long-lived replace of the Cosmos SDK

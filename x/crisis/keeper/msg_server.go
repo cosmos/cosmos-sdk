@@ -25,7 +25,7 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	params, err := k.GetConstantFee(ctx)
+	params, err := k.ConstantFee.Get(goCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if err := k.SetConstantFee(sdkCtx, msg.ConstantFee); err != nil {
+	if err := k.ConstantFee.Set(sdkCtx, msg.ConstantFee); err != nil {
 		return nil, err
 	}
 

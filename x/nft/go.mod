@@ -145,7 +145,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v0.5.7 // indirect
+	pgregory.net/rapid v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
@@ -155,6 +155,7 @@ replace (
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/store => ../../store
 	// TODO remove once https://github.com/cosmos/cosmos-sdk/pull/16155 is merged
 	github.com/cosmos/cosmos-sdk => ../..
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0

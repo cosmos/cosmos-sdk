@@ -21,6 +21,9 @@ Flags:
       --hidden-bool                                                          
       --i32 int32                                                            
       --i64 int                                                              
+      --map-string-coin map[string]cosmos.base.v1beta1.Coin                  
+      --map-string-string stringToString                                      (default [])
+      --map-string-uint32 stringToUint32                                     
       --node string                                                          <host>:<port> to CometBFT RPC interface for this chain (default "tcp://localhost:26657")
   -o, --output string                                                        Output format (text|json) (default "text")
       --page-count-total                                                     

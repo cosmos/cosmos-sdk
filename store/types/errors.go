@@ -26,16 +26,3 @@ var (
 	// invalid data.
 	ErrInvalidRequest = errors.Register(StoreCodespace, 7, "invalid request")
 )
-
-// ABCI QueryResult
-
-// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func QueryResult(err error, debug bool) ResponseQuery {
-	space, code, log := errors.ABCIInfo(err, debug)
-	return ResponseQuery{
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-	}
-}

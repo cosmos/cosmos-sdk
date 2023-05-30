@@ -123,7 +123,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	pgregory.net/rapid v0.5.7 // indirect
+	pgregory.net/rapid v0.6.0 // indirect
 )
 
 // TODO: remove after 0.7.0 release

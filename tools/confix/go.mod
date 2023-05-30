@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230524212735-6cabb6aa5741
-	github.com/creachadair/atomicfile v0.3.0
+	github.com/creachadair/atomicfile v0.3.1
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
@@ -147,7 +147,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v0.5.7 // indirect
+	pgregory.net/rapid v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
@@ -160,5 +160,6 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../
 )

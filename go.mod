@@ -61,7 +61,7 @@ require (
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
-	pgregory.net/rapid v0.5.7
+	pgregory.net/rapid v0.6.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -162,6 +162,7 @@ replace (
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
+	cosmossdk.io/store => ./store
 	// TODO: remove after 0.7.0 release
 	cosmossdk.io/x/tx => ./x/tx
 )

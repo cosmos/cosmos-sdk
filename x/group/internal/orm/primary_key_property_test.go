@@ -38,7 +38,6 @@ func testPrimaryKeyMachine(t *rapid.T) {
 	state := make(map[string]*testdata.TableModel)
 
 	t.Run(map[string]func(*rapid.T){
-
 		// Create is one of the model commands. It adds an object to the table, creating
 		// an error if it already exists.
 		"Create": func(t *rapid.T) {
@@ -151,7 +150,6 @@ func testPrimaryKeyMachine(t *rapid.T) {
 			}
 		},
 	})
-
 }
 
 // stateKeys gets all the keys in the model map

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -65,11 +66,20 @@ func printAndValidateSigs(
 ) bool {
 	sigTx := tx.(authsigning.SigVerifiableTx)
 	signModeHandler := clientCtx.TxConfig.SignModeHandler()
+	addrCdc := clientCtx.TxConfig.SigningContext().AddressCodec()
 
 	cmd.Println("Signers:")
-	signers := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	for i, signer := range signers {
-		cmd.Printf("  %v: %v\n", i, signer.String())
+		signerStr, err := addrCdc.BytesToString(signer)
+		if err != nil {
+			panic(err)
+		}
+		cmd.Printf("  %v: %v\n", i, signerStr)
 	}
 
 	success := true
@@ -93,7 +103,7 @@ func printAndValidateSigs(
 			sigSanity      = "OK"
 		)
 
-		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+		if i >= len(signers) || !bytes.Equal(sigAddr, signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}

@@ -147,7 +147,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		Data: b,
 		Path: delegatorDelegationPath,
 	}
-	resp, err := queryFn(ctx, req)
+	resp, err := queryFn(ctx, &req)
 	if err != nil {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.NotFound {
@@ -191,7 +191,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 		Data: b,
 		Path: delegatorUnbondingDelegationsPath,
 	}
-	resp, err := queryFn(ctx, req)
+	resp, err := queryFn(ctx, &req)
 	if err != nil && !errors.Is(err, sdkerrors.ErrNotFound) {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.NotFound {
@@ -238,7 +238,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		Data: b,
 		Path: balancesPath,
 	}
-	resp, err := queryFn(ctx, req)
+	resp, err := queryFn(ctx, &req)
 	if err != nil {
 		return nil, fmt.Errorf("bank query error, %w", err)
 	}
@@ -270,7 +270,7 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 		Path: stakingParamsPath,
 	}
 
-	resp, err := queryFn(ctx, req)
+	resp, err := queryFn(ctx, &req)
 	if err != nil {
 		return "", fmt.Errorf("staking query error, %w", err)
 	}

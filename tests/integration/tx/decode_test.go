@@ -23,6 +23,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -101,7 +102,7 @@ func TestDecode(t *testing.T) {
 					Sequence: accSeq,
 				}
 
-				gogoMsg, ok := gogo.(sdk.Msg)
+				gogoMsg, ok := gogo.(legacytx.LegacyMsg)
 				require.True(t, ok)
 
 				err = txBuilder.SetMsgs(gogoMsg)

@@ -701,7 +701,7 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *Store) Query(req *abci.RequestQuery) *abci.ResponseQuery {
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {

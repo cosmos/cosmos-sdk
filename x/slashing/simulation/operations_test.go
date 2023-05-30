@@ -115,8 +115,8 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
-	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
-	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
+	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
+	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -181,7 +181,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)

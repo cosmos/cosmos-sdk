@@ -2,6 +2,8 @@
 
 This document outlines the process for releasing a new version of Cosmos SDK, which involves major release and patch releases as well as maintenance for the major release.
 
+> **Note, the Cosmos SDK went directly from v0.47 to v0.50 and skipped the v0.48 and v0.49 versions.**
+
 ## Major Release Procedure
 
 A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1.0 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
@@ -79,8 +81,8 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.46** is the previous major release and is supported until the release of **0.48.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
-* **0.47** is the last major release and is supported until the release of **0.49.0**.
+* **0.46** is the previous major release and is supported until the release of **0.50.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.47** is the last major release and is supported until the release of **0.51.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
 The SDK team will not backport any bug fixes to releases that are not supported.

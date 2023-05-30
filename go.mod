@@ -178,6 +178,8 @@ replace (
 )
 
 retract (
+	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331
+	v0.46.12
 	// subject to a bug in the group module and gov module migration
 	[v0.46.5, v0.46.6]
 	// subject to the dragonberry vulnerability

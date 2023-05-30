@@ -68,7 +68,7 @@ func Example() {
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
 	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
-	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintKeeper)
+	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintkeeper.NewQueryServerImpl(mintKeeper))
 
 	params := minttypes.DefaultParams()
 	params.BlocksPerYear = 10000
@@ -98,7 +98,7 @@ func Example() {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// we should also check the state of the application
-	got, err := mintKeeper.GetParams(sdkCtx)
+	got, err := mintKeeper.Params.Get(sdkCtx)
 	if err != nil {
 		panic(err)
 	}

@@ -139,8 +139,7 @@ func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, f
 		}
 		ctx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
 
-		err := migrateFn(ctx)
-		if err != nil {
+		if err := migrateFn(ctx); err != nil {
 			return err
 		}
 	}

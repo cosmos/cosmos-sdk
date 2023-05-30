@@ -6,20 +6,21 @@ sidebar_position: 1
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-    * [Installation](#installation)
-    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-    * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-    * [Initialization](#initialization)
-    * [Detecting Upgrades](#detecting-upgrades)
-    * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-    * [Chain Setup](#chain-setup)
-        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-        * [Update App](#update-app)
+- [Cosmovisor](#cosmovisor)
+  - [Design](#design)
+  - [Contributing](#contributing)
+  - [Setup](#setup)
+    - [Installation](#installation)
+    - [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    - [Folder Layout](#folder-layout)
+  - [Usage](#usage)
+    - [Initialization](#initialization)
+    - [Detecting Upgrades](#detecting-upgrades)
+    - [Auto-Download](#auto-download)
+  - [Example: SimApp Upgrade](#example-simapp-upgrade)
+    - [Chain Setup](#chain-setup)
+      - [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+      - [Update App](#update-app)
 
 ## Design
 
@@ -88,7 +89,7 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
 * `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
-* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, Cosmovisor fails the upgrade.
+* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call [`pre-upgrade`](https://docs.cosmos.network/main/building-apps/app-upgrade#pre-upgrade-handling) in the application after exit status of `31`. After the maximum number of retries, Cosmovisor fails the upgrade.
 * `COSMOVISOR_DISABLE_LOGS` (defaults to `false`). If set to true, this will disable Cosmovisor logs (but not the underlying process) completely. This may be useful, for example, when a Cosmovisor subcommand you are executing returns a valid JSON you are then parsing, as logs added by Cosmovisor make this output not a valid JSON.
 
 ### Folder Layout

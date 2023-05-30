@@ -61,7 +61,7 @@ require (
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
-	pgregory.net/rapid v0.5.7
+	pgregory.net/rapid v0.6.0
 	sigs.k8s.io/yaml v1.3.0
 )
 

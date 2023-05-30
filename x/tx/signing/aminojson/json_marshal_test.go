@@ -1,14 +1,19 @@
 package aminojson_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"pgregory.net/rapid"
 
 	"gotest.tools/v3/assert"
@@ -130,4 +135,21 @@ func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	assert.NilError(t, err)
 	err = cdc.UnmarshalJSON(marshaledBytes, message2)
 	assert.NilError(t, err, "%s vs %s", string(marshaledBytes), string(goProtoJSON))
+}
+
+func TestDynamicPb(t *testing.T) {
+	msg := &aminojsonpb.AminoSignFee{}
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	desc, err := protoregistry.GlobalFiles.FindDescriptorByName(proto.MessageName(msg))
+	require.NoError(t, err)
+	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	dynamicMsg := dynamicMsgType.New().Interface()
+
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	dynamicBz, err := encoder.Marshal(dynamicMsg)
+	require.NoError(t, err)
+	fmt.Printf("dynamicBz: %s\n", string(dynamicBz))
+	require.Equal(t, string(bz), string(dynamicBz))
 }

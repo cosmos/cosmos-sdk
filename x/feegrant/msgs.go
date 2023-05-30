@@ -8,15 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	// For amino support.
-	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-
-	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
+	_, _ sdk.Msg                       = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
@@ -41,11 +37,6 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgGrantAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -77,9 +68,4 @@ func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgRevokeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

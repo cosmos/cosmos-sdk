@@ -32,7 +32,7 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context) {
 		// 1. If there is no scheduled upgrade.
 		// 2. If the plan is not ready.
 		// 3. If the plan is ready and skip upgrade height is set for current height.
-		if !found || !plan.ShouldExecute(ctx) || (plan.ShouldExecute(ctx) && k.IsSkipHeight(ctx.BlockHeight())) {
+		if !found || !plan.ShouldExecute(ctx) || (plan.ShouldExecute(ctx) && k.IsSkipHeight(ctx.HeaderInfo().Height)) {
 			lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
@@ -55,7 +55,7 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context) {
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
-		if k.IsSkipHeight(ctx.BlockHeight()) {
+		if k.IsSkipHeight(ctx.HeaderInfo().Height) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			logger.Info(skipUpgradeMsg)
 
@@ -68,7 +68,7 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context) {
 		if !k.HasHandler(plan.Name) {
 			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform or skip
 			// store migrations.
-			err := k.DumpUpgradeInfoToDisk(ctx.BlockHeight(), plan)
+			err := k.DumpUpgradeInfoToDisk(ctx.HeaderInfo().Height, plan)
 			if err != nil {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}

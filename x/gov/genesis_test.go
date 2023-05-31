@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +14,7 @@ import (
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	require.Panics(t, func() {
 		gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
 			Deposits: v1.Deposits{

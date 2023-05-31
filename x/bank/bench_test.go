@@ -7,7 +7,6 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -71,7 +70,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	genAccs := []authtypes.GenesisAccount{&acc}
 	s := createTestSuite(&testing.T{}, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, cmtproto.Header{})
+	ctx := baseApp.NewContext(false)
 
 	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(b, err)
@@ -129,7 +128,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	genAccs := []authtypes.GenesisAccount{&acc}
 	s := createTestSuite(&testing.T{}, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, cmtproto.Header{})
+	ctx := baseApp.NewContext(false)
 
 	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(b, err)

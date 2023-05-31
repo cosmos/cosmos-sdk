@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
@@ -424,7 +423,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(isCheckTx, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx)
 
 	res.App = app
 	return res, ctx

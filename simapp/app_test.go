@@ -188,7 +188,7 @@ func TestRunMigrations(t *testing.T) {
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
-				app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
+				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -222,7 +222,7 @@ func TestRunMigrations(t *testing.T) {
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
@@ -269,7 +269,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	})
 
 	// make sure the upgrade keeper has version map in state
-	ctx := app.NewContext(false, cmtproto.Header{})
+	ctx := app.NewContext(false)
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.ModuleManager.Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {

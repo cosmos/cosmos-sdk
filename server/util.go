@@ -247,10 +247,20 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
-		conf.RPC.PprofListenAddress = "localhost:6060"
-		conf.P2P.RecvRate = 5120000
-		conf.P2P.SendRate = 5120000
-		conf.Consensus.TimeoutCommit = 5 * time.Second
+		defaultCometCfg := cmtcfg.DefaultConfig()
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
+		}
+		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
+			conf.RPC.PprofListenAddress = "localhost:6060"
+		}
+		if conf.P2P.RecvRate == defaultCometCfg.P2P.RecvRate {
+			conf.P2P.RecvRate = 5120000
+		}
+		if conf.P2P.SendRate == defaultCometCfg.P2P.SendRate {
+			conf.P2P.SendRate = 5120000
+		}
+
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:

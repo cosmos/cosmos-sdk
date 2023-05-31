@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.4.1 // indirect
+	cosmossdk.io/api v0.4.2 // indirect
 	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/core v0.7.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
@@ -159,7 +159,7 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

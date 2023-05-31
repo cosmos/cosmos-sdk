@@ -27,7 +27,8 @@ RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest &&
   go install google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} && \
   go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} \
   github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} && \
-  go install cosmossdk.io/orm/cmd/protoc-gen-go-cosmos-orm@v1.0.0-beta.3
+  go install cosmossdk.io/orm/cmd/protoc-gen-go-cosmos-orm@v1.0.0-beta.3 && \
+  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 # install all gogo protobuf binaries
 RUN git clone https://github.com/cosmos/gogoproto.git; \

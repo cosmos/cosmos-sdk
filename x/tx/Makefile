@@ -1,3 +1,3 @@
 codegen:
-	@(cd internal/testpb; buf generate)
+	@(cd internal/testpb; buf mod update; buf generate)
 	@(cd signing/aminojson/internal; make codegen)

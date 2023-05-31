@@ -881,13 +881,16 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.
 			), app.trace)
 	}
 
-	// TODO: Update Query interface method accept a pointer to RequestQuery.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/12272
-	resp := queryable.Query(&req)
+	sdkReq := storetypes.RequestQuery(req)
+	resp, err := queryable.Query(&sdkReq)
+	if err != nil {
+		return sdkerrors.QueryResult(err, app.trace)
+	}
 	resp.Height = req.Height
 
-	return resp
+	abciResp := abci.ResponseQuery(*resp)
+
+	return &abciResp
 }
 
 func handleQueryP2P(app *BaseApp, path []string) *abci.ResponseQuery {

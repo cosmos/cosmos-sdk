@@ -67,7 +67,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 	return vr + " " + dispDenom, err
 }
 
-// formatCoins formats Coins into a value-rendered string, which uses
+// FormatCoins formats Coins into a value-rendered string, which uses
 // `formatCoin` separated by ", " (a comma and a space), and sorted
 // alphabetically by value-rendered denoms. It expects an array of metadata
 // (optionally nil), where each metadata at index `i` MUST match the coin denom

@@ -33,7 +33,7 @@ func TestRollback(t *testing.T) {
 		app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		ctx := app.NewContext(false, header)
+		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
 		app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -43,7 +43,7 @@ func TestRollback(t *testing.T) {
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store := app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
+	store := app.NewContext(true).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value10"), store.Get([]byte("key")))
 
 	// rollback 5 blocks
@@ -53,7 +53,7 @@ func TestRollback(t *testing.T) {
 
 	// recreate app to have clean check state
 	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	store = app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
+	store = app.NewContext(true).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value5"), store.Get([]byte("key")))
 
 	// commit another 5 blocks with different values
@@ -63,7 +63,7 @@ func TestRollback(t *testing.T) {
 			AppHash: app.LastCommitID().Hash,
 		}
 		app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
-		ctx := app.NewContext(false, header)
+		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
 		app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -73,6 +73,6 @@ func TestRollback(t *testing.T) {
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store = app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
+	store = app.NewContext(true).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("VALUE10"), store.Get([]byte("key")))
 }

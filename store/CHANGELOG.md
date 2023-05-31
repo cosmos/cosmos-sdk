@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Api Breaking Changes
 
 * [#16321](https://github.com/cosmos/cosmos-sdk/pull/16321) QueryInterface defines its own request and response types instead of relying on comet/abci & returns an error
+* [#16326](https://github.com/cosmos/cosmos-sdk/pull/16326) Store struct now takes header.Info from core/header instead of relying on comet header type
 
 ## [v0.1.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv0.1.0-alpha.1) - 2023-03-17
 

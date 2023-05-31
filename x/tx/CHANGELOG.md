@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#16044](https://github.com/cosmos/cosmos-sdk/pull/16044): rename aminojson.NewAminoJSON -> aminojson.NewEncoder
 * [#16047](https://github.com/cosmos/cosmos-sdk/pull/16047): aminojson.NewEncoder now takes EncoderOptions as an argument.
+* [#16254](https://github.com/cosmos/cosmos-sdk/pull/16254): aminojson.Encoder.Marshal now sorts all fields like encoding/json.Marshal does, hence no more need for sdk.\*SortJSON.
 
 ## v0.6.2
 

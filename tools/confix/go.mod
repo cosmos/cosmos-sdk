@@ -159,7 +159,7 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

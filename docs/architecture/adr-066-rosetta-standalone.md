@@ -10,10 +10,10 @@ DRAFT
 
 ## Abstract
 
-Rosetta implementation runs on top of cosmos-sdk. The tool should rely on stable cosmos-sdk
-releases and not in experimental features in order to ensure usability and stability.
-Having the tool inside the main cosmos-sdk repo may cause unrequired updates, and makes the
-tool maintainance more complicated.|
+Rosetta implementation runs on top of Cosmos SDK. The tool should rely on stable cosmos-sdk.
+releases and not experimental features in order to ensure usability and stability.
+Having the tool inside the main cosmos-sdk repo may cause unrequired updates, and make the
+tool maintenance more complicated.
 
 ## Context
 
@@ -32,11 +32,11 @@ scope well defined, but also it ensures better maintainability over time.
 ## Alternatives
 
 The 2 altnernatives are:
-- Keep the Project inside Cosmos-sdk: This might be easier to handle from a fully inmersed
-maintainer point of view, who works on different aspects of cosmos-sdk and might want to try
+- **Keep the Project inside Cosmos-sdk**: This might be easier to handle from a fully immersed position.
+maintainer's point of view, who works on different aspects of cosmos-sdk and might want to try
 features into Rosetta.
-- Move the project into another repo: This approach intends to keep the scope well defined,
-ensure maintainability and stability over time.
+- **Move the project into another repo**: This approach intends to keep the scope well defined,
+and to ensure maintainability and stability over time.
 
 ## Decision
 
@@ -63,3 +63,5 @@ The consequence will be a new repo that contains the rosetta tool implemented by
 
 ## Further Discussions
 
+- [Discussion on migrating Rosetta into a standalone repo](https://github.com/cosmos/cosmos-sdk/issues/16276)
+- [Zondax plugin implementation Test](https://github.com/Zondax/cosmos-sdk/pull/653)

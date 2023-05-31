@@ -106,9 +106,3 @@ message Ballot {
   reserved 3;
   repeated WeightedBallotOption options = 4;
 }
-
-message CustomSignedMessage {
-  option (cosmos.msg.v1.custom_signer) = true;
-  string thing1 = 1;
-  string thing2 = 2;
-}

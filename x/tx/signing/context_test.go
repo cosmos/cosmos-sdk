@@ -146,7 +146,7 @@ func TestGetSigners(t *testing.T) {
 }
 
 func TestDefineCustomGetSigners(t *testing.T) {
-	customMsg := &testpb.CustomSignedMessage{}
+	customMsg := &testpb.Ballot{}
 	signers := [][]byte{[]byte("foo")}
 
 	context, err := NewContext(Options{
@@ -157,8 +157,8 @@ func TestDefineCustomGetSigners(t *testing.T) {
 
 	_, err = context.GetSigners(customMsg)
 	// before calling DefineCustomGetSigners, we should get an error
-	require.ErrorContains(t, err, "need custom signers function")
-	DefineCustomGetSigners(context, func(msg *testpb.CustomSignedMessage) ([][]byte, error) {
+	require.ErrorContains(t, err, "use DefineCustomGetSigners to specify")
+	DefineCustomGetSigners(context, func(msg *testpb.Ballot) ([][]byte, error) {
 		return signers, nil
 	})
 	// after calling DefineCustomGetSigners, we should get the signers

@@ -86,7 +86,7 @@ type getSignersFunc func(proto.Message) ([][]byte, error)
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
 	if len(signersFields) == 0 {
-		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s", descriptor.FullName())
+		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s; use DefineCustomGetSigners to specify a custom getter", descriptor.FullName())
 	}
 
 	return signersFields, nil
@@ -124,11 +124,6 @@ func (c *Context) Validate() error {
 }
 
 func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
-	isCustom := proto.GetExtension(descriptor.Options(), msgv1.E_CustomSigner).(bool)
-	if isCustom {
-		return nil, fmt.Errorf("%w: %s", NeedCustomSignersError, descriptor.FullName())
-	}
-
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err

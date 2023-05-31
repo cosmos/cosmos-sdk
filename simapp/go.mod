@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.1
+	cosmossdk.io/api v0.4.2
 	cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
@@ -194,7 +194,6 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core

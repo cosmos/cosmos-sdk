@@ -120,6 +120,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
+// InitGenesis performs genesis initialization for the circuit module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	start := time.Now()
 	var genesisState types.GenesisState

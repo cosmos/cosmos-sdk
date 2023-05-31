@@ -153,6 +153,7 @@ require (
 
 replace (
 	// TODO: remove me when collections v0.2.0 is released
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../tx

@@ -36,11 +36,9 @@ func WeightedOperations(
 	sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgUnjail int
-	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
-		func(_ *rand.Rand) {
-			weightMsgUnjail = DefaultWeightMsgUnjail
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgUnjail, &weightMsgUnjail, nil, func(_ *rand.Rand) {
+		weightMsgUnjail = DefaultWeightMsgUnjail
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(

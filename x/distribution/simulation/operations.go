@@ -39,32 +39,24 @@ func WeightedOperations(
 	sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgSetWithdrawAddress int
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil, func(_ *rand.Rand) {
+		weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
+	})
 
 	var weightMsgWithdrawDelegationReward int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
+	})
 
 	var weightMsgWithdrawValidatorCommission int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
+	})
 
 	var weightMsgFundCommunityPool int
-	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
-		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil, func(_ *rand.Rand) {
+		weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(

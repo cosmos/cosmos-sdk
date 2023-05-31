@@ -8,7 +8,7 @@ echo "Generating API module"
 (cd proto; buf generate --template buf.gen.pulsar.yaml)
 
 echo "Generate Pulsar Test Data"
-(cd testutil/testdata; buf mod update; buf generate --template buf.gen.pulsar.yaml)
+(cd testutil/testdata; buf generate --template buf.gen.pulsar.yaml)
 
 echo "Generate x/tx"
 (cd x/tx; make codegen)

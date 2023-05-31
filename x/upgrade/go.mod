@@ -3,7 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.1
+	cosmossdk.io/api v0.4.2
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
@@ -181,7 +181,7 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

@@ -637,7 +637,7 @@ type VersionMap map[string]uint64
 //	    return app.mm.RunMigrations(ctx, cfg, fromVM)
 //	})
 //
-// Please also refer to docs/core/upgrade.md for more information.
+// Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
 func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {

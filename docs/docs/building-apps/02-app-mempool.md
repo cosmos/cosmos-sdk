@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Application mempool
+# Application Mempool
 
 :::note Synopsis
 This sections describes how the app-side mempool can be used and replaced. 

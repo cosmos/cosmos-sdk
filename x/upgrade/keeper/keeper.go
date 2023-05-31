@@ -237,7 +237,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
 	// as a strategy for emergency hard fork recoveries
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if plan.Height < sdkCtx.BlockHeight() {
+	if plan.Height < sdkCtx.HeaderInfo().Height {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -445,7 +445,7 @@ func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error)
 func (k Keeper) setDone(ctx context.Context, name string) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return store.Set(encodeDoneKey(name, sdkCtx.BlockHeight()), []byte{1})
+	return store.Set(encodeDoneKey(name, sdkCtx.HeaderInfo().Height), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name

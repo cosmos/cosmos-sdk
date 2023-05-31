@@ -26,7 +26,7 @@ func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockHeight := sdkCtx.BlockHeight()
+	blockHeight := sdkCtx.HeaderInfo().Height
 	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
 		return err

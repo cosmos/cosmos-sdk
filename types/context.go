@@ -304,6 +304,8 @@ func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 
 // WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
+	// Settime to UTC
+	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
 	return c
 }

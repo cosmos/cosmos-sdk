@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -128,7 +129,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				plan := types.Plan{Name: planName, Height: expHeight}
 				suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
-				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
+				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: expHeight})
 				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})

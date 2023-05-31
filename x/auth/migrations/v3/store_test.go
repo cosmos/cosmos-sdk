@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -68,7 +70,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	randAccNumber := uint64(rand.Intn(100000-10000) + 10000)
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), randAccNumber, 0)
 
-	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 
 	// migrator
 	m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter(), legacySubspace)
@@ -99,12 +101,11 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 			}
 
 			//  get the account address by acc id
-			accAddr := accountKeeper.GetAccountAddressByID(ctx, tc.accNum)
-
+			accAddr, err := accountKeeper.Accounts.Indexes.Number.MatchExact(ctx, tc.accNum)
 			if tc.doMigration {
-				require.Equal(t, accAddr, acc.Address)
+				require.Equal(t, accAddr.String(), acc.Address)
 			} else {
-				require.Equal(t, len(accAddr), 0)
+				require.ErrorIs(t, err, collections.ErrNotFound)
 			}
 		})
 	}

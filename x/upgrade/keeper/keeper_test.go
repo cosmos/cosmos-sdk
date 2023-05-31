@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(15)
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
 	keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test1",
 		Height: 15,
@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(15)
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
 	err = keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test-v0.10",
 		Height: 15,

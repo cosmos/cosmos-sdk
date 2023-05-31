@@ -9,23 +9,25 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
@@ -56,7 +58,7 @@ type (
 )
 
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
-	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
@@ -107,6 +109,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 	for height := int64(1); height <= int64(cfg.blocks); height++ {
 
+		_, _, addr := testdata.KeyTestPubAddr()
 		txs := [][]byte{}
 		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
 			msgs := []sdk.Msg{}
@@ -117,7 +120,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 				_, err := r.Read(value)
 				require.NoError(t, err)
 
-				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value})
+				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addr.String()})
 				keyCounter++
 			}
 
@@ -604,7 +607,7 @@ func TestSetMinGasPrices(t *testing.T) {
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 	suite.baseApp.InitChain(&abci.RequestInitChain{})
-	ctx := suite.baseApp.NewContext(true, cmtproto.Header{}) // TODO remove header here
+	ctx := suite.baseApp.NewContext(true)
 
 	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))

@@ -15,6 +15,7 @@ import (
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
 	sdkmath "cosmossdk.io/math"
+
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 
@@ -146,14 +147,9 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 	for i := 0; i < len(ops); i++ {
 		op := ops[i]
 
-		protoMessage, err := c.ir.Resolve(op.Type)
+		msg, err := c.ir.Resolve(op.Type)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation not found: "+op.Type)
-		}
-
-		msg, ok := protoMessage.(sdk.Msg)
-		if !ok {
-			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation is not a valid supported sdk.Msg: "+op.Type)
 		}
 
 		err = c.Msg(op.Metadata, msg)
@@ -171,7 +167,11 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 			}
 		}
 
-		signers := msg.GetSigners()
+		signers, _, err := c.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+		}
+
 		// check if there are enough signers
 		if len(signers) == 0 {
 			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("operation at index %d got no signers", op.OperationIdentifier.Index))
@@ -249,12 +249,22 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 		return nil, err
 	}
 
-	ops := make([]*rosettatypes.Operation, len(msg.GetSigners()))
-	for i, signer := range msg.GetSigners() {
+	signers, _, err := c.cdc.GetMsgV1Signers(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	ops := make([]*rosettatypes.Operation, len(signers))
+	for i, signer := range signers {
+		signerStr, err := c.ir.SigningContext().AddressCodec().BytesToString(signer)
+		if err != nil {
+			return nil, err
+		}
+
 		op := &rosettatypes.Operation{
 			Type:     opName,
 			Status:   &status,
-			Account:  &rosettatypes.AccountIdentifier{Address: signer.String()},
+			Account:  &rosettatypes.AccountIdentifier{Address: signerStr},
 			Metadata: meta,
 		}
 
@@ -594,13 +604,24 @@ func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation,
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 	}
 
-	for _, signer := range txBuilder.GetTx().GetSigners() {
+	signerAddrs, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
+	for _, signer := range signerAddrs {
+		var signerStr string
+		signerStr, err = c.ir.SigningContext().AddressCodec().BytesToString(signer)
+		if err != nil {
+			return
+		}
+
 		signers = append(signers, &rosettatypes.AccountIdentifier{
-			Address: signer.String(),
+			Address: signerStr,
 		})
 	}
 
-	return
+	return ops, signers, nil
 }
 
 func (c converter) SignedTx(txBytes []byte, signatures []*rosettatypes.Signature) (signedTxBytes []byte, err error) {
@@ -676,7 +697,11 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
 	}
 
-	signers := tx.GetSigners()
+	signers, err := tx.GetSigners()
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
 	// assert the signers data provided in options are the same as the expected signing accounts
 	// and that the number of rosetta provided public keys equals the one of the signers
 	if len(metadata.SignersData) != len(signers) || len(signers) != len(rosPubKeys) {
@@ -704,16 +729,21 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 		if err != nil {
 			return nil, nil, err
 		}
-		if !bytes.Equal(pubKey.Address().Bytes(), signer.Bytes()) {
+		if !bytes.Equal(pubKey.Address().Bytes(), signer) {
 			return nil, nil, crgerrs.WrapError(
 				crgerrs.ErrBadArgument,
-				fmt.Sprintf("public key at index %d does not match the expected transaction signer: %X <-> %X", i, rosPubKeys[i].Bytes, signer.Bytes()),
+				fmt.Sprintf("public key at index %d does not match the expected transaction signer: %X <-> %X", i, rosPubKeys[i].Bytes, signer),
 			)
+		}
+
+		signerStr, err := c.ir.SigningContext().AddressCodec().BytesToString(signer)
+		if err != nil {
+			return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
 		}
 
 		// set the signer data
 		signerData := authsigning.SignerData{
-			Address:       signer.String(),
+			Address:       signerStr,
 			ChainID:       metadata.ChainID,
 			AccountNumber: metadata.SignersData[i].AccountNumber,
 			Sequence:      metadata.SignersData[i].Sequence,
@@ -728,7 +758,7 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 
 		// set payload
 		payloadsToSign[i] = &rosettatypes.SigningPayload{
-			AccountIdentifier: &rosettatypes.AccountIdentifier{Address: signer.String()},
+			AccountIdentifier: &rosettatypes.AccountIdentifier{Address: signerStr},
 			Bytes:             signBytes,
 			SignatureType:     rosettatypes.Ecdsa,
 		}

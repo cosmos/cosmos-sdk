@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -124,7 +123,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				AppStateBytes:   stateBytes,
 			})
 
-			ctx := bapp.NewContext(false, cmtproto.Header{})
+			ctx := bapp.NewContext(false)
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
@@ -177,7 +176,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(50702) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(57554) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit

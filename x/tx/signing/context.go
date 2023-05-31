@@ -111,7 +111,7 @@ func (c *Context) Validate() error {
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
 				_, err := c.getGetSignersFn(md)
-				if err != nil && !errors.Is(err, NeedCustomSignersError) { // don't fail on custom signers
+				if err != nil {
 					errs = append(errs, err)
 				}
 			}
@@ -327,6 +327,10 @@ func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
 }
 
+type CustomGetSignersFunc func(message proto.Message) ([][]byte, error)
+
+func (cgsf CustomGetSignersFunc) IsManyPerContainerType() {}
+
 // DefineCustomGetSigners defines a custom GetSigners function for a given
 // message type. It is defined as a function rather than a method on Context
 // because of how go generics work.
@@ -340,5 +344,3 @@ func DefineCustomGetSigners[T proto.Message](ctx *Context, getSigners func(T) ([
 		return getSigners(msg.(T))
 	}
 }
-
-var NeedCustomSignersError = errors.New("need custom signers function")

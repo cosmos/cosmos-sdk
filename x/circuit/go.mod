@@ -16,7 +16,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto v0.0.0-20230524185152-1884fd1fac28
 	google.golang.org/grpc v1.55.0
 )
@@ -152,7 +152,7 @@ require (
 replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../.
 )

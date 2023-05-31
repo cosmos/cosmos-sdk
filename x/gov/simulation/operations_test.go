@@ -29,7 +29,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -95,7 +94,7 @@ func TestWeightedOperations(t *testing.T) {
 	ctx.WithChainID("test-chain")
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, govcodec.ModuleCdc, suite.TxConfig, suite.AccountKeeper,
+	weightesOps := simulation.WeightedOperations(appParams, suite.TxConfig, suite.AccountKeeper,
 		suite.BankKeeper, suite.GovKeeper, mockWeightedProposalMsg(3), mockWeightedLegacyProposalContent(1),
 	)
 

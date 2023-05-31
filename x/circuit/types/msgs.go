@@ -25,11 +25,6 @@ func (m MsgAuthorizeCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
 // Type Implements Msg.
 func (m MsgAuthorizeCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }
 
-// GetSignBytes Implements Msg.
-func (m MsgAuthorizeCircuitBreaker) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 // GetSigners returns the expected signers for a MsgAuthorizeCircuitBreaker.
 func (m MsgAuthorizeCircuitBreaker) GetSigners() []sdk.AccAddress {
 	granter := sdk.MustAccAddressFromBech32(m.Granter)
@@ -51,11 +46,6 @@ func (m MsgTripCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
 // Type Implements Msg.
 func (m MsgTripCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }
 
-// GetSignBytes Implements Msg.
-func (m MsgTripCircuitBreaker) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 // GetSigners returns the expected signers for a MsgTripCircuitBreaker.
 func (m MsgTripCircuitBreaker) GetSigners() []sdk.AccAddress {
 	granter := sdk.MustAccAddressFromBech32(m.Authority)
@@ -76,11 +66,6 @@ func (m MsgResetCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
 
 // Type Implements Msg.
 func (m MsgResetCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }
-
-// GetSignBytes Implements Msg.
-func (m MsgResetCircuitBreaker) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
 
 // GetSigners returns the expected signers for a MsgResetCircuitBreaker.
 func (m MsgResetCircuitBreaker) GetSigners() []sdk.AccAddress {

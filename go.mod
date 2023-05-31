@@ -3,7 +3,7 @@ go 1.20
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.4.1
+	cosmossdk.io/api v0.4.2
 	cosmossdk.io/collections v0.1.0
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
@@ -159,8 +159,6 @@ require (
 
 // Below are the short-lived replace of the Cosmos SDK
 replace (
-	// TODO remove after cosmossdk.io/api release
-	cosmossdk.io/api => ./api
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core

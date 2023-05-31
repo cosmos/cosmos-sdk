@@ -10,6 +10,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -38,6 +39,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	kv.Set(k, v)
+	rs.SetHeaderInfo(&header.Info{})
 	commitID := rs.Commit()
 	require.Equal(t, int64(1), commitID.Version)
 }

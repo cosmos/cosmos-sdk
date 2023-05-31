@@ -152,6 +152,7 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace (
+	cosmossdk.io/x/tx => ../../x/tx
 	// TODO: remove me after collections 0.2. is released.
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core

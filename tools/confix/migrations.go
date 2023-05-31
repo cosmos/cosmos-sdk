@@ -23,7 +23,7 @@ var Migrations = MigrationMap{
 	"v0.45": NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
 	"v0.46": PlanBuilder,
 	"v0.47": PlanBuilder,
-	"v0.48": PlanBuilder,
+	"v0.50": PlanBuilder,
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 

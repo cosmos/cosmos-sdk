@@ -47,6 +47,17 @@ func GetDenomUnit(denom string) (Dec, bool) {
 	return unit, true
 }
 
+// SetBaseDenom allow overwritting the base denom
+// if the denom has registered before, otherwise return error
+func SetBaseDenom(denom string) error {
+	_, ok := denomUnits[denom]
+	if !ok {
+		return fmt.Errorf("denom %s not registered", denom)
+	}
+	baseDenom = denom
+	return nil
+}
+
 // GetBaseDenom returns the denom of smallest unit registered
 func GetBaseDenom() (string, error) {
 	if baseDenom == "" {

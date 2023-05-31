@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,41 +52,29 @@ func WeightedOperations(
 		weightMsgCancelUnbondingDelegation int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateValidator = DefaultWeightMsgCreateValidator
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil, func(_ *rand.Rand) {
+		weightMsgCreateValidator = DefaultWeightMsgCreateValidator
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgEditValidator, &weightMsgEditValidator, nil,
-		func(_ *rand.Rand) {
-			weightMsgEditValidator = DefaultWeightMsgEditValidator
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgEditValidator, &weightMsgEditValidator, nil, func(_ *rand.Rand) {
+		weightMsgEditValidator = DefaultWeightMsgEditValidator
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDelegate, &weightMsgDelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgDelegate = DefaultWeightMsgDelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgDelegate, &weightMsgDelegate, nil, func(_ *rand.Rand) {
+		weightMsgDelegate = DefaultWeightMsgDelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUndelegate, &weightMsgUndelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgUndelegate = DefaultWeightMsgUndelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgUndelegate, &weightMsgUndelegate, nil, func(_ *rand.Rand) {
+		weightMsgUndelegate = DefaultWeightMsgUndelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgBeginRedelegate = DefaultWeightMsgBeginRedelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil, func(_ *rand.Rand) {
+		weightMsgBeginRedelegate = DefaultWeightMsgBeginRedelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
-		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil, func(_ *rand.Rand) {
+		weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -392,9 +381,9 @@ func SimulateMsgUndelegate(
 				break
 			}
 		}
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
@@ -581,9 +570,9 @@ func SimulateMsgBeginRedelegate(
 			}
 		}
 
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. However, since smart contracts and module accounts can stake, we can ignore the error
 		if simAccount.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, delAddr)

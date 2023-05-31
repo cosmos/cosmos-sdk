@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.1
+	cosmossdk.io/collections v0.1.0
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
@@ -18,14 +19,13 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto v0.0.0-20230524185152-1884fd1fac28
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 )
 
 require (
-	cosmossdk.io/collections v0.1.0 // indirect
 	cosmossdk.io/x/tx v0.6.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -121,11 +121,11 @@ require (
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/spf13/afero v1.9.3 // indirect
+	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
+	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -155,8 +155,8 @@ replace (
 	// TODO: remove me when collections v0.2.0 is released
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../tx
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )
 

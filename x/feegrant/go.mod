@@ -18,7 +18,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto v0.0.0-20230524185152-1884fd1fac28
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
@@ -123,11 +123,11 @@ require (
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/spf13/afero v1.9.3 // indirect
+	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
+	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -157,6 +157,5 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx
-	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../
 )

@@ -117,13 +117,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the circuit module's name.
-func (AppModule) Name() string { return types.ModuleName }
-
-// RegisterInvariants registers the circuit module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 

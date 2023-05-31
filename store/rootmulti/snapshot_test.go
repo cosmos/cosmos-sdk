@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,6 +50,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 		}
 	}
 
+	multiStore.SetHeaderInfo(&header.Info{})
 	multiStore.Commit()
 	multiStore.LoadLatestVersion()
 
@@ -77,6 +79,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 	store2.Set([]byte("X"), []byte{255})
 	store2.Set([]byte("A"), []byte{101})
 	trans1.Set([]byte("x1"), []byte{91})
+	store.SetHeaderInfo(&header.Info{})
 	store.Commit()
 
 	store1.Set([]byte("b"), []byte{2})

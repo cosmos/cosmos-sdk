@@ -224,6 +224,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	s4, _ := store.GetStoreByName("store4").(types.KVStore)
 	require.Nil(t, s4)
+	store.SetHeaderInfo(&header.Info{})
 
 	// do one commit
 	workingHash := store.WorkingHash()
@@ -293,6 +294,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, rs2)
 	require.Equal(t, v2, rs2.Get(k2))
 
+	restore.SetHeaderInfo(&header.Info{})
 	// store this migrated data, and load it again without migrations
 	migratedID := restore.Commit()
 	require.Equal(t, migratedID.Version, int64(2))
@@ -375,6 +377,7 @@ func TestMultiStoreRestart(t *testing.T) {
 		store3 := multi.GetStoreByName("store3").(types.KVStore)
 		store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, i)))
 
+		multi.SetHeaderInfo(&header.Info{})
 		multi.Commit()
 
 		cinfo, err := multi.GetCommitInfo(int64(i))
@@ -389,7 +392,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	// ... and another.
 	store2 := multi.GetStoreByName("store2").(types.KVStore)
 	store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, 3)))
-
+	multi.SetHeaderInfo(&header.Info{})
 	multi.Commit()
 
 	flushedCinfo, err := multi.GetCommitInfo(3)
@@ -438,6 +441,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
+	multi.SetHeaderInfo(&header.Info{})
 	// Commit the multistore.
 	_ = multi.Commit()
 
@@ -528,6 +532,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 			require.NoError(t, ms.LoadLatestVersion())
 
 			for i := int64(0); i < tc.numVersions; i++ {
+				ms.SetHeaderInfo(&header.Info{})
 				ms.Commit()
 			}
 
@@ -563,6 +568,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 
 	var lastCommitInfo types.CommitID
 	for i := int64(0); i < numVersions; i++ {
+		ms.SetHeaderInfo(&header.Info{})
 		lastCommitInfo = ms.Commit()
 	}
 
@@ -607,6 +613,7 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	// Commit enough to build up heights to prune, where on the next block we should
 	// batch delete.
 	for i := int64(0); i < 10; i++ {
+		ms.SetHeaderInfo(&header.Info{})
 		ms.Commit()
 	}
 
@@ -632,6 +639,7 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	require.Equal(t, pruneHeights, actualHeightsToPrune)
 
 	// commit one more block and ensure the heights have been pruned
+	ms.SetHeaderInfo(&header.Info{})
 	ms.Commit()
 
 	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
@@ -653,6 +661,7 @@ func TestUnevenStoresHeightCheck(t *testing.T) {
 	require.Nil(t, err)
 
 	// commit to increment store's height
+	store.SetHeaderInfo(&header.Info{})
 	store.Commit()
 
 	// mount store4 to root store
@@ -679,6 +688,7 @@ func TestSetInitialVersion(t *testing.T) {
 	multi.SetInitialVersion(5)
 	require.Equal(t, int64(5), multi.initialVersion)
 
+	multi.SetHeaderInfo(&header.Info{})
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
 
@@ -787,6 +797,7 @@ func TestCommitOrdered(t *testing.T) {
 	store3 := multi.GetStoreByName("store3").(types.KVStore)
 	store3.Set(k3, v3)
 
+	multi.SetHeaderInfo(&header.Info{})
 	typeID := multi.Commit()
 	require.Equal(t, int64(1), typeID.Version)
 

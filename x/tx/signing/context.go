@@ -327,9 +327,15 @@ func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
 }
 
-type CustomGetSignersFunc func(message proto.Message) ([][]byte, error)
+type CustomGetSignersFunc interface {
+	isCustomGetSignersFunc()
+}
 
-func (cgsf CustomGetSignersFunc) IsManyPerContainerType() {}
+type CustomGetSignersImpl[T proto.Message] func(message T) ([][]byte, error)
+
+func (cgsf CustomGetSignersImpl[T]) IsManyPerContainerType() {}
+
+func (cgsf CustomGetSignersImpl[T]) isCustomGetSignersFunc() {}
 
 // DefineCustomGetSigners defines a custom GetSigners function for a given
 // message type. It is defined as a function rather than a method on Context

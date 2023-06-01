@@ -114,12 +114,6 @@ func ProvideApp() (
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	// validate the signing context to make sure that messages are properly configured
-	// with cosmos.msg.v1.signer
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)

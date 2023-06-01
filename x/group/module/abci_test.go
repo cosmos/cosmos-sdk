@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 

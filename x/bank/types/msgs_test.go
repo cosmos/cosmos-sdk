@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -16,7 +18,8 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	addr2 := sdk.AccAddress([]byte("output"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	msg := NewMsgSend(addr1, addr2, coins)
-	res := msg.GetSignBytes()
+	res, err := codec.NewProtoCodec(types.NewInterfaceRegistry()).MarshalAminoJSON(msg)
+	require.NoError(t, err)
 
 	expected := `{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"cosmos1d9h8qat57ljhcm","to_address":"cosmos1da6hgur4wsmpnjyg"}}`
 	require.Equal(t, expected, string(res))
@@ -108,11 +111,12 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("input"))
 	addr2 := sdk.AccAddress([]byte("output"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	msg := MsgMultiSend{
+	msg := &MsgMultiSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
 	}
-	res := msg.GetSignBytes()
+	res, err := codec.NewProtoCodec(types.NewInterfaceRegistry()).MarshalAminoJSON(msg)
+	require.NoError(t, err)
 
 	expected := `{"type":"cosmos-sdk/MsgMultiSend","value":{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
 	require.Equal(t, expected, string(res))
@@ -152,7 +156,8 @@ func TestMsgSendGetSigners(t *testing.T) {
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil)
 	expected := `{"type":"cosmos-sdk/MsgSetSendEnabled","value":{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}}`
-	actualBz := msg.GetSignBytes()
+	actualBz, err := codec.NewProtoCodec(types.NewInterfaceRegistry()).MarshalAminoJSON(msg)
+	require.NoError(t, err)
 	actual := string(actualBz)
 	assert.Equal(t, expected, actual)
 }

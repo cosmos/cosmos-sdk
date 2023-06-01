@@ -14,10 +14,12 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
-func ProvideCustomGetSigners() signing.CustomGetSignersImpl[*bankv1beta1.SendAuthorization] {
-	return func(msg *bankv1beta1.SendAuthorization) ([][]byte, error) {
-		return [][]byte{[]byte("foo")}, nil
-	}
+func SetCustomGetSigners(registry codectypes.InterfaceRegistry) {
+	signing.DefineCustomGetSigners(registry.SigningContext(), func(msg *bankv1beta1.SendAuthorization) ([][]byte, error) {
+		// arbitrary logic
+		signer := msg.AllowList[1]
+		return [][]byte{[]byte(signer)}, nil
+	})
 }
 
 func TestDefineCustomGetSigners(t *testing.T) {
@@ -29,15 +31,39 @@ func TestDefineCustomGetSigners(t *testing.T) {
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),
-				configurator.GovModule(),
-				configurator.DistributionModule(),
 				configurator.ConsensusModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(ProvideCustomGetSigners),
+			depinject.Invoke(SetCustomGetSigners),
 		),
 		&interfaceRegistry,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, interfaceRegistry)
+
+	sendAuth := &bankv1beta1.SendAuthorization{
+		AllowList: []string{"foo", "bar"},
+	}
+	signers, err := interfaceRegistry.SigningContext().GetSigners(sendAuth)
+	require.Equal(t, [][]byte{[]byte("bar")}, signers)
+
+	// reset without invoker, no custom signer.
+	_, err = simtestutil.SetupAtGenesis(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.ParamsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.BankModule(),
+				configurator.ConsensusModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&interfaceRegistry,
+	)
+	require.NoError(t, err)
+	require.NotNil(t, interfaceRegistry)
+
+	_, err = interfaceRegistry.SigningContext().GetSigners(sendAuth)
+	require.ErrorContains(t, err, "use DefineCustomGetSigners")
 }

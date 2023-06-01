@@ -6,20 +6,19 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 
@@ -62,7 +61,6 @@ func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
 			ProvideApp,
-			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -79,36 +77,8 @@ func init() {
 	)
 }
 
-func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSignersImpl[*bankv1beta1.SendAuthorization]) (codectypes.InterfaceRegistry, error) {
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		// using the global prefixes is a temporary solution until we refactor this
-		// to get the address.Codec's from the container
-		AddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		},
-		ValidatorAddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, customGetSignersFunc := range customGetSigners {
-		signing.DefineCustomGetSigners(interfaceRegistry.SigningContext(), customGetSignersFunc)
-	}
-
-	// validate the signing context to make sure that messages are properly configured
-	// with cosmos.msg.v1.signer
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, err
-	}
-
-	return interfaceRegistry, nil
-}
-
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
+func ProvideApp() (
+	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -129,6 +99,27 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		// using the global prefixes is a temporary solution until we refactor this
+		// to get the address.Codec's from the container
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+	})
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
+	// validate the signing context to make sure that messages are properly configured
+	// with cosmos.msg.v1.signer
+	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -146,7 +137,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {

@@ -422,6 +422,7 @@ proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0-alpha.2/proto/tendermint
+ICS_23_URL              = https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1
 
 CMT_CRYPTO_TYPES     = proto/tendermint/crypto
 CMT_ABCI_TYPES       = proto/tendermint/abci
@@ -429,6 +430,7 @@ CMT_TYPES            = proto/tendermint/types
 CMT_VERSION          = proto/tendermint/version
 CMT_LIBS             = proto/tendermint/libs/bits
 CMT_P2P              = proto/tendermint/p2p
+ICS_23 							 = proto/ics23/v1
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
@@ -455,6 +457,11 @@ proto-update-deps:
 
 	@mkdir -p $(CMT_P2P)
 	@curl -sSL $(CMT_URL)/p2p/types.proto > $(CMT_P2P)/types.proto
+
+	@mkdir -p $(ICS_23)
+	@curl -sSL $(ICS_23_URL)/proofs.proto > $(ICS_23)/proofs.proto
+
+
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 

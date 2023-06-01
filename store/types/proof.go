@@ -61,9 +61,9 @@ func NewSmtCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 }
 
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
-// The proofOp.Data is just a marshaled CommitmentProof. The Key of the CommitmentOp is extracted
+// The proofOp.Data is a ics23.CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
-func CommitmentOpDecoder(pop cmtprotocrypto.ProofOp) (merkle.ProofOperator, error) {
+func CommitmentOpDecoder(pop ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
 	switch pop.Type {
 	case ProofOpIAVLCommitment:
@@ -76,17 +76,11 @@ func CommitmentOpDecoder(pop cmtprotocrypto.ProofOp) (merkle.ProofOperator, erro
 		return nil, errorsmod.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpSimpleMerkleCommitment', 'ProofOpIAVLCommitment', or 'ProofOpSMTCommitment'", pop.Type)
 	}
 
-	proof := &ics23.CommitmentProof{}
-	err := proof.Unmarshal(pop.Data)
-	if err != nil {
-		return nil, err
-	}
-
 	op := CommitmentOp{
 		Type:  pop.Type,
 		Key:   pop.Key,
 		Spec:  spec,
-		Proof: proof,
+		Proof: pop.Data,
 	}
 	return op, nil
 }
@@ -134,15 +128,12 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 // ProofOp implements ProofOperator interface and converts a CommitmentOp
 // into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
 // back into a CommitmentOp for proof verification
-func (op CommitmentOp) ProofOp() cmtprotocrypto.ProofOp {
-	bz, err := op.Proof.Marshal()
-	if err != nil {
-		panic(err.Error())
-	}
-	return cmtprotocrypto.ProofOp{
+func (op CommitmentOp) ProofOp() ProofOp {
+
+	return ProofOp{
 		Type: op.Type,
 		Key:  op.Key,
-		Data: bz,
+		Data: op.Proof,
 	}
 }
 

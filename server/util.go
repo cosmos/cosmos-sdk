@@ -233,11 +233,25 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
+<<<<<<< HEAD
 		conf.RPC.PprofListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		tmcfg.WriteConfigFile(tmCfgFile, conf)
+=======
+		defaultCometCfg := cmtcfg.DefaultConfig()
+		// The SDK is opinionated about those comet values, so we set them here.
+		// We verify first that the user has not changed them for not overriding them.
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
+		}
+		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
+			conf.RPC.PprofListenAddress = "localhost:6060"
+		}
+
+		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
+>>>>>>> 0bded0d19 (fix: do not overwrite comet config when set in `InterceptConfigsPreRunHandler` (#16395))
 
 	case err != nil:
 		return nil, err

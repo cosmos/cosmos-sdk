@@ -103,4 +103,4 @@ In addition, we also want to achieve the following:
 
 ## References
 
-* {reference link}
+* [Osmosis Simulation ADR](https://github.com/osmosis-labs/osmosis/blob/main/simulation/ADR.md)

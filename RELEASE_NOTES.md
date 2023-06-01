@@ -8,6 +8,7 @@ Missed the v0.47.0 announcement? Read it [here](https://github.com/cosmos/cosmos
 For this third patch release of the `v0.47.x` line, some of the notable changes include:
 
 * A command to be able to bootstrap comet from a local snapshot with [`<app> comet bootstrap-state`](https://docs.cosmos.network/v0.47/run-node/run-node#local-state-sync).
+* Commands to manage snapshots: Add `snapshot.Cmd(appCreator)` to your chain root command for using them.
 * The default logger is now `cosmossdk.io/log`, which supports coloring 🟥🟩🟪🟦 and filtering again.
 * A bug fix in `x/group` migration. Chains migrating from v0.46.x to v0.47.x must use at least v0.47.**3**.
 

@@ -248,17 +248,13 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		}
 
 		defaultCometCfg := cmtcfg.DefaultConfig()
+		// The SDK is opinionated about those comet values, so we set them here.
+		// We verify first that the user has not changed them for not overriding them.
 		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
 			conf.Consensus.TimeoutCommit = 5 * time.Second
 		}
 		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
 			conf.RPC.PprofListenAddress = "localhost:6060"
-		}
-		if conf.P2P.RecvRate == defaultCometCfg.P2P.RecvRate {
-			conf.P2P.RecvRate = 5120000
-		}
-		if conf.P2P.SendRate == defaultCometCfg.P2P.SendRate {
-			conf.P2P.SendRate = 5120000
 		}
 
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)

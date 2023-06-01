@@ -23,10 +23,10 @@ overdue for a revamp.
 
 ## Context
 
-The simulator today acts as a semi-fuzz testing suite that takes in an integer
-that represents a seed into a PRNG. The PRNG is used to generate a sequence of
-"operations" that are meant to reflect transactions that an application's state
-machine can process. Through the use of the PRNG, all aspects of block production
+The current simulator, `x/simulation`, acts as a semi-fuzz testing suite that takes
+in an integer that represents a seed into a PRNG. The PRNG is used to generate a
+sequence of "operations" that are meant to reflect transactions that an application's
+state machine can process. Through the use of the PRNG, all aspects of block production
 and consumption are randomized. This includes a block's proposer, the validators
 who both sign and miss the block, along with the transaction operations themselves.
 

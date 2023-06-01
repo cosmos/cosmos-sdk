@@ -8,6 +8,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -61,6 +62,7 @@ func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
 			ProvideApp,
+			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -77,8 +79,7 @@ func init() {
 	)
 }
 
-func ProvideApp() (
-	codectypes.InterfaceRegistry,
+func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -99,21 +100,6 @@ func ProvideApp() (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		// using the global prefixes is a temporary solution until we refactor this
-		// to get the address.Codec's from the container
-		AddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		},
-		ValidatorAddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-		},
-	})
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -131,7 +117,7 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
@@ -169,6 +155,35 @@ func SetupAppBuilder(inputs AppInputs) {
 		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
 		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
+}
+
+func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+	signingOptions := signing.Options{
+		// using the global prefixes is a temporary solution until we refactor this
+		// to get the address.Codec's from the container
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+	}
+	for _, signer := range customGetSigners {
+		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
+	}
+
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOptions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = interfaceRegistry.SigningContext().Validate()
+	if err != nil {
+		return nil, err
+	}
+	return interfaceRegistry, nil
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

@@ -148,20 +148,23 @@ func TestGetSigners(t *testing.T) {
 func TestDefineCustomGetSigners(t *testing.T) {
 	customMsg := &testpb.Ballot{}
 	signers := [][]byte{[]byte("foo")}
-
-	context, err := NewContext(Options{
+	options := Options{
 		AddressCodec:          dummyAddressCodec{},
 		ValidatorAddressCodec: dummyValidatorAddressCodec{},
-	})
+	}
+	context, err := NewContext(options)
 	require.NoError(t, err)
 
 	_, err = context.GetSigners(customMsg)
-	// before calling DefineCustomGetSigners, we should get an error
+	// without a custom signer we should get an error
 	require.ErrorContains(t, err, "use DefineCustomGetSigners to specify")
-	DefineCustomGetSigners(context, func(msg *testpb.Ballot) ([][]byte, error) {
+
+	// create a new context with a custom signer
+	options.DefineCustomGetSigners(proto.MessageName(customMsg), func(msg proto.Message) ([][]byte, error) {
 		return signers, nil
 	})
-	// after calling DefineCustomGetSigners, we should get the signers
+	context, err = NewContext(options)
+	require.NoError(t, err)
 	gotSigners, err := context.GetSigners(customMsg)
 	require.NoError(t, err)
 	require.Equal(t, signers, gotSigners)

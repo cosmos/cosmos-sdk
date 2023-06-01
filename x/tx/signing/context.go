@@ -24,7 +24,7 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
-	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
+	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -41,6 +41,21 @@ type Options struct {
 
 	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
 	ValidatorAddressCodec address.Codec
+
+	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
+}
+
+// DefineCustomGetSigners defines a custom GetSigners function for a given
+// message type.
+//
+// NOTE: if a custom signers function is defined, the message type used to
+// define this function MUST be the concrete type passed to GetSigners,
+// otherwise a runtime type error will occur.
+func (o *Options) DefineCustomGetSigners(typeName protoreflect.FullName, f GetSignersFunc) {
+	if o.CustomGetSigners == nil {
+		o.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
+	}
+	o.CustomGetSigners[typeName] = f
 }
 
 // ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
@@ -70,18 +85,29 @@ func NewContext(options Options) (*Context, error) {
 		return nil, errors.New("validator address codec is required")
 	}
 
+	if options.CustomGetSigners == nil {
+		options.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
+	}
+
 	c := &Context{
 		fileResolver:          protoFiles,
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
+		getSignersFuncs:       options.CustomGetSigners,
 	}
 
 	return c, nil
 }
 
-type getSignersFunc func(proto.Message) ([][]byte, error)
+type GetSignersFunc func(proto.Message) ([][]byte, error)
+
+type CustomGetSigner struct {
+	MsgType protoreflect.FullName
+	Fn      GetSignersFunc
+}
+
+func (c CustomGetSigner) IsManyPerContainerType() {}
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
@@ -123,7 +149,7 @@ func (c *Context) Validate() error {
 	return errors.Join(errs...)
 }
 
-func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
@@ -283,7 +309,7 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 	return addrCdc
 }
 
-func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
 	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
 		var err error
@@ -325,18 +351,4 @@ func (c *Context) FileResolver() ProtoFileResolver {
 // TypeResolver returns the protobuf type resolver used by the context.
 func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
-}
-
-// DefineCustomGetSigners defines a custom GetSigners function for a given
-// message type. It is defined as a function rather than a method on Context
-// because of how go generics work.
-//
-// NOTE: if a custom signers function is defined, the message type used to
-// define this function MUST be the concrete type passed to GetSigners,
-// otherwise a runtime type error will occur.
-func DefineCustomGetSigners[T proto.Message](ctx *Context, getSigners func(T) ([][]byte, error)) {
-	t := *new(T)
-	ctx.getSignersFuncs[t.ProtoReflect().Descriptor().FullName()] = func(msg proto.Message) ([][]byte, error) {
-		return getSigners(msg.(T))
-	}
 }

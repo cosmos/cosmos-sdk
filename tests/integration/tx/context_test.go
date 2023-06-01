@@ -45,6 +45,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 		AllowList: []string{"foo", "bar"},
 	}
 	signers, err := interfaceRegistry.SigningContext().GetSigners(sendAuth)
+	require.NoError(t, err)
 	require.Equal(t, [][]byte{[]byte("bar")}, signers)
 
 	// reset without invoker, no custom signer.

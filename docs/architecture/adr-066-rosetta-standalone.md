@@ -19,20 +19,20 @@ tool maintenance more complicated.
 
 In the current context; Rosetta is inside cosmos-sdk project due to easier maintainability.
 This is a problem because as seen in some previous commits, it has suffered unrequired changes
-like updates due to a refactor or a new experimental feature. Causing issues like missmatch
-dependencies or unexpected behaviour that needs to be addressed down the line.
+like updates due to a refactor or a new experimental feature. Such changes can cause mismatches 
+in dependencies, or unexpected behaviour that needs to be addressed down the line.
 
-Since Rosetta is a standalone tool that has been implemented using Cosmos-sdk, it should only
-rely on top of the latest releases, instead of being affected by experimental features or
+Since Rosetta is a standalone tool that has been implemented using Cosmos-sdk, it should 
+rely only on each release, instead of being affected by experimental features or
 interfeering over the cosmos-sdk development.
 
-Decoupling Rosetta from the cosmos-sdk project is no only a good practice since it keeps the
+Decoupling Rosetta from the cosmos-sdk project is not only a good practice since it keeps the
 scope well defined, but also it ensures better maintainability over time.
 
 ## Alternatives
 
 The 2 altnernatives are:
-- **Keep the Project inside Cosmos-sdk**: This might be easier to handle from a fully immersed position.
+- **Keep Project inside Cosmos-sdk**: This might be easier to handle from a fully immersed position.
   maintainer's point of view, who works on different aspects of cosmos-sdk and might want to try
   features into Rosetta.
 - **Move the project into another repo**: This approach intends to keep the scope well defined,
@@ -43,7 +43,7 @@ The 2 altnernatives are:
 We will move Rosetta into a standalone repo in order to keep the Scope well defined, a stable
 versioning, and to ensure an easier and cleaner maintainability.
 
-We will also add and keep track of quality standards as tests and following cosmos-sdk releases.
+We will also add and keep track of quality standards as tests and follow cosmos-sdk releases.
 
 ## Consequences
 

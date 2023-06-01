@@ -32,7 +32,7 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
 
 ```bash
-simd config migrate v0.48
+simd config migrate v0.50
 ```
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
@@ -53,7 +53,11 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 ### Protobuf
 
-The SDK is in the process of removing all `gogoproto` annotations.
+With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+
+TODO: summarize proto annotation requirements.
 
 #### Stringer
 
@@ -84,8 +88,9 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/gov`
 * `x/mint`
 * `x/nft`
+* `x/slashing`
 
-User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
+Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -105,6 +110,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 * `x/distribution`
 * `x/evidence`
 * `x/gov`
+* `x/slashing`
 
 **Users using depinject do not need any changes, this is automatically done for them.**
 
@@ -179,6 +185,8 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+
 #### `x/auth`
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
@@ -245,7 +253,7 @@ Due to the import changes, this is a breaking change. Chains need to remove **en
 * Run `make proto-gen`
 
 Other than that, the migration should be seamless.
-On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.50 (part 2).
 
 Note: It is possible that these steps must first be performed by your dependencies before you can perform them on your own codebase.
 
@@ -402,7 +410,7 @@ In case a module does not follow the standard message path, (e.g. IBC), it is ad
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.
-The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.

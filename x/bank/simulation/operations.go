@@ -33,17 +33,13 @@ func WeightedOperations(
 	bk keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend, weightMsgMultiSend int
-	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
-		func(_ *rand.Rand) {
-			weightMsgSend = DefaultWeightMsgSend
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil, func(_ *rand.Rand) {
+		weightMsgSend = DefaultWeightMsgSend
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
-		func(_ *rand.Rand) {
-			weightMsgMultiSend = DefaultWeightMsgMultiSend
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgMultiSend, &weightMsgMultiSend, nil, func(_ *rand.Rand) {
+		weightMsgMultiSend = DefaultWeightMsgMultiSend
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -177,7 +173,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -385,7 +381,7 @@ func sendMsgMultiSend(
 	if err != nil {
 		return err
 	}
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

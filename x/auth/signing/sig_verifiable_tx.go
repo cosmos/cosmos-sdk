@@ -11,7 +11,7 @@ import (
 // handlers.
 type SigVerifiableTx interface {
 	types.Tx
-	GetSigners() []types.AccAddress
+	GetSigners() ([][]byte, error)
 	GetPubKeys() ([]cryptotypes.PubKey, error) // If signer already has pubkey in context, this list will have nil in its place
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 }
@@ -25,4 +25,5 @@ type Tx interface {
 	types.FeeTx
 	tx.TipTx
 	types.TxWithTimeoutHeight
+	types.HasValidateBasic
 }

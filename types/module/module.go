@@ -219,17 +219,6 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
-type BeginBlockAppModule interface {
-	AppModule
-	BeginBlock(sdk.Context, abci.RequestBeginBlock)
-}
-
-// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
-type EndBlockAppModule interface {
-	AppModule
-	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
-}
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
@@ -266,11 +255,11 @@ func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns an empty module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context) error { return nil }
 
 // EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error) {
+	return []abci.ValidatorUpdate{}, nil
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -363,7 +352,7 @@ func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasBeginBlock := module.(BeginBlockAppModule)
+			_, hasBeginBlock := module.(appmodule.HasBeginBlocker)
 			return !hasBeginBlock
 		})
 	m.OrderBeginBlockers = moduleNames
@@ -374,7 +363,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasEndBlock := module.(EndBlockAppModule)
+			_, hasEndBlock := module.(HasABCIEndblock)
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
@@ -443,7 +432,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (abci.ResponseInitChain, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -458,12 +447,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
-				return abci.ResponseInitChain{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
-				return abci.ResponseInitChain{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
@@ -473,7 +462,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -482,10 +471,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
-	return abci.ResponseInitChain{
+	return &abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}, nil
 }
@@ -648,7 +637,7 @@ type VersionMap map[string]uint64
 //	    return app.mm.RunMigrations(ctx, cfg, fromVM)
 //	})
 //
-// Please also refer to docs/core/upgrade.md for more information.
+// Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
@@ -702,21 +691,19 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
-func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		if module, ok := m.Modules[moduleName].(BeginBlockAppModule); ok {
-			module.BeginBlock(ctx, req)
-		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			err := module.BeginBlock(ctx)
 			if err != nil {
-				return abci.ResponseBeginBlock{}, err
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}
 
-	return abci.ResponseBeginBlock{
+	return sdk.BeginBlock{
 		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }
@@ -724,38 +711,26 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 // EndBlock performs end block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
-func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
+func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		if module, ok := m.Modules[moduleName].(EndBlockAppModule); ok {
-			moduleValUpdates := module.EndBlock(ctx, req)
-
-			// use these validator updates if provided, the module manager assumes
-			// only one module will update the validator set
-			if len(moduleValUpdates) > 0 {
-				if len(validatorUpdates) > 0 {
-					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
-				}
-
-				validatorUpdates = moduleValUpdates
-			}
-		} else if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
+		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			if err != nil {
-				return abci.ResponseEndBlock{}, err
+				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
-				return abci.ResponseEndBlock{}, err
+				return sdk.EndBlock{}, err
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
 				for _, updates := range moduleValUpdates {
@@ -767,7 +742,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 		}
 	}
 
-	return abci.ResponseEndBlock{
+	return sdk.EndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil

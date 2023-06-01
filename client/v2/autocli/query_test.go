@@ -82,6 +82,15 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"bz": {
 					Usage: "some bytes",
 				},
+				"map_string_string": {
+					Usage: "some map of string to string",
+				},
+				"map_string_uint32": {
+					Usage: "some map of string to int32",
+				},
+				"map_string_coin": {
+					Usage: "some map of string to coin",
+				},
 			},
 		},
 	},
@@ -117,6 +126,72 @@ func TestCoin(t *testing.T) {
 		"4321bar",
 		"--a-coin", "100000foo",
 		"--duration", "4h3s",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestMap(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-string", "val=foo",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+		"--map-string-coin", "multi=100000bar,flag=100000foo",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-coin", "baz,100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"baz,100000foo\" for \"--map-string-coin\" flag: invalid format, expected key=value\n", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=not-unint32",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"bar=not-unint32\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"not-unint32\": invalid syntax\n", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123.9",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"bar=123.9\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"123.9\": invalid syntax\n", conn.errorOut.String())
+}
+
+func TestMapError(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
@@ -163,9 +238,6 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
-	errOut := conn.errorOut.String()
-	res := conn.out.String()
-	fmt.Println(errOut, res)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 

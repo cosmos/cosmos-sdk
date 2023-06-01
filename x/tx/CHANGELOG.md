@@ -31,6 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+* [#16340](https://github.com/cosmos/cosmos-sdk/pull/16340): add `DefineCustomGetSigners` API function.
+
 ## v0.7.0
 
 ### API Breaking

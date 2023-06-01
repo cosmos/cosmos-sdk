@@ -10,9 +10,16 @@ DRAFT
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide
-> a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+The Cosmos SDK simulator is a tool that allows developers to test the entirety
+of their application's state machine through the use of pseudo-randomized "operations",
+which represent transactions. The simulator also provides primitives that ensures
+there are no non-determinism issues and that the application's state machine can
+be successfully exported and imported using randomized state.
+
+The simulator has played an absolutely critical role in the development and testing
+of the Cosmos Hub and all the releases of the Cosmos SDK after the launch of the
+Cosmos Hub. Since the Hub, the simulator has relatively not changed much, so it's
+overdue for a revamp.
 
 ## Context
 
@@ -22,12 +29,6 @@ DRAFT
 > describing facts. It should clearly explain the problem and motivation that the
 > proposal aims to resolve.
 > {context body}
-
-## Alternatives
-
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through. 
 
 ## Decision
 
@@ -69,11 +70,6 @@ DRAFT
 > 
 > Later, this section can optionally list ideas or improvements the author or
 > reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus
-changes. Other ADRs can choose to include links to test cases if applicable.
 
 ## References
 

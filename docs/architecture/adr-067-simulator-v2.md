@@ -62,9 +62,9 @@ In addition, we also want to achieve the following:
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full
-> sentences, with active voice. "We will ..."
-> {decision body}
+Instead of refactoring the existing simulator, `x/simulation`, we propose to create
+a new package in the root of the Cosmos SDK, `simulator`, that will be the new
+simulation framework.
 
 ## Consequences
 

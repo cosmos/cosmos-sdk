@@ -3,7 +3,7 @@ package cosmos.store.v1beta1;
 
 option go_package = "cosmossdk.io/store/types";
 
-import "cosmos/ics23/v1/proofs.proto";
+import "ics23/v1/proofs.proto";
 
 // ProofOp defines an operation used for calculating Merkle root
 // The data could be arbitrary format, providing nessecary data

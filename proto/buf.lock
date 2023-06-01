@@ -12,6 +12,11 @@ deps:
     commit: 5e5b9fdd01804356895f8f79a6f1ddc1
     digest: shake256:0b85da49e2e5f9ebc4806eae058e2f56096ff3b1c59d1fb7c190413dd15f45dd456f0b69ced9059341c80795d2b6c943de15b120a9e0308b499e43e4b5fc2952
   - remote: buf.build
+    owner: cosmos
+    repository: ics23
+    commit: 3c44d8daa8b44059ac744cd17d4a49d7
+    digest: shake256:fed75bde09a652f2cbe6085d5e1afa8292f166a0f6314369fb60b71c189d34e893ee1bffde527373abd371c110bdc80e8ed1d534eaaf5da6bc62634903a6ec44
+  - remote: buf.build
     owner: googleapis
     repository: googleapis
     commit: cc916c31859748a68fd229a3c8d7a2e8

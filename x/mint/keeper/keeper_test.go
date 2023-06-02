@@ -67,8 +67,8 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
-	s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())
-
+	err = s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())
+	s.Require().NoError(err)
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 

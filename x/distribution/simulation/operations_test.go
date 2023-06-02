@@ -205,10 +205,11 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
@@ -310,10 +311,13 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
+	err := suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
+	suite.NoError(err)
+
 	// setup current revards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
+	err = suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
+	suite.NoError(err)
 }
 
 func TestSimTestSuite(t *testing.T) {

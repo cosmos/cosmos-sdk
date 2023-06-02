@@ -332,7 +332,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	}
 
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(msgs...)
+	_ = builder.SetMsgs(msgs...)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
 	setTxSignature(t, builder, uint64(counter))
 
@@ -353,7 +353,7 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 
 func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(tx.GetMsgs()...)
+	_ = builder.SetMsgs(tx.GetMsgs()...)
 
 	memo := tx.GetMemo()
 	vals, err := url.ParseQuery(memo)
@@ -379,6 +379,6 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 		}
 	}
 
-	builder.SetMsgs(msgs...)
+	_ = builder.SetMsgs(msgs...)
 	return builder.GetTx()
 }

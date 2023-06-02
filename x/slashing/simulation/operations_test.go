@@ -115,8 +115,12 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
-	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
-	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
+	err = suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
+	suite.Require().NoError(err)
+
+	err = suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
+	suite.Require().NoError(err)
+
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -161,7 +165,9 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
-	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err = suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.Require().NoError(err)
+
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
@@ -178,10 +184,12 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
-	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	err = suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	suite.Require().NoError(err)
 
 	// begin a new block
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)

@@ -335,8 +335,8 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-
+	err := s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	require.NoError(err)
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 

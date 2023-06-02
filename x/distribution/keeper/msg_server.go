@@ -123,11 +123,6 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
-	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck // deprecated but kept for backwards compatibility
-		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck // deprecated but kept for backwards compatibility
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
-	}
-
 	if err := msg.Params.ValidateBasic(); err != nil {
 		return nil, err
 	}
@@ -192,7 +187,10 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.
 	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
-	k.AllocateTokensToValidator(ctx, validator, reward)
+	err = k.AllocateTokensToValidator(ctx, validator, reward)
+	if err != nil {
+		return nil, err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(

@@ -62,7 +62,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	keeper.SetParams(ctx, stakingtypes.DefaultParams())
+	err := keeper.SetParams(ctx, stakingtypes.DefaultParams())
+	s.Require().NoError(err)
 
 	s.ctx = ctx
 	s.stakingKeeper = keeper
@@ -87,7 +88,8 @@ func (s *KeeperTestSuite) TestParams() {
 
 	expParams.MaxValidators = 555
 	expParams.MaxEntries = 111
-	keeper.SetParams(ctx, expParams)
+	err := keeper.SetParams(ctx, expParams)
+	require.NoError(err)
 	resParams = keeper.GetParams(ctx)
 	require.True(expParams.Equal(resParams))
 }

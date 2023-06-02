@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -126,7 +127,10 @@ func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, f
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(newTime)
-	sh.k.EndBlocker(sh.Ctx)
+	_, err := sh.k.EndBlocker(sh.Ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return sh.Ctx
 }
 
@@ -134,7 +138,10 @@ func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.BlockHeader().Time.Add(diff))
-	sh.k.EndBlocker(sh.Ctx)
+	_, err := sh.k.EndBlocker(sh.Ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return sh.Ctx
 }
 

@@ -174,7 +174,9 @@ func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	// Send some funds to the new account.
-	s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
+	_, err := s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
+	s.Require().NoError(err)
+
 	out, err := clitestutil.MsgSendExec(
 		s.clientCtx,
 		val[0].Address,

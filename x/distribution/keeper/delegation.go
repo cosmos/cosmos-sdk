@@ -21,7 +21,10 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	previousPeriod := valCurrentRewards.Period - 1
 
 	// increment reference count for the period we're going to track
-	k.incrementReferenceCount(ctx, val, previousPeriod)
+	err = k.incrementReferenceCount(ctx, val, previousPeriod)
+	if err != nil {
+		return err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validator := k.stakingKeeper.Validator(sdkCtx, val)

@@ -13,6 +13,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"testing"
 )
@@ -225,7 +226,10 @@ func BenchmarkSign(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		Sign(msg, seckey)
+		_, err := Sign(msg, seckey)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -236,6 +240,9 @@ func BenchmarkRecover(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		RecoverPubkey(msg, sig)
+		_, err := RecoverPubkey(msg, sig)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }

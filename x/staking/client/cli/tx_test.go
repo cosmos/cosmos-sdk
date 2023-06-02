@@ -107,35 +107,40 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 		{
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagAmount, "2000stake")
+				err := fs.Set(cli.FlagAmount, "2000stake")
+				require.NoError(s.T(), err)
 			},
 			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionRate, "0.54")
+				err := fs.Set(cli.FlagCommissionRate, "0.54")
+				require.NoError(s.T(), err)
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.54", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionMaxRate, "0.89")
+				err := fs.Set(cli.FlagCommissionMaxRate, "0.89")
+				require.NoError(s.T(), err)
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.89", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionMaxChangeRate, "0.55")
+				err := fs.Set(cli.FlagCommissionMaxChangeRate, "0.55")
+				require.NoError(s.T(), err)
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.55", "1"),
 		},
 		{
 			name: "Custom min self delegations",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagMinSelfDelegation, "0.33")
+				err := fs.Set(cli.FlagMinSelfDelegation, "0.33")
+				require.NoError(s.T(), err)
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "0.33"),
 		},

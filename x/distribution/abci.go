@@ -23,11 +23,17 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	// TODO this is Tendermint-dependent
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
-		k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos())
+		err := k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos())
+		if err != nil {
+			return err
+		}
 	}
 
 	// record the proposer for when we payout on the next block
 	consAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
-	k.SetPreviousProposerConsAddr(ctx, consAddr)
+	err := k.SetPreviousProposerConsAddr(ctx, consAddr)
+	if err != nil {
+		return err
+	}
 	return nil
 }

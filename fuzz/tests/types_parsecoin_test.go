@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func FuzzTypesParseCoin(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
-		types.ParseCoinNormalized(string(data))
+		_, err := types.ParseCoinNormalized(string(data))
+		require.NoError(t, err)
+
 	})
 }

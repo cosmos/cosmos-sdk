@@ -100,8 +100,10 @@ func NewContext(options Options) (*Context, error) {
 	return c, nil
 }
 
+// GetSignersFunc returns the signers for a given message.
 type GetSignersFunc func(proto.Message) ([][]byte, error)
 
+// CustomGetSigner is a custom GetSignersFunc that is defined for a specific message type.
 type CustomGetSigner struct {
 	MsgType protoreflect.FullName
 	Fn      GetSignersFunc

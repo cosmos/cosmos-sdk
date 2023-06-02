@@ -10,7 +10,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0-alpha.2
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.10
-	github.com/cosmos/iavl v0.21.0
+	github.com/cosmos/iavl v0.21.1
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -58,7 +58,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

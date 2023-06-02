@@ -3,7 +3,6 @@ package tx
 import (
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/tx/signing"
@@ -11,17 +10,18 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 func ProvideCustomGetSigners() signing.CustomGetSigner {
 	return signing.CustomGetSigner{
-		MsgType: proto.MessageName(&bankv1beta1.SendAuthorization{}),
+		MsgType: proto.MessageName(&testpb.TestRepeatedFields{}),
 		Fn: func(msg proto.Message) ([][]byte, error) {
-			sendAuth := msg.(*bankv1beta1.SendAuthorization)
+			testMsg := msg.(*testpb.TestRepeatedFields)
 			// arbitrary logic
-			signer := sendAuth.AllowList[1]
+			signer := testMsg.NullableDontOmitempty[1].Value
 			return [][]byte{[]byte(signer)}, nil
 		},
 	}
@@ -46,14 +46,17 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, interfaceRegistry)
 
-	sendAuth := &bankv1beta1.SendAuthorization{
-		AllowList: []string{"foo", "bar"},
+	msg := &testpb.TestRepeatedFields{
+		NullableDontOmitempty: []*testpb.Streng{
+			{Value: "foo"},
+			{Value: "bar"},
+		},
 	}
-	signers, err := interfaceRegistry.SigningContext().GetSigners(sendAuth)
+	signers, err := interfaceRegistry.SigningContext().GetSigners(msg)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{[]byte("bar")}, signers)
 
-	// reset without invoker, no custom signer.
+	// reset providing CustomGetSigners. validation will fail and depinject will return an error
 	_, err = simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
@@ -67,9 +70,5 @@ func TestDefineCustomGetSigners(t *testing.T) {
 		),
 		&interfaceRegistry,
 	)
-	require.NoError(t, err)
-	require.NotNil(t, interfaceRegistry)
-
-	_, err = interfaceRegistry.SigningContext().GetSigners(sendAuth)
 	require.ErrorContains(t, err, "use DefineCustomGetSigners")
 }

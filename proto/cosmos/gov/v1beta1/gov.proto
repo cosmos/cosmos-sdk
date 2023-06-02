@@ -255,6 +255,13 @@ message TallyParams {
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "expedited_threshold,omitempty"
   ];
+
+  //  Minimum proportion of Yes votes for an expedited proposal to reach quorum. Default value: 0.67.
+  bytes expedited_quorum = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "expedited_quorum,omitempty"
+  ];
 }
 
 // ProposalVotingPeriod defines custom voting periods for a unique governance

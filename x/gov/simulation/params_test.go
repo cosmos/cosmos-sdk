@@ -22,7 +22,7 @@ func TestParamChanges(t *testing.T) {
 		{"gov/votingparams", "votingparams", "{\"voting_period\": \"251681000000000\"}", "gov"},
 		{"gov/votingparams", "votingparams", "{\"expedited_voting_period\": \"53176000000000\"}", "gov"},
 		{"gov/depositparams", "depositparams", "{\"max_deposit_period\": \"153577000000000\"}", "gov"},
-		{"gov/tallyparams", "tallyparams", "{\"quorum\":\"0.429000000000000000\",\"veto\":\"0.323000000000000000\"}", "gov"},
+		{"gov/tallyparams", "tallyparams", "{\"quorum\":\"0.429000000000000000\"}", "gov"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)

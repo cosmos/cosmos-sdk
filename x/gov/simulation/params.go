@@ -20,6 +20,7 @@ const (
 	subkeyQuorum             = "quorum"
 	subkeyThreshold          = "threshold"
 	subkeyExpeditedThreshold = "expedited_threshold"
+	subkeyExpeditedQuorum    = "expedited_quorum"
 	subkeyVeto               = "veto"
 )
 
@@ -51,6 +52,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 					{subkeyQuorum, GenTallyParamsQuorum(r)},
 					{subkeyThreshold, GenTallyParamsThreshold(r)},
 					{subkeyExpeditedThreshold, GenTallyParamsExpeditedThreshold(r)},
+					{subkeyExpeditedQuorum, GenTallyParamsExpeditedQuorum(r)},
 					{subkeyVeto, GenTallyParamsVeto(r)},
 				}
 

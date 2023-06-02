@@ -232,6 +232,7 @@ func TestMigrate(t *testing.T) {
 	],
 	"starting_proposal_id": "0",
 	"tally_params": {
+		"expedited_quorum": "0",
 		"expedited_threshold": "0",
 		"quorum": "0",
 		"threshold": "0",

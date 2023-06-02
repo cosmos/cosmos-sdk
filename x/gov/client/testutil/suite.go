@@ -88,7 +88,7 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"voting_params":{"voting_period":"172800000000000","proposal_voting_periods":null,"expedited_voting_period":"86400000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","expedited_threshold":"0.667000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000","min_expedited_deposit":[{"denom":"stake","amount":"50000000"}],"min_initial_deposit_ratio":"0.000000000000000000"}}`,
+			`{"voting_params":{"voting_period":"172800000000000","proposal_voting_periods":null,"expedited_voting_period":"86400000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","expedited_threshold":"0.667000000000000000","expedited_quorum":"0.667000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000","min_expedited_deposit":[{"denom":"stake","amount":"50000000"}],"min_initial_deposit_ratio":"0.000000000000000000"}}`,
 		},
 		{
 			"text output",
@@ -104,6 +104,7 @@ deposit_params:
     denom: stake
   min_initial_deposit_ratio: "0.000000000000000000"
 tally_params:
+  expedited_quorum: "0.667000000000000000"
   expedited_threshold: "0.667000000000000000"
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
@@ -152,7 +153,7 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 				"tallying",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","expedited_threshold":"0.667000000000000000"}`,
+			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","expedited_threshold":"0.667000000000000000","expedited_quorum":"0.667000000000000000"}`,
 		},
 		{
 			"deposit params",

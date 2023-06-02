@@ -13,6 +13,18 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func SetupProposal(t *testing.T, ctx sdk.Context, app *simapp.SimApp, isExpedited bool) uint64 {
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, isExpedited)
+	require.NoError(t, err)
+
+	proposalID := proposal.ProposalId
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	return proposalID
+}
+
 func TestTallyNoOneVotes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -472,4 +484,114 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	expectedTallyResult := types.NewTallyResult(expectedYes, expectedAbstain, expectedNo, expectedNoWithVeto)
 
 	require.True(t, tallyResults.Equals(expectedTallyResult))
+}
+
+// proposal is expedited, proposal passes when quorum is greater than expedited
+// quorum = 1.000000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
+func TestTallyExpeditedQuorum1(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addrs, _ := createValidators(t, ctx, app, []int64{10, 10, 10})
+	proposalID := SetupProposal(t, ctx, app, true)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.NewNonSplitVoteOption(types.OptionNo)))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	require.True(t, passes)
+	require.False(t, burnDeposits)
+}
+
+// proposal is expedited, proposal fails when quorum is lower than expedited quorum but higher than regular quorum
+// quorum = 0.600000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
+func TestTallyExpeditedQuorum2(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	proposalID := SetupProposal(t, ctx, app, true)
+
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
+
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
+	require.True(t, found)
+
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[2], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	require.False(t, passes)
+	require.True(t, burnDeposits)
+}
+
+// proposal is expeditd, proposals fails when quorum is lower than regular quorum
+// quorum = 0.166666666666666667 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
+func TestTallyExpeditedQuorum3(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	proposalID := SetupProposal(t, ctx, app, true)
+
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
+
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 15)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
+	require.True(t, found)
+
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[2], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	require.False(t, passes)
+	require.True(t, burnDeposits)
+}
+
+// proposal is regular, proposal passes when quorum is greater than regular quorum but lower than expedited quorum
+// quorum = 0.600000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
+func TestTallyExpeditedQuorum4(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
+	proposalID := SetupProposal(t, ctx, app, false)
+
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
+	require.True(t, found)
+
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[2], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+	require.True(t, passes)
+	require.False(t, burnDeposits)
 }

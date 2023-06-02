@@ -26,6 +26,7 @@ const (
 	TallyParamsThreshold              = "tally_params_threshold"
 	TallyParamsExpeditedThreshold     = "tally_params_expedited_threshold"
 	TallyParamsVeto                   = "tally_params_veto"
+	TallyParamsExpeditedQuorum        = "tally_params_expedited_quorum"
 
 	// ExpeditedThreshold must be at least as large as the regular Threshold
 	// Therefore, we use this break out point in randomization.
@@ -79,6 +80,11 @@ func GenTallyParamsThreshold(r *rand.Rand) sdk.Dec {
 // GenTallyParamsExpeditedThreshold randomized TallyParamsExpeditedThreshold
 func GenTallyParamsExpeditedThreshold(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
+}
+
+// GenTallyParamsExpeditedQuorum randomized TallyParamsExpeditedThreshold
+func GenTallyParamsExpeditedQuorum(r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenTallyParamsVeto randomized TallyParamsVeto
@@ -150,6 +156,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) },
 	)
 
+	var expeditedQuorum sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, TallyParamsExpeditedQuorum, &expeditedQuorum, simState.Rand,
+		func(r *rand.Rand) { expeditedQuorum = GenTallyParamsExpeditedQuorum(r) },
+	)
+
 	proposalVotingPeriods := []types.ProposalVotingPeriod{
 		{
 			ProposalType: "cosmos.params.v1beta1.ParameterChangeProposal",
@@ -169,7 +181,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		startingProposalID,
 		types.NewDepositParams(minDeposit, depositPeriod, minExpeditedDeposit).WithMinInitialDepositRatio(minInitialDepositRatio),
 		types.NewVotingParams(votingPeriod, expeditedVotingPeriod, proposalVotingPeriods),
-		types.NewTallyParams(quorum, threshold, expeditedThreshold, veto),
+		types.NewTallyParams(quorum, threshold, expeditedThreshold, veto, expeditedQuorum),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

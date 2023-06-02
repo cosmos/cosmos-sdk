@@ -26,6 +26,7 @@ var (
 	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
 	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
 	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultExpeditedQuorum           = sdk.NewDecWithPrec(667, 3)
 	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 
 	DefaultProposalVotingPeriods []ProposalVotingPeriod = []ProposalVotingPeriod{}
@@ -132,18 +133,19 @@ func validateDepositParams(i interface{}) error {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, expeditedThreshold, vetoThreshold sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, expeditedThreshold, vetoThreshold, expeditedQuorum sdk.Dec) TallyParams {
 	return TallyParams{
 		Quorum:             quorum,
 		Threshold:          threshold,
 		ExpeditedThreshold: expeditedThreshold,
 		VetoThreshold:      vetoThreshold,
+		ExpeditedQuorum:    expeditedQuorum,
 	}
 }
 
 // DefaultTallyParams default parameters for tallying
 func DefaultTallyParams() TallyParams {
-	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultExpeditedThreshold, DefaultVetoThreshold)
+	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultExpeditedThreshold, DefaultVetoThreshold, DefaultExpeditedQuorum)
 }
 
 // GetThreshold returns threshold based on the value isExpedited
@@ -152,6 +154,15 @@ func (tp TallyParams) GetThreshold(isExpedited bool) sdk.Dec {
 		return tp.ExpeditedThreshold
 	}
 	return tp.Threshold
+}
+
+// GetQuorum returns quorum based on the value isExpedited
+func (tp TallyParams) GetQuorum(isExpedited bool) sdk.Dec {
+	if isExpedited {
+		return tp.ExpeditedQuorum
+	}
+
+	return tp.Quorum
 }
 
 // Equal checks equality of TallyParams

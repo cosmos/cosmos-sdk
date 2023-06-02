@@ -31,13 +31,13 @@ func TestTallyParamsGetThreshold(t *testing.T) {
 		},
 		{
 			name:          "custom expedited",
-			tallyParams:   types.NewTallyParams(types.DefaultQuorum, types.DefaultThreshold, sdk.NewDecWithPrec(777, 3), types.DefaultVetoThreshold),
+			tallyParams:   types.NewTallyParams(types.DefaultQuorum, types.DefaultThreshold, sdk.NewDecWithPrec(777, 3), types.DefaultVetoThreshold, types.DefaultExpeditedQuorum),
 			expectedValue: sdk.NewDecWithPrec(777, 3),
 			isExpedited:   true,
 		},
 		{
 			name:          "default not expedited",
-			tallyParams:   types.NewTallyParams(types.DefaultQuorum, sdk.NewDecWithPrec(6, 1), types.DefaultExpeditedThreshold, types.DefaultVetoThreshold),
+			tallyParams:   types.NewTallyParams(types.DefaultQuorum, sdk.NewDecWithPrec(6, 1), types.DefaultExpeditedThreshold, types.DefaultVetoThreshold, types.DefaultExpeditedQuorum),
 			expectedValue: sdk.NewDecWithPrec(6, 1),
 			isExpedited:   false,
 		},

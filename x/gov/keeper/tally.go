@@ -97,7 +97,9 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
-	if percentVoting.LT(tallyParams.Quorum) {
+	quorum := tallyParams.GetQuorum(proposal.IsExpedited)
+
+	if percentVoting.LT(quorum) {
 		return false, true, tallyResults
 	}
 
@@ -120,4 +122,9 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
 	return false, false, tallyResults
+}
+
+// hasReachedQuorum check if the votes have reached quorum or not.
+func hasReachedQuorum(percentVoting, quorum sdk.Dec) bool {
+	return percentVoting.LT(quorum)
 }

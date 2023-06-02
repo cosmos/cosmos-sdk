@@ -1,12 +1,6 @@
 package snapshot
 
 import (
-<<<<<<< HEAD
-	"fmt"
-
-=======
-	"cosmossdk.io/log"
->>>>>>> b590b0910 (chore: small snapshot commands & docs improvement (#16404))
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"

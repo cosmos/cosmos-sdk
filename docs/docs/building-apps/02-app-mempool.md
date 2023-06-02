@@ -43,7 +43,7 @@ all transactions, it can provide greater control over transaction ordering.
 Allowing the application to handle ordering enables the application to define how
 it would like the block constructed. 
 
-Currently, there is a default `PrepareProposal` implementation provided by the application.
+Currently, there is a `PrepareProposal` implementation provided by the application. 
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
@@ -115,6 +115,8 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
 When this mempool is used, it assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
 which is FIFO-ordered by default.
+
+> Note: If a NoOp mempool is used Prepare and Process both should be aware of this as Prepare could include transactions that could fail verification in process proposal.
 
 ### Sender Nonce Mempool
 

@@ -150,7 +150,7 @@ type (
 	}
 )
 
-func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
+func NewProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
 	return DefaultProposalHandler{
 		mempool:    mp,
 		txVerifier: txVerifier,
@@ -179,7 +179,7 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 // FIFO order.
 func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-		// If the mempool is nil or a no-op mempool, we simply return the transactions
+		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
@@ -236,6 +236,13 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
+	// if the mempool is nil or NoOp we simply return ACCEPT,
+	// because processProposal may have included txs that could fail verification
+	_, isNoOp := h.mempool.(mempool.NoOpMempool)
+	if h.mempool == nil || isNoOp {
+		return NoOpProcessProposal()
+	}
+
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		for _, txBytes := range req.Txs {
 			_, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)

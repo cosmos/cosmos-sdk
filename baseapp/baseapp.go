@@ -207,13 +207,11 @@ func NewBaseApp(
 		app.SetMempool(mempool.NoOpMempool{})
 	}
 
-	abciProposalHandler := NewDefaultProposalHandler(app.mempool, app)
-
 	if app.prepareProposal == nil {
-		app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
+		app.SetPrepareProposal(NoOpPrepareProposal())
 	}
 	if app.processProposal == nil {
-		app.SetProcessProposal(abciProposalHandler.ProcessProposalHandler())
+		app.SetProcessProposal(NoOpProcessProposal())
 	}
 	if app.extendVote == nil {
 		app.SetExtendVoteHandler(NoOpExtendVote())

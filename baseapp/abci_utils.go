@@ -236,8 +236,8 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
-	// if the mempool is nil or NoOp we simply return ACCEPT,
-	// because prepareProposal may have included txs that could fail verification
+	// If the mempool is nil or NoOp we simply return ACCEPT,
+	// because PrepareProposal may have included txs that could fail verification.
 	_, isNoOp := h.mempool.(mempool.NoOpMempool)
 	if h.mempool == nil || isNoOp {
 		return NoOpProcessProposal()

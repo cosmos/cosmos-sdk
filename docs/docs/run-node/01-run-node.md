@@ -168,7 +168,9 @@ log_level: "state:info,p2p:info,consensus:info,x/staking:info,x/ibc:info,*error"
 
 ## State Sync
 
-State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. You can read more here: https://docs.cometbft.com/v0.37/core/state-sync
+State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. Read more in [CometBFT documentation](https://docs.cometbft.com/v0.37/core/state-sync).
+
+State sync works thanks to snapshots. Read how the SDK handles snapshots [here](https://github.com/cosmos/cosmos-sdk/blob/825245d/store/snapshots/README.md).
 
 ### Local State Sync
 
@@ -176,4 +178,31 @@ Local state sync work similar to normal state sync except that it works off a lo
 
 1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
 2. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
-<!-- 3. TODO after https://github.com/cosmos/cosmos-sdk/pull/16060 is merged -->
+3. Verify that the node has the snapshot with `<appd> snapshots list`.
+
+### Snapshots Commands
+
+The Cosmos SDK provides commands for managing snapshots.
+These commands can be added in an app with the following snippet in `cmd/<app>/root.go`:
+
+```go
+import (
+  "github.com/cosmos/cosmos-sdk/client/snapshot"
+)
+
+func initRootCmd(/* ... */) {
+  // ...
+  rootCmd.AddCommand(
+    snapshot.Cmd(appCreator),
+  )
+}
+```
+
+Then following commands are available at `<appd> snapshots [command]`:
+
+* **list**: list local snapshots
+* **load**: Load a snapshot archive file into snapshot store
+* **restore**: Restore app state from local snapshot
+* **export**:  Export app state to snapshot store
+* **dump**: Dump the snapshot as portable archive format
+* **delete**: Delete a local snapshot

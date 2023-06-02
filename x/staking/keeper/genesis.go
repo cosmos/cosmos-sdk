@@ -33,14 +33,24 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	if err := k.SetParams(ctx, data.Params); err != nil {
 		panic(err)
 	}
-	k.SetLastTotalPower(ctx, data.LastTotalPower)
+
+	if err := k.SetLastTotalPower(ctx, data.LastTotalPower); err != nil {
+		panic(err)
+	}
 
 	for _, validator := range data.Validators {
-		k.SetValidator(ctx, validator)
+		if err := k.SetValidator(ctx, validator); err != nil {
+			panic(err)
+		}
 
 		// Manually set indices for the first time
-		k.SetValidatorByConsAddr(ctx, validator)
-		k.SetValidatorByPowerIndex(ctx, validator)
+		if err := k.SetValidatorByConsAddr(ctx, validator); err != nil {
+			panic(err)
+		}
+
+		if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
+			panic(err)
+		}
 
 		// Call the creation hook if not exported
 		if !data.Exported {
@@ -51,7 +61,9 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 		// update timeslice if necessary
 		if validator.IsUnbonding() {
-			k.InsertUnbondingValidatorQueue(ctx, validator)
+			if err := k.InsertUnbondingValidatorQueue(ctx, validator); err != nil {
+				panic(err)
+			}
 		}
 
 		switch validator.GetStatus() {
@@ -79,7 +91,9 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			}
 		}
 
-		k.SetDelegation(ctx, delegation)
+		if err := k.SetDelegation(ctx, delegation); err != nil {
+			panic(err)
+		}
 
 		// Call the after-modification hook if not exported
 		if !data.Exported {
@@ -90,19 +104,27 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
-		k.SetUnbondingDelegation(ctx, ubd)
+		if err := k.SetUnbondingDelegation(ctx, ubd); err != nil {
+			panic(err)
+		}
 
 		for _, entry := range ubd.Entries {
-			k.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+			if err := k.InsertUBDQueue(ctx, ubd, entry.CompletionTime); err != nil {
+				panic(err)
+			}
 			notBondedTokens = notBondedTokens.Add(entry.Balance)
 		}
 	}
 
 	for _, red := range data.Redelegations {
-		k.SetRedelegation(ctx, red)
+		if err := k.SetRedelegation(ctx, red); err != nil {
+			panic(err)
+		}
 
 		for _, entry := range red.Entries {
-			k.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
+			if err := k.InsertRedelegationQueue(ctx, red, entry.CompletionTime); err != nil {
+				panic(err)
+			}
 		}
 	}
 

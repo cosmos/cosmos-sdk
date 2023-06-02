@@ -27,8 +27,8 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params queries params of distribution module
-func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.Keeper.Params.Get(c)
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*type
 }
 
 // ValidatorDistributionInfo query validator's commission and self-delegation rewards
-func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryValidatorDistributionInfoRequest) (*types.QueryValidatorDistributionInfoResponse, error) {
+func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.QueryValidatorDistributionInfoRequest) (*types.QueryValidatorDistributionInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -45,8 +45,6 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -98,7 +96,7 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 }
 
 // ValidatorOutstandingRewards queries rewards of a validator address
-func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
+func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -106,8 +104,6 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -132,7 +128,7 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 }
 
 // ValidatorCommission queries accumulated commission for a validator
-func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidatorCommissionRequest) (*types.QueryValidatorCommissionResponse, error) {
+func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValidatorCommissionRequest) (*types.QueryValidatorCommissionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -140,8 +136,6 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -165,7 +159,7 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 }
 
 // ValidatorSlashes queries slash events of a validator
-func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
+func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -183,7 +177,7 @@ func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSl
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
 	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
@@ -208,7 +202,7 @@ func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSl
 }
 
 // DelegationRewards the total rewards accrued by a delegation
-func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
+func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -220,8 +214,6 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -264,7 +256,7 @@ func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegation
 }
 
 // DelegationTotalRewards the total rewards accrued by a each validator
-func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
+func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -272,8 +264,6 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
@@ -315,7 +305,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 }
 
 // DelegatorValidators queries the validators list of a delegator
-func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
+func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -324,14 +314,13 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
 	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
 	var validators []string
 
-	k.stakingKeeper.IterateDelegations(
+	err = k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			validators = append(validators, del.GetValidatorAddr().String())
@@ -339,11 +328,15 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		},
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryDelegatorValidatorsResponse{Validators: validators}, nil
 }
 
 // DelegatorWithdrawAddress queries Query/delegatorWithdrawAddress
-func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
+func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -356,7 +349,7 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 		return nil, err
 	}
 
-	withdrawAddr, err := k.GetDelegatorWithdrawAddr(c, delAdr)
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAdr)
 	if err != nil {
 		return nil, err
 	}
@@ -365,8 +358,8 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	pool, err := k.FeePool.Get(c)
+func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+	pool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

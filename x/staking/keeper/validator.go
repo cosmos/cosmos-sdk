@@ -145,13 +145,21 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator ty
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx context.Context,
 	validator types.Validator, tokensToRemove math.Int,
-) types.Validator {
-	k.DeleteValidatorByPowerIndex(ctx, validator)
-	validator = validator.RemoveTokens(tokensToRemove)
-	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator)
+) (types.Validator, error) {
+	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
+		return validator, err
+	}
 
-	return validator
+	validator = validator.RemoveTokens(tokensToRemove)
+	if err := k.SetValidator(ctx, validator); err != nil {
+		return validator, err
+	}
+
+	if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
+		return validator, err
+	}
+
+	return validator, nil
 }
 
 // UpdateValidatorCommission attempts to update a validator's commission rate.

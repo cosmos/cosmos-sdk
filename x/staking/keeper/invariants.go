@@ -57,7 +57,7 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			panic(err)
 		}
 
-		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
+		err = k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case types.Bonded:
 				bonded = bonded.Add(validator.GetTokens())
@@ -68,13 +68,19 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
+		err = k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
 			for _, entry := range ubd.Entries {
 				notBonded = notBonded.Add(entry.Balance)
 			}
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
 		poolBonded := k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom)
 		poolNotBonded := k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)

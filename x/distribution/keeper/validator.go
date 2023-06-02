@@ -145,7 +145,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	val, err := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return err
 	}

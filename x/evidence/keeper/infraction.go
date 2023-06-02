@@ -26,10 +26,10 @@ import (
 // in the case of a lunatic attack.
 func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	logger := k.Logger(sdkCtx)
+	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 
-	validator, err := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
+	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
 	if err != nil {
 		return err
 	}

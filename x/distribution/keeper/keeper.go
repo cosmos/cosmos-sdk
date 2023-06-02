@@ -105,8 +105,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 
 // withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	val, err := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +114,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, types.ErrNoValidatorDistInfo
 	}
 
-	del, err := k.stakingKeeper.Delegation(sdkCtx, delAddr, valAddr)
+	del, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -125,13 +124,13 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	}
 
 	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(sdkCtx, val, del)
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
 	if err != nil {
 		return nil, err
 	}
 
 	// reinitialize the delegation
-	err = k.initializeDelegation(sdkCtx, valAddr, delAddr)
+	err = k.initializeDelegation(ctx, valAddr, delAddr)
 	if err != nil {
 		return nil, err
 	}

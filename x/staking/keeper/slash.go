@@ -152,16 +152,19 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
-	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+	validator, err = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+	if err != nil {
+		return math.NewInt(0), err
+	}
 
 	switch validator.GetStatus() {
 	case types.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
-			panic(err)
+			return math.NewInt(0), err
 		}
 	case types.Unbonding, types.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
-			panic(err)
+			return math.NewInt(0), err
 		}
 	default:
 		panic("invalid validator status")

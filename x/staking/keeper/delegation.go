@@ -748,7 +748,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
+	if err = store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
 		return err
 	}
 
@@ -826,7 +826,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime 
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	redelegationTimesliceIterator, err := k.RedelegationQueueIterator(ctx, sdkCtx.BlockHeader().Time)
+	redelegationTimesliceIterator, err := k.RedelegationQueueIterator(ctx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}
@@ -921,10 +921,16 @@ func (k Keeper) Delegate(
 			// do nothing
 		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && validator.IsBonded():
 			// transfer pools
-			k.notBondedTokensToBonded(ctx, bondAmt)
+			err = k.notBondedTokensToBonded(ctx, bondAmt)
+			if err != nil {
+				return math.LegacyDec{}, err
+			}
 		case tokenSrc == types.Bonded && !validator.IsBonded():
 			// transfer pools
-			k.bondedTokensToNotBonded(ctx, bondAmt)
+			err = k.bondedTokensToNotBonded(ctx, bondAmt)
+			if err != nil {
+				return math.LegacyDec{}, err
+			}
 		default:
 			panic("unknown token source bond status")
 		}
@@ -991,7 +997,10 @@ func (k Keeper) Unbond(
 	// self-delegation below their minimum, we jail the validator.
 	if isValidatorOperator && !validator.Jailed &&
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
-		k.jailValidator(ctx, validator)
+		err = k.jailValidator(ctx, validator)
+		if err != nil {
+			return amount, err
+		}
 		validator = k.mustGetValidator(ctx, validator.GetOperator())
 	}
 
@@ -1146,7 +1155,9 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 		if entry.IsMature(ctxTime) && !entry.OnHold() {
 			ubd.RemoveEntry(int64(i))
 			i--
-			k.DeleteUnbondingIndex(ctx, entry.UnbondingId)
+			if err = k.DeleteUnbondingIndex(ctx, entry.UnbondingId); err != nil {
+				return nil, err
+			}
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
@@ -1284,7 +1295,9 @@ func (k Keeper) CompleteRedelegation(
 		if entry.IsMature(ctxTime) && !entry.OnHold() {
 			red.RemoveEntry(int64(i))
 			i--
-			k.DeleteUnbondingIndex(ctx, entry.UnbondingId)
+			if err = k.DeleteUnbondingIndex(ctx, entry.UnbondingId); err != nil {
+				return nil, err
+			}
 
 			if !entry.InitialBalance.IsZero() {
 				balances = balances.Add(sdk.NewCoin(bondDenom, entry.InitialBalance))

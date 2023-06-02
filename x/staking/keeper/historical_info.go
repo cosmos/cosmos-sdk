@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -101,10 +102,14 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// and then return at the first empty entry.
 	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
 		_, err := k.GetHistoricalInfo(ctx, i)
-		if err == nil {
-			k.DeleteHistoricalInfo(ctx, i)
-		} else {
-			break
+		if err != nil {
+			if errors.Is(err, types.ErrNoHistoricalInfo) {
+				break
+			}
+			return err
+		}
+		if err = k.DeleteHistoricalInfo(ctx, i); err != nil {
+			return err
 		}
 	}
 

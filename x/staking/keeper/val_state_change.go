@@ -200,7 +200,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 
-			k.SetLastValidatorPower(ctx, valAddr, newPower)
+			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
+				return nil, err
+			}
 		}
 
 		delete(last, valAddrStr)
@@ -218,10 +220,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 		validator, err = k.bondedToUnbonding(ctx, validator)
 		if err != nil {
-			return
+			return nil, err
 		}
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+		if err = k.DeleteLastValidatorPower(ctx, validator.GetOperator()); err != nil {
+			return nil, err
+		}
+
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
@@ -234,19 +239,27 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	// Compare and subtract the respective amounts to only perform one transfer.
 	// This is done in order to avoid doing multiple updates inside each iterator/loop.
 	case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
-		k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+		if err = k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded)); err != nil {
+			return nil, err
+		}
 	case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
-		k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+		if err = k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded)); err != nil {
+			return nil, err
+		}
 	default: // equal amounts of tokens; no update required
 	}
 
 	// set total power on lookup index if there are any updates
 	if len(updates) > 0 {
-		k.SetLastTotalPower(ctx, totalPower)
+		if err = k.SetLastTotalPower(ctx, totalPower); err != nil {
+			return nil, err
+		}
 	}
 
 	// set the list of validator updates
-	k.SetValidatorUpdates(ctx, updates)
+	if err = k.SetValidatorUpdates(ctx, updates); err != nil {
+		return nil, err
+	}
 
 	return updates, err
 }
@@ -317,16 +330,25 @@ func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	// delete the validator by power index, as the key will change
-	k.DeleteValidatorByPowerIndex(ctx, validator)
+	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
+		return validator, err
+	}
 
 	validator = validator.UpdateStatus(types.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
-	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator)
+	if err := k.SetValidator(ctx, validator); err != nil {
+		return validator, err
+	}
+
+	if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
+		return validator, err
+	}
 
 	// delete from queue if present
-	k.DeleteValidatorQueue(ctx, validator)
+	if err := k.DeleteValidatorQueue(ctx, validator); err != nil {
+		return validator, err
+	}
 
 	// trigger hook
 	consAddr, err := validator.GetConsAddr()
@@ -396,7 +418,9 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 		return validator, err
 	}
 
-	k.SetValidatorByUnbondingID(ctx, validator, id)
+	if err := k.SetValidatorByUnbondingID(ctx, validator, id); err != nil {
+		return validator, err
+	}
 
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
 		return validator, err

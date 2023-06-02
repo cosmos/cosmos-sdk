@@ -22,7 +22,10 @@ func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []by
 
 // update validator for testing
 func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
-	keeper.SetValidator(ctx, validator)
+	err := keeper.SetValidator(ctx, validator)
+	if err != nil {
+		panic(err)
+	}
 
 	// Remove any existing power key for validator.
 	store := keeper.storeService.OpenKVStore(ctx)
@@ -63,7 +66,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 
 	validator, err = keeper.GetValidator(ctx, validator.GetOperator())
 	if err != nil {
-		panic("validator expected but not found")
+		panic(err)
 	}
 
 	return validator

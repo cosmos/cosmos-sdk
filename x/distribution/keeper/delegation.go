@@ -26,13 +26,12 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 		return err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validator, err := k.stakingKeeper.Validator(sdkCtx, val)
+	validator, err := k.stakingKeeper.Validator(ctx, val)
 	if err != nil {
 		return err
 	}
 
-	delegation, err := k.stakingKeeper.Delegation(sdkCtx, del, val)
+	delegation, err := k.stakingKeeper.Delegation(ctx, del, val)
 	if err != nil {
 		return err
 	}
@@ -41,6 +40,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 

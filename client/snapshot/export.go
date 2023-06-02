@@ -1,8 +1,6 @@
 package snapshot
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
@@ -33,7 +31,7 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			fmt.Printf("Exporting snapshot for height %d\n", height)
+			cmd.Printf("Exporting snapshot for height %d\n", height)
 
 			sm := app.SnapshotManager()
 			snapshot, err := sm.Create(uint64(height))
@@ -41,7 +39,7 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Snapshot created at height %d, format %d, chunks %d\n", snapshot.Height, snapshot.Format, snapshot.Chunks)
+			cmd.Printf("Snapshot created at height %d, format %d, chunks %d\n", snapshot.Height, snapshot.Format, snapshot.Chunks)
 			return nil
 		},
 	}

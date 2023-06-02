@@ -209,7 +209,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided will use the latest block height in app state")
+	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
 }

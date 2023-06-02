@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.10-pio-4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.10-pio-4) - 2023-05-12
+
 ### Features
 
 * [PR 568](https://github.com/provenance-io/cosmos-sdk/pull/568) Allow injection of send restrictions into the `x/bank` module.
@@ -62,6 +68,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * [PR 568](https://github.com/provenance-io/cosmos-sdk/pull/568) `MsgMultiSend` now returns an error if there is more than one input.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.10-pio-3...v0.46.10-pio-4
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.10..v0.46.10-pio-4
 
 ---
 

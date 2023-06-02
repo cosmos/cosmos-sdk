@@ -56,7 +56,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{[]byte("bar")}, signers)
 
-	// reset providing CustomGetSigners. validation will fail and depinject will return an error
+	// Reset and provider no CustomGetSigners. Consequently, validation will fail and depinject will return an error
 	_, err = simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(

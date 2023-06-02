@@ -10,7 +10,6 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "snapshots",
 		Short: "Manage local snapshots",
-		Long:  "Manage local snapshots",
 	}
 	cmd.AddCommand(
 		ListSnapshotsCmd,

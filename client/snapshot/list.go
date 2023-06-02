@@ -22,7 +22,7 @@ var ListSnapshotsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list snapshots: %w", err)
 		}
 		for _, snapshot := range snapshots {
-			fmt.Println("height:", snapshot.Height, "format:", snapshot.Format, "chunks:", snapshot.Chunks)
+			cmd.Println("height:", snapshot.Height, "format:", snapshot.Format, "chunks:", snapshot.Chunks)
 		}
 
 		return nil

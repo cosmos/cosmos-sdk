@@ -22,7 +22,7 @@ const SnapshotFileName = "_snapshot"
 func LoadArchiveCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "load <archive-file>",
-		Short: "Load a snapshot archive file into snapshot store",
+		Short: "Load a snapshot archive file (.tar.gz) into snapshot store",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
@@ -70,7 +70,7 @@ func LoadArchiveCmd() *cobra.Command {
 
 				savedSnapshot, err := snapshotStore.Save(snapshot.Height, snapshot.Format, chunks)
 				if err != nil {
-					fmt.Println("failed to save snapshot", err)
+					cmd.Println("failed to save snapshot", err)
 					return
 				}
 				quitChan <- savedSnapshot

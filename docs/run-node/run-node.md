@@ -125,15 +125,41 @@ The naive way would be to run the same commands again in separate terminal windo
 
 ## State Sync
 
-State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. You can read more here: https://docs.cometbft.com/v0.37/core/state-sync
+State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. Read more in [CometBFT documentation](https://docs.cometbft.com/v0.34/core/state-sync).
+
+State sync works thanks to snapshots. Read how the SDK handles snapshots [here](https://github.com/cosmos/cosmos-sdk/blob/825245d/store/snapshots/README.md).
 
 ### Local State Sync
 
 Local state sync work similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
 
-1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
-2. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
-<!-- 3. TODO after https://github.com/cosmos/cosmos-sdk/pull/16060 is merged -->
-## Next {hide}
+1. As mentioned in https://docs.cometbft.com/v0.34/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
+2. Run `<appd snapshot restore <height> <format>` to restore a local snapshot (note: first load it from a file with the *load* command). 
+3. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> tendermint bootstrap-state`
 
-Read about the [Interacting with your Node](./interact-node.md) {hide}
+### Snapshots Commands
+
+The Cosmos SDK provides commands for managing snapshots.
+These commands can be added in an app with the following snippet in `cmd/<app>/root.go`:
+
+```go
+import (
+  "github.com/cosmos/cosmos-sdk/client/snapshot"
+)
+
+func initRootCmd(/* ... */) {
+  // ...
+  rootCmd.AddCommand(
+    snapshot.Cmd(appCreator),
+  )
+}
+```
+
+Then following commands are available at `<appd> snapshots [command]`:
+
+* **list**: list local snapshots
+* **load**: Load a snapshot archive file into snapshot store
+* **restore**: Restore app state from local snapshot
+* **export**:  Export app state to snapshot store
+* **dump**: Dump the snapshot as portable archive format
+* **delete**: Delete a local snapshot

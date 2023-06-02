@@ -177,8 +177,8 @@ State sync works thanks to snapshots. Read how the SDK handles snapshots [here](
 Local state sync work similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
 
 1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
-2. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
-3. Verify that the node has the snapshot with `<appd> snapshots list`.
+2. Run `<appd snapshot restore <height> <format>` to restore a local snapshot (note: first load it from a file with the *load* command). 
+3. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
 
 ### Snapshots Commands
 

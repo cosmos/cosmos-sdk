@@ -150,7 +150,7 @@ type (
 	}
 )
 
-func NewProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
+func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
 	return DefaultProposalHandler{
 		mempool:    mp,
 		txVerifier: txVerifier,

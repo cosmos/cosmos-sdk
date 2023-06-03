@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/types"
 
@@ -148,6 +149,10 @@ func TestShouldExecute(t *testing.T) {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.NewContext(nil, cmtproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
+			ctx = ctx.WithHeaderInfo(header.Info{
+				Height: tc.ctxHeight,
+				Time:   tc.ctxTime,
+			})
 			should := tc.p.ShouldExecute(ctx)
 			assert.Equal(t, tc.expected, should)
 		})

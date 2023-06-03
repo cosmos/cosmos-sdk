@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -51,10 +52,7 @@ func TestHooks(t *testing.T) {
 	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, minDeposit[0].Amount)
 
-	for _, addr := range addrs {
-		authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-	}
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	govHooksReceiver := MockGovHooksReceiver{}
 
@@ -73,7 +71,7 @@ func TestHooks(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)
 
-	params, _ := govKeeper.GetParams(ctx)
+	params, _ := govKeeper.Params.Get(ctx)
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)

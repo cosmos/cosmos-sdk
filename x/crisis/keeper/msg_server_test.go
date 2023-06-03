@@ -11,6 +11,7 @@ import (
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -34,9 +35,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String(), addresscodec.NewBech32Codec("cosmos"))
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", sdk.AccAddress([]byte("addr1_______________")).String(), addresscodec.NewBech32Codec("cosmos"))
 
 	s.ctx = testCtx.Ctx
 	s.keeper = keeper
@@ -46,7 +48,7 @@ func (s *KeeperTestSuite) SetupTest() {
 func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	// default params
 	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
-	err := s.keeper.SetConstantFee(s.ctx, constantFee)
+	err := s.keeper.ConstantFee.Set(s.ctx, constantFee)
 	s.Require().NoError(err)
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})

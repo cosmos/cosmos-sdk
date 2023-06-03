@@ -144,7 +144,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 		// A small amount of this error is tolerated and corrected for,
 		// however any greater amount should be considered a breach in expected
 		// behavior.
-		marginOfErr := sdk.SmallestDec().MulInt64(3)
+		marginOfErr := math.LegacySmallestDec().MulInt64(3)
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {
@@ -229,13 +229,13 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		return nil, err
 	}
 
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-	err = k.SetFeePool(ctx, feePool)
+	err = k.FeePool.Set(ctx, feePool)
 	if err != nil {
 		return nil, err
 	}

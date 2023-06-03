@@ -6,9 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/store/prefix"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"google.golang.org/grpc/codes"
@@ -27,7 +24,7 @@ func NewQueryServer(k AccountKeeper) types.QueryServer {
 
 type queryServer struct{ k AccountKeeper }
 
-func (s queryServer) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
+func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -38,13 +35,12 @@ func (s queryServer) AccountAddressByID(c context.Context, req *types.QueryAccou
 
 	accID := req.AccountId
 
-	ctx := sdk.UnwrapSDKContext(c)
-	address := s.k.GetAccountAddressByID(ctx, accID)
-	if len(address) == 0 {
+	address, err := s.k.Accounts.Indexes.Number.MatchExact(ctx, accID)
+	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
-	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil
 }
 
 func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
@@ -52,29 +48,21 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	store := s.k.storeService.OpenKVStore(ctx)
-	accountsStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.AddressStoreKeyPrefix)
-
 	var accounts []*codectypes.Any
-	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		account := s.k.decodeAccount(value)
-		any, err := codectypes.NewAnyWithValue(account)
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, s.k.Accounts, req.Pagination, func(_ sdk.AccAddress, value sdk.AccountI) (include bool, err error) {
+		accountAny, err := codectypes.NewAnyWithValue(value)
 		if err != nil {
-			return err
+			return false, err
 		}
-
-		accounts = append(accounts, any)
-		return nil
+		accounts = append(accounts, accountAny)
+		return false, nil // we don't include it since we're already appending the account
 	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
-	}
 
 	return &types.QueryAccountsResponse{Accounts: accounts, Pagination: pageRes}, err
 }
 
 // Account returns account details based on address
-func (s queryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -83,8 +71,7 @@ func (s queryServer) Account(c context.Context, req *types.QueryAccountRequest) 
 		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	addr, err := s.k.StringToBytes(req.Address)
+	addr, err := s.k.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +177,7 @@ func (s queryServer) AddressBytesToString(ctx context.Context, req *types.Addres
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := s.k.BytesToString(req.AddressBytes)
+	text, err := s.k.addressCodec.BytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +196,7 @@ func (s queryServer) AddressStringToBytes(ctx context.Context, req *types.Addres
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := s.k.StringToBytes(req.AddressString)
+	bz, err := s.k.addressCodec.StringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +205,7 @@ func (s queryServer) AddressStringToBytes(ctx context.Context, req *types.Addres
 }
 
 // AccountInfo implements the AccountInfo query.
-func (s queryServer) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
+func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -227,8 +214,7 @@ func (s queryServer) AccountInfo(goCtx context.Context, req *types.QueryAccountI
 		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := s.k.StringToBytes(req.Address)
+	addr, err := s.k.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}

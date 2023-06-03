@@ -41,12 +41,6 @@ may contain various metadata about the upgrade, typically application specific
 upgrade info to be included on-chain such as a git commit that validators could
 automatically upgrade to.
 
-#### Sidecar Process
-
-If an operator running the application binary also runs a sidecar process to assist
-in the automatic download and upgrade of a binary, the `Info` allows this process to
-be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
-
 ```go
 type Plan struct {
   Name   string
@@ -54,6 +48,12 @@ type Plan struct {
   Info   string
 }
 ```
+
+#### Sidecar Process
+
+If an operator running the application binary also runs a sidecar process to assist
+in the automatic download and upgrade of a binary, the `Info` allows this process to
+be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
 
 ### Handler
 

@@ -12,10 +12,9 @@ import (
 
 // getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
 // If the message does not have an amino name, then the function returns false.
-func getMessageAminoName(msg protoreflect.Message) (string, bool) {
-	opts := msg.Descriptor().Options()
-	if proto.HasExtension(opts, amino.E_Name) {
-		name := proto.GetExtension(opts, amino.E_Name)
+func getMessageAminoName(messageOptions proto.Message) (string, bool) {
+	if proto.HasExtension(messageOptions, amino.E_Name) {
+		name := proto.GetExtension(messageOptions, amino.E_Name)
 		return name.(string), true
 	}
 	return "", false

@@ -232,7 +232,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {
-		if arg == "--unsafe-skip-upgrades" {
+		if arg == FlagSkipUpgradeHeight {
 			j := i + 1
 
 			for j < len(args) {

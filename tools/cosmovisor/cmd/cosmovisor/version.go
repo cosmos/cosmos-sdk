@@ -6,11 +6,9 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"cosmossdk.io/tools/cosmovisor"
 	"github.com/spf13/cobra"
 )
-
-// OutputFlag defines the output format flag
-var OutputFlag = "output"
 
 func NewVersionCmd() *cobra.Command {
 	versionCmd := &cobra.Command{
@@ -18,7 +16,7 @@ func NewVersionCmd() *cobra.Command {
 		Short:        "Display cosmovisor and APP version.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
+			if val, err := cmd.Flags().GetString(cosmovisor.FlagOutput); val == "json" && err == nil {
 				return printVersionJSON(cmd, args)
 			}
 
@@ -26,7 +24,7 @@ func NewVersionCmd() *cobra.Command {
 		},
 	}
 
-	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
+	versionCmd.Flags().StringP(cosmovisor.FlagOutput, "o", "text", "Output format (text|json)")
 
 	return versionCmd
 }
@@ -41,7 +39,7 @@ func getVersion() string {
 }
 
 func printVersion(cmd *cobra.Command, args []string) error {
-	fmt.Printf("cosmovisor version: %s\n", getVersion())
+	cmd.Printf("cosmovisor version: %s\n", getVersion())
 
 	if err := Run(cmd, append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
@@ -72,6 +70,6 @@ func printVersionJSON(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 
-	fmt.Println(string(out))
+	cmd.Println(string(out))
 	return nil
 }

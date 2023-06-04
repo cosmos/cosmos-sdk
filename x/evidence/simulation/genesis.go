@@ -24,10 +24,7 @@ func GenEvidences(_ *rand.Rand, _ []simtypes.Account) []exported.Evidence {
 func RandomizedGenState(simState *module.SimulationState) {
 	var ev []exported.Evidence
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, evidence, &ev, simState.Rand,
-		func(r *rand.Rand) { ev = GenEvidences(r, simState.Accounts) },
-	)
+	simState.AppParams.GetOrGenerate(evidence, &ev, simState.Rand, func(r *rand.Rand) { ev = GenEvidences(r, simState.Accounts) })
 
 	evidenceGenesis := types.NewGenesisState(ev)
 

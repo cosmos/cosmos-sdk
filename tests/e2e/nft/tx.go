@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/nft/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -158,6 +159,6 @@ func (s *E2ETestSuite) initAccount() {
 	s.Require().NoError(err)
 
 	amount := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200)))
-	_, err = clitestutil.MsgSendExec(ctx, val.Address, s.owner, amount, args...)
+	_, err = clitestutil.MsgSendExec(ctx, val.Address, s.owner, amount, addresscodec.NewBech32Codec("cosmos"), args...)
 	s.Require().NoError(err)
 }

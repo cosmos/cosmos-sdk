@@ -115,6 +115,8 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	if err != nil {
 		return nil, err
 	}
+	// TODO: remove this sort once https://github.com/cosmos/cosmos-sdk/issues/2350#issuecomment-1542715157 lands
+	// the encoder should be rendering fields in lexical order
 	return sortJSON(bz)
 }
 

@@ -56,13 +56,13 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	params := types.DefaultParams()
 	params.WithdrawAddrEnabled = false
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
 	err := distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	require.NotNil(t, err)
 
 	params.WithdrawAddrEnabled = true
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	require.Nil(t, err)
@@ -103,10 +103,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	)
 
 	// set outstanding rewards
-	distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// set commission
-	distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission})
+	require.NoError(t, distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
 	// withdraw commission
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(1)), sdk.NewCoin("stake", math.NewInt(1)))
@@ -159,8 +159,8 @@ func TestGetTotalRewards(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
 	}
 
-	distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission})
-	distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	expectedRewards := valCommission.MulDec(math.LegacyNewDec(2))
 	totalRewards := distrKeeper.GetTotalRewards(ctx)
@@ -194,9 +194,9 @@ func TestFundCommunityPool(t *testing.T) {
 	)
 
 	// reset fee pool
-	distrKeeper.SetFeePool(ctx, types.InitialFeePool())
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, types.InitialFeePool()))
 
-	initPool, err := distrKeeper.GetFeePool(ctx)
+	initPool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 	require.Empty(t, initPool.CommunityPool)
 
@@ -205,7 +205,7 @@ func TestFundCommunityPool(t *testing.T) {
 	err = distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 	require.NoError(t, err)
 
-	feePool, err := distrKeeper.GetFeePool(ctx)
+	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
 }

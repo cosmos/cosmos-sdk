@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) SetupTest() {
 func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	// default params
 	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
-	err := s.keeper.SetConstantFee(s.ctx, constantFee)
+	err := s.keeper.ConstantFee.Set(s.ctx, constantFee)
 	s.Require().NoError(err)
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})

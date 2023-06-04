@@ -1,17 +1,19 @@
 package keeper
 
 import (
+	context "context"
+
 	proto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Keeper defines the circuit module's keeper.
 type Keeper struct {
-	storekey storetypes.StoreKey
+	storeService store.KVStoreService
 
 	authority []byte
 
@@ -19,14 +21,14 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(storeKey storetypes.StoreKey, authority string, addressCodec address.Codec) Keeper {
+func NewKeeper(storeService store.KVStoreService, authority string, addressCodec address.Codec) Keeper {
 	auth, err := addressCodec.StringToBytes(authority)
 	if err != nil {
 		panic(err)
 	}
 
 	return Keeper{
-		storekey:     storeKey,
+		storeService: storeService,
 		authority:    auth,
 		addressCodec: addressCodec,
 	}
@@ -36,11 +38,14 @@ func (k *Keeper) GetAuthority() []byte {
 	return k.authority
 }
 
-func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (*types.Permissions, error) {
-	store := ctx.KVStore(k.storekey)
+func (k *Keeper) GetPermissions(ctx context.Context, address []byte) (*types.Permissions, error) {
+	store := k.storeService.OpenKVStore(ctx)
 
 	key := types.CreateAddressPrefix(address)
-	bz := store.Get(key)
+	bz, err := store.Get(key)
+	if err != nil {
+		return nil, err
+	}
 
 	perms := &types.Permissions{}
 	if err := proto.Unmarshal(bz, perms); err != nil {
@@ -50,8 +55,8 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (*types.Permiss
 	return perms, nil
 }
 
-func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Permissions) error {
-	store := ctx.KVStore(k.storekey)
+func (k *Keeper) SetPermissions(ctx context.Context, address []byte, perms *types.Permissions) error {
+	store := k.storeService.OpenKVStore(ctx)
 
 	bz, err := proto.Marshal(perms)
 	if err != nil {
@@ -59,27 +64,30 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Pe
 	}
 
 	key := types.CreateAddressPrefix(address)
-	store.Set(key, bz)
-
-	return nil
+	return store.Set(key, bz)
 }
 
-func (k *Keeper) IsAllowed(ctx sdk.Context, msgURL string) bool {
-	store := ctx.KVStore(k.storekey)
-	return !store.Has(types.CreateDisableMsgPrefix(msgURL))
+func (k *Keeper) IsAllowed(ctx context.Context, msgURL string) (bool, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	has, err := store.Has(types.CreateDisableMsgPrefix(msgURL))
+	return !has, err
 }
 
-func (k *Keeper) DisableMsg(ctx sdk.Context, msgURL string) {
-	ctx.KVStore(k.storekey).Set(types.CreateDisableMsgPrefix(msgURL), []byte{})
+func (k *Keeper) DisableMsg(ctx context.Context, msgURL string) error {
+	return k.storeService.OpenKVStore(ctx).Set(types.CreateDisableMsgPrefix(msgURL), []byte{})
 }
 
-func (k *Keeper) EnableMsg(ctx sdk.Context, msgURL string) {
-	ctx.KVStore(k.storekey).Delete(types.CreateDisableMsgPrefix(msgURL))
+func (k *Keeper) EnableMsg(ctx context.Context, msgURL string) error {
+	return k.storeService.OpenKVStore(ctx).Delete(types.CreateDisableMsgPrefix(msgURL))
 }
 
-func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
-	store := ctx.KVStore(k.storekey)
-	iter := storetypes.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
+func (k *Keeper) IteratePermissions(ctx context.Context, cb func(address []byte, perms types.Permissions) (stop bool)) error {
+	store := k.storeService.OpenKVStore(ctx)
+	iter, err := store.Iterator(types.AccountPermissionPrefix, storetypes.PrefixEndBytes(types.AccountPermissionPrefix))
+	if err != nil {
+		return err
+	}
+
 	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
@@ -100,7 +108,7 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 	}
 }
 
-func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url []byte, perms types.Permissions) (stop bool)) {
+func (k *Keeper) IterateDisableLists(ctx context.Context, cb func(url []byte, perms types.Permissions) (stop bool)) {
 	store := ctx.KVStore(k.storekey)
 
 	iter := storetypes.KVStorePrefixIterator(store, types.AccountPermissionPrefix)

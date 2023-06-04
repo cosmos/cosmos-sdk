@@ -173,6 +173,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	circuitkeeper := keeper.NewKeeper(
+		in.Cdc,
 		in.StoreService,
 		authority.String(),
 		in.AddressCodec,

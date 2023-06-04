@@ -6,9 +6,11 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/circuit/types"
+	"github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -32,21 +34,20 @@ func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest)
 		return nil, err
 	}
 
-	perms, err := qs.keeper.GetPermissions(sdkCtx, add)
+	perms, err := qs.keeper.Permissions.Get(sdkCtx, add)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.AccountResponse{Permission: perms}, nil
+	return &types.AccountResponse{Permission: &perms}, nil
 }
 
 // Account returns account permissions.
-func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(c)
+func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
 	// Iterate over accounts and perform the callback
 
 	var accounts []*types.GenesisAccountPermissions
-	store := sdkCtx.KVStore(qs.keeper.storekey)
+	store := runtime.KVStoreAdapter(qs.keeper.storeService.OpenKVStore(ctx))
 	accountsStore := prefix.NewStore(store, types.AccountPermissionPrefix)
 
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
@@ -76,14 +77,12 @@ func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsReques
 }
 
 // DisabledList returns a list of disabled message urls
-func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(c)
+func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	// Iterate over disabled list and perform the callback
-
 	var msgs []string
-	qs.keeper.IterateDisableLists(sdkCtx, func(address []byte, perm types.Permissions) (stop bool) {
-		msgs = append(msgs, perm.LimitTypeUrls...)
-		return false
+	qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {
+		msgs = append(msgs, msgUrl)
+		return false, nil
 	})
 
 	return &types.DisabledListResponse{DisabledList: msgs}, nil

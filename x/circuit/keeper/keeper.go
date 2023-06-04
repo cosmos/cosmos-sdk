@@ -113,7 +113,7 @@ func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url string) (stop 
 	}(iter)
 
 	for ; iter.Valid(); iter.Next() {
-		if cb(string(iter.Key()[len(types.DisableListPrefix) : len(iter.Key())-1])) {
+		if cb(string(iter.Key()[len(types.DisableListPrefix):])) {
 			break
 		}
 	}

@@ -18,14 +18,14 @@ var (
 )
 
 func CreateAddressPrefix(account []byte) []byte {
-	key := make([]byte, len(AccountPermissionPrefix)+len(account)+1)
+	key := make([]byte, len(AccountPermissionPrefix)+len(account))
 	copy(key, AccountPermissionPrefix)
 	copy(key[len(AccountPermissionPrefix):], account)
 	return key
 }
 
 func CreateDisableMsgPrefix(msgURL string) []byte {
-	key := make([]byte, len(DisableListPrefix)+len(msgURL)+1)
+	key := make([]byte, len(DisableListPrefix)+len(msgURL))
 	copy(key, DisableListPrefix)
 	copy(key[len(DisableListPrefix):], msgURL)
 	return key

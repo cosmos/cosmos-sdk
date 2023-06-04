@@ -89,15 +89,18 @@ func TestIteratePermissions(t *testing.T) {
 
 	// Define a variable to store the returned permissions
 	var returnedPerms []types.Permissions
+	var returnedAddrs [][]byte
 
 	// Iterate through the permissions and append them to the returnedPerms slice
 	f.keeper.IteratePermissions(f.ctx, func(address []byte, perms types.Permissions) (stop bool) {
 		returnedPerms = append(returnedPerms, perms)
+		returnedAddrs = append(returnedAddrs, address)
 		return false
 	})
 
 	// Assert that the returned permissions match the set mock permissions
 	require.Equal(t, mockPerms, returnedPerms)
+	require.Equal(t, mockAddrs, returnedAddrs)
 }
 
 func TestIterateDisabledList(t *testing.T) {

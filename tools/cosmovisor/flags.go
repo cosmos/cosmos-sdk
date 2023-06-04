@@ -2,5 +2,6 @@ package cosmovisor
 
 const (
 	FlagOutput            = "output"
-	FlagSkipUpgradeHeight = "--unsafe-skip-upgrades"
+	FlagSkipUpgradeHeight = "unsafe-skip-upgrades"
+	FlagNoAppVersion      = "no-app-version"
 )

@@ -78,7 +78,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
-		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
+		if err := UpgradeBinary(log.NewCustomLogger(*l.logger), l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
 
@@ -102,7 +102,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		l.logger.Error().Err(err)
+		return false, fmt.Errorf("error reading upgrade-info.json: %w", err)
 	}
 
 	cmdDone := make(chan error)

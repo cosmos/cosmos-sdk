@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
+
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,33 +104,41 @@ func TestIterateDisabledList(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	mockPerms := []types.Permissions{
-		{Level: types.Permissions_LEVEL_SUPER_ADMIN, LimitTypeUrls: []string{"url1", "url2"}},
-		{Level: types.Permissions_LEVEL_ALL_MSGS},
-		{Level: types.Permissions_LEVEL_NONE_UNSPECIFIED},
-	}
-
 	// Set the permissions for a set of mock addresses
-	mockAddrs := [][]byte{
-		[]byte("mock_address_1"),
-		[]byte("mock_address_2"),
-		[]byte("mock_address_3"),
+	mockMsgs := []string{
+		"mockUrl1",
+		"mockUrl2",
+		"mockUrl3",
 	}
 
-	for i, addr := range mockAddrs {
-		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+	for _, url := range mockMsgs {
+		f.keeper.DisableMsg(f.ctx, url)
 	}
 
 	// Define a variable to store the returned disabled URLs
-	var returnedDisabled []types.Permissions
+	var returnedDisabled []string
 
-	f.keeper.IterateDisableLists(f.ctx, func(address []byte, perms types.Permissions) bool {
-		returnedDisabled = append(returnedDisabled, perms)
+	f.keeper.IterateDisableLists(f.ctx, func(url string) bool {
+		returnedDisabled = append(returnedDisabled, url)
 		return false
 	})
 
 	// Assert that the returned disabled URLs match the set mock disabled URLs
-	require.Equal(t, mockPerms[0].LimitTypeUrls, returnedDisabled[0].LimitTypeUrls)
-	require.Equal(t, mockPerms[1].LimitTypeUrls, returnedDisabled[1].LimitTypeUrls)
-	require.Equal(t, mockPerms[2].LimitTypeUrls, returnedDisabled[2].LimitTypeUrls)
+	require.Equal(t, mockMsgs[0], returnedDisabled[0])
+	require.Equal(t, mockMsgs[1], returnedDisabled[1])
+	require.Equal(t, mockMsgs[2], returnedDisabled[2])
+
+	// re-enable mockMsgs[0]
+	f.keeper.EnableMsg(f.ctx, mockMsgs[0])
+
+	returnedDisabled = []string{}
+	f.keeper.IterateDisableLists(f.ctx, func(url string) bool {
+		returnedDisabled = append(returnedDisabled, url)
+		return false
+	})
+
+	// Assert that the returned disabled URLs match the set mock disabled URLs
+	require.Len(t, returnedDisabled, 2)
+	require.Equal(t, mockMsgs[1], returnedDisabled[0])
+	require.Equal(t, mockMsgs[2], returnedDisabled[1])
 }

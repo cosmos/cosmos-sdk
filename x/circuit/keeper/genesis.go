@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/x/circuit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,8 +26,8 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return false
 	})
 
-	k.IterateDisableLists(ctx, func(address []byte, perm types.Permissions) (stop bool) {
-		disabledMsgs = append(disabledMsgs, perm.LimitTypeUrls...)
+	k.IterateDisableLists(ctx, func(url string) (stop bool) {
+		disabledMsgs = append(disabledMsgs, url)
 		return false
 	})
 

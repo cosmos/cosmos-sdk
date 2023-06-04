@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -100,10 +101,10 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 	}
 }
 
-func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url []byte, perms types.Permissions) (stop bool)) {
+func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url string) (stop bool)) {
 	store := ctx.KVStore(k.storekey)
 
-	iter := storetypes.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
+	iter := storetypes.KVStorePrefixIterator(store, types.DisableListPrefix)
 	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
@@ -112,13 +113,7 @@ func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(url []byte, perms 
 	}(iter)
 
 	for ; iter.Valid(); iter.Next() {
-		var perms types.Permissions
-		err := proto.Unmarshal(iter.Value(), &perms)
-		if err != nil {
-			panic(err)
-		}
-
-		if cb(iter.Key()[len(types.DisableListPrefix):], perms) {
+		if cb(string(iter.Key()[len(types.DisableListPrefix) : len(iter.Key())-1])) {
 			break
 		}
 	}

@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/x/circuit/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestQueryAccount(t *testing.T) {
@@ -61,11 +62,7 @@ func TestQueryDisabledList(t *testing.T) {
 	t.Parallel()
 	f := setupFixture(t)
 
-	add, err := f.Keeper.addressCodec.StringToBytes(addresses[0])
-	require.NoError(t, err)
-
-	err = f.Keeper.SetPermissions(f.Ctx, add, &f.MockPerms)
-	require.NoError(t, err)
+	f.Keeper.DisableMsg(f.Ctx, f.MockMsgURL)
 
 	// create a new query server
 	qs := QueryServer{keeper: f.Keeper}
@@ -73,5 +70,5 @@ func TestQueryDisabledList(t *testing.T) {
 	// test the DisabledList method
 	disabledList, err := qs.DisabledList(f.Ctx, &types.QueryDisabledListRequest{})
 	require.NoError(t, err)
-	require.Equal(t, []string{"test"}, disabledList.DisabledList)
+	require.Equal(t, []string{f.MockMsgURL}, disabledList.DisabledList)
 }

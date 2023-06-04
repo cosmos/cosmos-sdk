@@ -6,9 +6,10 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/circuit/types"
+	"github.com/cosmos/gogoproto/proto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -81,8 +82,8 @@ func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisabledLi
 	// Iterate over disabled list and perform the callback
 
 	var msgs []string
-	qs.keeper.IterateDisableLists(sdkCtx, func(address []byte, perm types.Permissions) (stop bool) {
-		msgs = append(msgs, perm.LimitTypeUrls...)
+	qs.keeper.IterateDisableLists(sdkCtx, func(url string) (stop bool) {
+		msgs = append(msgs, url)
 		return false
 	})
 

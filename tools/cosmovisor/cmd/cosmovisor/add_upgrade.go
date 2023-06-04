@@ -15,9 +15,7 @@ var addUpgradeCmd = &cobra.Command{
 	Short:        "Manually add upgrade binary to Cosmovisor",
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return AddUpgrade(cmd, args)
-	},
+	RunE:         AddUpgrade,
 }
 
 // AddUpgrade adds upgrade info to manifest
@@ -58,7 +56,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read binary: %w", err)
 	}
 
-	if err := os.WriteFile(upgradeLocation, executableData, 0o644); err != nil {
+	if err := os.WriteFile(upgradeLocation, executableData, 0o600); err != nil {
 		return fmt.Errorf("failed to write binary to location: %w", err)
 	}
 

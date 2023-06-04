@@ -11,12 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var addUpgradeCmd = &cobra.Command{
-	Use:          "add-upgrade [upgrade-name] [path to executable]",
-	Short:        "Manually add upgrade binary to Cosmovisor",
-	SilenceUsage: true,
-	Args:         cobra.ExactArgs(2),
-	RunE:         AddUpgrade,
+func NewAddUpgradeCmd() *cobra.Command {
+	addUpgrade := &cobra.Command{
+		Use:          "add-upgrade [upgrade-name] [path to executable]",
+		Short:        "Manually add upgrade binary to Cosmovisor",
+		SilenceUsage: true,
+		Args:         cobra.ExactArgs(2),
+		RunE:         AddUpgrade,
+	}
+
+	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary")
+
+	return addUpgrade
 }
 
 // AddUpgrade adds upgrade info to manifest
@@ -47,7 +53,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
-	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil {
+	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil { //nolingt:gosec // the mode is ok here
 		return fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 
@@ -58,7 +64,11 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, err := os.Stat(cfg.UpgradeBin(upgradeName)); err == nil {
-		return fmt.Errorf("upgrade binary already exists at %s", cfg.UpgradeBin(upgradeName))
+		if force, _ := cmd.Flags().GetBool(cosmovisor.FlagForce); !force {
+			return fmt.Errorf("upgrade binary already exists at %s", cfg.UpgradeBin(upgradeName))
+		} else {
+			logger.Info(fmt.Sprintf("Overwriting %s for %s upgrade", executablePath, upgradeName))
+		}
 	} else if !os.IsNotExist(err) {
 		return fmt.Errorf("failed to check if upgrade binary exists: %w", err)
 	}

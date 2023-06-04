@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
@@ -46,7 +47,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
-	if err := os.MkdirAll(upgradeLocation, 0o644); err != nil {
+	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil {
 		return fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 
@@ -56,11 +57,18 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read binary: %w", err)
 	}
 
-	if err := os.WriteFile(upgradeLocation, executableData, 0o600); err != nil {
+	if _, err := os.Stat(cfg.UpgradeBin(upgradeName)); err == nil {
+		return fmt.Errorf("upgrade binary already exists at %s", cfg.UpgradeBin(upgradeName))
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to check if upgrade binary exists: %w", err)
+	}
+
+	if err := os.WriteFile(cfg.UpgradeBin(upgradeName), executableData, 0o600); err != nil {
 		return fmt.Errorf("failed to write binary to location: %w", err)
 	}
 
-	logger.Info(fmt.Sprintf("Using %s for %s upgrade (copied to %s)", executablePath, upgradeName, upgradeLocation))
+	logger.Info(fmt.Sprintf("Using %s for %s upgrade", executablePath, upgradeName))
+	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
 	return nil
 }

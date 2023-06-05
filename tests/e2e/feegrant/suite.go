@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -701,8 +700,6 @@ func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 	grantAllowneceURL := val.APIAddress + "/cosmos/feegrant/v1beta1/allowance/%s/%s"
 	uri := fmt.Sprintf(grantAllowneceURL, granter.String(), grantee.String())
 	respBytes, err := testutil.GetRequest(uri)
-	//cmd := cli.GetCmdQueryFeeGrant(codecaddress.NewBech32Codec("cosmos"))
-	//out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	respAllow := &feegrant.QueryAllowanceResponse{}

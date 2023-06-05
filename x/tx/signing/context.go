@@ -25,6 +25,7 @@ type Context struct {
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
 	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
+	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -85,8 +86,9 @@ func NewContext(options Options) (*Context, error) {
 		return nil, errors.New("validator address codec is required")
 	}
 
-	if options.CustomGetSigners == nil {
-		options.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
+	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
+	for k, _ := range options.CustomGetSigners {
+		customGetSignerFuncs[k] = options.CustomGetSigners[k]
 	}
 
 	c := &Context{
@@ -94,7 +96,8 @@ func NewContext(options Options) (*Context, error) {
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       options.CustomGetSigners,
+		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
+		customGetSignerFuncs:  customGetSignerFuncs,
 	}
 
 	return c, nil
@@ -138,6 +141,9 @@ func (c *Context) Validate() error {
 
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
+				if _, customSigner := c.customGetSignerFuncs[md.FullName()]; customSigner {
+					errs = append(errs, fmt.Errorf("a custom signer function as been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
+				}
 				_, err := c.getGetSignersFn(md)
 				if err != nil {
 					errs = append(errs, err)
@@ -312,7 +318,11 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 }
 
 func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
-	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
+	f, ok := c.customGetSignerFuncs[messageDescriptor.FullName()]
+	if ok {
+		return f, nil
+	}
+	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)

@@ -26,6 +26,7 @@ const (
 	flagVestingEnd   = "vesting-end-time"
 	flagVestingAmt   = "vesting-amount"
 	flagAppendMode   = "append"
+	flagModuleName   = "module-name"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -78,8 +79,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingStart, _ := cmd.Flags().GetInt64(flagVestingStart)
 			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
+			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			return addGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd)
+			return addGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 
@@ -89,6 +91,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
 	cmd.Flags().Bool(flagAppendMode, false, "append the coins to an account already in the genesis.json file")
+	cmd.Flags().String(flagModuleName, "", "module account name")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -106,6 +109,7 @@ func addGenesisAccount(
 	appendAcct bool,
 	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
+	moduleName string,
 ) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
@@ -141,6 +145,8 @@ func addGenesisAccount(
 		default:
 			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
+	} else if moduleName != "" {
+		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
 	} else {
 		genAccount = baseAccount
 	}

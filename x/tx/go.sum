@@ -1,5 +1,5 @@
-cosmossdk.io/api v0.4.1 h1:0ikaYM6GyxTYYcfBiyR8YnLCfhNnhKpEFnaSepCTmqg=
-cosmossdk.io/api v0.4.1/go.mod h1:jR7k5ok90LxW2lFUXvd8Vpo/dr4PpiyVegxdm7b1ZdE=
+cosmossdk.io/api v0.4.2 h1:lQBMl4xINnMnBOR/tQLtjlDnR4exr4e6/SfHR8PILE0=
+cosmossdk.io/api v0.4.2/go.mod h1:qrVgOp7DIeAXa+Tt5dDjOC47bZCDrwx8ZHxrmy7STNE=
 cosmossdk.io/core v0.7.0 h1:GFss3qt2P9p23Cz24NnqLkslzb8n+B75A24x1JgJJp0=
 cosmossdk.io/core v0.7.0/go.mod h1:36hP0ZH/8ipsjzfcp0yKU4bqQXUGhS0/m1krWFCtwCc=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
@@ -33,8 +33,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
-github.com/stretchr/testify v1.8.3 h1:RP3t2pwF7cMEbC1dqtB6poj3niw/9gnV4Cjg5oW5gtY=
-github.com/stretchr/testify v1.8.3/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
+github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
@@ -87,6 +87,6 @@ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gotest.tools/v3 v3.4.0 h1:ZazjZUfuVeZGLAmlKKuyv3IKP5orXcwtOwDQH6YVr6o=
 gotest.tools/v3 v3.4.0/go.mod h1:CtbdzLSsqVhDgMtKsx03ird5YTGB3ar27v0u/yKBW5g=
-pgregory.net/rapid v0.5.7 h1:p7/XbOgyFY1I/3Q12UTXfos70VZTcgc3WeoyiEru5cs=
-pgregory.net/rapid v0.5.7/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
+pgregory.net/rapid v0.6.1 h1:4eyrDxyht86tT4Ztm+kvlyNBLIk071gR+ZQdhphc9dQ=
+pgregory.net/rapid v0.6.1/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=

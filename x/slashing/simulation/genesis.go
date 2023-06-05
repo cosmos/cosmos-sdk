@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -49,34 +50,19 @@ func GenSlashFractionDowntime(r *rand.Rand) math.LegacyDec {
 // RandomizedGenState generates a random GenesisState for slashing
 func RandomizedGenState(simState *module.SimulationState) {
 	var signedBlocksWindow int64
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SignedBlocksWindow, &signedBlocksWindow, simState.Rand,
-		func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(r) },
-	)
+	simState.AppParams.GetOrGenerate(SignedBlocksWindow, &signedBlocksWindow, simState.Rand, func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(r) })
 
 	var minSignedPerWindow math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MinSignedPerWindow, &minSignedPerWindow, simState.Rand,
-		func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(r) },
-	)
+	simState.AppParams.GetOrGenerate(MinSignedPerWindow, &minSignedPerWindow, simState.Rand, func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(r) })
 
 	var downtimeJailDuration time.Duration
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, DowntimeJailDuration, &downtimeJailDuration, simState.Rand,
-		func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(r) },
-	)
+	simState.AppParams.GetOrGenerate(DowntimeJailDuration, &downtimeJailDuration, simState.Rand, func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(r) })
 
 	var slashFractionDoubleSign math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, simState.Rand,
-		func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(r) },
-	)
+	simState.AppParams.GetOrGenerate(SlashFractionDoubleSign, &slashFractionDoubleSign, simState.Rand, func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(r) })
 
 	var slashFractionDowntime math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SlashFractionDowntime, &slashFractionDowntime, simState.Rand,
-		func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(r) },
-	)
+	simState.AppParams.GetOrGenerate(SlashFractionDowntime, &slashFractionDowntime, simState.Rand, func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(r) })
 
 	params := types.NewParams(
 		signedBlocksWindow, minSignedPerWindow, downtimeJailDuration,

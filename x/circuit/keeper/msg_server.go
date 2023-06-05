@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/x/circuit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -90,7 +91,12 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 	case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
 		for _, msgTypeURL := range msg.MsgTypeUrls {
 			// check if the message is in the list of allowed messages
-			if !srv.IsAllowed(ctx, msgTypeURL) {
+			isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isAllowed {
 				return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 			}
 			store.Set(types.CreateDisableMsgPrefix(msgTypeURL), []byte{0x01})
@@ -98,7 +104,12 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 	case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 		for _, msgTypeURL := range msg.MsgTypeUrls {
 			// check if the message is in the list of allowed messages
-			if !srv.IsAllowed(ctx, msgTypeURL) {
+			isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isAllowed {
 				return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 			}
 			for _, msgurl := range perms.LimitTypeUrls {
@@ -153,7 +164,13 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 	if perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || perms.Level == types.Permissions_LEVEL_SOME_MSGS || bytes.Equal(address, srv.GetAuthority()) {
 		// add all msg type urls to the disable list
 		for _, msgTypeURL := range msg.MsgTypeUrls {
-			if srv.IsAllowed(ctx, msgTypeURL) {
+
+			isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
+			if err != nil {
+				return nil, err
+			}
+
+			if isAllowed {
 				return nil, fmt.Errorf("message %s is not disabled", msgTypeURL)
 			}
 			store.Delete(types.CreateDisableMsgPrefix(msgTypeURL))

@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	context "context"
+
 	proto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -64,9 +67,10 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Pe
 	return nil
 }
 
-func (k *Keeper) IsAllowed(ctx sdk.Context, msgURL string) bool {
-	store := ctx.KVStore(k.storekey)
-	return !store.Has(types.CreateDisableMsgPrefix(msgURL))
+func (k *Keeper) IsAllowed(ctx context.Context, msgURL string) (bool, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(k.storekey)
+	return !store.Has(types.CreateDisableMsgPrefix(msgURL)), nil
 }
 
 func (k *Keeper) DisableMsg(ctx sdk.Context, msgURL string) {

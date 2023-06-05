@@ -99,7 +99,8 @@ func Test_TripCircuitBreaker(t *testing.T) {
 	_, err := srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.NoError(t, err)
 
-	allowed := ft.Keeper.IsAllowed(ft.Ctx, url)
+	allowed, err := ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
 	// user with all messages trips circuit breaker
@@ -115,7 +116,8 @@ func Test_TripCircuitBreaker(t *testing.T) {
 	_, err = srv.TripCircuitBreaker(ft.Ctx, superTrip)
 	require.NoError(t, err)
 
-	allowed = ft.Keeper.IsAllowed(ft.Ctx, url2)
+	allowed, err = ft.Keeper.IsAllowed(ft.Ctx, url2)
+	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
 	// user with no permission attempts to trips circuit breaker
@@ -156,14 +158,16 @@ func Test_ResetCircuitBreaker(t *testing.T) {
 	_, err := srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.NoError(t, err)
 
-	allowed := ft.Keeper.IsAllowed(ft.Ctx, url)
+	allowed, err := ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
 	adminReset := &types.MsgResetCircuitBreaker{Authority: addresses[0], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.Ctx, adminReset)
 	require.NoError(t, err)
 
-	allowed = ft.Keeper.IsAllowed(ft.Ctx, url)
+	allowed, err = ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.NoError(t, err)
 	require.True(t, allowed, "circuit breaker should be reset")
 
 	// user has no  permission to reset circuit breaker
@@ -171,14 +175,16 @@ func Test_ResetCircuitBreaker(t *testing.T) {
 	_, err = srv.TripCircuitBreaker(ft.Ctx, admintrip)
 	require.NoError(t, err)
 
-	allowed = ft.Keeper.IsAllowed(ft.Ctx, url)
+	allowed, err = ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
 	unknownUserReset := &types.MsgResetCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.Ctx, unknownUserReset)
 	require.Error(t, err)
 
-	allowed = ft.Keeper.IsAllowed(ft.Ctx, url)
+	allowed, err = ft.Keeper.IsAllowed(ft.Ctx, url)
+	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be reset")
 
 	// user with all messages resets circuit breaker

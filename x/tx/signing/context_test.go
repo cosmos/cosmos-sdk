@@ -177,6 +177,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 		return [][]byte{[]byte("qux")}, nil
 	})
 	context, err = NewContext(options)
+	require.NoError(t, err)
 	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
 }
 

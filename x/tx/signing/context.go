@@ -87,7 +87,7 @@ func NewContext(options Options) (*Context, error) {
 	}
 
 	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
-	for k, _ := range options.CustomGetSigners {
+	for k := range options.CustomGetSigners {
 		customGetSignerFuncs[k] = options.CustomGetSigners[k]
 	}
 

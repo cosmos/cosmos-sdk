@@ -73,7 +73,6 @@ func (s *E2ETestSuite) TestGrantGRPCAllowance() {
 			}
 		})
 	}
-
 }
 
 func (s *E2ETestSuite) TestGrantGRPCAllowanceByGrantee() {
@@ -136,7 +135,6 @@ func (s *E2ETestSuite) TestGrantGRPCAllowanceByGrantee() {
 			}
 		})
 	}
-
 }
 
 func (s *E2ETestSuite) TestGrantGRPCAllowanceByGranter() {
@@ -199,5 +197,4 @@ func (s *E2ETestSuite) TestGrantGRPCAllowanceByGranter() {
 			}
 		})
 	}
-
 }

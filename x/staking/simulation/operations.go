@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -54,41 +55,29 @@ func WeightedOperations(
 		weightMsgRotateConsPubKey          int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateValidator = DefaultWeightMsgCreateValidator
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil, func(_ *rand.Rand) {
+		weightMsgCreateValidator = DefaultWeightMsgCreateValidator
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgEditValidator, &weightMsgEditValidator, nil,
-		func(_ *rand.Rand) {
-			weightMsgEditValidator = DefaultWeightMsgEditValidator
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgEditValidator, &weightMsgEditValidator, nil, func(_ *rand.Rand) {
+		weightMsgEditValidator = DefaultWeightMsgEditValidator
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDelegate, &weightMsgDelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgDelegate = DefaultWeightMsgDelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgDelegate, &weightMsgDelegate, nil, func(_ *rand.Rand) {
+		weightMsgDelegate = DefaultWeightMsgDelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUndelegate, &weightMsgUndelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgUndelegate = DefaultWeightMsgUndelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgUndelegate, &weightMsgUndelegate, nil, func(_ *rand.Rand) {
+		weightMsgUndelegate = DefaultWeightMsgUndelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgBeginRedelegate = DefaultWeightMsgBeginRedelegate
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil, func(_ *rand.Rand) {
+		weightMsgBeginRedelegate = DefaultWeightMsgBeginRedelegate
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
-		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil, func(_ *rand.Rand) {
+		weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
+	})
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgRotateConsPubKey, &weightMsgRotateConsPubKey, nil,
 		func(_ *rand.Rand) {

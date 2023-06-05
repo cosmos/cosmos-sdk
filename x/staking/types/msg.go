@@ -8,7 +8,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -20,17 +19,6 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
-	_ sdk.Msg                            = &MsgRotateConsPubKey{}
-	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-
-	_ legacytx.LegacyMsg = &MsgCreateValidator{}
-	_ legacytx.LegacyMsg = &MsgEditValidator{}
-	_ legacytx.LegacyMsg = &MsgDelegate{}
-	_ legacytx.LegacyMsg = &MsgUndelegate{}
-	_ legacytx.LegacyMsg = &MsgBeginRedelegate{}
-	_ legacytx.LegacyMsg = &MsgCancelUnbondingDelegation{}
-	_ legacytx.LegacyMsg = &MsgUpdateParams{}
-	_ legacytx.LegacyMsg = &MsgRotateConsPubKey{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -66,12 +54,6 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	valAccAddr := sdk.AccAddress(valAddr)
 
 	return []sdk.AccAddress{valAccAddr}
-}
-
-// GetSignBytes returns the message bytes to sign over.
-func (msg MsgCreateValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // Validate validates the MsgCreateValidator sdk msg.
@@ -138,12 +120,6 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
 }
 
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgEditValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // NewMsgDelegate creates a new MsgDelegate instance.
 func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
@@ -157,12 +133,6 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.C
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgDelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
@@ -183,12 +153,6 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{delegator}
 }
 
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // NewMsgUndelegate creates a new MsgUndelegate instance.
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
@@ -202,12 +166,6 @@ func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgUndelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
@@ -224,18 +182,6 @@ func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddr
 func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
-// the expected signer needs to sign.
-func (m MsgUpdateParams) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&m)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message
@@ -263,11 +209,6 @@ func NewMsgRotateConsPubKey(valAddr sdk.ValAddress, pubKey cryptotypes.PubKey) (
 func (msg MsgRotateConsPubKey) GetSigners() []sdk.AccAddress {
 	signer, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	return []sdk.AccAddress{sdk.AccAddress(signer)}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgRotateConsPubKey) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic implements the sdk.Msg interface.

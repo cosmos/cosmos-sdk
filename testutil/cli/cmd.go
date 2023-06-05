@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -29,16 +30,16 @@ func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []st
 	return out, nil
 }
 
-func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac address.Codec, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(), args)
+	return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)
 }
 
-func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, ac address.Codec, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	args = append(args, extraArgs...)
 
-	return ExecTestCLICmd(clientCtx, cli.GetBalancesCmd(), args)
+	return ExecTestCLICmd(clientCtx, cli.GetBalancesCmd(ac), args)
 }

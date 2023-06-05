@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -107,7 +107,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.Quorum, params.Quorum)
 	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
-	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
+	require.Equal(t, math.LegacyZeroDec().String(), params.MinInitialDepositRatio)
 
 	// Check proposals' status
 	var migratedProp1 v1.Proposal
@@ -132,7 +132,7 @@ func getTestProposal() []sdk.Msg {
 	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 }

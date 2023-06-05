@@ -36,7 +36,7 @@ type GenesisState struct {
 	// last_validator_powers is a special index that provides a historical list
 	// of the last-block's bonded validators.
 	LastValidatorPowers []LastValidatorPower `protobuf:"bytes,3,rep,name=last_validator_powers,json=lastValidatorPowers,proto3" json:"last_validator_powers"`
-	// delegations defines the validator set at genesis.
+	// validators defines the validator set at genesis.
 	Validators []Validator `protobuf:"bytes,4,rep,name=validators,proto3" json:"validators"`
 	// delegations defines the delegations active at genesis.
 	Delegations []Delegation `protobuf:"bytes,5,rep,name=delegations,proto3" json:"delegations"`

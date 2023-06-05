@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,12 +19,13 @@ import (
 )
 
 type config struct {
-	handler     *txsigning.HandlerMap
-	decoder     sdk.TxDecoder
-	encoder     sdk.TxEncoder
-	jsonDecoder sdk.TxDecoder
-	jsonEncoder sdk.TxEncoder
-	protoCodec  codec.ProtoCodecMarshaler
+	handler        *txsigning.HandlerMap
+	decoder        sdk.TxDecoder
+	encoder        sdk.TxEncoder
+	jsonDecoder    sdk.TxDecoder
+	jsonEncoder    sdk.TxEncoder
+	protoCodec     codec.ProtoCodecMarshaler
+	signingContext *txsigning.Context
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -53,22 +55,16 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// We currently don't add SIGN_MODE_TEXTUAL as part of the default sign
-	// modes, as it's not released yet (including the Ledger app). However,
-	// textual's sign mode handler is already available in this package. If you
-	// want to use textual for **TESTING** purposes, feel free to create a
-	// handler that includes SIGN_MODE_TEXTUAL.
-	// ref: Tracking issue for SIGN_MODE_TEXTUAL https://github.com/cosmos/cosmos-sdk/issues/11970
+	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 //
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL
-// (for testing purposes for now).
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
 //
-// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
+// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
@@ -125,6 +121,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			panic(err)
 		}
 	}
+	txConfig.signingContext = opts.SigningContext
 
 	lenSignModes := len(configOptions.EnabledSignModes)
 	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
@@ -142,11 +139,9 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 				panic(err)
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			aminoJSONEncoder := aminojson.NewEncoder()
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
-				Encoder:      &aminoJSONEncoder,
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
@@ -202,4 +197,8 @@ func (g config) TxJSONEncoder() sdk.TxEncoder {
 
 func (g config) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
+}
+
+func (g config) SigningContext() *txsigning.Context {
+	return g.signingContext
 }

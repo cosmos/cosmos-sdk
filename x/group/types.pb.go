@@ -491,6 +491,7 @@ type GroupInfo struct {
 	// admin is the account address of the group's admin.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#group-1
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's membership structure that
 	// would break existing proposals. Whenever any members weight is changed,
@@ -642,6 +643,8 @@ type GroupPolicyInfo struct {
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata attached to the group policy.
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's GroupPolicyInfo structure that
 	// would create a different result on a running proposal.
@@ -695,6 +698,8 @@ type Proposal struct {
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,2,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/group#proposal-4
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposers are the account addresses of the proposers.
 	Proposers []string `protobuf:"bytes,4,rep,name=proposers,proto3" json:"proposers,omitempty"`
@@ -813,7 +818,7 @@ func (m *TallyResult) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TallyResult proto.InternalMessageInfo
 
-// Vote represents a vote for a proposal.
+// Vote represents a vote for a proposal.string metadata
 type Vote struct {
 	// proposal is the unique ID of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -822,6 +827,7 @@ type Vote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata attached to the vote.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#vote-2
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submit_time is the timestamp when the vote was submitted.
 	SubmitTime time.Time `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`

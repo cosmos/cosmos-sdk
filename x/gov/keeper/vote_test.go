@@ -3,22 +3,21 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/collections"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestVotes(t *testing.T) {
 	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
-	for _, addr := range addrs {
-		authKeeper.EXPECT().BytesToString(addr).Return(addr.String(), nil).AnyTimes()
-		authKeeper.EXPECT().StringToBytes(addr.String()).Return(addr, nil).AnyTimes()
-	}
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
@@ -38,7 +37,7 @@ func TestVotes(t *testing.T) {
 
 	// Test first vote
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), metadata))
-	vote, err := govKeeper.GetVote(ctx, proposalID, addrs[0])
+	vote, err := govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[0]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -47,7 +46,7 @@ func TestVotes(t *testing.T) {
 
 	// Test change of vote
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-	vote, err = govKeeper.GetVote(ctx, proposalID, addrs[0])
+	vote, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[0]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -61,7 +60,7 @@ func TestVotes(t *testing.T) {
 		v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 2)),
 		v1.NewWeightedVoteOption(v1.OptionNoWithVeto, sdkmath.LegacyNewDecWithPrec(5, 2)),
 	}, ""))
-	vote, err = govKeeper.GetVote(ctx, proposalID, addrs[1])
+	vote, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[1]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[1].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
@@ -77,9 +76,17 @@ func TestVotes(t *testing.T) {
 
 	// Test vote iterator
 	// NOTE order of deposits is determined by the addresses
-	votes, _ := govKeeper.GetAllVotes(ctx)
+	var votes v1.Votes
+	require.NoError(t, govKeeper.Votes.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		votes = append(votes, &value)
+		return false, nil
+	}))
 	require.Len(t, votes, 2)
-	propVotes, _ := govKeeper.GetVotes(ctx, proposalID)
+	var propVotes v1.Votes
+	require.NoError(t, govKeeper.Votes.Walk(ctx, collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID), func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (stop bool, err error) {
+		propVotes = append(propVotes, &value)
+		return false, nil
+	}))
 	require.Equal(t, votes, propVotes)
 	require.Equal(t, addrs[0].String(), votes[0].Voter)
 	require.Equal(t, proposalID, votes[0].ProposalId)
@@ -94,6 +101,6 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, votes[1].Options[3].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
 
 	// non existent vote
-	_, err = govKeeper.GetVote(ctx, proposalID+100, addrs[1])
-	require.ErrorIs(t, err, types.ErrVoteNotFound)
+	_, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID+100, addrs[1]))
+	require.ErrorIs(t, err, collections.ErrNotFound)
 }

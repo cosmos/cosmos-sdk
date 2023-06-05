@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -22,7 +23,7 @@ func TestInternalDenomTestSuite(t *testing.T) {
 }
 
 func (s *internalDenomTestSuite) TestRegisterDenom() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 	s.Require().Error(RegisterDenom(atom, atomUnit))
@@ -33,7 +34,14 @@ func (s *internalDenomTestSuite) TestRegisterDenom() {
 
 	res, ok = GetDenomUnit(matom)
 	s.Require().False(ok)
-	s.Require().Equal(ZeroDec(), res)
+	s.Require().Equal(math.LegacyZeroDec(), res)
+
+	err := SetBaseDenom(atom)
+	s.Require().NoError(err)
+
+	res, ok = GetDenomUnit(atom)
+	s.Require().True(ok)
+	s.Require().Equal(atomUnit, res)
 
 	// reset registration
 	baseDenom = ""
@@ -41,7 +49,7 @@ func (s *internalDenomTestSuite) TestRegisterDenom() {
 }
 
 func (s *internalDenomTestSuite) TestConvertCoins() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 
 	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
@@ -108,7 +116,7 @@ func (s *internalDenomTestSuite) TestConvertCoins() {
 }
 
 func (s *internalDenomTestSuite) TestConvertDecCoins() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 
 	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
@@ -186,6 +194,15 @@ func (s *internalDenomTestSuite) TestDecOperationOrder() {
 	coin, err := ConvertCoin(NewCoin("unit1", NewInt(100000011)), "unit2")
 	s.Require().NoError(err)
 	s.Require().Equal(coin, NewCoin("unit2", NewInt(11)))
+
+	// reset registration
+	baseDenom = ""
+	denomUnits = map[string]Dec{}
+}
+
+func (s *internalDenomTestSuite) TestSetBaseDenomError() {
+	err := SetBaseDenom(atom)
+	s.Require().Error(err)
 
 	// reset registration
 	baseDenom = ""

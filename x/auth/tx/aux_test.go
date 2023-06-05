@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -25,7 +26,7 @@ var (
 
 	msg     = testdata.NewTestMsg(tipperAddr, aux2Addr)
 	memo    = "test-memo"
-	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", sdk.NewIntFromUint64(123)))}
+	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", math.NewIntFromUint64(123)))}
 	chainID = "test-chain"
 	gas     = testdata.NewTestGasLimit()
 	fee     = testdata.NewTestFeeAmount()
@@ -162,7 +163,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 	tx, err := txConfig.TxDecoder()(txBz)
 	require.NoError(t, err)
-	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), feepayerAddr)
+	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), []byte(feepayerAddr))
 	require.Equal(t, tx.(sdk.FeeTx).GetFee(), fee)
 	require.Equal(t, tx.(sdk.FeeTx).GetGas(), gas)
 	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())

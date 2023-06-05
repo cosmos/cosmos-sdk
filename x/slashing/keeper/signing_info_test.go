@@ -5,7 +5,6 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -109,7 +108,6 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
-	s.stakingKeeper.EXPECT().SetMappedConskey(gomock.Any(), oldConsAddr, newConsAddr).Return().AnyTimes()
 
 	newInfo := slashingtypes.NewValidatorSigningInfo(
 		oldConsAddr,
@@ -130,15 +128,19 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	require.Equal(savedPubKey, pks[1])
 
 	// check validator SigningInfo is set properly to new consensus pubkey
-	signingInfo, found := slashingKeeper.GetValidatorSigningInfo(ctx, newConsAddr)
-	require.True(found)
+	signingInfo, err := slashingKeeper.GetValidatorSigningInfo(ctx, newConsAddr)
+	require.NoError(err)
 	require.Equal(signingInfo, newInfo)
 
 	// check missed blocks array is removed on old consensus pubkey
-	missedBlocks := slashingKeeper.GetValidatorMissedBlocks(ctx, oldConsAddr)
+	missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, oldConsAddr)
+	require.NoError(err)
+
 	require.Len(missedBlocks, 0)
 
 	// check missed blocks are set correctly for new pubkey
-	missedBlocks = slashingKeeper.GetValidatorMissedBlocks(ctx, newConsAddr)
+	missedBlocks, err = slashingKeeper.GetValidatorMissedBlocks(ctx, newConsAddr)
+	require.NoError(err)
+
 	require.Len(missedBlocks, 1)
 }

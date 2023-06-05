@@ -79,7 +79,7 @@ func WeightedOperations(
 		weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
 	})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgRotateConsPubKey, &weightMsgRotateConsPubKey, nil,
+	appParams.GetOrGenerate(OpWeightMsgRotateConsPubKey, &weightMsgRotateConsPubKey, nil,
 		func(_ *rand.Rand) {
 			weightMsgRotateConsPubKey = DefaultWeightMsgRotateConsPubKey
 		},

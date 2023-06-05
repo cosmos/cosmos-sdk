@@ -60,7 +60,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(historicalEntries, &histEntries, simState.Rand, func(r *rand.Rand) { histEntries = getHistEntries(r) })
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, keyRotationFee, &histEntries, simState.Rand,
+		keyRotationFee, &histEntries, simState.Rand,
 		func(r *rand.Rand) { rotationFee = getKeyRotationFee(r) },
 	)
 

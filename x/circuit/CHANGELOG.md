@@ -33,4 +33,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
-* (x/circuit) [#16415](https://github.com/cosmos/cosmos-sdk/issues/16415) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey` and requires a codec. Methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. Migrated to collections. `IsAllowed` from the `CircuitBreaker` interface now takes a `context.Context` instead of a `sdk.Context` and returns `bool, error`.
+* (x/circuit) [#16415](https://github.com/cosmos/cosmos-sdk/issues/16415) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey` and requires a codec. Methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. Migrated to collections.

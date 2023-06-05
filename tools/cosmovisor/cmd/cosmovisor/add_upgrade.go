@@ -53,7 +53,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
-	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil { //nolingt:gosec // the mode is ok here
+	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o750); err != nil {
 		return fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 

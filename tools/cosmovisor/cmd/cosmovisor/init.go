@@ -51,7 +51,7 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	switch genBinDirInfo, genBinDirErr := os.Stat(genBinDir); {
 	case os.IsNotExist(genBinDirErr):
 		logger.Info(fmt.Sprintf("creating directory (and any parents): %q", genBinDir))
-		mkdirErr := os.MkdirAll(genBinDir, 0o755) //nolint:gosec // the mode is ok here
+		mkdirErr := os.MkdirAll(genBinDir, 0o750)
 		if mkdirErr != nil {
 			return mkdirErr
 		}

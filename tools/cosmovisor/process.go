@@ -102,7 +102,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		return false, fmt.Errorf("error reading upgrade-info.json: %w", err)
+		l.logger.Error().Err(err)
 	}
 
 	cmdDone := make(chan error)

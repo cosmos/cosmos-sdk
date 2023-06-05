@@ -6,6 +6,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	feegrantv1beta1 "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -21,7 +22,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long: strings.TrimSpace(
 						`Query details for a grant. 
 You can find the fee-grant of a granter and grantee.`),
-					Example: fmt.Sprintf(`Example: $ %s query feegrant grant [granter] [grantee]`, version.AppName),
+					Example: fmt.Sprintf(`$ %s query feegrant grant [granter] [grantee]`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
 						{ProtoField: "grantee"},
@@ -32,7 +33,7 @@ You can find the fee-grant of a granter and grantee.`),
 					Use:       "grants-by-grantee [grantee]",
 					Short:     "Query all grants of a grantee",
 					Long:      "Queries all the grants for a grantee address.",
-					Example:   fmt.Sprintf(`Example: $ %s query feegrant grants-by-grantee [grantee]`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s query feegrant grants-by-grantee [grantee]`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
 					},
@@ -41,7 +42,7 @@ You can find the fee-grant of a granter and grantee.`),
 					RpcMethod: "AllowancesByGranter",
 					Use:       "grants-by-granter [granter]",
 					Short:     "Query all grants by a granter",
-					Example:   fmt.Sprintf(`Example: $ %s query feegrant grants-by-granter [granter]`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s query feegrant grants-by-granter [granter]`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
 					},

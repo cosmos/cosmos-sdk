@@ -3,6 +3,8 @@ package keeper
 import (
 	context "context"
 
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 )
 
@@ -25,7 +27,7 @@ func (k *Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisState) {
 		})
 		return false, nil
 	})
-	if err != nil {
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 
@@ -33,7 +35,7 @@ func (k *Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisState) {
 		disabledMsgs = append(disabledMsgs, msgUrl)
 		return false, nil
 	})
-	if err != nil {
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 

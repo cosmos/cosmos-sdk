@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,10 +67,13 @@ func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequ
 func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	// Iterate over disabled list and perform the callback
 	var msgs []string
-	qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {
+	err := qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {
 		msgs = append(msgs, msgUrl)
 		return false, nil
 	})
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+		return nil, err
+	}
 
 	return &types.DisabledListResponse{DisabledList: msgs}, nil
 }

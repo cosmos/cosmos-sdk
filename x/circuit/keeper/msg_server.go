@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	context "context"
-	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -84,7 +83,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 
 	// Check that the account has the permissions
 	perms, err := srv.Permissions.Get(ctx, address)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil && !errorsmod.IsOf(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
@@ -161,7 +160,7 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 
 	// Get the permissions for the account specified in the msg.Authority field
 	perms, err := keeper.Permissions.Get(ctx, address)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil && !errorsmod.IsOf(err, collections.ErrNotFound) {
 		return nil, fmt.Errorf("user permission does not exist %w", err)
 	}
 

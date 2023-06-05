@@ -1,14 +1,10 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
-	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/circuit/types"
-	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -44,33 +40,22 @@ func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest)
 
 // Account returns account permissions.
 func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	// Iterate over accounts and perform the callback
-
 	var accounts []*types.GenesisAccountPermissions
-	store := runtime.KVStoreAdapter(qs.keeper.storeService.OpenKVStore(ctx))
-	accountsStore := prefix.NewStore(store, types.AccountPermissionPrefix)
+	results, pageRes, err := query.CollectionPaginate[[]byte, types.Permissions](ctx, qs.keeper.Permissions, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
 
-	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		perm := &types.Permissions{}
-		if err := proto.Unmarshal(value, perm); err != nil {
-			return err
-		}
-
-		// remove key suffix
-		address, err := qs.keeper.addressCodec.BytesToString(bytes.TrimRight(key, "\x00"))
+	for _, result := range results {
+		address, err := qs.keeper.addressCodec.BytesToString(result.Key)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		accounts = append(accounts, &types.GenesisAccountPermissions{
 			Address:     address,
-			Permissions: perm,
+			Permissions: &result.Value,
 		})
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	return &types.AccountsResponse{Accounts: accounts, Pagination: pageRes}, nil

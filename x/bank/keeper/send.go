@@ -165,8 +165,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		),
 	)
 
+	var outAddress sdk.AccAddress
 	for _, out := range outputs {
-		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
+		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -492,11 +493,11 @@ func (r *sendRestriction) clear() {
 	r.fn = nil
 }
 
-var _ types.SendRestrictionFn = sendRestriction{}.apply
+var _ types.SendRestrictionFn = (*sendRestriction)(nil).apply
 
 // apply applies the send restriction if there is one. If not, it's a no-op.
-func (r sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
-	if r.fn == nil {
+func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	if r == nil || r.fn == nil {
 		return toAddr, nil
 	}
 	return r.fn(ctx, fromAddr, toAddr, amt)

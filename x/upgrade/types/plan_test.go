@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

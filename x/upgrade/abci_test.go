@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -154,7 +153,7 @@ func TestHaltIfTooNew(t *testing.T) {
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we error if we have a registered handler ahead of time")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.HeaderInfo().Height + 3}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 
 	err = s.module.BeginBlock(newCtx)

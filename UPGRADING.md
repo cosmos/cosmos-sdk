@@ -185,9 +185,9 @@ The store must be created during a chain upgrade to v0.47.x.
 
 ```go
 storetypes.StoreUpgrades{
-			Added: []string{
-				crisistypes.ModuleName,
-			},
+	Added: []string{
+		crisistypes.ModuleName,
+	},
 }
 ```
 
@@ -265,9 +265,9 @@ Because the `x/consensus` module is a new module, its store must be added while 
 
 ```go
 storetypes.StoreUpgrades{
-			Added: []string{
-				consensustypes.ModuleName,
-			},
+	Added: []string{
+		consensustypes.ModuleName,
+	},
 }
 ```
 

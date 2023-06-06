@@ -739,6 +739,8 @@ func TestABCI_TxGasLimits(t *testing.T) {
 
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		tx      signing.Tx

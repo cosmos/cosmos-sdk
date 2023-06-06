@@ -3,6 +3,7 @@ package tracekv
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"cosmossdk.io/errors"
@@ -196,5 +197,8 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
-	io.WriteString(w, "\n")
+	_, err = io.WriteString(w, "\n")
+	if err != nil {
+		fmt.Println(err)
+	}
 }

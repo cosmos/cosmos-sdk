@@ -39,7 +39,8 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator)
-	keeper.SetValidatorByConsAddr(ctx, validator)
+	err := keeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(err)
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
@@ -114,7 +115,8 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// set and retrieve a record
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
-	keeper.SetValidatorByConsAddr(ctx, validators[0])
+	err := keeper.SetValidatorByConsAddr(ctx, validators[0])
+	require.NoError(err)
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.True(found)
 	require.True(validators[0].MinEqual(&resVal))
@@ -274,7 +276,8 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	// Set MinCommissionRate to 0.05
 	params := keeper.GetParams(ctx)
 	params.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
-	keeper.SetParams(ctx, params)
+	err := keeper.SetParams(ctx, params)
+	require.NoError(err)
 
 	commission1 := stakingtypes.NewCommissionWithTime(
 		math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),

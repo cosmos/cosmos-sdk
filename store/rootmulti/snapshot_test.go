@@ -33,7 +33,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 		multiStore.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		keys = append(keys, key)
 	}
-	multiStore.LoadLatestVersion()
+	_ = multiStore.LoadLatestVersion()
 
 	for _, key := range keys {
 		store := multiStore.GetCommitKVStore(key).(*iavl.Store)
@@ -50,7 +50,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	multiStore.Commit()
-	multiStore.LoadLatestVersion()
+	_ = multiStore.LoadLatestVersion()
 
 	return multiStore
 }

@@ -666,7 +666,8 @@ func TestSetInitialVersion(t *testing.T) {
 
 	require.NoError(t, multi.LoadLatestVersion())
 
-	multi.SetInitialVersion(5)
+	err := multi.SetInitialVersion(5)
+	require.NoError(t, err)
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
@@ -938,7 +939,8 @@ func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	err := store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	require.NoError(t, err)
 	store.LoadLatestVersion()
 	return map[types.StoreKey]types.CommitKVStore{
 		testStoreKey1: &commitKVStoreStub{

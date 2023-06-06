@@ -74,7 +74,9 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
-	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
+	err = stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
+	require.NoError(t, err)
+
 	lastAccNum := uint64(1000)
 	createBaseAccount := func(addr sdk.AccAddress) *authtypes.BaseAccount {
 		baseAccount := authtypes.NewBaseAccountWithAddress(addr)
@@ -725,7 +727,8 @@ func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper
 	_, err = stakingKeeper.Delegate(ctx, addrs[0], valTokens, stakingtypes.Unbonded, val1, true)
 	require.NoError(t, err)
 
-	stakingKeeper.EndBlocker(ctx)
+	_, err = stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	return addrs[0], valAddrs[0]
 }

@@ -91,7 +91,8 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
 
 	ctxCheck = baseApp.NewContext(true, cmtproto.Header{})
 	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))

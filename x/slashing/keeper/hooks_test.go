@@ -11,8 +11,8 @@ func (s *KeeperTestSuite) TestAfterValidatorBonded() {
 	require := s.Require()
 
 	valAddr := sdk.ValAddress(consAddr.Bytes())
-	keeper.Hooks().AfterValidatorBonded(ctx, consAddr, valAddr)
-
+	err := keeper.Hooks().AfterValidatorBonded(ctx, consAddr, valAddr)
+	require.NoError(err)
 	_, ok := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.True(ok)
 }

@@ -56,7 +56,8 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// set historical entries in params to 5
 	params := stakingtypes.DefaultParams()
 	params.HistoricalEntries = 5
-	keeper.SetParams(ctx, params)
+	err := keeper.SetParams(ctx, params)
+	require.NoError(err)
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored

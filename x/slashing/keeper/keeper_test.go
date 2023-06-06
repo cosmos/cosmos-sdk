@@ -56,8 +56,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// set test params
-	s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams())
-
+	err := s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams())
+	s.Require().NoError(err)
 	slashingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	slashingtypes.RegisterQueryServer(queryHelper, s.slashingKeeper)

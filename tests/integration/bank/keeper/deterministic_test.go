@@ -305,7 +305,7 @@ func TestGRPCQueryParams(t *testing.T) {
 			DefaultSendEnabled: rapid.Bool().Draw(rt, "send"),
 		}
 
-		f.bankKeeper.SetParams(f.ctx, params)
+		err := f.bankKeeper.SetParams(f.ctx, params)
 
 		req := &banktypes.QueryParamsRequest{}
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 0, true)

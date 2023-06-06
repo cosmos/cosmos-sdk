@@ -87,8 +87,10 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 
 	grant.Authorization = any
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(skey, k.cdc.MustMarshal(&grant))
-
+	err = store.Set(skey, k.cdc.MustMarshal(&grant))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

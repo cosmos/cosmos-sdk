@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
@@ -18,23 +18,24 @@ import (
 // `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
 // to be added for the account, `appendAcct` updates the account if already exists.
 // `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
+// `moduleName“ is the module name for which the account is being created
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(
 	cdc codec.Codec,
-	accAddr types.AccAddress,
+	accAddr sdk.AccAddress,
 	appendAcct bool,
 	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
 	moduleName string,
 ) error {
-	coins, err := types.ParseCoinsNormalized(amountStr)
+	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
 
-	vestingAmt, err := types.ParseCoinsNormalized(vestingAmtStr)
+	vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
 	if err != nil {
-		return fmt.Errorf("failed to parse authvesting amount: %w", err)
+		return fmt.Errorf("failed to parse vesting amount: %w", err)
 	}
 
 	// create concrete account type based on input parameters
@@ -48,7 +49,7 @@ func AddGenesisAccount(
 
 		if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 			baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
-			return errors.New("authvesting amount cannot be greater than total amount")
+			return errors.New("vesting amount cannot be greater than total amount")
 		}
 
 		switch {
@@ -59,7 +60,7 @@ func AddGenesisAccount(
 			genAccount = authvesting.NewDelayedVestingAccountRaw(baseVestingAccount)
 
 		default:
-			return errors.New("invalid authvesting parameters; must supply start and end time or end time")
+			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
 	} else if moduleName != "" {
 		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
@@ -71,7 +72,7 @@ func AddGenesisAccount(
 		return fmt.Errorf("failed to validate new genesis account: %w", err)
 	}
 
-	appState, appGenesis, err := genutil.GenesisStateFromGenFile(genesisFileURL)
+	appState, appGenesis, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
@@ -112,7 +113,7 @@ func AddGenesisAccount(
 
 		authGenStateBz, err := cdc.MarshalJSON(&authGenState)
 		if err != nil {
-			return fmt.Errorf("failed to marshal authtypes genesis state: %w", err)
+			return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 		}
 		appState[authtypes.ModuleName] = authGenStateBz
 
@@ -125,7 +126,7 @@ func AddGenesisAccount(
 
 	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 	if err != nil {
-		return fmt.Errorf("failed to marshal banktypes genesis state: %w", err)
+		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
 	appState[banktypes.ModuleName] = bankGenStateBz
 

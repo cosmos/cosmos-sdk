@@ -76,23 +76,27 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 
 // NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
 // validator address prefix enabled codecs.
-func NewDefaultSigningOptions() *txsigning.Options {
+func NewDefaultSigningOptions() (*txsigning.Options, error) {
 	sdkConfig := sdk.GetConfig()
 	return &txsigning.Options{
 		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
-	}
+	}, nil
 }
 
 // NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
 // It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
 // NewTxConfigWithOptions but this fn does not enforce it.
-func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
+func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, error) {
+	var err error
+	configOpts := &configOptions
 	if configOpts.SigningOptions == nil {
-		configOpts.SigningOptions = NewDefaultSigningOptions()
+		configOpts.SigningOptions, err = NewDefaultSigningOptions()
+		if err != nil {
+			return nil, err
+		}
 	}
 	if configOpts.SigningContext == nil {
-		var err error
 		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)
 		if err != nil {
 			return nil, err
@@ -118,7 +122,7 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				SignersContext: configOpts.SigningContext,
 			})
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
@@ -132,10 +136,10 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				TypeResolver:        signingOpts.TypeResolver,
 			})
 			if configOpts.TextualCoinMetadataQueryFn == nil {
-				panic("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 	}
@@ -163,7 +167,10 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 	if opts.SigningContext == nil {
 		signingOpts := configOptions.SigningOptions
 		if signingOpts == nil {
-			signingOpts = NewDefaultSigningOptions()
+			signingOpts, err = NewDefaultSigningOptions()
+			if err != nil {
+				panic(err)
+			}
 		}
 		if signingOpts.FileResolver == nil {
 			signingOpts.FileResolver = protoCodec.InterfaceRegistry()

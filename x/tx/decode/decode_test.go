@@ -61,7 +61,7 @@ func TestDecode(t *testing.T) {
 		{
 			name:  "empty signer option",
 			msg:   &testpb.A{},
-			error: "no cosmos.msg.v1.signer option found for message A: tx parse error",
+			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
 		},
 	}
 

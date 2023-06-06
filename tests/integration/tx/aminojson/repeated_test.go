@@ -10,14 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	gogopb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
-	pulsarpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
+	gogopb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/gogo/testpb"
+	pulsarpb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 )
 
 func TestRepeatedFields(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
 	cases := map[string]struct {
 		gogo    gogoproto.Message

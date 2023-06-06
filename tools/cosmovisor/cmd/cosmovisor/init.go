@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -21,14 +20,13 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a cosmovisor daemon home directory.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
-
+		logger := cmd.Context().Value(log.ContextKey).(log.Logger)
 		return InitializeCosmovisor(logger, args)
 	},
 }
 
 // InitializeCosmovisor initializes the cosmovisor directories, current link, and initial executable.
-func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
+func InitializeCosmovisor(logger log.Logger, args []string) error {
 	if len(args) < 1 || len(args[0]) == 0 {
 		return errors.New("no <path to executable> provided")
 	}
@@ -46,14 +44,14 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 		return err
 	}
 
-	logger.Info().Msg("checking on the genesis/bin directory")
+	logger.Info("checking on the genesis/bin directory")
 	genBinExe := cfg.GenesisBin()
 	genBinDir, _ := filepath.Split(genBinExe)
 	genBinDir = filepath.Clean(genBinDir)
 	switch genBinDirInfo, genBinDirErr := os.Stat(genBinDir); {
 	case os.IsNotExist(genBinDirErr):
-		logger.Info().Msgf("creating directory (and any parents): %q", genBinDir)
-		mkdirErr := os.MkdirAll(genBinDir, 0o755)
+		logger.Info(fmt.Sprintf("creating directory (and any parents): %q", genBinDir))
+		mkdirErr := os.MkdirAll(genBinDir, 0o750)
 		if mkdirErr != nil {
 			return mkdirErr
 		}
@@ -62,29 +60,29 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 	case !genBinDirInfo.IsDir():
 		return fmt.Errorf("the path %q already exists but is not a directory", genBinDir)
 	default:
-		logger.Info().Msgf("the %q directory already exists", genBinDir)
+		logger.Info(fmt.Sprintf("the %q directory already exists", genBinDir))
 	}
 
-	logger.Info().Msg("checking on the genesis/bin executable")
+	logger.Info("checking on the genesis/bin executable")
 	if _, err = os.Stat(genBinExe); os.IsNotExist(err) {
-		logger.Info().Msgf("copying executable into place: %q", genBinExe)
+		logger.Info(fmt.Sprintf("copying executable into place: %q", genBinExe))
 		if cpErr := copyFile(pathToExe, genBinExe); cpErr != nil {
 			return cpErr
 		}
 	} else {
-		logger.Info().Msgf("the %q file already exists", genBinExe)
+		logger.Info(fmt.Sprintf("the %q file already exists", genBinExe))
 	}
-	logger.Info().Msgf("making sure %q is executable", genBinExe)
+	logger.Info(fmt.Sprintf("making sure %q is executable", genBinExe))
 	if err = plan.EnsureBinary(genBinExe); err != nil {
 		return err
 	}
 
-	logger.Info().Msg("checking on the current symlink and creating it if needed")
+	logger.Info("checking on the current symlink and creating it if needed")
 	cur, curErr := cfg.CurrentBin()
 	if curErr != nil {
 		return curErr
 	}
-	logger.Info().Msgf("the current symlink points to: %q", cur)
+	logger.Info(fmt.Sprintf("the current symlink points to: %q", cur))
 
 	return nil
 }

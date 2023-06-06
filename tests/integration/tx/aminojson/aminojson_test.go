@@ -43,9 +43,9 @@ import (
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/gogo/testpb"
-	pulsar_testpb "github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
+	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/gogo/testpb"
+	pulsar_testpb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -99,7 +99,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		desc := tt.Pulsar.ProtoReflect().Descriptor()
@@ -209,7 +209,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 

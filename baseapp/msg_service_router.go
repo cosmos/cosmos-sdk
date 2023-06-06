@@ -229,14 +229,21 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 				} else {
 					return nil, err
 				}
+			}
 
-				if msr.circuitBreaker != nil {
-					msgURL := sdk.MsgTypeURL(req)
-					if !msr.circuitBreaker.IsAllowed(ctx, msgURL) {
-						return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
-					}
+			if msr.circuitBreaker != nil {
+				msgURL := sdk.MsgTypeURL(req)
+
+				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				if err != nil {
+					return nil, err
+				}
+
+				if !isAllowed {
+					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
 				}
 			}
+
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)

@@ -322,7 +322,7 @@ func RegisterTxService(
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	err := txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
 

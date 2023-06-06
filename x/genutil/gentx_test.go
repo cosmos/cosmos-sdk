@@ -296,10 +296,11 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			if tc.expPass {
 				suite.stakingKeeper.EXPECT().ApplyAndReturnValidatorSetUpdates(gomock.Any()).Return(nil, nil).AnyTimes()
 				suite.Require().NotPanics(func() {
-					genutil.DeliverGenTxs(
+					_, err := genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,
 						suite.encodingConfig.TxConfig,
 					)
+					suite.Require().NoError(err)
 				})
 			} else {
 				_, err := genutil.DeliverGenTxs(

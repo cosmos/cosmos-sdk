@@ -36,7 +36,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 		k.SetValidator(ctx, validator)
 
 		// Manually set indices for the first time
-		k.SetValidatorByConsAddr(ctx, validator)
+		err := k.SetValidatorByConsAddr(ctx, validator)
+		if err != nil {
+			panic(err)
+		}
 		k.SetValidatorByPowerIndex(ctx, validator)
 
 		// Call the creation hook if not exported

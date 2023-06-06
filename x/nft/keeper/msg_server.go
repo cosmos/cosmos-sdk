@@ -43,11 +43,14 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 		return nil, err
 	}
 
-	ctx.EventManager().EmitTypedEvent(&nft.EventSend{
+	err = ctx.EventManager().EmitTypedEvent(&nft.EventSend{
 		ClassId:  msg.ClassId,
 		Id:       msg.Id,
 		Sender:   msg.Sender,
 		Receiver: msg.Receiver,
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &nft.MsgSendResponse{}, nil
 }

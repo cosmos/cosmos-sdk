@@ -143,11 +143,12 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
-			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			suite.Require().NoError(err)
 			if !tc.expErr {
 				suite.mockSendCoins(suite.ctx, minterAcc, baseAcc.GetAddress())
 			}
-			_, err := suite.msgServer.Send(suite.ctx, tc.input)
+			_, err = suite.msgServer.Send(suite.ctx, tc.input)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
@@ -240,11 +241,12 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
-			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			suite.Require().NoError(err)
 			if !tc.expErr {
 				suite.mockInputOutputCoins([]sdk.AccountI{minterAcc}, accAddrs[:2])
 			}
-			_, err := suite.msgServer.MultiSend(suite.ctx, tc.input)
+			_, err = suite.msgServer.MultiSend(suite.ctx, tc.input)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)

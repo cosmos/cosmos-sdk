@@ -83,7 +83,8 @@ func TestIteratePermissions(t *testing.T) {
 		[]byte("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+		err := f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+		require.NoError(t, err)
 	}
 
 	// Define a variable to store the returned permissions
@@ -117,7 +118,9 @@ func TestIterateDisabledList(t *testing.T) {
 	}
 
 	for i, addr := range mockAddrs {
-		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+		err := f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
+		require.NoError(t, err)
+
 	}
 
 	// Define a variable to store the returned disabled URLs

@@ -306,6 +306,7 @@ func TestGRPCQueryParams(t *testing.T) {
 		}
 
 		err := f.bankKeeper.SetParams(f.ctx, params)
+		assert.NilError(t, err)
 
 		req := &banktypes.QueryParamsRequest{}
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 0, true)

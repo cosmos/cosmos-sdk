@@ -137,9 +137,10 @@ func SimulateMsgRevokeAllowance(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		hasGrant := false
+
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
-		k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 			granter, err := ac.StringToBytes(grant.Granter)
 			if err != nil {
 				panic(err)
@@ -153,6 +154,10 @@ func SimulateMsgRevokeAllowance(
 			hasGrant = true
 			return true
 		})
+		var empty simtypes.OperationMsg
+		if err != nil {
+			return empty, nil, err
+		}
 
 		if !hasGrant {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, "no grants"), nil, nil

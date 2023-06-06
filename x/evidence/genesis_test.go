@@ -133,12 +133,13 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 		{
 			"success",
 			func() {
-				suite.keeper.SetEvidence(suite.ctx, &types.Equivocation{
+				err := suite.keeper.SetEvidence(suite.ctx, &types.Equivocation{
 					Height:           1,
 					Power:            100,
 					Time:             time.Now().UTC(),
 					ConsensusAddress: pk.PubKey().Address().String(),
 				})
+				suite.NoError(err)
 			},
 			true,
 			func() {},

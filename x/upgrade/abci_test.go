@@ -103,7 +103,8 @@ func VerifyDoUpgrade(t *testing.T) {
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -111,7 +112,8 @@ func VerifyDoUpgrade(t *testing.T) {
 		return vm, nil
 	})
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	VerifyCleared(t, newCtx)
@@ -120,7 +122,8 @@ func VerifyDoUpgrade(t *testing.T) {
 func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
 	t.Log("Verify that a panic happens at the upgrade height")
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
@@ -128,7 +131,8 @@ func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName strin
 		return vm, nil
 	})
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	VerifyCleared(t, newCtx)
@@ -145,7 +149,8 @@ func TestHaltIfTooNew(t *testing.T) {
 
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 	require.Equal(t, 0, called)
 
@@ -153,7 +158,8 @@ func TestHaltIfTooNew(t *testing.T) {
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
 	require.NoError(t, err)
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 	require.Equal(t, 0, called)
 
@@ -161,7 +167,8 @@ func TestHaltIfTooNew(t *testing.T) {
 
 	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(futCtx)
+		err := s.module.BeginBlock(futCtx)
+		require.NoError(t, err)
 	})
 	require.Equal(t, 1, called)
 
@@ -203,7 +210,8 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(s.ctx)
+		err := s.module.BeginBlock(s.ctx)
+		require.NoError(t, err)
 	})
 }
 
@@ -261,7 +269,8 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	t.Log("Verify a second proposal also is being cleared")
@@ -270,7 +279,8 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx = newCtx.WithBlockHeight(skipTwo)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	// To ensure verification is being done only after both upgrades are cleared
@@ -298,7 +308,8 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	t.Log("Verify the second proposal is not skipped")
@@ -332,7 +343,8 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	// Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	// A new proposal with height in skipUpgradeHeights
@@ -341,7 +353,8 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
 	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	t.Log("Verify a new proposal is not skipped")
@@ -363,7 +376,8 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
 	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
+		err := s.module.BeginBlock(newCtx)
+		require.NoError(t, err)
 	})
 
 	VerifyDoUpgrade(t)
@@ -455,11 +469,13 @@ func TestBinaryVersion(t *testing.T) {
 		ctx := tc.preRun()
 		if tc.expectPanic {
 			require.Panics(t, func() {
-				s.module.BeginBlock(ctx)
+				err := s.module.BeginBlock(ctx)
+				require.NoError(t, err)
 			})
 		} else {
 			require.NotPanics(t, func() {
-				s.module.BeginBlock(ctx)
+				err := s.module.BeginBlock(ctx)
+				require.NoError(t, err)
 			})
 		}
 	}
@@ -492,7 +508,8 @@ func TestDowngradeVerification(t *testing.T) {
 
 	// successful upgrade.
 	require.NotPanics(t, func() {
-		m.BeginBlock(ctx)
+		err := m.BeginBlock(ctx)
+		require.NoError(t, err)
 	})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
@@ -541,11 +558,13 @@ func TestDowngradeVerification(t *testing.T) {
 
 		if tc.expectPanic {
 			require.Panics(t, func() {
-				m.BeginBlock(ctx)
+				err := m.BeginBlock(ctx)
+				require.NoError(t, err)
 			}, name)
 		} else {
 			require.NotPanics(t, func() {
-				m.BeginBlock(ctx)
+				err := m.BeginBlock(ctx)
+				require.NoError(t, err)
 			}, name)
 		}
 	}

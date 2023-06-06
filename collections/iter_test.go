@@ -10,8 +10,10 @@ import (
 func TestIteratorBasic(t *testing.T) {
 	sk, ctx := deps()
 	// safety check to ensure that iteration does not cross prefix boundaries
-	sk.OpenKVStore(ctx).Set([]byte{0, 0}, []byte("before prefix"))
-	sk.OpenKVStore(ctx).Set([]byte{2, 1}, []byte("after prefix"))
+	err := sk.OpenKVStore(ctx).Set([]byte{0, 0}, []byte("before prefix"))
+	require.NoError(t, err)
+	err = sk.OpenKVStore(ctx).Set([]byte{2, 1}, []byte("after prefix"))
+	require.NoError(t, err)
 	schemaBuilder := NewSchemaBuilder(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "m", StringKey, Uint64Value)
 	_, err := schemaBuilder.Build()

@@ -41,7 +41,10 @@ func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc c
 				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
-				store.Set(grantByExpTimeQueueKey, []byte{})
+				err = store.Set(grantByExpTimeQueueKey, []byte{})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

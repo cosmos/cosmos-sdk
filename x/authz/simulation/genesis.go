@@ -58,12 +58,9 @@ func newAnyAuthorization(a authz.Authorization) *codectypes.Any {
 // RandomizedGenState generates a random GenesisState for authz.
 func RandomizedGenState(simState *module.SimulationState) {
 	var grants []authz.GrantAuthorization
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, "authz", &grants, simState.Rand,
-		func(r *rand.Rand) {
-			grants = genGrant(r, simState.Accounts, simState.GenTimestamp)
-		},
-	)
+	simState.AppParams.GetOrGenerate("authz", &grants, simState.Rand, func(r *rand.Rand) {
+		grants = genGrant(r, simState.Accounts, simState.GenTimestamp)
+	})
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)
 

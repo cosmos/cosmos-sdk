@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -123,8 +122,10 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
+
 			require.NoError(t, err)
-			ctx := bapp.NewContext(false, cmtproto.Header{})
+			ctx := bapp.NewContext(false)
+
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))

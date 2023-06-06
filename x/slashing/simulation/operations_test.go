@@ -7,7 +7,6 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -100,7 +99,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false)
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
@@ -114,12 +113,8 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
-
-	err = suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
-	suite.Require().NoError(err)
-
-	err = suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
-	suite.Require().NoError(err)
+	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
+	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
 
 func TestSimTestSuite(t *testing.T) {

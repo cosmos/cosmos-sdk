@@ -40,7 +40,7 @@ func TestBeginBlocker(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	pks := simtestutil.CreateTestPubKeys(1)
 	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))
@@ -69,10 +69,11 @@ func TestBeginBlocker(t *testing.T) {
 		BlockIdFlag: cmtproto.BlockIDFlagCommit,
 	}})
 
-	slashing.BeginBlocker(ctx, slashingKeeper)
+	err = slashing.BeginBlocker(ctx, slashingKeeper)
+	require.NoError(t, err)
 
-	info, found := slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
-	require.True(t, found)
+	info, err := slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
+	require.NoError(t, err)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
@@ -80,26 +81,32 @@ func TestBeginBlocker(t *testing.T) {
 
 	height := int64(0)
 
+	signedBlocksWindow, err := slashingKeeper.SignedBlocksWindow(ctx)
+	require.NoError(t, err)
 	// for 100 blocks, mark the validator as having signed
-	for ; height < slashingKeeper.SignedBlocksWindow(ctx); height++ {
+	for ; height < signedBlocksWindow; height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
 				Validator:   val,
 				BlockIdFlag: cmtproto.BlockIDFlagCommit,
 			}})
 
-		slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		require.NoError(t, err)
 	}
 
+	minSignedPerWindow, err := slashingKeeper.MinSignedPerWindow(ctx)
+	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
-	for ; height < ((slashingKeeper.SignedBlocksWindow(ctx) * 2) - slashingKeeper.MinSignedPerWindow(ctx) + 1); height++ {
+	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
 				Validator:   val,
 				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
 			}})
 
-		slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		require.NoError(t, err)
 	}
 
 	// end block

@@ -7,12 +7,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -33,12 +35,13 @@ type UpgradeTestSuite struct {
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx
 
 	skipUpgradeHeights := make(map[int64]bool)
 
-	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	})
@@ -126,8 +129,8 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				plan := types.Plan{Name: planName, Height: expHeight}
 				err := suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				suite.Require().NoError(err)
-				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
-				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: expHeight})
+				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
 				suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan)
@@ -184,8 +187,11 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		},
 	}
 
-	vm := suite.upgradeKeeper.GetModuleVersionMap(suite.ctx)
-	mv := suite.upgradeKeeper.GetModuleVersions(suite.ctx)
+	vm, err := suite.upgradeKeeper.GetModuleVersionMap(suite.ctx)
+	suite.Require().NoError(err)
+
+	mv, err := suite.upgradeKeeper.GetModuleVersions(suite.ctx)
+	suite.Require().NoError(err)
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {

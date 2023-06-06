@@ -7,8 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -50,7 +49,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

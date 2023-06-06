@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -106,6 +105,7 @@ func (s *SimTestSuite) SetupTest() {
 
 	err = mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 	s.Require().NoError(err)
+
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))

@@ -5,8 +5,9 @@ go 1.20
 require (
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
+	cosmossdk.io/x/tx v0.6.3
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/cometbft/cometbft v0.38.0-alpha.2
+	github.com/cometbft/cometbft v0.38.0-rc1
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230524212735-6cabb6aa5741
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/rosetta-sdk-go v0.10.0
@@ -23,8 +24,7 @@ require (
 	cosmossdk.io/core v0.7.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741 // indirect
-	cosmossdk.io/store v0.1.0-alpha.1.0.20230530172526-a187b061ea10 // indirect
-	cosmossdk.io/x/tx v0.6.3 // indirect
+	cosmossdk.io/store v0.1.0-alpha.1.0.20230606164023-59c86dba6693 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -38,7 +38,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230529170040-f235f568816e // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230606152911-c4be581b807f // indirect
 	github.com/cockroachdb/redact v1.1.4 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.0.0-beta.1 // indirect
+	github.com/cosmos/iavl v1.0.0-beta.2 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

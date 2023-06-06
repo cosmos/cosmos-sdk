@@ -1,25 +1,40 @@
 package distribution
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	distirbuitonv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
 	FlagCommission       = "commission"
 	FlagMaxMessagesPerTx = "max-msgs"
+	BaseAddress          = "A58856F0FD53BF058B4909A21AEC019107BA6"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	baseAddr := "A58856F0FD53BF058B4909A21AEC019107BA6"
+	var valAddress bytes.Buffer
+	var accAddress bytes.Buffer
+	accAddress.WriteString(baseAddr)
+	accAddress.WriteString("acc")
+	valAddress.WriteString(baseAddr)
+	valAddress.WriteString("val")
+
+	bech32PrefixValAddr, err := am.ac.BytesToString(accAddress.Bytes())
+	if err != nil {
+		panic(err)
+	}
+	bech32PrefixAccAddr, err := am.validatorCodec.BytesToString(valAddress.Bytes())
+	if err != nil {
+		panic(err)
+	}
 
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{

@@ -10,7 +10,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0-alpha.2
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.10
-	github.com/cosmos/iavl v1.0.0-beta.1
+	github.com/cosmos/iavl v1.0.0-beta.2
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.9
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/onsi/gomega v1.20.0 // indirect
+	github.com/onsi/gomega v1.26.0 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

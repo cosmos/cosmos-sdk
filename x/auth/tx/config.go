@@ -3,8 +3,6 @@ package tx
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -76,56 +74,40 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 	})
 }
 
-// NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
-// custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
-	txConfig := &config{
-		decoder:     DefaultTxDecoder(protoCodec),
-		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
-		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
-		protoCodec:  protoCodec,
+// NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
+// validator address prefix enabled codecs.
+func NewDefaultSigningOptions() *txsigning.Options {
+	sdkConfig := sdk.GetConfig()
+	return &txsigning.Options{
+		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
 	}
+}
 
-	opts := &configOptions
-	if opts.SigningHandler != nil {
-		txConfig.handler = opts.SigningHandler
-		return txConfig
+// NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
+// It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
+// NewTxConfigWithOptions but this fn does not enforce it.
+func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
+	if configOpts.SigningOptions == nil {
+		configOpts.SigningOptions = NewDefaultSigningOptions()
 	}
-
-	signingOpts := opts.SigningOptions
-	if signingOpts == nil {
-		signingOpts = &txsigning.Options{}
-	}
-	if signingOpts.TypeResolver == nil {
-		signingOpts.TypeResolver = protoregistry.GlobalTypes
-	}
-	if signingOpts.FileResolver == nil {
-		signingOpts.FileResolver = protoCodec.InterfaceRegistry()
-	}
-	if len(opts.EnabledSignModes) == 0 {
-		opts.EnabledSignModes = DefaultSignModes
-	}
-
-	if opts.SigningContext == nil {
-		sdkConfig := sdk.GetConfig()
-		if signingOpts.AddressCodec == nil {
-			signingOpts.AddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix())
-		}
-		if signingOpts.ValidatorAddressCodec == nil {
-			signingOpts.ValidatorAddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
-		}
+	if configOpts.SigningContext == nil {
 		var err error
-		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
-	txConfig.signingContext = opts.SigningContext
 
-	lenSignModes := len(configOptions.EnabledSignModes)
-	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
-	for i, m := range configOptions.EnabledSignModes {
+	signingOpts := configOpts.SigningOptions
+
+	if len(configOpts.EnabledSignModes) == 0 {
+		configOpts.EnabledSignModes = DefaultSignModes
+	}
+
+	lenSignModes := len(configOpts.EnabledSignModes)
+	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(configOpts.CustomSignModes))
+	for i, m := range configOpts.EnabledSignModes {
 		var err error
 		switch m {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
@@ -133,7 +115,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i], err = directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
 				TypeResolver:   signingOpts.TypeResolver,
-				SignersContext: opts.SigningContext,
+				SignersContext: configOpts.SigningContext,
 			})
 			if err != nil {
 				panic(err)
@@ -145,11 +127,11 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
-				CoinMetadataQuerier: opts.TextualCoinMetadataQueryFn,
+				CoinMetadataQuerier: configOpts.TextualCoinMetadataQueryFn,
 				FileResolver:        signingOpts.FileResolver,
 				TypeResolver:        signingOpts.TypeResolver,
 			})
-			if opts.TextualCoinMetadataQueryFn == nil {
+			if configOpts.TextualCoinMetadataQueryFn == nil {
 				panic("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
@@ -157,11 +139,52 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			}
 		}
 	}
-	for i, m := range opts.CustomSignModes {
+	for i, m := range configOpts.CustomSignModes {
 		handlers[i+lenSignModes] = m
 	}
 
-	txConfig.handler = txsigning.NewHandlerMap(handlers...)
+	handler := txsigning.NewHandlerMap(handlers...)
+	return handler, nil
+}
+
+// NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
+// custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
+	txConfig := &config{
+		decoder:     DefaultTxDecoder(protoCodec),
+		encoder:     DefaultTxEncoder(),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
+		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
+		protoCodec:  protoCodec,
+	}
+
+	var err error
+	opts := &configOptions
+	if opts.SigningContext == nil {
+		signingOpts := configOptions.SigningOptions
+		if signingOpts == nil {
+			signingOpts = NewDefaultSigningOptions()
+		}
+		if signingOpts.FileResolver == nil {
+			signingOpts.FileResolver = protoCodec.InterfaceRegistry()
+		}
+		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+		if err != nil {
+			panic(err)
+		}
+	}
+	txConfig.signingContext = opts.SigningContext
+
+	if opts.SigningHandler != nil {
+		txConfig.handler = opts.SigningHandler
+		return txConfig
+	}
+
+	txConfig.handler, err = NewSigningHandlerMap(configOptions)
+	if err != nil {
+		panic(err)
+	}
+
 	return txConfig
 }
 

@@ -697,7 +697,7 @@ func TestChangeSets(t *testing.T) {
 	require.NoError(t, iavlStore.LoadVersionForOverwriting(targetVersion))
 
 	for i, cs := range changeSets {
-		v, err := iavlStore.SaveChangeSet(cs)
+		v, err := tree.SaveChangeSet(cs)
 		require.NoError(t, err)
 		require.Equal(t, v, targetVersion+int64(i+1))
 	}

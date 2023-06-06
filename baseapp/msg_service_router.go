@@ -126,13 +126,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 					return nil, err
 				}
 
-<<<<<<< HEAD
-				if msr.circuitBreaker != nil {
-					msgURL := sdk.MsgTypeURL(req)
-					if !msr.circuitBreaker.IsAllowed(ctx, msgURL) {
-						return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
-					}
-=======
 			if msr.circuitBreaker != nil {
 				msgURL := sdk.MsgTypeURL(req)
 
@@ -143,7 +136,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 
 				if !isAllowed {
 					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
->>>>>>> dda81a227 (refactor: avoid breaking change due to #16415 included in v0.50 (#16430))
 				}
 			}
 			// Call the method handler from the service description with the handler object.

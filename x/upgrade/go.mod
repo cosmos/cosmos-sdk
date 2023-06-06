@@ -33,7 +33,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/storage v1.30.0 // indirect
-	cosmossdk.io/collections v0.1.0 // indirect
+	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/x/tx v0.6.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -183,9 +183,7 @@ require (
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 
 replace (
-	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

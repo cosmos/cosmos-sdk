@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/collections v0.1.0
+	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c
 	cosmossdk.io/core v0.7.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
@@ -155,10 +155,7 @@ require (
 
 // Below are the short-lived replace of the evidence module
 replace (
-	// TODO: remove me when collections v0.2.0 is released
-	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

@@ -60,7 +60,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230606152911-c4be581b807f // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230606202032-d96868fd481e // indirect
 	github.com/cockroachdb/redact v1.1.4 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -194,10 +194,8 @@ require (
 // It must be in sync with SimApp temporary replaces
 replace (
 	// TODO tag all extracted modules after SDK refactor
-	// TODO: remove me after collections v0.2.0 is released
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
-	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

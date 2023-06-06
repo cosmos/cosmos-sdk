@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v0.1.0 // indirect
+	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
 	cosmossdk.io/x/tx v0.7.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -155,10 +155,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	// TODO: remove me when collections v0.2.0 is released
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../tx
 	github.com/cosmos/cosmos-sdk => ../../
 )

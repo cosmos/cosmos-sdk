@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -100,7 +99,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// end of app init
 
-	s.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = app.BaseApp.NewContext(false)
 	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)

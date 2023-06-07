@@ -53,7 +53,11 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 ### Protobuf
 
-The SDK is in the process of removing all `gogoproto` annotations.
+With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+
+TODO: summarize proto annotation requirements.
 
 #### Stringer
 
@@ -84,8 +88,10 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/gov`
 * `x/mint`
 * `x/nft`
+* `x/slashing`
+* `x/upgrade`
 
-User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
+Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -105,6 +111,8 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 * `x/distribution`
 * `x/evidence`
 * `x/gov`
+* `x/slashing`
+* `x/upgrade`
 
 **Users using depinject do not need any changes, this is automatically done for them.**
 
@@ -178,6 +186,8 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
 #### `x/auth`
 

@@ -64,7 +64,7 @@ func TestStakingMsgs(t *testing.T) {
 		),
 		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
-	ctxCheck := app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck := app.BaseApp.NewContext(true)
 
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
@@ -84,8 +84,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
-
-	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = app.BaseApp.NewContext(true)
 	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.True(t, found)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
@@ -103,7 +102,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
-	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = app.BaseApp.NewContext(true)
 	validator, found = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.True(t, found)
 	require.Equal(t, description, validator.Description)
@@ -116,7 +115,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
-	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = app.BaseApp.NewContext(true)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
 	require.True(t, found)
@@ -128,7 +127,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// delegation should exist anymore
-	ctxCheck = app.BaseApp.NewContext(true, cmtproto.Header{})
+	ctxCheck = app.BaseApp.NewContext(true)
 	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
 	require.False(t, found)
 

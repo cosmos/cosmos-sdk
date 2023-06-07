@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -456,41 +456,44 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, err)
 
 	// Test bad path.
-	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	query := types.RequestQuery{Path: "/key", Data: k, Height: ver}
+	_, err = multi.Query(&query)
+	codespace, code, _ := errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	_, err = multi.Query(&query)
+	codespace, code, _ = errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	_, err = multi.Query(&query)
+	codespace, code, _ = errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err := multi.Query(&query)
+	require.NoError(t, err)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err = multi.Query(&query)
+	require.NoError(t, err)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	// Since we are using the request as a reference, the path will be modified.
 	query.Data = k2
 	query.Path = "/store2/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err = multi.Query(&query)
+	require.NoError(t, err)
 	require.Equal(t, v2, qres.Value)
 }
 

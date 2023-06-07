@@ -4,6 +4,8 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
+const lastVersion = "v0.47"; // TODO change with v0.50 at release.
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Cosmos SDK",
@@ -37,7 +39,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
-          lastVersion: "v0.47",
+          lastVersion: lastVersion,
           versions: {
             current: {
               path: "main",

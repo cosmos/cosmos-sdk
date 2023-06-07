@@ -46,6 +46,14 @@ type ConfigOptions struct {
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
 	CustomSignModes []txsigning.SignModeHandler
+	// ProtoDecoder is the decoder that will be used to decode protobuf transactions.
+	ProtoDecoder sdk.TxDecoder
+	// ProtoEncoder is the encoder that will be used to encode protobuf transactions.
+	ProtoEncoder sdk.TxEncoder
+	// JsonDecoder is the decoder that will be used to decode json transactions.
+	JSONDecoder sdk.TxDecoder
+	// JsonEncoder is the encoder that will be used to encode json transactions.
+	JSONEncoder sdk.TxEncoder
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -155,11 +163,19 @@ func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, e
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
 func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
 	txConfig := &config{
-		decoder:     DefaultTxDecoder(protoCodec),
-		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
-		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
-		protoCodec:  protoCodec,
+		protoCodec: protoCodec,
+	}
+	if configOptions.ProtoDecoder == nil {
+		txConfig.decoder = DefaultTxDecoder(protoCodec)
+	}
+	if configOptions.ProtoEncoder == nil {
+		txConfig.encoder = DefaultTxEncoder()
+	}
+	if configOptions.JSONDecoder == nil {
+		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
+	}
+	if configOptions.JSONEncoder == nil {
+		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
 	}
 
 	var err error

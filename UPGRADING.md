@@ -417,15 +417,16 @@ The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
-#### `x/crisis`
+#### `x/crisis` and `x/consensus`
 
-With the migrations of all modules away from `x/params`, the crisis module now has a store.
+With the migrations of all modules away from `x/params`, the crisis and consensus module now has a store.
 The store must be created during a chain upgrade to v0.47.x.
 
 ```go
 storetypes.StoreUpgrades{
 			Added: []string{
 				crisistypes.ModuleName,
+				consensusparamtypes.ModuleName,
 			},
 }
 ```

@@ -76,10 +76,14 @@ var DefaultSignModes = []signingtypes.SignMode{
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithOptions(protoCodec, ConfigOptions{
+	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
 	})
+	if err != nil {
+		panic(err)
+	}
+	return txConfig
 }
 
 // NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
@@ -161,7 +165,7 @@ func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, e
 
 // NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) (client.TxConfig, error) {
 	txConfig := &config{
 		protoCodec: protoCodec,
 	}
@@ -185,7 +189,7 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		if signingOpts == nil {
 			signingOpts, err = NewDefaultSigningOptions()
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 		if signingOpts.FileResolver == nil {
@@ -193,22 +197,22 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		}
 		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 	txConfig.signingContext = opts.SigningContext
 
 	if opts.SigningHandler != nil {
 		txConfig.handler = opts.SigningHandler
-		return txConfig
+		return txConfig, nil
 	}
 
 	txConfig.handler, err = NewSigningHandlerMap(configOptions)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return txConfig
+	return txConfig, nil
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {

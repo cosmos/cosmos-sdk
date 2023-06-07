@@ -91,7 +91,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
 	}
 
-	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	if err != nil {
+		panic(err)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

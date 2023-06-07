@@ -3,8 +3,8 @@ module cosmossdk.io/orm
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.1
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/api v0.4.2
+	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-db v1.0.0
@@ -13,12 +13,12 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/iancoleman/strcase v0.2.0
 	github.com/regen-network/gocuke v0.6.2
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
-	pgregory.net/rapid v0.5.7
+	pgregory.net/rapid v0.6.2
 )
 
 require (

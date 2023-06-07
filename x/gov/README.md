@@ -142,9 +142,7 @@ Note that when *participants* have bonded and unbonded Atoms, their voting power
 
 Once a proposal reaches `MinDeposit`, it immediately enters `Voting period`. We
 define `Voting period` as the interval between the moment the vote opens and
-the moment the vote closes. `Voting period` should always be shorter than
-`Unbonding period` to prevent double voting. The initial value of
-`Voting period` is 2 weeks.
+the moment the vote closes. The initial value of `Voting period` is 2 weeks.
 
 #### Option set
 

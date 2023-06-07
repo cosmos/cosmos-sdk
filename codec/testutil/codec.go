@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,9 +28,11 @@ func (o CodecOptions) NewInterfaceRegistry() codectypes.InterfaceRegistry {
 	}
 
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles:            proto.HybridResolver,
-		AddressCodec:          address.NewBech32Codec(accAddressPrefix),
-		ValidatorAddressCodec: address.NewBech32Codec(valAddressPrefix),
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          address.NewBech32Codec(accAddressPrefix),
+			ValidatorAddressCodec: address.NewBech32Codec(valAddressPrefix),
+		},
 	})
 	if err != nil {
 		panic(err)

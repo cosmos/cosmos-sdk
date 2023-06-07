@@ -2,6 +2,7 @@ package codec
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -196,7 +198,23 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return jsonBytes, nil
+	// TODO: remove this sort once https://github.com/cosmos/cosmos-sdk/issues/2350#issuecomment-1542715157 lands
+	// the encoder should be rendering in lexical order
+	return sortJSON(jsonBytes)
+}
+
+// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
+func sortJSON(toSortJSON []byte) ([]byte, error) {
+	var c interface{}
+	err := json.Unmarshal(toSortJSON, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,

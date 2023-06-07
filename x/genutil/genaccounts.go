@@ -1,4 +1,4 @@
-package helpers
+package genutil
 
 import (
 	"encoding/json"
@@ -10,7 +10,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -137,5 +136,5 @@ func AddGenesisAccount(
 	}
 
 	appGenesis.AppState = appStateJSON
-	return genutil.ExportGenesisFile(appGenesis, genesisFileURL)
+	return ExportGenesisFile(appGenesis, genesisFileURL)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/depinject"
+
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"cosmossdk.io/core/address"
@@ -30,11 +31,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 5
+const (
+	ConsensusVersion = 5
+	GovModuleName    = "gov"
+)
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -239,7 +242,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// default to governance authority if not provided
-	authority := types.NewModuleAddress(govtypes.ModuleName)
+	authority := types.NewModuleAddress(GovModuleName)
 	if in.Config.Authority != "" {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}

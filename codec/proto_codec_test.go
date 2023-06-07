@@ -7,6 +7,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -176,9 +177,11 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 
 func TestGetSigners(t *testing.T) {
 	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		AddressCodec:          testAddressCodec{},
-		ValidatorAddressCodec: testAddressCodec{},
-		ProtoFiles:            protoregistry.GlobalFiles,
+		SigningOptions: signing.Options{
+			AddressCodec:          testAddressCodec{},
+			ValidatorAddressCodec: testAddressCodec{},
+		},
+		ProtoFiles: protoregistry.GlobalFiles,
 	})
 	require.NoError(t, err)
 	cdc := codec.NewProtoCodec(interfaceRegistry)

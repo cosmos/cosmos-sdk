@@ -50,7 +50,10 @@ func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrad
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.ClearUpgradePlan(sdkCtx)
+	err := k.ClearUpgradePlan(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCancelUpgradeResponse{}, nil
 }

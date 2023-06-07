@@ -16,6 +16,7 @@ func NewRootCmd() *cobra.Command {
 		runCmd,
 		configCmd,
 		NewVersionCmd(),
+		NewAddUpgradeCmd(),
 	)
 
 	return rootCmd

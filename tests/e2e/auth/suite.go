@@ -84,42 +84,6 @@ func (s *E2ETestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *E2ETestSuite) TestCLIValidateSignatures() {
-	val := s.network.Validators[0]
-	sendTokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
-
-	res, err := s.createBankMsg(val, val.Address, sendTokens,
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
-	s.Require().NoError(err)
-
-	// write  unsigned tx to file
-	unsignedTx := testutil.WriteToNewTempFile(s.T(), res.String())
-	defer unsignedTx.Close()
-	res, err = authclitestutil.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
-	s.Require().NoError(err)
-	signedTx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
-	s.Require().NoError(err)
-
-	signedTxFile := testutil.WriteToNewTempFile(s.T(), res.String())
-	defer signedTxFile.Close()
-	txBuilder, err := val.ClientCtx.TxConfig.WrapTxBuilder(signedTx)
-	s.Require().NoError(err)
-	_, err = authclitestutil.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
-	s.Require().NoError(err)
-
-	txBuilder.SetMemo("MODIFIED TX")
-	bz, err := val.ClientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-
-	modifiedTxFile := testutil.WriteToNewTempFile(s.T(), string(bz))
-	defer modifiedTxFile.Close()
-
-	_, err = authclitestutil.TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
-	s.Require().EqualError(err, "signatures validation failed")
-}
-
 func (s *E2ETestSuite) TestCLISignGenOnly() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]

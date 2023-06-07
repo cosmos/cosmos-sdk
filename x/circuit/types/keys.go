@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "circuit"
@@ -13,20 +15,6 @@ const (
 
 // KVStore keys
 var (
-	AccountPermissionPrefix = []byte{0x01}
-	DisableListPrefix       = []byte{0x02}
+	AccountPermissionPrefix = collections.NewPrefix(1)
+	DisableListPrefix       = collections.NewPrefix(2)
 )
-
-func CreateAddressPrefix(account []byte) []byte {
-	key := make([]byte, len(AccountPermissionPrefix)+len(account)+1)
-	copy(key, AccountPermissionPrefix)
-	copy(key[len(AccountPermissionPrefix):], account)
-	return key
-}
-
-func CreateDisableMsgPrefix(msgURL string) []byte {
-	key := make([]byte, len(DisableListPrefix)+len(msgURL)+1)
-	copy(key, DisableListPrefix)
-	copy(key[len(DisableListPrefix):], msgURL)
-	return key
-}

@@ -178,7 +178,9 @@ replace (
 )
 
 retract (
-	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331
+	// migrating from v0.46.x -> v0.46.12 breaks LastResultsHash
+	// this is not an issue for new chains started on v0.46.12 or chains that
+	// need to upgrade to v0.46.13 due to barberry
 	v0.46.12
 	// subject to a bug in the group module and gov module migration
 	[v0.46.5, v0.46.6]

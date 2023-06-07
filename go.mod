@@ -4,14 +4,14 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/collections v0.2.0
+	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
-	cosmossdk.io/x/tx v0.6.3
+	cosmossdk.io/x/tx v0.8.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -158,13 +158,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-)
-
-// Below are the short-lived replace of the Cosmos SDK
-replace (
-	cosmossdk.io/core => ./core
-	// TODO: remove after 0.7.0 release
-	cosmossdk.io/x/tx => ./x/tx
 )
 
 // Below are the long-lived replace of the Cosmos SDK

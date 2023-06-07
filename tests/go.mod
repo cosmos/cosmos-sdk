@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	cosmossdk.io/log v1.1.0
@@ -13,8 +13,8 @@ require (
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
-	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/tx v0.7.0
+	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc // indirect
+	cosmossdk.io/x/tx v0.8.0
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.38.0-rc1
 	github.com/cosmos/cosmos-db v1.0.0
@@ -23,15 +23,13 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/mock v1.6.0
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
+	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.6.2
 )
-
-require google.golang.org/grpc v1.55.0
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
@@ -40,7 +38,7 @@ require (
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/storage v1.30.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230309163709-87da587416ba // indirect
-	cosmossdk.io/collections v0.1.0 // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230220112800-f69b9ff58fbe // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -97,6 +95,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.3 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -194,8 +193,6 @@ require (
 // It must be in sync with SimApp temporary replaces
 replace (
 	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

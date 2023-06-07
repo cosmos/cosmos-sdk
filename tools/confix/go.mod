@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.20
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230524212735-6cabb6aa5741
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230607182757-cfeb10287d61
 	github.com/creachadair/atomicfile v0.3.1
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.7.0
@@ -14,14 +14,14 @@ require (
 
 require (
 	cosmossdk.io/api v0.4.2 // indirect
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
-	cosmossdk.io/core v0.7.0 // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
+	cosmossdk.io/core v0.8.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741 // indirect
 	cosmossdk.io/log v1.1.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c // indirect
-	cosmossdk.io/x/tx v0.6.3 // indirect
+	cosmossdk.io/x/tx v0.8.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -159,8 +159,4 @@ require (
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 
-replace (
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../

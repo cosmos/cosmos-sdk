@@ -1,7 +1,7 @@
 # Cosmos SDK v0.46.13 Release Notes
 
 This release includes few improvements and bug fixes.
-Notably, the [burberry security fix](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825). All chains using Cosmos SDK `<= v0.46.12` should upgrade to `v0.46.13` **immediately**.
+Notably, the [barberry security fix](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825). All chains using Cosmos SDK `<= v0.46.12` should upgrade to `v0.46.13` **immediately**.
 
 When upgrading from `<= v0.46.12` to `v0.46.13`, a **coordinated upgrade** is required. A chain is safe as soon as **33%+1** of the voting power has upgraded.
 

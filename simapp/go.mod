@@ -196,7 +196,6 @@ require (
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 replace (
-	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core

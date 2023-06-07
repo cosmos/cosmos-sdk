@@ -26,12 +26,11 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
+	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.6.2
 )
-
-require google.golang.org/grpc v1.55.0
 
 require (
 	cloud.google.com/go v0.110.0 // indirect

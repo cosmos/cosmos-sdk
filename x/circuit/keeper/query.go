@@ -49,6 +49,7 @@ func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequ
 	}
 
 	for _, result := range results {
+		result := result
 		address, err := qs.keeper.addressCodec.BytesToString(result.Key)
 		if err != nil {
 			return nil, err

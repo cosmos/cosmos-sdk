@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
+
 ### Features
 
 * [#15970](https://github.com/cosmos/cosmos-sdk/pull/15970) Enable SIGN_MODE_TEXTUAL.

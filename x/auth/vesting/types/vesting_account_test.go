@@ -372,6 +372,35 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, dva.DelegatedVesting)
 }
 
+func TestCreatePeriodicVestingAccBricked(t *testing.T) {
+	c := sdk.NewCoins
+	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
+	stake := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, amt) }
+	now := tmtime.Now()
+
+	// set up simapp
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	bogusPeriods := types.Periods{
+		{Length: 1, Amount: c(fee(10000), stake(100))},
+		{Length: 1000, Amount: []sdk.Coin{{Denom: feeDenom, Amount: sdk.NewInt(-9000)}}},
+	}
+	bacc, origCoins := initBaseAccount()
+	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), bogusPeriods)
+	addr := pva.GetAddress()
+	app.AccountKeeper.SetAccount(ctx, pva)
+
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, c(fee(6000), stake(100)))
+	require.NoError(t, err)
+	require.Equal(t, int64(100), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	ctx = ctx.WithBlockTime(now.Add(160 * time.Second))
+	_, _, dest := testdata.KeyTestPubAddr()
+	require.Panics(t, func() { app.BankKeeper.SendCoins(ctx, addr, dest, c(fee(750))) })
+}
+
 func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	c := sdk.NewCoins
 	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
@@ -493,6 +522,51 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 
 	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested
 	require.Equal(t, int64(10), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+}
+
+func TestAddGrantPeriodicVestingAcc_negAmount(t *testing.T) {
+	c := sdk.NewCoins
+	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
+	stake := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, amt) }
+	now := tmtime.Now()
+
+	// set up simapp
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	// create an account with an initial grant
+	periods := types.Periods{
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+	}
+	bacc, origCoins := initBaseAccount()
+	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
+	addr := pva.GetAddress()
+
+	// At now+150, add a new grant which attempts to prematurely vest the grant
+	bogusPeriods := types.Periods{
+		{Length: 1, Amount: c(fee(750))},
+		{Length: 1000, Amount: []sdk.Coin{{Denom: feeDenom, Amount: sdk.NewInt(-749)}}},
+	}
+	ctx = ctx.WithBlockTime(now.Add(150 * time.Second))
+	grantAction := types.NewPeriodicGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), bogusPeriods, c(fee(1)))
+	err := pva.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
+	app.AccountKeeper.SetAccount(ctx, pva)
+
+	// fund the vesting account with new grant (old has vested and transferred out)
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(fee(1001), stake(100)))
+	require.NoError(t, err)
+	require.Equal(t, int64(100), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// try to transfer the original grant before its time
+	ctx = ctx.WithBlockTime(now.Add(160 * time.Second))
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(fee(750)))
+	require.NoError(t, err)
 }
 
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {

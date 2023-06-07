@@ -29,7 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
 		if err != nil {
 			panic(err)
 		}

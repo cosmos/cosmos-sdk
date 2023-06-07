@@ -23,11 +23,6 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx context.Context, delAddr sdk.AccAdd
 	return sdk.AccAddress(b), nil
 }
 
-// set the delegator withdraw address
-func (k Keeper) SetDelegatorWithdrawAddr(ctx context.Context, delAddr, withdrawAddr sdk.AccAddress) error {
-	return k.DelegatorsWithdrawAddress.Set(ctx, delAddr, withdrawAddr)
-}
-
 // iterate over delegator withdraw addrs
 func (k Keeper) IterateDelegatorWithdrawAddrs(ctx context.Context, handler func(del, addr sdk.AccAddress) (stop bool)) {
 	store := k.storeService.OpenKVStore(ctx)

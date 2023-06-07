@@ -63,7 +63,7 @@ func TestQueryDisabledList(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.keeper.DisableMsg(f.ctx, f.mockMsgURL)
+	require.NoError(t, f.keeper.DisableList.Set(f.ctx, f.mockMsgURL))
 
 	// create a new query server
 	qs := keeper.NewQueryServer(f.keeper)

@@ -38,7 +38,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		// Check that the authorizer has the permission level of "super admin"
 		perms, err := srv.Permissions.Get(ctx, address)
 		if err != nil {
-			return nil, fmt.Errorf("user permission does not exist %w", err)
+			return nil, err
 		}
 
 		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
@@ -161,7 +161,7 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 	// Get the permissions for the account specified in the msg.Authority field
 	perms, err := keeper.Permissions.Get(ctx, address)
 	if err != nil && !errorsmod.IsOf(err, collections.ErrNotFound) {
-		return nil, fmt.Errorf("user permission does not exist %w", err)
+		return nil, err
 	}
 
 	if perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || perms.Level == types.Permissions_LEVEL_SOME_MSGS || bytes.Equal(address, srv.GetAuthority()) {

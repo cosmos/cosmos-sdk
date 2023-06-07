@@ -60,6 +60,8 @@ func (k *Keeper) InitGenesis(ctx context.Context, genState *types.GenesisState) 
 	}
 	for _, url := range genState.DisabledTypeUrls {
 		// Set the disabled type urls
-		k.DisableMsg(ctx, url)
+		if err := k.DisableList.Set(ctx, url); err != nil {
+			panic(err)
+		}
 	}
 }

@@ -5,6 +5,8 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
+
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in its previous versions, to CometBFT.

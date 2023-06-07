@@ -7,6 +7,7 @@
 Missed the v0.47.0 announcement? Read it [here](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
 For this third patch release of the `v0.47.x` line, some of the notable changes include:
 
+* The [burberry](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825) security vulnerability is resolved. All chains using Cosmos SDK `<= v0.47.2` are advised to upgrade to `v0.47.3` **immediately**. When upgrading from `<= v0.47.2` to `v0.47.3`, a **coordinated upgrade** is required. A chain is safe as soon as **33%+1** of the voting power has upgraded.
 * A command to be able to bootstrap comet from a local snapshot with [`<app> comet bootstrap-state`](https://docs.cosmos.network/v0.47/run-node/run-node#local-state-sync).
 * Commands to manage snapshots: Add `snapshot.Cmd(appCreator)` to your chain root command for using them.
 * The default logger is now `cosmossdk.io/log`, which supports coloring 🟥🟩🟪🟦 and filtering again.

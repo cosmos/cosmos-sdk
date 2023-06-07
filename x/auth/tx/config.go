@@ -50,9 +50,9 @@ type ConfigOptions struct {
 	ProtoDecoder sdk.TxDecoder
 	// ProtoEncoder is the encoder that will be used to encode protobuf transactions.
 	ProtoEncoder sdk.TxEncoder
-	// JsonDecoder is the decoder that will be used to decode json transactions.
+	// JSONDecoder is the decoder that will be used to decode json transactions.
 	JSONDecoder sdk.TxDecoder
-	// JsonEncoder is the encoder that will be used to encode json transactions.
+	// JSONEncoder is the encoder that will be used to encode json transactions.
 	JSONEncoder sdk.TxEncoder
 }
 

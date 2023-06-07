@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	cosmossdk.io/log v1.1.0
@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
 	cosmossdk.io/x/tx v0.7.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -154,10 +154,6 @@ require (
 
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-replace (
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
-	// TODO remove once https://github.com/cosmos/cosmos-sdk/pull/16155 is merged
-	github.com/cosmos/cosmos-sdk => ../..
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
-)
+replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
+
+replace github.com/cosmos/cosmos-sdk => ../..

@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	cosmossdk.io/log v1.1.0
@@ -13,7 +13,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0-rc1
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230524212735-6cabb6aa5741
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230607182757-cfeb10287d61
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -33,7 +33,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/storage v1.30.0 // indirect
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/x/tx v0.6.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -182,8 +182,4 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 
-replace (
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../tx
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../

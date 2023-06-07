@@ -14,8 +14,8 @@ require (
 
 require (
 	cosmossdk.io/api v0.4.2 // indirect
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
-	cosmossdk.io/core v0.7.0 // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
+	cosmossdk.io/core v0.8.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741 // indirect
 	cosmossdk.io/log v1.1.0 // indirect
@@ -159,8 +159,4 @@ require (
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 
-replace (
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../

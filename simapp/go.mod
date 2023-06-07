@@ -197,8 +197,6 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/circuit => ../x/circuit

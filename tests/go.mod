@@ -193,8 +193,6 @@ require (
 // It must be in sync with SimApp temporary replaces
 replace (
 	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

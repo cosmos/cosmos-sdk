@@ -25,7 +25,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	if ctx.BlockHeight() > 1 {
 		err := k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos())
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
 

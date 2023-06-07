@@ -236,7 +236,7 @@ func (st *Store) Has(key []byte) (exists bool) {
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer st.metrics.MeasureSince("store", "iavl", "delete")
-	err := st.tree.Remove(key)
+	_, _, err := st.tree.Remove(key)
 	if err != nil {
 		panic(err)
 	}

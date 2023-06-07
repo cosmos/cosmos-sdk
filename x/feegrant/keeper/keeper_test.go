@@ -397,7 +397,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			}
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, tc.allowance)
 			suite.NoError(err)
-			err := suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
+			err = suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
 			suite.NoError(err)
 			grant, err := suite.feegrantKeeper.GetAllowance(tc.ctx, tc.granter, tc.grantee)
 			if tc.expErrMsg != "" {

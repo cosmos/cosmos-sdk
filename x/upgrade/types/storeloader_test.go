@@ -127,7 +127,7 @@ func TestSetLoader(t *testing.T) {
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
 				err := oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
-				_, err := oldApp.Commit()
+				_, err = oldApp.Commit()
 				require.NoError(t, err)
 			}
 

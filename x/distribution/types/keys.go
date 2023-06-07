@@ -160,11 +160,6 @@ func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
 	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
 }
 
-// GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
-func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
-}
-
 // GetDelegatorStartingInfoKey creates the key for a delegator's starting info.
 func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
 	return append(append(DelegatorStartingInfoPrefix, address.MustLengthPrefix(v.Bytes())...), address.MustLengthPrefix(d.Bytes())...)

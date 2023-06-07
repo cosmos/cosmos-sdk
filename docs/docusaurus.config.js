@@ -46,9 +46,9 @@ const config = {
               path: "main",
               // banner: "unreleased",
             },
-            // "v0.47": {
-            //   path: "v0.47",
-            //   label: "v0.47",
+            // "v0.50": {
+            //   path: "v0.50",
+            //   label: "v0.50",
             // },
           },
         },

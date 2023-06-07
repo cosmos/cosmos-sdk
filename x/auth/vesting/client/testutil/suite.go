@@ -181,10 +181,17 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 			},
 			expectErr: true,
 		},
-		"bad periods": {
+		"bad periods length": {
 			args: []string{
 				sdk.AccAddress("addr8_______________").String(),
 				"testdata/badperiod.json",
+			},
+			expectErr: true,
+		},
+		"bad periods amount": {
+			args: []string{
+				sdk.AccAddress("addr9_______________").String(),
+				"testdata/badperiod2.json",
 			},
 			expectErr: true,
 		},
@@ -347,10 +354,18 @@ func (s *IntegrationTestSuite) TestNewMsgCreateClawbackVestingAccountCmd() {
 			expectErr: true,
 		},
 		{
-			name: "bad vesting periods",
+			name: "bad vesting periods length",
 			args: []string{
 				sdk.AccAddress("addr13______________").String(),
 				fmt.Sprintf("--%s=%s", cli.FlagVesting, "testdata/badperiod.json"),
+			},
+			expectErr: true,
+		},
+		{
+			name: "bad vesting periods amount",
+			args: []string{
+				sdk.AccAddress("addr13______________").String(),
+				fmt.Sprintf("--%s=%s", cli.FlagVesting, "testdata/badperiod2.json"),
 			},
 			expectErr: true,
 		},

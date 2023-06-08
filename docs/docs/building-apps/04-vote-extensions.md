@@ -13,7 +13,7 @@ defined in ABCI++.
 
 ABCI++ allows an application to extend a pre-commit vote with arbitrary data. This
 process does NOT have be deterministic and the data returned can be unique to the
-validator process. The Cosmos SDK defines `ExtendVoteHandler`:
+validator process. The Cosmos SDK defines `baseapp.ExtendVoteHandler`:
 
 ```go
 type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)

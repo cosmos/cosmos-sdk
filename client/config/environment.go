@@ -23,9 +23,9 @@ func ChangeEnvironmentCmd(defaultNodeHome string) *cobra.Command {
 		Short: "Set home environment variables for commands",
 		Long: `Set home environment variables for commands
 Example:
-	osmosisd set-env mainnet
-	osmosisd set-env localnet
-	osmosisd set-env $HOME/.custom-dir
+	simd set-env mainnet
+	simd set-env localnet
+	simd set-env $HOME/.custom-dir
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,9 +61,8 @@ func PrintEnvironmentCmd(defaultNodeHome string) *cobra.Command {
 Example:
 	osmosisd get-env'
 	Returns one of:
-	- mainnet implying $HOME/.osmosisd
-	- localosmosis implying $HOME/.osmosisd-local
-	- localosmosis
+	- mainnet implying $HOME/.simd
+	- localnet implying $HOME/.simd-local
 	- custom path`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			environment := GetHomeEnvironment(defaultNodeHome)
@@ -81,12 +80,12 @@ Example:
 }
 
 func CreateEnvFile(cmd *cobra.Command, defaultNodeHome string) error {
-	// Check if .env file was created in /.osmosisd
+	// Check if .env file was created in /.simd
 	envPath := filepath.Join(defaultNodeHome, ".env")
 	if _, err := os.Stat(envPath); err != nil {
 		// If not exist, we create a new .env file with node dir passed
 		if os.IsNotExist(err) {
-			// Create ./osmosisd if not exist
+			// Create ./simd if not exist
 			if _, err = os.Stat(defaultNodeHome); err != nil {
 				if os.IsNotExist(err) {
 					err = os.MkdirAll(defaultNodeHome, 0777)
@@ -108,7 +107,7 @@ func CreateEnvFile(cmd *cobra.Command, defaultNodeHome string) error {
 				fmt.Println("using mainnet environment")
 				nodeHome = EnvMainnet
 			}
-			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", nodeHome))
+			_, err = envFile.WriteString(fmt.Sprintf("ENVIRONMENT=%s", nodeHome))
 			if err != nil {
 				return err
 			}

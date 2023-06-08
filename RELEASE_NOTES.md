@@ -3,7 +3,6 @@
 This release includes the migration to [CometBFT v0.34.27](https://github.com/cometbft/cometbft/blob/v0.34.27/CHANGELOG.md#v03427).
 This migration should be not be breaking for chains.
 From `v0.46.11`+, the following replace is *mandatory* in the `go.mod` of your application:
-
 ```go
 // use cometbft
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27

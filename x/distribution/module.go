@@ -99,11 +99,11 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper         keeper.Keeper
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	stakingKeeper  types.StakingKeeper
-	validatorCodec address.Codec
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
 }

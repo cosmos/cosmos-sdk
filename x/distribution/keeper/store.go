@@ -196,12 +196,6 @@ func (k Keeper) SetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddre
 	return k.ValidatorCurrentRewards.Set(ctx, val, rewards)
 }
 
-// delete current rewards for a validator
-func (k Keeper) DeleteValidatorCurrentRewards(ctx context.Context, val sdk.ValAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorCurrentRewardsKey(val))
-}
-
 // iterate over current rewards
 func (k Keeper) IterateValidatorCurrentRewards(ctx context.Context, handler func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool)) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))

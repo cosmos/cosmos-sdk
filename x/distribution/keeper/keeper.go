@@ -61,7 +61,7 @@ func NewKeeper(
 			sb,
 			types.DelegatorWithdrawAddrPrefix,
 			"delegators_withdraw_address",
-			sdk.LengthPrefixedAddressKey(sdk.AccAddressKey),
+			sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collcodec.KeyToValueCodec(sdk.AccAddressKey),
 		),
 	}

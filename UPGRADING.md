@@ -34,7 +34,9 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 All ABCI methods now accept a pointer to the request and response types defined
 by CometBFT. In addition, they also return errors. An ABCI method should only
 return errors in cases where a catastrophic failure has occurred and the application
-should halt.
+should halt. However, this is abstracted away from the application developer. Any
+handler that an application can define or set that returns an error, will gracefully
+by handled by `BaseApp` on behalf of the application.
 
 BaseApp calls of `BeginBlock` & `Endblock` are now private but are still exposed
 to the application to define via the `Manager` type. `FinalizeBlock` is public

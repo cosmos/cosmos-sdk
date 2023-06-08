@@ -8,7 +8,7 @@ on:
     types: [published]
 
 concurrency:
-  group: ci-${{ github.ref }}-sims-047
+  group: ci-${{ github.ref }}-sims-050
   cancel-in-progress: true
 
 jobs:

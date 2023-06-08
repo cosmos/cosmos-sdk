@@ -179,33 +179,6 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 	return
 }
 
-// get current rewards for a validator
-func (k Keeper) GetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorCurrentRewards, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetValidatorCurrentRewardsKey(val))
-	if err != nil {
-		return
-	}
-
-	err = k.cdc.Unmarshal(b, &rewards)
-	return
-}
-
-// iterate over current rewards
-func (k Keeper) IterateValidatorCurrentRewards(ctx context.Context, handler func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorCurrentRewardsPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var rewards types.ValidatorCurrentRewards
-		k.cdc.MustUnmarshal(iter.Value(), &rewards)
-		addr := types.GetValidatorCurrentRewardsAddress(iter.Key())
-		if handler(addr, rewards) {
-			break
-		}
-	}
-}
-
 // get accumulated commission for a validator
 func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress) (commission types.ValidatorAccumulatedCommission, err error) {
 	store := k.storeService.OpenKVStore(ctx)

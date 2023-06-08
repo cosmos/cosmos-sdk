@@ -198,15 +198,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	)
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
-	k.IterateValidatorCurrentRewards(ctx,
-		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool) {
+	err = k.ValidatorCurrentRewards.Walk(ctx, nil,
+		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool, err error) {
 			cur = append(cur, types.ValidatorCurrentRewardsRecord{
 				ValidatorAddress: val.String(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
 	k.IterateDelegatorStartingInfos(ctx,

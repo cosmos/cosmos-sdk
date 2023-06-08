@@ -31,11 +31,18 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 
 ### BaseApp
 
-All ABCI calls accept a pointer to the request and response types defined by Comet. 
+All ABCI calls now accept a pointer to the request and response types defined by
+CometBFT. BaseApp calls of `BeginBlock` & `Endblock` are now private but are still
+exposed to the application to define via the `Manager` type. `FinalizeBlock` is
+public and should be used in order to test and run operations. This means that
+although `BeginBlock` & `Endblock` no longer exist in the ABCI interface, they
+are automatically called by `BaseApp` during `FinalizeBlock`. Specifically, the
+order of operations is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 
-Baseapp calls of BeginBlock & Endblock are now private. FinalizeBlock is public and should be used in order to test and run operations.
-
-VoteExtensions were added and can be used in a variety of locations. Please see [TODO DOCS LINK FOR VOTE EXTENSIONS]()
+ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
+methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
+allows an application to define handlers for these methods via `ExtendVoteHandler`
+and `VerifyVoteExtensionHandler` respectively. Please see [TODO_LINK]() for more info.
 
 ### Configuration
 
@@ -55,8 +62,8 @@ the `msg_index` which identifies which events and attributes relate the same
 transaction.
 
 `BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
-an added attribute, `mode=BeginBlock|EndBlock`, to identify if it belongs to
-`BeginBlock` or `EndBlock`.
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if the event belongs
+to `BeginBlock` or `EndBlock`.
 
 #### gRPC-Web
 

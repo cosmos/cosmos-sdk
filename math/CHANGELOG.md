@@ -44,6 +44,8 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Improvements
 
+* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved math/Int.Size by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
+
 * [#15768](https://github.com/cosmos/cosmos-sdk/pull/15768) Removed the second call to the `init` method for the global variable `grand`.
 * [#16141](https://github.com/cosmos/cosmos-sdk/pull/16141) Speedup `LegacyDec.ApproxRoot` and `LegacyDec.ApproxSqrt`.
 

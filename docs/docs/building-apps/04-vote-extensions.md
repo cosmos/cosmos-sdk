@@ -52,3 +52,16 @@ on how votes are propagated. See [here](https://github.com/cometbft/cometbft/blo
 for more details.
 
 ## Vote Extension Propagation
+
+The agreed upon vote extensions at height `H` are provided to the proposing validator
+at height `H+1` during `PrepareProposal`. As a result, the vote extensions are
+not natively provided or exposed to the remaining validators during `ProcessProposal`.
+As a result, if an application requires that the agreed upon vote extensions from
+height `H` are available to all validators at `H+1`, the application must propagate
+these vote extensions manually in the block proposal itself. This can be done by
+"injecting" them into the block proposal, since the `Txs` field in `PrepareProposal`
+is just a slice of byte slices.
+
+`FinalizeBlock` will ignore any byte slice that doesn't implement an `sdk.Tx` so
+any injected vote extensions will safely be ignored in `FinalizeBlock`. For more
+details on propagation, see the [ABCI++ 2.0 ADR](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-064-abci-2.0.md#vote-extension-propagation--verification).

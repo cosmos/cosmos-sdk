@@ -56,7 +56,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"count\"|\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
+		Use:   "grant <grantee> <\"count\"|\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:

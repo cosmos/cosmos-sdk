@@ -42,7 +42,7 @@ func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 	return BalancesIndexes{
 		Denom: indexes.NewReversePair[math.Int](
 			sb, types.DenomAddressPrefix, "address_by_denom_index",
-			collections.PairKeyCodec(sdk.AddressKeyAsIndexKey(sdk.AccAddressKey), collections.StringKey), // nolint:staticcheck // Note: refer to the AddressKeyAsIndexKey docs to understand why we do this.
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), collections.StringKey), // nolint:staticcheck // Note: refer to the LengthPrefixedAddressKey docs to understand why we do this.
 		),
 	}
 }

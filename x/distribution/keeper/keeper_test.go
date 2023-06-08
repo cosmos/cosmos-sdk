@@ -66,6 +66,9 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	err = distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	require.Nil(t, err)
+	addr, err := distrKeeper.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
+	require.NoError(t, err)
+	require.Equal(t, addr, withdrawAddr)
 
 	require.Error(t, distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, distrAcc.GetAddress()))
 }

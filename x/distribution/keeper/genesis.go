@@ -146,7 +146,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	var dwi []types.DelegatorWithdrawInfo
-	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key sdk.AccAddress, value sdk.AccAddress) (stop bool, err error) {
+	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
 			DelegatorAddress: key.String(),
 			WithdrawAddress:  value.String(),

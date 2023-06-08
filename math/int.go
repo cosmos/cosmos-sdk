@@ -429,8 +429,10 @@ func (i *Int) Unmarshal(data []byte) error {
 // and the next value fitting with the digits of (1<<64)-1 is:
 //
 //	10000000000000000000
-var big10Pow19, _ = new(big.Int).SetString("1"+strings.Repeat("0", 19), 10)
-var log10Of2 = stdmath.Log10(2)
+var (
+	big10Pow19, _ = new(big.Int).SetString("1"+strings.Repeat("0", 19), 10)
+	log10Of2      = stdmath.Log10(2)
+)
 
 func (i *Int) Size() (size int) {
 	sign := i.Sign()
@@ -447,7 +449,7 @@ func (i *Int) Size() (size int) {
 		// on comparisons inside sizeBigInt, hence we make a copy
 		// of ii and make it absolute having taken note of the sign
 		// already.
-		size += 1
+		size++
 		// We already accounted for the negative sign above, thus
 		// we can now compute the length of the absolute value.
 		ii = new(big.Int).Abs(ii)

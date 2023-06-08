@@ -15,7 +15,7 @@ Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI+
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 

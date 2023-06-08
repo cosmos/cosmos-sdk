@@ -39,8 +39,8 @@ Similar to extending a vote, an application can also verify vote extensions from
 other validators when validating their pre-commits. For a given vote extension,
 this process MUST be deterministic. The Cosmos SDK defines `sdk.VerifyVoteExtensionHandler`:
 
-```go
-type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/abci.go#L26-L27
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetVerifyVoteExtensionHandler`

@@ -29,7 +29,7 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
-### Baseapp
+### BaseApp
 
 All ABCI calls accept a pointer to the request and response types defined by Comet. 
 
@@ -49,9 +49,14 @@ More information about [confix](https://docs.cosmos.network/main/tooling/confix)
 
 #### Events
 
-The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+The log section of `abci.TxResult` is not populated in the case of successful
+msg(s) execution. Instead a new attribute is added to all messages indicating
+the `msg_index` which identifies which events and attributes relate the same
+transaction.
 
-BeginBlock & EndBlock Events are now emitted through FinalizeBlock but have an added attribute to identify if it belongs to Begin or EndBlock
+`BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if it belongs to
+`BeginBlock` or `EndBlock`.
 
 #### gRPC-Web
 

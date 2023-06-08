@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
@@ -36,7 +35,7 @@ import (
 
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	ctx := suite.baseApp.NewContext(true, cmtproto.Header{})
+	ctx := suite.baseApp.NewContext(true)
 	suite.baseApp.StoreConsensusParams(ctx, cmttypes.DefaultConsensusParams().ToProto())
 
 	reqInfo := abci.RequestInfo{}
@@ -51,11 +50,11 @@ func TestABCI_Info(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, appVersion, res.AppVersion)
 
-	header := cmtproto.Header{Height: 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	suite.baseApp.Commit()
 	require.NoError(t, suite.baseApp.SetAppVersion(ctx, 1))
-	res = suite.baseApp.Info(reqInfo)
+	res, err = suite.baseApp.Info(&reqInfo)
+	require.NoError(t, err)
 	require.Equal(t, uint64(1), res.AppVersion)
 }
 

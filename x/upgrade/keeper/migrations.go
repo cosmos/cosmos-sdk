@@ -54,6 +54,9 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeService storetypes.KVStoreServ
 	return nil
 }
 
+// Migrate2to3 migrates from version 2 to 3.
+// It takes the legacy protocol version and if it exists, uses it to set
+// the app version (of the baseapp)
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return migrateAppVersion(ctx, m.keeper)
 }
@@ -62,12 +65,21 @@ func migrateAppVersion(ctx sdk.Context, keeper *Keeper) error {
 	if keeper.versionModifier == nil {
 		return fmt.Errorf("version modifier is not set")
 	}
-	store := ctx.KVStore(keeper.storeKey)
-	// if the key was never set then we don't need to
-	if !store.Has([]byte{LegacyProtocolVersionByte}) {
+
+	store := keeper.storeService.OpenKVStore(ctx)
+	// if the key was never set then we don't need to migrate anything
+	exists, err := store.Has([]byte{LegacyProtocolVersionByte})
+	if err != nil {
+		return fmt.Errorf("error checking if legacy protocol version key exists: %w", err)
+	}
+	if !exists {
 		return nil
 	}
-	versionBytes := store.Get([]byte{LegacyProtocolVersionByte})
+
+	versionBytes, err := store.Get([]byte{LegacyProtocolVersionByte})
+	if err != nil {
+		return fmt.Errorf("error getting legacy protocol version: %w", err)
+	}
 	appVersion := binary.BigEndian.Uint64(versionBytes)
 
 	if err := keeper.versionModifier.SetAppVersion(ctx, appVersion); err != nil {

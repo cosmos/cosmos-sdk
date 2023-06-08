@@ -15,6 +15,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
+
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -44,6 +47,7 @@ type ModuleInputs struct {
 	ProtoFileResolver   txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
+	MetadataBankKeeper     BankKeeper                         `optional:"true"`
 	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
 	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
@@ -66,7 +70,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
 	sdkConfig := sdk.GetConfig()
+
 	txConfigOptions := tx.ConfigOptions{
+		EnabledSignModes: tx.DefaultSignModes,
 		SigningOptions: &txsigning.Options{
 			FileResolver: in.ProtoFileResolver,
 			// From static config? But this is already in auth config.
@@ -78,7 +84,17 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		},
 		CustomSignModes: customSignModeHandlers,
 	}
-	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+
+	// enable SIGN_MODE_TEXTUAL only if bank keeper is available
+	if in.MetadataBankKeeper != nil {
+		txConfigOptions.EnabledSignModes = append(txConfigOptions.EnabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
+	}
+
+	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	if err != nil {
+		panic(err)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

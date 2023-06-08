@@ -1,14 +1,14 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -32,59 +32,49 @@ func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest)
 		return nil, err
 	}
 
-	perms, err := qs.keeper.GetPermissions(sdkCtx, add)
+	perms, err := qs.keeper.Permissions.Get(sdkCtx, add)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.AccountResponse{Permission: perms}, nil
+	return &types.AccountResponse{Permission: &perms}, nil
 }
 
 // Account returns account permissions.
-func (qs QueryServer) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(c)
-	// Iterate over accounts and perform the callback
-
+func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
 	var accounts []*types.GenesisAccountPermissions
-	store := sdkCtx.KVStore(qs.keeper.storekey)
-	accountsStore := prefix.NewStore(store, types.AccountPermissionPrefix)
+	results, pageRes, err := query.CollectionPaginate[[]byte, types.Permissions](ctx, qs.keeper.Permissions, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
 
-	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		perm := &types.Permissions{}
-		if err := proto.Unmarshal(value, perm); err != nil {
-			return err
-		}
-
-		// remove key suffix
-		address, err := qs.keeper.addressCodec.BytesToString(bytes.TrimRight(key, "\x00"))
+	for _, result := range results {
+		result := result
+		address, err := qs.keeper.addressCodec.BytesToString(result.Key)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		accounts = append(accounts, &types.GenesisAccountPermissions{
 			Address:     address,
-			Permissions: perm,
+			Permissions: &result.Value,
 		})
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	return &types.AccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
 }
 
 // DisabledList returns a list of disabled message urls
-func (qs QueryServer) DisabledList(c context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(c)
+func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	// Iterate over disabled list and perform the callback
-
 	var msgs []string
-	qs.keeper.IterateDisableLists(sdkCtx, func(address []byte, perm types.Permissions) (stop bool) {
-		msgs = append(msgs, perm.LimitTypeUrls...)
-		return false
+	err := qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {
+		msgs = append(msgs, msgUrl)
+		return false, nil
 	})
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+		return nil, err
+	}
 
 	return &types.DisabledListResponse{DisabledList: msgs}, nil
 }

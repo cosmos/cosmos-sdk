@@ -5,6 +5,8 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
+
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in its previous versions, to CometBFT.
@@ -89,6 +91,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/mint`
 * `x/nft`
 * `x/slashing`
+* `x/upgrade`
 
 Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
@@ -111,6 +114,7 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 * `x/evidence`
 * `x/gov`
 * `x/slashing`
+* `x/upgrade`
 
 **Users using depinject do not need any changes, this is automatically done for them.**
 
@@ -415,6 +419,19 @@ The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
+#### `x/crisis`
+
+With the migrations of all modules away from `x/params`, the crisis module now has a store.
+The store must be created during a chain upgrade to v0.47.x.
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				crisistypes.ModuleName,
+			},
+}
+```
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -427,7 +444,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### New Proposal.Proposer field
+##### New `Proposal.Proposer` field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
@@ -483,7 +500,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-The old params module is required to still be imported in your app.go in order to handle this migration. 
+The `x/params` module should still be imported in your app.go in order to handle this migration.
+
+Because the `x/consensus` module is a new module, its store must be added while upgrading to v0.47.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				consensustypes.ModuleName,
+			},
+}
+```
 
 ##### `app.go` changes
 

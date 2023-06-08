@@ -1,4 +1,4 @@
-package helpers
+package genutil
 
 import (
 	"encoding/json"
@@ -10,7 +10,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -19,6 +18,7 @@ import (
 // `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
 // to be added for the account, `appendAcct` updates the account if already exists.
 // `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
+// `moduleName“ is the module name for which the account is being created
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(
 	cdc codec.Codec,
@@ -26,6 +26,7 @@ func AddGenesisAccount(
 	appendAcct bool,
 	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
+	moduleName string,
 ) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
@@ -61,6 +62,8 @@ func AddGenesisAccount(
 		default:
 			return errors.New("invalid vesting parameters; must supply start and end time or end time")
 		}
+	} else if moduleName != "" {
+		genAccount = authtypes.NewEmptyModuleAccount(moduleName, authtypes.Burner, authtypes.Minter)
 	} else {
 		genAccount = baseAccount
 	}
@@ -133,5 +136,5 @@ func AddGenesisAccount(
 	}
 
 	appGenesis.AppState = appStateJSON
-	return genutil.ExportGenesisFile(appGenesis, genesisFileURL)
+	return ExportGenesisFile(appGenesis, genesisFileURL)
 }

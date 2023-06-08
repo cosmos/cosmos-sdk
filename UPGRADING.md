@@ -65,8 +65,6 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 ### Protobuf
 
-The SDK is in the process of removing all `gogoproto` annotations. It is recommended to not introduce new types and add gogoproto annotations
-
 With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
 For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).

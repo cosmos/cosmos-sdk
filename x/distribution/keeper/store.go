@@ -193,13 +193,7 @@ func (k Keeper) GetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddre
 
 // set current rewards for a validator
 func (k Keeper) SetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddress, rewards types.ValidatorCurrentRewards) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&rewards)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetValidatorCurrentRewardsKey(val), b)
+	return k.ValidatorCurrentRewards.Set(ctx, val, rewards)
 }
 
 // delete current rewards for a validator

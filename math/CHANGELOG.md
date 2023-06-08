@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## Improvements
+
+* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved math/Int.Size by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
+
 ### Bug Fixes
 
 * [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.
@@ -43,8 +47,6 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ## [math/v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.1) - 2023-05-15
 
 ### Improvements
-
-* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved math/Int.Size by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
 
 * [#15768](https://github.com/cosmos/cosmos-sdk/pull/15768) Removed the second call to the `init` method for the global variable `grand`.
 * [#16141](https://github.com/cosmos/cosmos-sdk/pull/16141) Speedup `LegacyDec.ApproxRoot` and `LegacyDec.ApproxSqrt`.

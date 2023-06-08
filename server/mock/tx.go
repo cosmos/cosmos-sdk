@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	protov2 "google.golang.org/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -83,7 +86,7 @@ var (
 )
 
 func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
-	bytes := fmt.Sprintf("%s=%s", key, value)
+	bytes := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
 	return &KVStoreTx{
 		key:     []byte(key),
 		value:   []byte(value),
@@ -100,6 +103,10 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
+func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
+	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
+}
+
 func (msg *KVStoreTx) GetSignBytes() []byte {
 	return msg.bytes
 }
@@ -109,8 +116,8 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSigners() []sdk.AccAddress {
-	return nil
+func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
+	return nil, nil
 }
 
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
@@ -128,6 +135,9 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	case 2:
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
+	case 3:
+		k, v, addr := split[0], split[1], split[2]
+		tx = &KVStoreTx{k, v, txBytes, addr}
 	default:
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}

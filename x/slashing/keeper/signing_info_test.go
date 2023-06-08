@@ -26,8 +26,8 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
 
 	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
-	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
-	require.True(found)
+	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.NoError(err)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
 	require.Equal(info.IndexOffset, int64(3))
 	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
@@ -43,7 +43,8 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	require.Equal(signingInfos[0].Address, signingInfo.Address)
 
 	// test Tombstone
-	keeper.Tombstone(ctx, consAddr)
+	err = keeper.Tombstone(ctx, consAddr)
+	require.NoError(err)
 	require.True(keeper.IsTombstoned(ctx, consAddr))
 
 	// test JailUntil
@@ -77,12 +78,13 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		}
 
 		// validator should have missed all blocks
-		missedBlocks := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		missedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow))
 
 		// sign next block, which rolls the missed block bitmap
 		idx := valIdxOffset % params.SignedBlocksWindow
-		err := keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, false)
+		err = keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, false)
 		require.NoError(err)
 
 		missed, err := keeper.GetMissedBlockBitmapValue(ctx, consAddr, idx)
@@ -90,7 +92,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		require.False(missed)
 
 		// validator should have missed all blocks except the last one
-		missedBlocks = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}
 }

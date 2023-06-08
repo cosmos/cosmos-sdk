@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -100,9 +99,9 @@ func (s *SimTestSuite) SetupTest() {
 	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
-	mintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+	ctx := app.BaseApp.NewContext(false)
+	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
+	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
@@ -167,8 +166,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
 
 	// execute operation
 	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -208,12 +206,11 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
 	// unbonding delegation
-	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight(), blockTime.Add(2*time.Minute), delTokens, 0)
+	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight()+1, blockTime.Add(2*time.Minute), delTokens, 0)
 	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -241,8 +238,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -301,8 +297,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -344,8 +339,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)

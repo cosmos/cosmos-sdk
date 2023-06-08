@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -48,35 +49,20 @@ func GenGoalBonded(r *rand.Rand) math.LegacyDec {
 func RandomizedGenState(simState *module.SimulationState) {
 	// minter
 	var inflation math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Inflation, &inflation, simState.Rand,
-		func(r *rand.Rand) { inflation = GenInflation(r) },
-	)
+	simState.AppParams.GetOrGenerate(Inflation, &inflation, simState.Rand, func(r *rand.Rand) { inflation = GenInflation(r) })
 
 	// params
 	var inflationRateChange math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, InflationRateChange, &inflationRateChange, simState.Rand,
-		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) },
-	)
+	simState.AppParams.GetOrGenerate(InflationRateChange, &inflationRateChange, simState.Rand, func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) })
 
 	var inflationMax math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, InflationMax, &inflationMax, simState.Rand,
-		func(r *rand.Rand) { inflationMax = GenInflationMax(r) },
-	)
+	simState.AppParams.GetOrGenerate(InflationMax, &inflationMax, simState.Rand, func(r *rand.Rand) { inflationMax = GenInflationMax(r) })
 
 	var inflationMin math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, InflationMin, &inflationMin, simState.Rand,
-		func(r *rand.Rand) { inflationMin = GenInflationMin(r) },
-	)
+	simState.AppParams.GetOrGenerate(InflationMin, &inflationMin, simState.Rand, func(r *rand.Rand) { inflationMin = GenInflationMin(r) })
 
 	var goalBonded math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GoalBonded, &goalBonded, simState.Rand,
-		func(r *rand.Rand) { goalBonded = GenGoalBonded(r) },
-	)
+	simState.AppParams.GetOrGenerate(GoalBonded, &goalBonded, simState.Rand, func(r *rand.Rand) { goalBonded = GenGoalBonded(r) })
 
 	mintDenom := simState.BondDenom
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)

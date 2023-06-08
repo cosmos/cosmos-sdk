@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -116,9 +115,14 @@ func TestMsgService(t *testing.T) {
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},
 	)
-	_ = app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
 
-	msg := testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
+	_, _, addr := testdata.KeyTestPubAddr()
+	msg := testdata.MsgCreateDog{
+		Dog:   &testdata.Dog{Name: "Spot"},
+		Owner: addr.String(),
+	}
 
 	txBuilder := txConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
@@ -157,6 +161,7 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Equal(t, abci.CodeTypeOK, res.TxResults[0].Code, "res=%+v", res)
 }

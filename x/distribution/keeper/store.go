@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"cosmossdk.io/collections"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -15,64 +16,11 @@ import (
 
 // get the delegator withdraw address, defaulting to the delegator address
 func (k Keeper) GetDelegatorWithdrawAddr(ctx context.Context, delAddr sdk.AccAddress) (sdk.AccAddress, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetDelegatorWithdrawAddrKey(delAddr))
-	if b == nil {
-		return delAddr, err
+	addr, err := k.DelegatorsWithdrawAddress.Get(ctx, delAddr)
+	if err != nil && errors.Is(err, collections.ErrNotFound) {
+		return delAddr, nil
 	}
-	return sdk.AccAddress(b), nil
-}
-
-// set the delegator withdraw address
-func (k Keeper) SetDelegatorWithdrawAddr(ctx context.Context, delAddr, withdrawAddr sdk.AccAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
-}
-
-// delete a delegator withdraw addr
-func (k Keeper) DeleteDelegatorWithdrawAddr(ctx context.Context, delAddr, withdrawAddr sdk.AccAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetDelegatorWithdrawAddrKey(delAddr))
-}
-
-// iterate over delegator withdraw addrs
-func (k Keeper) IterateDelegatorWithdrawAddrs(ctx context.Context, handler func(del, addr sdk.AccAddress) (stop bool)) {
-	store := k.storeService.OpenKVStore(ctx)
-	iter := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.DelegatorWithdrawAddrPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		addr := sdk.AccAddress(iter.Value())
-		del := types.GetDelegatorWithdrawInfoAddress(iter.Key())
-		if handler(del, addr) {
-			break
-		}
-	}
-}
-
-// get the global fee pool distribution info
-func (k Keeper) GetFeePool(ctx context.Context) (feePool types.FeePool, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.FeePoolKey)
-	if err != nil {
-		return
-	}
-
-	if b == nil {
-		panic("Stored fee pool should not have been nil")
-	}
-	err = k.cdc.Unmarshal(b, &feePool)
-	return feePool, err
-}
-
-// set the global fee pool distribution info
-func (k Keeper) SetFeePool(ctx context.Context, feePool types.FeePool) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&feePool)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.FeePoolKey, b)
+	return addr, err
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the

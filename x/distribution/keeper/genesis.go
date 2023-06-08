@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -11,7 +13,10 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	k.SetFeePool(ctx, data.FeePool)
+	err := k.FeePool.Set(ctx, data.FeePool)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
@@ -26,7 +31,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	var previousProposer sdk.ConsAddress
@@ -45,7 +53,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		if err != nil {
+			panic(err)
+		}
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
@@ -53,21 +64,30 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
 		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
 		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		err = k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
 		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
@@ -79,14 +99,20 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
 		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+		err = k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
@@ -109,7 +135,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -119,14 +145,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	dwi := make([]types.DelegatorWithdrawInfo, 0)
-	k.IterateDelegatorWithdrawAddrs(ctx, func(del, addr sdk.AccAddress) (stop bool) {
+	var dwi []types.DelegatorWithdrawInfo
+	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddress: del.String(),
-			WithdrawAddress:  addr.String(),
+			DelegatorAddress: key.String(),
+			WithdrawAddress:  value.String(),
 		})
-		return false
+		return false, nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	pp, err := k.GetPreviousProposerConsAddr(ctx)
 	if err != nil {

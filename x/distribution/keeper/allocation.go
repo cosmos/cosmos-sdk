@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -105,8 +107,9 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	}
 
 	// update current rewards
-	currentRewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	if err != nil {
+	currentRewards, err := k.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
+	// if the rewards do not exist it's fine, we will just add to zero.
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 

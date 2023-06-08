@@ -40,7 +40,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 // increment validator period, returning the period just ended
 func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
 	// fetch current rewards
-	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	rewards, err := k.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
 	if err != nil {
 		return 0, err
 	}

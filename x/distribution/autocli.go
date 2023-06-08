@@ -7,6 +7,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	distirbuitonv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -18,6 +19,10 @@ var (
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	exAccAddress, err := am.ac.BytesToString([]byte("A58856F0FD53BF058B4909A21AEC019107BA6A58856F0FD53BF058B4909A21AEC019107BA6"))
+	if err != nil {
+		panic(err)
+	}
+	valAddress, err := types.ValAddressFromHex("A58856F0FD53BF058B4909A21AEC019107BA6A58856F0FD53BF058B4909A21AEC019107BA6")
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +52,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorOutstandingRewards",
 					Use:       "validator-outstanding-rewards [validator]",
 					Short:     "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
-					Example:   fmt.Sprintf(`$ %s query distribution validator-outstanding-rewards %s1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne`, version.AppName, "bech32PrefixValAddr"),
+					Example:   fmt.Sprintf(`$ %s query distribution validator-outstanding-rewards %s`, version.AppName, valAddress.String()),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
 					},
@@ -56,7 +61,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorCommission",
 					Use:       "commission [validator]",
 					Short:     "Query distribution validator commission",
-					Example:   fmt.Sprintf(`$ %s query distribution commission %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`, version.AppName, "bech32PrefixValAddr"),
+					Example:   fmt.Sprintf(`$ %s query distribution commission %s`, version.AppName, valAddress.String()),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
 					},
@@ -65,7 +70,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorSlashes",
 					Use:       "slashes [validator] [start-height] [end-height]",
 					Short:     "Query distribution validator slashes",
-					Example:   fmt.Sprintf(`$ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100`, version.AppName, "bech32PrefixValAddr"),
+					Example:   fmt.Sprintf(`$ %s query distribution slashes %s 0 100`, version.AppName, valAddress.String()),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
 						{ProtoField: "start_height"},
@@ -80,9 +85,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example: strings.TrimSpace(
 						fmt.Sprintf(`
 $ %s query distribution rewards %s
-$ %s query distribution rewards %s %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query distribution rewards %s %s
 `,
-							version.AppName, exAccAddress, version.AppName, exAccAddress, "bech32PrefixValAddr",
+							version.AppName, exAccAddress, version.AppName, exAccAddress, valAddress.String(),
 						),
 					),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{

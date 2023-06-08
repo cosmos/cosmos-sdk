@@ -19,10 +19,10 @@ validator process. The Cosmos SDK defines `baseapp.ExtendVoteHandler`:
 type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
 ```
 
-An application can set this handler in `app.go` via the `SetExtendVoteHandler`
-`BaseApp` option function. The `ExtendVoteHandler`, if defined, is called during
+An application can set this handler in `app.go` via the `baseapp.SetExtendVoteHandler`
+`BaseApp` option function. The `sdk.ExtendVoteHandler`, if defined, is called during
 the `ExtendVote` ABCI method. Note, if an application decides to implement
-`ExtendVoteHandler`, it MUST return a non-nil `VoteExtension`. However, the vote
+`baseapp.ExtendVoteHandler`, it MUST return a non-nil `VoteExtension`. However, the vote
 extension can be empty. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/spec/abci/abci++_methods.md#extendvote)
 for more details.
 
@@ -37,14 +37,14 @@ for more details.
 
 Similar to extending a vote, an application can also verify vote extensions from
 other validators when validating their pre-commits. For a given vote extension,
-this process MUST be deterministic. The Cosmos SDK defines `VerifyVoteExtensionHandler`:
+this process MUST be deterministic. The Cosmos SDK defines `sdk.VerifyVoteExtensionHandler`:
 
 ```go
 type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
 ```
 
-An application can set this handler in `app.go` via the `SetVerifyVoteExtensionHandler`
-`BaseApp` option function. The `VerifyVoteExtensionHandler`, if defined, is called
+An application can set this handler in `app.go` via the `baseapp.SetVerifyVoteExtensionHandler`
+`BaseApp` option function. The `sdk.VerifyVoteExtensionHandler`, if defined, is called
 during the `VerifyVoteExtension` ABCI method. If an application defines a vote
 extension handler, it should also define a verification handler. Note, not all
 validators will share the same view of what vote extensions they verify depending

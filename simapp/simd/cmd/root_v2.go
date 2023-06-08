@@ -66,18 +66,25 @@ func NewRootCmd() *cobra.Command {
 		panic(err)
 	}
 
+	homeEnvironment := config.GetHomeEnvironment(simapp.DefaultNodeHome)
+	homeDir, err := config.EnvironmentNameToPath(homeEnvironment, simapp.DefaultNodeHome)
+	if err != nil {
+		// Failed to convert home environment to home path, using default home
+		homeDir = simapp.DefaultNodeHome
+	}
+
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(simapp.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
 		Use:   "simd",
-		Short: "simulation app",
+		Short: "simulation app hieu",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -215,6 +222,8 @@ func initRootCmd(
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp),
 		snapshot.Cmd(newApp),
+		config.ChangeEnvironmentCmd(simapp.DefaultNodeHome),
+		config.PrintEnvironmentCmd(simapp.DefaultNodeHome),
 	)
 
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)

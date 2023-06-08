@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/x/evidence/types"
@@ -23,15 +24,16 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
-func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
-	logger := k.Logger(ctx)
+func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	logger := k.Logger(sdkCtx)
 	consAddr := evidence.GetConsensusAddress()
 
-	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
+	validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.
-		return
+		return nil
 	}
 
 	if !validator.GetOperator().Empty() {
@@ -46,20 +48,20 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 			// getting this coordination right, it is easier to relax the
 			// constraints and ignore evidence that cannot be handled.
 			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
-			return
+			return nil
 		}
 	}
 
 	// calculate the age of the evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
-	ageDuration := ctx.BlockHeader().Time.Sub(infractionTime)
-	ageBlocks := ctx.BlockHeader().Height - infractionHeight
+	ageDuration := sdkCtx.BlockHeader().Time.Sub(infractionTime)
+	ageBlocks := sdkCtx.BlockHeader().Height - infractionHeight
 
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	cp := ctx.ConsensusParams()
+	cp := sdkCtx.ConsensusParams()
 	if cp.Evidence != nil {
 		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
 			logger.Info(
@@ -70,7 +72,7 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 				"infraction_time", infractionTime,
 				"max_age_duration", cp.Evidence.MaxAgeDuration,
 			)
-			return
+			return nil
 		}
 	}
 
@@ -86,7 +88,7 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 			"infraction_height", infractionHeight,
 			"infraction_time", infractionTime,
 		)
-		return
+		return nil
 	}
 
 	logger.Info(
@@ -108,21 +110,39 @@ func (k Keeper) handleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	// to/by CometBFT. This value is validator.Tokens as sent to CometBFT via
 	// ABCI, and now received as evidence. The fraction is passed in to separately
 	// to slash unbonding and rebonding delegations.
-	k.slashingKeeper.SlashWithInfractionReason(
+	slashFractionDoubleSign, err := k.slashingKeeper.SlashFractionDoubleSign(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = k.slashingKeeper.SlashWithInfractionReason(
 		ctx,
 		consAddr,
-		k.slashingKeeper.SlashFractionDoubleSign(ctx),
+		slashFractionDoubleSign,
 		evidence.GetValidatorPower(), distributionHeight,
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
+	if err != nil {
+		return err
+	}
 
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).
 	if !validator.IsJailed() {
-		k.slashingKeeper.Jail(ctx, consAddr)
+		err = k.slashingKeeper.Jail(ctx, consAddr)
+		if err != nil {
+			return err
+		}
 	}
 
-	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
-	k.slashingKeeper.Tombstone(ctx, consAddr)
-	k.SetEvidence(ctx, evidence)
+	err = k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	if err != nil {
+		return err
+	}
+
+	err = k.slashingKeeper.Tombstone(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }

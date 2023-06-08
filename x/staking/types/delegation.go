@@ -127,7 +127,7 @@ func NewUnbondingDelegation(
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, unbondingID uint64) {
+func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, unbondingID uint64) bool {
 	// Check the entries exists with creation_height and complete_time
 	entryIndex := -1
 	for index, ubdEntry := range ubd.Entries {
@@ -144,11 +144,12 @@ func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time
 
 		// update the entry
 		ubd.Entries[entryIndex] = ubdEntry
-	} else {
-		// append the new unbond delegation entry
-		entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, unbondingID)
-		ubd.Entries = append(ubd.Entries, entry)
+		return false
 	}
+	// append the new unbond delegation entry
+	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, unbondingID)
+	ubd.Entries = append(ubd.Entries, entry)
+	return true
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation

@@ -29,7 +29,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## [Unreleased]
+
+## v0.8.0
+
+### Improvements
+
+* [#16340](https://github.com/cosmos/cosmos-sdk/pull/16340): add `DefineCustomGetSigners` API function.
+
+## v0.7.0
+
+### API Breaking
+
+* [#16044](https://github.com/cosmos/cosmos-sdk/pull/16044): rename aminojson.NewAminoJSON -> aminojson.NewEncoder.
+* [#16047](https://github.com/cosmos/cosmos-sdk/pull/16047): aminojson.NewEncoder now takes EncoderOptions as an argument.
+* [#16254](https://github.com/cosmos/cosmos-sdk/pull/16254): aminojson.Encoder.Marshal now sorts all fields like encoding/json.Marshal does, hence no more need for sdk.\*SortJSON.
 
 ## v0.6.2
 
@@ -41,7 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#15871](https://github.com/cosmos/cosmos-sdk/pull/15871) 
+* [#15871](https://github.com/cosmos/cosmos-sdk/pull/15871)
   * `HandlerMap` now has a `DefaultMode()` getter method
   * Textual types use `signing.ProtoFileResolver` instead of `protoregistry.Files`
 
@@ -56,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
 
 ### Bug Fixes
+
 * [#15849](https://github.com/cosmos/cosmos-sdk/pull/15849) Fix int64 usage for 32 bit platforms.
 
 ## v0.5.1

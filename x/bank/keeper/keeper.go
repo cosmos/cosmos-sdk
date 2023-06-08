@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -94,7 +97,7 @@ func NewBaseKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -256,9 +259,12 @@ func (k BaseKeeper) GetAllDenomMetaData(ctx context.Context) []types.Metadata {
 // provides the metadata to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseKeeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool) {
-	_ = k.BaseViewKeeper.DenomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) bool {
-		return cb(metadata)
+	err := k.BaseViewKeeper.DenomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
+		return cb(metadata), nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 }
 
 // SetDenomMetaData sets the denominations metadata
@@ -474,7 +480,10 @@ func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, 
 // with the balance of each coin.
 // The iteration stops if the callback returns true.
 func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin) bool) {
-	_ = k.Supply.Walk(ctx, nil, func(s string, m math.Int) bool {
-		return cb(sdk.NewCoin(s, m))
+	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) (bool, error) {
+		return cb(sdk.NewCoin(s, m)), nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 }

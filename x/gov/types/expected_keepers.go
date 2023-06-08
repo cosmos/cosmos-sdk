@@ -37,7 +37,7 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	addresscodec.Codec
+	AddressCodec() addresscodec.Codec
 
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 
@@ -66,11 +66,11 @@ type BankKeeper interface {
 
 // GovHooks event hooks for governance proposal object (noalias)
 type GovHooks interface {
-	AfterProposalSubmission(ctx sdk.Context, proposalID uint64)                            // Must be called after proposal is submitted
-	AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) // Must be called after a deposit is made
-	AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress)        // Must be called after a vote on a proposal is cast
-	AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
-	AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
+	AfterProposalSubmission(ctx context.Context, proposalID uint64)                            // Must be called after proposal is submitted
+	AfterProposalDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) // Must be called after a deposit is made
+	AfterProposalVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress)        // Must be called after a vote on a proposal is cast
+	AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
+	AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
 }
 
 type GovHooksWrapper struct{ GovHooks }

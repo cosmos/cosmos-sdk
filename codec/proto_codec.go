@@ -2,6 +2,7 @@ package codec
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,7 +12,12 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -158,6 +164,57 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 	}
 
 	return bz
+}
+
+// MarshalAminoJSON provides aminojson.Encoder compatibility for gogoproto messages.
+// x/tx/signing/aminojson cannot marshal gogoproto messages directly since this type does not implement
+// the standard library google.golang.org/protobuf/proto.Message.
+// We convert gogo types to dynamicpb messages and then marshal that directly to amino JSON.
+func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: pc.interfaceRegistry})
+	gogoBytes, err := gogoproto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	var protoMsg protoreflect.ProtoMessage
+	typ, err := protoregistry.GlobalTypes.FindMessageByURL(fmt.Sprintf("/%s", gogoproto.MessageName(msg)))
+	if typ != nil && err != nil {
+		protoMsg = typ.New().Interface()
+	} else {
+		desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
+		if err != nil {
+			return nil, err
+		}
+		dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+		protoMsg = dynamicMsgType.New().Interface()
+	}
+
+	err = proto.Unmarshal(gogoBytes, protoMsg)
+	if err != nil {
+		return nil, err
+	}
+	jsonBytes, err := encoder.Marshal(protoMsg)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: remove this sort once https://github.com/cosmos/cosmos-sdk/issues/2350#issuecomment-1542715157 lands
+	// the encoder should be rendering in lexical order
+	return sortJSON(jsonBytes)
+}
+
+// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
+func sortJSON(toSortJSON []byte) ([]byte, error) {
+	var c interface{}
+	err := json.Unmarshal(toSortJSON, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,

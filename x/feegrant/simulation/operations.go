@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,13 +44,13 @@ func WeightedOperations(
 		weightMsgRevokeAllowance int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgGrantAllowance, &weightMsgGrantAllowance, nil,
+	appParams.GetOrGenerate(OpWeightMsgGrantAllowance, &weightMsgGrantAllowance, nil,
 		func(_ *rand.Rand) {
 			weightMsgGrantAllowance = DefaultWeightGrantAllowance
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgRevokeAllowance, &weightMsgRevokeAllowance, nil,
+	appParams.GetOrGenerate(OpWeightMsgRevokeAllowance, &weightMsgRevokeAllowance, nil,
 		func(_ *rand.Rand) {
 			weightMsgRevokeAllowance = DefaultWeightRevokeAllowance
 		},

@@ -72,10 +72,7 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
 	var defaultSendEnabledParam bool
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
-		func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) },
-	)
+	simState.AppParams.GetOrGenerate(string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand, func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) })
 
 	sendEnabled := RandomGenesisSendEnabled(simState.Rand, simState.BondDenom)
 

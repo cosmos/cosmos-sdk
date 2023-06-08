@@ -48,7 +48,11 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		return err
 	}
 	addr := sdk.AccAddress(pubKey.Address())
-	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
+	signers, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return err
+	}
+	if !isTxSigner(addr, signers) {
 		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
@@ -75,7 +79,12 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	}
 
 	// check whether the address is a signer
-	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
+	signers, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return err
+	}
+
+	if !isTxSigner(addr, signers) {
 		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 
@@ -189,9 +198,9 @@ func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	return simRes, nil
 }
 
-func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+func isTxSigner(user []byte, signers [][]byte) bool {
 	for _, s := range signers {
-		if bytes.Equal(user.Bytes(), s.Bytes()) {
+		if bytes.Equal(user, s) {
 			return true
 		}
 	}

@@ -4,9 +4,9 @@ import (
 	fmt "fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -24,7 +24,7 @@ var (
 )
 
 func TestSendAuthorization(t *testing.T) {
-	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmtproto.Header{})
+	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(header.Info{})
 	allowList := make([]sdk.AccAddress, 1)
 	allowList[0] = toAddr
 	authorization := types.NewSendAuthorization(coins1000, nil)

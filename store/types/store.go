@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -40,7 +40,26 @@ type CommitStore interface {
 //
 // This is an optional, but useful extension to any CommitStore
 type Queryable interface {
-	Query(*abci.RequestQuery) *abci.ResponseQuery
+	Query(*RequestQuery) (*ResponseQuery, error)
+}
+
+type RequestQuery struct {
+	Data   []byte
+	Path   string
+	Height int64
+	Prove  bool
+}
+
+type ResponseQuery struct {
+	Code      uint32
+	Log       string
+	Info      string
+	Index     int64
+	Key       []byte
+	Value     []byte
+	ProofOps  *crypto.ProofOps
+	Height    int64
+	Codespace string
 }
 
 //----------------------------------------
@@ -190,9 +209,6 @@ type CommitMultiStore interface {
 
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLLazyLoading enable/disable lazy loading on iavl.
-	SetLazyLoading(lazyLoading bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error

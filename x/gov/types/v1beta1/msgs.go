@@ -7,8 +7,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/gov/codec"
 )
 
 // Governance message types and routes
@@ -20,8 +18,7 @@ const (
 )
 
 var (
-	_, _, _, _ sdk.Msg            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
-	_, _, _, _ legacytx.LegacyMsg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
+	_, _, _, _ sdk.Msg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 
 	_ codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
@@ -81,12 +78,6 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	return nil
 }
 
-// GetSignBytes returns the message bytes to sign over.
-func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := codec.Amino.MustMarshalJSON(&m)
-	return sdk.MustSortJSON(bz)
-}
-
 // GetSigners returns the expected signers for a MsgSubmitProposal.
 func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
@@ -104,12 +95,6 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// GetSignBytes returns the message bytes to sign over.
-func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := codec.Amino.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // GetSigners returns the expected signers for a MsgDeposit.
 func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
@@ -121,12 +106,6 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 	return &MsgVote{proposalID, voter.String(), option}
 }
 
-// GetSignBytes returns the message bytes to sign over.
-func (msg MsgVote) GetSignBytes() []byte {
-	bz := codec.Amino.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // GetSigners returns the expected signers for a MsgVote.
 func (msg MsgVote) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
@@ -136,12 +115,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal.
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
-}
-
-// GetSignBytes returns the message bytes to sign over.
-func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := codec.Amino.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners returns the expected signers for a MsgVoteWeighted.

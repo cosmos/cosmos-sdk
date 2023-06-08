@@ -5,6 +5,8 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
+
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in its previous versions, to CometBFT.
@@ -65,6 +67,12 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 The SDK is in the process of removing all `gogoproto` annotations. It is recommended to not introduce new types and add gogoproto annotations
 
+With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+
+TODO: summarize proto annotation requirements.
+
 #### Stringer
 
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
@@ -94,8 +102,10 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/gov`
 * `x/mint`
 * `x/nft`
+* `x/slashing`
+* `x/upgrade`
 
-User manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
+Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -115,6 +125,8 @@ The following modules' `Keeper` methods now take in a `context.Context` instead 
 * `x/distribution`
 * `x/evidence`
 * `x/gov`
+* `x/slashing`
+* `x/upgrade`
 
 **Users using depinject do not need any changes, this is automatically done for them.**
 
@@ -188,6 +200,8 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
 #### `x/auth`
 
@@ -417,6 +431,19 @@ The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
+#### `x/crisis`
+
+With the migrations of all modules away from `x/params`, the crisis module now has a store.
+The store must be created during a chain upgrade to v0.47.x.
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				crisistypes.ModuleName,
+			},
+}
+```
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -429,7 +456,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### New Proposal.Proposer field
+##### New `Proposal.Proposer` field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
@@ -485,7 +512,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-The old params module is required to still be imported in your app.go in order to handle this migration. 
+The `x/params` module should still be imported in your app.go in order to handle this migration.
+
+Because the `x/consensus` module is a new module, its store must be added while upgrading to v0.47.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				consensustypes.ModuleName,
+			},
+}
+```
 
 ##### `app.go` changes
 

@@ -16,6 +16,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
@@ -23,7 +24,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var EventTallyResult = "cosmos.group.v1.EventProposalPruned"
+var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"
 
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 	for i := 50; i < 70; i++ {
@@ -1588,6 +1589,14 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(dp1, dp2)
 	}
 
+	// no group policy
+	noPolicies, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
+		Admin: addrs[2].String(),
+	})
+	s.Require().NoError(err)
+	policyAccs = noPolicies.GroupPolicies
+	s.Require().Equal(len(policyAccs), 0)
+
 	// query group policy by admin
 	policiesByAdminRes, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
 		Admin: admin.String(),
@@ -1834,7 +1843,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -1983,7 +1992,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
 				events := ctxVPE.EventManager().ABCIEvents()
 
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 	}
@@ -2072,12 +2081,31 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	myProposalID := proposalRes.ProposalId
 
-	// proposals by group policy
+	// no group policy
 	proposalsRes, err := s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
-		Address: accountAddr,
+		Address: addrs[2].String(),
 	})
 	s.Require().NoError(err)
 	proposals := proposalsRes.Proposals
+	s.Require().Equal(len(proposals), 0)
+
+	// proposals by group policy (request with pagination)
+	proposalsRes, err = s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
+		Address: accountAddr,
+		Pagination: &query.PageRequest{
+			Limit: 2,
+		},
+	})
+	s.Require().NoError(err)
+	proposals = proposalsRes.Proposals
+	s.Require().Equal(len(proposals), 1)
+
+	// proposals by group policy
+	proposalsRes, err = s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
+		Address: accountAddr,
+	})
+	s.Require().NoError(err)
+	proposals = proposalsRes.Proposals
 	s.Require().Equal(len(proposals), 1)
 	s.Assert().Equal(req.GroupPolicyAddress, proposals[0].GroupPolicyAddress)
 	s.Assert().Equal(req.Metadata, proposals[0].Metadata)
@@ -2549,7 +2577,7 @@ func (s *TestSuite) TestExecProposal() {
 			expToBalances:     sdk.NewInt64Coin("test", 100),
 			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"proposal with multiple messages executed when accepted": {
@@ -2567,7 +2595,7 @@ func (s *TestSuite) TestExecProposal() {
 			expToBalances:     sdk.NewInt64Coin("test", 200),
 			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"proposal not executed when rejected": {
@@ -2580,7 +2608,7 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().False(eventTypeFound(events, EventTallyResult))
+				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"open proposal must not fail": {
@@ -2591,7 +2619,7 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().False(eventTypeFound(events, EventTallyResult))
+				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"invalid proposal id": {
@@ -2649,7 +2677,7 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 		"prevent double execution when successful": {
@@ -2939,7 +2967,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
 				events := sdkCtx.EventManager().ABCIEvents()
-				s.Require().True(eventTypeFound(events, EventTallyResult))
+				s.Require().True(eventTypeFound(events, EventProposalPruned))
 
 			} else {
 				// Check that proposal and votes exists

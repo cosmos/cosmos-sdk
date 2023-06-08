@@ -9,8 +9,6 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/core/address"
-
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -114,9 +112,11 @@ type interfaceMap = map[string]reflect.Type
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
-		ProtoFiles:            proto.HybridResolver,
-		AddressCodec:          failingAddressCodec{},
-		ValidatorAddressCodec: failingAddressCodec{},
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          failingAddressCodec{},
+			ValidatorAddressCodec: failingAddressCodec{},
+		},
 	})
 	if err != nil {
 		panic(err)
@@ -129,11 +129,8 @@ type InterfaceRegistryOptions struct {
 	// ProtoFiles is the set of files to use for the registry. It is required.
 	ProtoFiles signing.ProtoFileResolver
 
-	// AddressCodec is the address codec to use for the registry. It is required.
-	AddressCodec address.Codec
-
-	// ValidatorAddressCodec is the validator address codec to use for the registry. It is required.
-	ValidatorAddressCodec address.Codec
+	// SigningOptions are the signing options to use for the registry.
+	SigningOptions signing.Options
 }
 
 // NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
@@ -142,12 +139,8 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 		return nil, fmt.Errorf("proto files must be provided")
 	}
 
-	signingCtx, err := signing.NewContext(signing.Options{
-		FileResolver:          options.ProtoFiles,
-		TypeResolver:          nil,
-		AddressCodec:          options.AddressCodec,
-		ValidatorAddressCodec: options.ValidatorAddressCodec,
-	})
+	options.SigningOptions.FileResolver = options.ProtoFiles
+	signingCtx, err := signing.NewContext(options.SigningOptions)
 	if err != nil {
 		return nil, err
 	}

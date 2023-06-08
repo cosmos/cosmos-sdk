@@ -3,9 +3,6 @@ package authz
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-
 	"github.com/cosmos/gogoproto/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,11 +14,6 @@ var (
 	_ sdk.Msg = &MsgGrant{}
 	_ sdk.Msg = &MsgRevoke{}
 	_ sdk.Msg = &MsgExec{}
-
-	// For amino support.
-	_ legacytx.LegacyMsg = &MsgGrant{}
-	_ legacytx.LegacyMsg = &MsgRevoke{}
-	_ legacytx.LegacyMsg = &MsgExec{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
@@ -45,11 +37,6 @@ func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *t
 func (msg MsgGrant) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
@@ -104,11 +91,6 @@ func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
-}
-
 // NewMsgExec creates a new MsgExecAuthorized
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
@@ -145,9 +127,4 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 func (msg MsgExec) GetSigners() []sdk.AccAddress {
 	grantee, _ := sdk.AccAddressFromBech32(msg.Grantee)
 	return []sdk.AccAddress{grantee}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.Amino.MustMarshalJSON(&msg))
 }

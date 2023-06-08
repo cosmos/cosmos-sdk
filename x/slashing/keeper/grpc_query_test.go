@@ -39,8 +39,8 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 	)
 
 	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
-	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
-	require.True(found)
+	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.NoError(err)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
 		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consAddr.String()})

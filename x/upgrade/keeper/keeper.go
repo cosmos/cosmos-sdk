@@ -416,6 +416,7 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
+// If successful, it will increment the app version and clear the IBC state
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {

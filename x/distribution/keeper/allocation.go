@@ -111,7 +111,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	}
 
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
+	err = k.ValidatorCurrentRewards.Set(ctx, val.GetOperator(), currentRewards)
 	if err != nil {
 		return err
 	}

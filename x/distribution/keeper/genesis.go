@@ -84,7 +84,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		err = k.ValidatorCurrentRewards.Set(ctx, valAddr, cur.Rewards)
 		if err != nil {
 			panic(err)
 		}

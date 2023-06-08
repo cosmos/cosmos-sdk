@@ -70,3 +70,12 @@ The group module emits the following events:
 | message                         | action        | /cosmos.group.v1.Msg/LeaveGroup |
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
+
+### EventProposalPruned
+
+| Type                                | Attribute Key | Attribute Value                 |
+|-------------------------------------|---------------|---------------------------------|
+| message                             | action        | /cosmos.group.v1.Msg/LeaveGroup |
+| cosmos.group.v1.EventProposalPruned | proposal_id   | {proposalId}                    |
+| cosmos.group.v1.EventProposalPruned | status        | {ProposalStatus}                |
+| cosmos.group.v1.EventProposalPruned | tally_result  | {TallyResult}                   |

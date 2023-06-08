@@ -125,6 +125,43 @@ The previous command allow you to run a single node. This is enough for the next
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/docker-compose.yml).
 
-## Next {hide}
+## State Sync
 
-Read about the [Interacting with your Node](./interact-node.md) {hide}
+State sync is the act in which a node syncs the latest or close to the latest state of a blockchain. This is useful for users who don't want to sync all the blocks in history. Read more in [CometBFT documentation](https://docs.cometbft.com/v0.34/core/state-sync).
+
+State sync works thanks to snapshots. Read how the SDK handles snapshots [here](https://github.com/cosmos/cosmos-sdk/blob/825245d/store/snapshots/README.md).
+
+### Local State Sync
+
+Local state sync work similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
+
+1. As mentioned in https://docs.cometbft.com/v0.34/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
+2. Run `<appd snapshot restore <height> <format>` to restore a local snapshot (note: first load it from a file with the *load* command). 
+3. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> tendermint bootstrap-state`
+
+### Snapshots Commands
+
+The Cosmos SDK provides commands for managing snapshots.
+These commands can be added in an app with the following snippet in `cmd/<app>/root.go`:
+
+```go
+import (
+  "github.com/cosmos/cosmos-sdk/client/snapshot"
+)
+
+func initRootCmd(/* ... */) {
+  // ...
+  rootCmd.AddCommand(
+    snapshot.Cmd(appCreator),
+  )
+}
+```
+
+Then following commands are available at `<appd> snapshots [command]`:
+
+* **list**: list local snapshots
+* **load**: Load a snapshot archive file into snapshot store
+* **restore**: Restore app state from local snapshot
+* **export**:  Export app state to snapshot store
+* **dump**: Dump the snapshot as portable archive format
+* **delete**: Delete a local snapshot

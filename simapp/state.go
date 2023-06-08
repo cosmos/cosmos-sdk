@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -27,6 +28,34 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+	genesisState := NewDefaultGenesisState(cdc)
+	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
+}
+
+// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
+func AppStateFnWithExtendedCb(
+	cdc codec.JSONCodec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+	rawStateCb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCbs(cdc, simManager, genesisState, nil, rawStateCb)
+}
+
+// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+// genesisState is the default genesis state of the whole app.
+// moduleStateCb is the callback function to access moduleState.
+// rawStateCb is the callback function to extend rawState.
+func AppStateFnWithExtendedCbs(
+	cdc codec.JSONCodec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+	moduleStateCb func(moduleName string, genesisState interface{}),
+	rawStateCb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if FlagGenesisTimeValue == 0 {
@@ -64,11 +93,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -124,8 +153,20 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		}
 
 		// change appState back
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+		for name, state := range map[string]proto.Message{
+			stakingtypes.ModuleName: stakingState,
+			banktypes.ModuleName:    bankState,
+		} {
+			if moduleStateCb != nil {
+				moduleStateCb(name, state)
+			}
+			rawState[name] = cdc.MustMarshalJSON(state)
+		}
+
+		// extend state from callback function
+		if rawStateCb != nil {
+			rawStateCb(rawState)
+		}
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
@@ -142,8 +183,20 @@ func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
-	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState(cdc)
+	return AppStateRandomizedFnWithState(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+}
+
+// AppStateRandomizedFnWithState creates calls each module's GenesisState generator function
+// and creates the simulation params
+// genesisState is the genesis state of the app.
+// This function will not exist in v0.47, but be replaced by AppStateRandomizedFn with an extra genesisState argument.
+func AppStateRandomizedFnWithState(
+	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
+	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+	genesisState map[string]json.RawMessage,
+) (json.RawMessage, []simtypes.Account) {
+	numAccs := int64(len(accs))
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts

@@ -52,18 +52,6 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.Co
 	store.Set(types.ProposerKey, bz)
 }
 
-// get the starting info associated with a delegator
-func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetDelegatorStartingInfoKey(val, del))
-	if err != nil {
-		return
-	}
-
-	err = k.cdc.Unmarshal(b, &period)
-	return period, err
-}
-
 // get historical rewards for a particular period
 func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

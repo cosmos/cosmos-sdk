@@ -54,8 +54,6 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 
 	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	err = f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
-	assert.NilError(t, err)
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
 
 	// Create a validator

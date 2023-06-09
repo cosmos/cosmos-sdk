@@ -151,11 +151,6 @@ func TestSetLoader(t *testing.T) {
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 
-			// checking the case of the store being renamed
-			if tc.setLoader != nil {
-				checkStore(t, db, upgradeHeight, tc.origStoreKey, k, nil)
-			}
-
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
 		})

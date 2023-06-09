@@ -17,6 +17,7 @@ import (
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	circuitBreaker    CircuitBreaker
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -32,6 +33,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 type IMsgServiceRouter interface {
+	SetCircuit(cb CircuitBreaker)
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
@@ -39,6 +41,10 @@ type IMsgServiceRouter interface {
 }
 
 var _ IMsgServiceRouter = &MsgServiceRouter{}
+
+func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	msr.circuitBreaker = cb
+}
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
@@ -130,6 +136,20 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 					return nil, err
 				}
 			}
+
+			if msr.circuitBreaker != nil {
+				msgURL := sdk.MsgTypeURL(req)
+
+				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				if err != nil {
+					return nil, err
+				}
+
+				if !isAllowed {
+					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
+				}
+			}
+
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)

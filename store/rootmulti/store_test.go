@@ -87,7 +87,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 
 	// require no failure when given an invalid or pruned version
 	_, err = ms.CacheMultiStoreWithVersion(cID.Version + 1)
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	// require a valid version can be cache-loaded
 	cms, err := ms.CacheMultiStoreWithVersion(cID.Version)
@@ -97,6 +97,17 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	kvStore := cms.GetKVStore(ms.keysByName["store1"])
 	require.NotNil(t, kvStore)
 	require.Equal(t, kvStore.Get(k), v)
+
+	// add new module stores (store4 and store5) to multi stores and commit
+	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	require.NoError(t, err)
+	ms.Commit()
+
+	// cache multistore of version before adding store4 should works
+	_, err = ms.CacheMultiStoreWithVersion(1)
+	require.NoError(t, err)
 
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
@@ -272,6 +283,12 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, migratedID.Version, int64(2))
 
 	reload, _ := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	// unmount store3 since store3 was deleted
+	unmountStore(reload, "store3")
+
+	rs3, _ := reload.GetStoreByName("store3").(types.KVStore)
+	require.Nil(t, rs3)
+
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -475,9 +492,9 @@ func TestMultiStore_Pruning(t *testing.T) {
 		saved       []int64
 	}{
 		{"prune nothing", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
-		{"prune everything", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune everything", 12, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7}, []int64{8, 9, 10, 11, 12}},
+		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 3, 4, 6, 5, 7}, []int64{8, 9, 10}},
+		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 3, 4, 5, 6}, []int64{7, 8, 9, 10}},
 		{"prune some; large batch", 10, pruningtypes.NewCustomPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
@@ -495,12 +512,12 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.NoError(t, err, "expected error when loading height: %d", v)
+				require.NoError(t, err, "expected no error when loading height: %d", v)
 			}
 
 			for _, v := range tc.deleted {
 				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.NoError(t, err, "expected error when loading height: %d", v)
+				require.Error(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}
@@ -604,6 +621,32 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 		_, err := ms.CacheMultiStoreWithVersion(v)
 		require.NoError(t, err, "expected error when loading height: %d", v)
 	}
+}
+
+// TestUnevenStoresHeightCheck tests if loading root store correctly errors when
+// there's any module store with the wrong height
+func TestUnevenStoresHeightCheck(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// commit to increment store's height
+	store.Commit()
+
+	// mount store4 to root store
+	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+
+	// load the stores without upgrades
+	err = store.LoadLatestVersion()
+	require.Error(t, err)
+
+	// now, let's load with upgrades...
+	upgrades := &types.StoreUpgrades{
+		Added: []string{"store4"},
+	}
+	err = store.LoadLatestVersionAndUpgrade(upgrades)
+	require.Nil(t, err)
 }
 
 func TestSetInitialVersion(t *testing.T) {
@@ -783,6 +826,13 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.Pruning
 	}
 
 	return store, upgrades
+}
+
+func unmountStore(rootStore *Store, storeKeyName string) {
+	sk := rootStore.keysByName[storeKeyName]
+	delete(rootStore.stores, sk)
+	delete(rootStore.storesParams, sk)
+	delete(rootStore.keysByName, storeKeyName)
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {

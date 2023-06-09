@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
@@ -242,6 +242,10 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	defer func() {
 		if err = svr.Stop(); err != nil {
+			tmos.Exit(err.Error())
+		}
+
+		if err = app.Close(); err != nil {
 			tmos.Exit(err.Error())
 		}
 	}()
@@ -485,6 +489,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 
 		if apiSrv != nil {

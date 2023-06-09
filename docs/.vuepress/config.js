@@ -31,16 +31,16 @@ module.exports = {
     },
     versions: [
       {
-        "label": "v0.44",
-        "key": "v0.44"
-      },
-      {
         "label": "v0.45",
         "key": "v0.45"
       },
       {
         "label": "v0.46",
         "key": "v0.46"
+      },
+      {
+        "label": "v0.47",
+        "key": "v0.47"
       },
       {
         "label": "main",

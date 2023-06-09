@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -21,6 +23,16 @@ const (
 	GroupVote       = "group-vote"
 )
 
+func checkAccExists(acc sdk.AccAddress, g []*group.GroupMember, lastIndex int) bool {
+	s := acc.String()
+	for i := 0; i < lastIndex; i++ {
+		if g[i].Member.Address == s {
+			return true
+		}
+	}
+	return false
+}
+
 func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	groups := make([]*group.GroupInfo, 3)
 	for i := 0; i < 3; i++ {
@@ -40,6 +52,9 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 	groupMembers := make([]*group.GroupMember, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
+		for checkAccExists(acc.Address, groupMembers, i) {
+			acc, _ = simtypes.RandomAcc(r, accounts)
+		}
 		groupMembers[i] = &group.GroupMember{
 			GroupId: uint64(i + 1),
 			Member: &group.Member{
@@ -54,9 +69,14 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 
 func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.GroupPolicyInfo {
 	groupPolicies := make([]*group.GroupPolicyInfo, 3)
-	for i := 0; i < 3; i++ {
-		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
-		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
+	raccs := make([]simtypes.Account, 0, len(simState.Accounts))
+	raccs = append(raccs, simState.Accounts...)
+	r.Shuffle(len(raccs), func(i, j int) {
+		raccs[i], raccs[j] = raccs[j], raccs[i]
+	})
+	for i := range groupPolicies {
+		acc := raccs[i]
+		policy, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
 		if err != nil {
 			panic(err)
 		}
@@ -65,7 +85,7 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 			Admin:          acc.Address.String(),
 			Address:        acc.Address.String(),
 			Version:        1,
-			DecisionPolicy: any,
+			DecisionPolicy: policy,
 			Metadata:       simtypes.RandStringOfLength(r, 10),
 		}
 	}
@@ -147,6 +167,11 @@ func getVoteOption(index int) group.VoteOption {
 
 // RandomizedGenState generates a random GenesisState for the group module.
 func RandomizedGenState(simState *module.SimulationState) {
+	// The test requires we have at least 3 accounts.
+	if len(simState.Accounts) < 3 {
+		return
+	}
+
 	// groups
 	var groups []*group.GroupInfo
 	simState.AppParams.GetOrGenerate(
@@ -194,4 +219,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	simState.GenState[group.ModuleName] = simState.Cdc.MustMarshalJSON(&groupGenesis)
+	bz, err := json.MarshalIndent(simState.GenState[group.ModuleName], "", " ")
+	if err == nil {
+		fmt.Printf("Selected randomly generated group parameters:\n%s\n", bz)
+	}
 }

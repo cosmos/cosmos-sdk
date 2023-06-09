@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -231,6 +232,15 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter IMsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 
+// SetCircuitBreaker sets the circuit breaker for the BaseApp.
+// The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
+func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
+	if app.msgServiceRouter == nil {
+		panic("cannot set circuit breaker with no msg service router set")
+	}
+	app.msgServiceRouter.SetCircuit(cb)
+}
+
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
@@ -354,11 +364,11 @@ func (app *BaseApp) Init() error {
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
-	rms, ok := app.cms.(*rootmulti.Store)
-	if !ok {
-		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
 	}
-	return rms.GetPruning().Validate()
+
+	return app.cms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
@@ -892,4 +902,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
 func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
+}
+
+// Close is called in start cmd to gracefully cleanup resources.
+func (app *BaseApp) Close() error {
+	return nil
 }

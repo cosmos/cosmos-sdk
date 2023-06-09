@@ -66,13 +66,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress
 
 // set the starting info associated with a delegator
 func (k Keeper) SetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&period)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetDelegatorStartingInfoKey(val, del), b)
+	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), period)
 }
 
 // check existence of the starting info associated with a delegator

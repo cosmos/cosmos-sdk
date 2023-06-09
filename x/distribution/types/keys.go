@@ -49,7 +49,7 @@ var (
 	ValidatorOutstandingRewardsPrefix = []byte{0x02}             // key for outstanding rewards
 
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
-	DelegatorStartingInfoPrefix          = []byte{0x04}             // key for delegator starting info
+	DelegatorStartingInfoPrefix          = collections.NewPrefix(4) // key for delegator starting info
 	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = []byte{0x06}             // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07}             // key for accumulated validator commission

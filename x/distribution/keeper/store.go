@@ -64,12 +64,6 @@ func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress
 	return period, err
 }
 
-// delete the starting info associated with a delegator
-func (k Keeper) DeleteDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetDelegatorStartingInfoKey(val, del))
-}
-
 // iterate over delegator starting infos
 func (k Keeper) IterateDelegatorStartingInfos(ctx context.Context, handler func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool)) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))

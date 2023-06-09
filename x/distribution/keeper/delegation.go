@@ -254,7 +254,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// remove delegator starting info
-	err = k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil {
 		return nil, err
 	}

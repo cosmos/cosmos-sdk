@@ -54,7 +54,8 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 
 	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
+	err = f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
+	assert.NilError(t, err)
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
 
 	// Create a validator
@@ -68,7 +69,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 
 	// Create a delegator
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
-	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
+	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 
 	// Create a validator to redelegate to
 	validator2 := testutil.NewValidator(t, addrVals[1], PKs[1])
@@ -191,7 +192,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Try to unbond validator
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is not complete (is not mature yet)
 	validator, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -205,7 +206,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is complete
 	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -251,7 +252,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is not complete for both validators
 	validator1, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -271,7 +272,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Try again to unbond validators
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator1, but not for validator2
 	validator1, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -290,7 +291,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Try again to unbond validators
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator2
 	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])

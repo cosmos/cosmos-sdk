@@ -40,7 +40,7 @@ func TestInitGenesis(t *testing.T) {
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
 	}
-	f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
 
 	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
 	assert.NilError(t, err)

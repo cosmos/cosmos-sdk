@@ -27,7 +27,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
 	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi)
+	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi))
 
 	return addrs, validators
 }

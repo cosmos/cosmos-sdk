@@ -87,68 +87,6 @@ message Data {
   // NOTE: not all txs here are valid.  We're just agreeing on the order first.
   // This means that block.AppHash does not include these txs.
   repeated bytes txs = 1;
-
-  // field number 2 is reserved for intermediate state roots
-  EvidenceList           evidence                 = 3 [(gogoproto.nullable) = false];
-  Messages               messages                 = 4 [(gogoproto.nullable) = false];
-  uint64                 original_square_size     = 5;
-  bytes                  hash                     = 6;
-}
-
-// DuplicateVoteEvidence contains evidence of a validator signed two conflicting votes.
-message DuplicateVoteEvidence {
-  tendermint.types.Vote     vote_a             = 1;
-  tendermint.types.Vote     vote_b             = 2;
-  int64                     total_voting_power = 3;
-  int64                     validator_power    = 4;
-  google.protobuf.Timestamp timestamp          = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-}
-
-// LightClientAttackEvidence contains evidence of a set of validators attempting to mislead a light client.
-message LightClientAttackEvidence {
-  tendermint.types.LightBlock conflicting_block            = 1;
-  int64                       common_height                = 2;
-  repeated tendermint.types.Validator byzantine_validators = 3;
-  int64                               total_voting_power   = 4;
-  google.protobuf.Timestamp           timestamp            = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-}
-
-message Evidence {
-  oneof sum {
-    DuplicateVoteEvidence     duplicate_vote_evidence      = 1;
-    LightClientAttackEvidence light_client_attack_evidence = 2;
-  }
-}
-
-// EvidenceData contains any evidence of malicious wrong-doing by validators
-message EvidenceList {
-  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
-}
-
-message Messages {
-  repeated Message messages_list = 1;
-}
-
-message Message {
-  bytes namespace_id = 1;
-  bytes data         = 2;
-}
-
-// DataAvailabilityHeader contains the row and column roots of the erasure
-// coded version of the data in Block.Data.
-// Therefor the original Block.Data is arranged in a
-// k × k matrix, which is then "extended" to a
-// 2k × 2k matrix applying multiple times Reed-Solomon encoding.
-// For details see Section 5.2: https://arxiv.org/abs/1809.09044
-// or the Celestia specification:
-// https://github.com/celestiaorg/celestia-specs/blob/master/specs/data_structures.md#availabledataheader
-// Note that currently we list row and column roots in separate fields
-// (different from the spec).
-message DataAvailabilityHeader {
-  // RowRoot_j 	= root((M_{j,1} || M_{j,2} || ... || M_{j,2k} ))
-  repeated bytes row_roots = 1;
-  // ColumnRoot_j = root((M_{1,j} || M_{2,j} || ... || M_{2k,j} ))
-  repeated bytes column_roots = 2;
 }
 
 // Vote represents a prevote, precommit, or commit vote from validators for
@@ -213,37 +151,7 @@ message BlockMeta {
 
 // TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree.
 message TxProof {
-  repeated bytes    row_roots = 1;
-  repeated bytes    data      = 2;
-  repeated NMTProof proofs    = 3;
-}
-
-// MalleatedTx wraps a transaction that was derived from a different original
-// transaction. This allows for tendermint to track malleated and original
-// transactions
-message MalleatedTx {
-  bytes original_tx_hash = 1;
-  bytes tx               = 2;
-}
-
-// Proof represents proof of a namespace.ID in an NMT.
-// In case this proof proves the absence of a namespace.ID
-// in a tree it also contains the leaf hashes of the range
-// where that namespace would be.
-message NMTProof {
-  // start index of this proof.
-  int32 start = 1;
-  // end index of this proof.
-  int32 end = 2;
-  // Nodes that together with the corresponding leaf values can be used to
-  // recompute the root and verify this proof. Nodes should consist of the max
-  // and min namespaces along with the actual hash, resulting in each being 48
-  // bytes each
-  repeated bytes nodes = 3;
-  // leafHash are nil if the namespace is present in the NMT. In case the
-  // namespace to be proved is in the min/max range of the tree but absent, this
-  // will contain the leaf hash necessary to verify the proof of absence. Leaf
-  // hashes should consist of the namespace along with the actual hash,
-  // resulting 40 bytes total.
-  bytes leaf_hash = 4;
+  bytes                   root_hash = 1;
+  bytes                   data      = 2;
+  tendermint.crypto.Proof proof     = 3;
 }

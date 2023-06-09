@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -50,6 +51,16 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
+			},
+			true,
+			func() {},
+			func(*feegrant.QueryAllowanceResponse) {},
+		},
+		{
+			"non existed grant",
+			&feegrant.QueryAllowanceRequest{
+				Granter: invalidGranter,
+				Grantee: invalidGrantee,
 			},
 			true,
 			func() {},

@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -100,7 +99,7 @@ func (s *SimTestSuite) SetupTest() {
 	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
 	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
@@ -389,10 +388,10 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
+	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
+	s.Require().NoError(s.distrKeeper.ValidatorCurrentRewards.Set(ctx, valAddress, currentRewards))
 }
 
 func TestSimTestSuite(t *testing.T) {

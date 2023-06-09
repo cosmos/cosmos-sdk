@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -261,7 +260,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false)
 
 	genesisVals := suite.stakingKeeper.GetAllValidators(suite.ctx)
 	suite.Require().Len(genesisVals, 1)
@@ -310,10 +309,10 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
+	suite.Require().NoError(suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards))
 	// setup current revards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
+	suite.Require().NoError(suite.distrKeeper.ValidatorCurrentRewards.Set(suite.ctx, valAddress, currentRewards))
 }
 
 func TestSimTestSuite(t *testing.T) {

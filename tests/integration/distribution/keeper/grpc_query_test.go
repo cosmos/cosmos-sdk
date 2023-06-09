@@ -517,7 +517,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	assert.NilError(t, f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))
 	assert.NilError(t, f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
 	expRes := &types.QueryDelegationRewardsResponse{

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -136,10 +137,12 @@ func TestSigVerification(t *testing.T) {
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
 		EnabledSignModes:           enabledSignModes,
 	}
-	suite.clientCtx.TxConfig = authtx.NewTxConfigWithOptions(
+	var err error
+	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		txConfigOpts,
 	)
+	require.NoError(t, err)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// make block height non-zero to ensure account numbers part of signBytes
@@ -171,10 +174,11 @@ func TestSigVerification(t *testing.T) {
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
 		EnabledSignModes:           enabledSignModes,
 	}
-	anteTxConfig := authtx.NewTxConfigWithOptions(
+	anteTxConfig, err := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		txConfigOpts,
 	)
+	require.NoError(t, err)
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())

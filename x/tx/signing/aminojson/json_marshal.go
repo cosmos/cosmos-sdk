@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -22,6 +23,8 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
+	// DonotSortFields when set turns off sorting of field names.
+	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver protoregistry.MessageTypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
@@ -36,6 +39,7 @@ type Encoder struct {
 	fieldEncoders   map[string]FieldEncoder
 	fileResolver    signing.ProtoFileResolver
 	typeResolver    protoregistry.MessageTypeResolver
+	doNotSortFields bool
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -61,8 +65,9 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"legacy_coins":     nullSliceAsEmptyEncoder,
 			"cosmos_dec_bytes": cosmosDecEncoder,
 		},
-		fileResolver: options.FileResolver,
-		typeResolver: options.TypeResolver,
+		fileResolver:    options.FileResolver,
+		typeResolver:    options.TypeResolver,
+		doNotSortFields: options.DoNotSortFields,
 	}
 	return enc
 }
@@ -164,6 +169,11 @@ func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
 	}
 }
 
+type nameAndIndex struct {
+	i    int
+	name string
+}
+
 func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if msg == nil {
 		return errors.New("nil message")
@@ -192,10 +202,27 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	fields := msg.Descriptor().Fields()
 	first := true
 	emptyOneOfWritten := map[string]bool{}
+
+	// 1. If permitted, ensure the names are sorted.
+	indices := make([]*nameAndIndex, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
-		v := msg.Get(f)
 		name := getAminoFieldName(f)
+		indices = append(indices, &nameAndIndex{i: i, name: name})
+	}
+
+	if shouldSortFields := !enc.doNotSortFields; shouldSortFields {
+		sort.Slice(indices, func(i, j int) bool {
+			ni, nj := indices[i], indices[j]
+			return ni.name < nj.name
+		})
+	}
+
+	for _, ni := range indices {
+		i := ni.i
+		name := ni.name
+		f := fields.Get(i)
+		v := msg.Get(f)
 		oneof := f.ContainingOneof()
 		isOneOf := oneof != nil
 		oneofFieldName, oneofTypeName, err := getOneOfNames(f)

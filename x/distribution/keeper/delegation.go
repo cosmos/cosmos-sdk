@@ -14,7 +14,7 @@ import (
 // initialize starting info for a new delegation
 func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) error {
 	// period has already been incremented - we want to store the period ended by this delegation action
-	valCurrentRewards, err := k.GetValidatorCurrentRewards(ctx, val)
+	valCurrentRewards, err := k.ValidatorCurrentRewards.Get(ctx, val)
 	if err != nil {
 		return err
 	}

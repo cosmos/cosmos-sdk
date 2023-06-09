@@ -68,3 +68,8 @@ message ValidatorSigner {
   option (cosmos.msg.v1.signer) = "signer";
   string signer                 = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
+
+service TestSimpleSigner {
+  option (cosmos.msg.v1.service) = true;
+  rpc TestSimpleSigner(SimpleSigner) returns (SimpleSigner) {}
+}

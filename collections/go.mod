@@ -3,14 +3,14 @@ module cosmossdk.io/collections
 go 1.20
 
 require (
-	cosmossdk.io/core v0.7.0
+	cosmossdk.io/core v0.8.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/stretchr/testify v1.8.4
-	pgregory.net/rapid v0.6.0
+	pgregory.net/rapid v0.6.2
 )
 
 require (
-	cosmossdk.io/api v0.4.1 // indirect
+	cosmossdk.io/api v0.4.2 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

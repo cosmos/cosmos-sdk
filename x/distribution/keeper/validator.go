@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,7 +23,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 	}
 
 	// set current rewards (starting at period 1)
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	err = k.ValidatorCurrentRewards.Set(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
@@ -40,8 +42,8 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 // increment validator period, returning the period just ended
 func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
 	// fetch current rewards
-	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	if err != nil {
+	rewards, err := k.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return 0, err
 	}
 
@@ -100,7 +102,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// set current rewards, incrementing period by 1
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
+	err = k.ValidatorCurrentRewards.Set(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
 	if err != nil {
 		return 0, err
 	}

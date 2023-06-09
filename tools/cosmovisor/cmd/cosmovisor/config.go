@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"cosmossdk.io/tools/cosmovisor"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +15,7 @@ var configCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Fprint(cmd.OutOrStdout(), cfg.DetailString())
+		cmd.Print(cfg.DetailString())
 		return nil
 	},
 }

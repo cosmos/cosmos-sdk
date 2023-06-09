@@ -113,7 +113,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	h.k.DeleteValidatorHistoricalRewards(ctx, valAddr)
 
 	// clear current rewards
-	err = h.k.DeleteValidatorCurrentRewards(ctx, valAddr)
+	err = h.k.ValidatorCurrentRewards.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}

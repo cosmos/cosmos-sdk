@@ -194,6 +194,9 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// StreamEvents
+	StreamEvents chan StreamEvents
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -214,6 +217,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		queryGasLimit:    math.MaxUint64,
+		StreamEvents:     make(chan StreamEvents),
 	}
 
 	for _, option := range options {
@@ -745,7 +749,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
 			)
 		}
-
+		app.AddStreamEvents(app.finalizeBlockState.ctx.BlockHeight(), resp.Events, true)
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
@@ -808,6 +812,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 			)
 		}
 
+		app.AddStreamEvents(app.finalizeBlockState.ctx.BlockHeight(), eb.Events, true)
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
 		endblock = eb
 	}

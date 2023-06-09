@@ -168,7 +168,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
-	hasInfo, err := k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil {
 		return nil, err
 	}

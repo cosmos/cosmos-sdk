@@ -68,7 +68,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorCurrentRewards",
 			v1.GetValidatorCurrentRewardsKey(valAddr),
-			types.GetValidatorCurrentRewardsKey(valAddr),
+			append(types.ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorAccumulatedCommission",

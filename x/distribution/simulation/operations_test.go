@@ -4,11 +4,13 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -110,14 +112,15 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
-	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(validator0.GetOperator(), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	require.NoError(suite.T(), err)
 
 	// execute operation
 	op := simulation.SimulateMsgWithdrawDelegatorReward(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)

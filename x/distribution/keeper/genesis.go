@@ -99,7 +99,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(valAddr, sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
 			panic(err)
 		}

@@ -37,7 +37,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if slashFactor.IsNegative() {
-		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
+		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
@@ -64,7 +64,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 
 	// should not be slashing an unbonded validator
 	if validator.IsUnbonded() {
-		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
+		return math.NewInt(0), fmt.Errorf("should not be slashing unbonded validator: %s", validator.GetOperator())
 	}
 
 	operatorAddress := validator.GetOperator()
@@ -82,9 +82,9 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	switch {
 	case infractionHeight > sdkCtx.BlockHeight():
 		// Can't slash infractions in the future
-		panic(fmt.Sprintf(
+		return math.NewInt(0), fmt.Errorf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, sdkCtx.BlockHeight()))
+			infractionHeight, sdkCtx.BlockHeight())
 
 	case infractionHeight == sdkCtx.BlockHeight():
 		// Special-case slash at current height for efficiency - we don't need to

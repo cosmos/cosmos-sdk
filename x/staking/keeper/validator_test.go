@@ -39,9 +39,9 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
-	keeper.SetValidator(ctx, validator)
-	keeper.SetValidatorByPowerIndex(ctx, validator)
-	keeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(keeper.SetValidator(ctx, validator))
+	require.NoError(keeper.SetValidatorByPowerIndex(ctx, validator))
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
@@ -78,11 +78,11 @@ func (s *KeeperTestSuite) TestValidator() {
 
 	// check the last validator power
 	power := int64(100)
-	keeper.SetLastValidatorPower(ctx, valAddr, power)
+	require.NoError(keeper.SetLastValidatorPower(ctx, valAddr, power))
 	resPower, err := keeper.GetLastValidatorPower(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(power, resPower)
-	keeper.DeleteLastValidatorPower(ctx, valAddr)
+	require.NoError(keeper.DeleteLastValidatorPower(ctx, valAddr))
 	resPower, err = keeper.GetLastValidatorPower(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(int64(0), resPower)
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// set and retrieve a record
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
-	keeper.SetValidatorByConsAddr(ctx, validators[0])
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[0]))
 	resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[0].MinEqual(&resVal))
@@ -180,12 +180,12 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// shouldn't be able to remove if there are still tokens left
 	validators[1].Status = stakingtypes.Unbonded
-	keeper.SetValidator(ctx, validators[1])
+	require.NoError(keeper.SetValidator(ctx, validators[1]))
 	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "attempting to remove a validator which still contains tokens: failed to remove validator")
 
-	validators[1].Tokens = math.ZeroInt()                    // ...remove all tokens
-	keeper.SetValidator(ctx, validators[1])                  // ...set the validator
-	keeper.RemoveValidator(ctx, validators[1].GetOperator()) // Now it can be removed.
+	validators[1].Tokens = math.ZeroInt()                                     // ...remove all tokens
+	require.NoError(keeper.SetValidator(ctx, validators[1]))                  // ...set the validator
+	require.NoError(keeper.RemoveValidator(ctx, validators[1].GetOperator())) // Now it can be removed.
 	_, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// burn half the delegator shares
-	keeper.DeleteValidatorByPowerIndex(ctx, validator)
+	require.NoError(keeper.DeleteValidatorByPowerIndex(ctx, validator))
 	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(math.LegacyNewDec(2)))
 	require.Equal(keeper.TokensFromConsensusPower(ctx, 50), burned)
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
@@ -227,9 +227,9 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// set new validator by power index
-	keeper.DeleteValidatorByPowerIndex(ctx, validator)
+	require.NoError(keeper.DeleteValidatorByPowerIndex(ctx, validator))
 	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
-	keeper.SetNewValidatorByPowerIndex(ctx, validator)
+	require.NoError(keeper.SetNewValidatorByPowerIndex(ctx, validator))
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 }
 
@@ -285,7 +285,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	params, err := keeper.GetParams(ctx)
 	require.NoError(err)
 	params.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
-	keeper.SetParams(ctx, params)
+	require.NoError(keeper.SetParams(ctx, params))
 
 	commission1 := stakingtypes.NewCommissionWithTime(
 		math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
@@ -299,8 +299,8 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	val1, _ = val1.SetInitialCommission(commission1)
 	val2, _ = val2.SetInitialCommission(commission2)
 
-	keeper.SetValidator(ctx, val1)
-	keeper.SetValidator(ctx, val2)
+	require.NoError(keeper.SetValidator(ctx, val1))
+	require.NoError(keeper.SetValidator(ctx, val2))
 
 	testCases := []struct {
 		validator   stakingtypes.Validator
@@ -360,12 +360,14 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.Equal(math.LegacyNewDecFromInt(addTokens), validator.DelegatorShares)
 
-	keeper.RemoveValidatorTokensAndShares(ctx, validator, math.LegacyNewDecFromInt(delTokens))
+	_, _, err = keeper.RemoveValidatorTokensAndShares(ctx, validator, math.LegacyNewDecFromInt(delTokens))
+	require.NoError(err)
 	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.Equal(delTokens, validator.Tokens)
 	require.True(validator.DelegatorShares.Equal(math.LegacyNewDecFromInt(delTokens)))
 
-	keeper.RemoveValidatorTokens(ctx, validator, delTokens)
+	_, err = keeper.RemoveValidatorTokens(ctx, validator, delTokens)
+	require.NoError(err)
 	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.True(validator.Tokens.IsZero())
 }
@@ -394,14 +396,14 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator1 := testutil.NewValidator(s.T(), valAddr1, PKs[1])
 	validator1.UnbondingHeight = endHeight
 	validator1.UnbondingTime = endTime
-	keeper.InsertUnbondingValidatorQueue(ctx, validator1)
+	require.NoError(keeper.InsertUnbondingValidatorQueue(ctx, validator1))
 
 	resVals, err = keeper.GetUnbondingValidators(ctx, endTime, endHeight)
 	require.NoError(err)
 	require.Equal(2, len(resVals))
 
 	// delete unbonding validator from the queue
-	keeper.DeleteValidatorQueue(ctx, validator1)
+	require.NoError(keeper.DeleteValidatorQueue(ctx, validator1))
 	resVals, err = keeper.GetUnbondingValidators(ctx, endTime, endHeight)
 	require.NoError(err)
 	require.Equal(1, len(resVals))
@@ -412,17 +414,15 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
-	keeper.SetValidator(ctx, validator)
+	require.NoError(keeper.SetValidator(ctx, validator))
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")
 
 	validator.Status = stakingtypes.Unbonding
-	err = keeper.SetValidator(ctx, validator)
-	require.NoError(err)
-	err = keeper.UnbondAllMatureValidators(ctx)
-	require.NoError(err)
+	require.NoError(keeper.SetValidator(ctx, validator))
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 
@@ -430,8 +430,8 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator = testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(addTokens)
 	validator.Status = stakingtypes.Unbonding
-	keeper.SetValidator(ctx, validator)
-	keeper.UnbondAllMatureValidators(ctx)
+	require.NoError(keeper.SetValidator(ctx, validator))
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(stakingtypes.Unbonded, validator.Status)

@@ -71,12 +71,12 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	val2 := testutil.NewValidator(t, valAddrs[1], pks[1])
 	vals := []types.Validator{val1, val2}
 
-	f.stakingKeeper.SetValidator(f.sdkCtx, val1)
-	f.stakingKeeper.SetValidator(f.sdkCtx, val2)
-	f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1)
-	f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2)
-	f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1)
-	f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val2))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2))
+	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1))
+	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2))
 
 	_, err := f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[0]), types.Unbonded, val1, true)
 	assert.NilError(t, err)
@@ -145,7 +145,7 @@ func initFixture(t testing.TB) *fixture {
 	types.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	stakingKeeper.SetParams(sdkCtx, types.DefaultParams())
+	assert.NilError(t, stakingKeeper.SetParams(sdkCtx, types.DefaultParams()))
 
 	f := fixture{
 		app:           integrationApp,

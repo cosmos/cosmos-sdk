@@ -43,6 +43,7 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
+	require := s.Require()
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
@@ -64,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	keeper.SetParams(ctx, stakingtypes.DefaultParams())
+	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))
 
 	s.ctx = ctx
 	s.stakingKeeper = keeper
@@ -90,7 +91,7 @@ func (s *KeeperTestSuite) TestParams() {
 
 	expParams.MaxValidators = 555
 	expParams.MaxEntries = 111
-	keeper.SetParams(ctx, expParams)
+	require.NoError(keeper.SetParams(ctx, expParams))
 	resParams, err = keeper.GetParams(ctx)
 	require.NoError(err)
 	require.True(expParams.Equal(resParams))
@@ -101,7 +102,7 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	require := s.Require()
 
 	expTotalPower := math.NewInt(10 ^ 9)
-	keeper.SetLastTotalPower(ctx, expTotalPower)
+	require.NoError(keeper.SetLastTotalPower(ctx, expTotalPower))
 	resTotalPower, err := keeper.GetLastTotalPower(ctx)
 	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))

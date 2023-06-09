@@ -567,7 +567,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, srcValAddr, shares)
-	keeper.SetDelegation(ctx, del)
+	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.GetDelegation(ctx, Addr, srcValAddr)
 	require.NoError(err)
 
@@ -721,7 +721,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
-	keeper.SetDelegation(ctx, del)
+	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.GetDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)
 
@@ -846,13 +846,13 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
-	keeper.SetDelegation(ctx, del)
+	require.NoError(keeper.SetDelegation(ctx, del))
 	resDel, err := keeper.GetDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)
 	require.Equal(del, resDel)
 
 	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0)
-	keeper.SetUnbondingDelegation(ctx, ubd)
+	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)
 	require.Equal(ubd, resUnbond)

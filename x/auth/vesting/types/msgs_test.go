@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -82,6 +83,13 @@ func TestPeriodicVestingAccountMsg(t *testing.T) {
 	}, false)
 	err = badPeriods.ValidateBasic()
 	require.Error(t, err)
+
+	badPeriodAmount := NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr, startTime, []Period{
+		{Length: 1, Amount: []sdk.Coin{{Denom: "atom", Amount: sdk.NewInt(1000)}}},
+		{Length: 1000, Amount: []sdk.Coin{{Denom: "atom", Amount: sdk.NewInt(-999)}}},
+	}, true)
+	err = badPeriodAmount.ValidateBasic()
+	require.Error(t, err)
 }
 
 func TestClawbackVestingAccountMsg(t *testing.T) {
@@ -146,6 +154,19 @@ func TestClawbackVestingAccountMsg(t *testing.T) {
 	noVestingOk := NewMsgCreateClawbackVestingAccount(fromAddr, toAddr, startTime, lockupPeriods, emptyPeriods, false)
 	err = noVestingOk.ValidateBasic()
 	require.NoError(t, err)
+
+	badPeriodsAmount := []Period{
+		{Length: 1, Amount: []sdk.Coin{{Denom: "atom", Amount: sdk.NewInt(20000000)}}},
+		{Length: 1000, Amount: []sdk.Coin{{Denom: "atom", Amount: sdk.NewInt(-10000000)}}},
+	}
+
+	negLockupEvent := NewMsgCreateClawbackVestingAccount(fromAddr, toAddr, startTime, badPeriodsAmount, vestingPeriods, false)
+	err = negLockupEvent.ValidateBasic()
+	require.Error(t, err)
+
+	negVestingEvent := NewMsgCreateClawbackVestingAccount(fromAddr, toAddr, startTime, lockupPeriods, badPeriodsAmount, false)
+	err = negVestingEvent.ValidateBasic()
+	require.Error(t, err)
 }
 
 func TestClawbackMsg(t *testing.T) {

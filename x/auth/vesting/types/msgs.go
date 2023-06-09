@@ -149,6 +149,9 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 		if period.Length < 1 {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
+		if !period.Amount.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
+		}
 	}
 
 	return nil
@@ -212,6 +215,9 @@ func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 		if period.Length < 1 {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
+		if !period.Amount.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
+		}
 		lockupCoins = lockupCoins.Add(period.Amount...)
 	}
 
@@ -219,6 +225,9 @@ func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+		}
+		if !period.Amount.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
 		}
 		vestingCoins = vestingCoins.Add(period.Amount...)
 	}

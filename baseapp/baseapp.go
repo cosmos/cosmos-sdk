@@ -782,6 +782,8 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		return resp
 	}
 
+	app.AddStreamEvents(app.checkState.Context().BlockHeight(), result.Events, false)
+
 	resp = &abci.ExecTxResult{
 		GasWanted: int64(gInfo.GasWanted),
 		GasUsed:   int64(gInfo.GasUsed),

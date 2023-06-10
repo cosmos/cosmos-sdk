@@ -1,14 +1,14 @@
 package baseapp
 
-import "github.com/cometbft/cometbft/abci/types"
+import abci "github.com/cometbft/cometbft/abci/types"
 
 type StreamEvents struct {
-	Events []types.Event
+	Events []abci.Event
 	Height uint64
 	Flush  bool
 }
 
-func (app *BaseApp) AddStreamEvents(height int64, events []types.Event, flush bool) {
+func (app *BaseApp) AddStreamEvents(height int64, events []abci.Event, flush bool) {
 	go func() {
 		app.StreamEvents <- StreamEvents{
 			Events: events,

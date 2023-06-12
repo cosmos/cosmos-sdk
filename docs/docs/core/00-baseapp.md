@@ -88,7 +88,7 @@ First, the important parameters that are initialized during the bootstrapping of
 Then, parameters used to define [volatile states](#state-updates) (i.e. cached states):
 
 * `checkState`: This state is updated during [`CheckTx`](#checktx), and reset on [`Commit`](#commit).
-* `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
+* `finalizeBlockState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
   [`Commit`](#commit) and gets re-initialized on BeginBlock.
 * `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
 * `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
@@ -131,7 +131,7 @@ Naturally, developers can add additional `options` based on their application's 
 ## State Updates
 
 The `BaseApp` maintains four primary volatile states and a root or main state. The main state
-is the canonical state of the application and the volatile states, `checkState`, `deliverState`, `prepareProposalState`, `processPreposalState`,
+is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processProposalState`, `voteExtensionState` and `finalizeBlockState`
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
@@ -143,7 +143,7 @@ The types can be illustrated as follows:
 ### InitChain State Updates
 
 During `InitChain`, the four volatile states, `checkState`, `prepareProposalState`, `processProposalState` 
-and `deliverState` are set by branching the root `CommitMultiStore`. Any subsequent reads and writes happen 
+and `finalizeBlockState` are set by branching the root `CommitMultiStore`. Any subsequent reads and writes happen 
 on branched versions of the `CommitMultiStore`.
 To avoid unnecessary roundtrip to the main state, all reads to the branched store are cached.
 
@@ -186,28 +186,28 @@ Again we want to highlight that the described behavior is that of the default ha
 
 ### BeginBlock State Updates
 
-During `BeginBlock`, the `deliverState` is set for use in subsequent `DeliverTx` ABCI messages. The
-`deliverState` is based off of the last committed state from the root store and is branched.
-Note, the `deliverState` is set to `nil` on [`Commit`](#commit).
+During `BeginBlock`, the `finalizeBlockState` is set for use in subsequent `DeliverTx` ABCI messages. The
+`finalizeBlockState` is based off of the last committed state from the root store and is branched.
+Note, the `finalizeBlockState` is set to `nil` on [`Commit`](#commit).
 
 ![BeginBlock](./baseapp_state-begin_block.png)
 
 ### DeliverTx State Updates
 
 The state flow for `DeliverTx` is nearly identical to `CheckTx` except state transitions occur on
-the `deliverState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
-occur on a doubly branched state -- `deliverState`. Successful message execution results in
-writes being committed to `deliverState`. Note, if message execution fails, state transitions from
+the `finalizeBlockState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
+occur on a doubly branched state -- `finalizeBlockState`. Successful message execution results in
+writes being committed to `finalizeBlockState`. Note, if message execution fails, state transitions from
 the AnteHandler are persisted.
 
 ![DeliverTx](./baseapp_state-deliver_tx.png)
 
 ### Commit State Updates
 
-During `Commit` all the state transitions that occurred in the `deliverState` are finally written to
+During `Commit` all the state transitions that occurred in the `finalizeBlockState` are finally written to
 the root `CommitMultiStore` which in turn is committed to disk and results in a new application
 root hash. These state transitions are now considered final. Finally, the `checkState` is set to the
-newly committed state and `deliverState` is set to `nil` to be reset on `BeginBlock`.
+newly committed state and `finalizeBlockState` is set to `nil` to be reset on `BeginBlock`.
 
 ![Commit](./baseapp_state-commit.png)
 
@@ -375,12 +375,12 @@ This allows certain checks like signature verification can be skipped during `Ch
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order.
 
-Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `deliverState` is initialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
+Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
 
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
+2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `finalizeBlockState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `finalizeBlockState` `CacheMultiStore`.
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
@@ -411,7 +411,7 @@ The first thing `RunTx` does upon being called is to retrieve the `context`'s `C
 
 After that, `RunTx()` calls `ValidateBasic()`, when available and for backward compatibility, on each `sdk.Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
-Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
+Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`finalizeBlockState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L663-L672
@@ -419,7 +419,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L663-L6
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./10-ocap.md) of the Cosmos SDK.
 
-Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
+Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`finalizeBlockState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 ### AnteHandler
 
@@ -465,16 +465,17 @@ Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effec
 The [`InitChain` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
 * [Consensus Parameters](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_app_requirements.md#consensus-parameters) via `setConsensusParams`.
-* [`checkState` and `deliverState`](#state-updates) via `setState`.
+* [`checkState` and `finalizeBlockState`](#state-updates) via `setState`.
 * The [block gas meter](../basics/04-gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
 Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls the [`initChainer()`](../basics/00-app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../building-modules/08-genesis.md#initgenesis) function of each of the application's modules.
 
-### BeginBlock
 
-The [`BeginBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
+### Finalize Block
 
-* Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setState` function.
+The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.38.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. It includes the previous `BeginBlock, DeliverTx and Endblock` calls.  
+
+* Initialize [`finalizeBlockState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setState` function.
 
   ```go reference
   https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L406-L433
@@ -486,15 +487,13 @@ The [`BeginBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.
 * Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
 * Set the [`VoteInfos`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during `DeliverTx` and `EndBlock`.
 
-### EndBlock
 
-The [`EndBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
 
 ### Commit
 
 The [`Commit` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occurred during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
 
-To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
+To commit state-transitions, the `Commit` function calls the `Write()` function on `finalizeBlockState.ms`, where `finalizeBlockState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `finalizeBlockState.ctx.BlockHeader`) and `finalizeBlockState` to `nil`.
 
 Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
 

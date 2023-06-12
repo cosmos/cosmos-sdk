@@ -50,7 +50,7 @@ var (
 
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = []byte{0x04}             // key for delegator starting info
-	ValidatorHistoricalRewardsPrefix     = []byte{0x05}             // key for historical validators rewards / stake
+	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = []byte{0x06}             // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07}             // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
@@ -175,11 +175,6 @@ func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, k)
 	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
-}
-
-// GetValidatorCurrentRewardsKey creates the key for a validator's current rewards.
-func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
-	return append(ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorAccumulatedCommissionKey creates the key for a validator's current commission.

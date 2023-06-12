@@ -36,7 +36,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 	outstanding := types.ValidatorOutstandingRewards{Rewards: decCoins}
 	commission := types.ValidatorAccumulatedCommission{Commission: decCoins}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 100)
-	currentRewards := types.NewValidatorCurrentRewards(decCoins, 5)
 	slashEvent := types.NewValidatorSlashEvent(10, math.LegacyOneDec())
 
 	kvPairs := kv.Pairs{
@@ -46,7 +45,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 			{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshal(&outstanding)},
 			{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshal(&info)},
 			{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshal(&historicalRewards)},
-			{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshal(&currentRewards)},
 			{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshal(&commission)},
 			{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshal(&slashEvent)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
@@ -62,7 +60,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 		{"ValidatorOutstandingRewards", fmt.Sprintf("%v\n%v", outstanding, outstanding)},
 		{"DelegatorStartingInfo", fmt.Sprintf("%v\n%v", info, info)},
 		{"ValidatorHistoricalRewards", fmt.Sprintf("%v\n%v", historicalRewards, historicalRewards)},
-		{"ValidatorCurrentRewards", fmt.Sprintf("%v\n%v", currentRewards, currentRewards)},
 		{"ValidatorAccumulatedCommission", fmt.Sprintf("%v\n%v", commission, commission)},
 		{"ValidatorSlashEvent", fmt.Sprintf("%v\n%v", slashEvent, slashEvent)},
 		{"other", ""},

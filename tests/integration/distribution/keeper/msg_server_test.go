@@ -197,7 +197,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, err)
 	// setup current rewards and outstanding rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	err = f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards)
+	err = f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards)
 	require.NoError(t, err)
 	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)

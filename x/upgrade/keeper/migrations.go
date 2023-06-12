@@ -86,6 +86,5 @@ func migrateAppVersion(ctx sdk.Context, keeper *Keeper) error {
 		return fmt.Errorf("error migration app version: %w", err)
 	}
 
-	store.Delete([]byte{LegacyProtocolVersionByte})
-	return nil
+	return store.Delete([]byte{LegacyProtocolVersionByte})
 }

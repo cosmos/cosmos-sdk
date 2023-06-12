@@ -394,7 +394,7 @@ type paramStore struct {
 
 var _ baseapp.ParamStore = (*paramStore)(nil)
 
-func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
+func (ps *paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
 	ps.params = value
 	return nil
 }

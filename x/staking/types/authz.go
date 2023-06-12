@@ -190,7 +190,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(fmt.Errorf("unkown authorization type"),
+		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
 			"cannot normalize authz type with %T", authzType)
 	}
 }

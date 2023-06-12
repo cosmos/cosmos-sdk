@@ -140,7 +140,8 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			} else if resp.Updated != nil {
 				updated, ok := resp.Updated.(authz.Authorization)
 				if !ok {
-					return nil, fmt.Errorf("expected %T but got %T", (authz.Authorization)(nil), resp.Updated)
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+
 				}
 				err = k.update(ctx, grantee, granter, updated)
 			}

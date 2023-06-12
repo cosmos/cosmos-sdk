@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/log v1.1.0
-	cosmossdk.io/x/upgrade v0.0.0-20230607190716-2877190997a2
+	cosmossdk.io/x/upgrade v0.0.0-20230612214834-215158d52dc2
 	github.com/otiai10/copy v1.11.0
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0

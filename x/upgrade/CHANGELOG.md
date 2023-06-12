@@ -32,7 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* []() `BinaryDownloadURLMap.ValidateBasic()` and `BinaryDownloadURLMap.CheckURLs` now both take a checksum parameter when willing to ensure a checksum is provided for each URL.
-* []() `plan.DownloadURLWithChecksum` has been renamed to `plan.DownloadURL` and does not validate the URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadURL` to validate the URL.
-* []() `plan.DownloadUpgrade` does not validate URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadUpgrade` to validate the URL.
+* [#16511](https://github.com/cosmos/cosmos-sdk/pull/16511) `BinaryDownloadURLMap.ValidateBasic()` and `BinaryDownloadURLMap.CheckURLs` now both take a checksum parameter when willing to ensure a checksum is provided for each URL.
+* [#16511](https://github.com/cosmos/cosmos-sdk/pull/16511) `plan.DownloadURLWithChecksum` has been renamed to `plan.DownloadURL` and does not validate the URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadURL` to validate the URL.
+* [#16511](https://github.com/cosmos/cosmos-sdk/pull/16511) `plan.DownloadUpgrade` does not validate URL anymore. Call `plan.ValidateURL` before calling `plan.DownloadUpgrade` to validate the URL.
 * [#16227](https://github.com/cosmos/cosmos-sdk/issues/16227) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey`, methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. `UpgradeHandler` now receives a `context.Context`. `GetUpgradedClient`, `GetUpgradedConsensusState`, `GetUpgradePlan` now return a specific error for "not found".

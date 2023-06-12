@@ -1,6 +1,8 @@
 package authz
 
-import "github.com/cosmos/gogoproto/proto"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // AcceptResponse instruments the controller of an authz message if the request is accepted
 // and if it should be updated or deleted.
@@ -12,5 +14,5 @@ type AcceptResponse struct {
 	Delete bool
 	// Controller, who is calling Authorization.Accept must check if `Updated != nil`. If yes,
 	// it must use the updated version and handle the update on the storage level.
-	Updated proto.Message
+	Updated sdk.Msg
 }

@@ -64,42 +64,36 @@ In addition, we also want to achieve the following:
 
 Instead of refactoring the existing simulator, `x/simulation`, we propose to create
 a new package in the root of the Cosmos SDK, `simulator`, that will be the new
-simulation framework.
+simulation framework. The simulator will more accurately reflect the complete
+lifecycle of an ABCI application.
 
-## Consequences
+Specifically, we propose a similar implementation and use of a `simulator.Manager`,
+that exists today, that is responsible for managing the execution of a simulation.
+The manager will wrap an ABCI application and will be responsible for the following:
 
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
+* Populating the application's mempool with a set of pseudo-random transactions
+  before each block, some of which may contain invalid messages.
+* Selecting transactions and a random proposer to execute `PrepareProposal`.
+* Executing `ProcessProposal`, `FinalizeBlock` and `Commit`.
+* Executing a set of validity predicates before and after each block.
+* Maintaining a CPU and RAM profile of the simulation execution.
+* Allowing a simulation to stop and resume from a given block height.
+* Simulation liveness of each validator per-block.
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+The new simulator package will not naturally not be backwards compatible with the
+existing `x/simulation` module. However, modules will still be responsible for
+providing pseudo-random transactions to the simulator.
 
 ### Positive
 
-> {positive consequences}
+* Providing more intuitive and cleaner APIs for application developers
+* More closely resembling the true lifecycle of an ABCI application
 
 ### Negative
 
-> {negative consequences}
-
-### Neutral
-
-> {neutral consequences}
-
-## Further Discussions
-
-> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
-> summary of issues to be solved in future iterations (usually referencing comments
-> from a pull-request discussion).
-> 
-> Later, this section can optionally list ideas or improvements the author or
-> reviewers found during the analysis of this ADR.
+* Breaking current Cosmos SDK module APIs for transaction generation
 
 ## References
 

@@ -122,6 +122,10 @@ can be disabled or enabled by configuration.
 
 ### Breakpoints
 
+Via configuration, a caller can express a height-based breakpoint that will allow
+the simulation to stop and resume from a given height. This will allow for debugging
+of CPU, RAM, and state.
+
 ### Validity Predicates
 
 ## Consequences

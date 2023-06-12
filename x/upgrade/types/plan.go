@@ -5,7 +5,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -30,12 +29,9 @@ func (p Plan) ValidateBasic() error {
 	return nil
 }
 
-// ShouldExecute returns true if the Plan is ready to execute given the current context
-func (p Plan) ShouldExecute(ctx sdk.Context) bool {
-	if p.Height > 0 {
-		return p.Height <= ctx.HeaderInfo().Height
-	}
-	return false
+// ShouldExecute returns true if the Plan is ready to execute given the current block height
+func (p Plan) ShouldExecute(blockHeight int64) bool {
+	return p.Height > 0 && p.Height <= blockHeight
 }
 
 // DueAt is a string representation of when this plan is due to be executed

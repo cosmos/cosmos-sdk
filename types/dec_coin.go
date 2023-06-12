@@ -242,7 +242,7 @@ func (coins DecCoins) Add(coinsB ...DecCoin) DecCoins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 func (coins DecCoins) safeAdd(coinsB DecCoins) DecCoins {
-	sum := ([]DecCoin)(nil)
+	sum := make(DecCoins, 0, len(coins)+len(coinsB))
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
 

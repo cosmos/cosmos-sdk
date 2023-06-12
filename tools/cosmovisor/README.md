@@ -73,10 +73,14 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 * `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
 * `run` - Run the configured binary using the rest of the provided arguments.
 * `version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
+* `config` - Display the current `cosmovisor` configuration, that means displaying the environment variables value that `cosmovisor` is using.
+* `add-upgrade` - Add an upgrade manually to `cosmovisor`.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
-*Note: Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
+:::warning
+Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
+:::
 
 `cosmovisor` reads its configuration from environment variables:
 

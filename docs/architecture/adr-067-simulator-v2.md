@@ -128,6 +128,11 @@ of CPU, RAM, and state.
 
 ### Validity Predicates
 
+We propose to provide the ability for an application to provide the simulator a
+set of validity predicates, i.e. invariant checkers, that will be executed before
+and after each block. This will allow for the application to assert that certain
+state invariants are held before and after each block.
+
 ## Consequences
 
 ### Backwards Compatibility

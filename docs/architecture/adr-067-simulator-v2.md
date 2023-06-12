@@ -80,6 +80,11 @@ The manager will wrap an ABCI application and will be responsible for the follow
 * Allowing a simulation to stop and resume from a given block height.
 * Simulation liveness of each validator per-block.
 
+From an application developer's perspective, they will only need to provide the
+modules to be used in the simulator and the manager will take care of the rest.
+In addition, they will not need to write their own simulation test(s), e.g.
+non-determinism, multi-seed, etc..., as the manager will provide these as well.
+
 ### Backwards Compatibility
 
 The new simulator package will not naturally not be backwards compatible with the

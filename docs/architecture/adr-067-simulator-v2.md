@@ -113,6 +113,35 @@ Statistics, such as total blocks and total failed proposals, will be collected,
 logged and written to output after the full or partial execution of a simulation.
 The output destination of these statistics will be configurable.
 
+```go
+func (s *Simulator) SimulateBlock() {
+  rProposer := s.SelectRandomProposer()
+  rTxs := s.SelectTxs()
+
+  prepareResp, err := s.app.PrepareProposal(&abci.RequestPrepareProposal{Txs: rTxs})
+  // handle error
+
+  processResp, err := s.app.ProcessProposal(&abci.RequestProcessProposal{
+    Txs: prepareResp.Txs,
+    // ...
+  })
+  // handle error
+
+  // execute liveness matrix...
+
+  _, err = s.app.FinalizeBlock(...)
+  // handle error
+  
+  _, err = s.app.Commit(...)
+  // handle error
+}
+```
+
+Note, some application do not define or need their own app-side mempool, so we
+propose that `SelectTxs` mimic CometBFT and just return FIFO-ordered transactions
+from an ad-hoc simulator mempool. In the case where an application does define
+its own mempool, it will simply ignore what is provided in `RequestPrepareProposal`.
+
 ### Profiling
 
 The manager will be responsible for collecting CPU and RAM profiles of the simulation
@@ -132,6 +161,14 @@ We propose to provide the ability for an application to provide the simulator a
 set of validity predicates, i.e. invariant checkers, that will be executed before
 and after each block. This will allow for the application to assert that certain
 state invariants are held before and after each block.
+
+```go
+type Manager struct {
+  // ...
+  preBlockValidator   func(sdk.Context) error
+  postBlockValidator  func(sdk.Context) error
+}
+```
 
 ## Consequences
 

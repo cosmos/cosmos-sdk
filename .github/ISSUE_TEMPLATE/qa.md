@@ -49,7 +49,6 @@ v                     without deliberation
 * [ ] Public testnet (IBC, WASM, SDK)
 * [ ] Upgrade a chain with data from vX
 * Release documentation
-    * [ ] https://github.com/cosmos/cosmos-sdk/issues/16481
     * [ ] Audit UPGRADING.md
     * [ ] Update all codeblock to the appropriate version number
 
@@ -64,7 +63,7 @@ v                     without deliberation
     * Are Msg and Query methods and types well-named and organized?
     * Is everything well documented (inline godoc as well as [`/spec/` folder](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/SPEC-SPEC.md) in module directory)
     * check the proto definition - make sure everything is in accordance to ADR-30 (at least 1 person, TODO assignee)
-        * Check new fields and endpoints have the `Since: cosmos-sdk 0.47` comment
+        * Check new fields and endpoints have the `Since: cosmos-sdk X` comment
 * [ ] Completeness audit, fully implemented with tests
     * [ ] Genesis import and export of all state
     * [ ] Query services

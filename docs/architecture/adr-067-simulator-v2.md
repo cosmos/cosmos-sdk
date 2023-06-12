@@ -109,7 +109,16 @@ mempool will be used to seed the transactions into a block proposal as it would
 in a real network. This allows us to not only test the state machine, but also
 test the ABCI lifecycle of a block.
 
+Statistics, such as total blocks and total failed proposals, will be collected,
+logged and written to output after the full or partial execution of a simulation.
+The output destination of these statistics will be configurable.
+
 ### Profiling
+
+The manager will be responsible for collecting CPU and RAM profiles of the simulation
+execution. We propose to use [Pyroscope](https://pyroscope.io/docs/golang/) to
+capture profiles and export them to a local file and via an HTTP endpoint. This
+can be disabled or enabled by configuration.
 
 ### Breakpoints
 

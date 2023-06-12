@@ -85,6 +85,38 @@ modules to be used in the simulator and the manager will take care of the rest.
 In addition, they will not need to write their own simulation test(s), e.g.
 non-determinism, multi-seed, etc..., as the manager will provide these as well.
 
+```go
+type Manager struct {
+  app     sdk.Application
+  mempool sdk.Mempool
+  rng     rand.Rand
+  // ...
+}
+```
+
+### Configuration
+
+The simulator's testing input will be driven by a configuration file, as opposed
+to CLI arguments. This will allow for more extensibility and ease of use along with
+the ability to have shared configuration files across multiple simulations.
+
+### Execution
+
+As alluded to previously, after the execution of each block, the manager will
+generate a series of pseudo-random transactions and attempt to insert them into
+the mempool via `BaseApp#CheckTx`. During the ABCI lifecycle of a block, this
+mempool will be used to seed the transactions into a block proposal as it would
+in a real network. This allows us to not only test the state machine, but also
+test the ABCI lifecycle of a block.
+
+### Profiling
+
+### Breakpoints
+
+### Validity Predicates
+
+## Consequences
+
 ### Backwards Compatibility
 
 The new simulator package will not naturally not be backwards compatible with the

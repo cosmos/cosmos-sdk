@@ -159,6 +159,12 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
+// Here are the short-lived replace from the Cosmos SDK
+// Replace here are pending PRs, or version to be tagged
+// replace (
+// 	<temporary replace>
+// )
+
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

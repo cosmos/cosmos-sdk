@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -108,6 +109,7 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			update   bool
 			reconfig bool
 			insecure bool
+			output   string
 		)
 
 		chainCmd := &cobra.Command{
@@ -128,6 +130,7 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 		chainCmd.Flags().BoolVar(&update, flagUpdate, false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
 		chainCmd.Flags().BoolVar(&reconfig, flagConfig, false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data")
 		chainCmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow re-configuring the selected chain using an insecure gRPC connection")
+		chainCmd.PersistentFlags().StringVar(&output, flags.FlagOutput, flags.OutputFormatJSON, "output format (text|json)")
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err

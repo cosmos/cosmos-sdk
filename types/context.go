@@ -362,7 +362,7 @@ func (c Context) CacheContextWithErrorEvents() (cc Context, writeCache func(), w
 	cc, writeCache = c.CacheContext()
 
 	writeErrorEvents = func() {
-		c.EventManager().EmitErrorEvents(cc.EventManager().Events())
+		c.EventManager().EmitErrorEvents(MarkEventsAsErrorEvents(cc.EventManager().Events()))
 	}
 
 	return cc, writeCache, writeErrorEvents

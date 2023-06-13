@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.4.2
 	cosmossdk.io/client/v2 v2.0.0-20230607190716-2877190997a2
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
-	github.com/cockroachdb/errors v1.9.1
+	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
@@ -36,7 +36,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230606202032-d96868fd481e // indirect
-	github.com/cockroachdb/redact v1.1.4 // indirect
+	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cometbft/cometbft v0.38.0-rc1 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -118,9 +118,9 @@ require (
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230525234025-438c736192d0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230525234020-1aefcd67740a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
@@ -128,6 +128,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
-	pgregory.net/rapid v0.7.1 // indirect
+	pgregory.net/rapid v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

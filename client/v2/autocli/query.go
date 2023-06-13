@@ -124,8 +124,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		err = b.outOrStdoutFormat(cmd, bz)
-		return err
+		return b.outOrStdoutFormat(cmd, bz)
 	})
 	if err != nil {
 		return nil, err

@@ -358,6 +358,16 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, writeCache
 }
 
+func (c Context) CacheContextWithErrorEvents() (cc Context, writeCache func(), writeErrorEvents func()) {
+	cc, writeCache = c.CacheContext()
+
+	writeErrorEvents = func() {
+		c.EventManager().EmitErrorEvents(cc.EventManager().Events())
+	}
+
+	return cc, writeCache, writeErrorEvents
+}
+
 var (
 	_ context.Context    = Context{}
 	_ storetypes.Context = Context{}

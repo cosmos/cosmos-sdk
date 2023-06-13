@@ -23,6 +23,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
+	EmitErrorEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -53,6 +54,11 @@ func (em *EventManager) EmitEvent(event Event) {
 // Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
+}
+
+// EmitErrorEvents calls EmitEvents after having marked the event as an error event
+func (em *EventManager) EmitErrorEvents(events Events) {
+	em.EmitEvents(MarkEventsAsErrorEvents(events))
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.
@@ -338,6 +344,26 @@ func MarkEventsToIndex(events []abci.Event, indexSet map[string]struct{}) []abci
 		}
 
 		updatedEvents[i] = updatedEvent
+	}
+
+	return updatedEvents
+}
+
+// MarkEventsAsErrorEvents returns the set of ABCI events, where each event's attribute
+// is modified to include the ".error" suffix
+func MarkEventsAsErrorEvents(events Events) Events {
+	updatedEvents := make(Events, len(events))
+
+	for i, e := range events {
+		if !strings.HasSuffix(e.Type, ".error") {
+			updatedEvent := Event{
+				Type:       fmt.Sprintf("%s.error", e.Type),
+				Attributes: e.Attributes,
+			}
+			updatedEvents[i] = updatedEvent
+		} else {
+			updatedEvents[i] = e
+		}
 	}
 
 	return updatedEvents

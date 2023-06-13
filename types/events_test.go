@@ -272,3 +272,59 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 		})
 	}
 }
+
+func (s *eventsTestSuite) TestMarkEventsAsErrors() {
+	events := sdk.Events{
+		{
+			Type: "message",
+			Attributes: []abci.EventAttribute{
+				{Key: "sender", Value: "foo"},
+				{Key: "recipient", Value: "bar"},
+			},
+		},
+		{
+			Type: "staking",
+			Attributes: []abci.EventAttribute{
+				{Key: "deposit", Value: "5"},
+				{Key: "unbond", Value: "10"},
+			},
+		},
+	}
+	expected := sdk.Events{
+		{
+			Type: "message.error",
+			Attributes: []abci.EventAttribute{
+				{Key: "sender", Value: "foo"},
+				{Key: "recipient", Value: "bar"},
+			},
+		},
+		{
+			Type: "staking.error",
+			Attributes: []abci.EventAttribute{
+				{Key: "deposit", Value: "5"},
+				{Key: "unbond", Value: "10"},
+			},
+		},
+	}
+
+	testCases := map[string]struct {
+		events   sdk.Events
+		expected sdk.Events
+	}{
+		"regular events": {
+			events:   events,
+			expected: expected,
+		},
+		"events already marked as error": {
+			events:   sdk.MarkEventsAsErrorEvents(events),
+			expected: expected,
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		s.T().Run(name, func(_ *testing.T) {
+			s.Require().Equal(tc.expected, sdk.MarkEventsAsErrorEvents(tc.events))
+		})
+	}
+}

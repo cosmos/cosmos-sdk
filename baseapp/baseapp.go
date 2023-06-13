@@ -894,8 +894,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	msgsV2, err := tx.GetMsgsV2()
+	errorEvents := make(sdk.Events, 0)
 	if err == nil {
-		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
+		result, errorEvents, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
 	if err == nil {
 		// Run optional postHandlers.
@@ -926,6 +927,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}
+	} else {
+		// Append the error events, and defensively mark them as such.
+		errorEvents = sdk.MarkEventsAsErrorEvents(errorEvents)
+		anteEvents = append(anteEvents, errorEvents.ToABCIEvents()...)
 	}
 
 	return gInfo, result, anteEvents, err
@@ -936,7 +941,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, sdk.Events, error) {
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
@@ -948,13 +953,13 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+			return nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+			return nil, nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
 		// create message events
@@ -979,7 +984,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		if len(msgResult.MsgResponses) > 0 {
 			msgResponse := msgResult.MsgResponses[0]
 			if msgResponse == nil {
-				return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+				return nil, sdk.MarkEventsAsErrorEvents(events), sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
 			}
 			msgResponses = append(msgResponses, msgResponse)
 		}
@@ -988,14 +993,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 	data, err := makeABCIData(msgResponses)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to marshal tx data")
+		return nil, sdk.MarkEventsAsErrorEvents(events), errorsmod.Wrap(err, "failed to marshal tx data")
 	}
 
 	return &sdk.Result{
 		Data:         data,
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
-	}, nil
+	}, nil, nil
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.

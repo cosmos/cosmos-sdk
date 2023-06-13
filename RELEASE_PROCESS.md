@@ -234,7 +234,7 @@ Note: The Cosmos SDK team is in an active process of limiting Go modules that de
 The Cosmos SDK team should strive to release modules that depend on the Cosmos SDK at the same time or soon after a major version Cosmos SDK itself.
 Those modules can be considered as part of the Cosmos SDK, but features and improvements are released at a different cadence.
 
-* When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch.
+* When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch. A compability matrix must be provided in the `README.md` of that module with the corresponding versions.
 * Modules that import the SDK but do not need to be imported in an app (`e.g. cosmovisor`) must be released from the `main` branch and follow the process defined below.
 
 ### Modules that do not depend on the Cosmos SDK

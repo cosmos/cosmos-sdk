@@ -18,17 +18,16 @@ import (
 
 // environment variable names
 const (
-	EnvHome                     = "DAEMON_HOME"
-	EnvName                     = "DAEMON_NAME"
-	EnvDownloadBin              = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	EnvDownloadMustHaveChecksum = "DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM"
-	EnvRestartUpgrade           = "DAEMON_RESTART_AFTER_UPGRADE"
-	EnvRestartDelay             = "DAEMON_RESTART_DELAY"
-	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
-	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
-	EnvInterval                 = "DAEMON_POLL_INTERVAL"
-	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
-	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
+	EnvHome                 = "DAEMON_HOME"
+	EnvName                 = "DAEMON_NAME"
+	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvRestartDelay         = "DAEMON_RESTART_DELAY"
+	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
+	EnvInterval             = "DAEMON_POLL_INTERVAL"
+	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
 )
 
 const (
@@ -43,17 +42,16 @@ const defaultFilename = "upgrade-info.json"
 
 // Config is the information passed in to control the daemon
 type Config struct {
-	Home                     string
-	Name                     string
-	AllowDownloadBinaries    bool
-	DownloadMustHaveChecksum bool
-	RestartAfterUpgrade      bool
-	RestartDelay             time.Duration
-	PollInterval             time.Duration
-	UnsafeSkipBackup         bool
-	DataBackupPath           string
-	PreupgradeMaxRetries     int
-	DisableLogs              bool
+	Home                  string
+	Name                  string
+	AllowDownloadBinaries bool
+	RestartAfterUpgrade   bool
+	RestartDelay          time.Duration
+	PollInterval          time.Duration
+	UnsafeSkipBackup      bool
+	DataBackupPath        string
+	PreupgradeMaxRetries  int
+	DisableLogs           bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -153,9 +151,6 @@ func GetConfigFromEnv() (*Config, error) {
 
 	var err error
 	if cfg.AllowDownloadBinaries, err = booleanOption(EnvDownloadBin, false); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.DownloadMustHaveChecksum, err = booleanOption(EnvDownloadMustHaveChecksum, false); err != nil {
 		errs = append(errs, err)
 	}
 	if cfg.RestartAfterUpgrade, err = booleanOption(EnvRestartUpgrade, true); err != nil {
@@ -372,7 +367,6 @@ func (cfg Config) DetailString() string {
 		{EnvHome, cfg.Home},
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
-		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvRestartDelay, cfg.RestartDelay.String()},
 		{EnvInterval, cfg.PollInterval.String()},

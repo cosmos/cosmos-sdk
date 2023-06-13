@@ -3,14 +3,13 @@ package db
 import (
 	storetypes "cosmossdk.io/store/types"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
 var _ = (*storetypes.Iterator)(nil)
 
 type AsStoreIter struct {
 	dbm.Iterator
-	valid bool
 }
 
 // DBToStoreIterator returns an iterator wrapping the given iterator so that it satisfies the
@@ -21,5 +20,5 @@ func ToStoreIterator(source dbm.Iterator) *AsStoreIter {
 	return ret
 }
 
-func (it *AsStoreIter) Next()       { it.valid = it.Iterator.Next() }
-func (it *AsStoreIter) Valid() bool { return it.valid }
+func (it *AsStoreIter) Next()       { it.Iterator.Next() }
+func (it *AsStoreIter) Valid() bool { return it.Iterator.Valid() }

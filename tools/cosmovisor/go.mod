@@ -4,7 +4,11 @@ go 1.20
 
 require (
 	cosmossdk.io/log v1.1.0
+<<<<<<< HEAD
 	cosmossdk.io/x/upgrade v0.0.0-20230613135102-afe571f5b616
+=======
+	cosmossdk.io/x/upgrade v0.0.0-20230613152654-3f214535967c
+>>>>>>> 62709adcc (feat: make checksum optional in upgrade validation (#16511))
 	github.com/otiai10/copy v1.11.0
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0

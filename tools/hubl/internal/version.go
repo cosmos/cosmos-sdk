@@ -25,7 +25,7 @@ func VersionCmd() *cobra.Command {
 			if long {
 				for _, dep := range version.Deps {
 					if dep.Path == "cosmossdk.io/client/v2" {
-						cmd.Printf("cleint/v2 version: %s\n", strings.TrimSpace(dep.Version))
+						cmd.Printf("client/v2 version: %s\n", strings.TrimSpace(dep.Version))
 					}
 				}
 			}

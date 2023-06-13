@@ -44,6 +44,8 @@ v                     without deliberation
     * [ ] Audit client
     * [ ] Audit server
     * [ ] Audit store 
+    * [ ] Audit runtime
+    * [ ] Audit simapp
 * [ ] Release alpha
 * [ ] Cosmos-SDK testnet
 * [ ] Public testnet (IBC, WASM, SDK)

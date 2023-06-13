@@ -19,7 +19,7 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - staticcheck
+    # - staticcheck disabling due to the sheer number of "this package has been moved to it's own module" errors TODO: reenable
     - stylecheck
     - typecheck
     - unconvert

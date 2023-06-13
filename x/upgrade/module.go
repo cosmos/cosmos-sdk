@@ -153,7 +153,7 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
@@ -187,7 +187,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config             *modulev1.Module
-	StoreService store.KVStoreService
+	StoreService       store.KVStoreService
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier baseapp.AppVersionModifier

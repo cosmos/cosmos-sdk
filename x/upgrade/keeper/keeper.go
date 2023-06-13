@@ -406,6 +406,7 @@ func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error)
 func (k Keeper) setDone(ctx context.Context, name string) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	fmt.Println("setting done", "height", sdkCtx.HeaderInfo().Height, "name", name)
 	return store.Set(encodeDoneKey(name, sdkCtx.HeaderInfo().Height), []byte{1})
 }
 
@@ -442,11 +443,11 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	if k.versionModifier != nil {
 		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if err := k.versionModifier.SetAppVersion(ctx, currentAppVersion+1); err != nil {
-			panic(err)
+			return err
 		}
 	}
 

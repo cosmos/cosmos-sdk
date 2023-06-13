@@ -4,7 +4,6 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
-	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -47,7 +46,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	s.key = key
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
@@ -297,7 +296,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 		Height: 123450000,
 	}
 
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan))
 	vm, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 	s.Require().NoError(err)
@@ -317,10 +316,12 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	require.True(keeper.HasHandler("test0"))
+	err = keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test0",
 		Height: 10,
 	})
+	require.NoError(err)
 
 	s.T().Log("verify valid upgrade name and height")
 	name, height, err = keeper.GetLastCompletedUpgrade(s.ctx)
@@ -333,10 +334,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	})
 
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
-	keeper.ApplyUpgrade(newCtx, types.Plan{
+	err = keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test1",
 		Height: 15,
 	})
+	require.NoError(err)
 
 	s.T().Log("verify valid upgrade name and height with multiple upgrades")
 	name, height, err = keeper.GetLastCompletedUpgrade(newCtx)
@@ -356,10 +358,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	err := keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test-v0.9",
 		Height: 10,
 	})
+	require.NoError(err)
 
 	name, height, err := keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test-v0.9", name)

@@ -6,13 +6,8 @@ require (
 	cosmossdk.io/api v0.4.2
 	cosmossdk.io/client/v2 v2.0.0-20230607190716-2877190997a2
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
-<<<<<<< HEAD
-	github.com/cockroachdb/errors v1.9.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230607190716-2877190997a2
-=======
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0
->>>>>>> eba06fd86 (build(deps): Bump github.com/cockroachdb/errors from 1.9.1 to 1.10.0 (#16516))
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0

@@ -1,6 +1,7 @@
 package textual_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -97,6 +98,57 @@ func FuzzTimestampJSONParseToParseRoundTrip(f *testing.F) {
 			// Per issue: https://github.com/cosmos/cosmos-sdk/issues/15761
 			if !gotTs.AsTime().Equal(tc.Proto.AsTime()) {
 				t.Fatalf("Roundtrip mismatch\n\tGot:  %#v\n\tWant: %#v", gotTs, tc.Proto)
+			}
+		}
+	})
+}
+
+func FuzzBytesValueRendererParse(f *testing.F) {
+	// 1. Generate some seeds from testdata.
+	seed, err := os.ReadFile("./internal/testdata/bytes.json")
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(seed)
+
+	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	if err != nil {
+		f.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var testCases []bytesTest
+		if err := json.Unmarshal(input, &testCases); err != nil {
+			return
+		}
+
+		for _, tc := range testCases {
+			rend, err := tr.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			screens, err := rend.Format(ctx, protoreflect.ValueOfBytes(tc.base64))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if g, w := len(screens), 1; g != w {
+				t.Fatalf("Mismatch screen count: got=%d, want=%d", g, w)
+			}
+
+			// Round trip and test.
+			val, err := rend.Parse(ctx, screens)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if g, w := len(tc.base64), 35; g > w {
+				if len(val.Bytes()) != 0 {
+					t.Fatalf("val.Bytes() != 0:\n\tGot:  % x", val.Bytes())
+				}
+			} else if !bytes.Equal(tc.base64, val.Bytes()) {
+				t.Fatalf("val.Bytes() mismatch:\n\tGot:  % x\n\tWant: % x", val.Bytes(), tc.base64)
 			}
 		}
 	})

@@ -63,7 +63,7 @@ v                     without deliberation
 * [ ] API audit 
     * spec audit: check if the spec is complete.
     * Are Msg and Query methods and types well-named and organized?
-    * Is everything well documented (inline godoc as well as [`/spec/` folder](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/SPEC-SPEC.md) in module directory)
+    * Is everything well documented (inline godoc as well as package [`README.md`](https://docs.cosmos.network/main/spec/SPEC_MODULE#common-layout) in module directory)
     * check the proto definition - make sure everything is in accordance to ADR-30 (at least 1 person, TODO assignee)
         * Check new fields and endpoints have the `Since: cosmos-sdk X` comment
 * [ ] Completeness audit, fully implemented with tests

@@ -163,8 +163,8 @@ github.com/bytedance/sonic v1.8.0 h1:ea0Xadu+sHlu7x5O3gKhRpQ1IKiMrSiHttPF0ybECuA
 github.com/bytedance/sonic v1.8.0/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=
 github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
-github.com/celestiaorg/celestia-core v1.21.2-tm-v0.34.27.0.20230609015031-9885a9a730b6 h1:i5yEIqYENWsrPDFtIUKqmXCLAvjQf+GlUlopHQ4NHY8=
-github.com/celestiaorg/celestia-core v1.21.2-tm-v0.34.27.0.20230609015031-9885a9a730b6/go.mod h1:LOxHW9nA++/9U8TgvTyKo9TO3F09sWv8asKQs00m73U=
+github.com/celestiaorg/celestia-core v1.22.0-tm-v0.34.28 h1:idHJK9i4WCkYOf5PXVWZbOs8pWkCiHHQGI4MZr0iMtQ=
+github.com/celestiaorg/celestia-core v1.22.0-tm-v0.34.28/go.mod h1:LOxHW9nA++/9U8TgvTyKo9TO3F09sWv8asKQs00m73U=
 github.com/celestiaorg/nmt v0.16.0 h1:4CX6d1Uwf1C+tGcAWskPve0HCDTnI4Ey8ffjiDwcGH0=
 github.com/celestiaorg/nmt v0.16.0/go.mod h1:GfwIvQPhUakn1modWxJ+rv8dUjJzuXg5H+MLFM1o7nY=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=

@@ -4,11 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/log v1.1.0
-<<<<<<< HEAD
-	cosmossdk.io/x/upgrade v0.0.0-20230613135102-afe571f5b616
-=======
 	cosmossdk.io/x/upgrade v0.0.0-20230614103911-b3da8bb4e801
->>>>>>> 7a55c936a (chore: clean-up all replaces and add tagging process (#16528))
 	github.com/otiai10/copy v1.11.0
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0

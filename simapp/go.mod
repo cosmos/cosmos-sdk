@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/cometbft/cometbft v0.37.1
+	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/golang/mock v1.6.0

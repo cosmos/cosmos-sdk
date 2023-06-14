@@ -160,7 +160,9 @@ of CPU, RAM, and state.
 We propose to provide the ability for an application to provide the simulator a
 set of validity predicates, i.e. invariant checkers, that will be executed before
 and after each block. This will allow for the application to assert that certain
-state invariants are held before and after each block.
+state invariants are held before and after each block. Note, as a consequence of
+this, we propose to remove the existing notion of invariants from module production
+execution paths and deprecate their usage all together.
 
 ```go
 type Manager struct {

@@ -220,6 +220,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
 	k.IterateValidatorSlashEvents(ctx,

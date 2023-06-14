@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			name:    "no expiry: no error",
 			ctx:     suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
 			granter: suite.addrs[1],
-			grantee: suite.addrs[3],
+			grantee: suite.addrs[2],
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
 			},
@@ -406,6 +406,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 				suite.NoError(err)
 				suite.NotNil(grant)
 			}
+
 			if tc.postRun != nil {
 				tc.postRun()
 			}

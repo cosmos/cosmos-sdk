@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
@@ -78,7 +79,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
-	key := feegrant.FeeAllowanceKey(granter, grantee)
+	ggp := granteeGranterPair(grantee, granter)
 
 	exp, err := feeAllowance.ExpiresAt()
 	if err != nil {
@@ -95,7 +96,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	if exp != nil {
 		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
 		// remove the 1st byte and reuse the remaining key as it is
-		err = k.addToFeeAllowanceQueue(ctx, key[1:], exp)
+		err = k.addToFeeAllowanceQueue(ctx, ggp, exp)
 		if err != nil {
 			return err
 		}
@@ -123,7 +124,6 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-
 	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -306,11 +306,16 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	rng := collections.NewPrefixUntilPairRange[time.Time, []byte](exp)
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, []byte], value bool) (bool, error) {
-		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceQueueKeyPrefix, key.K2()...))
+		grantee, granter := parseGranteeGranterPair(key.K2())
 
 		if err := k.FeeAllowance.Remove(ctx, collections.Join(sdk.AccAddress(grantee), sdk.AccAddress(granter))); err != nil {
 			return true, err
 		}
+
+		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
+			return true, err
+		}
+
 		return false, nil
 	})
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
@@ -318,4 +323,19 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func granteeGranterPair(grantee, granter sdk.AccAddress) []byte {
+	return append(address.MustLengthPrefix(grantee.Bytes()), granter.Bytes()...)
+}
+
+func parseGranteeGranterPair(key []byte) (sdk.AccAddress, sdk.AccAddress) {
+	granteeAddrLen, _ := sdk.ParseLengthPrefixedBytes(key, 0, 1)
+	key = key[1:]
+
+	grantee, _ := sdk.ParseLengthPrefixedBytes(key, 0, int(granteeAddrLen[0]))
+	key = key[int(granteeAddrLen[0]):]
+
+	granter := key
+	return grantee, granter
 }

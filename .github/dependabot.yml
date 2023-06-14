@@ -242,10 +242,12 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
-      - dependency-name: "github.com/cometbft/cometbft"
+      - dependency-name: "github.com/cometbft/*"
         dependency-type: "all"
-        update-types: # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.47.x
-          ["version-update:semver-major", "version-update:semver-minor"]
+    ignore:
+        - dependency-name: "github.com/cometbft/cometbft"
+          # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.47.x
+          update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: gomod
     directory: "/"
@@ -264,7 +266,9 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
-      - dependency-name: "github.com/cometbft/cometbft"
+      - dependency-name: "github.com/cometbft/*"
         dependency-type: "all"
-        update-types: # cometbft 0.38 is not semver, but we want to only update "patch" versions for 0.50.x
-          ["version-update:semver-major", "version-update:semver-minor"]
+    ignore:
+        - dependency-name: "github.com/cometbft/cometbft"
+          # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.47.x
+          update-types: ["version-update:semver-major", "version-update:semver-minor"]

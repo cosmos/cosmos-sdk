@@ -28,7 +28,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	n := len(commandOptions.PositionalArgs)
 	// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
 	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
-	for i, arg := range commandOptions.PositgaddionalArgs {
+	for i, arg := range commandOptions.PositionalArgs {
 		isPositional[arg.ProtoField] = true
 
 		field := fields.ByName(protoreflect.Name(arg.ProtoField))

@@ -19,7 +19,6 @@ func TestE2ETestSuite(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false)
 
-	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 
 	suite.Run(t, NewE2ETestSuite(cfg, app.UpgradeKeeper, ctx))

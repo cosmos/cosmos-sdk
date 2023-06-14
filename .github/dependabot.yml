@@ -244,7 +244,7 @@ updates:
         dependency-type: "all"
       - dependency-name: "github.com/cometbft/cometbft"
         dependency-type: "all"
-        update-types:
+        update-types: # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.47.x
           ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: gomod
@@ -266,5 +266,5 @@ updates:
         dependency-type: "all"
       - dependency-name: "github.com/cometbft/cometbft"
         dependency-type: "all"
-        update-types:
+        update-types: # cometbft 0.38 is not semver, but we want to only update "patch" versions for 0.50.x
           ["version-update:semver-major", "version-update:semver-minor"]

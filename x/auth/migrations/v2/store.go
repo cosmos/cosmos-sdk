@@ -20,12 +20,15 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/grpc"
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -135,7 +137,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 
 	queryFn := querier.Route(delegatorDelegationPath)
 
-	q := &stakingtypes.QueryDelegatorDelegationsRequest{
+	q := &stakingv1beta1.QueryDelegatorDelegationsRequest{
 		DelegatorAddr: address,
 	}
 
@@ -156,14 +158,19 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		return nil, fmt.Errorf("staking query error, %w", err)
 	}
 
-	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
+	balance := new(stakingv1beta1.QueryDelegatorDelegationsResponse)
 	if err := proto.Unmarshal(resp.Value, balance); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
 	}
 
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {
-		res = res.Add(i.Balance)
+		bal, err := strconv.Atoi(i.Balance.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
+		}
+		coin := sdk.NewCoin(i.Balance.Denom, sdk.NewInt(int64(bal)))
+		res = res.Add(coin)
 	}
 
 	return res, nil
@@ -179,7 +186,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 
 	queryFn := querier.Route(delegatorUnbondingDelegationsPath)
 
-	q := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
+	q := &stakingv1beta1.QueryDelegatorUnbondingDelegationsRequest{
 		DelegatorAddr: address,
 	}
 
@@ -200,7 +207,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 		return nil, fmt.Errorf("staking query error, %w", err)
 	}
 
-	balance := new(stakingtypes.QueryDelegatorUnbondingDelegationsResponse)
+	balance := new(stakingv1beta1.QueryDelegatorUnbondingDelegationsResponse)
 	if err := proto.Unmarshal(resp.Value, balance); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
 	}
@@ -208,7 +215,11 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 	res := sdk.NewCoins()
 	for _, i := range balance.UnbondingResponses {
 		for _, r := range i.Entries {
-			res = res.Add(sdk.NewCoin(bondDenom, r.Balance))
+			bal, err := strconv.Atoi(r.Balance)
+			if err != nil {
+				return nil, fmt.Errorf("unable to convert unbonding balance to int: %w", err)
+			}
+			res = res.Add(sdk.NewCoin(bondDenom, sdk.NewInt(int64(bal))))
 		}
 	}
 
@@ -229,7 +240,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		Address:    address,
 		Pagination: nil,
 	}
-	b, err := proto.Marshal(q)
+	b, err := gogoproto.Marshal(q)
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal bank type query request, %w", err)
 	}
@@ -243,7 +254,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		return nil, fmt.Errorf("bank query error, %w", err)
 	}
 	balance := new(banktypes.QueryAllBalancesResponse)
-	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+	if err := gogoproto.Unmarshal(resp.Value, balance); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
 	return balance.Balances, nil
@@ -259,7 +270,7 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 
 	queryFn := querier.Route(stakingParamsPath)
 
-	q := &stakingtypes.QueryParamsRequest{}
+	q := &stakingv1beta1.QueryParamsRequest{}
 
 	b, err := proto.Marshal(q)
 	if err != nil {
@@ -275,7 +286,7 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 		return "", fmt.Errorf("staking query error, %w", err)
 	}
 
-	params := new(stakingtypes.QueryParamsResponse)
+	params := new(stakingv1beta1.QueryParamsResponse)
 	if err := proto.Unmarshal(resp.Value, params); err != nil {
 		return "", fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
 	}

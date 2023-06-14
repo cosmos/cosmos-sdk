@@ -4,24 +4,24 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.4.2
-	cosmossdk.io/client/v2 v2.0.0-20230614103911-b3da8bb4e801
+	cosmossdk.io/client/v2 v2.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
-	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/tools/rosetta v0.2.1-0.20230613133644-0a778132a60f
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/tools/confix v0.0.0-20230614114324-f368ed5c62bc
+	cosmossdk.io/tools/rosetta v0.2.1-0.20230614114324-f368ed5c62bc
+	cosmossdk.io/x/circuit v0.0.0-20230614114324-f368ed5c62bc
+	cosmossdk.io/x/evidence v0.0.0-20230614114324-f368ed5c62bc
+	cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc
+	cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/tx v0.8.0
-	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/upgrade v0.0.0-20230614114324-f368ed5c62bc
 	github.com/cometbft/cometbft v0.38.0-rc1
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.50.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.1

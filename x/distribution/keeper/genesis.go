@@ -99,7 +99,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(valAddr, sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
 			panic(err)
 		}
@@ -212,16 +212,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
-	k.IterateDelegatorStartingInfos(ctx,
-		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
-			dels = append(dels, types.DelegatorStartingInfoRecord{
-				ValidatorAddress: val.String(),
-				DelegatorAddress: del.String(),
-				StartingInfo:     info,
-			})
-			return false
-		},
-	)
+	err = k.DelegatorStartingInfo.Walk(ctx, nil, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value types.DelegatorStartingInfo) (stop bool, err error) {
+		dels = append(dels, types.DelegatorStartingInfoRecord{
+			DelegatorAddress: key.K2().String(),
+			ValidatorAddress: key.K1().String(),
+			StartingInfo:     value,
+		})
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
 	k.IterateValidatorSlashEvents(ctx,

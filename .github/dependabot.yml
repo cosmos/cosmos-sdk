@@ -242,8 +242,10 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
-      - dependency-name: "github.com/cometbft/*"
+      - dependency-name: "github.com/cometbft/cometbft"
         dependency-type: "all"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: gomod
     directory: "/"
@@ -262,5 +264,7 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
-      - dependency-name: "github.com/cometbft/*"
+      - dependency-name: "github.com/cometbft/cometbft"
         dependency-type: "all"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]

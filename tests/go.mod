@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.50.0
+	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cobra v1.7.0
@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/storage v1.30.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/client/v2 v2.0.0-20230614103911-b3da8bb4e801 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

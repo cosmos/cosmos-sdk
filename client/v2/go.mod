@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230613135102-afe571f5b616
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230614103911-b3da8bb4e801
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1

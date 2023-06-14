@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -26,9 +27,12 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema  collections.Schema
-	Params  collections.Item[types.Params]
-	FeePool collections.Item[types.FeePool]
+	Schema                    collections.Schema
+	Params                    collections.Item[types.Params]
+	FeePool                   collections.Item[types.FeePool]
+	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
+	ValidatorCurrentRewards   collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
+	DelegatorStartingInfo     collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -55,6 +59,27 @@ func NewKeeper(
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		DelegatorsWithdrawAddress: collections.NewMap(
+			sb,
+			types.DelegatorWithdrawAddrPrefix,
+			"delegators_withdraw_address",
+			sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collcodec.KeyToValueCodec(sdk.AccAddressKey),
+		),
+		ValidatorCurrentRewards: collections.NewMap(
+			sb,
+			types.ValidatorCurrentRewardsPrefix,
+			"validators_current_rewards",
+			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorCurrentRewards](cdc),
+		),
+		DelegatorStartingInfo: collections.NewMap(
+			sb,
+			types.DelegatorStartingInfoPrefix,
+			"delegators_starting_info",
+			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.DelegatorStartingInfo](cdc),
+		),
 	}
 
 	schema, err := sb.Build()
@@ -99,8 +124,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		),
 	)
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
-	return nil
+	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
 }
 
 // withdraw rewards from a delegation

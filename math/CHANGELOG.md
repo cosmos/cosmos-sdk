@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## Improvements
+
+* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved math/Int.Size by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
+
 ### Bug Fixes
 
 * [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.

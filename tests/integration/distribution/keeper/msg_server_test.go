@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -188,7 +189,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), issuedShares)
 	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
-	err = f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20))
+	err = f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20))
 	require.NoError(t, err)
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
@@ -197,7 +198,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, err)
 	// setup current rewards and outstanding rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	err = f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards)
+	err = f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards)
 	require.NoError(t, err)
 	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)

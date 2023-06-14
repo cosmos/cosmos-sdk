@@ -194,6 +194,18 @@ require (
 // 	<temporary replace>
 // )
 
+// SimApp on main always tests the latest extracted SDK modules importing the sdk
+replace (
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
+	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
+)
+
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.

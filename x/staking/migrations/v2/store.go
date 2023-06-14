@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
-	v2distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -63,15 +62,15 @@ func migrateValidatorsByPowerIndexKey(store storetypes.KVStore) {
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
-	v2distribution.MigratePrefixAddress(store, v1.LastValidatorPowerKey)
+	MigratePrefixAddress(store, v1.LastValidatorPowerKey)
 
-	v2distribution.MigratePrefixAddress(store, v1.ValidatorsKey)
-	v2distribution.MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
+	MigratePrefixAddress(store, v1.ValidatorsKey)
+	MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
 	migrateValidatorsByPowerIndexKey(store)
 
-	v2distribution.MigratePrefixAddressAddress(store, v1.DelegationKey)
-	v2distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
-	v2distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
+	MigratePrefixAddressAddress(store, v1.DelegationKey)
+	MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
+	MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValSrcIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValDstIndexKey)

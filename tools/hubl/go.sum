@@ -37,8 +37,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.4.2 h1:lQBMl4xINnMnBOR/tQLtjlDnR4exr4e6/SfHR8PILE0=
 cosmossdk.io/api v0.4.2/go.mod h1:qrVgOp7DIeAXa+Tt5dDjOC47bZCDrwx8ZHxrmy7STNE=
-cosmossdk.io/client/v2 v2.0.0-20230607190716-2877190997a2 h1:x4eu8xjihip1U+WCuOrK3rcyMSe28HS9D8ZPyoONrcE=
-cosmossdk.io/client/v2 v2.0.0-20230607190716-2877190997a2/go.mod h1:Khq/WZqGHSgFlwPI6Ui47UE9RzblIze7iMX+s3nu3eM=
+cosmossdk.io/client/v2 v2.0.0-20230613135102-afe571f5b616 h1:/rT+NrbfwF4/Fe0pgSdAejUOmgItfP40w+Vg2Zub92o=
+cosmossdk.io/client/v2 v2.0.0-20230613135102-afe571f5b616/go.mod h1:55KO/mJnklKWaDVQn5Q126IsbenPosRBUFRDpr5TQr8=
 cosmossdk.io/collections v0.2.0 h1:CgMfLtE16+qox3zBYrGh60i4yKV8SeExLnIdOS2sbQs=
 cosmossdk.io/collections v0.2.0/go.mod h1:Oc1FK0vlmxJZsgUn9/o3ldE6zNyWKvobVzaLhWknZJE=
 cosmossdk.io/core v0.8.0 h1:LcJnu52E1a8f8E317VfQ1xK/RZe+IuhMNQAjnDLh25M=

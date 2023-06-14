@@ -23,9 +23,8 @@ var (
 	_, pubkey1, addr1 = testdata.KeyTestPubAddr()
 	_, _, addr2       = testdata.KeyTestPubAddr()
 
-	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	gas   = uint64(10000)
-	//msg     = banktypes.NewMsgSend(addr1, addr2, coins)
+	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	gas     = uint64(10000)
 	msg     = &types.QueryAccountRequest{Address: addr1.String()}
 	memo    = "foo"
 	timeout = uint64(10)

@@ -46,14 +46,10 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 
 		if arg.Optional {
 			if i != n-1 {
-				return nil, fmt.Errorf("varargs positional argument %s must be the last argument", arg.ProtoField)
+				return nil, fmt.Errorf("optional positional argument %s must be the last argument", arg.ProtoField)
 			}
 
 			hasOptional = true
-		}
-
-		if hasVarargs && hasOptional {
-			return nil, fmt.Errorf("vargs and optional positional arguments are mutually exclusive")
 		}
 
 		_, hasValue, err := b.addFieldFlag(
@@ -80,9 +76,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 		handler.CobraArgs = cobra.RangeArgs(n-1, n)
 		handler.hasOptional = true
 	} else {
-		handler.CobraArgs = cobra.RangeArgs(n-1, n)
-
-		//handler.CobraArgs = cobra.ExactArgs(n)
+		handler.CobraArgs = cobra.ExactArgs(n)
 	}
 
 	// validate flag options

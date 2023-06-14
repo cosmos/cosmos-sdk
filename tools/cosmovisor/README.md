@@ -97,7 +97,7 @@ Use of `cosmovisor` without one of the action arguments is deprecated. For backw
 * `COSMOVISOR_DISABLE_LOGS` (defaults to `false`). If set to true, this will disable Cosmovisor logs (but not the underlying process) completely. This may be useful, for example, when a Cosmovisor subcommand you are executing returns a valid JSON you are then parsing, as logs added by Cosmovisor make this output not a valid JSON.
 * `COSMOVISOR_COLOR_LOGS` (defaults to `true`). If set to true, this will colorise Cosmovisor logs (but not the underlying process).
 * `COSMOVISOR_TIMEFORMAT_LOGS` (defaults to `kitchen`). If set to a value (`layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen`), this will add timestamp prefix to Cosmovisor logs (but not the underlying process).
-* `COSMOVISOR_CUSTOM_PREUPGRADE` (defaults to ``).  If set, this will run $DAEMON_HOME/cosmovisor/$COSMOVISOR_CUSTOM_PREUPGRADE prior to upgrade with the arguments [ upgrade.Name, upgrade.Height ]
+* `COSMOVISOR_CUSTOM_PREUPGRADE` (defaults to ``).  If set, this will run $DAEMON_HOME/cosmovisor/$COSMOVISOR_CUSTOM_PREUPGRADE prior to upgrade with the arguments [ upgrade.Name, upgrade.Height ].  Executes a custom script (separate and prior to the chain daemon pre-upgrade command)
 
 ### Folder Layout
 

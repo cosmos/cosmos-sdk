@@ -72,7 +72,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (tools) [#16550](https://github.com/cosmos/cosmos-sdk/pull/16550) Add COSMOVISOR_CUSTOM_PREUPGRADE to cosmovisor to execute custom pre-upgrade scripts.
 * [#15970](https://github.com/cosmos/cosmos-sdk/pull/15970) Enable SIGN_MODE_TEXTUAL.
 * (types) [#15958](https://github.com/cosmos/cosmos-sdk/pull/15958) Add `module.NewBasicManagerFromManager` for creating a basic module manager from a module manager.
 * (runtime) [#15818](https://github.com/cosmos/cosmos-sdk/pull/15818) Provide logger through `depinject` instead of appBuilder.

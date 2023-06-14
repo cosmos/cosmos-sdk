@@ -51,7 +51,7 @@ import (
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1"
 	"google.golang.org/grpc/status"
 )
 
@@ -387,60 +387,60 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			return err
 		}
 
-		out := &rpb.ServerReflectionResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
-			ValidHost:       in.Host, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+		out := &rpb.ServerReflectionResponse{
+			ValidHost:       in.Host,
 			OriginalRequest: in,
 		}
 		switch req := in.MessageRequest.(type) {
 		case *rpb.ServerReflectionRequest_FileByFilename:
-			b, err := s.fileDescEncodingByFilename(req.FileByFilename, sentFileDescriptors) //nolint:staticcheck // SA1019: we want to keep using v1alpha
+			b, err := s.fileDescEncodingByFilename(req.FileByFilename, sentFileDescriptors)
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
-					ErrorResponse: &rpb.ErrorResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					ErrorResponse: &rpb.ErrorResponse{
 						ErrorCode:    int32(codes.NotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_FileDescriptorResponse{
-					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b}, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b},
 				}
 			}
 		case *rpb.ServerReflectionRequest_FileContainingSymbol:
-			b, err := s.fileDescEncodingContainingSymbol(req.FileContainingSymbol, sentFileDescriptors) //nolint:staticcheck // SA1019: we want to keep using v1alpha
+			b, err := s.fileDescEncodingContainingSymbol(req.FileContainingSymbol, sentFileDescriptors)
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
-					ErrorResponse: &rpb.ErrorResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					ErrorResponse: &rpb.ErrorResponse{
 						ErrorCode:    int32(codes.NotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_FileDescriptorResponse{
-					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b}, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b},
 				}
 			}
 		case *rpb.ServerReflectionRequest_FileContainingExtension:
-			typeName := req.FileContainingExtension.ContainingType //nolint:staticcheck // SA1019: we want to keep using v1alpha
-			extNum := req.FileContainingExtension.ExtensionNumber  //nolint:staticcheck // SA1019: we want to keep using v1alpha
+			typeName := req.FileContainingExtension.ContainingType
+			extNum := req.FileContainingExtension.ExtensionNumber
 			b, err := s.fileDescEncodingContainingExtension(typeName, extNum, sentFileDescriptors)
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
-					ErrorResponse: &rpb.ErrorResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					ErrorResponse: &rpb.ErrorResponse{
 						ErrorCode:    int32(codes.NotFound),
 						ErrorMessage: err.Error(),
 					},
 				}
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_FileDescriptorResponse{
-					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b}, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					FileDescriptorResponse: &rpb.FileDescriptorResponse{FileDescriptorProto: b},
 				}
 			}
 		case *rpb.ServerReflectionRequest_AllExtensionNumbersOfType:
-			extNums, err := s.allExtensionNumbersForTypeName(req.AllExtensionNumbersOfType) //nolint:staticcheck // SA1019: we want to keep using v1alpha
+			extNums, err := s.allExtensionNumbersForTypeName(req.AllExtensionNumbersOfType)
 			if err != nil {
 				out.MessageResponse = &rpb.ServerReflectionResponse_ErrorResponse{
-					ErrorResponse: &rpb.ErrorResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					ErrorResponse: &rpb.ErrorResponse{
 						ErrorCode:    int32(codes.NotFound),
 						ErrorMessage: err.Error(),
 					},
@@ -448,22 +448,22 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 				log.Printf("OH NO: %s", err)
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_AllExtensionNumbersResponse{
-					AllExtensionNumbersResponse: &rpb.ExtensionNumberResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
-						BaseTypeName:    req.AllExtensionNumbersOfType, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+					AllExtensionNumbersResponse: &rpb.ExtensionNumberResponse{
+						BaseTypeName:    req.AllExtensionNumbersOfType,
 						ExtensionNumber: extNums,
 					},
 				}
 			}
 		case *rpb.ServerReflectionRequest_ListServices:
 			svcNames, _ := s.getSymbols()
-			serviceResponses := make([]*rpb.ServiceResponse, len(svcNames)) //nolint:staticcheck // SA1019: we want to keep using v1alpha
+			serviceResponses := make([]*rpb.ServiceResponse, len(svcNames))
 			for i, n := range svcNames {
-				serviceResponses[i] = &rpb.ServiceResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+				serviceResponses[i] = &rpb.ServiceResponse{
 					Name: n,
 				}
 			}
 			out.MessageResponse = &rpb.ServerReflectionResponse_ListServicesResponse{
-				ListServicesResponse: &rpb.ListServiceResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+				ListServicesResponse: &rpb.ListServiceResponse{
 					Service: serviceResponses,
 				},
 			}

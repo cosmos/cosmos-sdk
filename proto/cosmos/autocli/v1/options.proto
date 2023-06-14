@@ -81,6 +81,7 @@ message RpcCommandOptions {
 
   // skip specifies whether to skip this rpc method when generating commands.
   bool skip = 12;
+
 }
 
 // FlagOptions are options for flags generated from rpc request fields.

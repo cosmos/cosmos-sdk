@@ -31,10 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// Deprecated: UpgradeInfoFileName file to store upgrade information
-// use x/upgrade/types.UpgradeInfoFilename instead.
-const UpgradeInfoFileName string = "upgrade-info.json"
-
 type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade

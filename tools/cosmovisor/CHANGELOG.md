@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Features
 
-* [#12457](https://github.com/cosmos/cosmos-sdk/issues/12457) Add `cosmovisor pre-upgrade` command to manually add an upgrade to cosmovisor.
+* [#16413](https://github.com/cosmos/cosmos-sdk/issues/16413) Add `cosmovisor pre-upgrade` command to manually add an upgrade to cosmovisor.
 * [#15361](https://github.com/cosmos/cosmos-sdk/pull/15361) Add `cosmovisor config` command to display the configuration used by cosmovisor.
 
 ## Improvements

@@ -38,9 +38,6 @@ const (
 	currentLink = "current"
 )
 
-// must be the same as x/upgrade/types.UpgradeInfoFilename
-const defaultFilename = "upgrade-info.json"
-
 // Config is the information passed in to control the daemon
 type Config struct {
 	Home                     string
@@ -87,7 +84,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", defaultFilename)
+	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.

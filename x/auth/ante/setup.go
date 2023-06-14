@@ -44,7 +44,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		// If there exists a maximum block gas limit, we must ensure that the tx
 		// does not exceed it.
 		if cp.Block.MaxGas > 0 && gasTx.GetGas() > uint64(cp.Block.MaxGas) {
-			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
+			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
 		}
 	}
 

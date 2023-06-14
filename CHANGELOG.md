@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* (x/distriubtion) [#16218](https://github.com/cosmos/cosmos-sdk/pull/16218) Add Autocli config to distribution module.
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 
@@ -73,7 +74,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#16257](https://github.com/cosmos/cosmos-sdk/pull/16257) Allow setting the base denom in the denom registry.
 * (x/group) [#16191](https://github.com/cosmos/cosmos-sdk/pull/16191) Add EventProposalPruned event to group module whenever a proposal is pruned.
 * (genutil) [#16046](https://github.com/cosmos/cosmos-sdk/pull/16046) Add "module-name" flag to genutil add-genesis-account to enable intializing module accounts at genesis.
-* (x/distriubtion) [#16218](https://github.com/cosmos/cosmos-sdk/pull/16218) Add Autocli config to distribution module.
 
 ### Improvements
 

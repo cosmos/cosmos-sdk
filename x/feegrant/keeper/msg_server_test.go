@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 		{
 			"success: revoke fee allowance",
@@ -268,7 +268,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 	}
 

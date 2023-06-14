@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/feegrant"
 
@@ -76,19 +77,11 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 
 	var grants []*feegrant.Grant
 
-	store := q.storeService.OpenKVStore(ctx)
-	grantsStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
-
-	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key, value []byte) error {
-		var grant feegrant.Grant
-
-		if err := q.cdc.Unmarshal(value, &grant); err != nil {
-			return err
-		}
-
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.FeeAllowance, req.Pagination, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
 		grants = append(grants, &grant)
-		return nil
-	})
+		return false, nil
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr))
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

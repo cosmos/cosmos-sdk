@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// verify: feegrant is revoked
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
-	suite.Contains(err.Error(), "fee-grant not found")
+	suite.Contains(err.Error(), "not found")
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
@@ -322,6 +322,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
 	now := suite.ctx.BlockTime()
 	oneYearExpiry := now.AddDate(1, 0, 0)
+	now = now.Add(1000)
 
 	testCases := []struct {
 		name      string
@@ -379,10 +380,9 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			name:    "no expiry: no error",
 			ctx:     suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
 			granter: suite.addrs[1],
-			grantee: suite.addrs[2],
+			grantee: suite.addrs[3],
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
-				Expiration: &oneYearExpiry,
 			},
 		},
 	}
@@ -395,12 +395,15 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			}
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, tc.allowance)
 			suite.NoError(err)
-			suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
+			err = suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
+			suite.NoError(err)
+
 			grant, err := suite.feegrantKeeper.GetAllowance(tc.ctx, tc.granter, tc.grantee)
 			if tc.expErrMsg != "" {
 				suite.Error(err)
 				suite.Contains(err.Error(), tc.expErrMsg)
 			} else {
+				suite.NoError(err)
 				suite.NotNil(grant)
 			}
 			if tc.postRun != nil {

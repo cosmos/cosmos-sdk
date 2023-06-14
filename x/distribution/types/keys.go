@@ -48,12 +48,12 @@ var (
 	ProposerKey                       = []byte{0x01}             // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix = []byte{0x02}             // key for outstanding rewards
 
-	DelegatorWithdrawAddrPrefix          = []byte{0x03} // key for delegator withdraw address
-	DelegatorStartingInfoPrefix          = []byte{0x04} // key for delegator starting info
-	ValidatorHistoricalRewardsPrefix     = []byte{0x05} // key for historical validators rewards / stake
-	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
-	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
-	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
+	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
+	DelegatorStartingInfoPrefix          = []byte{0x04}             // key for delegator starting info
+	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
+	ValidatorCurrentRewardsPrefix        = []byte{0x06}             // key for current validator rewards
+	ValidatorAccumulatedCommissionPrefix = []byte{0x07}             // key for accumulated validator commission
+	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
 
 	ParamsKey = collections.NewPrefix(9) // key for distribution module params
 )
@@ -160,11 +160,6 @@ func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
 	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
 }
 
-// GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
-func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
-}
-
 // GetDelegatorStartingInfoKey creates the key for a delegator's starting info.
 func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
 	return append(append(DelegatorStartingInfoPrefix, address.MustLengthPrefix(v.Bytes())...), address.MustLengthPrefix(d.Bytes())...)
@@ -180,11 +175,6 @@ func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, k)
 	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
-}
-
-// GetValidatorCurrentRewardsKey creates the key for a validator's current rewards.
-func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
-	return append(ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorAccumulatedCommissionKey creates the key for a validator's current commission.

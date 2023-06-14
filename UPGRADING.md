@@ -29,6 +29,28 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
+### BaseApp
+
+All ABCI methods now accept a pointer to the request and response types defined
+by CometBFT. In addition, they also return errors. An ABCI method should only
+return errors in cases where a catastrophic failure has occurred and the application
+should halt. However, this is abstracted away from the application developer. Any
+handler that an application can define or set that returns an error, will gracefully
+by handled by `BaseApp` on behalf of the application.
+
+BaseApp calls of `BeginBlock` & `Endblock` are now private but are still exposed
+to the application to define via the `Manager` type. `FinalizeBlock` is public
+and should be used in order to test and run operations. This means that although
+`BeginBlock` & `Endblock` no longer exist in the ABCI interface, they are automatically
+called by `BaseApp` during `FinalizeBlock`. Specifically, the order of operations
+is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
+
+ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
+methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
+allows an application to define handlers for these methods via `ExtendVoteHandler`
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+for more info.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -41,7 +63,14 @@ More information about [confix](https://docs.cosmos.network/main/tooling/confix)
 
 #### Events
 
-The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+The log section of `abci.TxResult` is not populated in the case of successful
+msg(s) execution. Instead a new attribute is added to all messages indicating
+the `msg_index` which identifies which events and attributes relate the same
+transaction.
+
+`BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if the event belongs
+to `BeginBlock` or `EndBlock`.
 
 #### gRPC-Web
 

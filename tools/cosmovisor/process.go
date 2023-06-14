@@ -179,7 +179,7 @@ func (l Launcher) doCustomPreUpgrade() error {
 
 	// check if upgrade-info.json is not empty.
 	var uInfo upgradetypes.Plan
-	upgradeInfoFile, err := os.ReadFile(filepath.Join(l.cfg.Home, "data", "upgrade-info.json"))
+	upgradeInfoFile, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
 	if err != nil {
 		return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 	}

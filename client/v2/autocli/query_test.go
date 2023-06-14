@@ -38,6 +38,7 @@ var buildModuleVargasOptional = func(moduleName string, b *Builder) (*cobra.Comm
 	err := b.AddQueryServiceCommands(cmd, testCmdDescInvalidOptAndVargas)
 	return cmd, err
 }
+
 var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -151,7 +152,8 @@ var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
 					Optional:   true,
 				},
 			},
-		}},
+		},
+	},
 }
 
 var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
@@ -179,7 +181,8 @@ var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
 					Varargs:    true,
 				},
 			},
-		}},
+		},
+	},
 }
 
 func TestCoin(t *testing.T) {

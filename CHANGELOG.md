@@ -38,9 +38,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (deps) [#16553](https://github.com/cosmos/cosmos-sdk/pull/16553) Bump CometBFT to [v0.34.29](https://github.com/cometbft/cometbft/blob/v0.34.29/CHANGELOG.md#v03429).
+
 ## [v0.46.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.13) - 2023-06-08
 
-## Features 
+### Features 
 
 * (snapshots) [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving and restoring snapshot locally.
 * (baseapp) [#16290](https://github.com/cosmos/cosmos-sdk/pull/16290) Add circuit breaker setter in baseapp.

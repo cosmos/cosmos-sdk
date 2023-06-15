@@ -12,7 +12,5 @@ var (
 	ErrInvalidKey            = errors.Register(ModuleName, 7, "invalid key")
 	ErrDuplicateEntry        = errors.Register(ModuleName, 8, "duplicate entry")
 	ErrMultipleSenders       = errors.Register(ModuleName, 9, "multiple senders not allowed")
-	// ErrInvalidSigner duplicates an error of the same name in x/gov to resolve a cyclic dependency:
-	// See: https://github.com/cosmos/cosmos-sdk/blob/91d14c04accdd5ded86888514401f1cdd0949eb2/x/gov/types/errors.go#L20
-	ErrInvalidSigner = errors.Register(ModuleName, 10, "expected gov account as only signer for proposal message")
+	ErrInvalidSigner         = errors.Register(ModuleName, 10, "invalid signer")
 )

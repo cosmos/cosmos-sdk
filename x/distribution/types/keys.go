@@ -130,11 +130,6 @@ func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
 }
 
-// GetValidatorAccumulatedCommissionKey creates the key for a validator's current commission.
-func GetValidatorAccumulatedCommissionKey(v sdk.ValAddress) []byte {
-	return append(ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(v.Bytes())...)
-}
-
 // GetValidatorSlashEventPrefix creates the prefix key for a validator's slash fractions.
 func GetValidatorSlashEventPrefix(v sdk.ValAddress) []byte {
 	return append(ValidatorSlashEventPrefix, address.MustLengthPrefix(v.Bytes())...)

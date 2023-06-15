@@ -13,8 +13,9 @@ import (
 
 func NewVersionCmd() *cobra.Command {
 	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "Display cosmovisor and APP version.",
+		Use:          "version",
+		Short:        "Display cosmovisor and APP version.",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noAppVersion, _ := cmd.Flags().GetBool(cosmovisor.FlagNoAppVersion)
 			if val, err := cmd.Flags().GetString(cosmovisor.FlagOutput); val == "json" && err == nil {

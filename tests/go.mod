@@ -171,7 +171,7 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/term v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
@@ -193,6 +193,18 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+
+// SimApp on main always tests the latest extracted SDK modules importing the sdk
+replace (
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
+	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
+)
 
 // Below are the long-lived replace for tests.
 replace (

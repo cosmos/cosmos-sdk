@@ -35,3 +35,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* (autocli) [#16316](https://github.com/cosmos/cosmos-sdk/pull/16316) - Add support for optional positional argument

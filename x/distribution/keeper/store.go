@@ -150,23 +150,7 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.V
 
 // set accumulated commission for a validator
 func (k Keeper) SetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) error {
-	var (
-		bz  []byte
-		err error
-	)
-
-	store := k.storeService.OpenKVStore(ctx)
-	if commission.Commission.IsZero() {
-		bz, err = k.cdc.Marshal(&types.ValidatorAccumulatedCommission{})
-	} else {
-		bz, err = k.cdc.Marshal(&commission)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetValidatorAccumulatedCommissionKey(val), bz)
+	return k.ValidatorsAccumulatedCommission.Set(ctx, val, commission)
 }
 
 // delete accumulated commission for a validator

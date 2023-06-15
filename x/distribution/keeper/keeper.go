@@ -27,12 +27,13 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                    collections.Schema
-	Params                    collections.Item[types.Params]
-	FeePool                   collections.Item[types.FeePool]
-	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
-	ValidatorCurrentRewards   collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
-	DelegatorStartingInfo     collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	Schema                          collections.Schema
+	Params                          collections.Item[types.Params]
+	FeePool                         collections.Item[types.FeePool]
+	DelegatorsWithdrawAddress       collections.Map[sdk.AccAddress, sdk.AccAddress]
+	ValidatorCurrentRewards         collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
+	DelegatorStartingInfo           collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -79,6 +80,13 @@ func NewKeeper(
 			"delegators_starting_info",
 			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.DelegatorStartingInfo](cdc),
+		),
+		ValidatorsAccumulatedCommission: collections.NewMap(
+			sb,
+			types.ValidatorAccumulatedCommissionPrefix,
+			"validators_accumulated_commission",
+			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorAccumulatedCommission](cdc),
 		),
 	}
 

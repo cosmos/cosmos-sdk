@@ -95,13 +95,13 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
-	currentCommission, err := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	if err != nil {
+	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, val.GetOperator())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, val.GetOperator(), currentCommission)
 	if err != nil {
 		return err
 	}

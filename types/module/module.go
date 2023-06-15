@@ -39,6 +39,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -243,15 +244,20 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 	return []abci.ValidatorUpdate{}
 }
 
+type ConsensusParamsGetter interface {
+	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+}
+
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-	OrderMigrations    []string
+	Modules               map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	OrderInitGenesis      []string
+	OrderExportGenesis    []string
+	OrderBeginBlockers    []string
+	OrderEndBlockers      []string
+	OrderMigrations       []string
+	consensusParamsGetter ConsensusParamsGetter
 }
 
 // NewManager creates a new Manager object.
@@ -289,6 +295,11 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		OrderBeginBlockers: modulesStr,
 		OrderEndBlockers:   modulesStr,
 	}
+}
+
+func (m *Manager) WithConsensusParamsGetter(g ConsensusParamsGetter) *Manager {
+	m.consensusParamsGetter = g
+	return m
 }
 
 // SetOrderInitGenesis sets the order of init genesis calls
@@ -560,6 +571,14 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
 		if ok {
 			module.BeginBlock(ctx, req)
+			if m.consensusParamsGetter != nil && moduleName == "upgrade" {
+				p := ctx.ConsensusParams()
+				if p == nil || p.Block == nil {
+					if p = m.consensusParamsGetter.GetConsensusParams(ctx); p != nil {
+						ctx = ctx.WithConsensusParams(p)
+					}
+				}
+			}
 		}
 	}
 

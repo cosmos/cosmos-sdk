@@ -84,7 +84,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules).WithConsensusParamsGetter(app)
 	app.appConfig = inputs.AppConfig
 
 	for name, mod := range inputs.Modules {

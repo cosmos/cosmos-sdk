@@ -73,7 +73,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorAccumulatedCommission",
 			v1.GetValidatorAccumulatedCommissionKey(valAddr),
-			types.GetValidatorAccumulatedCommissionKey(valAddr),
+			append(types.ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorSlashEvent",

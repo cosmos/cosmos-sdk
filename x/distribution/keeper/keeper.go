@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"github.com/cockroachdb/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,12 +28,13 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                    collections.Schema
-	Params                    collections.Item[types.Params]
-	FeePool                   collections.Item[types.FeePool]
-	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
-	ValidatorCurrentRewards   collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
-	DelegatorStartingInfo     collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	Schema                          collections.Schema
+	Params                          collections.Item[types.Params]
+	FeePool                         collections.Item[types.FeePool]
+	DelegatorsWithdrawAddress       collections.Map[sdk.AccAddress, sdk.AccAddress]
+	ValidatorCurrentRewards         collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
+	DelegatorStartingInfo           collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -79,6 +81,13 @@ func NewKeeper(
 			"delegators_starting_info",
 			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.DelegatorStartingInfo](cdc),
+		),
+		ValidatorsAccumulatedCommission: collections.NewMap(
+			sb,
+			types.ValidatorAccumulatedCommissionPrefix,
+			"validators_accumulated_commission",
+			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorAccumulatedCommission](cdc),
 		),
 	}
 
@@ -157,8 +166,8 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
-	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if err != nil {
+	accumCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
@@ -167,8 +176,10 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
-
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
+	if err != nil {
+		return nil, err
+	}
 	// update outstanding
 	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
 	if err != nil {

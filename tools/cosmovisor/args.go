@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -197,10 +197,10 @@ func GetConfigFromEnv() (*Config, error) {
 	}
 
 	errs = append(errs, cfg.validate()...)
-
 	if len(errs) > 0 {
-		return nil, cverrors.FlattenErrors(errs...)
+		return nil, errors.Join(errs...)
 	}
+
 	return cfg, nil
 }
 
@@ -225,7 +225,7 @@ func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
 	logger.Info("configuration:")
 	switch {
 	case err != nil:
-		cverrors.LogErrors(logger, "configuration errors found", err)
+		logger.Error("configuration errors found", "err", err)
 	case cfg != nil:
 		logger.Info(cfg.DetailString())
 	}

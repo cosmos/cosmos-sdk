@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
@@ -632,8 +632,9 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 				assert.NoError(t, err)
 			} else if assert.Error(t, err) {
 				errCount := 1
-				if multi, isMulti := err.(*errors.MultiError); isMulti {
-					errCount = multi.Len()
+				if errMulti, ok := err.(interface{ Unwrap() []error }); ok {
+					err := errMulti.Unwrap()
+					errCount = len(err)
 				}
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
@@ -659,7 +660,6 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 		fmt.Errorf("multi-error error 2"),
 		fmt.Errorf("multi-error error 3"),
 	}
-	errMulti := errors.FlattenErrors(errs...)
 
 	makeTestLogger := func(testName string, out io.Writer) log.Logger {
 		output := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Kitchen, NoColor: true}
@@ -684,7 +684,7 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 		{
 			name:        "multi error",
 			cfg:         nil,
-			err:         errMulti,
+			err:         errors.Join(errs...),
 			contains:    []string{"configuration errors found", errs[0].Error(), errs[1].Error(), errs[2].Error()},
 			notcontains: nil,
 		},

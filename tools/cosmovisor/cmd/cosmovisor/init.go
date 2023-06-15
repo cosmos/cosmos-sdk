@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
@@ -106,7 +105,7 @@ func getConfigForInitCmd() (*cosmovisor.Config, error) {
 		errs = append(errs, fmt.Errorf("%s must be an absolute path", cosmovisor.EnvHome))
 	}
 	if len(errs) > 0 {
-		return nil, cverrors.FlattenErrors(errs...)
+		return nil, errors.Join(errs...)
 	}
 	return cfg, nil
 }

@@ -73,8 +73,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf(`$ %s query distribution slashes %s 0 100`, version.AppName, valAddress.String()),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
-						{ProtoField: "start_height"},
-						{ProtoField: "end_height"},
+						{ProtoField: "starting_height"},
+						{ProtoField: "ending_height"},
 					},
 				},
 				{

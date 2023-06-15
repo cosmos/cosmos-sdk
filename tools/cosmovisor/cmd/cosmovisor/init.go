@@ -6,12 +6,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
 	"cosmossdk.io/x/upgrade/plan"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 var initCmd = &cobra.Command{
@@ -19,8 +21,7 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a cosmovisor daemon home directory.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(log.Logger)
-		return InitializeCosmovisor(logger, args)
+		return InitializeCosmovisor(nil, args)
 	},
 }
 
@@ -41,6 +42,10 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	cfg, err := getConfigForInitCmd()
 	if err != nil {
 		return err
+	}
+
+	if logger == nil {
+		logger = cfg.Logger(os.Stdout)
 	}
 
 	logger.Info("checking on the genesis/bin directory")
@@ -95,6 +100,15 @@ func getConfigForInitCmd() (*cosmovisor.Config, error) {
 		Home: os.Getenv(cosmovisor.EnvHome),
 		Name: os.Getenv(cosmovisor.EnvName),
 	}
+
+	var err error
+	if cfg.ColorLogs, err = cosmovisor.BooleanOption(cosmovisor.EnvColorLogs, true); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.TimeFormatLogs, err = cosmovisor.TimeFormatOptionFromEnv(cosmovisor.EnvTimeFormatLogs, time.Kitchen); err != nil {
+		errs = append(errs, err)
+	}
+
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}
@@ -105,7 +119,7 @@ func getConfigForInitCmd() (*cosmovisor.Config, error) {
 		errs = append(errs, fmt.Errorf("%s must be an absolute path", cosmovisor.EnvHome))
 	}
 	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+		return cfg, errors.Join(errs...)
 	}
 	return cfg, nil
 }

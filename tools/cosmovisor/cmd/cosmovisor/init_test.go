@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/tools/cosmovisor"
 )
 
@@ -28,15 +29,24 @@ func TestInitTestSuite(t *testing.T) {
 
 // cosmovisorInitEnv are some string values of environment variables used to configure Cosmovisor, and used by the init command.
 type cosmovisorInitEnv struct {
-	Home string
-	Name string
+	Home           string
+	Name           string
+	ColorLogs      string
+	TimeFormatLogs string
+}
+
+type envMap struct {
+	val        string
+	allowEmpty bool
 }
 
 // ToMap creates a map of the cosmovisorInitEnv where the keys are the env var names.
-func (c cosmovisorInitEnv) ToMap() map[string]string {
-	return map[string]string{
-		cosmovisor.EnvHome: c.Home,
-		cosmovisor.EnvName: c.Name,
+func (c cosmovisorInitEnv) ToMap() map[string]envMap {
+	return map[string]envMap{
+		cosmovisor.EnvHome:           {val: c.Home, allowEmpty: false},
+		cosmovisor.EnvName:           {val: c.Name, allowEmpty: false},
+		cosmovisor.EnvColorLogs:      {val: c.ColorLogs, allowEmpty: false},
+		cosmovisor.EnvTimeFormatLogs: {val: c.TimeFormatLogs, allowEmpty: true},
 	}
 }
 
@@ -46,6 +56,10 @@ func (c *cosmovisorInitEnv) Set(envVar, envVal string) {
 	case cosmovisor.EnvHome:
 		c.Home = envVal
 	case cosmovisor.EnvName:
+		c.Name = envVal
+	case cosmovisor.EnvColorLogs:
+		c.Name = envVal
+	case cosmovisor.EnvTimeFormatLogs:
 		c.Name = envVal
 	default:
 		panic(fmt.Errorf("Unknown environment variable [%s]. Cannot set field to [%s]. ", envVar, envVal))
@@ -77,9 +91,9 @@ func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) {
 	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
-		if len(envVal) != 0 {
-			err = os.Setenv(envVar, envVal)
-			msg = fmt.Sprintf("setting %s to %s", envVar, envVal)
+		if len(envVal.val) != 0 || envVal.allowEmpty {
+			err = os.Setenv(envVar, envVal.val)
+			msg = fmt.Sprintf("setting %s to %s", envVar, envVal.val)
 		} else {
 			err = os.Unsetenv(envVar)
 			msg = fmt.Sprintf("unsetting %s", envVar)

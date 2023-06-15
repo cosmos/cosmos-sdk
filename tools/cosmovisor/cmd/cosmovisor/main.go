@@ -3,15 +3,14 @@ package main
 import (
 	"context"
 	"os"
-
-	"cosmossdk.io/log"
 )
 
 func main() {
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
-	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
+	// error logger used only during configuration phase
+	cfg, _ := getConfigForInitCmd()
+	logger := cfg.Logger(os.Stderr)
 
-	if err := NewRootCmd().ExecuteContext(ctx); err != nil {
+	if err := NewRootCmd().ExecuteContext(context.Background()); err != nil {
 		if errMulti, ok := err.(interface{ Unwrap() []error }); ok {
 			err := errMulti.Unwrap()
 			for _, e := range err {

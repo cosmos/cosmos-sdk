@@ -153,21 +153,6 @@ func (k Keeper) SetValidatorAccumulatedCommission(ctx context.Context, val sdk.V
 	return k.ValidatorsAccumulatedCommission.Set(ctx, val, commission)
 }
 
-// iterate over accumulated commissions
-func (k Keeper) IterateValidatorAccumulatedCommissions(ctx context.Context, handler func(val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorAccumulatedCommissionPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var commission types.ValidatorAccumulatedCommission
-		k.cdc.MustUnmarshal(iter.Value(), &commission)
-		addr := types.GetValidatorAccumulatedCommissionAddress(iter.Key())
-		if handler(addr, commission) {
-			break
-		}
-	}
-}
-
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

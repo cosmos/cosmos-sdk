@@ -175,15 +175,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	)
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
-	k.IterateValidatorAccumulatedCommissions(ctx,
-		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
-			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
-				ValidatorAddress: addr.String(),
-				Accumulated:      commission,
-			})
-			return false
-		},
-	)
+	err = k.ValidatorsAccumulatedCommission.Walk(ctx, nil, func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool, err error) {
+		acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
+			ValidatorAddress: addr.String(),
+			Accumulated:      commission,
+		})
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
 	k.IterateValidatorHistoricalRewards(ctx,

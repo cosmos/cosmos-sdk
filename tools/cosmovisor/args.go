@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -215,20 +214,6 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	return duration, nil
-}
-
-// LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
-	if cfg == nil && err == nil {
-		return
-	}
-	logger.Info("configuration:")
-	switch {
-	case err != nil:
-		logger.Error("configuration errors found", "err", err)
-	case cfg != nil:
-		logger.Info(cfg.DetailString())
-	}
 }
 
 // validate returns an error if this config is invalid.

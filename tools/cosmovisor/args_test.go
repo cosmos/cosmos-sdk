@@ -1,21 +1,16 @@
 package cosmovisor
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
@@ -638,90 +633,6 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
-		})
-	}
-}
-
-func (s *argsTestSuite) TestLogConfigOrError() {
-	cfg := &Config{
-		Home:                  "/no/place/like/it",
-		Name:                  "cosmotestvisor",
-		AllowDownloadBinaries: true,
-		RestartAfterUpgrade:   true,
-		PollInterval:          999,
-		UnsafeSkipBackup:      false,
-		DataBackupPath:        "/no/place/like/it",
-		PreupgradeMaxRetries:  20,
-	}
-	errNormal := fmt.Errorf("this is a single error")
-	errs := []error{
-		fmt.Errorf("multi-error error 1"),
-		fmt.Errorf("multi-error error 2"),
-		fmt.Errorf("multi-error error 3"),
-	}
-
-	makeTestLogger := func(testName string, out io.Writer) log.Logger {
-		output := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Kitchen, NoColor: true}
-		logger := zerolog.New(output).With().Str("test", testName).Timestamp().Logger()
-		return log.NewCustomLogger(logger)
-	}
-
-	tests := []struct {
-		name        string
-		cfg         *Config
-		err         error
-		contains    []string
-		notcontains []string
-	}{
-		{
-			name:        "normal error",
-			cfg:         nil,
-			err:         errNormal,
-			contains:    []string{"configuration error", errNormal.Error()}, // TODO: Fix this.
-			notcontains: nil,
-		},
-		{
-			name:        "multi error",
-			cfg:         nil,
-			err:         errors.Join(errs...),
-			contains:    []string{"configuration errors found", errs[0].Error(), errs[1].Error(), errs[2].Error()},
-			notcontains: nil,
-		},
-		{
-			name:        "config",
-			cfg:         cfg,
-			err:         nil,
-			contains:    []string{"Configurable Values", cfg.DetailString()},
-			notcontains: nil,
-		},
-		{
-			name:        "error and config - no config details",
-			cfg:         cfg,
-			err:         errNormal,
-			contains:    []string{"error"},
-			notcontains: []string{"Configuration is valid", EnvName, cfg.Home}, // Just some spot checks.
-		},
-		{
-			name:        "nil nil - no output",
-			cfg:         nil,
-			err:         nil,
-			contains:    nil,
-			notcontains: []string{" "},
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			var b bytes.Buffer
-			logger := makeTestLogger(tc.name, &b)
-			LogConfigOrError(logger, tc.cfg, tc.err)
-			output := b.String()
-			for _, expected := range tc.contains {
-				assert.Contains(t, output, expected)
-			}
-			for _, unexpected := range tc.notcontains {
-				assert.NotContains(t, output, unexpected)
-			}
 		})
 	}
 }

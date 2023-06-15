@@ -633,8 +633,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			} else if assert.Error(t, err) {
 				errCount := 1
 				if errMulti, ok := err.(interface{ Unwrap() []error }); ok {
-					err := errMulti.Unwrap()
-					errCount = len(err)
+					errCount = len(errMulti.Unwrap())
 				}
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}

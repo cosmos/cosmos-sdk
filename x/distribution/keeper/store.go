@@ -129,67 +129,6 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 	return
 }
 
-// get accumulated commission for a validator
-func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress) (commission types.ValidatorAccumulatedCommission, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetValidatorAccumulatedCommissionKey(val))
-	if err != nil {
-		return types.ValidatorAccumulatedCommission{}, err
-	}
-
-	if b == nil {
-		return types.ValidatorAccumulatedCommission{}, nil
-	}
-
-	err = k.cdc.Unmarshal(b, &commission)
-	if err != nil {
-		return types.ValidatorAccumulatedCommission{}, err
-	}
-	return
-}
-
-// set accumulated commission for a validator
-func (k Keeper) SetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) error {
-	var (
-		bz  []byte
-		err error
-	)
-
-	store := k.storeService.OpenKVStore(ctx)
-	if commission.Commission.IsZero() {
-		bz, err = k.cdc.Marshal(&types.ValidatorAccumulatedCommission{})
-	} else {
-		bz, err = k.cdc.Marshal(&commission)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetValidatorAccumulatedCommissionKey(val), bz)
-}
-
-// delete accumulated commission for a validator
-func (k Keeper) DeleteValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorAccumulatedCommissionKey(val))
-}
-
-// iterate over accumulated commissions
-func (k Keeper) IterateValidatorAccumulatedCommissions(ctx context.Context, handler func(val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorAccumulatedCommissionPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var commission types.ValidatorAccumulatedCommission
-		k.cdc.MustUnmarshal(iter.Value(), &commission)
-		addr := types.GetValidatorAccumulatedCommissionAddress(iter.Key())
-		if handler(addr, commission) {
-			break
-		}
-	}
-}
-
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

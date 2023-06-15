@@ -42,10 +42,9 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
-
+	storetypes "cosmossdk.io/store/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -262,6 +261,10 @@ func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error
 	return []abci.ValidatorUpdate{}, nil
 }
 
+type ConsensusParamsGetter interface {
+	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+}
+
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
@@ -273,6 +276,7 @@ type Manager struct {
 	OrderPrepareCheckStaters []string
 	OrderPrecommiters        []string
 	OrderMigrations          []string
+	consensusParamsGetter    ConsensusParamsGetter
 }
 
 // NewManager creates a new Manager object.
@@ -317,6 +321,11 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		OrderPrecommiters:        modulesStr,
 		OrderPrepareCheckStaters: modulesStr,
 	}
+}
+
+func (m *Manager) WithConsensusParamsGetter(g ConsensusParamsGetter) *Manager {
+	m.consensusParamsGetter = g
+	return m
 }
 
 // SetOrderInitGenesis sets the order of init genesis calls
@@ -700,6 +709,15 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 			err := module.BeginBlock(ctx)
 			if err != nil {
 				return sdk.BeginBlock{}, err
+			}
+			if m.consensusParamsGetter != nil && moduleName == "upgrade" {
+				p := ctx.ConsensusParams()
+				if p.Block == nil {
+					cp := m.consensusParamsGetter.GetConsensusParams(ctx)
+					if cp != nil {
+						ctx = ctx.WithConsensusParams(*cp)
+					}
+				}
 			}
 		}
 	}

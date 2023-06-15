@@ -35,6 +35,7 @@ type IntegrationTestSuite struct {
 	cdc                   codec.Codec
 	genesisAccount        *authtypes.BaseAccount
 	bankClient            types.QueryClient
+	msgClient             types.MsgClient
 	testClient            testdata.QueryClient
 	genesisAccountBalance int64
 }
@@ -104,6 +105,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
 	s.bankClient = types.NewQueryClient(queryHelper)
 	s.testClient = testdata.NewQueryClient(queryHelper)
+	s.msgClient = types.NewMsgClient(queryHelper)
 	s.genesisAccount = acc
 }
 

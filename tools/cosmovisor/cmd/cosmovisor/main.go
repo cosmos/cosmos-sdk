@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"cosmossdk.io/log"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 )
 
 func main() {
@@ -13,7 +12,15 @@ func main() {
 	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
 	if err := NewRootCmd().ExecuteContext(ctx); err != nil {
-		cverrors.LogErrors(logger, "", err)
+		if errMulti, ok := err.(interface{ Unwrap() []error }); ok {
+			err := errMulti.Unwrap()
+			for _, e := range err {
+				logger.Error("", "error", e)
+			}
+		} else {
+			logger.Error("", "error", err)
+		}
+
 		os.Exit(1)
 	}
 }

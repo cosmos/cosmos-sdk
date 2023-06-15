@@ -52,56 +52,6 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.Co
 	store.Set(types.ProposerKey, bz)
 }
 
-// get the starting info associated with a delegator
-func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetDelegatorStartingInfoKey(val, del))
-	if err != nil {
-		return
-	}
-
-	err = k.cdc.Unmarshal(b, &period)
-	return period, err
-}
-
-// set the starting info associated with a delegator
-func (k Keeper) SetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&period)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetDelegatorStartingInfoKey(val, del), b)
-}
-
-// check existence of the starting info associated with a delegator
-func (k Keeper) HasDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) (bool, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Has(types.GetDelegatorStartingInfoKey(val, del))
-}
-
-// delete the starting info associated with a delegator
-func (k Keeper) DeleteDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetDelegatorStartingInfoKey(val, del))
-}
-
-// iterate over delegator starting infos
-func (k Keeper) IterateDelegatorStartingInfos(ctx context.Context, handler func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.DelegatorStartingInfoPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var info types.DelegatorStartingInfo
-		k.cdc.MustUnmarshal(iter.Value(), &info)
-		val, del := types.GetDelegatorStartingInfoAddresses(iter.Key())
-		if handler(val, del, info) {
-			break
-		}
-	}
-}
-
 // get historical rewards for a particular period
 func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

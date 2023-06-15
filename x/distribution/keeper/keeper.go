@@ -32,6 +32,7 @@ type Keeper struct {
 	FeePool                   collections.Item[types.FeePool]
 	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
 	ValidatorCurrentRewards   collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
+	DelegatorStartingInfo     collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -71,6 +72,13 @@ func NewKeeper(
 			"validators_current_rewards",
 			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorCurrentRewards](cdc),
+		),
+		DelegatorStartingInfo: collections.NewMap(
+			sb,
+			types.DelegatorStartingInfoPrefix,
+			"delegators_starting_info",
+			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.DelegatorStartingInfo](cdc),
 		),
 	}
 

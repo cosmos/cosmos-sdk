@@ -58,7 +58,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"DelegatorStartingInfo",
 			v1.GetDelegatorStartingInfoKey(valAddr, addr2),
-			types.GetDelegatorStartingInfoKey(valAddr, addr2),
+			append(append(types.DelegatorStartingInfoPrefix, address.MustLengthPrefix(valAddr.Bytes())...), address.MustLengthPrefix(addr2.Bytes())...),
 		},
 		{
 			"ValidatorHistoricalRewards",

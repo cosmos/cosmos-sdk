@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"github.com/cockroachdb/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -165,8 +166,8 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
-	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if err != nil {
+	accumCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 

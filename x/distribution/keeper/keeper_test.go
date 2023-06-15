@@ -120,7 +120,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	require.NoError(t, err)
 
 	// check remainder
-	remainderValCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
+	remainderValCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
 	require.NoError(t, err)
 	remainder := remainderValCommission.Commission
 	require.Equal(t, sdk.DecCoins{

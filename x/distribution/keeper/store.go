@@ -129,25 +129,6 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 	return
 }
 
-// get accumulated commission for a validator
-func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress) (commission types.ValidatorAccumulatedCommission, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetValidatorAccumulatedCommissionKey(val))
-	if err != nil {
-		return types.ValidatorAccumulatedCommission{}, err
-	}
-
-	if b == nil {
-		return types.ValidatorAccumulatedCommission{}, nil
-	}
-
-	err = k.cdc.Unmarshal(b, &commission)
-	if err != nil {
-		return types.ValidatorAccumulatedCommission{}, err
-	}
-	return
-}
-
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

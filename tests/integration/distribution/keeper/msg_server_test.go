@@ -542,7 +542,8 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				), balance)
 
 				// check remainder
-				remainder, _ := f.distrKeeper.GetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr)
+				remainder, err := f.distrKeeper.ValidatorsAccumulatedCommission.Get(f.sdkCtx, f.valAddr)
+				require.NoError(t, err)
 				assert.DeepEqual(t, sdk.DecCoins{
 					sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(1).Quo(math.LegacyNewDec(4))),
 					sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(2))),

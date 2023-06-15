@@ -209,17 +209,8 @@ func TestGenesisAccountsContains(t *testing.T) {
 	genAccounts = append(genAccounts, acc)
 	require.True(t, genAccounts.Contains(acc.GetAddress()))
 }
-<<<<<<< HEAD
-=======
-
-func TestNewModuleAddressOrBech32Address(t *testing.T) {
-	input := "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv"
-	require.Equal(t, input, types.NewModuleAddressOrBech32Address(input).String())
-	require.Equal(t, "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", types.NewModuleAddressOrBech32Address("distribution").String())
-}
 
 func TestModuleAccountValidateNilBaseAccount(t *testing.T) {
 	ma := &types.ModuleAccount{Name: "foo"}
 	_ = ma.Validate()
 }
->>>>>>> 629dc63ec (fix(x/auth): ensure nil .BaseAccounts are reported in ModuleAccount.Validate (#16554))

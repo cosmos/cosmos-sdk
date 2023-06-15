@@ -142,10 +142,10 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, feePool.CommunityPool.IsZero())
 
-	val0Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
+	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	val1Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr1)
+	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr1)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	_, err = distrKeeper.ValidatorCurrentRewards.Get(ctx, valAddr0)
@@ -184,12 +184,12 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(2)}}, feePool.CommunityPool)
 
 	// 50% commission for first proposer, (0.5 * 98%) * 100 / 2 = 23.25
-	val0Commission, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
+	val0Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecWithPrec(2450, 2)}}, val0Commission.Commission)
 
 	// zero commission for second proposer
-	val1Commission, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr1)
+	val1Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr1)
 	require.NoError(t, err)
 	require.True(t, val1Commission.Commission.IsZero())
 

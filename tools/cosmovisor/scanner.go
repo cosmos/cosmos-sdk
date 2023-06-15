@@ -142,26 +142,23 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 }
 
 func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
-	var ui upgradetypes.Plan
-
-	f, err := os.Open(filename)
+	f, err := os.ReadFile(filename)
 	if err != nil {
 		return upgradetypes.Plan{}, err
 	}
-	defer f.Close()
 
-	d := json.NewDecoder(f)
-	if err := d.Decode(&ui); err != nil {
+	var upgradePlan upgradetypes.Plan
+	if err := json.Unmarshal(f, &upgradePlan); err != nil {
 		return upgradetypes.Plan{}, err
 	}
 
 	// required values must be set
-	if ui.Height <= 0 || ui.Name == "" {
-		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
+	if err := upgradePlan.ValidateBasic(); err != nil {
+		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content: %w, got: %v", err, upgradePlan)
 	}
 
 	// normalize name to prevent operator error in upgrade name case sensitivity errors.
-	ui.Name = strings.ToLower(ui.Name)
+	upgradePlan.Name = strings.ToLower(upgradePlan.Name)
 
-	return ui, err
+	return upgradePlan, err
 }

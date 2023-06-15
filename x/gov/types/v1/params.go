@@ -86,7 +86,7 @@ func DefaultParams() Params {
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
 		DefaultPeriod,
-		time.Minute*2,
+		DefaultPeriod,
 		DefaultExpeditedPeriod,
 		DefaultQuorum.String(),
 		DefaultThreshold.String(),

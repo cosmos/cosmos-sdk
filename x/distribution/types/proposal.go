@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // GetTitle returns the title of a community pool spend proposal.
@@ -46,18 +44,18 @@ func validateAbstract(c *CommunityPoolSpendProposal) error {
 	)
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
-		return errorsmod.Wrap(types.ErrInvalidProposalContent, "proposal title cannot be blank")
+		return errorsmod.Wrap(ErrInvalidProposalContent, "proposal title cannot be blank")
 	}
 	if len(title) > MaxTitleLength {
-		return errorsmod.Wrapf(types.ErrInvalidProposalContent, "proposal title is longer than max length of %d", MaxTitleLength)
+		return errorsmod.Wrapf(ErrInvalidProposalContent, "proposal title is longer than max length of %d", MaxTitleLength)
 	}
 
 	description := c.GetDescription()
 	if len(description) == 0 {
-		return errorsmod.Wrap(types.ErrInvalidProposalContent, "proposal description cannot be blank")
+		return errorsmod.Wrap(ErrInvalidProposalContent, "proposal description cannot be blank")
 	}
 	if len(description) > MaxDescriptionLength {
-		return errorsmod.Wrapf(types.ErrInvalidProposalContent, "proposal description is longer than max length of %d", MaxDescriptionLength)
+		return errorsmod.Wrapf(ErrInvalidProposalContent, "proposal description is longer than max length of %d", MaxDescriptionLength)
 	}
 
 	return nil

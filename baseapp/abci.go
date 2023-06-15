@@ -1,9 +1,11 @@
 package baseapp
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -532,6 +534,34 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
+	if app.oeEnabled {
+		if app.oeInfo == nil {
+			completionSignal := make(chan struct{})
+			app.oeInfo = &OptimisticExecutionInfo{
+				Completion: completionSignal,
+				Request: &abci.RequestFinalizeBlock{
+					Txs:                req.Txs,
+					DecidedLastCommit:  req.ProposedLastCommit,
+					Misbehavior:        req.Misbehavior,
+					Hash:               req.Hash,
+					Height:             req.Height,
+					Time:               req.Time,
+					NextValidatorsHash: req.NextValidatorsHash,
+					ProposerAddress:    req.ProposerAddress,
+				},
+			}
+
+			go func() {
+				log.Println("Running OE ✅")
+				app.oeInfo.Response, app.oeInfo.Error = app.internalFinalizeBlock(app.oeInfo.Request)
+				app.oeInfo.Completion <- struct{}{}
+			}()
+
+		} else if !bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
+			app.oeInfo.Aborted = true
+		}
+	}
+
 	return resp, nil
 }
 
@@ -645,7 +675,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // skipped. This is to support compatibility with proposers injecting vote
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
-func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
@@ -711,7 +741,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			WithHeaderHash(req.Hash)
 	}
 
-	beginBlock := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
@@ -745,6 +779,22 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		ConsensusParamUpdates: &cp,
 		AppHash:               app.workingHash(),
 	}, nil
+}
+
+func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	defer func() {
+		app.oeInfo = nil
+	}()
+
+	if app.oeInfo != nil && app.oeEnabled {
+		<-app.oeInfo.Completion
+		if !app.oeInfo.Aborted && bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
+			return app.oeInfo.Response, app.oeInfo.Error
+		}
+	}
+
+	log.Println("NOT running OE ❌")
+	return app.internalFinalizeBlock(req)
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

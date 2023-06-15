@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -10,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/log"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -194,10 +193,10 @@ func GetConfigFromEnv() (*Config, error) {
 	}
 
 	errs = append(errs, cfg.validate()...)
-
 	if len(errs) > 0 {
-		return nil, cverrors.FlattenErrors(errs...)
+		return nil, errors.Join(errs...)
 	}
+
 	return cfg, nil
 }
 
@@ -212,20 +211,6 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	return duration, nil
-}
-
-// LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
-	if cfg == nil && err == nil {
-		return
-	}
-	logger.Info("configuration:")
-	switch {
-	case err != nil:
-		cverrors.LogErrors(logger, "configuration errors found", err)
-	case cfg != nil:
-		logger.Info(cfg.DetailString())
-	}
 }
 
 // validate returns an error if this config is invalid.

@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"errors"
+
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,8 +38,8 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 
 	// force-withdraw commission
-	valCommission, err := h.k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if err != nil {
+	valCommission, err := h.k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -96,7 +99,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 
 	// remove commission record
-	err = h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
+	err = h.k.ValidatorsAccumulatedCommission.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}

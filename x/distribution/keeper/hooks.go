@@ -96,7 +96,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 
 	// remove commission record
-	err = h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
+	err = h.k.ValidatorsAccumulatedCommission.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}

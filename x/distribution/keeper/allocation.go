@@ -101,7 +101,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, val.GetOperator(), currentCommission)
 	if err != nil {
 		return err
 	}

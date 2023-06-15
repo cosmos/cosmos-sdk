@@ -148,11 +148,6 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.V
 	return
 }
 
-// set accumulated commission for a validator
-func (k Keeper) SetValidatorAccumulatedCommission(ctx context.Context, val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) error {
-	return k.ValidatorsAccumulatedCommission.Set(ctx, val, commission)
-}
-
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)

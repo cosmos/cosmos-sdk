@@ -175,8 +175,10 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
-
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
+	if err != nil {
+		return nil, err
+	}
 	// update outstanding
 	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
 	if err != nil {

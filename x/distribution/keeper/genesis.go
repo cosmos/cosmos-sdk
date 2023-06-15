@@ -64,7 +64,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, acc.Accumulated)
 		if err != nil {
 			panic(err)
 		}

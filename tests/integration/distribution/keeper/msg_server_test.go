@@ -481,7 +481,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	require.NoError(t, err)
 
 	// set commission
-	err = f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr, distrtypes.ValidatorAccumulatedCommission{Commission: valCommission})
+	err = f.distrKeeper.ValidatorsAccumulatedCommission.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorAccumulatedCommission{Commission: valCommission})
 	require.NoError(t, err)
 
 	testCases := []struct {

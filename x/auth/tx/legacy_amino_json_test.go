@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +26,7 @@ var (
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
-	msg     = &types.QueryAccountRequest{Address: addr1.String()}
+	msg     = &types.MsgUpdateParams{Authority: addr1.String()}
 	memo    = "foo"
 	timeout = uint64(10)
 )
@@ -156,6 +157,7 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 	mode, _ := signing.APISignModeToInternal(modeHandler.Mode())
 	legacyAmino := codec.NewLegacyAmino()
 	legacytx.RegressionTestingAminoCodec = legacyAmino
+	legacy.RegisterAminoMsg(legacyAmino, &types.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
 
 	testcases := []struct {
 		name           string

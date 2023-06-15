@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/errors"
 
@@ -27,10 +26,7 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 // UpdateParams updates the params.
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if ms.authority != msg.Authority {
-		// this has been duplicated from the x/gov module to prevent a cyclic dependency
-		// see: https://github.com/cosmos/cosmos-sdk/blob/91d14c04accdd5ded86888514401f1cdd0949eb2/x/gov/types/errors.go#L20
-		duplicatedGovErr := fmt.Errorf("expected gov account as only signer for proposal message")
-		return nil, errors.Wrapf(duplicatedGovErr, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
+		return nil, errors.Wrapf(types.ErrGovInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {

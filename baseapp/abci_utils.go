@@ -40,6 +40,11 @@ type (
 		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
 		TotalBondedTokens(ctx sdk.Context) math.Int
 	}
+
+	// GasTx defines the contract that a transaction with a gas limit must implement.
+	GasTx interface {
+		GetGas() uint64
+	}
 )
 
 // ValidateVoteExtensions defines a helper function for verifying vote extension
@@ -191,10 +196,6 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			maxBlockGas = b.MaxGas
 		}
 
-		type GasTx interface {
-			GetGas() uint64
-		}
-
 		var (
 			selectedTxs  [][]byte
 			totalTxBytes int64
@@ -277,10 +278,28 @@ func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 	}
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		var totalTxGas uint64
+
+		var maxBlockGas int64
+		if b := ctx.ConsensusParams().Block; b != nil {
+			maxBlockGas = b.MaxGas
+		}
+
 		for _, txBytes := range req.Txs {
-			_, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
+			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+			}
+
+			if maxBlockGas > 0 {
+				gasTx, ok := tx.(GasTx)
+				if ok {
+					totalTxGas += gasTx.GetGas()
+				}
+
+				if totalTxGas > uint64(maxBlockGas) {
+					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				}
 			}
 		}
 

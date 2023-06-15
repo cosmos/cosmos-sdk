@@ -552,6 +552,12 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			}
 
 			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Println("⚡️⚡️⚡️ RECOVERED PANIC IN OE")
+						app.oeInfo.Panic = r
+					}
+				}()
 				log.Println("Running OE ✅")
 				app.oeInfo.Response, app.oeInfo.Error = app.internalFinalizeBlock(app.oeInfo.Request)
 				app.oeInfo.Completion <- struct{}{}
@@ -665,16 +671,6 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	return resp, err
 }
 
-// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
-// Specifically, it will execute an application's BeginBlock (if defined), followed
-// by the transactions in the proposal, finally followed by the application's
-// EndBlock (if defined).
-//
-// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
-// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
-// skipped. This is to support compatibility with proposers injecting vote
-// extensions into the proposal, which should not themselves be executed in cases
-// where they adhere to the sdk.Tx interface.
 func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
@@ -741,10 +737,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 			WithHeaderHash(req.Hash)
 	}
 
-	beginBlock, err := app.beginBlock(req)
-	if err != nil {
-		return nil, err
-	}
+	beginBlock := app.beginBlock(req)
 
 	events = append(events, beginBlock.Events...)
 
@@ -781,12 +774,26 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	}, nil
 }
 
+// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
+// Specifically, it will execute an application's BeginBlock (if defined), followed
+// by the transactions in the proposal, finally followed by the application's
+// EndBlock (if defined).
+//
+// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
+// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
+// skipped. This is to support compatibility with proposers injecting vote
+// extensions into the proposal, which should not themselves be executed in cases
+// where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	defer func() {
 		app.oeInfo = nil
 	}()
 
 	if app.oeInfo != nil && app.oeEnabled {
+		if app.oeInfo.Panic != nil {
+			panic(app.oeInfo.Panic)
+		}
+
 		<-app.oeInfo.Completion
 		if !app.oeInfo.Aborted && bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
 			return app.oeInfo.Response, app.oeInfo.Error

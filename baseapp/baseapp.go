@@ -683,7 +683,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -692,7 +692,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	if app.beginBlocker != nil {
 		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			return resp, err
+			panic(err)
 		}
 
 		// append BeginBlock attributes to all events in the EndBlock response
@@ -706,7 +706,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
-	return resp, nil
+	return resp
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {

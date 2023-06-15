@@ -8,4 +8,5 @@ type OptimisticExecutionInfo struct {
 	Request    *abci.RequestFinalizeBlock
 	Response   *abci.ResponseFinalizeBlock
 	Error      error
+	Panic      interface{}
 }

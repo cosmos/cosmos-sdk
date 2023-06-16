@@ -57,6 +57,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (x/auth/types) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
+* (migrations) [#](https://github.com/cosmos/cosmos-sdk/pull/) Add `WithConsensusParamsGetter` to allow other modules to access updated context with consensus parameters within the same block that executes migration.
+
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 

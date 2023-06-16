@@ -64,7 +64,7 @@ Gas consumption can be done manually, generally by the module developer in the [
 https://github.com/cometbft/cometbft/blob/v0.37.0/types/params.go#L66-L105
 ```
 
-When a new [transaction](../core/01-transactions.md) is being processed via `Finalize`, the current value of `BlockGasMeter` is checked to see if it is above the limit. If it is the transaction fails and returned to the consensus engine as a failed transaction. This can happen even with the first transaction in a block, as `FinalizeBlock` itself can consume gas. If not, the transaction is processed normally. At the end of `FinalizeBlock`, the gas tracked by `ctx.BlockGasMeter()` is increased by the amount consumed to process the transaction:
+When a new [transaction](../core/01-transactions.md) is being processed via `FinalizeBlock`, the current value of `BlockGasMeter` is checked to see if it is above the limit. If it is, the transaction fails and returned to the consensus engine as a failed transaction. This can happen even with the first transaction in a block, as `FinalizeBlock` itself can consume gas. If not, the transaction is processed normally. At the end of `FinalizeBlock`, the gas tracked by `ctx.BlockGasMeter()` is increased by the amount consumed to process the transaction:
 
 ```go
 ctx.BlockGasMeter().ConsumeGas(

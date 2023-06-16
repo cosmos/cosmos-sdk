@@ -712,9 +712,6 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 			if err != nil {
 				return sdk.BeginBlock{}, err
 			}
-			// Manager retrieves consensus parameters from the consensusParamsGetter and
-			// updates the context with these parameters if current module is upgrade module,
-			// so that Manager uses the updated context to execute BeginBlock.
 			if m.consensusParamsGetter != nil {
 				cp := ctx.ConsensusParams()
 				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params

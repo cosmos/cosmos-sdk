@@ -508,7 +508,6 @@ func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) cmtproto
 	return ret0
 }
 
-// BeginBlock indicates an expected call of BeginBlock.
 func (mr *MockConsensusParamGetterRecorder) GetConsensusParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsensusParams", reflect.TypeOf((*MockConsensusParamGetter)(nil).GetConsensusParams), arg0)

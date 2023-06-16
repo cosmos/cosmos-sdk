@@ -23,7 +23,6 @@ require (
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.10
@@ -57,7 +56,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.10.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/sync v0.2.0
+	golang.org/x/sync v0.3.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230525234020-1aefcd67740a
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
@@ -160,6 +159,12 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
+// Here are the short-lived replace from the Cosmos SDK
+// Replace here are pending PRs, or version to be tagged
+// replace (
+// 	<temporary replace>
+// )
+
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring
@@ -169,12 +174,14 @@ replace (
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
 retract (
+	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331
+	v0.46.12
 	// subject to a bug in the group module and gov module migration
 	[v0.46.5, v0.46.6]
 	// subject to the dragonberry vulnerability

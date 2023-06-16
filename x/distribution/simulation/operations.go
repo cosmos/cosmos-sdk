@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/collections"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/pkg/errors"
 )
 
 // Simulation operation weights constants
@@ -171,8 +173,8 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission, err := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
-		if err != nil {
+		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, validator.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
 

@@ -1,20 +1,19 @@
 package types
 
 import (
-	context "context"
+	"context"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/authz"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
-
-var _ authz.Authorization = &StakeAuthorization{}
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
@@ -62,11 +61,12 @@ func (a StakeAuthorization) MsgTypeURL() string {
 // is unspecified.
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(authz.ErrNegativeMaxTokens, "negative coin amount: %v", a.MaxTokens)
+		return errorsmod.Wrapf(fmt.Errorf("max tokens should be positive"),
+			"negative coin amount: %v", a.MaxTokens)
 	}
 
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return authz.ErrUnknownAuthorizationType
+		return fmt.Errorf("unknown authorization type")
 	}
 
 	return nil
@@ -190,6 +190,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(authz.ErrUnknownAuthorizationType, "cannot normalize authz type with %T", authzType)
+		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
+			"cannot normalize authz type with %T", authzType)
 	}
 }

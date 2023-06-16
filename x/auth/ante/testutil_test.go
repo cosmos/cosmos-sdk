@@ -34,7 +34,6 @@ import (
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -67,7 +66,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) // app.BaseApp.NewContext(isCheckTx, cmtproto.Header{}).WithBlockHeight(1)
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

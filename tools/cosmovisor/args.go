@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -216,7 +215,7 @@ func (cfg *Config) Logger(dst io.Writer) log.Logger {
 	var logger log.Logger
 
 	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
+		logger = log.NewNopLogger()
 	} else {
 		logger = log.NewLogger(dst,
 			log.ColorOption(cfg.ColorLogs),

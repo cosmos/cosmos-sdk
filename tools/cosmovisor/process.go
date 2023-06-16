@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,15 +15,16 @@ import (
 	"time"
 
 	"github.com/otiai10/copy"
-	"github.com/rs/zerolog"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
+var ErrUpgradeInfoNotFound = errors.New("upgrade-info.json not found")
+
 type Launcher struct {
-	logger *zerolog.Logger
+	logger log.Logger
 	cfg    *Config
 	fw     *fileWatcher
 }
@@ -33,8 +35,7 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 		return Launcher{}, err
 	}
 
-	zl := logger.Impl().(*zerolog.Logger)
-	return Launcher{logger: zl, cfg: cfg, fw: fw}, nil
+	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
@@ -50,7 +51,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
 
-	l.logger.Info().Str("path", bin).Strs("args", args).Msg("running app")
+	l.logger.Info("running app", "path", bin, "args", args)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -63,11 +64,16 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			l.logger.Fatal().Err(err).Str("bin", bin).Msg("terminated")
+			l.logger.Error("termined", "error", err, "bin", bin)
+			os.Exit(1)
 		}
 	}()
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
+		if errors.Is(err, ErrUpgradeInfoNotFound) {
+			return false, nil
+		}
+
 		return false, err
 	}
 
@@ -78,7 +84,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
-		if err := UpgradeBinary(log.NewCustomLogger(*l.logger), l.cfg, l.fw.currentInfo); err != nil {
+		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
 
@@ -98,11 +104,11 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 // It returns (true, nil) if an upgrade should be initiated (and we killed the process)
 // It returns (false, err) if the process died by itself, or there was an issue reading the upgrade-info file.
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
-// to happened with "start" but may happened with short-lived commands like `gaiad export ...`
+// to happen with "start" but may happen with short-lived commands like `simd export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		l.logger.Error().Err(err)
+		return false, ErrUpgradeInfoNotFound
 	}
 
 	cmdDone := make(chan error)
@@ -113,7 +119,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
-		l.logger.Info().Msg("daemon shutting down in an attempt to restart")
+		l.logger.Info("daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
@@ -153,7 +159,7 @@ func (l Launcher) doBackup() error {
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
 		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", stStr))
 
-		l.logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
+		l.logger.Info("starting to take backup of data directory", "backup start time", st)
 
 		// copy the $DAEMON_HOME/data to a backup dir
 		if err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst); err != nil {
@@ -162,7 +168,7 @@ func (l Launcher) doBackup() error {
 
 		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
-		l.logger.Info().Str("backup saved at", dst).Time("backup completion time", et).TimeDiff("time taken to complete backup", et, st).Msg("backup completed")
+		l.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
 	}
 
 	return nil
@@ -183,17 +189,17 @@ func (l *Launcher) doPreUpgrade() error {
 
 			switch err.(*exec.ExitError).ProcessState.ExitCode() {
 			case 1:
-				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
+				l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
 				return nil
 			case 30:
 				return fmt.Errorf("pre-upgrade command failed : %w", err)
 			case 31:
-				l.logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
+				l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
 				continue
 			}
 		}
 
-		l.logger.Info().Msg("pre-upgrade successful. continuing the upgrade.")
+		l.logger.Info("pre-upgrade successful. continuing the upgrade.")
 		return nil
 	}
 }
@@ -211,7 +217,7 @@ func (l *Launcher) executePreUpgradeCmd() error {
 		return err
 	}
 
-	l.logger.Info().Bytes("result", result).Msg("pre-upgrade result")
+	l.logger.Info("pre-upgrade result", "result", result)
 	return nil
 }
 

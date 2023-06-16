@@ -7,9 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -245,8 +243,7 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	output := zerolog.ConsoleWriter{Out: bufferedStdOut, TimeFormat: time.RFC3339Nano}
-	logger := log.NewCustomLogger(zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger())
+	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false)).With(log.ModuleKey, "cosmovisor")
 	return &bufferedStdOut, logger
 }
 

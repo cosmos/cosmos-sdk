@@ -140,11 +140,6 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValA
 	return
 }
 
-// set validator outstanding rewards
-func (k Keeper) SetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) error {
-	return k.ValidatorOutstandingRewards.Set(ctx, val, rewards)
-}
-
 // get slash event for height
 func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
 	store := k.storeService.OpenKVStore(ctx)

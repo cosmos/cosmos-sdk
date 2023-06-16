@@ -35,7 +35,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 	}
 
 	// set outstanding rewards
-	err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	err = k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 	return err
 }
 
@@ -70,7 +70,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+		err = k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), outstanding)
 		if err != nil {
 			return 0, err
 		}

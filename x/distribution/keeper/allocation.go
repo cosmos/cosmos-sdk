@@ -134,5 +134,5 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	}
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	return k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+	return k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), outstanding)
 }

@@ -189,7 +189,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		return nil, err
 	}
 	// update outstanding
-	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}

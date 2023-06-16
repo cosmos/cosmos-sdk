@@ -58,8 +58,8 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-		if err != nil {
+		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, val.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
 

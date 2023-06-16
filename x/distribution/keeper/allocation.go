@@ -128,8 +128,8 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		),
 	)
 
-	outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	if err != nil {
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, val.GetOperator())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 

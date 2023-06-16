@@ -57,8 +57,11 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
+			err := banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
+			if err != nil {
+				panic(err)
+			}
 			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
@@ -90,8 +93,11 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
+			err := banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(i)))))
+			if err != nil {
+				panic(err)
+			}
 			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
 		}
@@ -115,7 +121,10 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
 		if delegation.GetValidatorAddr().Equals(existingValAddr) {
-			k.RemoveDelegation(f.sdkCtx, delegation)
+			err := k.RemoveDelegation(f.sdkCtx, delegation)
+			if err != nil {
+				panic(err)
+			}
 			delegation.ValidatorAddress = newValAddr.String()
 			k.SetDelegation(f.sdkCtx, delegation)
 		}

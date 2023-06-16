@@ -887,9 +887,10 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 	// mint a non-staking token and send to an account
 	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
-	f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt)
-	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt)
-
+	err = f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt)
+	require.NoError(t, err)
+	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt)
+	require.NoError(t, err)
 	testCases := []struct {
 		name      string
 		msg       *distrtypes.MsgDepositValidatorRewardsPool

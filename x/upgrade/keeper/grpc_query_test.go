@@ -42,10 +42,10 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	})
-
+	suite.Require().NoError(err)
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -133,8 +133,8 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan)
-
+				err = suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan)
+				suite.Require().NoError(err)
 				req = &types.QueryAppliedPlanRequest{Name: planName}
 			},
 			true,

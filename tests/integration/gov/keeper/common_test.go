@@ -48,9 +48,12 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	f.stakingKeeper.SetValidator(f.ctx, val1)
 	f.stakingKeeper.SetValidator(f.ctx, val2)
 	f.stakingKeeper.SetValidator(f.ctx, val3)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val1)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val2)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val3)
+	err = f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val1)
+	assert.NilError(t, err)
+	err = f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val2)
+	assert.NilError(t, err)
+	err = f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val3)
+	assert.NilError(t, err)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val1)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val2)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3)
@@ -59,7 +62,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[2], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
-
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	return addrs, valAddrs
 }

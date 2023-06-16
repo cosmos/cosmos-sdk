@@ -28,7 +28,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 			panic(fmt.Sprintf("evidence with hash %s already exists", evi.Hash()))
 		}
 
-
 		if err := k.Evidences.Set(ctx, evi.Hash(), evi); err != nil {
 			panic(err)
 		}

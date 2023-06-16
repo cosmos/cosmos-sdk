@@ -95,10 +95,12 @@ func Example_basicUsage() {
 	})
 	// StopAndWait must be deferred before the error check,
 	// as the nodes value may contain some successfully started instances.
-	defer nodes.StopAndWait()
-	if err != nil {
-		panic(err)
-	}
+	defer func() {
+		err := nodes.StopAndWait()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check

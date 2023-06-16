@@ -43,7 +43,8 @@ func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, 
 		validator := testutil.NewValidator(t, addrVals[i], PKs[i])
 		validator, _ = validator.AddTokensFromDel(amt)
 		validator = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validator, true)
-		f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, validator)
+		err := f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, validator)
+		assert.NilError(t, err)
 	}
 
 	return f, addrDels, addrVals

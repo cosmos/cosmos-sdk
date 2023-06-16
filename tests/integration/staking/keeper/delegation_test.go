@@ -21,8 +21,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	ctx := f.sdkCtx
 
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, int64(1000))
-	f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
-
+	err := f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	assert.NilError(t, err)
 	addrDel := sdk.AccAddress([]byte("addr"))
 	accAmt := sdk.NewInt(10000)
 	initCoins := sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), accAmt))

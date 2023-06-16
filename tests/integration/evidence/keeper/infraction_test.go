@@ -182,11 +182,11 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, val))
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(val.Address()), info)
-
+	err = f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(val.Address()), info)
+	assert.NilError(t, err)
 	// handle a signature to set signing info
-	f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
-
+	err = f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
+	assert.NilError(t, err)
 	// double sign less than max age
 	oldTokens := f.stakingKeeper.Validator(ctx, operatorAddr).GetTokens()
 

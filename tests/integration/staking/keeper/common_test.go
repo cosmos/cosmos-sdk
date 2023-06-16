@@ -73,8 +73,10 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 
 	f.stakingKeeper.SetValidator(f.sdkCtx, val1)
 	f.stakingKeeper.SetValidator(f.sdkCtx, val2)
-	f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1)
-	f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2)
+	err := f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1)
+	assert.NilError(t, err)
+	err = f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2)
+	assert.NilError(t, err)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2)
 
@@ -145,8 +147,8 @@ func initFixture(t testing.TB) *fixture {
 	types.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	stakingKeeper.SetParams(sdkCtx, types.DefaultParams())
-
+	err := stakingKeeper.SetParams(sdkCtx, types.DefaultParams())
+	assert.NilError(t, err)
 	f := fixture{
 		app:           integrationApp,
 		sdkCtx:        sdkCtx,

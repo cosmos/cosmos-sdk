@@ -29,7 +29,10 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 		if err != nil {
 			panic(err)
 		}
-		keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		err = keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, array := range data.MissedBlocks {
@@ -60,7 +63,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
-	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	err = keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
@@ -79,6 +82,8 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 
 		return false
 	})
-
+	if err != nil {
+		panic(err)
+	}
 	return types.NewGenesisState(params, signingInfos, missedBlocks)
 }

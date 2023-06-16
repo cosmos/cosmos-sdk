@@ -140,7 +140,6 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 					ConsensusAddress: pk.PubKey().Address().String(),
 				}
 				suite.Require().NoError(suite.keeper.Evidences.Set(suite.ctx, ev.Hash(), ev))
-
 			},
 			true,
 			func() {},

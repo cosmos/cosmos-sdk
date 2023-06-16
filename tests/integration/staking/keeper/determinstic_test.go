@@ -117,8 +117,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
-
+	err := stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(t, err)
 	// set pools
 	startTokens := stakingKeeper.TokensFromConsensusPower(sdkCtx, 10)
 	bondDenom := stakingKeeper.BondDenom(sdkCtx)
@@ -222,13 +222,14 @@ func createAndSetValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) s
 func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.Validator) {
 	f.stakingKeeper.SetValidator(f.ctx, validator)
 	f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator)
+	err := f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator)
+	assert.NilError(t, err)
 	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
-	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins)
-
+	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins)
+	assert.NilError(t, err)
 	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
 }
@@ -312,8 +313,10 @@ func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
-	banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins)
-
+	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins)
+	if err != nil {
+		return nil, err
+	}
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
 	return shares, err
 }

@@ -420,11 +420,11 @@ func TestBinaryVersion(t *testing.T) {
 				require.NoError(t, err)
 
 				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
-				s.keeper.ApplyUpgrade(newCtx, types.Plan{
+				err = s.keeper.ApplyUpgrade(newCtx, types.Plan{
 					Name:   "test0",
 					Height: 12,
 				})
-
+				require.NoError(t, err)
 				return newCtx
 			},
 			false,

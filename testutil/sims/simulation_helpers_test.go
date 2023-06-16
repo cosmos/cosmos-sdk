@@ -118,7 +118,10 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	require.NotPanics(t, func() { ms.MountStoreWithDB(key1, storetypes.StoreTypeIAVL, db) })
 	require.NotPanics(t, func() { ms.MountStoreWithDB(key2, storetypes.StoreTypeIAVL, db) })
 	require.NotPanics(t, func() {
-		ms.LoadLatestVersion()
+		err := ms.LoadLatestVersion()
+		if err != nil {
+			panic(err)
+		}
 	})
 	return ms.GetKVStore(key1), ms.GetKVStore(key2)
 }

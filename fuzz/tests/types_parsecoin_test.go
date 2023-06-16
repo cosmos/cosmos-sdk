@@ -10,6 +10,9 @@ import (
 
 func FuzzTypesParseCoin(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
-		types.ParseCoinNormalized(string(data))
+		_, err := types.ParseCoinNormalized(string(data))
+		if err != nil {
+			panic(err)
+		}
 	})
 }

@@ -126,7 +126,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			require.NoError(t, err)
 			ctx := bapp.NewContext(false)
 
-
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
 			feeAmount := sdk.NewCoins(feeCoin)

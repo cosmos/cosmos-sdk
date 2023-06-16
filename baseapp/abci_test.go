@@ -337,7 +337,8 @@ func TestBaseApp_Precommit(t *testing.T) {
 	})
 	app.Seal()
 
-	app.Commit()
+	_, err = app.Commit()
+	require.NoError(t, err)
 	require.Equal(t, true, wasPrecommiterCalled)
 }
 
@@ -384,7 +385,8 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
 	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
 
-	suite.baseApp.Commit()
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 
 	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
@@ -436,7 +438,8 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
 		}
 
-		suite.baseApp.Commit()
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
 	}
 }
 
@@ -462,10 +465,11 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Txs:    [][]byte{txBytes},
 	})
+	require.NoError(t, err)
 
 	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
@@ -569,8 +573,10 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
-		suite.baseApp.Commit()
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
+		require.NoError(t, err)
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
 	}
 }
 
@@ -589,9 +595,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
+	require.NoError(t, err)
 
 	// transaction with no messages
 	{
@@ -979,7 +986,7 @@ func TestABCI_Query(t *testing.T) {
 	bz, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 		Txs:    [][]byte{bz},
 	})
@@ -990,7 +997,8 @@ func TestABCI_Query(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query returns correct value after Commit
-	suite.baseApp.Commit()
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 
 	res, err = suite.baseApp.Query(context.TODO(), &query)
 	require.NoError(t, err)
@@ -1122,8 +1130,10 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	app.Commit()
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	require.Equal(t, true, wasPrepareCheckStateCalled)
 }
@@ -1144,8 +1154,10 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	app.Commit()
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	require.Equal(t, true, wasPrecommiterCalled)
 }

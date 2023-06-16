@@ -151,7 +151,7 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			return false, nil
 		})
 		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
-
+			return sdk.FormatInvariant(types.ModuleName, "module account coins", err.Error()), true
 		}
 
 		communityPool, err := k.FeePool.Get(ctx)

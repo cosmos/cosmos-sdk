@@ -527,12 +527,24 @@ func TestManager_BeginBlock_WithConsensusParamsGetter(t *testing.T) {
 		"upgrade": mockUpgradeModule,
 	}).WithConsensusParamsGetter(mockParamsGetter)
 
+	// Create a context with a nil consensus params object and an empty event manager
+	ctx := sdk.Context{}
+
 	mockUpgradeModule.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Return(&cmtproto.ConsensusParams{
+	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Times(1).Return(&cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{MaxBytes: 1000},
 	})
-	ctx := sdk.Context{}
 	_, err := m.BeginBlock(ctx)
+	require.NoError(t, err)
+
+	// Create a context with a consensus params object and an empty event manager
+	ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxBytes: 1000},
+	})
+
+	mockUpgradeModule.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Times(0)
+	_, err = m.BeginBlock(ctx)
 	require.NoError(t, err)
 }
 

@@ -22,7 +22,7 @@ const (
 	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
 	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
 
-	DistributionModuleName = "distribution"
+	distributionModuleName = "distribution"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

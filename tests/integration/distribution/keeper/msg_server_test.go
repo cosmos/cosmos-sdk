@@ -200,7 +200,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	err = f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards)
 	require.NoError(t, err)
-	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
 	initOutstandingRewards, err := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
 	assert.NilError(t, err)
@@ -302,7 +302,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				// check rewards
 				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
 				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
+				assert.NilError(t, err)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
@@ -477,7 +478,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	assert.DeepEqual(t, expCoins, balance)
 
 	// set outstanding rewards
-	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
 
 	// set commission
@@ -947,7 +948,8 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				assert.NilError(t, err)
 
 				// check validator outstanding rewards
-				outstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, val)
+				outstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, val)
+				assert.NilError(t, err)
 				for _, c := range tc.msg.Amount {
 					x := outstandingRewards.Rewards.AmountOf(c.Denom)
 					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))

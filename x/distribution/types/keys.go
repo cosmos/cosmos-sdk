@@ -44,32 +44,17 @@ const (
 //
 // - 0x09: Params
 var (
-	FeePoolKey                        = collections.NewPrefix(0) // key for global distribution state
-	ProposerKey                       = []byte{0x01}             // key for the proposer operator address
-	ValidatorOutstandingRewardsPrefix = []byte{0x02}             // key for outstanding rewards
-
+	FeePoolKey                           = collections.NewPrefix(0) // key for global distribution state
+	ProposerKey                          = []byte{0x01}             // key for the proposer operator address
+	ValidatorOutstandingRewardsPrefix    = collections.NewPrefix(2) // key for outstanding rewards
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = collections.NewPrefix(4) // key for delegator starting info
 	ValidatorHistoricalRewardsPrefix     = []byte{0x05}             // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = collections.NewPrefix(6) // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
-
-	ParamsKey = collections.NewPrefix(9) // key for distribution module params
+	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
-
-// GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
-func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x02<valAddrLen (1 Byte)><valAddr_Bytes>
-
-	// Remove prefix and address length.
-	kv.AssertKeyAtLeastLength(key, 3)
-	addr := key[2:]
-	kv.AssertKeyLength(addr, int(key[1]))
-
-	return sdk.ValAddress(addr)
-}
 
 // GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
@@ -85,19 +70,6 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	return
 }
 
-// GetValidatorAccumulatedCommissionAddress creates the address from a validator's accumulated commission key.
-func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
-
-	// Remove prefix and address length.
-	kv.AssertKeyAtLeastLength(key, 3)
-	addr := key[2:]
-	kv.AssertKeyLength(addr, int(key[1]))
-
-	return sdk.ValAddress(addr)
-}
-
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
 	// key is in the format:
@@ -111,11 +83,6 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
-}
-
-// GetValidatorOutstandingRewardsKey creates the outstanding rewards key for a validator.
-func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
-	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
 }
 
 // GetValidatorHistoricalRewardsPrefix creates the prefix key for a validator's historical rewards.

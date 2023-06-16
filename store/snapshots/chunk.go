@@ -59,6 +59,10 @@ func (w *ChunkWriter) Close() error {
 // CloseWithError closes the writer and sends an error to the reader.
 func (w *ChunkWriter) CloseWithError(err error) {
 	if !w.closed {
+		if w.pipe == nil {
+			// create a dummy pipe just to propagate the error to the reader
+			_ = w.chunk()
+		}
 		w.closed = true
 		close(w.ch)
 		if w.pipe != nil {

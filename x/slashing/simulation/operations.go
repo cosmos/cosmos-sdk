@@ -63,7 +63,12 @@ func SimulateMsgUnjail(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgUnjail{})
 
-		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
+		allVals, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get all validators"), nil, err
+		}
+
+		validator, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not ok"), nil, nil // skip
 		}
@@ -87,7 +92,11 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}
 
-		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		selfDel, err := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, err
+		}
+
 		if selfDel == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}

@@ -53,7 +53,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val, nil).AnyTimes()
 
 	// allocate tokens
 	tokens := sdk.DecCoins{
@@ -111,14 +111,14 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	val0, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
 	val0.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0, nil).AnyTimes()
 
 	// create second validator with 0% commission
 	valAddr1 := sdk.ValAddress(valConsAddr1)
 	val1, err := distrtestutil.CreateValidator(valConsPk1, math.NewInt(100))
 	require.NoError(t, err)
 	val1.Commission = stakingtypes.NewCommission(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1, nil).AnyTimes()
 
 	abciValA := abci.Validator{
 		Address: valConsPk0.Address(),
@@ -237,21 +237,21 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	val0, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
 	val0.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val0, nil).AnyTimes()
 
 	// create second validator with 10% commission
 	valAddr1 := sdk.ValAddress(valConsAddr1)
 	val1, err := distrtestutil.CreateValidator(valConsPk1, math.NewInt(100))
 	require.NoError(t, err)
 	val1.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1, nil).AnyTimes()
 
 	// create third validator with 10% commission
 	valAddr2 := sdk.ValAddress(valConsAddr2)
 	val2, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr2), valConsPk1, stakingtypes.Description{})
 	require.NoError(t, err)
 	val2.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
-	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2, nil).AnyTimes()
 
 	abciValA := abci.Validator{
 		Address: valConsPk0.Address(),

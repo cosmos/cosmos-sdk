@@ -201,8 +201,7 @@ func NewSimApp(
 	// create and set dummy vote extension handler
 	voteExtOp := func(bApp *baseapp.BaseApp) {
 		voteExtHandler := NewVoteExtensionHandler()
-		bApp.SetExtendVoteHandler(voteExtHandler.ExtendVote())
-		bApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtension())
+		voteExtHandler.SetHandlers(bApp)
 	}
 	baseAppOptions = append(baseAppOptions, voteExtOp)
 

@@ -8,24 +8,32 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
+	// VoteExtension defines the structure used to create a dummy vote extension.
 	VoteExtension struct {
 		Hash   []byte
 		Height int64
 		Data   []byte
 	}
 
+	// VoteExtensionHandler defines a dummy vote extension handler for SimApp.
 	VoteExtensionHandler struct{}
 )
 
-func NewVoteExtensionHandler() VoteExtensionHandler {
-	return VoteExtensionHandler{}
+func NewVoteExtensionHandler() *VoteExtensionHandler {
+	return &VoteExtensionHandler{}
 }
 
-func (h VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
+func (h *VoteExtensionHandler) SetHandlers(bApp *baseapp.BaseApp) {
+	bApp.SetExtendVoteHandler(h.ExtendVote())
+	bApp.SetVerifyVoteExtensionHandler(h.VerifyVoteExtension())
+}
+
+func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 	return func(_ sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 		buf := make([]byte, 1024)
 
@@ -51,7 +59,7 @@ func (h VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 	}
 }
 
-func (h VoteExtensionHandler) VerifyVoteExtension() sdk.VerifyVoteExtensionHandler {
+func (h *VoteExtensionHandler) VerifyVoteExtension() sdk.VerifyVoteExtensionHandler {
 	return func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		var ve VoteExtension
 

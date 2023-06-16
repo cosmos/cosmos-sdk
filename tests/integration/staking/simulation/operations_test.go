@@ -204,7 +204,6 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
-	require.NoError(err)
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
@@ -213,7 +212,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 
 	// execute operation
@@ -302,7 +301,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 
 	// execute operation
@@ -345,7 +344,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 
 	// execute operation

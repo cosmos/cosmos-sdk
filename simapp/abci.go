@@ -13,15 +13,18 @@ import (
 )
 
 type (
+	// VoteExtensionHandler defines a dummy vote extension handler for SimApp.
+	//
+	// NOTE: This implementation is solely used for testing purposes. DO NOT use
+	// in a production application!
+	VoteExtensionHandler struct{}
+
 	// VoteExtension defines the structure used to create a dummy vote extension.
 	VoteExtension struct {
 		Hash   []byte
 		Height int64
 		Data   []byte
 	}
-
-	// VoteExtensionHandler defines a dummy vote extension handler for SimApp.
-	VoteExtensionHandler struct{}
 )
 
 func NewVoteExtensionHandler() *VoteExtensionHandler {

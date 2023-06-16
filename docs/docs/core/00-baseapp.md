@@ -82,14 +82,14 @@ First, the important parameters that are initialized during the bootstrapping of
   [`CheckTx/RecheckTx`](#checktx) and [`FinalizeBlock`](#finalizeblock).
 * [`InitChainer`](../basics/00-app-anatomy.md#initchainer),
   [`BeginBlocker` and `EndBlocker`](../basics/00-app-anatomy.md#beginblocker-and-endblocker): These are
-  the functions executed when the application receives the `InitChain`, `BeginBlock` and `EndBlock`
+  the functions executed when the application receives the `InitChain` and `FinalizeBlock`
   ABCI messages from the underlying CometBFT engine.
 
 Then, parameters used to define [volatile states](#state-updates) (i.e. cached states):
 
 * `checkState`: This state is updated during [`CheckTx`](#checktx), and reset on [`Commit`](#commit).
 * `finalizeBlockState`: This state is updated during [`FinalizeBlock`](#finalizeblock), and set to `nil` on
-  [`Commit`](#commit) and gets re-initialized on BeginBlock.
+  [`Commit`](#commit) and gets re-initialized on `FinalizeBlock`.
 * `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
 * `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
 
@@ -205,7 +205,7 @@ the AnteHandler are persisted.
 During `Commit` all the state transitions that occurred in the `finalizeBlockState` are finally written to
 the root `CommitMultiStore` which in turn is committed to disk and results in a new application
 root hash. These state transitions are now considered final. Finally, the `checkState` is set to the
-newly committed state and `finalizeBlockState` is set to `nil` to be reset on `BeginBlock`.
+newly committed state and `finalizeBlockState` is set to `nil` to be reset on `FinalizeBlock`.
 
 ![Commit](./baseapp_state-commit.png)
 
@@ -279,7 +279,7 @@ It's important to note that `PrepareProposal` complements the `ProcessProposal` 
 
 ### Process Proposal
 
-The `ProcessProposal` function is called by the BaseApp as part of the ABCI message flow, and is executed during the `BeginBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
+The `ProcessProposal` function is called by the BaseApp as part of the ABCI message flow, and is executed during the `FinalizeBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
 
 The `ProcessProposal` function performs several key tasks, including:
 

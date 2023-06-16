@@ -57,7 +57,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.Equal(t, sendAuth.String(), resp.Updated.String())
 
 	t.Log("expect updated authorization nil after spending remaining amount")
-	resp, err = resp.Updated.Accept(ctx, send)
+	resp, err = resp.Updated.(*types.SendAuthorization).Accept(ctx, send)
 	require.NoError(t, err)
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)

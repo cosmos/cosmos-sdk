@@ -24,6 +24,7 @@ var (
 	flagInsecure = "insecure"
 	flagUpdate   = "update"
 	flagConfig   = "config"
+	flagLong     = "long"
 )
 
 func RootCommand() (*cobra.Command, error) {
@@ -49,7 +50,11 @@ func RootCommand() (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
-	commands = append(commands, InitCommand(config, configDir))
+	commands = append(
+		commands,
+		InitCommand(config, configDir),
+		VersionCmd(),
+	)
 
 	cmd.AddCommand(commands...)
 	return cmd, nil

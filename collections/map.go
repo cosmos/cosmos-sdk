@@ -65,11 +65,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 	}
 
 	kvStore := m.sa(ctx)
-	err = kvStore.Set(bytesKey, valueBytes)
-	if err != nil {
-		return err
-	}
-	return nil
+	return kvStore.Set(bytesKey, valueBytes)
 }
 
 // Get returns the value associated with the provided key,

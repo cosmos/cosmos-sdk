@@ -155,9 +155,8 @@ func SimulateMsgRevokeAllowance(
 			hasGrant = true
 			return true
 		})
-		var empty simtypes.OperationMsg
 		if err != nil {
-			return empty, nil, err
+			return simtypes.OperationMsg{}, nil, err
 		}
 
 		if !hasGrant {

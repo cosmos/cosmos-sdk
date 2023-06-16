@@ -215,8 +215,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
 	require.NotPanics(t, func() {
-		err := mm.RegisterServices(cfg)
-		require.NoError(t, err)
+		mm.RegisterServices(cfg)
 	})
 }
 

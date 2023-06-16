@@ -1232,7 +1232,10 @@ func flushCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	}
 
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
-	_ = batch.Set([]byte(cInfoKey), bz)
+	err = batch.Set([]byte(cInfoKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func flushLatestVersion(batch dbm.Batch, version int64) {
@@ -1241,5 +1244,8 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 		panic(err)
 	}
 
-	_ = batch.Set([]byte(latestVersionKey), bz)
+	err = batch.Set([]byte(latestVersionKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }

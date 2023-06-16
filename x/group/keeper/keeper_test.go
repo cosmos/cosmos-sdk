@@ -457,7 +457,9 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := module.EndBlocker(ctx, s.groupKeeper)
-		s.Require().NoError(err)
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 
@@ -522,7 +524,9 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := module.EndBlocker(ctx, s.groupKeeper)
-		s.Require().NoError(err)
+		if err != nil {
+			panic(err)
+		}
 	})
 
 	// member 2 (high weight) leaves group.
@@ -535,6 +539,8 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := module.EndBlocker(ctx, s.groupKeeper)
-		s.Require().NoError(err)
+		if err != nil {
+			panic(err)
+		}
 	})
 }

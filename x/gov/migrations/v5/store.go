@@ -38,9 +38,5 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
-	err = store.Set(v4.ParamsKey, bz)
-	if err != nil {
-		return err
-	}
-	return nil
+	return store.Set(v4.ParamsKey, bz)
 }

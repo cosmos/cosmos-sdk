@@ -11,13 +11,13 @@ To generate the proto file, the Cosmos SDK uses a docker image, this image is pr
 Below is the example of the Cosmos SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/Makefile#L411-L432
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/Makefile#L411-L432
 ```
 
 The script used to generate the protobuf files can be found in the `scripts/` directory. 
 
 ```shell reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/protocgen.sh#L1-L37
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protocgen.sh
 ```
 
 ## Buf

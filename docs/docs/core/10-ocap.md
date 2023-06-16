@@ -68,10 +68,9 @@ sumValue := externalModule.ComputeSumValue(*account)
 In the Cosmos SDK, you can see the application of this principle in simapp.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go#L294-L318
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go
 ```
 
 The following diagram shows the current dependencies between keepers.
 
 ![Keeper dependencies](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/keeper_dependencies.svg)
-

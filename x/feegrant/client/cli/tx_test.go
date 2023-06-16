@@ -13,9 +13,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -451,7 +454,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		respType     proto.Message
 	}{
 		{
-			"invalid grantee",
+			"invalid granter",
 			append(
 				[]string{
 					"wrong_granter",

@@ -5,17 +5,21 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections/indexes"
+
 	"cosmossdk.io/collections"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -53,27 +57,54 @@ type AccountKeeperI interface {
 
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
+
+	AddressCodec() address.Codec
+}
+
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, types.AccountNumberStoreKeyPrefix, "account_by_number", collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v sdk.AccountI) (uint64, error) {
+				return v.GetAccountNumber(), nil
+			},
+		),
+	}
+}
+
+type AccountsIndexes struct {
+	// Number is a unique index that indexes accounts by their account number.
+	Number *indexes.Unique[uint64, sdk.AccAddress, sdk.AccountI]
+}
+
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.AccountI] {
+	return []collections.Index[sdk.AccAddress, sdk.AccountI]{
+		a.Number,
+	}
 }
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
+	addressCodec address.Codec
+
 	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
+	bech32Prefix string
 
 	// The prototypical AccountI constructor.
-	proto      func() sdk.AccountI
-	addressCdc address.Codec
+	proto func() sdk.AccountI
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
 
 	// State
-
-	ParamsState   collections.Item[types.Params] // NOTE: name is this because it conflicts with the Params gRPC method impl
+	Schema        collections.Schema
+	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
+	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -93,20 +124,26 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	bech32Codec := NewBech32Codec(bech32Prefix)
-
 	sb := collections.NewSchemaBuilder(storeService)
 
-	return AccountKeeper{
+	ak := AccountKeeper{
+		addressCodec:  authcodec.NewBech32Codec(bech32Prefix),
+		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
 		cdc:           cdc,
 		permAddrs:     permAddrs,
-		addressCdc:    bech32Codec,
 		authority:     authority,
-		ParamsState:   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	ak.Schema = schema
+	return ak
 }
 
 // GetAuthority returns the x/auth module's authority.
@@ -114,10 +151,10 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
-// GetAddressCodec returns the x/auth module's address.
+// AddressCodec returns the x/auth module's address.
 // x/auth is tied to bech32 encoded user accounts
-func (ak AccountKeeper) GetAddressCodec() address.Codec {
-	return ak.addressCdc
+func (ak AccountKeeper) AddressCodec() address.Codec {
+	return ak.addressCodec
 }
 
 // Logger returns a module-specific logger.
@@ -230,49 +267,14 @@ func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAcc
 	ak.SetAccount(ctx, macc)
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) sdk.AccountI {
-	acc, err := ak.UnmarshalAccount(bz)
-	if err != nil {
-		panic(err)
-	}
-
-	return acc
-}
-
-// MarshalAccount protobuf serializes an Account interface
-func (ak AccountKeeper) MarshalAccount(accountI sdk.AccountI) ([]byte, error) {
-	return ak.cdc.MarshalInterface(accountI)
-}
-
-// UnmarshalAccount returns an Account interface from raw encoded account
-// bytes of a Proto-based Account type
-func (ak AccountKeeper) UnmarshalAccount(bz []byte) (sdk.AccountI, error) {
-	var acc sdk.AccountI
-	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
-}
-
-// GetCodec return codec.Codec object used by the keeper
-func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
-
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdc.(bech32Codec)
-	if !ok {
-		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
-	}
-
-	return bech32Codec.bech32Prefix, nil
-}
-
-// SetParams sets the auth module's parameters.
-// CONTRACT: This method performs no validation of the parameters.
-func (ak AccountKeeper) SetParams(ctx context.Context, params types.Params) error {
-	return ak.ParamsState.Set(ctx, params)
+	return ak.bech32Prefix, nil
 }
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	params, err := ak.ParamsState.Get(ctx)
+	params, err := ak.Params.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}

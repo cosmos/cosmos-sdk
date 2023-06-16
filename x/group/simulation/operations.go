@@ -101,76 +101,48 @@ func WeightedOperations(
 		weightMsgCreateGroupWithPolicy           int
 	)
 
-	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateGroup = WeightMsgCreateGroup
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgCreateGroupPolicy, &weightMsgCreateGroupPolicy, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgLeaveGroup, &weightMsgLeaveGroup, nil,
-		func(_ *rand.Rand) {
-			weightMsgLeaveGroup = WeightMsgLeaveGroup
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgSubmitProposal, &weightMsgSubmitProposal, nil,
-		func(_ *rand.Rand) {
-			weightMsgSubmitProposal = WeightMsgSubmitProposal
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgVote, &weightMsgVote, nil,
-		func(_ *rand.Rand) {
-			weightMsgVote = WeightMsgVote
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgExec, &weightMsgExec, nil,
-		func(_ *rand.Rand) {
-			weightMsgExec = WeightMsgExec
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupMetadata, &weightMsgUpdateGroupMetadata, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupMetadata = WeightMsgUpdateGroupMetadata
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupAdmin, &weightMsgUpdateGroupAdmin, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupAdmin = WeightMsgUpdateGroupAdmin
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupMembers, &weightMsgUpdateGroupMembers, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupMembers = WeightMsgUpdateGroupMembers
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupPolicyAdmin, &weightMsgUpdateGroupPolicyAdmin, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupPolicyAdmin = WeightMsgUpdateGroupPolicyAdmin
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupPolicyDecisionPolicy, &weightMsgUpdateGroupPolicyDecisionPolicy, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupPolicyDecisionPolicy = WeightMsgUpdateGroupPolicyDecisionPolicy
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupPolicyMetaData, &weightMsgUpdateGroupPolicyMetadata, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
-		},
-	)
-	appParams.GetOrGenerate(cdc, OpMsgWithdrawProposal, &weightMsgWithdrawProposal, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawProposal = WeightMsgWithdrawProposal
-		},
-	)
+	appParams.GetOrGenerate(OpMsgCreateGroup, &weightMsgCreateGroup, nil, func(_ *rand.Rand) {
+		weightMsgCreateGroup = WeightMsgCreateGroup
+	})
+	appParams.GetOrGenerate(OpMsgCreateGroupPolicy, &weightMsgCreateGroupPolicy, nil, func(_ *rand.Rand) {
+		weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
+	})
+	appParams.GetOrGenerate(OpMsgLeaveGroup, &weightMsgLeaveGroup, nil, func(_ *rand.Rand) {
+		weightMsgLeaveGroup = WeightMsgLeaveGroup
+	})
+	appParams.GetOrGenerate(OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil, func(_ *rand.Rand) {
+		weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
+	})
+	appParams.GetOrGenerate(OpMsgSubmitProposal, &weightMsgSubmitProposal, nil, func(_ *rand.Rand) {
+		weightMsgSubmitProposal = WeightMsgSubmitProposal
+	})
+	appParams.GetOrGenerate(OpMsgVote, &weightMsgVote, nil, func(_ *rand.Rand) {
+		weightMsgVote = WeightMsgVote
+	})
+	appParams.GetOrGenerate(OpMsgExec, &weightMsgExec, nil, func(_ *rand.Rand) {
+		weightMsgExec = WeightMsgExec
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupMetadata, &weightMsgUpdateGroupMetadata, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupMetadata = WeightMsgUpdateGroupMetadata
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupAdmin, &weightMsgUpdateGroupAdmin, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupAdmin = WeightMsgUpdateGroupAdmin
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupMembers, &weightMsgUpdateGroupMembers, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupMembers = WeightMsgUpdateGroupMembers
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupPolicyAdmin, &weightMsgUpdateGroupPolicyAdmin, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupPolicyAdmin = WeightMsgUpdateGroupPolicyAdmin
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupPolicyDecisionPolicy, &weightMsgUpdateGroupPolicyDecisionPolicy, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupPolicyDecisionPolicy = WeightMsgUpdateGroupPolicyDecisionPolicy
+	})
+	appParams.GetOrGenerate(OpMsgUpdateGroupPolicyMetaData, &weightMsgUpdateGroupPolicyMetadata, nil, func(_ *rand.Rand) {
+		weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
+	})
+	appParams.GetOrGenerate(OpMsgWithdrawProposal, &weightMsgWithdrawProposal, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawProposal = WeightMsgWithdrawProposal
+	})
 
 	pCdc := codec.NewProtoCodec(registry)
 
@@ -287,7 +259,7 @@ func SimulateMsgCreateGroup(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -351,7 +323,7 @@ func SimulateMsgCreateGroupWithPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -417,7 +389,7 @@ func SimulateMsgCreateGroupPolicy(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -498,7 +470,7 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -563,7 +535,7 @@ func SimulateMsgUpdateGroupAdmin(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -619,7 +591,7 @@ func SimulateMsgUpdateGroupMetadata(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -702,7 +674,7 @@ func SimulateMsgUpdateGroupMembers(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -767,7 +739,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -831,7 +803,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -887,7 +859,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -995,7 +967,7 @@ func SimulateMsgWithdrawProposal(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1103,7 +1075,7 @@ func SimulateMsgVote(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1183,7 +1155,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 
@@ -1247,7 +1219,7 @@ func SimulateMsgLeaveGroup(
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, ""), nil, err
 	}
 }
 

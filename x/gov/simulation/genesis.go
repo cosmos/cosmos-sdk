@@ -55,13 +55,13 @@ func GenExpeditedMinDeposit(r *rand.Rand, bondDenom string) sdk.Coins {
 }
 
 // GenDepositMinInitialRatio returns randomized DepositMinInitialRatio
-func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
+func GenDepositMinInitialDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }
 
 // GenProposalCancelRate returns randomized ProposalCancelRate
-func GenProposalCancelRate(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
+func GenProposalCancelRate(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }
 
 // GenVotingPeriod returns randomized VotingPeriod
@@ -85,7 +85,7 @@ func GenThreshold(r *rand.Rand) sdkmath.LegacyDec {
 }
 
 // GenExpeditedThreshold randomized ExpeditedThreshold
-func GenExpeditedThreshold(r *rand.Rand) sdk.Dec {
+func GenExpeditedThreshold(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
 }
 
@@ -99,70 +99,37 @@ func RandomizedGenState(simState *module.SimulationState) {
 	startingProposalID := uint64(simState.Rand.Intn(100))
 
 	var minDeposit sdk.Coins
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MinDeposit, &minDeposit, simState.Rand,
-		func(r *rand.Rand) { minDeposit = GenMinDeposit(r, simState.BondDenom) },
-	)
+	simState.AppParams.GetOrGenerate(MinDeposit, &minDeposit, simState.Rand, func(r *rand.Rand) { minDeposit = GenMinDeposit(r, simState.BondDenom) })
 
 	var expeditedMinDeposit sdk.Coins
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, ExpeditedMinDeposit, &expeditedMinDeposit, simState.Rand,
-		func(r *rand.Rand) { expeditedMinDeposit = GenExpeditedMinDeposit(r, simState.BondDenom) },
-	)
+	simState.AppParams.GetOrGenerate(ExpeditedMinDeposit, &expeditedMinDeposit, simState.Rand, func(r *rand.Rand) { expeditedMinDeposit = GenExpeditedMinDeposit(r, simState.BondDenom) })
 
 	var depositPeriod time.Duration
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, DepositPeriod, &depositPeriod, simState.Rand,
-		func(r *rand.Rand) { depositPeriod = GenDepositPeriod(r) },
-	)
+	simState.AppParams.GetOrGenerate(DepositPeriod, &depositPeriod, simState.Rand, func(r *rand.Rand) { depositPeriod = GenDepositPeriod(r) })
 
-	var minInitialDepositRatio sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MinInitialRatio, &minInitialDepositRatio, simState.Rand,
-		func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) },
-	)
+	var minInitialDepositRatio sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(MinInitialRatio, &minInitialDepositRatio, simState.Rand, func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) })
 
-	var proposalCancelRate sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, ProposalCancelRate, &proposalCancelRate, simState.Rand,
-		func(r *rand.Rand) { proposalCancelRate = GenProposalCancelRate(r) },
-	)
+	var proposalCancelRate sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(ProposalCancelRate, &proposalCancelRate, simState.Rand, func(r *rand.Rand) { proposalCancelRate = GenProposalCancelRate(r) })
 
 	var votingPeriod time.Duration
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, VotingPeriod, &votingPeriod, simState.Rand,
-		func(r *rand.Rand) { votingPeriod = GenVotingPeriod(r) },
-	)
+	simState.AppParams.GetOrGenerate(VotingPeriod, &votingPeriod, simState.Rand, func(r *rand.Rand) { votingPeriod = GenVotingPeriod(r) })
 
 	var expeditedVotingPeriod time.Duration
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, ExpeditedVotingPeriod, &expeditedVotingPeriod, simState.Rand,
-		func(r *rand.Rand) { expeditedVotingPeriod = GenExpeditedVotingPeriod(r) },
-	)
+	simState.AppParams.GetOrGenerate(ExpeditedVotingPeriod, &expeditedVotingPeriod, simState.Rand, func(r *rand.Rand) { expeditedVotingPeriod = GenExpeditedVotingPeriod(r) })
 
-	var quorum sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Quorum, &quorum, simState.Rand,
-		func(r *rand.Rand) { quorum = GenQuorum(r) },
-	)
+	var quorum sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(Quorum, &quorum, simState.Rand, func(r *rand.Rand) { quorum = GenQuorum(r) })
 
-	var threshold sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Threshold, &threshold, simState.Rand,
-		func(r *rand.Rand) { threshold = GenThreshold(r) },
-	)
+	var threshold sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(Threshold, &threshold, simState.Rand, func(r *rand.Rand) { threshold = GenThreshold(r) })
 
-	var expitedVotingThreshold sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, ExpeditedThreshold, &expitedVotingThreshold, simState.Rand,
-		func(r *rand.Rand) { expitedVotingThreshold = GenExpeditedThreshold(r) },
-	)
+	var expitedVotingThreshold sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(ExpeditedThreshold, &expitedVotingThreshold, simState.Rand, func(r *rand.Rand) { expitedVotingThreshold = GenExpeditedThreshold(r) })
 
-	var veto sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Veto, &veto, simState.Rand,
-		func(r *rand.Rand) { veto = GenVeto(r) },
-	)
+	var veto sdkmath.LegacyDec
+	simState.AppParams.GetOrGenerate(Veto, &veto, simState.Rand, func(r *rand.Rand) { veto = GenVeto(r) })
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,

@@ -172,9 +172,11 @@ func (s *ConverterTestSuite) TestOpsAndSigners() {
 		ops, signers, err := s.c.ToRosetta().OpsAndSigners(txBytes)
 		s.Require().NoError(err)
 
-		s.Require().Equal(len(ops), len(sdkTx.GetMsgs())*len(sdkTx.GetSigners()), "operation number mismatch")
+		signerAddrs, err := sdkTx.GetSigners()
+		s.Require().NoError(err)
+		s.Require().Equal(len(ops), len(sdkTx.GetMsgs())*len(signerAddrs), "operation number mismatch")
 
-		s.Require().Equal(len(signers), len(sdkTx.GetSigners()), "signers number mismatch")
+		s.Require().Equal(len(signers), len(signerAddrs), "signers number mismatch")
 	})
 }
 

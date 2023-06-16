@@ -29,24 +29,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ListenBeginBlockRequest is the request type for the ListenBeginBlock RPC method
-type ListenBeginBlockRequest struct {
-	Req *types.RequestBeginBlock  `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
-	Res *types.ResponseBeginBlock `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+// ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
+type ListenFinalizeBlockRequest struct {
+	Req *types.RequestFinalizeBlock  `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
+	Res *types.ResponseFinalizeBlock `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
 }
 
-func (m *ListenBeginBlockRequest) Reset()         { *m = ListenBeginBlockRequest{} }
-func (m *ListenBeginBlockRequest) String() string { return proto.CompactTextString(m) }
-func (*ListenBeginBlockRequest) ProtoMessage()    {}
-func (*ListenBeginBlockRequest) Descriptor() ([]byte, []int) {
+func (m *ListenFinalizeBlockRequest) Reset()         { *m = ListenFinalizeBlockRequest{} }
+func (m *ListenFinalizeBlockRequest) String() string { return proto.CompactTextString(m) }
+func (*ListenFinalizeBlockRequest) ProtoMessage()    {}
+func (*ListenFinalizeBlockRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7b98083eb9315fb6, []int{0}
 }
-func (m *ListenBeginBlockRequest) XXX_Unmarshal(b []byte) error {
+func (m *ListenFinalizeBlockRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ListenBeginBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ListenFinalizeBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ListenBeginBlockRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ListenFinalizeBlockRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -56,116 +56,26 @@ func (m *ListenBeginBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *ListenBeginBlockRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenBeginBlockRequest.Merge(m, src)
+func (m *ListenFinalizeBlockRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListenFinalizeBlockRequest.Merge(m, src)
 }
-func (m *ListenBeginBlockRequest) XXX_Size() int {
+func (m *ListenFinalizeBlockRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *ListenBeginBlockRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenBeginBlockRequest.DiscardUnknown(m)
+func (m *ListenFinalizeBlockRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListenFinalizeBlockRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ListenBeginBlockRequest proto.InternalMessageInfo
+var xxx_messageInfo_ListenFinalizeBlockRequest proto.InternalMessageInfo
 
-func (m *ListenBeginBlockRequest) GetReq() *types.RequestBeginBlock {
+func (m *ListenFinalizeBlockRequest) GetReq() *types.RequestFinalizeBlock {
 	if m != nil {
 		return m.Req
 	}
 	return nil
 }
 
-func (m *ListenBeginBlockRequest) GetRes() *types.ResponseBeginBlock {
-	if m != nil {
-		return m.Res
-	}
-	return nil
-}
-
-// ListenBeginBlockResponse is the response type for the ListenBeginBlock RPC method
-type ListenBeginBlockResponse struct {
-}
-
-func (m *ListenBeginBlockResponse) Reset()         { *m = ListenBeginBlockResponse{} }
-func (m *ListenBeginBlockResponse) String() string { return proto.CompactTextString(m) }
-func (*ListenBeginBlockResponse) ProtoMessage()    {}
-func (*ListenBeginBlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{1}
-}
-func (m *ListenBeginBlockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ListenBeginBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ListenBeginBlockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ListenBeginBlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenBeginBlockResponse.Merge(m, src)
-}
-func (m *ListenBeginBlockResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *ListenBeginBlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenBeginBlockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ListenBeginBlockResponse proto.InternalMessageInfo
-
-// ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
-type ListenEndBlockRequest struct {
-	Req *types.RequestEndBlock  `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
-	Res *types.ResponseEndBlock `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
-}
-
-func (m *ListenEndBlockRequest) Reset()         { *m = ListenEndBlockRequest{} }
-func (m *ListenEndBlockRequest) String() string { return proto.CompactTextString(m) }
-func (*ListenEndBlockRequest) ProtoMessage()    {}
-func (*ListenEndBlockRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{2}
-}
-func (m *ListenEndBlockRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ListenEndBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ListenEndBlockRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ListenEndBlockRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenEndBlockRequest.Merge(m, src)
-}
-func (m *ListenEndBlockRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *ListenEndBlockRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenEndBlockRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ListenEndBlockRequest proto.InternalMessageInfo
-
-func (m *ListenEndBlockRequest) GetReq() *types.RequestEndBlock {
-	if m != nil {
-		return m.Req
-	}
-	return nil
-}
-
-func (m *ListenEndBlockRequest) GetRes() *types.ResponseEndBlock {
+func (m *ListenFinalizeBlockRequest) GetRes() *types.ResponseFinalizeBlock {
 	if m != nil {
 		return m.Res
 	}
@@ -173,21 +83,21 @@ func (m *ListenEndBlockRequest) GetRes() *types.ResponseEndBlock {
 }
 
 // ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
-type ListenEndBlockResponse struct {
+type ListenFinalizeBlockResponse struct {
 }
 
-func (m *ListenEndBlockResponse) Reset()         { *m = ListenEndBlockResponse{} }
-func (m *ListenEndBlockResponse) String() string { return proto.CompactTextString(m) }
-func (*ListenEndBlockResponse) ProtoMessage()    {}
-func (*ListenEndBlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{3}
+func (m *ListenFinalizeBlockResponse) Reset()         { *m = ListenFinalizeBlockResponse{} }
+func (m *ListenFinalizeBlockResponse) String() string { return proto.CompactTextString(m) }
+func (*ListenFinalizeBlockResponse) ProtoMessage()    {}
+func (*ListenFinalizeBlockResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7b98083eb9315fb6, []int{1}
 }
-func (m *ListenEndBlockResponse) XXX_Unmarshal(b []byte) error {
+func (m *ListenFinalizeBlockResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ListenEndBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ListenFinalizeBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ListenEndBlockResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ListenFinalizeBlockResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -197,116 +107,17 @@ func (m *ListenEndBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *ListenEndBlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenEndBlockResponse.Merge(m, src)
+func (m *ListenFinalizeBlockResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListenFinalizeBlockResponse.Merge(m, src)
 }
-func (m *ListenEndBlockResponse) XXX_Size() int {
+func (m *ListenFinalizeBlockResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *ListenEndBlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenEndBlockResponse.DiscardUnknown(m)
+func (m *ListenFinalizeBlockResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListenFinalizeBlockResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ListenEndBlockResponse proto.InternalMessageInfo
-
-// ListenDeliverTxRequest is the request type for the ListenDeliverTx RPC method
-type ListenDeliverTxRequest struct {
-	// explicitly pass in block height as neither RequestDeliverTx or ResponseDeliverTx contain it
-	BlockHeight int64                    `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	Req         *types.RequestDeliverTx  `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
-	Res         *types.ResponseDeliverTx `protobuf:"bytes,3,opt,name=res,proto3" json:"res,omitempty"`
-}
-
-func (m *ListenDeliverTxRequest) Reset()         { *m = ListenDeliverTxRequest{} }
-func (m *ListenDeliverTxRequest) String() string { return proto.CompactTextString(m) }
-func (*ListenDeliverTxRequest) ProtoMessage()    {}
-func (*ListenDeliverTxRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{4}
-}
-func (m *ListenDeliverTxRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ListenDeliverTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ListenDeliverTxRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ListenDeliverTxRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenDeliverTxRequest.Merge(m, src)
-}
-func (m *ListenDeliverTxRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *ListenDeliverTxRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenDeliverTxRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ListenDeliverTxRequest proto.InternalMessageInfo
-
-func (m *ListenDeliverTxRequest) GetBlockHeight() int64 {
-	if m != nil {
-		return m.BlockHeight
-	}
-	return 0
-}
-
-func (m *ListenDeliverTxRequest) GetReq() *types.RequestDeliverTx {
-	if m != nil {
-		return m.Req
-	}
-	return nil
-}
-
-func (m *ListenDeliverTxRequest) GetRes() *types.ResponseDeliverTx {
-	if m != nil {
-		return m.Res
-	}
-	return nil
-}
-
-// ListenDeliverTxResponse is the response type for the ListenDeliverTx RPC method
-type ListenDeliverTxResponse struct {
-}
-
-func (m *ListenDeliverTxResponse) Reset()         { *m = ListenDeliverTxResponse{} }
-func (m *ListenDeliverTxResponse) String() string { return proto.CompactTextString(m) }
-func (*ListenDeliverTxResponse) ProtoMessage()    {}
-func (*ListenDeliverTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{5}
-}
-func (m *ListenDeliverTxResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ListenDeliverTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ListenDeliverTxResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ListenDeliverTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListenDeliverTxResponse.Merge(m, src)
-}
-func (m *ListenDeliverTxResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *ListenDeliverTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListenDeliverTxResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ListenDeliverTxResponse proto.InternalMessageInfo
+var xxx_messageInfo_ListenFinalizeBlockResponse proto.InternalMessageInfo
 
 // ListenCommitRequest is the request type for the ListenCommit RPC method
 type ListenCommitRequest struct {
@@ -320,7 +131,7 @@ func (m *ListenCommitRequest) Reset()         { *m = ListenCommitRequest{} }
 func (m *ListenCommitRequest) String() string { return proto.CompactTextString(m) }
 func (*ListenCommitRequest) ProtoMessage()    {}
 func (*ListenCommitRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{6}
+	return fileDescriptor_7b98083eb9315fb6, []int{2}
 }
 func (m *ListenCommitRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -378,7 +189,7 @@ func (m *ListenCommitResponse) Reset()         { *m = ListenCommitResponse{} }
 func (m *ListenCommitResponse) String() string { return proto.CompactTextString(m) }
 func (*ListenCommitResponse) ProtoMessage()    {}
 func (*ListenCommitResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7b98083eb9315fb6, []int{7}
+	return fileDescriptor_7b98083eb9315fb6, []int{3}
 }
 func (m *ListenCommitResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -408,12 +219,8 @@ func (m *ListenCommitResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_ListenCommitResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*ListenBeginBlockRequest)(nil), "cosmos.store.streaming.abci.ListenBeginBlockRequest")
-	proto.RegisterType((*ListenBeginBlockResponse)(nil), "cosmos.store.streaming.abci.ListenBeginBlockResponse")
-	proto.RegisterType((*ListenEndBlockRequest)(nil), "cosmos.store.streaming.abci.ListenEndBlockRequest")
-	proto.RegisterType((*ListenEndBlockResponse)(nil), "cosmos.store.streaming.abci.ListenEndBlockResponse")
-	proto.RegisterType((*ListenDeliverTxRequest)(nil), "cosmos.store.streaming.abci.ListenDeliverTxRequest")
-	proto.RegisterType((*ListenDeliverTxResponse)(nil), "cosmos.store.streaming.abci.ListenDeliverTxResponse")
+	proto.RegisterType((*ListenFinalizeBlockRequest)(nil), "cosmos.store.streaming.abci.ListenFinalizeBlockRequest")
+	proto.RegisterType((*ListenFinalizeBlockResponse)(nil), "cosmos.store.streaming.abci.ListenFinalizeBlockResponse")
 	proto.RegisterType((*ListenCommitRequest)(nil), "cosmos.store.streaming.abci.ListenCommitRequest")
 	proto.RegisterType((*ListenCommitResponse)(nil), "cosmos.store.streaming.abci.ListenCommitResponse")
 }
@@ -423,40 +230,33 @@ func init() {
 }
 
 var fileDescriptor_7b98083eb9315fb6 = []byte{
-	// 519 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
-	0x18, 0xc6, 0x6b, 0x82, 0x90, 0xf0, 0x26, 0x40, 0x1e, 0x8c, 0x90, 0x49, 0xa1, 0x0d, 0x08, 0x71,
-	0x72, 0xe8, 0x9f, 0x9d, 0xb8, 0x40, 0x07, 0x12, 0x08, 0x0e, 0xa8, 0x45, 0x1c, 0xb8, 0x4c, 0x69,
-	0xfa, 0x2a, 0xb5, 0xd6, 0xc4, 0xad, 0x6d, 0x2a, 0x26, 0x21, 0xc1, 0x01, 0x71, 0xe6, 0x53, 0x70,
-	0xe3, 0x7b, 0x70, 0xdc, 0x91, 0x23, 0x6a, 0xbf, 0x08, 0x8a, 0x9d, 0x6e, 0x49, 0xb6, 0x4c, 0xcd,
-	0xb1, 0xf6, 0xf3, 0x3c, 0xef, 0xef, 0xed, 0xfb, 0xc6, 0xf8, 0x51, 0xc8, 0x65, 0xcc, 0xa5, 0x2f,
-	0x15, 0x17, 0xe0, 0x4b, 0x25, 0x20, 0x88, 0x59, 0x12, 0xf9, 0xc1, 0x28, 0x64, 0x7e, 0x24, 0x66,
-	0x21, 0x9d, 0x09, 0xae, 0x38, 0xd9, 0x33, 0x3a, 0xaa, 0x75, 0xf4, 0x54, 0x47, 0x53, 0x9d, 0xb3,
-	0xa7, 0x20, 0x19, 0x83, 0x88, 0x59, 0xa2, 0x8c, 0x51, 0x1d, 0xcf, 0x40, 0x1a, 0xa7, 0xf3, 0xb0,
-	0x50, 0x61, 0xd1, 0x1e, 0x81, 0x0a, 0xda, 0xfe, 0x94, 0x49, 0x05, 0x49, 0x9a, 0xa0, 0x55, 0xde,
-	0x0f, 0x84, 0xef, 0xbe, 0xd5, 0x67, 0x7d, 0x88, 0x58, 0xd2, 0x9f, 0xf2, 0xf0, 0x68, 0x00, 0xf3,
-	0x4f, 0x20, 0x15, 0xe9, 0x61, 0x4b, 0xc0, 0xdc, 0x46, 0x4d, 0xf4, 0x78, 0xab, 0xe3, 0xd1, 0xb3,
-	0x62, 0xba, 0x3a, 0xcd, 0x64, 0x39, 0x5f, 0x2a, 0x27, 0xfb, 0xa9, 0x4b, 0xda, 0x57, 0xb4, 0xeb,
-	0xc1, 0x05, 0x2e, 0x39, 0xe3, 0x89, 0x84, 0xa2, 0x4d, 0x7a, 0x0e, 0xb6, 0xcf, 0x73, 0x18, 0xa9,
-	0xf7, 0x0d, 0xe1, 0x3b, 0xe6, 0xf2, 0x65, 0x32, 0x2e, 0x20, 0x76, 0xf2, 0x88, 0xcd, 0x2a, 0xc4,
-	0x53, 0x97, 0x06, 0xec, 0xe6, 0x01, 0x5b, 0x95, 0x80, 0x79, 0x93, 0xf4, 0x6c, 0xbc, 0x5b, 0x26,
-	0xc8, 0xe0, 0x7e, 0xa1, 0xf5, 0xd5, 0x0b, 0x98, 0xb2, 0x05, 0x88, 0xf7, 0x9f, 0xd7, 0x74, 0x2d,
-	0xbc, 0x3d, 0x4a, 0xb5, 0x87, 0x13, 0x60, 0xd1, 0x44, 0x69, 0x4c, 0x6b, 0xb0, 0xa5, 0xcf, 0x5e,
-	0xe9, 0x23, 0x03, 0x33, 0xbf, 0x04, 0x46, 0x27, 0x9d, 0x25, 0xeb, 0x0e, 0x7a, 0xa6, 0x03, 0xab,
-	0x72, 0x30, 0x06, 0xad, 0xe0, 0x92, 0xde, 0xbd, 0xf5, 0xa4, 0x73, 0x9c, 0x59, 0x0f, 0xbf, 0x11,
-	0xde, 0x31, 0x77, 0x07, 0x3c, 0x8e, 0x99, 0xaa, 0xd1, 0x40, 0x3b, 0xff, 0x6f, 0xde, 0xaf, 0x64,
-	0xc9, 0x72, 0x53, 0x2d, 0x79, 0x86, 0x71, 0x38, 0x09, 0x92, 0x08, 0x0e, 0x25, 0x28, 0xdb, 0x6a,
-	0x5a, 0xba, 0xf5, 0xc2, 0xa2, 0x67, 0xeb, 0x4a, 0x87, 0xe9, 0xaf, 0x37, 0x1f, 0xde, 0x05, 0x4c,
-	0x0c, 0xae, 0x1b, 0xd3, 0x10, 0x94, 0xb7, 0x8b, 0x6f, 0x17, 0x71, 0x4d, 0x91, 0xce, 0xf7, 0xab,
-	0x78, 0xe7, 0x79, 0xff, 0xe0, 0xb5, 0xb9, 0x04, 0x31, 0x04, 0xb1, 0x60, 0x21, 0x90, 0xaf, 0xf8,
-	0x56, 0x79, 0xb9, 0x48, 0x8f, 0x5e, 0xf2, 0x69, 0xd1, 0x8a, 0x6f, 0xc2, 0xd9, 0xaf, 0xe9, 0x32,
-	0x60, 0xe4, 0x18, 0xdf, 0x28, 0xae, 0x0f, 0xe9, 0x6c, 0x10, 0x54, 0xda, 0x76, 0xa7, 0x5b, 0xcb,
-	0x93, 0x95, 0xfe, 0x82, 0x6f, 0x96, 0xc6, 0x4e, 0x36, 0xc9, 0x29, 0x2f, 0xb3, 0xd3, 0xab, 0x67,
-	0xca, 0xaa, 0x4b, 0xbc, 0x9d, 0x9f, 0x14, 0x79, 0xb2, 0x41, 0x4a, 0x61, 0x07, 0x9d, 0x76, 0x0d,
-	0x47, 0xf6, 0xb4, 0x3c, 0xfd, 0xb3, 0x74, 0xd1, 0xc9, 0xd2, 0x45, 0xff, 0x96, 0x2e, 0xfa, 0xb9,
-	0x72, 0x1b, 0x27, 0x2b, 0xb7, 0xf1, 0x77, 0xe5, 0x36, 0x3e, 0xb6, 0x4c, 0x96, 0x1c, 0x1f, 0x51,
-	0xc6, 0x2f, 0x7c, 0x7c, 0x47, 0xd7, 0xf4, 0xc3, 0xd8, 0xfd, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x25,
-	0xac, 0xcc, 0x9e, 0xa2, 0x05, 0x00, 0x00,
+	// 409 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0x31, 0x6f, 0xda, 0x40,
+	0x14, 0xc7, 0x31, 0x96, 0x2a, 0xf5, 0x60, 0x3a, 0xaa, 0x0a, 0x19, 0xd5, 0x05, 0xab, 0x45, 0x4c,
+	0xe7, 0x9a, 0x0e, 0x20, 0x75, 0x69, 0x41, 0xaa, 0x5a, 0xb5, 0x43, 0x05, 0x52, 0x87, 0x2c, 0xc8,
+	0x36, 0x4f, 0xe6, 0x04, 0xf6, 0x99, 0xbb, 0x0b, 0x52, 0xf2, 0x09, 0xb2, 0x25, 0x4b, 0x3e, 0x46,
+	0xbe, 0x47, 0x46, 0xc6, 0x8c, 0x11, 0x7c, 0x91, 0xc8, 0x77, 0x84, 0x60, 0x05, 0xa2, 0x30, 0xf2,
+	0xee, 0xff, 0x7b, 0xef, 0x77, 0xbc, 0x33, 0x6a, 0x86, 0x4c, 0xc4, 0x4c, 0xb8, 0x42, 0x32, 0x0e,
+	0xae, 0x90, 0x1c, 0xfc, 0x98, 0x26, 0x91, 0xeb, 0x07, 0x21, 0x75, 0x23, 0x9e, 0x86, 0x24, 0xe5,
+	0x4c, 0x32, 0x5c, 0xd3, 0x39, 0xa2, 0x72, 0x64, 0x9b, 0x23, 0x59, 0xce, 0xaa, 0x49, 0x48, 0xc6,
+	0xc0, 0x63, 0x9a, 0x48, 0x0d, 0xca, 0xb3, 0x14, 0x84, 0x26, 0xad, 0x4f, 0xb9, 0x09, 0x0b, 0x2f,
+	0x00, 0xe9, 0x7b, 0xee, 0x8c, 0x0a, 0x09, 0x49, 0xd6, 0x41, 0xa5, 0x9c, 0x4b, 0x03, 0x59, 0x7f,
+	0x55, 0xed, 0x27, 0x4d, 0xfc, 0x19, 0x3d, 0x87, 0xde, 0x8c, 0x85, 0xd3, 0x01, 0xcc, 0x4f, 0x41,
+	0x48, 0xdc, 0x41, 0x26, 0x87, 0x79, 0xd5, 0xa8, 0x1b, 0xad, 0x52, 0xfb, 0x33, 0x79, 0x9a, 0xa7,
+	0x04, 0xc8, 0x26, 0x96, 0x47, 0x33, 0x02, 0x77, 0x33, 0x50, 0x54, 0x8b, 0x0a, 0x6c, 0xee, 0x01,
+	0x45, 0xca, 0x12, 0x01, 0xcf, 0x48, 0xe1, 0x7c, 0x40, 0xb5, 0xbd, 0x42, 0x1a, 0x70, 0x6e, 0x0c,
+	0x54, 0xd1, 0xe7, 0x7d, 0x16, 0xc7, 0x54, 0x3e, 0x9a, 0x36, 0x50, 0x39, 0xc8, 0x82, 0xa3, 0x09,
+	0xd0, 0x68, 0x22, 0x95, 0xb2, 0x39, 0x28, 0xa9, 0xda, 0x2f, 0x55, 0xc2, 0xde, 0xae, 0xd3, 0xc7,
+	0x83, 0x4e, 0x9b, 0xbe, 0x59, 0x16, 0x7f, 0x47, 0x28, 0x9c, 0xf8, 0x49, 0x04, 0x23, 0x01, 0xb2,
+	0x6a, 0xd6, 0xcd, 0x56, 0xa9, 0xdd, 0x20, 0xb9, 0x9d, 0x6c, 0xfe, 0x59, 0x32, 0xcc, 0x7e, 0xfd,
+	0xf9, 0xff, 0xcf, 0xa7, 0x7c, 0xf0, 0x56, 0x43, 0x43, 0x90, 0xce, 0x7b, 0xf4, 0x2e, 0xaf, 0xab,
+	0x87, 0xb4, 0xaf, 0x8b, 0xa8, 0xf2, 0xa3, 0xd7, 0xff, 0xad, 0x0f, 0x81, 0x0f, 0x81, 0x2f, 0x68,
+	0x08, 0xf8, 0x62, 0x7b, 0xbf, 0xdc, 0xfd, 0x71, 0x87, 0xbc, 0xf0, 0x12, 0xc8, 0xe1, 0x15, 0x5a,
+	0xdd, 0xe3, 0x41, 0xad, 0x88, 0x05, 0x2a, 0xef, 0xaa, 0xe3, 0x2f, 0xaf, 0xe8, 0x94, 0x5b, 0x8a,
+	0xe5, 0x1d, 0x41, 0xe8, 0xa1, 0xbd, 0x6f, 0xb7, 0x2b, 0xdb, 0x58, 0xae, 0x6c, 0xe3, 0x7e, 0x65,
+	0x1b, 0x57, 0x6b, 0xbb, 0xb0, 0x5c, 0xdb, 0x85, 0xbb, 0xb5, 0x5d, 0x38, 0x69, 0xe8, 0x5e, 0x62,
+	0x3c, 0x25, 0x94, 0xed, 0xfd, 0x70, 0x82, 0x37, 0xea, 0x51, 0x7f, 0x7d, 0x08, 0x00, 0x00, 0xff,
+	0xff, 0xa8, 0x04, 0x3e, 0xdb, 0x5e, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -471,12 +271,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ABCIListenerServiceClient interface {
-	// ListenBeginBlock is the corresponding endpoint for ABCIListener.ListenBeginBlock
-	ListenBeginBlock(ctx context.Context, in *ListenBeginBlockRequest, opts ...grpc.CallOption) (*ListenBeginBlockResponse, error)
-	// ListenEndBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
-	ListenEndBlock(ctx context.Context, in *ListenEndBlockRequest, opts ...grpc.CallOption) (*ListenEndBlockResponse, error)
-	// ListenDeliverTx is the corresponding endpoint for ABCIListener.ListenDeliverTx
-	ListenDeliverTx(ctx context.Context, in *ListenDeliverTxRequest, opts ...grpc.CallOption) (*ListenDeliverTxResponse, error)
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
+	ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(ctx context.Context, in *ListenCommitRequest, opts ...grpc.CallOption) (*ListenCommitResponse, error)
 }
@@ -489,27 +285,9 @@ func NewABCIListenerServiceClient(cc grpc1.ClientConn) ABCIListenerServiceClient
 	return &aBCIListenerServiceClient{cc}
 }
 
-func (c *aBCIListenerServiceClient) ListenBeginBlock(ctx context.Context, in *ListenBeginBlockRequest, opts ...grpc.CallOption) (*ListenBeginBlockResponse, error) {
-	out := new(ListenBeginBlockResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.store.streaming.abci.ABCIListenerService/ListenBeginBlock", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aBCIListenerServiceClient) ListenEndBlock(ctx context.Context, in *ListenEndBlockRequest, opts ...grpc.CallOption) (*ListenEndBlockResponse, error) {
-	out := new(ListenEndBlockResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.store.streaming.abci.ABCIListenerService/ListenEndBlock", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aBCIListenerServiceClient) ListenDeliverTx(ctx context.Context, in *ListenDeliverTxRequest, opts ...grpc.CallOption) (*ListenDeliverTxResponse, error) {
-	out := new(ListenDeliverTxResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.store.streaming.abci.ABCIListenerService/ListenDeliverTx", in, out, opts...)
+func (c *aBCIListenerServiceClient) ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error) {
+	out := new(ListenFinalizeBlockResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.store.streaming.abci.ABCIListenerService/ListenFinalizeBlock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -527,12 +305,8 @@ func (c *aBCIListenerServiceClient) ListenCommit(ctx context.Context, in *Listen
 
 // ABCIListenerServiceServer is the server API for ABCIListenerService service.
 type ABCIListenerServiceServer interface {
-	// ListenBeginBlock is the corresponding endpoint for ABCIListener.ListenBeginBlock
-	ListenBeginBlock(context.Context, *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error)
-	// ListenEndBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
-	ListenEndBlock(context.Context, *ListenEndBlockRequest) (*ListenEndBlockResponse, error)
-	// ListenDeliverTx is the corresponding endpoint for ABCIListener.ListenDeliverTx
-	ListenDeliverTx(context.Context, *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error)
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
+	ListenFinalizeBlock(context.Context, *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(context.Context, *ListenCommitRequest) (*ListenCommitResponse, error)
 }
@@ -541,14 +315,8 @@ type ABCIListenerServiceServer interface {
 type UnimplementedABCIListenerServiceServer struct {
 }
 
-func (*UnimplementedABCIListenerServiceServer) ListenBeginBlock(ctx context.Context, req *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenBeginBlock not implemented")
-}
-func (*UnimplementedABCIListenerServiceServer) ListenEndBlock(ctx context.Context, req *ListenEndBlockRequest) (*ListenEndBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenEndBlock not implemented")
-}
-func (*UnimplementedABCIListenerServiceServer) ListenDeliverTx(ctx context.Context, req *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListenDeliverTx not implemented")
+func (*UnimplementedABCIListenerServiceServer) ListenFinalizeBlock(ctx context.Context, req *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListenFinalizeBlock not implemented")
 }
 func (*UnimplementedABCIListenerServiceServer) ListenCommit(ctx context.Context, req *ListenCommitRequest) (*ListenCommitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListenCommit not implemented")
@@ -558,56 +326,20 @@ func RegisterABCIListenerServiceServer(s grpc1.Server, srv ABCIListenerServiceSe
 	s.RegisterService(&_ABCIListenerService_serviceDesc, srv)
 }
 
-func _ABCIListenerService_ListenBeginBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenBeginBlockRequest)
+func _ABCIListenerService_ListenFinalizeBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListenFinalizeBlockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenBeginBlock(ctx, in)
+		return srv.(ABCIListenerServiceServer).ListenFinalizeBlock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.store.streaming.abci.ABCIListenerService/ListenBeginBlock",
+		FullMethod: "/cosmos.store.streaming.abci.ABCIListenerService/ListenFinalizeBlock",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenBeginBlock(ctx, req.(*ListenBeginBlockRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ABCIListenerService_ListenEndBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenEndBlockRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenEndBlock(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.store.streaming.abci.ABCIListenerService/ListenEndBlock",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenEndBlock(ctx, req.(*ListenEndBlockRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ABCIListenerService_ListenDeliverTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListenDeliverTxRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ABCIListenerServiceServer).ListenDeliverTx(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.store.streaming.abci.ABCIListenerService/ListenDeliverTx",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIListenerServiceServer).ListenDeliverTx(ctx, req.(*ListenDeliverTxRequest))
+		return srv.(ABCIListenerServiceServer).ListenFinalizeBlock(ctx, req.(*ListenFinalizeBlockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -635,16 +367,8 @@ var _ABCIListenerService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ABCIListenerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListenBeginBlock",
-			Handler:    _ABCIListenerService_ListenBeginBlock_Handler,
-		},
-		{
-			MethodName: "ListenEndBlock",
-			Handler:    _ABCIListenerService_ListenEndBlock_Handler,
-		},
-		{
-			MethodName: "ListenDeliverTx",
-			Handler:    _ABCIListenerService_ListenDeliverTx_Handler,
+			MethodName: "ListenFinalizeBlock",
+			Handler:    _ABCIListenerService_ListenFinalizeBlock_Handler,
 		},
 		{
 			MethodName: "ListenCommit",
@@ -655,7 +379,7 @@ var _ABCIListenerService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/store/streaming/abci/grpc.proto",
 }
 
-func (m *ListenBeginBlockRequest) Marshal() (dAtA []byte, err error) {
+func (m *ListenFinalizeBlockRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -665,12 +389,12 @@ func (m *ListenBeginBlockRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ListenBeginBlockRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ListenFinalizeBlockRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ListenBeginBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ListenFinalizeBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -702,7 +426,7 @@ func (m *ListenBeginBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *ListenBeginBlockResponse) Marshal() (dAtA []byte, err error) {
+func (m *ListenFinalizeBlockResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -712,157 +436,12 @@ func (m *ListenBeginBlockResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ListenBeginBlockResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ListenFinalizeBlockResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ListenBeginBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *ListenEndBlockRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ListenEndBlockRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ListenEndBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Res != nil {
-		{
-			size, err := m.Res.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGrpc(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Req != nil {
-		{
-			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGrpc(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ListenEndBlockResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ListenEndBlockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ListenEndBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *ListenDeliverTxRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ListenDeliverTxRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ListenDeliverTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Res != nil {
-		{
-			size, err := m.Res.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGrpc(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Req != nil {
-		{
-			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGrpc(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.BlockHeight != 0 {
-		i = encodeVarintGrpc(dAtA, i, uint64(m.BlockHeight))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ListenDeliverTxResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ListenDeliverTxResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ListenDeliverTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ListenFinalizeBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -958,7 +537,7 @@ func encodeVarintGrpc(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *ListenBeginBlockRequest) Size() (n int) {
+func (m *ListenFinalizeBlockRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -975,62 +554,7 @@ func (m *ListenBeginBlockRequest) Size() (n int) {
 	return n
 }
 
-func (m *ListenBeginBlockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *ListenEndBlockRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Req != nil {
-		l = m.Req.Size()
-		n += 1 + l + sovGrpc(uint64(l))
-	}
-	if m.Res != nil {
-		l = m.Res.Size()
-		n += 1 + l + sovGrpc(uint64(l))
-	}
-	return n
-}
-
-func (m *ListenEndBlockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *ListenDeliverTxRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.BlockHeight != 0 {
-		n += 1 + sovGrpc(uint64(m.BlockHeight))
-	}
-	if m.Req != nil {
-		l = m.Req.Size()
-		n += 1 + l + sovGrpc(uint64(l))
-	}
-	if m.Res != nil {
-		l = m.Res.Size()
-		n += 1 + l + sovGrpc(uint64(l))
-	}
-	return n
-}
-
-func (m *ListenDeliverTxResponse) Size() (n int) {
+func (m *ListenFinalizeBlockResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1076,7 +600,7 @@ func sovGrpc(x uint64) (n int) {
 func sozGrpc(x uint64) (n int) {
 	return sovGrpc(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *ListenBeginBlockRequest) Unmarshal(dAtA []byte) error {
+func (m *ListenFinalizeBlockRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1099,10 +623,10 @@ func (m *ListenBeginBlockRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ListenBeginBlockRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ListenFinalizeBlockRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenBeginBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ListenFinalizeBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1135,7 +659,7 @@ func (m *ListenBeginBlockRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Req == nil {
-				m.Req = &types.RequestBeginBlock{}
+				m.Req = &types.RequestFinalizeBlock{}
 			}
 			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1171,7 +695,7 @@ func (m *ListenBeginBlockRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Res == nil {
-				m.Res = &types.ResponseBeginBlock{}
+				m.Res = &types.ResponseFinalizeBlock{}
 			}
 			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1198,7 +722,7 @@ func (m *ListenBeginBlockRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ListenBeginBlockResponse) Unmarshal(dAtA []byte) error {
+func (m *ListenFinalizeBlockResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1221,373 +745,10 @@ func (m *ListenBeginBlockResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ListenBeginBlockResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ListenFinalizeBlockResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenBeginBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGrpc(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ListenEndBlockRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGrpc
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ListenEndBlockRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenEndBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGrpc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Req == nil {
-				m.Req = &types.RequestEndBlock{}
-			}
-			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGrpc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Res == nil {
-				m.Res = &types.ResponseEndBlock{}
-			}
-			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGrpc(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ListenEndBlockResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGrpc
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ListenEndBlockResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenEndBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGrpc(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ListenDeliverTxRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGrpc
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ListenDeliverTxRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenDeliverTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BlockHeight", wireType)
-			}
-			m.BlockHeight = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGrpc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.BlockHeight |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGrpc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Req == nil {
-				m.Req = &types.RequestDeliverTx{}
-			}
-			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGrpc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Res == nil {
-				m.Res = &types.ResponseDeliverTx{}
-			}
-			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGrpc(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthGrpc
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ListenDeliverTxResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGrpc
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ListenDeliverTxResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListenDeliverTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ListenFinalizeBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

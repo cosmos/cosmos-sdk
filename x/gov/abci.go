@@ -1,9 +1,11 @@
 package gov
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -12,20 +14,35 @@ import (
 )
 
 // EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
+func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
-		keeper.DeleteProposal(ctx, proposal.Id)
+	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	err := keeper.InactiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+		proposal, err := keeper.Proposals.Get(ctx, key.K2())
+		if err != nil {
+			return false, err
+		}
+		err = keeper.DeleteProposal(ctx, proposal.Id)
+		if err != nil {
+			return false, err
+		}
 
-		params := keeper.GetParams(ctx)
+		params, err := keeper.Params.Get(ctx)
+		if err != nil {
+			return false, err
+		}
 		if !params.BurnProposalDepositPrevote {
-			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
-			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+		}
+
+		if err != nil {
+			return false, err
 		}
 
 		// called when proposal become inactive
@@ -48,14 +65,26 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
-		return false
+		return false, nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return err
+	}
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
+	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	err = keeper.ActiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+		proposal, err := keeper.Proposals.Get(ctx, key.K2())
+		if err != nil {
+			return false, err
+		}
+
 		var tagValue, logMsg string
 
-		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+		passes, burnDeposits, tallyResults, err := keeper.Tally(ctx, proposal)
+		if err != nil {
+			return false, err
+		}
 
 		// If an expedited proposal fails, we do not want to update
 		// the deposit at this point since the proposal is converted to regular.
@@ -63,13 +92,20 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		// EXCEPT when an expedited proposal fails.
 		if !(proposal.Expedited && !passes) {
 			if burnDeposits {
-				keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {
-				keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+				err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+			}
+
+			if err != nil {
+				return false, err
 			}
 		}
 
-		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+		err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+		if err != nil {
+			return false, err
+		}
 
 		switch {
 		case passes:
@@ -129,11 +165,17 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.Expedited = false
-			params := keeper.GetParams(ctx)
+			params, err := keeper.Params.Get(ctx)
+			if err != nil {
+				return false, err
+			}
 			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
 			proposal.VotingEndTime = &endTime
 
-			keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+			err = keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+			if err != nil {
+				return false, err
+			}
 
 			tagValue = types.AttributeValueExpeditedProposalRejected
 			logMsg = "expedited proposal converted to regular"
@@ -145,7 +187,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		proposal.FinalTallyResult = &tallyResults
 
-		keeper.SetProposal(ctx, proposal)
+		err = keeper.SetProposal(ctx, proposal)
+		if err != nil {
+			return false, err
+		}
 
 		// when proposal become active
 		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
@@ -168,6 +213,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			),
 		)
 
-		return false
+		return false, nil
 	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return err
+	}
+	return nil
 }

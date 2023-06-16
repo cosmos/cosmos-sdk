@@ -1,18 +1,19 @@
 package types
 
 import (
+	"context"
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/authz"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
-
-var _ authz.Authorization = &StakeAuthorization{}
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
@@ -60,11 +61,12 @@ func (a StakeAuthorization) MsgTypeURL() string {
 // is unspecified.
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(authz.ErrNegativeMaxTokens, "negative coin amount: %v", a.MaxTokens)
+		return errorsmod.Wrapf(fmt.Errorf("max tokens should be positive"),
+			"negative coin amount: %v", a.MaxTokens)
 	}
 
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return authz.ErrUnknownAuthorizationType
+		return fmt.Errorf("unknown authorization type")
 	}
 
 	return nil
@@ -74,7 +76,7 @@ func (a StakeAuthorization) ValidateBasic() error {
 // and, should the allowed list not be empty, if the validator is in the allowed list.
 // If these conditions are met, the authorization amount is validated and if successful, the
 // corresponding AcceptResponse is returned.
-func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	var (
 		validatorAddress string
 		amount           sdk.Coin
@@ -99,8 +101,9 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 
 	isValidatorExists := false
 	allowedList := a.GetAllowList().GetAddress()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, validator := range allowedList {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
 			isValidatorExists = true
 			break
@@ -109,7 +112,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 
 	denyList := a.GetDenyList().GetAddress()
 	for _, validator := range denyList {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
 			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
 		}
@@ -187,6 +190,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(authz.ErrUnknownAuthorizationType, "cannot normalize authz type with %T", authzType)
+		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
+			"cannot normalize authz type with %T", authzType)
 	}
 }

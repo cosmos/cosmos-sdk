@@ -78,7 +78,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
-		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
+		if err := UpgradeBinary(log.NewCustomLogger(*l.logger), l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
 
@@ -232,7 +232,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {
-		if arg == "--unsafe-skip-upgrades" {
+		if arg == fmt.Sprintf("--%s", FlagSkipUpgradeHeight) {
 			j := i + 1
 
 			for j < len(args) {

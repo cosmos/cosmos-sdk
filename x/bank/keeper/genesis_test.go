@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestExportGenesis() {
@@ -16,7 +15,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 	expectedBalances, expTotalSupply := suite.getTestBalancesAndSupply()
 
 	// Adding genesis supply to the expTotalSupply
-	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 	suite.Require().NoError(err)
 	expTotalSupply = expTotalSupply.Add(genesisSupply...)
 
@@ -30,11 +29,11 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		suite.mockMintCoins(mintAcc)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedBalances[i].Coins))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, accAddr)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, accAddr, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, accAddr, expectedBalances[i].Coins))
 	}
 
 	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))
@@ -85,7 +84,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 	}
 	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdkmath.NewInt(11)), sdk.NewCoin("barcoin", sdkmath.NewInt(21)))
 
-	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 	suite.Require().NoError(err)
 
 	testcases := []struct {
@@ -119,7 +118,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 				suite.PanicsWithError(tc.expPanicMsg, func() { suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
 				suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis)
-				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 				suite.Require().NoError(err)
 
 				// adding genesis supply to expected supply

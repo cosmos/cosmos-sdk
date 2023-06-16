@@ -11,9 +11,12 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -29,7 +32,6 @@ type ProtoCodecMarshaler interface {
 // encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
-	getSignersCtx     *signing.GetSignersContext
 }
 
 var (
@@ -39,16 +41,8 @@ var (
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
-	getSignersCtx, err := signing.NewGetSignersContext(
-		signing.GetSignersOptions{
-			ProtoFiles: interfaceRegistry,
-		})
-	if err != nil {
-		panic(err)
-	}
 	return &ProtoCodec{
 		interfaceRegistry: interfaceRegistry,
-		getSignersCtx:     getSignersCtx,
 	}
 }
 
@@ -171,6 +165,37 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 	return bz
 }
 
+// MarshalAminoJSON provides aminojson.Encoder compatibility for gogoproto messages.
+// x/tx/signing/aminojson cannot marshal gogoproto messages directly since this type does not implement
+// the standard library google.golang.org/protobuf/proto.Message.
+// We convert gogo types to dynamicpb messages and then marshal that directly to amino JSON.
+func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{FileResolver: pc.interfaceRegistry})
+	gogoBytes, err := gogoproto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	var protoMsg protoreflect.ProtoMessage
+	typ, err := protoregistry.GlobalTypes.FindMessageByURL(fmt.Sprintf("/%s", gogoproto.MessageName(msg)))
+	if typ != nil && err != nil {
+		protoMsg = typ.New().Interface()
+	} else {
+		desc, err := pc.interfaceRegistry.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(msg)))
+		if err != nil {
+			return nil, err
+		}
+		dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+		protoMsg = dynamicMsgType.New().Interface()
+	}
+
+	err = proto.Unmarshal(gogoBytes, protoMsg)
+	if err != nil {
+		return nil, err
+	}
+	return encoder.Marshal(protoMsg)
+}
+
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,
 // it unmarshals from JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
@@ -277,7 +302,7 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
-func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, error) {
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, error) {
 	msgv2, err := anyutil.Unpack(&anypb.Any{
 		TypeUrl: msg.TypeUrl,
 		Value:   msg.Value,
@@ -286,17 +311,17 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]string, proto.Message, 
 		return nil, nil, err
 	}
 
-	signers, err := pc.getSignersCtx.GetSigners(msgv2)
+	signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgv2)
 	return signers, msgv2, err
 }
 
-func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]string, error) {
-	return pc.getSignersCtx.GetSigners(msg)
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([][]byte, error) {
+	return pc.interfaceRegistry.SigningContext().GetSigners(msg)
 }
 
-func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]string, proto.Message, error) {
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
-		signers, err := pc.getSignersCtx.GetSigners(msgV2)
+		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err
 	}
 	a, err := types.NewAnyWithValue(msg)

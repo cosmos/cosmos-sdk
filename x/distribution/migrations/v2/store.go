@@ -1,25 +1,27 @@
 package v2
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v1"
+	v2staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 )
 
 // MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
-	store := ctx.KVStore(storeKey)
-	MigratePrefixAddress(store, v1.ValidatorOutstandingRewardsPrefix)
-	MigratePrefixAddress(store, v1.DelegatorWithdrawAddrPrefix)
-	MigratePrefixAddressAddress(store, v1.DelegatorStartingInfoPrefix)
-	MigratePrefixAddressBytes(store, v1.ValidatorHistoricalRewardsPrefix)
-	MigratePrefixAddress(store, v1.ValidatorCurrentRewardsPrefix)
-	MigratePrefixAddress(store, v1.ValidatorAccumulatedCommissionPrefix)
-	MigratePrefixAddressBytes(store, v1.ValidatorSlashEventPrefix)
+func MigrateStore(ctx sdk.Context, storeService store.KVStoreService) error {
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+	v2staking.MigratePrefixAddress(store, v1.ValidatorOutstandingRewardsPrefix)
+	v2staking.MigratePrefixAddress(store, v1.DelegatorWithdrawAddrPrefix)
+	v2staking.MigratePrefixAddressAddress(store, v1.DelegatorStartingInfoPrefix)
+	v2staking.MigratePrefixAddressBytes(store, v1.ValidatorHistoricalRewardsPrefix)
+	v2staking.MigratePrefixAddress(store, v1.ValidatorCurrentRewardsPrefix)
+	v2staking.MigratePrefixAddress(store, v1.ValidatorAccumulatedCommissionPrefix)
+	v2staking.MigratePrefixAddressBytes(store, v1.ValidatorSlashEventPrefix)
 
 	return nil
 }

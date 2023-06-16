@@ -14,8 +14,7 @@ type AppModuleWithAllExtensions interface {
 	module.HasGenesis
 	module.HasInvariants
 	module.HasConsensusVersion
-	module.BeginBlockAppModule
-	module.EndBlockAppModule
+	module.HasABCIEndblock
 }
 
 // CoreAppModule is solely here for the purpose of generating
@@ -25,4 +24,6 @@ type CoreAppModule interface {
 	appmodule.HasGenesis
 	appmodule.HasBeginBlocker
 	appmodule.HasEndBlocker
+	appmodule.HasPrecommit
+	appmodule.HasPrepareCheckState
 }

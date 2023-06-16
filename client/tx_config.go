@@ -2,6 +2,7 @@ package client
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -29,6 +30,7 @@ type (
 		NewTxBuilder() TxBuilder
 		WrapTxBuilder(sdk.Tx) (TxBuilder, error)
 		SignModeHandler() *txsigning.HandlerMap
+		SigningContext() *txsigning.Context
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction
@@ -48,5 +50,11 @@ type (
 		SetTimeoutHeight(height uint64)
 		SetFeeGranter(feeGranter sdk.AccAddress)
 		AddAuxSignerData(tx.AuxSignerData) error
+	}
+
+	// ExtendedTxBuilder extends the TxBuilder interface,
+	// which is used to set extension options to be included in a transaction.
+	ExtendedTxBuilder interface {
+		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}
 )

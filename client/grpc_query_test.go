@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -52,10 +51,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// TODO duplicated from testutils/sims/app_helpers.go
 	// need more composable startup options for simapp, this test needed a handle to the closed over genesis account
 	// to query balances
-	err := depinject.Inject(testutil.AppConfig, &interfaceRegistry, &bankKeeper, &appBuilder, &cdc)
+	err := depinject.Inject(
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&interfaceRegistry, &bankKeeper, &appBuilder, &cdc)
 	s.NoError(err)
 
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 	err = app.Load(true)
 	s.NoError(err)
 
@@ -78,25 +82,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: sims.DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
+	app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: sims.DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	},
 	)
 
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
+		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
 
 	// end of app init
 
-	s.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = app.BaseApp.NewContext(false)
 	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)

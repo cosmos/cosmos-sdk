@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -29,10 +32,15 @@ type GenesisTestSuite struct {
 func (suite *GenesisTestSuite) SetupTest() {
 	var evidenceKeeper keeper.Keeper
 
-	app, err := simtestutil.Setup(testutil.AppConfig, &evidenceKeeper)
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			depinject.Supply(log.NewNopLogger()),
+			testutil.AppConfig,
+		),
+		&evidenceKeeper)
 	require.NoError(suite.T(), err)
 
-	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
 	suite.keeper = evidenceKeeper
 }
 
@@ -66,8 +74,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			true,
 			func() {
 				for _, e := range testEvidence {
-					_, ok := suite.keeper.GetEvidence(suite.ctx, e.Hash())
-					suite.True(ok)
+					_, err := suite.keeper.Evidences.Get(suite.ctx, e.Hash())
+					suite.NoError(err)
 				}
 			},
 		},
@@ -86,7 +94,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			},
 			false,
 			func() {
-				suite.Empty(suite.keeper.GetAllEvidence(suite.ctx))
+				_, err := suite.keeper.Evidences.Iterate(suite.ctx, nil)
+				suite.Require().ErrorIs(err, collections.ErrInvalidIterator)
 			},
 		},
 	}
@@ -124,12 +133,13 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 		{
 			"success",
 			func() {
-				suite.keeper.SetEvidence(suite.ctx, &types.Equivocation{
+				ev := &types.Equivocation{
 					Height:           1,
 					Power:            100,
 					Time:             time.Now().UTC(),
 					ConsensusAddress: pk.PubKey().Address().String(),
-				})
+				}
+				suite.Require().NoError(suite.keeper.Evidences.Set(suite.ctx, ev.Hash(), ev))
 			},
 			true,
 			func() {},

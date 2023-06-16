@@ -30,7 +30,7 @@ var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
@@ -38,7 +38,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgSend int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
 			weightMsgSend = WeightSend
 		},
@@ -54,7 +54,7 @@ func WeightedOperations(
 
 // SimulateMsgSend generates a MsgSend with random values.
 func SimulateMsgSend(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
@@ -113,7 +113,7 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 

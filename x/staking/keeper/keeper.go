@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/core/store"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -21,18 +23,18 @@ var _ types.DelegationSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	authKeeper types.AccountKeeper
-	bankKeeper types.BankKeeper
-	hooks      types.StakingHooks
-	authority  string
+	storeService storetypes.KVStoreService
+	cdc          codec.BinaryCodec
+	authKeeper   types.AccountKeeper
+	bankKeeper   types.BankKeeper
+	hooks        types.StakingHooks
+	authority    string
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
+	storeService storetypes.KVStoreService,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
@@ -47,23 +49,24 @@ func NewKeeper(
 	}
 
 	// ensure that authority is a valid AccAddress
-	if _, err := ak.StringToBytes(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")
 	}
 
 	return &Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		authKeeper: ak,
-		bankKeeper: bk,
-		hooks:      nil,
-		authority:  authority,
+		storeService: storeService,
+		cdc:          cdc,
+		authKeeper:   ak,
+		bankKeeper:   bk,
+		hooks:        nil,
+		authority:    authority,
 	}
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Hooks gets the hooks for staking *Keeper {
@@ -87,25 +90,34 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 }
 
 // GetLastTotalPower Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastTotalPowerKey)
+func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.LastTotalPowerKey)
+	if err != nil {
+		return math.ZeroInt(), err
+	}
 
 	if bz == nil {
-		return math.ZeroInt()
+		return math.ZeroInt(), nil
 	}
 
 	ip := sdk.IntProto{}
-	k.cdc.MustUnmarshal(bz, &ip)
+	err = k.cdc.Unmarshal(bz, &ip)
+	if err != nil {
+		return math.ZeroInt(), err
+	}
 
-	return ip.Int
+	return ip.Int, nil
 }
 
 // SetLastTotalPower Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
-	store.Set(types.LastTotalPowerKey, bz)
+func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := k.cdc.Marshal(&sdk.IntProto{Int: power})
+	if err != nil {
+		return err
+	}
+	return store.Set(types.LastTotalPowerKey, bz)
 }
 
 // GetAuthority returns the x/staking module's authority.
@@ -114,19 +126,28 @@ func (k Keeper) GetAuthority() string {
 }
 
 // SetValidatorUpdates sets the ABCI validator power updates for the current block.
-func (k Keeper) SetValidatorUpdates(ctx sdk.Context, valUpdates []abci.ValidatorUpdate) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&types.ValidatorUpdates{Updates: valUpdates})
-	store.Set(types.ValidatorUpdatesKey, bz)
+func (k Keeper) SetValidatorUpdates(ctx context.Context, valUpdates []abci.ValidatorUpdate) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := k.cdc.Marshal(&types.ValidatorUpdates{Updates: valUpdates})
+	if err != nil {
+		return err
+	}
+	return store.Set(types.ValidatorUpdatesKey, bz)
 }
 
 // GetValidatorUpdates returns the ABCI validator power updates within the current block.
-func (k Keeper) GetValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ValidatorUpdatesKey)
+func (k Keeper) GetValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.ValidatorUpdatesKey)
+	if err != nil {
+		return nil, err
+	}
 
 	var valUpdates types.ValidatorUpdates
-	k.cdc.MustUnmarshal(bz, &valUpdates)
+	err = k.cdc.Unmarshal(bz, &valUpdates)
+	if err != nil {
+		return nil, err
+	}
 
-	return valUpdates.Updates
+	return valUpdates.Updates, nil
 }

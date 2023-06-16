@@ -8,7 +8,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/spf13/pflag"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -78,6 +77,7 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 	privKey := ed25519.GenPrivKey()
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
+	require := s.Require()
 	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) cli.TxCreateValidatorConfig {
 		return cli.TxCreateValidatorConfig{
 			IP:                      ip,
@@ -107,35 +107,35 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 		{
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagAmount, "2000stake")
+				require.NoError(fs.Set(cli.FlagAmount, "2000stake"))
 			},
 			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionRate, "0.54")
+				require.NoError(fs.Set(cli.FlagCommissionRate, "0.54"))
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.54", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionMaxRate, "0.89")
+				require.NoError(fs.Set(cli.FlagCommissionMaxRate, "0.89"))
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.89", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagCommissionMaxChangeRate, "0.55")
+				require.NoError(fs.Set(cli.FlagCommissionMaxChangeRate, "0.55"))
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.55", "1"),
 		},
 		{
 			name: "Custom min self delegations",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagMinSelfDelegation, "0.33")
+				require.NoError(fs.Set(cli.FlagMinSelfDelegation, "0.33"))
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "0.33"),
 		},
@@ -150,9 +150,9 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 			tc.fsModify(fs)
 
 			cvCfg, err := cli.PrepareConfigForTxCreateValidator(fs, moniker, nodeID, chainID, valPubKey)
-			require.NoError(s.T(), err)
+			require.NoError(err)
 
-			require.Equal(s.T(), tc.expectedCfg, cvCfg)
+			require.Equal(tc.expectedCfg, cvCfg)
 		})
 	}
 }
@@ -308,6 +308,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 func (s *CLITestSuite) TestNewEditValidatorCmd() {
 	cmd := cli.NewEditValidatorCmd()
 
+	moniker := "testing"
 	details := "bio"
 	identity := "test identity"
 	securityContact := "test contact"
@@ -383,8 +384,20 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 			"",
 		},
 		{
+			"edit validator moniker", // https://github.com/cosmos/cosmos-sdk/issues/10660
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"",
+		},
+		{
 			"with all edit flags",
 			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
 				fmt.Sprintf("--details=%s", details),
 				fmt.Sprintf("--identity=%s", identity),
 				fmt.Sprintf("--security-contact=%s", securityContact),
@@ -498,6 +511,34 @@ func (s *CLITestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			"invalid decimal coin expression: fooCoin",
+		},
+		{
+			"wrong src validator",
+			[]string{
+				"invalid",                           // wrong src-validator-addr
+				sdk.ValAddress(s.addrs[1]).String(), // dst-validator-addr
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"invalid bech32",
+		},
+		{
+			"wrong dst validator",
+			[]string{
+				sdk.ValAddress(s.addrs[0]).String(), // src-validator-addr
+				"invalid",                           // wrong dst-validator-addr
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			"invalid bech32",
 		},
 		{
 			"valid transaction of delegate",

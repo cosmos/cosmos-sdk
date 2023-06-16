@@ -1,10 +1,11 @@
 package authz
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+	"context"
 
-var _ Authorization = &GenericAuthorization{}
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/authz"
+)
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
 func NewGenericAuthorization(msgTypeURL string) *GenericAuthorization {
@@ -19,8 +20,8 @@ func (a GenericAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error) {
-	return AcceptResponse{Accept: true}, nil
+func (a GenericAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+	return authz.AcceptResponse{Accept: true}, nil
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.

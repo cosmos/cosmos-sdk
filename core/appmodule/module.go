@@ -38,6 +38,19 @@ type HasServices interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
+// HasPrepareCheckState is an extension interface that contains information about the AppModule
+// and PrepareCheckState.
+type HasPrepareCheckState interface {
+	AppModule
+	PrepareCheckState(context.Context) error
+}
+
+// HasPrecommit is an extension interface that contains information about the AppModule and Precommit.
+type HasPrecommit interface {
+	AppModule
+	Precommit(context.Context) error
+}
+
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
 type HasBeginBlocker interface {

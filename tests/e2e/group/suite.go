@@ -10,7 +10,9 @@ import (
 
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -70,7 +72,9 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.ClientCtx,
 		val.Address,
 		account,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))),
+		address.NewBech32Codec("cosmos"),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
@@ -202,9 +206,9 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Logs), 0)
-	s.Require().NotNil(txResp.Logs[0].Events)
-	events := txResp.Logs[0].Events
+	s.Require().Greater(len(txResp.Events), 0)
+	s.Require().NotNil(txResp.Events[0])
+	events := txResp.Events
 	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
 
 	for _, e := range events {
@@ -278,6 +282,7 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	s.Require().NoError(err)
 	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
+		address.NewBech32Codec("cosmos"),
 		s.commonFlags...,
 	)
 	s.Require().NoError(err)

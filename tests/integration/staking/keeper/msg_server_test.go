@@ -4,64 +4,50 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
-	// setup the app
-	var (
-		stakingKeeper *keeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		accountKeeper authkeeper.AccountKeeper
-	)
-	app, err := simtestutil.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			configurator.BankModule(),
-			configurator.TxModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.AuthModule(),
-		),
-		simtestutil.DefaultStartUpConfig(),
-		&stakingKeeper, &bankKeeper, &accountKeeper)
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
-	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
-	bondDenom := stakingKeeper.BondDenom(ctx)
-
 	// set the not bonded pool module account
-	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
-	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 5)
+	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
+	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), startTokens))))
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
+	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	moduleBalance := bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), stakingKeeper.BondDenom(ctx))
+	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
 	assert.DeepEqual(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
-	delAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000))
-	validators := stakingKeeper.GetValidators(ctx, 10)
-	assert.Equal(t, len(validators), 1)
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, sdk.NewInt(10000))
+	valAddr := sdk.ValAddress(addrs[0])
+	delegatorAddr := addrs[1]
 
-	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	// setup a new validator with bonded status
+	validator, err := types.NewValidator(valAddr, PKs[0], types.NewDescription("Validator", "", "", "", ""))
+	validator.Status = types.Bonded
 	assert.NilError(t, err)
-	delegatorAddr := delAddrs[0]
+	assert.NilError(t, f.stakingKeeper.SetValidator(ctx, validator))
+
+	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	assert.NilError(t, err)
 
 	// setting the ubd entry
-	unbondingAmount := sdk.NewInt64Coin(stakingKeeper.BondDenom(ctx), 5)
+	unbondingAmount := sdk.NewInt64Coin(bondDenom, 5)
 	ubd := types.NewUnbondingDelegation(
 		delegatorAddr, validatorAddr, 10,
 		ctx.BlockTime().Add(time.Minute*10),
@@ -70,8 +56,8 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	)
 
 	// set and retrieve a record
-	stakingKeeper.SetUnbondingDelegation(ctx, ubd)
-	resUnbond, found := stakingKeeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(ctx, ubd))
+	resUnbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, ubd, resUnbond)
 
@@ -87,7 +73,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(bondDenom, sdk.NewInt(4)),
 				CreationHeight:   11,
 			},
 			expErrMsg: "unbonding delegation entry is not found at block height",
@@ -98,7 +84,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(bondDenom, sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 			expErrMsg: "invalid height",
@@ -176,7 +162,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				assert.ErrorContains(t, err, testCase.expErrMsg)
 			} else {
 				assert.NilError(t, err)
-				balanceForNotBondedPool := bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
+				balanceForNotBondedPool := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
 				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
 				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
 			}

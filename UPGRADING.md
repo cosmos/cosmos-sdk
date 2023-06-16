@@ -1,8 +1,11 @@
 # Upgrading Cosmos SDK
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
+Note, always read the **SimApp** section for more information on application wiring updates.
 
 ## [Unreleased]
+
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
 ### Migration to CometBFT (Part 2)
 
@@ -26,15 +29,48 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
+### BaseApp
+
+All ABCI methods now accept a pointer to the request and response types defined
+by CometBFT. In addition, they also return errors. An ABCI method should only
+return errors in cases where a catastrophic failure has occurred and the application
+should halt. However, this is abstracted away from the application developer. Any
+handler that an application can define or set that returns an error, will gracefully
+by handled by `BaseApp` on behalf of the application.
+
+BaseApp calls of `BeginBlock` & `Endblock` are now private but are still exposed
+to the application to define via the `Manager` type. `FinalizeBlock` is public
+and should be used in order to test and run operations. This means that although
+`BeginBlock` & `Endblock` no longer exist in the ABCI interface, they are automatically
+called by `BaseApp` during `FinalizeBlock`. Specifically, the order of operations
+is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
+
+ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
+methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
+allows an application to define handlers for these methods via `ExtendVoteHandler`
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+for more info.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
 
 ```bash
-simd config migrate v0.48
+simd config migrate v0.50
 ```
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### Events
+
+The log section of `abci.TxResult` is not populated in the case of successful
+msg(s) execution. Instead a new attribute is added to all messages indicating
+the `msg_index` which identifies which events and attributes relate the same
+transaction.
+
+`BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if the event belongs
+to `BeginBlock` or `EndBlock`.
 
 #### gRPC-Web
 
@@ -48,7 +84,11 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 ### Protobuf
 
-The SDK is in the process of removing all `gogoproto` annotations.
+With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+
+TODO: summarize proto annotation requirements.
 
 #### Stringer
 
@@ -57,21 +97,32 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 ### SimApp
 
+<!-- TODO(@julienrbrt) collapse this section in 3 parts, general, app v1 and app v2 changes, now it is a bit confusing -->
+
 #### Module Assertions
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
-### Modules Keepers
+#### Modules Keepers
 
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
 * `x/auth`
+* `x/authz`
+* `x/bank`
 * `x/consensus`
+* `x/crisis`
+* `x/distribution`
+* `x/evidence`
 * `x/feegrant`
+* `x/gov`
+* `x/mint`
 * `x/nft`
+* `x/slashing`
+* `x/upgrade`
 
-When not using depinject, the `runtime.NewKVStoreService` method can be used to create a `KVStoreService` from a `StoreKey`:
+Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
 ```diff
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -81,6 +132,68 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
 ```
+
+The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+
+* `x/authz`
+* `x/bank`
+* `x/mint`
+* `x/crisis`
+* `x/distribution`
+* `x/evidence`
+* `x/gov`
+* `x/slashing`
+* `x/upgrade`
+
+**Users using depinject do not need any changes, this is automatically done for them.**
+
+#### Logger
+
+The following modules `NewKeeper` function now take a `log.Logger`:
+
+* `x/bank`
+
+`depinject` users must now supply the logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+
+```diff
+appConfig = depinject.Configs(
+	AppConfig,
+	depinject.Supply(
+		// supply the application options
+		appOpts,
++		logger,
+	...
+```
+
+```diff
+- app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
++ app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
+User manually wiring their chain need to add the logger argument when creating the keeper.
+
+#### Module Basics
+
+Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
+The global variable has been removed and the basic module manager can be now created from the module manager.
+
+This is automatically done for depinject users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+
+```go
+depinject.Supply(
+			// supply custom module basics
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{
+						paramsclient.ProposalHandler,
+					},
+				),
+			},
+		)
+```
+
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
 ### Packages
 
@@ -105,9 +218,9 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-#### `x/auth`
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
-Methods in the `AccountKeeper` now use `context.Context` instead of `sdk.Context`. Any module that has an interface for it will need to update and re-generate mocks if needed.
+#### `x/auth`
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
@@ -173,7 +286,7 @@ Due to the import changes, this is a breaking change. Chains need to remove **en
 * Run `make proto-gen`
 
 Other than that, the migration should be seamless.
-On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.48 (part 2).
+On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.50 (part 2).
 
 Note: It is possible that these steps must first be performed by your dependencies before you can perform them on your own codebase.
 
@@ -330,10 +443,23 @@ In case a module does not follow the standard message path, (e.g. IBC), it is ad
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
 Cosmos SDK modules now store their parameters directly in its repective modules.
-The `params` module will be removed in `v0.48`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.48`.
+The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
+
+#### `x/crisis`
+
+With the migrations of all modules away from `x/params`, the crisis module now has a store.
+The store must be created during a chain upgrade to v0.47.x.
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				crisistypes.ModuleName,
+			},
+}
+```
 
 #### `x/gov`
 
@@ -347,7 +473,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### New Proposal.Proposer field
+##### New `Proposal.Proposer` field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
@@ -403,7 +529,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-The old params module is required to still be imported in your app.go in order to handle this migration. 
+The `x/params` module should still be imported in your app.go in order to handle this migration.
+
+Because the `x/consensus` module is a new module, its store must be added while upgrading to v0.47.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				consensustypes.ModuleName,
+			},
+}
+```
 
 ##### `app.go` changes
 

@@ -12,7 +12,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
@@ -38,7 +37,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -70,7 +69,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
 	addIBCMetadata(ctx, suite.bankKeeper)
 
@@ -121,8 +120,9 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -172,8 +172,9 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
-	ctx := suite.ctx
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithBlockTime(time.Now())
 	queryClient := suite.mockQueryClient(ctx)
 
@@ -201,7 +202,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -233,7 +234,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -254,7 +255,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -458,7 +459,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
-	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
@@ -468,7 +469,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
 		))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, addr)
-		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, bal))
+		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, addr, bal))
 	}
 
 	testCases := map[string]struct {

@@ -4,23 +4,33 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -36,39 +46,110 @@ var (
 )
 
 type deterministicFixture struct {
-	ctx           sdk.Context
-	stakingKeeper *stakingkeeper.Keeper
-	bankKeeper    bankkeeper.BaseKeeper
+	app *integration.App
+
+	ctx  sdk.Context
+	cdc  codec.Codec
+	keys map[string]*storetypes.KVStoreKey
+
 	accountKeeper authkeeper.AccountKeeper
-	queryClient   stakingtypes.QueryClient
-	amt1          math.Int
-	amt2          math.Int
+	bankKeeper    bankkeeper.BaseKeeper
+	stakingKeeper *stakingkeeper.Keeper
+
+	queryClient stakingtypes.QueryClient
+	amt1        math.Int
+	amt2        math.Int
 }
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
-	f := &deterministicFixture{}
-
-	var interfaceRegistry codectypes.InterfaceRegistry
-
-	app, err := simtestutil.Setup(
-		stakingtestutil.AppConfig,
-		&f.bankKeeper,
-		&f.accountKeeper,
-		&f.stakingKeeper,
-		&interfaceRegistry,
+	keys := storetypes.NewKVStoreKeys(
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 	)
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
+
+	logger := log.NewTestLogger(t)
+	cms := integration.CreateMultiStore(keys, logger)
+
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+
+	authority := authtypes.NewModuleAddress("gov")
+
+	maccPerms := map[string][]string{
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.ModuleName:        {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	}
+
+	accountKeeper := authkeeper.NewAccountKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		sdk.Bech32MainPrefix,
+		authority.String(),
+	)
+
+	blockedAddresses := map[string]bool{
+		accountKeeper.GetAuthority(): false,
+	}
+	bankKeeper := bankkeeper.NewBaseKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		accountKeeper,
+		blockedAddresses,
+		authority.String(),
+		log.NewNopLogger(),
+	)
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule)
+
+	ctx := integrationApp.Context()
+
+	// Register MsgServer and QueryServer
+	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
+
+	// set default staking params
+	assert.NilError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
+
+	// set pools
+	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
+	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	accountKeeper.SetModuleAccount(ctx, notBondedPool)
+	bondedPool := stakingKeeper.GetBondedPool(ctx)
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	accountKeeper.SetModuleAccount(ctx, bondedPool)
 
-	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	qr := integrationApp.QueryHelper()
+	queryClient := stakingtypes.NewQueryClient(qr)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(f.ctx, interfaceRegistry)
-	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: f.stakingKeeper})
-	f.queryClient = stakingtypes.NewQueryClient(queryHelper)
+	amt1 := stakingKeeper.TokensFromConsensusPower(ctx, 101)
+	amt2 := stakingKeeper.TokensFromConsensusPower(ctx, 102)
 
-	f.amt1 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 101)
-	f.amt2 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 102)
+	f := deterministicFixture{
+		app:           integrationApp,
+		ctx:           sdk.UnwrapSDKContext(ctx),
+		cdc:           cdc,
+		keys:          keys,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+		queryClient:   queryClient,
+		amt1:          amt1,
+		amt2:          amt2,
+	}
 
-	return f
+	return &f
 }
 
 func durationGenerator() *rapid.Generator[time.Duration] {
@@ -140,14 +221,14 @@ func createAndSetValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) s
 }
 
 func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.Validator) {
-	f.stakingKeeper.SetValidator(f.ctx, validator)
-	f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, validator))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegatorAddress, coins)
+	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins))
 
 	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
@@ -232,7 +313,7 @@ func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
-	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegator, coins)
+	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins))
 
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
 	return shares, err
@@ -283,7 +364,7 @@ func TestGRPCValidators(t *testing.T) {
 	getStaticValidator(f, t)
 	getStaticValidator2(f, t)
 
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3525, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2862, false)
 }
 
 func TestGRPCValidatorDelegations(t *testing.T) {
@@ -322,7 +403,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -571,11 +652,11 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
 
-		f.stakingKeeper.SetHistoricalInfo(
+		assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(
 			f.ctx,
 			height,
 			&historicalInfo,
-		)
+		))
 
 		req := &stakingtypes.QueryHistoricalInfoRequest{
 			Height: height,
@@ -595,11 +676,11 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	height := int64(127)
 
-	f.stakingKeeper.SetHistoricalInfo(
+	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(
 		f.ctx,
 		height,
 		&historicalInfo,
-	)
+	))
 
 	req := &stakingtypes.QueryHistoricalInfoRequest{
 		Height: height,
@@ -653,7 +734,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(f, t)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6185, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6242, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

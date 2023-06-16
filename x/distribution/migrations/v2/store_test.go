@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +20,7 @@ import (
 
 func TestStoreMigration(t *testing.T) {
 	distributionKey := storetypes.NewKVStoreKey("distribution")
+	storeService := runtime.NewKVStoreService(distributionKey)
 	ctx := testutil.DefaultContext(distributionKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(distributionKey)
 
@@ -45,17 +48,17 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorOutstandingRewards",
 			v1.GetValidatorOutstandingRewardsKey(valAddr),
-			types.GetValidatorOutstandingRewardsKey(valAddr),
+			append(types.ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"DelegatorWithdrawAddr",
 			v1.GetDelegatorWithdrawAddrKey(addr2),
-			types.GetDelegatorWithdrawAddrKey(addr2),
+			append(types.DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(addr2.Bytes())...),
 		},
 		{
 			"DelegatorStartingInfo",
 			v1.GetDelegatorStartingInfoKey(valAddr, addr2),
-			types.GetDelegatorStartingInfoKey(valAddr, addr2),
+			append(append(types.DelegatorStartingInfoPrefix, address.MustLengthPrefix(valAddr.Bytes())...), address.MustLengthPrefix(addr2.Bytes())...),
 		},
 		{
 			"ValidatorHistoricalRewards",
@@ -65,12 +68,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorCurrentRewards",
 			v1.GetValidatorCurrentRewardsKey(valAddr),
-			types.GetValidatorCurrentRewardsKey(valAddr),
+			append(types.ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorAccumulatedCommission",
 			v1.GetValidatorAccumulatedCommissionKey(valAddr),
-			types.GetValidatorAccumulatedCommissionKey(valAddr),
+			append(types.ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorSlashEvent",
@@ -85,7 +88,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v2.MigrateStore(ctx, distributionKey)
+	err := v2.MigrateStore(ctx, storeService)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

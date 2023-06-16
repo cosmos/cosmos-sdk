@@ -11,25 +11,12 @@ import (
 //
 // Please use the above module instead of this package.
 type (
-	Int  = sdkmath.Int
-	Uint = sdkmath.Uint
+	Int = sdkmath.Int
 )
 
 var (
-	NewIntFromBigInt = sdkmath.NewIntFromBigInt
-	OneInt           = sdkmath.OneInt
-	NewInt           = sdkmath.NewInt
-	ZeroInt          = sdkmath.ZeroInt
-	IntEq            = sdkmath.IntEq
-	NewIntFromString = sdkmath.NewIntFromString
-	NewUint          = sdkmath.NewUint
-	NewIntFromUint64 = sdkmath.NewIntFromUint64
-	MaxInt           = sdkmath.MaxInt
-	MinInt           = sdkmath.MinInt
-)
-
-const (
-	MaxBitLen = sdkmath.MaxBitLen
+	NewInt  = sdkmath.NewInt
+	ZeroInt = sdkmath.ZeroInt
 )
 
 func (ip IntProto) String() string {
@@ -40,31 +27,11 @@ type (
 	Dec = sdkmath.LegacyDec
 )
 
-const (
-	Precision            = sdkmath.LegacyPrecision
-	DecimalPrecisionBits = sdkmath.LegacyDecimalPrecisionBits
-)
-
 var (
-	ZeroDec                  = sdkmath.LegacyZeroDec
-	OneDec                   = sdkmath.LegacyOneDec
-	SmallestDec              = sdkmath.LegacySmallestDec
-	NewDec                   = sdkmath.LegacyNewDec
-	NewDecWithPrec           = sdkmath.LegacyNewDecWithPrec
-	NewDecFromBigInt         = sdkmath.LegacyNewDecFromBigInt
-	NewDecFromBigIntWithPrec = sdkmath.LegacyNewDecFromBigIntWithPrec
-	NewDecFromInt            = sdkmath.LegacyNewDecFromInt
-	NewDecFromIntWithPrec    = sdkmath.LegacyNewDecFromIntWithPrec
-	NewDecFromStr            = sdkmath.LegacyNewDecFromStr
-	MustNewDecFromStr        = sdkmath.LegacyMustNewDecFromStr
-	MaxSortableDec           = sdkmath.LegacyMaxSortableDec
-	ValidSortableDec         = sdkmath.LegacyValidSortableDec
-	SortableDecBytes         = sdkmath.LegacySortableDecBytes
-	DecsEqual                = sdkmath.LegacyDecsEqual
-	MinDec                   = sdkmath.LegacyMinDec
-	MaxDec                   = sdkmath.LegacyMaxDec
-	DecEq                    = sdkmath.LegacyDecEq
-	DecApproxEq              = sdkmath.LegacyDecApproxEq
+	NewDecWithPrec    = sdkmath.LegacyNewDecWithPrec
+	NewDecFromInt     = sdkmath.LegacyNewDecFromInt
+	NewDecFromStr     = sdkmath.LegacyNewDecFromStr
+	MustNewDecFromStr = sdkmath.LegacyMustNewDecFromStr
 )
 
 var _ CustomProtobufType = (*Dec)(nil)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -22,8 +23,7 @@ var (
 )
 
 func (s *KeeperTestSuite) execExpectCalls() {
-	s.accountKeeper.EXPECT().StringToBytes(Addr.String()).Return(Addr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(Addr).Return(Addr.String(), nil).AnyTimes()
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 }
 
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(pk)
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(res)
 
 	newRate := math.LegacyZeroDec()
-	invalidRate := sdk.NewDec(2)
+	invalidRate := math.LegacyNewDec(2)
 
 	lowSelfDel := math.OneInt()
 	highSelfDel := math.NewInt(100)
@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, sdk.NewCoin("stake", sdk.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -467,7 +467,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -551,17 +551,14 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := stakingtypes.NewMsgCreateValidator(srcValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(srcValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
-
-	s.accountKeeper.EXPECT().StringToBytes(addr2.String()).Return(addr2, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(addr2).Return(addr2.String(), nil).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr2, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err = stakingtypes.NewMsgCreateValidator(dstValAddr, dstPk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err = msgServer.CreateValidator(ctx, msg)
@@ -570,9 +567,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, srcValAddr, shares)
-	keeper.SetDelegation(ctx, del)
-	_, found := keeper.GetDelegation(ctx, Addr, srcValAddr)
-	require.True(found)
+	require.NoError(keeper.SetDelegation(ctx, del))
+	_, err = keeper.GetDelegation(ctx, Addr, srcValAddr)
+	require.NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -611,7 +608,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			name: "invalid destination validator",
@@ -716,7 +713,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
@@ -724,9 +721,9 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
-	keeper.SetDelegation(ctx, del)
-	_, found := keeper.GetDelegation(ctx, Addr, ValAddr)
-	require.True(found)
+	require.NoError(keeper.SetDelegation(ctx, del))
+	_, err = keeper.GetDelegation(ctx, Addr, ValAddr)
+	require.NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -762,7 +759,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: shares.RoundInt()},
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "validator does not exist",
@@ -839,12 +836,9 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	s.accountKeeper.EXPECT().StringToBytes(Addr.String()).Return(Addr, nil).AnyTimes()
-	s.accountKeeper.EXPECT().BytesToString(Addr).Return(Addr.String(), nil).AnyTimes()
-
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, stakingtypes.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr, pk, amt, stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
@@ -852,15 +846,15 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
-	keeper.SetDelegation(ctx, del)
-	resDel, found := keeper.GetDelegation(ctx, Addr, ValAddr)
-	require.True(found)
+	require.NoError(keeper.SetDelegation(ctx, del))
+	resDel, err := keeper.GetDelegation(ctx, Addr, ValAddr)
+	require.NoError(err)
 	require.Equal(del, resDel)
 
 	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0)
-	keeper.SetUnbondingDelegation(ctx, ubd)
-	resUnbond, found := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
-	require.True(found)
+	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
+	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
+	require.NoError(err)
 	require.Equal(ubd, resUnbond)
 
 	testCases := []struct {
@@ -900,7 +894,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 				CreationHeight:   10,
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address: invalid bech32 string",
+			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
 			name: "entry not found at height",

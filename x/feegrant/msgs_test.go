@@ -6,14 +6,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/feegrant"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestAminoJSON(t *testing.T) {
+	legacyAmino := codec.NewLegacyAmino()
+	feegrant.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegressionTestingAminoCodec = legacyAmino
 	tx := legacytx.StdTx{}
-	var msg legacytx.LegacyMsg
+	var msg sdk.Msg
 	allowanceAny, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))})
 	require.NoError(t, err)
 

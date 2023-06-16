@@ -1,10 +1,11 @@
 package main
 
 import (
-	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
-	"github.com/rs/zerolog"
+	"os"
+
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 var runCmd = &cobra.Command{
@@ -12,23 +13,19 @@ var runCmd = &cobra.Command{
 	Short:              "Run an APP command.",
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return Run(cmd, args)
+	RunE: func(_ *cobra.Command, args []string) error {
+		return run(args)
 	},
 }
 
-// Run runs the configured program with the given args and monitors it for upgrades.
-func Run(cmd *cobra.Command, args []string, options ...RunOption) error {
+// run runs the configured program with the given args and monitors it for upgrades.
+func run(args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
 	}
 
-	logger := cmd.Context().Value(log.ContextKey).(log.Logger)
-
-	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
-	}
+	logger := cfg.Logger(os.Stdout)
 
 	runCfg := DefaultRunConfig
 	for _, opt := range options {

@@ -3,6 +3,7 @@ package autocli
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -157,6 +158,6 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 		}
 	}
 
-	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-	return err
+	cmd.Println(strings.TrimSpace(string(out)))
+	return nil
 }

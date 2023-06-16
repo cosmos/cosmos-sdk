@@ -17,7 +17,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type KeeperTestSuite struct {
@@ -35,7 +34,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

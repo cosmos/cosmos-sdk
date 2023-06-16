@@ -19,11 +19,12 @@ import (
 )
 
 const (
-	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeInfo   = "upgrade-info"
-	FlagNoValidate    = "no-validate"
-	FlagDaemonName    = "daemon-name"
-	FlagAuthority     = "authority"
+	FlagUpgradeHeight      = "upgrade-height"
+	FlagUpgradeInfo        = "upgrade-info"
+	FlagNoValidate         = "no-validate"
+	FlagNoChecksumRequired = "no-checksum-required"
+	FlagDaemonName         = "daemon-name"
+	FlagAuthority          = "authority"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -73,15 +74,21 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 			}
 
 			if !noValidate {
-				var daemonName string
-				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
+				daemonName, err := cmd.Flags().GetString(FlagDaemonName)
+				if err != nil {
+					return err
+				}
+
+				noChecksum, err := cmd.Flags().GetBool(FlagNoChecksumRequired)
+				if err != nil {
 					return err
 				}
 
 				var planInfo *plan.Info
-				if planInfo, err = plan.ParseInfo(p.Info); err != nil {
+				if planInfo, err = plan.ParseInfo(p.Info, plan.ParseOptionEnforceChecksum(!noChecksum)); err != nil {
 					return err
 				}
+
 				if err = planInfo.ValidateFull(daemonName); err != nil {
 					return err
 				}
@@ -112,6 +119,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info (dangerous!)")
+	cmd.Flags().Bool(FlagNoChecksumRequired, false, "Skip requirement of checksums for binaries in the upgrade info")
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
 	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
 

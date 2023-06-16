@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cache"
 	"cosmossdk.io/store/cachekv"
 	iavlstore "cosmossdk.io/store/iavl"
@@ -19,8 +20,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	require.NoError(t, err)
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 	store2 := mngr.GetStoreCache(sKey, store)
 
@@ -33,8 +33,7 @@ func TestUnwrap(t *testing.T) {
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	require.NoError(t, err)
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 	_ = mngr.GetStoreCache(sKey, store)
 
@@ -47,8 +46,7 @@ func TestStoreCache(t *testing.T) {
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	require.NoError(t, err)
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 	kvStore := mngr.GetStoreCache(sKey, store)
 
@@ -74,8 +72,7 @@ func TestReset(t *testing.T) {
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	require.NoError(t, err)
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 	store2 := mngr.GetStoreCache(sKey, store)
 
@@ -95,8 +92,7 @@ func TestCacheWrap(t *testing.T) {
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
-	tree, err := iavl.NewMutableTree(db, 100, false)
-	require.NoError(t, err)
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 
 	cacheWrapper := mngr.GetStoreCache(sKey, store).CacheWrap()

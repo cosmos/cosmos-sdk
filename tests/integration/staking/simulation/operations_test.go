@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -99,13 +100,9 @@ func (s *SimTestSuite) SetupTest() {
 	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
-	err = mintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	s.Require().NoError(err)
-
-	err = mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-	s.Require().NoError(err)
-
+	ctx := app.BaseApp.NewContext(false)
+	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
+	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
@@ -170,8 +167,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
-	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
-	s.Require().NoError(err)
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
 
 	// execute operation
 	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -206,8 +202,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
-	err := s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-	s.Require().NoError(err)
+	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
@@ -216,8 +211,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-	s.Require().NoError(err)
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -245,8 +239,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
 
-	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-	s.Require().NoError(err)
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -301,13 +294,11 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
-	err := s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-	s.Require().NoError(err)
+	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-	s.Require().NoError(err)
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -344,12 +335,12 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	s.stakingKeeper.SetDelegation(ctx, delegation)
-	err := s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-	require.NoError(err)
+	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	s.Require().NoError(err)
 
 	// execute operation
@@ -399,13 +390,10 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	err := s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
-	s.Require().NoError(err)
-
+	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	err = s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
-	s.Require().NoError(err)
+	s.Require().NoError(s.distrKeeper.ValidatorCurrentRewards.Set(ctx, valAddress, currentRewards))
 }
 
 func TestSimTestSuite(t *testing.T) {

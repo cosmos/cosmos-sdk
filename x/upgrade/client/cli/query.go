@@ -42,8 +42,8 @@ func GetCurrentPlanCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := types.QueryCurrentPlanRequest{}
-			res, err := queryClient.CurrentPlan(cmd.Context(), &params)
+			req := types.QueryCurrentPlanRequest{}
+			res, err := queryClient.CurrentPlan(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -77,8 +77,8 @@ func GetAppliedPlanCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 			ctx := cmd.Context()
-			params := types.QueryAppliedPlanRequest{Name: args[0]}
-			res, err := queryClient.AppliedPlan(ctx, &params)
+			req := types.QueryAppliedPlanRequest{Name: args[0]}
+			res, err := queryClient.AppliedPlan(ctx, &req)
 			if err != nil {
 				return err
 			}
@@ -130,15 +130,15 @@ func GetModuleVersionsCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			var params types.QueryModuleVersionsRequest
+			var req types.QueryModuleVersionsRequest
 
 			if len(args) == 1 {
-				params = types.QueryModuleVersionsRequest{ModuleName: args[0]}
+				req = types.QueryModuleVersionsRequest{ModuleName: args[0]}
 			} else {
-				params = types.QueryModuleVersionsRequest{}
+				req = types.QueryModuleVersionsRequest{}
 			}
 
-			res, err := queryClient.ModuleVersions(cmd.Context(), &params)
+			res, err := queryClient.ModuleVersions(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}

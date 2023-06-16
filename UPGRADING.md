@@ -5,6 +5,8 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
+
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in its previous versions, to CometBFT.
@@ -27,6 +29,28 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
+### BaseApp
+
+All ABCI methods now accept a pointer to the request and response types defined
+by CometBFT. In addition, they also return errors. An ABCI method should only
+return errors in cases where a catastrophic failure has occurred and the application
+should halt. However, this is abstracted away from the application developer. Any
+handler that an application can define or set that returns an error, will gracefully
+by handled by `BaseApp` on behalf of the application.
+
+BaseApp calls of `BeginBlock` & `Endblock` are now private but are still exposed
+to the application to define via the `Manager` type. `FinalizeBlock` is public
+and should be used in order to test and run operations. This means that although
+`BeginBlock` & `Endblock` no longer exist in the ABCI interface, they are automatically
+called by `BaseApp` during `FinalizeBlock`. Specifically, the order of operations
+is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
+
+ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
+methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
+allows an application to define handlers for these methods via `ExtendVoteHandler`
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+for more info.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -39,7 +63,14 @@ More information about [confix](https://docs.cosmos.network/main/tooling/confix)
 
 #### Events
 
-The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+The log section of `abci.TxResult` is not populated in the case of successful
+msg(s) execution. Instead a new attribute is added to all messages indicating
+the `msg_index` which identifies which events and attributes relate the same
+transaction.
+
+`BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if the event belongs
+to `BeginBlock` or `EndBlock`.
 
 #### gRPC-Web
 
@@ -417,6 +448,19 @@ The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
+#### `x/crisis`
+
+With the migrations of all modules away from `x/params`, the crisis module now has a store.
+The store must be created during a chain upgrade to v0.47.x.
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				crisistypes.ModuleName,
+			},
+}
+```
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -429,7 +473,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### New Proposal.Proposer field
+##### New `Proposal.Proposer` field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
@@ -485,7 +529,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-The old params module is required to still be imported in your app.go in order to handle this migration. 
+The `x/params` module should still be imported in your app.go in order to handle this migration.
+
+Because the `x/consensus` module is a new module, its store must be added while upgrading to v0.47.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				consensustypes.ModuleName,
+			},
+}
+```
 
 ##### `app.go` changes
 

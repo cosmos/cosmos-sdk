@@ -18,7 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -60,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		key,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
 	)
 	err := keeper.SetParams(ctx, stakingtypes.DefaultParams())
 	s.Require().NoError(err)

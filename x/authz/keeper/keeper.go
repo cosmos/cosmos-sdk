@@ -136,7 +136,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				err = k.update(ctx, grantee, granter, resp.Updated)
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

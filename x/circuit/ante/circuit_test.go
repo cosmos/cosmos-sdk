@@ -1,12 +1,14 @@
 package ante_test
 
 import (
+	"context"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	cbtypes "cosmossdk.io/x/circuit/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -16,12 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	"cosmossdk.io/x/circuit/ante"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type fixture struct {
-	ctx           sdk.Context
+	ctx           context.Context
 	mockStoreKey  storetypes.StoreKey
 	mockMsgURL    string
 	mockclientCtx client.Context
@@ -32,8 +35,8 @@ type MockCircuitBreaker struct {
 	isAllowed bool
 }
 
-func (m MockCircuitBreaker) IsAllowed(ctx sdk.Context, typeURL string) bool {
-	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker"
+func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
+	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker", nil
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -80,7 +83,8 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 
 		tx := f.txBuilder.GetTx()
 
-		_, err = decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
+		_, err = decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return ctx, nil
 		})
 

@@ -5,10 +5,9 @@ import (
 	"os"
 	"path"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {
@@ -32,10 +31,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger := cmd.Context().Value(log.ContextKey).(log.Logger)
-	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
-	}
+	logger := cfg.Logger(os.Stdout)
 
 	upgradeName := args[0]
 	if len(upgradeName) == 0 {

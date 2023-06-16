@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package testpb;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
@@ -55,4 +56,10 @@ message IntAsBytes {
     (amino.dont_omitempty) = true,
     (gogoproto.nullable)   = false
   ];
+}
+
+service IntegrationTxTestMsg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc TestFields(TestRepeatedFields) returns (TestRepeatedFields) {}
 }

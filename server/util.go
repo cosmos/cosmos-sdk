@@ -517,7 +517,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		defaultMempool,
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
 	}
 }

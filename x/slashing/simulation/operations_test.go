@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -178,13 +179,11 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
-	err = suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-	suite.Require().NoError(err)
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 	suite.Require().NoError(err)
-
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(suite.r, suite.app.BaseApp, ctx, suite.accounts, "")

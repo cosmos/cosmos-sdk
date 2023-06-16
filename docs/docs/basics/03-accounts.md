@@ -95,7 +95,7 @@ Each account is identified using `Address` which is a sequence of bytes derived 
 These types implement the `Address` interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/address.go#L108-L124
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/address.go#L126-L134
 ```
 
 Address construction algorithm is defined in [ADR-28](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-028-public-key-addresses.md).

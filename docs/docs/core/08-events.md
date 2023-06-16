@@ -87,7 +87,7 @@ the [`Context`](./02-context.md), where Event should be already registered, and 
 **Typed events:**
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/keeper/msg_server.go#L88-L91
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/keeper/msg_server.go#L95-L97
 ```
 
 **Legacy events:**

@@ -1,21 +1,16 @@
 package cosmovisor
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
@@ -40,22 +35,31 @@ type cosmovisorEnv struct {
 	Interval                 string
 	PreupgradeMaxRetries     string
 	DisableLogs              string
+	ColorLogs                string
+	TimeFormatLogs           string
+}
+
+type envMap struct {
+	val        string
+	allowEmpty bool
 }
 
 // ToMap creates a map of the cosmovisorEnv where the keys are the env var names.
-func (c cosmovisorEnv) ToMap() map[string]string {
-	return map[string]string{
-		EnvHome:                     c.Home,
-		EnvName:                     c.Name,
-		EnvDownloadBin:              c.DownloadBin,
-		EnvDownloadMustHaveChecksum: c.DownloadMustHaveChecksum,
-		EnvRestartUpgrade:           c.RestartUpgrade,
-		EnvRestartDelay:             c.RestartDelay,
-		EnvSkipBackup:               c.SkipBackup,
-		EnvDataBackupPath:           c.DataBackupPath,
-		EnvInterval:                 c.Interval,
-		EnvPreupgradeMaxRetries:     c.PreupgradeMaxRetries,
-		EnvDisableLogs:              c.DisableLogs,
+func (c cosmovisorEnv) ToMap() map[string]envMap {
+	return map[string]envMap{
+		EnvHome:                     {val: c.Home, allowEmpty: false},
+		EnvName:                     {val: c.Name, allowEmpty: false},
+		EnvDownloadBin:              {val: c.DownloadBin, allowEmpty: false},
+		EnvDownloadMustHaveChecksum: {val: c.DownloadMustHaveChecksum, allowEmpty: false},
+		EnvRestartUpgrade:           {val: c.RestartUpgrade, allowEmpty: false},
+		EnvRestartDelay:             {val: c.RestartDelay, allowEmpty: false},
+		EnvSkipBackup:               {val: c.SkipBackup, allowEmpty: false},
+		EnvDataBackupPath:           {val: c.DataBackupPath, allowEmpty: false},
+		EnvInterval:                 {val: c.Interval, allowEmpty: false},
+		EnvPreupgradeMaxRetries:     {val: c.PreupgradeMaxRetries, allowEmpty: false},
+		EnvDisableLogs:              {val: c.DisableLogs, allowEmpty: false},
+		EnvColorLogs:                {val: c.ColorLogs, allowEmpty: false},
+		EnvTimeFormatLogs:           {val: c.TimeFormatLogs, allowEmpty: true},
 	}
 }
 
@@ -84,6 +88,10 @@ func (c *cosmovisorEnv) Set(envVar, envVal string) {
 		c.PreupgradeMaxRetries = envVal
 	case EnvDisableLogs:
 		c.DisableLogs = envVal
+	case EnvColorLogs:
+		c.ColorLogs = envVal
+	case EnvTimeFormatLogs:
+		c.TimeFormatLogs = envVal
 	default:
 		panic(fmt.Errorf("Unknown environment variable [%s]. Ccannot set field to [%s]. ", envVar, envVal))
 	}
@@ -114,9 +122,9 @@ func (s *argsTestSuite) setEnv(t *testing.T, env *cosmovisorEnv) {
 	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
-		if len(envVal) != 0 {
-			err = os.Setenv(envVar, envVal)
-			msg = fmt.Sprintf("setting %s to %s", envVar, envVal)
+		if len(envVal.val) != 0 || envVal.allowEmpty {
+			err = os.Setenv(envVar, envVal.val)
+			msg = fmt.Sprintf("setting %s to %s", envVar, envVal.val)
 		} else {
 			err = os.Unsetenv(envVar)
 			msg = fmt.Sprintf("unsetting %s", envVar)
@@ -288,7 +296,7 @@ func (s *argsTestSuite) TestBooleanOption() {
 	name := "COSMOVISOR_TEST_VAL"
 
 	check := func(def, expected, isErr bool, msg string) {
-		v, err := booleanOption(name, def)
+		v, err := BooleanOption(name, def)
 		if isErr {
 			s.Require().Error(err)
 			return
@@ -320,6 +328,57 @@ func (s *argsTestSuite) TestBooleanOption() {
 	os.Setenv(name, "TRUE")
 	check(true, true, false, "should handle true value case not sensitive")
 	check(false, true, false, "should handle true value case not sensitive")
+}
+
+func (s *argsTestSuite) TestTimeFormat() {
+	initialEnv := s.clearEnv()
+	defer s.setEnv(nil, initialEnv)
+
+	name := "COSMOVISOR_TEST_VAL"
+
+	check := func(def, expected string, isErr bool, msg string) {
+		v, err := TimeFormatOptionFromEnv(name, def)
+		if isErr {
+			s.Require().Error(err)
+			return
+		}
+		s.Require().NoError(err)
+		s.Require().Equal(expected, v, msg)
+	}
+
+	os.Unsetenv(name)
+	check(time.Kitchen, time.Kitchen, false, "should correctly set default value")
+
+	os.Setenv(name, "")
+	check(time.Kitchen, "", false, "should correctly set to a none")
+
+	os.Setenv(name, "wrong")
+	check(time.Kitchen, "", true, "should error on wrong value")
+
+	os.Setenv(name, "layout")
+	check(time.Kitchen, time.Layout, false, "should handle layout value")
+	os.Setenv(name, "ansic")
+	check(time.Kitchen, time.ANSIC, false, "should handle ansic value")
+	os.Setenv(name, "unixdate")
+	check(time.Kitchen, time.UnixDate, false, "should handle unixdate value")
+	os.Setenv(name, "rubydate")
+	check(time.Kitchen, time.RubyDate, false, "should handle rubydate value")
+	os.Setenv(name, "rfc822")
+	check(time.Kitchen, time.RFC822, false, "should handle rfc822 value")
+	os.Setenv(name, "rfc822z")
+	check(time.Kitchen, time.RFC822Z, false, "should handle rfc822z value")
+	os.Setenv(name, "rfc850")
+	check(time.Kitchen, time.RFC850, false, "should handle rfc850 value")
+	os.Setenv(name, "rfc1123")
+	check(time.Kitchen, time.RFC1123, false, "should handle rfc1123 value")
+	os.Setenv(name, "rfc1123z")
+	check(time.Kitchen, time.RFC1123Z, false, "should handle rfc1123z value")
+	os.Setenv(name, "rfc3339")
+	check(time.Kitchen, time.RFC3339, false, "should handle rfc3339 value")
+	os.Setenv(name, "rfc3339nano")
+	check(time.Kitchen, time.RFC3339Nano, false, "should handle rfc3339nano value")
+	os.Setenv(name, "kitchen")
+	check(time.Kitchen, time.Kitchen, false, "should handle kitchen value")
 }
 
 func (s *argsTestSuite) TestDetailString() {
@@ -355,6 +414,9 @@ func (s *argsTestSuite) TestDetailString() {
 		fmt.Sprintf("%s: %t", EnvSkipBackup, unsafeSkipBackup),
 		fmt.Sprintf("%s: %s", EnvDataBackupPath, home),
 		fmt.Sprintf("%s: %d", EnvPreupgradeMaxRetries, preupgradeMaxRetries),
+		fmt.Sprintf("%s: %t", EnvDisableLogs, cfg.DisableLogs),
+		fmt.Sprintf("%s: %t", EnvColorLogs, cfg.ColorLogs),
+		fmt.Sprintf("%s: %s", EnvTimeFormatLogs, cfg.TimeFormatLogs),
 		"Derived Values:",
 		fmt.Sprintf("Root Dir: %s", home),
 		fmt.Sprintf("Upgrade Dir: %s", home),
@@ -378,7 +440,18 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name string, downloadBin, downloadMustHaveChecksum, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval, preupgradeMaxRetries int, disableLogs bool) *Config {
+	newConfig := func(
+		home, name string,
+		downloadBin bool,
+		downloadMustHaveChecksum bool,
+		restartUpgrade bool,
+		restartDelay int,
+		skipBackup bool,
+		dataBackupPath string,
+		interval, preupgradeMaxRetries int,
+		disableLogs, colorLogs bool,
+		timeFormatLogs string,
+	) *Config {
 		return &Config{
 			Home:                     home,
 			Name:                     name,
@@ -391,6 +464,8 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			DataBackupPath:           dataBackupPath,
 			PreupgradeMaxRetries:     preupgradeMaxRetries,
 			DisableLogs:              disableLogs,
+			ColorLogs:                colorLogs,
+			TimeFormatLogs:           timeFormatLogs,
 		}
 	}
 
@@ -413,214 +488,247 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 				DataBackupPath:           "bad",
 				Interval:                 "bad",
 				PreupgradeMaxRetries:     "bad",
+				TimeFormatLogs:           "bad",
 			},
 			expectedCfg:      nil,
-			expectedErrCount: 10,
+			expectedErrCount: 11,
 		},
 		{
 			name:             "all good",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "nothing set",
-			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", "", "", "", "false"},
+			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", "", "", "", "false", "false", ""},
 			expectedCfg:      nil,
 			expectedErrCount: 3,
 		},
 		// Note: Home and Name tests are done in TestValidate
+		// timeformat tests are done in the TestTimeFormat
 		{
 			name:             "download bin bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "bad", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "bad", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
-			name:             "download bin not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false),
+			name: "download bin not set",
+
+			envVals:          cosmovisorEnv{absPath, "testname", "", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download ensure checksum true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download ensure checksum false",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "bad", "600ms", "true", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "bad", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart upgrade not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "bad", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "bad", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "skip unsafe backups not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "false", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "false", "", "303ms", "1", "false", "true", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false, true, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "bad", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "bad", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "0", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "0", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 300, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "", "1", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 300, 1, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval 600",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "600", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "600", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 1s",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "1s", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 1000, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "1s", "1", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 1000, 1, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval -3m",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "-3m", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "-3m", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart delay bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "bad", "false", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "bad", "false", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart delay 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "0", "false", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "0", "false", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart delay not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "", "false", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 0, false, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "", "false", "", "303ms", "1", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 0, false, absPath, 303, 1, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart delay 600",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600", "false", "", "300ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600", "false", "", "300ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart delay 1s",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "1s", "false", "", "303ms", "1", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 1000, false, absPath, 303, 1, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "1s", "false", "", "303ms", "1", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 1000, false, absPath, 303, 1, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart delay -3m",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "-3m", "false", "", "303ms", "1", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "-3m", "false", "", "303ms", "1", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "prepupgrade max retries bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "bad", "false"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "bad", "false", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "prepupgrade max retries 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "0", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "0", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries 5",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "false"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 5, false),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "false", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 5, false, false, time.Kitchen),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "disable logs bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "bad"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "bad", "true", "kitchen"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "disable logs good",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, time.Kitchen),
 			expectedErrCount: 0,
+		},
+		{
+			name:             "disable logs color bad",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "true", "bad", "kitchen"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "disable logs color good",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", "kitchen"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, time.Kitchen),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "disable logs timestamp",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", ""},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, ""),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "enable rf3339 logs timestamp",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "true", "rfc3339"},
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, true, time.RFC3339),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "invalid logs timestamp format",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "true", "invalid"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
 		},
 	}
 
@@ -632,97 +740,12 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 				assert.NoError(t, err)
 			} else if assert.Error(t, err) {
 				errCount := 1
-				if multi, isMulti := err.(*errors.MultiError); isMulti {
-					errCount = multi.Len()
+				if errMulti, ok := err.(interface{ Unwrap() []error }); ok {
+					errCount = len(errMulti.Unwrap())
 				}
 				assert.Equal(t, tc.expectedErrCount, errCount, "error count")
 			}
 			assert.Equal(t, tc.expectedCfg, cfg, "config")
-		})
-	}
-}
-
-func (s *argsTestSuite) TestLogConfigOrError() {
-	cfg := &Config{
-		Home:                  "/no/place/like/it",
-		Name:                  "cosmotestvisor",
-		AllowDownloadBinaries: true,
-		RestartAfterUpgrade:   true,
-		PollInterval:          999,
-		UnsafeSkipBackup:      false,
-		DataBackupPath:        "/no/place/like/it",
-		PreupgradeMaxRetries:  20,
-	}
-	errNormal := fmt.Errorf("this is a single error")
-	errs := []error{
-		fmt.Errorf("multi-error error 1"),
-		fmt.Errorf("multi-error error 2"),
-		fmt.Errorf("multi-error error 3"),
-	}
-	errMulti := errors.FlattenErrors(errs...)
-
-	makeTestLogger := func(testName string, out io.Writer) log.Logger {
-		output := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Kitchen, NoColor: true}
-		logger := zerolog.New(output).With().Str("test", testName).Timestamp().Logger()
-		return log.NewCustomLogger(logger)
-	}
-
-	tests := []struct {
-		name        string
-		cfg         *Config
-		err         error
-		contains    []string
-		notcontains []string
-	}{
-		{
-			name:        "normal error",
-			cfg:         nil,
-			err:         errNormal,
-			contains:    []string{"configuration error", errNormal.Error()}, // TODO: Fix this.
-			notcontains: nil,
-		},
-		{
-			name:        "multi error",
-			cfg:         nil,
-			err:         errMulti,
-			contains:    []string{"configuration errors found", errs[0].Error(), errs[1].Error(), errs[2].Error()},
-			notcontains: nil,
-		},
-		{
-			name:        "config",
-			cfg:         cfg,
-			err:         nil,
-			contains:    []string{"Configurable Values", cfg.DetailString()},
-			notcontains: nil,
-		},
-		{
-			name:        "error and config - no config details",
-			cfg:         cfg,
-			err:         errNormal,
-			contains:    []string{"error"},
-			notcontains: []string{"Configuration is valid", EnvName, cfg.Home}, // Just some spot checks.
-		},
-		{
-			name:        "nil nil - no output",
-			cfg:         nil,
-			err:         nil,
-			contains:    nil,
-			notcontains: []string{" "},
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			var b bytes.Buffer
-			logger := makeTestLogger(tc.name, &b)
-			LogConfigOrError(logger, tc.cfg, tc.err)
-			output := b.String()
-			for _, expected := range tc.contains {
-				assert.Contains(t, output, expected)
-			}
-			for _, unexpected := range tc.notcontains {
-				assert.NotContains(t, output, unexpected)
-			}
 		})
 	}
 }

@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"strconv"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/grpc"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -35,7 +35,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -236,11 +235,11 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 
 	queryFn := querier.Route(balancesPath)
 
-	q := &banktypes.QueryAllBalancesRequest{
+	q := &bankv1beta1.QueryAllBalancesRequest{
 		Address:    address,
 		Pagination: nil,
 	}
-	b, err := gogoproto.Marshal(q)
+	b, err := proto.Marshal(q)
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal bank type query request, %w", err)
 	}
@@ -253,11 +252,19 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 	if err != nil {
 		return nil, fmt.Errorf("bank query error, %w", err)
 	}
-	balance := new(banktypes.QueryAllBalancesResponse)
-	if err := gogoproto.Unmarshal(resp.Value, balance); err != nil {
+	balance := new(bankv1beta1.QueryAllBalancesResponse)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
-	return balance.Balances, nil
+	coins := make(sdk.Coins, len(balance.Balances))
+	for i, b := range balance.Balances {
+		amount, err := strconv.Atoi(b.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
+		}
+		coins[i] = sdk.NewCoin(b.Denom, sdk.NewInt(int64(amount)))
+	}
+	return coins, nil
 }
 
 // We use the baseapp.QueryRouter here to do inter-module state querying.

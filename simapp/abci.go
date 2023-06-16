@@ -79,6 +79,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtension() sdk.VerifyVoteExtensionHand
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_VerifyStatus(abci.ResponseApplySnapshotChunk_ACCEPT)}, nil
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
 }

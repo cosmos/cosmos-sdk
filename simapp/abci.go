@@ -53,9 +53,7 @@ func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 			return nil, fmt.Errorf("failed to encode vote extension: %w", err)
 		}
 
-		return &abci.ResponseExtendVote{
-			VoteExtension: bz,
-		}, nil
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 }
 

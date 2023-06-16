@@ -74,13 +74,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L6
 In practice, the [constructor of the application](../basics/00-app-anatomy.md#constructor-function) is passed as the `appCreator`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/simd/cmd/root.go#L254-L268
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root.go#L278-L291
 ```
 
 Then, the instance of `app` is used to instantiate a new CometBFT node:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L336-L348
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L341-L378
 ```
 
 The CometBFT node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/cometbft/cometbft/blob/v0.37.0/abci/types/application.go#L9-L35) (given that `app` extends [`baseapp`](./00-baseapp.md)). As part of the `node.New` method, CometBFT makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the CometBFT node. The difference between these two heights should always be negative or null. If it is strictly negative, `node.New` will replay blocks until the height of the application reaches the height of the CometBFT node. Finally, if the height of the application is `0`, the CometBFT node will call [`InitChain`](./00-baseapp.md#initchain) on the application to initialize the state from the genesis file.

@@ -112,8 +112,8 @@ func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.Query
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
 
-	rewards, err := k.GetValidatorOutstandingRewards(ctx, valAdr)
-	if err != nil {
+	rewards, err := k.Keeper.ValidatorOutstandingRewards.Get(ctx, valAdr)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
 		return nil, err
 	}
 

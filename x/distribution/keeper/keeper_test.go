@@ -106,7 +106,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	)
 
 	// set outstanding rewards
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// set commission
 	require.NoError(t, distrKeeper.ValidatorsAccumulatedCommission.Set(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission}))
@@ -162,8 +162,8 @@ func TestGetTotalRewards(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
 	}
 
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	expectedRewards := valCommission.MulDec(math.LegacyNewDec(2))
 	totalRewards := distrKeeper.GetTotalRewards(ctx)

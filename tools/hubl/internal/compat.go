@@ -30,7 +30,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 				InterfaceName: iface,
 			})
 			if err == nil {
-				interfaceImplNames = append(interfaceImplNames, implRes.ImplementationMessageNames...)
+				interfaceImplNames = append(interfaceImplNames, implRes.ImplementationMessageNames[1:]...)
 			}
 		}
 	}
@@ -56,6 +56,8 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			}
 
 			switch res := in.MessageResponse.(type) {
+			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
+				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // SA1019: we want to keep using v1alpha
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:

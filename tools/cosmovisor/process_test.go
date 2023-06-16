@@ -114,7 +114,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger(os.Stdout, log.ColorOption(false)).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -128,7 +128,6 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
-
 	require.NoError(err)
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())

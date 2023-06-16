@@ -150,7 +150,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 // checkHeight checks if the current block height
 func (fw *fileWatcher) checkHeight() (int64, error) {
-	result, err := exec.Command(fw.currentBin, "status").Output()
+	result, err := exec.Command(fw.currentBin, "status").Output() //nolint:gosec // we want to execute the status command
 	if err != nil {
 		return 0, err
 	}

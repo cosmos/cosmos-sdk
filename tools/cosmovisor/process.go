@@ -64,7 +64,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			l.logger.Error("termined", "error", err, "bin", bin)
+			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
 		}
 	}()
@@ -219,6 +219,32 @@ func (l *Launcher) executePreUpgradeCmd() error {
 
 	l.logger.Info("pre-upgrade result", "result", result)
 	return nil
+}
+
+// checkHeight checks if the current block height
+func (l *Launcher) checkHeight() (uint64, error) {
+	bin, err := l.cfg.CurrentBin()
+	if err != nil {
+		return 0, fmt.Errorf("error creating symlink to genesis: %w", err)
+	}
+
+	result, err := exec.Command(bin, "status").Output()
+	if err != nil {
+		return 0, err
+	}
+
+	type response struct {
+		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"SyncInfo"`
+	}
+
+	var resp response
+	if err := json.Unmarshal(result, &resp); err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseUint(resp.SyncInfo.LatestBlockHeight, 10, 64)
 }
 
 // IsSkipUpgradeHeight checks if pre-upgrade script must be run.

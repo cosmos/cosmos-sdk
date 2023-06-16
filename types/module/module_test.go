@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"reflect"
 	"testing"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -479,6 +481,59 @@ func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
 	_, err = mm.BeginBlock(sdk.Context{})
 	require.EqualError(t, err, "some error")
+}
+
+type MockConsensusParamGetter struct {
+	ctrl     *gomock.Controller
+	recorder *MockConsensusParamGetterRecorder
+}
+
+type MockConsensusParamGetterRecorder struct {
+	mock *MockConsensusParamGetter
+}
+
+func NewMockConsensusParamGetter(ctrl *gomock.Controller) *MockConsensusParamGetter {
+	mock := &MockConsensusParamGetter{ctrl: ctrl}
+	mock.recorder = &MockConsensusParamGetterRecorder{mock}
+	return mock
+}
+
+func (m *MockConsensusParamGetter) EXPECT() *MockConsensusParamGetterRecorder {
+	return m.recorder
+}
+
+func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) *tmproto.ConsensusParams {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConsensusParams", arg0)
+	ret0, _ := ret[0].(*tmproto.ConsensusParams)
+	return ret0
+}
+
+// BeginBlock indicates an expected call of BeginBlock.
+func (mr *MockConsensusParamGetterRecorder) GetConsensusParams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsensusParams", reflect.TypeOf((*MockConsensusParamGetter)(nil).GetConsensusParams), arg0)
+}
+
+func TestManager_BeginBlock_WithConsensusParamsGetter(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockUpgradeModule := mock.NewMockCoreAppModule(mockCtrl)
+	mockParamsGetter := NewMockConsensusParamGetter(mockCtrl)
+
+	// Create a Manager with the mock consensusParamsGetter and an upgrade module
+	m := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"upgrade": mockUpgradeModule,
+	}).WithConsensusParamsGetter(mockParamsGetter)
+
+	mockUpgradeModule.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Return(&cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxBytes: 1000},
+	})
+	ctx := sdk.Context{}
+	_, err := m.BeginBlock(ctx)
+	require.NoError(t, err)
 }
 
 func TestCoreAPIManager_EndBlock(t *testing.T) {

@@ -263,7 +263,7 @@ func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error
 
 // ConsensusParamsGetter is an interface to retrieve consensus parameters for a given context.
 type ConsensusParamsGetter interface {
-	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+	GetConsensusParams(ctx sdk.Context) tmproto.ConsensusParams
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -721,8 +721,8 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 				// and consensus parameters should not be overwritten.
 				if p.Block == nil {
 					cp := m.consensusParamsGetter.GetConsensusParams(ctx)
-					if cp != nil {
-						ctx = ctx.WithConsensusParams(*cp)
+					if cp.Block != nil {
+						ctx = ctx.WithConsensusParams(cp)
 					}
 				}
 			}

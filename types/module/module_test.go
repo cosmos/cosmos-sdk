@@ -502,10 +502,10 @@ func (m *MockConsensusParamGetter) EXPECT() *MockConsensusParamGetterRecorder {
 	return m.recorder
 }
 
-func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) *tmproto.ConsensusParams {
+func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) tmproto.ConsensusParams {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConsensusParams", arg0)
-	ret0, _ := ret[0].(*tmproto.ConsensusParams)
+	ret0, _ := ret[0].(tmproto.ConsensusParams)
 	return ret0
 }
 
@@ -531,7 +531,7 @@ func TestManager_BeginBlock_WithConsensusParamsGetter(t *testing.T) {
 	ctx := sdk.Context{}
 
 	mockUpgradeModule.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Times(1).Return(&cmtproto.ConsensusParams{
+	mockParamsGetter.EXPECT().GetConsensusParams(gomock.Any()).Times(1).Return(cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{MaxBytes: 1000},
 	})
 	_, err := m.BeginBlock(ctx)

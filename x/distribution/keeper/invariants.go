@@ -70,13 +70,18 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		var remaining sdk.DecCoins
 
 		valDelegationAddrs := make(map[string][]sdk.AccAddress)
-		for _, del := range k.stakingKeeper.GetAllSDKDelegations(ctx) {
+		allDelegations, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, del := range allDelegations {
 			valAddr := del.GetValidatorAddr().String()
 			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
 		}
 
 		// iterate over all validators
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		err = k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 
 			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
@@ -100,6 +105,9 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
 		broken := len(remaining) > 0 && remaining[0].Amount.IsNegative()
 		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
@@ -111,11 +119,19 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		valCount := uint64(0)
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})
-		dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		dels, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		slashCount := uint64(0)
 		k.IterateValidatorSlashEvents(ctx,
 			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {

@@ -1,6 +1,13 @@
 package keeper
 
 import (
+<<<<<<< HEAD
+=======
+	"context"
+	"errors"
+
+	"cosmossdk.io/collections"
+>>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324))
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,13 +28,16 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // initialize validator distribution record
-func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
+func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
 	return h.k.initializeValidator(ctx, val)
 }
 
 // AfterValidatorRemoved performs clean up after a validator is removed
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	// fetch outstanding
 	outstanding, err := h.k.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
 	if err != nil {
@@ -117,16 +127,27 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 }
 
 // increment period
-func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	_, err := h.k.IncrementValidatorPeriod(ctx, val)
+func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	_, err = h.k.IncrementValidatorPeriod(ctx, val)
 	return err
 }
 
 // withdraw delegation rewards (which also increments period)
-func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	del, err := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if err != nil {
+		return err
+	}
 
 	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		return err
@@ -136,32 +157,32 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 }
 
 // create new delegation period record
-func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return h.k.initializeDelegation(ctx, valAddr, delAddr)
 }
 
 // record the slash event
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec) error {
+func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec) error {
 	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 	return nil
 }
 
-func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
+func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBonded(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
+func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }

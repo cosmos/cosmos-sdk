@@ -92,6 +92,7 @@ Then, parameters used to define [volatile states](#state-updates) (i.e. cached s
   [`Commit`](#commit) and gets re-initialized on `FinalizeBlock`.
 * `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
 * `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
+* `VoteExtensionState`: This state is updated during [`ExtendVote`](#extendvote) & [`VerifyVoteExtension`](#verifyvoteextension).
 
 Finally, a few more important parameters:
 
@@ -540,7 +541,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#
 
 `VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process does NOT have be deterministic and the data returned can be unique to the validator process.
 
-In the Cosmos-SDK this is implemented as a NoOp.
+In the Cosmos-SDK this is implemented as a NoOp:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L282-L288

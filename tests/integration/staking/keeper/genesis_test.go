@@ -40,10 +40,14 @@ func TestInitGenesis(t *testing.T) {
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
 	}
-	f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
 
-	params := (f.stakingKeeper.GetParams(f.sdkCtx))
-	validators := (f.stakingKeeper.GetAllValidators(f.sdkCtx))
+	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	assert.NilError(t, err)
+
+	validators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	assert.NilError(t, err)
+
 	assert.Assert(t, len(validators) == 1)
 	var delegations []types.Delegation
 
@@ -87,7 +91,8 @@ func TestInitGenesis(t *testing.T) {
 		),
 	)
 
-	genesisDelegations := (f.stakingKeeper.GetAllDelegations(f.sdkCtx))
+	genesisDelegations, err := f.stakingKeeper.GetAllDelegations(f.sdkCtx)
+	assert.NilError(t, err)
 	delegations = append(delegations, genesisDelegations...)
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
@@ -96,7 +101,10 @@ func TestInitGenesis(t *testing.T) {
 	actualGenesis := (f.stakingKeeper.ExportGenesis(f.sdkCtx))
 	assert.DeepEqual(t, genesisState.Params, actualGenesis.Params)
 	assert.DeepEqual(t, genesisState.Delegations, actualGenesis.Delegations)
-	assert.DeepEqual(t, (f.stakingKeeper.GetAllValidators(f.sdkCtx)), actualGenesis.Validators)
+
+	allvals, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, allvals, actualGenesis.Validators)
 
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(f.sdkCtx, (f.stakingKeeper))
@@ -175,13 +183,13 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	assert.Assert(t, size > 100)
 
 	f, addrs := bootstrapGenesisTest(t, 200)
-	genesisValidators := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	genesisValidators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	assert.NilError(t, err)
 
-	params := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	assert.NilError(t, err)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
-
-	var err error
 
 	bondedPoolAmt := math.ZeroInt()
 	for i := range validators {

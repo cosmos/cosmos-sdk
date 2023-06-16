@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
@@ -57,7 +56,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(types.GovModuleName).String(),
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper

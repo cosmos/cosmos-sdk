@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,46 +16,48 @@ import (
 )
 
 type fileWatcher struct {
-	logger log.Logger
-
-	// full path to a watched file
-	filename string
+	filename string // full path to a watched file
 	interval time.Duration
 
+	currentBin  string
 	currentInfo upgradetypes.Plan
 	lastModTime time.Time
 	cancel      chan bool
 	ticker      *time.Ticker
-	needsUpdate bool
 
+	needsUpdate bool
 	initialized bool
 }
 
-func newUpgradeFileWatcher(logger log.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error) {
+	filename := cfg.UpgradeInfoFilePath()
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
 
 	filenameAbs, err := filepath.Abs(filename)
 	if err != nil {
-		return nil,
-			fmt.Errorf("invalid path; %s must be a valid file path: %w", filename, err)
+		return nil, fmt.Errorf("invalid path: %s must be a valid file path: %w", filename, err)
 	}
 
 	dirname := filepath.Dir(filename)
-	info, err := os.Stat(dirname)
-	if err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("invalid path; %s must be an existing directory: %w", dirname, err)
+	if info, err := os.Stat(dirname); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("invalid path: %s must be an existing directory: %w", dirname, err)
+	}
+
+	bin, err := cfg.CurrentBin()
+	if err != nil {
+		return nil, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
 	return &fileWatcher{
-		logger:      logger,
+		currentBin:  bin,
 		filename:    filenameAbs,
-		interval:    interval,
+		interval:    cfg.PollInterval,
 		currentInfo: upgradetypes.Plan{},
 		lastModTime: time.Time{},
 		cancel:      make(chan bool),
-		ticker:      time.NewTicker(interval),
+		ticker:      time.NewTicker(cfg.PollInterval),
 		needsUpdate: false,
 		initialized: false,
 	}, nil
@@ -63,9 +67,9 @@ func (fw *fileWatcher) Stop() {
 	close(fw.cancel)
 }
 
-// pools the filesystem to check for new upgrade currentInfo. currentName is the name
-// of currently running upgrade. The check is rejected if it finds an upgrade with the same
-// name.
+// MonitorUpdate pools the filesystem to check for new upgrade currentInfo.
+// currentName is the name of currently running upgrade.  The check is rejected if it finds
+// an upgrade with the same name.
 func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan struct{} {
 	fw.ticker.Reset(fw.interval)
 	done := make(chan struct{})
@@ -113,6 +117,12 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		panic(fmt.Errorf("failed to parse upgrade info file: %w", err))
 	}
 
+	// file exist but too early in height
+	currentHeight, _ := fw.checkHeight()
+	if currentHeight != 0 && currentHeight < info.Height {
+		return false
+	}
+
 	if !fw.initialized {
 		// daemon has restarted
 		fw.initialized = true
@@ -136,6 +146,31 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	}
 
 	return false
+}
+
+// checkHeight checks if the current block height
+func (fw *fileWatcher) checkHeight() (int64, error) {
+	result, err := exec.Command(fw.currentBin, "status").Output()
+	if err != nil {
+		return 0, err
+	}
+
+	type response struct {
+		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"SyncInfo"`
+	}
+
+	var resp response
+	if err := json.Unmarshal(result, &resp); err != nil {
+		return 0, err
+	}
+
+	if resp.SyncInfo.LatestBlockHeight == "" {
+		return 0, errors.New("latest block height is empty")
+	}
+
+	return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
 }
 
 func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {

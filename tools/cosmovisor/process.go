@@ -2,7 +2,6 @@ package cosmovisor
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,8 +20,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
-var ErrUpgradeInfoNotFound = errors.New("upgrade-info.json not found")
-
 type Launcher struct {
 	logger log.Logger
 	cfg    *Config
@@ -30,7 +27,7 @@ type Launcher struct {
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
+	fw, err := newUpgradeFileWatcher(cfg, logger)
 	if err != nil {
 		return Launcher{}, err
 	}
@@ -70,10 +67,6 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}()
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
-		if errors.Is(err, ErrUpgradeInfoNotFound) {
-			return false, nil
-		}
-
 		return false, err
 	}
 
@@ -102,13 +95,14 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 // When it returns, the process (app) is finished.
 //
 // It returns (true, nil) if an upgrade should be initiated (and we killed the process)
-// It returns (false, err) if the process died by itself, or there was an issue reading the upgrade-info file.
+// It returns (false, err) if the process died by itself
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happen with "start" but may happen with short-lived commands like `simd export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		return false, ErrUpgradeInfoNotFound
+		// upgrade info not found do nothing
+		currentUpgrade = upgradetypes.Plan{}
 	}
 
 	cmdDone := make(chan error)
@@ -219,32 +213,6 @@ func (l *Launcher) executePreUpgradeCmd() error {
 
 	l.logger.Info("pre-upgrade result", "result", result)
 	return nil
-}
-
-// checkHeight checks if the current block height
-func (l *Launcher) checkHeight() (uint64, error) {
-	bin, err := l.cfg.CurrentBin()
-	if err != nil {
-		return 0, fmt.Errorf("error creating symlink to genesis: %w", err)
-	}
-
-	result, err := exec.Command(bin, "status").Output()
-	if err != nil {
-		return 0, err
-	}
-
-	type response struct {
-		SyncInfo struct {
-			LatestBlockHeight string `json:"latest_block_height"`
-		} `json:"SyncInfo"`
-	}
-
-	var resp response
-	if err := json.Unmarshal(result, &resp); err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseUint(resp.SyncInfo.LatestBlockHeight, 10, 64)
 }
 
 // IsSkipUpgradeHeight checks if pre-upgrade script must be run.

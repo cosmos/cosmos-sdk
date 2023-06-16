@@ -552,12 +552,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			}
 
 			go func() {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Println("⚡️⚡️⚡️ RECOVERED PANIC IN OE")
-						app.oeInfo.Panic = r
-					}
-				}()
 				log.Println("Running OE ✅")
 				app.oeInfo.Response, app.oeInfo.Error = app.internalFinalizeBlock(app.oeInfo.Request)
 				app.oeInfo.Completion <- struct{}{}
@@ -737,7 +731,10 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 			WithHeaderHash(req.Hash)
 	}
 
-	beginBlock := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
 
 	events = append(events, beginBlock.Events...)
 
@@ -790,10 +787,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}()
 
 	if app.oeInfo != nil && app.oeEnabled {
-		if app.oeInfo.Panic != nil {
-			panic(app.oeInfo.Panic)
-		}
-
 		<-app.oeInfo.Completion
 		if !app.oeInfo.Aborted && bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
 			return app.oeInfo.Response, app.oeInfo.Error

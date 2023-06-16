@@ -266,6 +266,14 @@ func NewSimApp(
 	// }
 	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
+	// create and set dummy vote extension handler
+	voteExtOp := func(bApp *baseapp.BaseApp) {
+		voteExtHandler := NewVoteExtensionHandler()
+		bApp.SetExtendVoteHandler(voteExtHandler.ExtendVote())
+		bApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtension())
+	}
+	baseAppOptions = append(baseAppOptions, voteExtOp)
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)

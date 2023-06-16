@@ -64,7 +64,8 @@ The following examples show how to query Events using the Cosmos SDK.
 ## EventManager
 
 In Cosmos SDK applications, Events are managed by an abstraction called the `EventManager`.
-Internally, the `EventManager` tracks a list of Events for the entire execution flow of `FinalizeBlock` (i.e. transaction execution, `BeginBlock`, `EndBlock`).
+Internally, the `EventManager` tracks a list of Events for the entire execution flow of `FinalizeBlock` 
+(i.e. transaction execution, `BeginBlock`, `EndBlock`).
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/events.go#L24-L27

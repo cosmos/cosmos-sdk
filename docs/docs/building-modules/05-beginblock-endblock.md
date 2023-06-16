@@ -30,7 +30,7 @@ The actual implementation of `BeginBlocker` and `EndBlocker` in `abci.go` are ve
 * If needed, they use the `keeper` and `ctx` to trigger state-transitions.
 * If needed, they can emit [`events`](../core/08-events.md) via the `ctx`'s `EventManager`.
 
-A specific type of `EndBlocker` is is available to return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://docs.cometbft.com/v0.37/spec/abci/abci++_methods#endblock). This is the preferred way to implement custom validator changes.
+A specific type of `EndBlocker` is available to return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://docs.cometbft.com/v0.37/spec/abci/abci++_methods#endblock). This is the preferred way to implement custom validator changes.
 
 It is possible for developers to define the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./01-module-manager.md#manager).
 

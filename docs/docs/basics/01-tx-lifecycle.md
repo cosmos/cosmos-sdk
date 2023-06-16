@@ -208,7 +208,7 @@ explicitly ordered in the block proposal.
 
 The `FinalizeBlock` ABCI function defined in [`BaseApp`](../core/00-baseapp.md) does the bulk of the
 state transitions: it is run for each transaction in the block in sequential order as committed
-to during consensus. Under the hood, `FinalizeBlock` is almost identical to `CheckTx` but calls the
+to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the
 [`runTx`](../core/00-baseapp.md#runtx) function in deliver mode instead of check mode.
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 

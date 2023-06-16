@@ -97,7 +97,7 @@ Finally, a few more important parameters:
 
 * `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
   because they did not vote or because the proposer did not include their vote. This information is
-  carried by the [Context](#context) and can be used by the application for various things like <!-- TODO fix the context link-->
+  carried by the [Context](./02-context.md) and can be used by the application for various things like
   punishing absent validators.
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the

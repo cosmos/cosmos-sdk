@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var (
@@ -37,6 +36,11 @@ var (
 	distAcct     = authtypes.NewModuleAddress(disttypes.ModuleName)
 	TestProposal = getTestProposal()
 )
+
+// mintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
+// It should be synced with the mint module's name if it is ever changed.
+// See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
+const mintModuleName = "mint"
 
 // getTestProposal creates and returns a test proposal message.
 func getTestProposal() []sdk.Msg {
@@ -122,9 +126,9 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeepe
 	balances[distAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
 
 	// We don't track module account balances.
-	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
+	bankKeeper.EXPECT().MintCoins(gomock.Any(), mintModuleName, gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), minttypes.ModuleName, types.ModuleName, gomock.Any()).AnyTimes()
+	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), mintModuleName, types.ModuleName, gomock.Any()).AnyTimes()
 
 	// But we do track normal account balances.
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {

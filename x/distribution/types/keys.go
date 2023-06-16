@@ -58,19 +58,6 @@ var (
 	ParamsKey = collections.NewPrefix(9) // key for distribution module params
 )
 
-// GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
-func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x02<valAddrLen (1 Byte)><valAddr_Bytes>
-
-	// Remove prefix and address length.
-	kv.AssertKeyAtLeastLength(key, 3)
-	addr := key[2:]
-	kv.AssertKeyLength(addr, int(key[1]))
-
-	return sdk.ValAddress(addr)
-}
-
 // GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
 	// key is in the format:

@@ -145,21 +145,6 @@ func (k Keeper) SetValidatorOutstandingRewards(ctx context.Context, val sdk.ValA
 	return k.ValidatorOutstandingRewards.Set(ctx, val, rewards)
 }
 
-// iterate validator outstanding rewards
-func (k Keeper) IterateValidatorOutstandingRewards(ctx context.Context, handler func(val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorOutstandingRewardsPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		rewards := types.ValidatorOutstandingRewards{}
-		k.cdc.MustUnmarshal(iter.Value(), &rewards)
-		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
-		if handler(addr, rewards) {
-			break
-		}
-	}
-}
-
 // get slash event for height
 func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
 	store := k.storeService.OpenKVStore(ctx)

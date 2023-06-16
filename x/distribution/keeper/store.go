@@ -129,48 +129,6 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 	return
 }
 
-// get validator outstanding rewards
-func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.GetValidatorOutstandingRewardsKey(val))
-	if err != nil {
-		return
-	}
-	err = k.cdc.Unmarshal(bz, &rewards)
-	return
-}
-
-// set validator outstanding rewards
-func (k Keeper) SetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&rewards)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.GetValidatorOutstandingRewardsKey(val), b)
-}
-
-// delete validator outstanding rewards
-func (k Keeper) DeleteValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorOutstandingRewardsKey(val))
-}
-
-// iterate validator outstanding rewards
-func (k Keeper) IterateValidatorOutstandingRewards(ctx context.Context, handler func(val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorOutstandingRewardsPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		rewards := types.ValidatorOutstandingRewards{}
-		k.cdc.MustUnmarshal(iter.Value(), &rewards)
-		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
-		if handler(addr, rewards) {
-			break
-		}
-	}
-}
-
 // get slash event for height
 func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
 	store := k.storeService.OpenKVStore(ctx)

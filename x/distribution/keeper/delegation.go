@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +43,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
+	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 
 // calculate the rewards accrued by a delegation between two periods
@@ -81,8 +83,8 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 // calculate the total rewards accrued by a delegation
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	// fetch starting info for delegation
-	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
-	if err != nil {
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return
 	}
 
@@ -177,7 +179,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
-	hasInfo, err := k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +253,8 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// decrement reference count of starting period
-	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
-	if err != nil {
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
@@ -263,7 +265,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// remove delegator starting info
-	err = k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil {
 		return nil, err
 	}

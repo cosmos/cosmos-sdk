@@ -29,7 +29,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 	}
 
 	// set accumulated commission
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
 	if err != nil {
 		return err
 	}

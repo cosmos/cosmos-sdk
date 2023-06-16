@@ -198,6 +198,14 @@ func NewSimApp(
 	// }
 	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
+	// create and set dummy vote extension handler
+	voteExtOp := func(bApp *baseapp.BaseApp) {
+		voteExtHandler := NewVoteExtensionHandler()
+		bApp.SetExtendVoteHandler(voteExtHandler.ExtendVote())
+		bApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtension())
+	}
+	baseAppOptions = append(baseAppOptions, voteExtOp)
+
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
 	// register streaming services

@@ -7,9 +7,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
+	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
@@ -149,6 +152,61 @@ func FuzzBytesValueRendererParse(f *testing.F) {
 				}
 			} else if !bytes.Equal(tc.base64, val.Bytes()) {
 				t.Fatalf("val.Bytes() mismatch:\n\tGot:  % x\n\tWant: % x", val.Bytes(), tc.base64)
+			}
+		}
+	})
+}
+
+func FuzzMessageValueRendererParse(f *testing.F) {
+	if testing.Short() {
+		f.Skip()
+	}
+
+	// 1. Use the seeds from testdata and mutate them.
+	seed, err := os.ReadFile("./internal/testdata/message.json")
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(seed)
+
+	ctx := context.Background()
+	tr, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: EmptyCoinMetadataQuerier})
+	if err != nil {
+		f.Fatalf("Failed to create SignModeHandler: %v", err)
+	}
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var testCases []messageJSONTest
+		if err := json.Unmarshal(input, &testCases); err != nil {
+			return
+		}
+
+		for _, tc := range testCases {
+			rend := textual.NewMessageValueRenderer(tr, (&testpb.Foo{}).ProtoReflect().Descriptor())
+
+			var screens []textual.Screen
+			var err error
+
+			if tc.Proto != nil {
+				screens, err = rend.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
+				if err != nil {
+					continue
+				}
+			}
+
+			val, err := rend.Parse(ctx, screens)
+			if err != nil {
+				continue
+			}
+
+			msg := val.Message().Interface()
+			gotMsg, ok := msg.(*testpb.Foo)
+			if !ok {
+				t.Fatalf("Wrong type for Foo: %T", msg)
+			}
+			diff := cmp.Diff(gotMsg, tc.Proto, protocmp.Transform())
+			if diff != "" {
+				t.Fatalf("Roundtrip mismatch\n\tGot:  %#v\n\tWant: %#v", gotMsg, tc.Proto)
 			}
 		}
 	})

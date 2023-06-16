@@ -53,7 +53,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		err = k.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		if err != nil {
 			panic(err)
 		}
@@ -64,7 +64,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, acc.Accumulated)
 		if err != nil {
 			panic(err)
 		}
@@ -164,26 +164,29 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
-	k.IterateValidatorOutstandingRewards(ctx,
-		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
-				ValidatorAddress:   addr.String(),
-				OutstandingRewards: rewards.Rewards,
-			})
-			return false
-		},
+	err = k.ValidatorOutstandingRewards.Walk(ctx, nil, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
+		outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
+			ValidatorAddress:   addr.String(),
+			OutstandingRewards: rewards.Rewards,
+		})
+		return false, nil
+	},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
-	k.IterateValidatorAccumulatedCommissions(ctx,
-		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
-			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
-				ValidatorAddress: addr.String(),
-				Accumulated:      commission,
-			})
-			return false
-		},
-	)
+	err = k.ValidatorsAccumulatedCommission.Walk(ctx, nil, func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool, err error) {
+		acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
+			ValidatorAddress: addr.String(),
+			Accumulated:      commission,
+		})
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
 	k.IterateValidatorHistoricalRewards(ctx,

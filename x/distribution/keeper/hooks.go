@@ -97,7 +97,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	}
 
 	// delete outstanding
-	err = h.k.DeleteValidatorOutstandingRewards(ctx, valAddr)
+	err = h.k.ValidatorOutstandingRewards.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}

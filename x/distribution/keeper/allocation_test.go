@@ -130,13 +130,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	val0OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
-	require.NoError(t, err)
-	require.True(t, val0OutstandingRewards.Rewards.IsZero())
+	_, err = distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	val1OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
-	require.NoError(t, err)
-	require.True(t, val1OutstandingRewards.Rewards.IsZero())
+	_, err = distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr1)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
@@ -170,11 +168,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 200, votes))
 
 	// 98 outstanding rewards (100 less 2 to community pool)
-	val0OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
+	val0OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecWithPrec(490, 1)}}, val0OutstandingRewards.Rewards)
 
-	val1OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
+	val1OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr1)
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecWithPrec(490, 1)}}, val1OutstandingRewards.Rewards)
 
@@ -269,13 +267,11 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	val0OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
-	require.NoError(t, err)
-	require.True(t, val0OutstandingRewards.Rewards.IsZero())
+	_, err = distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	val1OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
-	require.NoError(t, err)
-	require.True(t, val1OutstandingRewards.Rewards.IsZero())
+	_, err = distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr1)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
@@ -311,15 +307,15 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 31, votes))
 
-	val0OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
+	val0OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)
 	require.NoError(t, err)
 	require.True(t, val0OutstandingRewards.Rewards.IsValid())
 
-	val1OutstandingRewards, err = distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
+	val1OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr1)
 	require.NoError(t, err)
 	require.True(t, val1OutstandingRewards.Rewards.IsValid())
 
-	val2OutstandingRewards, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr2)
+	val2OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr2)
 	require.NoError(t, err)
 	require.True(t, val2OutstandingRewards.Rewards.IsValid())
 }

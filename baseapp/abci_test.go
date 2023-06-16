@@ -1171,11 +1171,11 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.baseApp.LastBlockHeight() + 1,
-		Txs:    [][]byte{txBytes},
+		Txs:    reqProposalTxBytes[:],
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, 1, pool.CountTx())
+	require.Equal(t, 0, pool.CountTx())
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))

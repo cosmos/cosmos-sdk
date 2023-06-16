@@ -85,19 +85,6 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	return
 }
 
-// GetValidatorAccumulatedCommissionAddress creates the address from a validator's accumulated commission key.
-func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
-
-	// Remove prefix and address length.
-	kv.AssertKeyAtLeastLength(key, 3)
-	addr := key[2:]
-	kv.AssertKeyLength(addr, int(key[1]))
-
-	return sdk.ValAddress(addr)
-}
-
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
 	// key is in the format:

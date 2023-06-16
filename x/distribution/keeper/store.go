@@ -142,12 +142,7 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValA
 
 // set validator outstanding rewards
 func (k Keeper) SetValidatorOutstandingRewards(ctx context.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&rewards)
-	if err != nil {
-		return err
-	}
-	return store.Set(types.GetValidatorOutstandingRewardsKey(val), b)
+	return k.ValidatorOutstandingRewards.Set(ctx, val, rewards)
 }
 
 // delete validator outstanding rewards

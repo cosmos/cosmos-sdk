@@ -39,7 +39,7 @@ func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
 		return fmt.Errorf("unhandled error: %w", err)
 	}
 
-	upgradeInfo, err := plan.ParseInfo(p.Info)
+	upgradeInfo, err := plan.ParseInfo(p.Info, plan.ParseOptionEnforceChecksum(cfg.DownloadMustHaveChecksum))
 	if err != nil {
 		return fmt.Errorf("cannot parse upgrade info: %w", err)
 	}

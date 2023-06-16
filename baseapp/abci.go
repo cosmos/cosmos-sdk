@@ -142,11 +142,11 @@ func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	if lastCommitID.Version > 0 {
 		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("creating query context: %w", err)
 		}
 		appVersion, err = app.AppVersion(ctx)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("getting app version: %w", err)
 		}
 	}
 

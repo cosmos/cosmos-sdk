@@ -504,8 +504,6 @@ EndBlock is run after transaction execution completes. It allows developers to h
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#L747-L769
 ```
 
-
-
 ### Commit
 
 The [`Commit` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occurred during `FinalizeBlock` and to reset state for the next block.
@@ -527,3 +525,23 @@ Each CometBFT `query` comes with a `path`, which is a `string` which denotes wha
 * Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 * Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queries are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
 * P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `BaseApp`'s [constructor](#constructor).
+
+### ExtendVote
+
+`ExtendVote` allows an application to extend a pre-commit vote with arbitrary data. This process does NOT have be deterministic and the data returned can be unique to the validator process.
+
+In the Cosmos-SDK this is implemented as a NoOp:
+
+``` go reference 
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L274-L281
+```
+
+### VerifyVoteExtension
+
+`VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process does NOT have be deterministic and the data returned can be unique to the validator process.
+
+In the Cosmos-SDK this is implemented as a NoOp.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L282-L288
+```

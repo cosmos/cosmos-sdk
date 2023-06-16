@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -502,10 +501,10 @@ func (m *MockConsensusParamGetter) EXPECT() *MockConsensusParamGetterRecorder {
 	return m.recorder
 }
 
-func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) tmproto.ConsensusParams {
+func (m *MockConsensusParamGetter) GetConsensusParams(arg0 sdk.Context) cmtproto.ConsensusParams {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConsensusParams", arg0)
-	ret0, _ := ret[0].(tmproto.ConsensusParams)
+	ret0, _ := ret[0].(cmtproto.ConsensusParams)
 	return ret0
 }
 

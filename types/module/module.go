@@ -261,6 +261,7 @@ func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error
 	return []abci.ValidatorUpdate{}, nil
 }
 
+// ConsensusParamsGetter is an interface to retrieve consensus parameters for a given context.
 type ConsensusParamsGetter interface {
 	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 }
@@ -323,6 +324,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	}
 }
 
+// WithConsensusParamsGetter sets ConsensusParamsGetter for Manager.
 func (m *Manager) WithConsensusParamsGetter(g ConsensusParamsGetter) *Manager {
 	m.consensusParamsGetter = g
 	return m
@@ -710,6 +712,9 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 			if err != nil {
 				return sdk.BeginBlock{}, err
 			}
+			// Manager retrieves consensus parameters from the consensusParamsGetter and
+			// updates the context with these parameters if current module is upgrade module,
+			// so that Manager uses the updated context to execute BeginBlock.
 			if m.consensusParamsGetter != nil && moduleName == "upgrade" {
 				p := ctx.ConsensusParams()
 				if p.Block == nil {

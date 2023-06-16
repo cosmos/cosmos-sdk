@@ -45,10 +45,7 @@ var (
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
 	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")
 	ErrUnbondingOnHoldRefCountNegative = errors.Register(ModuleName, 42, "cannot un-hold unbonding operation that is not on hold")
-<<<<<<< HEAD
-=======
 	ErrInvalidSigner                   = errors.Register(ModuleName, 43, "expected authority account as only signer for proposal message")
 	ErrBadRedelegationSrc              = errors.Register(ModuleName, 44, "redelegation source validator not found")
 	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324))
 )

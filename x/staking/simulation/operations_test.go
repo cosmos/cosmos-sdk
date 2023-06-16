@@ -201,13 +201,8 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-=======
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
@@ -300,13 +295,8 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-=======
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
@@ -347,23 +337,14 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	// setup accounts[3] as delegator
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-=======
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-=======
 	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324)):tests/integration/staking/simulation/operations_test.go
 
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)

@@ -1,13 +1,8 @@
 package keeper
 
 import (
-<<<<<<< HEAD
-=======
 	"context"
-	"errors"
 
-	"cosmossdk.io/collections"
->>>>>>> 1be7d9805 (refactor(x/staking)!: KVStoreService, return errors and use context.Context (#16324))
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

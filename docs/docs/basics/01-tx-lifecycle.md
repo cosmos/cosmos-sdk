@@ -158,6 +158,7 @@ must be in this proposer's mempool.
 
 The next step of consensus is to execute the transactions to fully validate them. All full-nodes
 that receive a block proposal from the correct proposer execute the transactions by calling the ABCI function `FinalizeBlock`. 
+As mentioned throughout the documentation `BeginBlock` `ExecuteTx` and `EndBlock` are called within FinalizeBlock. 
 While each full-node runs everything locally, this process yields a single, unambiguous result, 
 since the messages' state transitions are deterministic and transactions are
 explicitly ordered in the block proposal.
@@ -227,7 +228,7 @@ Instead of using their `checkState`, full-nodes use `finalizeblock`:
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/03-msg-services.md).
   For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/01-module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/03-msg-services.md#handler-type) within the module.
   
-* **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `FinalizeBlockState`.
+* **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `finalizeBlockState`.
 
 * **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
 

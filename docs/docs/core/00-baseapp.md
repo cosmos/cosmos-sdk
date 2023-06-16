@@ -232,7 +232,7 @@ Similar to `sdk.Msg`s, [`queries`](../building-modules/02-messages-and-queries.m
 
 Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all the query routes using the application's [module manager](../building-modules/01-module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/00-app-anatomy.md#app-constructor).
 
-## Main ABCI 1.0 Messages
+## Main ABCI 2.0 Messages
 
 The [Application-Blockchain Interface](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like CometBFT.
 

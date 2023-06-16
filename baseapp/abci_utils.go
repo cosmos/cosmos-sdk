@@ -226,20 +226,16 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 					txGasLimit = gasTx.GetGas()
 				}
 
-				if maxBlockGas > 0 {
-					// Only add the transaction to the proposal if we have enough gas
-					// capacity AND space.
-					if (txGasLimit+totalTxGas) < uint64(maxBlockGas) && (txSize+totalTxBytes) < req.MaxTxBytes {
+				// only add the transaction to the proposal if we have enough capacity
+				if (txSize + totalTxBytes) < req.MaxTxBytes {
+					// If there is a max block gas limit, add the tx only if the limit has
+					// not been met.
+					if maxBlockGas > 0 && (txGasLimit+totalTxGas) < uint64(maxBlockGas) {
 						totalTxGas += txGasLimit
 						totalTxBytes += txSize
-
 						selectedTxs = append(selectedTxs, bz)
-					}
-				} else {
-					// Only add the transaction to the proposal if we have enough space.
-					if (txSize + totalTxBytes) < req.MaxTxBytes {
+					} else {
 						totalTxBytes += txSize
-
 						selectedTxs = append(selectedTxs, bz)
 					}
 				}

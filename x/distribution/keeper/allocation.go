@@ -19,13 +19,12 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	feesCollectedInt := k.bankKeeper.GetAllBalances(sdkCtx, feeCollector.GetAddress())
+	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
-	err := k.bankKeeper.SendCoinsFromModuleToModule(sdkCtx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
 	if err != nil {
 		return err
 	}
@@ -58,7 +57,10 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, vote.Validator.Address)
+		validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if err != nil {
+			return err
+		}
 
 		// TODO: Consider micro-slashing for missing votes.
 		//
@@ -66,7 +68,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 		reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-		err := k.AllocateTokensToValidator(ctx, validator, reward)
+		err = k.AllocateTokensToValidator(ctx, validator, reward)
 		if err != nil {
 			return err
 		}
@@ -128,11 +130,11 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		),
 	)
 
-	outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	if err != nil {
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, val.GetOperator())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	return k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+	return k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), outstanding)
 }

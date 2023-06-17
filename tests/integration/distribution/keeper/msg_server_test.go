@@ -96,7 +96,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
@@ -200,7 +200,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	err = f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards)
 	require.NoError(t, err)
-	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
 	initOutstandingRewards, err := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
 	assert.NilError(t, err)
@@ -245,7 +245,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "no delegation distribution info",
+			expErrMsg: "no delegation for (address, validator) tuple",
 		},
 		{
 			name: "validator with no delegations",
@@ -254,7 +254,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: sdk.ValAddress(sdk.AccAddress(PKS[2].Address())).String(),
 			},
 			expErr:    true,
-			expErrMsg: "no validator distribution info",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name: "valid msg",
@@ -302,7 +302,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				// check rewards
 				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
 				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
+				assert.NilError(t, err)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
@@ -477,7 +478,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	assert.DeepEqual(t, expCoins, balance)
 
 	// set outstanding rewards
-	err = f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
 
 	// set commission
@@ -890,6 +891,9 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt)
 	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt)
 
+	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
+	require.NoError(t, err)
+
 	testCases := []struct {
 		name      string
 		msg       *distrtypes.MsgDepositValidatorRewardsPool
@@ -901,7 +905,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Depositor:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(100))),
 			},
 		},
 		{
@@ -917,7 +921,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Depositor:        addr.String(),
 				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
-				Amount:           sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), sdk.NewInt(100))),
+				Amount:           sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(100))),
 			},
 			expErr:    true,
 			expErrMsg: "validator does not exist",
@@ -947,7 +951,8 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				assert.NilError(t, err)
 
 				// check validator outstanding rewards
-				outstandingRewards, _ := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, val)
+				outstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, val)
+				assert.NilError(t, err)
 				for _, c := range tc.msg.Amount {
 					x := outstandingRewards.Rewards.AmountOf(c.Denom)
 					assert.DeepEqual(t, x, sdk.NewDecFromInt(c.Amount))

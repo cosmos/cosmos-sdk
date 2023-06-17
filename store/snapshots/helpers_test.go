@@ -171,8 +171,7 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
-type mockErrorSnapshotter struct {
-}
+type mockErrorSnapshotter struct{}
 
 var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
 

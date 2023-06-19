@@ -1292,7 +1292,9 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
+
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},

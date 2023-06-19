@@ -130,6 +130,7 @@ func (r *Range[K]) RangeValues() (start, end *RangeKey[K], order Order, err erro
 	return r.start, r.end, r.order, nil
 }
 
+// parseRangeInstruction converts a Ranger into start bytes, end bytes and order of a store iteration.
 func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r Ranger[K]) ([]byte, []byte, Order, error) {
 	var (
 		start *RangeKey[K]

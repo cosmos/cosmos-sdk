@@ -164,6 +164,9 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace (
+	cosmossdk.io/collections v0.2.0 => ./collections
+)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

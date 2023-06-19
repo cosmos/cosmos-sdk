@@ -53,9 +53,14 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	}
 
 	// Check if config file exists
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	switch _, err := os.Stat(configFilePath); {
+	case os.IsNotExist(err):
 		fmt.Println("creating new node configuration in", filepath.Dir(filepath.Dir(configFilePath)))
+	case err != nil:
+		return fmt.Errorf("unexpected error while stating config path: %w", err)
+
 	}
+
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		return err
 	}
@@ -87,20 +92,23 @@ func WriteHomeDirToFile(filePath, homeDir string) error {
 	return os.WriteFile(filePath, buffer.Bytes(), 0o600)
 }
 
-// ReadHomeDir tries to return the currently stored home directory from the
-// given config directory.
-func ReadHomeDir(configPath string, v *viper.Viper) (string, error) {
+// ReadOrMakeHomeDir tries to return the currently stored home directory from the given config directory.
+// If it does not exists a new home directory is created and returned.
+func ReadOrMakeHomeDir(configPath string, v *viper.Viper) (string, error) {
 	homeDirConfig := HomeDirConfig{}
 	v.AddConfigPath(configPath)
 	v.SetConfigName("home")
 	v.SetConfigType("toml")
 
 	homeFilePath := filepath.Join(configPath, "home.toml")
-	if _, err := os.Stat(homeFilePath); os.IsNotExist(err) {
+	switch _, err := os.Stat(homeFilePath); {
+	case os.IsNotExist(err):
 		folder := filepath.Dir(configPath)
 		if err := WriteHomeDirToFile(homeFilePath, folder); err != nil {
 			return "", err
 		}
+	case err != nil:
+		return "", fmt.Errorf("unexpected error while stating home path: %w", err)
 	}
 
 	if err := v.ReadInConfig(); err != nil {

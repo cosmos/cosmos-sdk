@@ -52,7 +52,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	homeFilePath := filepath.Join(homeFileDir, "home.toml")
 	ctx = ctx.WithHomeFilePath(homeFilePath)
 
-	homeDir, err := ReadHomeDir(homeFileDir, ctx.Viper)
+	homeDir, err := ReadOrMakeHomeDir(homeFileDir, ctx.Viper)
 	if err == nil {
 		ctx = ctx.WithHomeDir(homeDir)
 	}
@@ -101,7 +101,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 func CreateClientConfigAtPath(configPath, chainID string) error {
 	configFilePath := filepath.Join(configPath, "client.toml")
 
-	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(configPath, 0o0750); err != nil {
 		return fmt.Errorf("couldn't make client config: %v", err)
 	}
 

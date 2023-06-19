@@ -40,11 +40,13 @@ func TestWriteReadHomeDirToFromFile(t *testing.T) {
 		},
 	}
 	for _, tc := range testcases {
+		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			err := WriteHomeDirToFile(tc.homeFilePath, newHome)
 			if tc.expPass {
 				assert.NilError(t, err, "no error expected when writing home dir to file")
-				homeDir, err := ReadHomeDir(defaultConfigPath, ctx.Viper)
+				homeDir, err := ReadOrMakeHomeDir(defaultConfigPath, ctx.Viper)
 				assert.NilError(t, err, "expected no error reading the home dir from the configuration file")
 				assert.Equal(t, homeDir, newHome,
 					"expected home dir read from configuration file to be %q; got: %q", newHome, homeDir,

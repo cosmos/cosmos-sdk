@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"cosmossdk.io/tools/confix"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
@@ -31,11 +29,7 @@ func SetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				if filename == "home" {
-					filename = clientCtx.HomeFilePath
-				} else {
-					filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
-				}
+				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
 			}
 
 			plan := transform.Plan{
@@ -60,14 +54,6 @@ func SetCommand() *cobra.Command {
 							Value: value,
 						}, true); !ok {
 							return errors.New("failed to set value")
-						}
-
-						if key[0] == "home-dir" {
-							newConfigToml := fmt.Sprintf("%s/config/%s", inputValue, confix.CMTConfig)
-							if _, err := os.Stat(newConfigToml); os.IsNotExist(err) {
-								newConfigPath := fmt.Sprintf("%s/config", inputValue)
-								return config.CreateClientConfigAtPath(newConfigPath, clientCtx.ChainID)
-							}
 						}
 
 						return nil

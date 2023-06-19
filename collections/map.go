@@ -162,11 +162,12 @@ func (m Map[K, V]) Clear(ctx context.Context, ranger Ranger[K]) error {
 	return deleteDomain(m.sa(ctx), startBytes, endBytes)
 }
 
+const clearBatchSize = 10000
+
 // deleteDomain deletes the domain of an iterator, the key difference
 // is that it uses batches to clear the store meaning that it will read
 // the keys within the domain close the iterator and then delete them.
 func deleteDomain(s store.KVStore, start, end []byte) error {
-	const clearBatchSize = 10000
 
 	for {
 		iter, err := s.Iterator(start, end)
@@ -174,7 +175,7 @@ func deleteDomain(s store.KVStore, start, end []byte) error {
 			return err
 		}
 
-		var keys [][]byte
+		keys := make([][]byte, 0, clearBatchSize)
 		for ; iter.Valid() && len(keys) < clearBatchSize; iter.Next() {
 			keys = append(keys, iter.Key())
 		}

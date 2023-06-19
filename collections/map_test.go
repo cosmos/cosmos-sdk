@@ -41,7 +41,7 @@ func TestMap_Clear(t *testing.T) {
 	makeTest := func() (context.Context, Map[uint64, uint64]) {
 		sk, ctx := deps()
 		m := NewMap(NewSchemaBuilder(sk), NewPrefix(0), "test", Uint64Key, Uint64Value)
-		for i := uint64(0); i < 1000; i++ {
+		for i := uint64(0); i < clearBatchSize*2; i++ {
 			require.NoError(t, m.Set(ctx, i, i))
 		}
 		return ctx, m
@@ -65,9 +65,9 @@ func TestMap_Clear(t *testing.T) {
 		require.NoError(t, err)
 		keys, err := iter.Keys()
 		require.NoError(t, err)
-		require.Len(t, keys, 899)
+		require.Len(t, keys, clearBatchSize*2-101)
 		require.Equal(t, keys[0], uint64(101))
-		require.Equal(t, keys[len(keys)-1], uint64(999))
+		require.Equal(t, keys[len(keys)-1], uint64(clearBatchSize*2-1))
 	})
 }
 

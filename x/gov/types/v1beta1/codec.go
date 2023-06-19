@@ -35,7 +35,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations(
 		(*Content)(nil),
-		&distrtypes.CommunityPoolSpendProposal{},
+		&distrtypes.CommunityPoolSpendProposal{}, // nolint: staticcheck
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

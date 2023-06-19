@@ -17,7 +17,7 @@ import (
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.ValidatorI) error {
 	// set initial historical rewards (period 0) with reference count of 1
-	err := k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	err := k.ValidatorHistoricalRewards.Set(ctx, collections.Join(val.GetOperator(), uint64(0)), types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// set new historical rewards with reference count of 1
-	err = k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
+	err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(val.GetOperator(), rewards.Period), types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
 	if err != nil {
 		return 0, err
 	}
@@ -120,7 +120,7 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 		panic("reference count should never exceed 2")
 	}
 	historical.ReferenceCount++
-	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
+	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
 
 // decrement the reference count for a historical rewards value, and delete if zero references remain
@@ -138,7 +138,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 		return k.ValidatorHistoricalRewards.Remove(ctx, collections.Join(valAddr, period))
 	}
 
-	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
+	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
 
 func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {

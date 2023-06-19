@@ -74,7 +74,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, his.Period), his.Rewards)
 		if err != nil {
 			panic(err)
 		}

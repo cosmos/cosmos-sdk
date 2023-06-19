@@ -111,7 +111,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(validator0.GetOperator(), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
@@ -307,7 +307,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.Require().NoError(suite.stakingKeeper.SetValidator(suite.ctx, validator))
 
 	return validator
 }
@@ -315,7 +315,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	suite.Require().NoError(suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards))
+	suite.Require().NoError(suite.distrKeeper.ValidatorHistoricalRewards.Set(suite.ctx, collections.Join(valAddress, uint64(2)), historicalRewards))
 	// setup current revards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	suite.Require().NoError(suite.distrKeeper.ValidatorCurrentRewards.Set(suite.ctx, valAddress, currentRewards))

@@ -66,13 +66,7 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAd
 
 // set historical rewards for a particular period
 func (k Keeper) SetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&rewards)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetValidatorHistoricalRewardsKey(val, period), b)
+	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(val, period), rewards)
 }
 
 // iterate over historical rewards

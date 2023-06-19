@@ -245,6 +245,16 @@ func (e Events) ToABCIEvents() []abci.Event {
 	return res
 }
 
+// FromABCIEvents converts a slice of abci.Event objects to Events
+func FromABCIEvents(events []abci.Event) Events {
+	res := make([]Event, len(events))
+	for i, ev := range events {
+		res[i] = Event{Type: ev.Type, Attributes: ev.Attributes}
+	}
+
+	return res
+}
+
 // GetAttributes returns all attributes matching a given key present in events.
 // If the key is not found, the boolean value will be false.
 func (e Events) GetAttributes(key string) ([]Attribute, bool) {

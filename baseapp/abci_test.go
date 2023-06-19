@@ -690,31 +690,33 @@ func TestABCI_ErrorEvents(t *testing.T) {
 
 			tx := newTxCounter(t, suite.txConfig, 0, 0)
 
+			var finalEvents sdk.Events
+			var nonErrorEvents int
+
 			_, result, events, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
-
 				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
-				if testCase.emitError {
-					require.Len(t, events, 1)
-					require.Equal(t, events[0].Type, CounterErrorEvent+".error")
-				} else {
-					require.Len(t, events, 0)
-				}
+				finalEvents = sdk.FromABCIEvents(events)
+				nonErrorEvents = 0
 			} else {
 				require.NotNil(t, result)
-				if testCase.emitError {
-					require.Len(t, result.GetEvents(), 3)
-					require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 1)
-					require.Equal(t, sdk.ExtractErrorEvents(result.GetEvents())[0].Type, CounterErrorEvent+".error")
-				} else {
-					require.Len(t, result.GetEvents(), 2)
-					require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 0)
-				}
+				finalEvents = result.GetEvents()
+				nonErrorEvents = 2
 			}
+
+			if testCase.emitError {
+				require.Len(t, finalEvents, nonErrorEvents+1)
+				require.Len(t, sdk.ExtractErrorEvents(finalEvents), 1)
+				require.Equal(t, sdk.ExtractErrorEvents(finalEvents)[0].Type, CounterErrorEvent+".error")
+			} else {
+				require.Len(t, finalEvents, nonErrorEvents)
+				require.Len(t, sdk.ExtractErrorEvents(finalEvents), 0)
+			}
+
 		}
 	}
 }

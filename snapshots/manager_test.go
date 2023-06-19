@@ -4,12 +4,14 @@ import (
 	"errors"
 	"testing"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 var opts = types.NewSnapshotOptions(1500, 2)
@@ -242,4 +244,14 @@ func TestManager_Restore(t *testing.T) {
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.NoError(t, err)
+}
+
+func TestManager_TakeError(t *testing.T) {
+	snapshotter := &mockErrorSnapshotter{}
+	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.Error(t, err)
 }

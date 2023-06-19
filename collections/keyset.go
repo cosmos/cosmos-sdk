@@ -58,7 +58,7 @@ func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key
 }
 
 // Clear clears the KeySet using the provided Ranger. Refer to Map.Clear for
-// behavioural documentation.
+// behavioral documentation.
 func (k KeySet[K]) Clear(ctx context.Context, ranger Ranger[K]) error {
 	return (Map[K, NoValue])(k).Clear(ctx, ranger)
 }

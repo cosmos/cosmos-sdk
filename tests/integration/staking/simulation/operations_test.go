@@ -201,14 +201,14 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
 	// unbonding delegation
 	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight()+1, blockTime.Add(2*time.Minute), delTokens, 0)
-	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
+	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
 	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
@@ -293,7 +293,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
@@ -334,14 +334,14 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	// setup accounts[3] as delegator
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
 	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -382,7 +382,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(ctx, 100)
 
-	s.stakingKeeper.SetValidator(ctx, validator)
+	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, validator))
 
 	return validator
 }

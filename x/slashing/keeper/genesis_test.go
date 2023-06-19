@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	require.NotEqual(info1, newInfo1)
 
 	// Initialize genesis with genesis state before tombstone
-	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return()
+	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return(nil)
 	keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
 
 	// Validator isTombstoned should return false as GenesisState is initialized

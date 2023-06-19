@@ -168,16 +168,14 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(1))),
 	)
 
-	err := suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
-	suite.Require().NoError(err)
-	err = suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
-	suite.Require().NoError(err)
+	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// setup validator accumulated commission
 	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission}))
 	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -212,7 +210,7 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
@@ -267,7 +265,8 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.ctx = suite.app.BaseApp.NewContext(false)
 
-	genesisVals := suite.stakingKeeper.GetAllValidators(suite.ctx)
+	genesisVals, err := suite.stakingKeeper.GetAllValidators(suite.ctx)
+	suite.Require().NoError(err)
 	suite.Require().Len(genesisVals, 1)
 	suite.genesisVals = genesisVals
 }

@@ -49,12 +49,11 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	valTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 20)
 
-	bondDenom = f.stakingKeeper.BondDenom(f.sdkCtx)
+	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
+	assert.NilError(t, err)
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 
 	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	err := f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
-	assert.NilError(t, err)
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
 
 	// Create a validator
@@ -68,7 +67,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 
 	// Create a delegator
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
-	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
+	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 
 	// Create a validator to redelegate to
 	validator2 := testutil.NewValidator(t, addrVals[1], PKs[1])
@@ -111,7 +110,8 @@ func doUnbondingDelegation(
 	assert.Assert(math.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
 	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
-	unbondingDelegations := stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
+	unbondingDelegations, err := stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
+	assert.NilError(t, err)
 	assert.DeepEqual(t, math.NewInt(1), unbondingDelegations[0].Entries[0].Balance)
 
 	// check that our hook was called
@@ -133,7 +133,8 @@ func doRedelegation(
 	assert.NilError(t, err)
 
 	// Check that the redelegation happened- we look up the entry and see that it has the correct number of shares
-	redelegations := stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	redelegations, err := stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	assert.NilError(t, err)
 	assert.Equal(t, 1, len(redelegations))
 	assert.DeepEqual(t, math.LegacyNewDec(1), redelegations[0].Entries[0].SharesDst)
 
@@ -189,26 +190,28 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Try to unbond validator
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is not complete (is not mature yet)
 	validator, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator.Status)
-	unbondingVals := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	unbondingVals, err := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	assert.NilError(t, err)
 	assert.Equal(t, 1, len(unbondingVals))
 	assert.Equal(t, validator.OperatorAddress, unbondingVals[0])
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is complete
 	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonded, validator.Status)
-	unbondingVals = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	assert.NilError(t, err)
 	assert.Equal(t, 0, len(unbondingVals))
 }
 
@@ -247,7 +250,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is not complete for both validators
 	validator1, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -256,17 +259,18 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator2.Status)
-	unbondingVals := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	unbondingVals, err := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	assert.NilError(t, err)
 	assert.Equal(t, 2, len(unbondingVals))
 	assert.Equal(t, validator1.OperatorAddress, unbondingVals[0])
 	assert.Equal(t, validator2.OperatorAddress, unbondingVals[1])
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err := f.stakingKeeper.UnbondingCanComplete(f.sdkCtx, ubdeIDs[0])
+	err = f.stakingKeeper.UnbondingCanComplete(f.sdkCtx, ubdeIDs[0])
 	assert.NilError(t, err)
 
 	// Try again to unbond validators
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator1, but not for validator2
 	validator1, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
@@ -275,7 +279,8 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator2.Status)
-	unbondingVals = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	assert.NilError(t, err)
 	assert.Equal(t, 1, len(unbondingVals))
 	assert.Equal(t, validator2.OperatorAddress, unbondingVals[0])
 
@@ -284,13 +289,14 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Try again to unbond validators
-	f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx)
+	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator2
 	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonded, validator2.Status)
-	unbondingVals = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
+	assert.NilError(t, err)
 	assert.Equal(t, 0, len(unbondingVals))
 }
 
@@ -312,7 +318,8 @@ func TestRedelegationOnHold1(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Redelegation is not complete - still exists
-	redelegations := f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	redelegations, err := f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	assert.NilError(t, err)
 	assert.Equal(t, 1, len(redelegations))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
@@ -321,7 +328,8 @@ func TestRedelegationOnHold1(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Redelegation is complete and record is gone
-	redelegations = f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	redelegations, err = f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	assert.NilError(t, err)
 	assert.Equal(t, 0, len(redelegations))
 }
 
@@ -344,7 +352,8 @@ func TestRedelegationOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Redelegation is not complete - still exists
-	redelegations := f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	redelegations, err := f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	assert.NilError(t, err)
 	assert.Equal(t, 1, len(redelegations))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
@@ -352,7 +361,8 @@ func TestRedelegationOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Redelegation is complete and record is gone
-	redelegations = f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	redelegations, err = f.stakingKeeper.GetRedelegationsFromSrcValidator(f.sdkCtx, addrVals[0])
+	assert.NilError(t, err)
 	assert.Equal(t, 0, len(redelegations))
 }
 

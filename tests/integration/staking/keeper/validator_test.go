@@ -67,7 +67,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// create keeper parameters
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	params.MaxValidators = uint32(maxVals)
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	// create a random pool
 	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(f.sdkCtx), f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1234)))))
@@ -132,7 +132,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	validator, _ = validator.AddTokensFromDel(valTokens)
 	assert.Equal(t, types.Unbonded, validator.Status)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
-	err:=f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, validator)
+	err := f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, validator)
 	assert.NilError(t, err)
 	validator = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validator, true)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
@@ -242,7 +242,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	// now 2 max resValidators
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	params.MaxValidators = 2
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	// initialize some validators into the state
 	amts := []math.Int{
@@ -296,7 +296,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	nMax := uint32(2)
 	params.MaxValidators = nMax
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	// initialize some validators into the state
 	powers := []int64{0, 100, 400, 400}
@@ -407,7 +407,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	// now 2 max resValidators
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	params.MaxValidators = 2
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	// initialize some validators into the state
 	var validators [3]types.Validator
@@ -453,7 +453,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	max := 2
 	params.MaxValidators = uint32(2)
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	// initialize some validators into the state
 	powers := []int64{0, 100, 400, 400, 200}
@@ -628,7 +628,7 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 	f, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 	params := types.DefaultParams()
 	params.MaxValidators = 2
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
 	assert.NilError(t, err)
 	powers := []int64{10, 20, 5}
 	var validators [5]types.Validator
@@ -665,8 +665,8 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	params := f.stakingKeeper.GetParams(f.sdkCtx)
 	params.MaxValidators = uint32(3)
 
-	err:=f.stakingKeeper.SetParams(f.sdkCtx, params)
-	assert.NilError(t, err)s
+	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
+	assert.NilError(t, err)
 	powers := []int64{100, 100}
 	var validators [2]types.Validator
 

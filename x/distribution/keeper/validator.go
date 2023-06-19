@@ -159,7 +159,10 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	// increment reference count on period we need to track
-	k.incrementReferenceCount(ctx, valAddr, newPeriod)
+	err = k.incrementReferenceCount(ctx, valAddr, newPeriod)
+	if err != nil {
+		return err
+	}
 
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
 	height := uint64(sdkCtx.BlockHeight())

@@ -21,16 +21,26 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	previousPeriod := valCurrentRewards.Period - 1
 
 	// increment reference count for the period we're going to track
-	k.incrementReferenceCount(ctx, val, previousPeriod)
+	err = k.incrementReferenceCount(ctx, val, previousPeriod)
+	if err != nil {
+		return err
+	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validator := k.stakingKeeper.Validator(sdkCtx, val)
-	delegation := k.stakingKeeper.Delegation(sdkCtx, del, val)
+	validator, err := k.stakingKeeper.Validator(ctx, val)
+	if err != nil {
+		return err
+	}
+
+	delegation, err := k.stakingKeeper.Delegation(ctx, del, val)
+	if err != nil {
+		return err
+	}
 
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 

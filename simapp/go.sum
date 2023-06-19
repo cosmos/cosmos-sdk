@@ -212,8 +212,8 @@ cosmossdk.io/tools/rosetta v0.2.1-0.20230614114324-f368ed5c62bc h1:7gFe3tRGqaA3s
 cosmossdk.io/tools/rosetta v0.2.1-0.20230614114324-f368ed5c62bc/go.mod h1:l5qTTiHcPXf1m3iz7WuACKFmHW2ewAuIW/+ZcWcUm4Q=
 cosmossdk.io/x/circuit v0.0.0-20230614114324-f368ed5c62bc h1:JwM4NDnE5nBZeLllLKPoftFtq0eztBWE0vlc3GDxmlk=
 cosmossdk.io/x/circuit v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:VcyU4WzhBXJr+XAAFyGMuR4/CjZLVYtj5EYIH4UwFv4=
-cosmossdk.io/x/evidence v0.0.0-20230614114324-f368ed5c62bc h1:M75vwNysEwbig9+GrY62hc2E1dEt7hfRwBsFVofGDkQ=
-cosmossdk.io/x/evidence v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:p6buH/50prKzlsCO4Wixv9rizvg4WRCatv/MqqcxoWI=
+cosmossdk.io/x/evidence v0.0.0-20230616204757-46e5f3fb0376 h1:6dgsdUP4yHokKLE99qZUT6i4BtYEuMSW2Of0ufYKyNE=
+cosmossdk.io/x/evidence v0.0.0-20230616204757-46e5f3fb0376/go.mod h1:p6buH/50prKzlsCO4Wixv9rizvg4WRCatv/MqqcxoWI=
 cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc h1:Ycesi/NLYXvHrxrWee9PF46Rmek38B7M4UP9MMzCptk=
 cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:OUQndoNT6o5MAtRBF9eCQx22nBVO+gHdyKYOcK6dAVo=
 cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc h1:jSfbIQybYPjsHEoqxefBsS9kW+R9t2nmu4bsjeE2wGI=

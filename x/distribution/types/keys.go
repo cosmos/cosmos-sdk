@@ -58,12 +58,10 @@ var (
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
 
-var (
-	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
-	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
-	// state backwards compatibility.
-	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
-)
+// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
+// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
+// state backwards compatibility.
+var LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
 
 type leUint64Key struct{}
 

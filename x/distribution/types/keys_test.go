@@ -17,5 +17,4 @@ func TestLEUint64Key(t *testing.T) {
 		_, _, err := LEUint64Key.Decode([]byte{0})
 		require.ErrorContains(t, err, "invalid buffer size")
 	})
-
 }

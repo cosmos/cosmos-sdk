@@ -670,8 +670,10 @@ func TestABCI_ErrorEvents(t *testing.T) {
 			fail      bool
 			emitError bool
 		}{
-			//{false, true},
+			{false, true},
 			{true, true},
+			{true, false},
+			{false, false},
 		}
 
 		for _, testCase := range testCases {
@@ -696,15 +698,23 @@ func TestABCI_ErrorEvents(t *testing.T) {
 				space, code, _ := errorsmod.ABCIInfo(err, false)
 				require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
-				// ToDo: Check error events in the anteEvents
-				require.Len(t, events, 1)
-				require.Equal(t, events[0].Type, CounterErrorEvent+".error")
+				if testCase.emitError {
+					require.Len(t, events, 1)
+					require.Equal(t, events[0].Type, CounterErrorEvent+".error")
+				} else {
+					require.Len(t, events, 0)
+				}
 			} else {
 				require.NotNil(t, result)
-				require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 1)
-				require.Equal(t, sdk.ExtractErrorEvents(result.GetEvents())[0].Type, CounterErrorEvent+".error")
+				if testCase.emitError {
+					require.Len(t, result.GetEvents(), 3)
+					require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 1)
+					require.Equal(t, sdk.ExtractErrorEvents(result.GetEvents())[0].Type, CounterErrorEvent+".error")
+				} else {
+					require.Len(t, result.GetEvents(), 2)
+					require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 0)
+				}
 			}
-			fmt.Println(result, events)
 		}
 	}
 }

@@ -134,7 +134,12 @@ var CounterErrorEvent = "counter_only_consumed_gas"
 
 func (m CounterServerImplCustomFailures) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Emit a normal event
+	sdkCtx.EventManager().EmitEvents(
+		counterEvent(CounterErrorEvent, 1),
+	)
 	if m.emitError {
+		// Emit an error event
 		sdkCtx.EventManager().EmitErrorEvents(
 			counterEvent(CounterErrorEvent, -1),
 		)

@@ -963,7 +963,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg) // ToDo: Why are events not maintained here?
+		msgResult, err := handler(ctx, msg)
 		if err != nil {
 			return nil, sdk.ExtractErrorEvents(ctx.EventManager().Events()), errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}

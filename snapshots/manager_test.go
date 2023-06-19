@@ -4,11 +4,8 @@ import (
 	"errors"
 	"testing"
 
-<<<<<<< HEAD:snapshots/manager_test.go
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
-=======
-	db "github.com/cosmos/cosmos-db"
->>>>>>> aeccbc910 (fix: snapshotter's failure is not propogated (#16588)):store/snapshots/manager_test.go
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

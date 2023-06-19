@@ -36,9 +36,6 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 		if i == n {
 			break
 		}
-		if i >= n {
-			panic("unexpected: validate args should have caught this")
-		}
 
 		name := fmt.Sprintf("%d", i)
 		if i == n-1 && m.hasVarargs {

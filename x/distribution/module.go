@@ -10,9 +10,10 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/depinject"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/store"
 
@@ -62,7 +63,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the distribution module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -85,7 +86,7 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the root query command for the distribution module.
 func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
+	return nil
 }
 
 // RegisterInterfaces implements InterfaceModule
@@ -190,7 +191,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
 }
 

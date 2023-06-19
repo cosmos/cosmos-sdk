@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (cli) [#](https://github.com/cosmos/cosmos-sdk/pull/) Store home directory using `config` command.
+* (cli) [#16599](https://github.com/cosmos/cosmos-sdk/pull/16599) Store home directory using `config` command.
 
 ### Improvements
 

@@ -189,16 +189,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
-	k.IterateValidatorHistoricalRewards(ctx,
-		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
+	err = k.ValidatorHistoricalRewards.Walk(ctx, nil,
+		func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
-				ValidatorAddress: val.String(),
-				Period:           period,
+				ValidatorAddress: key.K1().String(),
+				Period:           key.K2(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
 	err = k.ValidatorCurrentRewards.Walk(ctx, nil,

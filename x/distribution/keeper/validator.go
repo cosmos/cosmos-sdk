@@ -135,7 +135,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
-		return k.DeleteValidatorHistoricalReward(ctx, valAddr, period)
+		return k.ValidatorHistoricalRewards.Remove(ctx, collections.Join(valAddr, period))
 	}
 
 	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)

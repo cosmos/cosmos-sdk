@@ -69,12 +69,6 @@ func (k Keeper) SetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAd
 	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(val, period), rewards)
 }
 
-// delete a historical reward
-func (k Keeper) DeleteValidatorHistoricalReward(ctx context.Context, val sdk.ValAddress, period uint64) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorHistoricalRewardsKey(val, period))
-}
-
 // delete historical rewards for a validator
 func (k Keeper) DeleteValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))

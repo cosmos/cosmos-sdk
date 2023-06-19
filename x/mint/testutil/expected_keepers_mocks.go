@@ -37,11 +37,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondedRatio mocks base method.
-func (m *MockStakingKeeper) BondedRatio(ctx types.Context) math.LegacyDec {
+func (m *MockStakingKeeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondedRatio", ctx)
 	ret0, _ := ret[0].(math.LegacyDec)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // BondedRatio indicates an expected call of BondedRatio.
@@ -51,11 +52,12 @@ func (mr *MockStakingKeeperMockRecorder) BondedRatio(ctx interface{}) *gomock.Ca
 }
 
 // StakingTokenSupply mocks base method.
-func (m *MockStakingKeeper) StakingTokenSupply(ctx types.Context) math.Int {
+func (m *MockStakingKeeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StakingTokenSupply", ctx)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // StakingTokenSupply indicates an expected call of StakingTokenSupply.

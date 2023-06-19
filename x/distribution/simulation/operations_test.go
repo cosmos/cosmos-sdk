@@ -110,7 +110,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(validator0.GetOperator(), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
@@ -304,8 +304,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	require.NoError(err)
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
-
-	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	require.NoError(suite.stakingKeeper.SetValidator(suite.ctx, validator))
 
 	return validator
 }

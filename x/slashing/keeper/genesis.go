@@ -9,7 +9,7 @@ import (
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
 func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
-	stakingKeeper.IterateValidators(ctx,
+	err := stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator stakingtypes.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
@@ -23,6 +23,9 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 			return false
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	for _, info := range data.SigningInfos {
 		address, err := sdk.ConsAddressFromBech32(info.Address)

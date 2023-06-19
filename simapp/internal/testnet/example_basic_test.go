@@ -13,9 +13,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
-func Example_basicUsage() {
+func Example_basicUsage(t *testing.T) {
 	const nVals = 2
 
 	// Set up new private keys for the set of validators.
@@ -101,7 +102,7 @@ func Example_basicUsage() {
 			panic(err)
 		}
 	}()
-
+	require.NoError(t, err)
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check
 	// a couple simple properties of one node.

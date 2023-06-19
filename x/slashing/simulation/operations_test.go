@@ -170,7 +170,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	err = suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
 	suite.Require().NoError(err)
 	// put validator0 in jail
-	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
 
 	// setup self delegation
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
@@ -178,7 +178,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
-	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
@@ -219,7 +219,9 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	stakingKeeper.SetValidator(ctx, validator)
-
+	err = stakingKeeper.SetValidator(ctx, validator)
+	if err != nil {
+		return stakingtypes.Validator{}, err
+	}
 	return validator, nil
 }

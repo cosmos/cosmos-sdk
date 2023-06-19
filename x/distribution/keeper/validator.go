@@ -82,7 +82,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// fetch historical rewards for last period
-	historical, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
+	historical, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(val.GetOperator(), rewards.Period-1))
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +112,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 
 // increment the reference count for a historical rewards value
 func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
-	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
+	historical, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(valAddr, period))
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 
 // decrement the reference count for a historical rewards value, and delete if zero references remain
 func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
-	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
+	historical, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(valAddr, period))
 	if err != nil {
 		return err
 	}

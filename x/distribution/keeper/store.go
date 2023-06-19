@@ -52,18 +52,6 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.Co
 	store.Set(types.ProposerKey, bz)
 }
 
-// get historical rewards for a particular period
-func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
-	if err != nil {
-		return
-	}
-
-	err = k.cdc.Unmarshal(b, &rewards)
-	return
-}
-
 // historical reference count (used for testcases)
 func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count uint64) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))

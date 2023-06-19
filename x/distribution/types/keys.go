@@ -19,6 +19,9 @@ const (
 
 	// RouterKey is the message route for distribution
 	RouterKey = ModuleName
+
+	// GovModuleName is the name of the gov module
+	GovModuleName = "gov"
 )
 
 // Keys for distribution store

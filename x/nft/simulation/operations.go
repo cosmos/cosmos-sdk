@@ -109,7 +109,7 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
 		}
 
-		if _, _, err = app.SimDeliver(txCfg.TxEncoder(), tx); err != nil {
+		if _, _, _, err = app.SimDeliver(txCfg.TxEncoder(), tx); err != nil {
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 

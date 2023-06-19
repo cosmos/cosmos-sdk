@@ -273,6 +273,8 @@ const (
 	AttributeKeyModule = "module"
 	AttributeKeySender = "sender"
 	AttributeKeyAmount = "amount"
+
+	ErrorEventSuffix = ".error"
 )
 
 type (
@@ -355,9 +357,9 @@ func MarkEventsAsErrorEvents(events Events) Events {
 	updatedEvents := make(Events, len(events))
 
 	for i, e := range events {
-		if !strings.HasSuffix(e.Type, ".error") {
+		if !strings.HasSuffix(e.Type, ErrorEventSuffix) {
 			updatedEvent := Event{
-				Type:       fmt.Sprintf("%s.error", e.Type),
+				Type:       fmt.Sprintf("%s%s", e.Type, ErrorEventSuffix),
 				Attributes: e.Attributes,
 			}
 			updatedEvents[i] = updatedEvent
@@ -367,4 +369,14 @@ func MarkEventsAsErrorEvents(events Events) Events {
 	}
 
 	return updatedEvents
+}
+
+func ExtractErrorEvents(events Events) Events {
+	errorEvents := EmptyEvents()
+	for _, event := range events {
+		if strings.HasSuffix(event.Type, ErrorEventSuffix) {
+			errorEvents = append(errorEvents, event)
+		}
+	}
+	return errorEvents
 }

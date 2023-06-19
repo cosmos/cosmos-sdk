@@ -117,7 +117,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 		}
 
-		_, res, err := app.SimDeliver(txGen.TxEncoder(), tx)
+		_, res, _, err := app.SimDeliver(txGen.TxEncoder(), tx)
 
 		// result should fail if:
 		// - validator cannot be unjailed due to tombstone

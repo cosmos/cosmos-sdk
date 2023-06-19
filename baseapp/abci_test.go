@@ -407,7 +407,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			require.True(t, res.TxResults[i].IsOK(), fmt.Sprintf("%v", res))
 
 			events := res.TxResults[i].GetEvents()
-			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+			require.Len(t, events, 4, "should contain ante handler, message type and counter events respectively")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
 		}
@@ -597,7 +597,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+			_, result, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -619,7 +619,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
-		_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
+		_, result, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -635,7 +635,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 
-		_, result, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
+		_, result, _, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -650,11 +650,62 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		txBuilder.SetMsgs(&testdata.MsgCreateDog{})
 		tx := txBuilder.GetTx()
 
-		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+		_, _, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 		require.Error(t, err)
 		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
+	}
+}
+
+func TestABCI_ErrorEvents(t *testing.T) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			return
+		})
+	}
+
+	{
+		testCases := []struct {
+			fail      bool
+			emitError bool
+		}{
+			//{false, true},
+			{true, true},
+		}
+
+		for _, testCase := range testCases {
+			suite := NewBaseAppSuite(t, anteOpt)
+
+			suite.baseApp.InitChain(&abci.RequestInitChain{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+			})
+
+			suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: 1,
+			})
+			baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplCustomFailures{testCase.fail, testCase.emitError})
+
+			tx := newTxCounter(t, suite.txConfig, 0, 0)
+
+			_, result, events, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+
+			if testCase.fail {
+				require.Error(t, err)
+
+				space, code, _ := errorsmod.ABCIInfo(err, false)
+				require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
+				require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
+				// ToDo: Check error events in the anteEvents
+				require.Len(t, events, 1)
+				require.Equal(t, events[0].Type, CounterErrorEvent+".error")
+			} else {
+				require.NotNil(t, result)
+				require.Len(t, sdk.ExtractErrorEvents(result.GetEvents()), 1)
+				require.Equal(t, sdk.ExtractErrorEvents(result.GetEvents())[0].Type, CounterErrorEvent+".error")
+			}
+			fmt.Println(result, events)
+		}
 	}
 }
 
@@ -816,7 +867,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
 
-			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+			_, result, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
 			ctx := getFinalizeBlockStateCtx(suite.baseApp)
 

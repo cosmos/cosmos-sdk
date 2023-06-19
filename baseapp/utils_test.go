@@ -125,6 +125,26 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
+type CounterServerImplCustomFailures struct {
+	fail      bool
+	emitError bool
+}
+
+var CounterErrorEvent = "counter_only_consumed_gas"
+
+func (m CounterServerImplCustomFailures) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if m.emitError {
+		sdkCtx.EventManager().EmitErrorEvents(
+			counterEvent(CounterErrorEvent, -1),
+		)
+	}
+	if m.fail {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "forced failure")
+	}
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
 type NoopCounterServerImpl struct{}
 
 func (m NoopCounterServerImpl) IncrementCounter(

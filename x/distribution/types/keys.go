@@ -97,20 +97,6 @@ func (l leUint64Key) DecodeNonTerminal(buffer []byte) (int, uint64, error) { ret
 
 func (l leUint64Key) SizeNonTerminal(_ uint64) int { return 8 }
 
-// GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
-func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
-	// key is in the format:
-	// 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
-	kv.AssertKeyAtLeastLength(key, 2)
-	valAddrLen := int(key[1])
-	kv.AssertKeyAtLeastLength(key, 3+valAddrLen)
-	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	b := key[2+valAddrLen:]
-	kv.AssertKeyLength(b, 8)
-	period = binary.LittleEndian.Uint64(b)
-	return
-}
-
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
 	// key is in the format:
@@ -124,18 +110,6 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
-}
-
-// GetValidatorHistoricalRewardsPrefix creates the prefix key for a validator's historical rewards.
-func GetValidatorHistoricalRewardsPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
-}
-
-// GetValidatorHistoricalRewardsKey creates the key for a validator's historical rewards.
-func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, k)
-	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
 }
 
 // GetValidatorSlashEventPrefix creates the prefix key for a validator's slash fractions.

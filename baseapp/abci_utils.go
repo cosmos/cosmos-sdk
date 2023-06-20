@@ -242,7 +242,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 
 				// Check if we've reached capacity. If so, we cannot select any more
 				// transactions.
-				if totalTxBytes >= req.MaxTxBytes || totalTxGas >= uint64(maxBlockGas) {
+				if totalTxBytes >= req.MaxTxBytes || (maxBlockGas > 0 && (totalTxGas >= uint64(maxBlockGas))) {
 					break
 				}
 			}

@@ -30,7 +30,12 @@ Before actually running the node, we need to initialize the chain, and most impo
 simd init <moniker> --chain-id my-test-chain
 ```
 
-The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network. All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag.
+The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network.
+
+:::tip
+All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag to each commands,
+or set an `$APPD_HOME` environment variable.
+:::
 
 The `~/.simapp` folder has the following structure:
 

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.staking.v1beta1;
+package liquidstaking.staking.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -9,9 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "tendermint/types/types.proto";
-import "tendermint/abci/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most
@@ -118,12 +117,16 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
-
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
-
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
+  // Total number of shares either tokenized or owned by a liquid staking provider 
+  string total_liquid_shares = 14 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // BondStatus is the status of a validator.
@@ -198,6 +201,8 @@ message Delegation {
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // has this delegation been marked as a validator self bond.
+  bool validator_bond = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -301,6 +306,33 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+  string min_commission_rate = 6 [
+    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // validator_bond_factor is required as a safety check for tokenizing shares and 
+  // delegations from liquid staking providers
+  string validator_bond_factor = 7 [
+    (gogoproto.moretags) = "yaml:\"validator_bond_factor\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // global_liquid_staking_cap represents a cap on the portion of stake that 
+  // comes from liquid staking providers
+  string global_liquid_staking_cap = 8 [
+    (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // validator_liquid_staking_cap represents a cap on the portion of stake that 
+  // comes from liquid staking providers for a specific validator
+  string validator_liquid_staking_cap = 9 [
+    (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -367,4 +399,20 @@ enum InfractionType {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
+}
+
+// TokenizeShareRecord represents a tokenized delegation 
+message TokenizeShareRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 id = 1;
+  string owner = 2;
+  string module_account = 3; // module account take the role of delegator
+  string validator = 4; // validator delegated to for tokenize share record creation
+}
+
+// PendingTokenizeShareAuthorizations stores a list of addresses that have their 
+// tokenize share enablement in progress
+message PendingTokenizeShareAuthorizations {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

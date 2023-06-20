@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.staking.v1beta1;
+package liquidstaking.staking.v1beta1;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
@@ -7,9 +7,10 @@ import "gogoproto/gogo.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/staking/v1beta1/staking.proto";
+import "staking/v1beta1/staking.proto";
+import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
 // Msg defines the staking Msg service.
 service Msg {
@@ -30,6 +31,39 @@ service Msg {
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
+
+  // UnbondValidator defines a method for performing the status transition for a validator
+  // from bonded to unbonded
+  rpc UnbondValidator(MsgUnbondValidator) returns (MsgUnbondValidatorResponse);
+
+  // CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
+  // and delegate back to previous validator.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc CancelUnbondingDelegation(MsgCancelUnbondingDelegation) returns (MsgCancelUnbondingDelegationResponse);
+
+  // TokenizeShares defines a method for tokenizing shares from a validator.
+  rpc TokenizeShares(MsgTokenizeShares) returns (MsgTokenizeSharesResponse);
+
+  // RedeemTokens defines a method for redeeming tokens from a validator for
+  // shares.
+  rpc RedeemTokens(MsgRedeemTokensforShares)
+      returns (MsgRedeemTokensforSharesResponse);
+
+  // TransferTokenizeShareRecord defines a method to transfer ownership of
+  // TokenizeShareRecord
+  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
+      returns (MsgTransferTokenizeShareRecordResponse);
+
+  // DisableTokenizeShares defines a method to prevent the tokenization of an addresses stake
+  rpc DisableTokenizeShares(MsgDisableTokenizeShares) returns (MsgDisableTokenizeSharesResponse);
+
+  // EnableTokenizeShares defines a method to re-enable the tokenization of an addresseses stake
+  // after it has been disabled
+  rpc EnableTokenizeShares(MsgEnableTokenizeShares) returns (MsgEnableTokenizeSharesResponse);
+
+  // ValidatorBond defines a method for performing a validator self-bond
+  rpc ValidatorBond(MsgValidatorBond) returns (MsgValidatorBondResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -121,3 +155,102 @@ message MsgUndelegate {
 message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
+
+// MsgUnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+message MsgUnbondValidator {
+  string validator_address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+message MsgUnbondValidatorResponse {}
+
+// MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
+//
+// Since: cosmos-sdk 0.46
+message MsgCancelUnbondingDelegation {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (gogoproto.equal)      = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is always less than or equal to unbonding delegation entry balance
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  // creation_height is the height which the unbonding took place.
+  int64 creation_height = 4;
+}
+
+// MsgCancelUnbondingDelegationResponse
+//
+// Since: cosmos-sdk 0.46
+message MsgCancelUnbondingDelegationResponse {}
+
+message MsgTokenizeShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
+  string tokenized_share_owner = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgTokenizeSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+}
+
+message MsgRedeemTokensforShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgRedeemTokensforSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+}
+
+message MsgTransferTokenizeShareRecord {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 tokenize_share_record_id = 1;
+  string sender = 2;
+  string new_owner = 3;
+}
+
+message MsgTransferTokenizeShareRecordResponse {}
+
+message MsgDisableTokenizeShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
+  option (gogoproto.equal)      = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgDisableTokenizeSharesResponse {}
+
+message MsgEnableTokenizeShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  
+  option (gogoproto.equal)      = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgEnableTokenizeSharesResponse {
+  google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// MsgValidatorBond defines a SDK message for performing validator self-bond of delegated coins
+// from a delegator to a validator.
+message MsgValidatorBond {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+message MsgValidatorBondResponse {}

@@ -1,12 +1,14 @@
 syntax = "proto3";
-package cosmos.staking.v1beta1;
+package liquidstaking.staking.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/staking/v1beta1/staking.proto";
+import "staking/v1beta1/staking.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -90,6 +92,30 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/params";
   }
+
+  // Query for individual tokenize share record information by share by id
+  rpc TokenizeShareRecordById(QueryTokenizeShareRecordByIdRequest) returns (QueryTokenizeShareRecordByIdResponse) {}
+
+  // Query for individual tokenize share record information by share denom
+  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest) returns (QueryTokenizeShareRecordByDenomResponse) {}
+
+  // Query tokenize share records by address
+  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest) returns (QueryTokenizeShareRecordsOwnedResponse) {}
+
+  // Query for all tokenize share records
+  rpc AllTokenizeShareRecords(QueryAllTokenizeShareRecordsRequest) returns (QueryAllTokenizeShareRecordsResponse) {}
+
+  // Query for last tokenize share record id
+  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest) returns (QueryLastTokenizeShareRecordIdResponse) {}
+
+  // Query for total tokenized staked assets
+  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest) returns (QueryTotalTokenizeSharedAssetsResponse) {}
+
+  // Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+  rpc TotalLiquidStaked(QueryTotalLiquidStaked) returns (QueryTotalLiquidStakedResponse) {}
+
+  // Query tokenize share locks
+  rpc TokenizeShareLockInfo(QueryTokenizeShareLockInfo) returns (QueryTokenizeShareLockInfoResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.
@@ -118,7 +144,7 @@ message QueryValidatorRequest {
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse {
-  // validator defines the the validator info.
+  // validator defines the validator info.
   Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
@@ -288,7 +314,7 @@ message QueryDelegatorValidatorsRequest {
 // QueryDelegatorValidatorsResponse is response type for the
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsResponse {
-  // validators defines the the validators' info of a delegator.
+  // validators defines the validators' info of a delegator.
   repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
@@ -311,7 +337,7 @@ message QueryDelegatorValidatorRequest {
 // QueryDelegatorValidatorResponse response type for the
 // Query/DelegatorValidator RPC method.
 message QueryDelegatorValidatorResponse {
-  // validator defines the the validator info.
+  // validator defines the validator info.
   Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
@@ -345,4 +371,102 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordByIdRequest is request type for the 
+// Query/QueryTokenizeShareRecordById RPC method.
+message QueryTokenizeShareRecordByIdRequest {
+  uint64 id = 1;
+}
+
+// QueryTokenizeShareRecordByIdRequest is response type for the 
+// Query/QueryTokenizeShareRecordById RPC method.
+message QueryTokenizeShareRecordByIdResponse {
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryTokenizeShareRecordByDenomRequest is request type for the 
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+message QueryTokenizeShareRecordByDenomRequest { 
+  string denom = 1;
+}
+
+// QueryTokenizeShareRecordByDenomResponse is response type for the 
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+message QueryTokenizeShareRecordByDenomResponse {
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryTokenizeShareRecordsOwnedRequest is request type for the 
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+message QueryTokenizeShareRecordsOwnedRequest {
+  string owner = 1;
+}
+
+// QueryTokenizeShareRecordsOwnedResponse is response type for the 
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+message QueryTokenizeShareRecordsOwnedResponse {
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllTokenizeShareRecordsRequest is request type for the 
+// Query/QueryAllTokenizeShareRecords RPC method.
+message QueryAllTokenizeShareRecordsRequest {}
+
+// QueryAllTokenizeShareRecordsResponse is response type for the 
+// Query/QueryAllTokenizeShareRecords RPC method.
+message QueryAllTokenizeShareRecordsResponse {
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryLastTokenizeShareRecordIdRequest is request type for the 
+// Query/QueryLastTokenizeShareRecordId RPC method.
+message QueryLastTokenizeShareRecordIdRequest {}
+
+// QueryLastTokenizeShareRecordIdResponse is response type for the 
+// Query/QueryLastTokenizeShareRecordId RPC method.
+message QueryLastTokenizeShareRecordIdResponse {
+  uint64 id = 1;
+}
+
+// QueryTotalTokenizeSharedAssetsRequest is request type for the 
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+message QueryTotalTokenizeSharedAssetsRequest {}
+
+// QueryTotalTokenizeSharedAssetsResponse is response type for the 
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+message QueryTotalTokenizeSharedAssetsResponse {
+  cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryQueryTotalLiquidStakedRequest is request type for the 
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStaked {}
+
+// QueryQueryTotalLiquidStakedResponse is response type for the 
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStakedResponse {
+  string tokens = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// QueryTokenizeShareLockInfo queries the tokenize share lock information
+// associated with given account
+message QueryTokenizeShareLockInfo {
+  string address = 1;
+}
+// QueryTokenizeShareLockInfoResponse is the response from the 
+// QueryTokenizeShareLockInfo query
+message QueryTokenizeShareLockInfoResponse{
+  string status = 1;
+  string expiration_time = 2;
+}
+
+enum TokenizeShareLockStatus {
+  LOCKED = 0;
+  UNLOCKED = 1;
+  LOCK_EXPIRING = 2;
 }

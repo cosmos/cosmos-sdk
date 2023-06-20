@@ -48,7 +48,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorOutstandingRewards",
 			v1.GetValidatorOutstandingRewardsKey(valAddr),
-			types.GetValidatorOutstandingRewardsKey(valAddr),
+			append(types.ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"DelegatorWithdrawAddr",

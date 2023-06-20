@@ -94,8 +94,9 @@ func TestSlashingMsgs(t *testing.T) {
 	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 
 	ctxCheck = baseApp.NewContext(true)
-	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.NoError(t, err)
+
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))

@@ -16,8 +16,8 @@ type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
-		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
-		GetParams(ctx sdk.Context) (params stakingtypes.Params)
+		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the

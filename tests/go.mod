@@ -3,8 +3,13 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.20
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.4.2
 	cosmossdk.io/collections v0.2.0 // indirect
+=======
+	cosmossdk.io/api v0.4.3-0.20230615032830-feb87fce5495
+	cosmossdk.io/collections v0.2.0
+>>>>>>> e078f1a49 (feat(client): add positional optional to client v2 (#16316))
 	cosmossdk.io/core v0.8.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741

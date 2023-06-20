@@ -716,11 +716,11 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 			// updates the context with these parameters if current module is upgrade module,
 			// so that Manager uses the updated context to execute BeginBlock.
 			if m.consensusParamsGetter != nil {
-				p := ctx.ConsensusParams()
+				cp := ctx.ConsensusParams()
 				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
 				// and consensus parameters should not be overwritten.
 				if p.Block == nil {
-					cp := m.consensusParamsGetter.GetConsensusParams(ctx)
+					cp = m.consensusParamsGetter.GetConsensusParams(ctx)
 					if cp.Block != nil {
 						ctx = ctx.WithConsensusParams(cp)
 					}

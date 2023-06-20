@@ -55,7 +55,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = MsgRedelegateExec(
+	out, err := MsgRedelegateExec(
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
@@ -64,11 +64,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(int64(0), int64(txRes.Code))
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
@@ -118,7 +122,6 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -137,7 +140,6 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -157,7 +159,6 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -178,7 +179,6 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -399,7 +399,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 			&types.QueryDelegatorDelegationsResponse{},
 			&types.QueryDelegatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), false, sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -455,7 +455,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
 			&types.QueryValidatorDelegationsResponse{},
 			&types.QueryValidatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), false, sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -876,12 +876,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
+min_commission_rate: "0.000000000000000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1187,7 +1188,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				val2.ValAddress.String(),                               // dst-validator-addr
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1284,6 +1285,251 @@ func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewTokenizeSharesCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"Without reward owner",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without tokenize share amount",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without tokenize share amount and reward owner",
+			[]string{
+				val.ValAddress.String(),
+				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without validator address",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without validator address and reward owner",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without validator address, tokenize share amount and reward owner",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"valid transaction of tokenize share",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewTokenizeSharesCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewRedeemTokensCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"Without redeem token amount",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"valid transaction of redeem token",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewRedeemTokensCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewTransferTokenizeShareRecordCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"Without new owner",
+			[]string{
+				"123",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without record id",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without record id and new owner",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"valid transaction of transfer tokenize share record",
+			[]string{
+				"123",
+				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewTransferTokenizeShareRecordCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
 // TestBlockResults tests that the validator updates correctly show when
 // calling the /block_results RPC endpoint.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
@@ -1350,7 +1596,8 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 			break
 		}
 
-		s.network.WaitForNextBlock()
+		err = s.network.WaitForNextBlock()
+		require.NoError(err)
 	}
 }
 

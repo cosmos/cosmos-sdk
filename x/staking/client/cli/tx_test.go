@@ -17,7 +17,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
-	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) TxCreateValidatorConfig {
+	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange string) TxCreateValidatorConfig {
 		return TxCreateValidatorConfig{
 			IP:                      ip,
 			ChainID:                 chainID,
@@ -28,7 +28,6 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			CommissionRate:          commission,
 			CommissionMaxRate:       commissionMax,
 			CommissionMaxChangeRate: commissionMaxChange,
-			MinSelfDelegation:       minSelfDelegation,
 		}
 	}
 
@@ -42,42 +41,43 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			fsModify: func(fs *pflag.FlagSet) {
 				return
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1"),
-		},
-		{
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01"),
+		}, {
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagAmount, "2000stake")
+				err := fs.Set(FlagAmount, "2000stake")
+				if err != nil {
+					panic(err)
+				}
 			},
-			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
-		},
-		{
+			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01"),
+		}, {
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionRate, "0.54")
+				err := fs.Set(FlagCommissionRate, "0.54")
+				if err != nil {
+					panic(err)
+				}
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1"),
-		},
-		{
+			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01"),
+		}, {
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionMaxRate, "0.89")
+				err := fs.Set(FlagCommissionMaxRate, "0.89")
+				if err != nil {
+					panic(err)
+				}
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1"),
-		},
-		{
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01"),
+		}, {
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionMaxChangeRate, "0.55")
+				err := fs.Set(FlagCommissionMaxChangeRate, "0.55")
+				if err != nil {
+					panic(err)
+				}
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55", "1"),
-		},
-		{
-			name: "Custom min self delegations",
-			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagMinSelfDelegation, "0.33")
-			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "0.33"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55"),
 		},
 	}
 

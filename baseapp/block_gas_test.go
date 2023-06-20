@@ -150,7 +150,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
-
 			txBuilder.SetGasLimit(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 
 			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()

@@ -1313,6 +1313,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	// ensure we only select transactions that fit within the block gas limit
 	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
 		MaxTxBytes: 1_000_000, // large enough to ignore restriction
 		Height:     1,

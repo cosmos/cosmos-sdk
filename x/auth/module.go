@@ -203,15 +203,8 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Provide(ProvideModule),
 	)
-}
-
-// ProvideAddressCodec provides an address.Codec to the container for any
-// modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return authcodec.NewBech32Codec(config.Bech32Prefix)
 }
 
 type ModuleInputs struct {
@@ -221,6 +214,7 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
+	AddressCodec            address.Codec                 `optional:"true"`
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -247,6 +241,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	if in.AddressCodec == nil {
+		in.AddressCodec = authcodec.NewBech32Codec(in.Config.Bech32Prefix)
+	}
+
+	if in.Config.Bech32Prefix == "" {
+		in.Config.Bech32Prefix = ""
+	}
+
 	if in.RandomGenesisAccountsFn == nil {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}
@@ -255,7 +257,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

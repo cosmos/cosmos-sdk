@@ -137,9 +137,6 @@ func NewAccountKeeper(
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
-	if bech32Prefix == "" {
-		ak.bech32Prefix = "bech32 is not used on this chain"
-	}
 	schema, err := sb.Build()
 	if err != nil {
 		panic(err)
@@ -271,6 +268,10 @@ func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAcc
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
+	if ak.bech32Prefix == "" {
+		return "bech32 is not used on this chain", nil
+	}
+
 	return ak.bech32Prefix, nil
 }
 

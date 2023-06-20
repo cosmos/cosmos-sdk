@@ -245,10 +245,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AddressCodec = authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 	}
 
-	if in.Config.Bech32Prefix == "" {
-		in.Config.Bech32Prefix = ""
-	}
-
 	if in.RandomGenesisAccountsFn == nil {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}

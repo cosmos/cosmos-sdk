@@ -1,5 +1,5 @@
 syntax = "proto3";
-package liquidstaking.staking.v1beta1;
+package cosmos.staking.v1beta1;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
@@ -7,10 +7,9 @@ import "gogoproto/gogo.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "staking/v1beta1/staking.proto";
-import "cosmos/msg/v1/msg.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 
-option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Msg defines the staking Msg service.
 service Msg {
@@ -45,15 +44,13 @@ service Msg {
   // TokenizeShares defines a method for tokenizing shares from a validator.
   rpc TokenizeShares(MsgTokenizeShares) returns (MsgTokenizeSharesResponse);
 
-  // RedeemTokens defines a method for redeeming tokens from a validator for
+  // RedeemTokensForShares defines a method for redeeming tokens from a validator for
   // shares.
-  rpc RedeemTokens(MsgRedeemTokensforShares)
-      returns (MsgRedeemTokensforSharesResponse);
+  rpc RedeemTokensForShares(MsgRedeemTokensForShares) returns (MsgRedeemTokensForSharesResponse);
 
   // TransferTokenizeShareRecord defines a method to transfer ownership of
   // TokenizeShareRecord
-  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
-      returns (MsgTransferTokenizeShareRecordResponse);
+  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord) returns (MsgTransferTokenizeShareRecordResponse);
 
   // DisableTokenizeShares defines a method to prevent the tokenization of an addresses stake
   rpc DisableTokenizeShares(MsgDisableTokenizeShares) returns (MsgDisableTokenizeSharesResponse);
@@ -159,19 +156,17 @@ message MsgUndelegateResponse {
 // MsgUnbondValidator defines a method for performing the status transition for
 // a validator from bonded to unbonded
 message MsgUnbondValidator {
-  string validator_address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 }
+// MsgUnbondValidatorResponse defines the Msg/UnbondValidator response type.
 message MsgUnbondValidatorResponse {}
 
 // MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
 //
 // Since: cosmos-sdk 0.46
 message MsgCancelUnbondingDelegation {
-  option (cosmos.msg.v1.signer) = "delegator_address";
-  option (gogoproto.equal)      = false;
-
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // amount is always less than or equal to unbonding delegation entry balance
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
   // creation_height is the height which the unbonding took place.
@@ -183,63 +178,69 @@ message MsgCancelUnbondingDelegation {
 // Since: cosmos-sdk 0.46
 message MsgCancelUnbondingDelegationResponse {}
 
+// MsgTokenizeShares tokenizes a delegation
 message MsgTokenizeShares {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
-  string tokenized_share_owner = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address     = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount                = 3 [(gogoproto.nullable) = false];
+  string                   tokenized_share_owner = 4;
 }
 
+// MsgTokenizeSharesResponse defines the Msg/MsgTokenizeShares response type.
 message MsgTokenizeSharesResponse {
-  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }
 
-message MsgRedeemTokensforShares {
-  option (gogoproto.equal) = false;
+// MsgRedeemTokensForShares redeems a tokenized share back into a native delegation
+message MsgRedeemTokensForShares {
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false];
 }
 
-message MsgRedeemTokensforSharesResponse {
-  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+// MsgRedeemTokensForSharesResponse defines the Msg/MsgRedeemTokensForShares response type.
+message MsgRedeemTokensForSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }
 
+// MsgTransferTokenizeShareRecord transfer a tokenize share record
 message MsgTransferTokenizeShareRecord {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   uint64 tokenize_share_record_id = 1;
-  string sender = 2;
-  string new_owner = 3;
+  string sender                   = 2;
+  string new_owner                = 3;
 }
 
+// MsgTransferTokenizeShareRecordResponse defines the Msg/MsgTransferTokenizeShareRecord response type.
 message MsgTransferTokenizeShareRecordResponse {}
 
+// MsgDisableTokenizeShares prevents the tokenization of shares for a given address
 message MsgDisableTokenizeShares {
-  option (cosmos.msg.v1.signer) = "delegator_address";
-
-  option (gogoproto.equal)      = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
 }
 
+// MsgDisableTokenizeSharesResponse defines the Msg/DisableTokenizeShares response type.
 message MsgDisableTokenizeSharesResponse {}
 
+// MsgEnableTokenizeShares re-enables tokenization of shares for a given address
 message MsgEnableTokenizeShares {
-  option (cosmos.msg.v1.signer) = "delegator_address";
-  
-  option (gogoproto.equal)      = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
 }
 
+// MsgEnableTokenizeSharesResponse defines the Msg/EnableTokenizeShares response type.
 message MsgEnableTokenizeSharesResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
@@ -250,7 +251,9 @@ message MsgValidatorBond {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 }
+
+// MsgValidatorBondResponse defines the Msg/ValidatorBond response type.
 message MsgValidatorBondResponse {}

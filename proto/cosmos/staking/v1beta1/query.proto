@@ -1,14 +1,13 @@
 syntax = "proto3";
-package liquidstaking.staking.v1beta1;
+package cosmos.staking.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "staking/v1beta1/staking.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -97,19 +96,23 @@ service Query {
   rpc TokenizeShareRecordById(QueryTokenizeShareRecordByIdRequest) returns (QueryTokenizeShareRecordByIdResponse) {}
 
   // Query for individual tokenize share record information by share denom
-  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest) returns (QueryTokenizeShareRecordByDenomResponse) {}
+  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest)
+      returns (QueryTokenizeShareRecordByDenomResponse) {}
 
   // Query tokenize share records by address
-  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest) returns (QueryTokenizeShareRecordsOwnedResponse) {}
+  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest)
+      returns (QueryTokenizeShareRecordsOwnedResponse) {}
 
   // Query for all tokenize share records
   rpc AllTokenizeShareRecords(QueryAllTokenizeShareRecordsRequest) returns (QueryAllTokenizeShareRecordsResponse) {}
 
   // Query for last tokenize share record id
-  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest) returns (QueryLastTokenizeShareRecordIdResponse) {}
+  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest)
+      returns (QueryLastTokenizeShareRecordIdResponse) {}
 
   // Query for total tokenized staked assets
-  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest) returns (QueryTotalTokenizeSharedAssetsResponse) {}
+  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest)
+      returns (QueryTotalTokenizeSharedAssetsResponse) {}
 
   // Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
   rpc TotalLiquidStaked(QueryTotalLiquidStaked) returns (QueryTotalLiquidStakedResponse) {}
@@ -373,81 +376,81 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryTokenizeShareRecordByIdRequest is request type for the 
+// QueryTokenizeShareRecordByIdRequest is request type for the
 // Query/QueryTokenizeShareRecordById RPC method.
 message QueryTokenizeShareRecordByIdRequest {
   uint64 id = 1;
 }
 
-// QueryTokenizeShareRecordByIdRequest is response type for the 
+// QueryTokenizeShareRecordByIdRequest is response type for the
 // Query/QueryTokenizeShareRecordById RPC method.
 message QueryTokenizeShareRecordByIdResponse {
-  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryTokenizeShareRecordByDenomRequest is request type for the 
+// QueryTokenizeShareRecordByDenomRequest is request type for the
 // Query/QueryTokenizeShareRecordByDenom RPC method.
-message QueryTokenizeShareRecordByDenomRequest { 
+message QueryTokenizeShareRecordByDenomRequest {
   string denom = 1;
 }
 
-// QueryTokenizeShareRecordByDenomResponse is response type for the 
+// QueryTokenizeShareRecordByDenomResponse is response type for the
 // Query/QueryTokenizeShareRecordByDenom RPC method.
 message QueryTokenizeShareRecordByDenomResponse {
-  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryTokenizeShareRecordsOwnedRequest is request type for the 
+// QueryTokenizeShareRecordsOwnedRequest is request type for the
 // Query/QueryTokenizeShareRecordsOwned RPC method.
 message QueryTokenizeShareRecordsOwnedRequest {
   string owner = 1;
 }
 
-// QueryTokenizeShareRecordsOwnedResponse is response type for the 
+// QueryTokenizeShareRecordsOwnedResponse is response type for the
 // Query/QueryTokenizeShareRecordsOwned RPC method.
 message QueryTokenizeShareRecordsOwnedResponse {
-  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryAllTokenizeShareRecordsRequest is request type for the 
+// QueryAllTokenizeShareRecordsRequest is request type for the
 // Query/QueryAllTokenizeShareRecords RPC method.
 message QueryAllTokenizeShareRecordsRequest {}
 
-// QueryAllTokenizeShareRecordsResponse is response type for the 
+// QueryAllTokenizeShareRecordsResponse is response type for the
 // Query/QueryAllTokenizeShareRecords RPC method.
 message QueryAllTokenizeShareRecordsResponse {
-  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryLastTokenizeShareRecordIdRequest is request type for the 
+// QueryLastTokenizeShareRecordIdRequest is request type for the
 // Query/QueryLastTokenizeShareRecordId RPC method.
 message QueryLastTokenizeShareRecordIdRequest {}
 
-// QueryLastTokenizeShareRecordIdResponse is response type for the 
+// QueryLastTokenizeShareRecordIdResponse is response type for the
 // Query/QueryLastTokenizeShareRecordId RPC method.
 message QueryLastTokenizeShareRecordIdResponse {
   uint64 id = 1;
 }
 
-// QueryTotalTokenizeSharedAssetsRequest is request type for the 
+// QueryTotalTokenizeSharedAssetsRequest is request type for the
 // Query/QueryTotalTokenizeSharedAssets RPC method.
 message QueryTotalTokenizeSharedAssetsRequest {}
 
-// QueryTotalTokenizeSharedAssetsResponse is response type for the 
+// QueryTotalTokenizeSharedAssetsResponse is response type for the
 // Query/QueryTotalTokenizeSharedAssets RPC method.
 message QueryTotalTokenizeSharedAssetsResponse {
-  cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryQueryTotalLiquidStakedRequest is request type for the 
+// QueryQueryTotalLiquidStakedRequest is request type for the
 // Query/QueryQueryTotalLiquidStaked RPC method.
 message QueryTotalLiquidStaked {}
 
-// QueryQueryTotalLiquidStakedResponse is response type for the 
+// QueryQueryTotalLiquidStakedResponse is response type for the
 // Query/QueryQueryTotalLiquidStaked RPC method.
 message QueryTotalLiquidStakedResponse {
   string tokens = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.moretags)   = "yaml:\"tokens\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
@@ -458,15 +461,9 @@ message QueryTotalLiquidStakedResponse {
 message QueryTokenizeShareLockInfo {
   string address = 1;
 }
-// QueryTokenizeShareLockInfoResponse is the response from the 
+// QueryTokenizeShareLockInfoResponse is the response from the
 // QueryTokenizeShareLockInfo query
-message QueryTokenizeShareLockInfoResponse{
-  string status = 1;
+message QueryTokenizeShareLockInfoResponse {
+  string status          = 1;
   string expiration_time = 2;
-}
-
-enum TokenizeShareLockStatus {
-  LOCKED = 0;
-  UNLOCKED = 1;
-  LOCK_EXPIRING = 2;
 }

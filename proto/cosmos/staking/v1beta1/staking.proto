@@ -1,5 +1,5 @@
 syntax = "proto3";
-package liquidstaking.staking.v1beta1;
+package cosmos.staking.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -9,8 +9,9 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "tendermint/types/types.proto";
+import "tendermint/abci/types.proto";
 
-option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most
@@ -121,9 +122,9 @@ message Validator {
   int64 unbonding_on_hold_ref_count = 12;
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
-  // Total number of shares either tokenized or owned by a liquid staking provider 
+  // Total number of shares either tokenized or owned by a liquid staking provider
   string total_liquid_shares = 14 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"total_liquid_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -312,21 +313,21 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // validator_bond_factor is required as a safety check for tokenizing shares and 
+  // validator_bond_factor is required as a safety check for tokenizing shares and
   // delegations from liquid staking providers
   string validator_bond_factor = 7 [
-    (gogoproto.moretags) = "yaml:\"validator_bond_factor\"",
+    (gogoproto.moretags)   = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
-  // global_liquid_staking_cap represents a cap on the portion of stake that 
+  // global_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers
   string global_liquid_staking_cap = 8 [
     (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // validator_liquid_staking_cap represents a cap on the portion of stake that 
+  // validator_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers for a specific validator
   string validator_liquid_staking_cap = 9 [
     (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
@@ -401,18 +402,33 @@ message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
 }
 
-// TokenizeShareRecord represents a tokenized delegation 
+// TokenizeShareRecord represents a tokenized delegation
 message TokenizeShareRecord {
   option (gogoproto.equal) = true;
 
-  uint64 id = 1;
-  string owner = 2;
+  uint64 id             = 1;
+  string owner          = 2;
   string module_account = 3; // module account take the role of delegator
-  string validator = 4; // validator delegated to for tokenize share record creation
+  string validator      = 4; // validator delegated to for tokenize share record creation
 }
 
-// PendingTokenizeShareAuthorizations stores a list of addresses that have their 
+// PendingTokenizeShareAuthorizations stores a list of addresses that have their
 // tokenize share enablement in progress
 message PendingTokenizeShareAuthorizations {
-  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string addresses = 1;
+}
+
+// TokenizeShareLockStatus indicates whether the address is able to tokenize shares
+enum TokenizeShareLockStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an empty tokenize share lock status
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0;
+  // LOCKED indicates the account is locked and cannot tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1;
+  // UNLOCKED indicates the account is unlocked and can tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2;
+  // LOCK_EXPIRING indicates the account is unable to tokenize shares, but
+  // will be able to tokenize shortly (after 1 unbonding period)
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3;
 }

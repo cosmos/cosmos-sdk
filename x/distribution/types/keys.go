@@ -2,11 +2,8 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -60,46 +57,6 @@ var (
 	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
-
-// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
-// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
-// state backwards compatibility.
-// Deprecated: use collections.Uint64Key instead.
-var LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
-
-type leUint64Key struct{}
-
-func (l leUint64Key) Encode(buffer []byte, key uint64) (int, error) {
-	binary.LittleEndian.PutUint64(buffer, key)
-	return 8, nil
-}
-
-func (l leUint64Key) Decode(buffer []byte) (int, uint64, error) {
-	if size := len(buffer); size < 8 {
-		return 0, 0, fmt.Errorf("invalid buffer size, wanted 8 at least got %d", size)
-	}
-	return 8, binary.LittleEndian.Uint64(buffer), nil
-}
-
-func (l leUint64Key) Size(_ uint64) int { return 8 }
-
-func (l leUint64Key) EncodeJSON(value uint64) ([]byte, error) {
-	return collections.Uint64Key.EncodeJSON(value)
-}
-
-func (l leUint64Key) DecodeJSON(b []byte) (uint64, error) { return collections.Uint64Key.DecodeJSON(b) }
-
-func (l leUint64Key) Stringify(key uint64) string { return collections.Uint64Key.Stringify(key) }
-
-func (l leUint64Key) KeyType() string { return "little-endian-uint64" }
-
-func (l leUint64Key) EncodeNonTerminal(buffer []byte, key uint64) (int, error) {
-	return l.Encode(buffer, key)
-}
-
-func (l leUint64Key) DecodeNonTerminal(buffer []byte) (int, uint64, error) { return l.Decode(buffer) }
-
-func (l leUint64Key) SizeNonTerminal(_ uint64) int { return 8 }
 
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {

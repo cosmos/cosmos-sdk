@@ -6984,9 +6984,9 @@ multiplied by exchange rate.
 | `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
-| `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
 | `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
+| `total_validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
 | `total_liquid_shares` | [string](#string) |  | Total number of shares either tokenized or owned by a liquid staking provider |
 
 
@@ -8014,7 +8014,6 @@ MsgEditValidator defines a SDK message for editing an existing validator.
 | `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
-| `min_self_delegation` | [string](#string) |  |  |
 
 
 

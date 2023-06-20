@@ -69,7 +69,7 @@ func TestUpdateHome(t *testing.T) {
 	assert.NilError(t, err, "expected no error")
 
 	homeFileDir := filepath.Dir(clientCtx.HomeFilePath)
-	homeDir, err := config.ReadHomeDir(homeFileDir, clientCtx.Viper)
+	homeDir, err := config.ReadOrMakeHomeDir(homeFileDir, clientCtx.Viper)
 	assert.NilError(t, err, "expected no error reading the home dir from the configuration file")
 	assert.Equal(t, homeDir, setNewHome[0], "expected home dir read from configuration file to be %q; got: %q", setNewHome[0], homeDir)
 
@@ -77,7 +77,7 @@ func TestUpdateHome(t *testing.T) {
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.HomeCommand(), setUpdatedHome)
 	assert.NilError(t, err, "expected no error")
 
-	homeDir, err = config.ReadHomeDir(homeFileDir, clientCtx.Viper)
+	homeDir, err = config.ReadOrMakeHomeDir(homeFileDir, clientCtx.Viper)
 	assert.NilError(t, err, "expected no error reading the home dir from the configuration file")
 	assert.Equal(t, homeDir, setUpdatedHome[0], "expected home dir read from configuration file to be %q; got: %q", setUpdatedHome[0], homeDir)
 }

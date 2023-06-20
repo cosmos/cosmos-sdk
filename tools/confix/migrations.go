@@ -14,7 +14,6 @@ const (
 	AppConfig    = "app.toml"
 	ClientConfig = "client.toml"
 	CMTConfig    = "config.toml"
-	HomeConfig   = "home.toml"
 )
 
 // MigrationMap defines a mapping from a version to a transformation plan.

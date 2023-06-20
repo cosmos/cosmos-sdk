@@ -244,7 +244,6 @@ func init() {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
-
 	if configTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
 	}

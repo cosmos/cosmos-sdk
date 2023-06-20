@@ -45,7 +45,4 @@ func TestCheckValid(t *testing.T) {
 
 	err = confix.CheckValid(confix.ClientConfig, mustReadConfig(t, "testdata/client.toml"))
 	assert.NilError(t, err)
-
-	err = confix.CheckValid(confix.HomeConfig, mustReadConfig(t, "testdata/home.toml"))
-	assert.NilError(t, err)
 }

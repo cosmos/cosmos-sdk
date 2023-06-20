@@ -202,7 +202,6 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/circuit => ../x/circuit

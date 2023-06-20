@@ -34,7 +34,7 @@ The command above creates all the configuration files needed for your node to ru
 
 :::tip
 All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag to each commands,
-or set an `$APPD_HOME` environment variable.
+or set an `$APPD_HOME` environment variable (where `APPD` is the name of the binary).
 :::
 
 The `~/.simapp` folder has the following structure:

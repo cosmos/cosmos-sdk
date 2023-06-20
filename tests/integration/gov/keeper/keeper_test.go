@@ -112,8 +112,7 @@ func initFixture(t testing.TB) *fixture {
 		types.DefaultConfig(),
 		authority.String(),
 	)
-	err := govKeeper.ProposalID.Set(newCtx, 1)
-	assert.NilError(t, err)
+	assert.NilError(t, govKeeper.ProposalID.Set(newCtx, 1))
 	govRouter := v1beta1.NewRouter()
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)

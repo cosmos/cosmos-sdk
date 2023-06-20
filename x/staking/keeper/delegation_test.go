@@ -885,7 +885,7 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	delegation := stakingtypes.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	require.NoError(keeper.SetDelegation(ctx, delegation))
 
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDecFromInt(delTokens))
+	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDecFromInt(delTokens))
 	require.NoError(err)
 
 	// end block

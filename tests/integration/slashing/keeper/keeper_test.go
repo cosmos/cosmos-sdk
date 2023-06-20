@@ -138,8 +138,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	p, err := f.stakingKeeper.GetParams(f.ctx)
 	assert.NilError(t, err)
 	p.MaxValidators = 5
-	err := f.stakingKeeper.SetParams(f.ctx, p)
-	assert.NilError(t, err)
+	assert.NilError(t, f.stakingKeeper.SetParams(f.ctx, p))
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
@@ -163,7 +162,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
@@ -190,7 +190,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
 
-	err := f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
 	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 	// bond to meet minimum self-delegation
@@ -342,7 +342,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	params, err := f.stakingKeeper.GetParams(f.ctx)
 	require.NoError(t, err)
 	params.MaxValidators = 1
-	err := f.stakingKeeper.SetParams(f.ctx, params)
+	err = f.stakingKeeper.SetParams(f.ctx, params)
 	assert.NilError(t, err)
 	power := int64(100)
 
@@ -437,8 +437,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	assert.NilError(t, err)
 
 	// validator rejoins and starts signing again
-	f.stakingKeeper.Unjail(f.ctx, consAddr)
-
+	err = f.stakingKeeper.Unjail(f.ctx, consAddr)
+	assert.NilError(t, err)
 	err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagCommit)
 	assert.NilError(t, err)
 

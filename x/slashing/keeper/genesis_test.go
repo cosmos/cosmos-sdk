@@ -13,7 +13,6 @@ import (
 func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
-
 	err := keeper.SetParams(ctx, testutil.TestParams())
 	s.Require().NoError(err)
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
@@ -24,8 +23,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
-	keeper.SetValidatorSigningInfo(ctx, consAddr1, info1)
-	keeper.SetValidatorSigningInfo(ctx, consAddr2, info2)
+	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr1, info1))
+	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, info2))
 	genesisState := keeper.ExportGenesis(ctx)
 
 	require.Equal(genesisState.Params, testutil.TestParams())

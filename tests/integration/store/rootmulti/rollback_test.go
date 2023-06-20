@@ -70,7 +70,7 @@ func TestRollback(t *testing.T) {
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
 		assert.NilError(t, err)

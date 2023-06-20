@@ -921,9 +921,10 @@ func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
-	err := store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	require.NoError(err)
-	store.LoadLatestVersion()
+	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	if err := store.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
 	return map[types.StoreKey]types.CommitKVStore{
 		testStoreKey1: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),

@@ -153,7 +153,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				err = s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+				err := s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,

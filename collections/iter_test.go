@@ -16,7 +16,7 @@ func TestIteratorBasic(t *testing.T) {
 	require.NoError(t, err)
 	schemaBuilder := NewSchemaBuilder(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "m", StringKey, Uint64Value)
-	_, err := schemaBuilder.Build()
+	_, err = schemaBuilder.Build()
 	require.NoError(t, err)
 
 	for i := uint64(1); i <= 2; i++ {

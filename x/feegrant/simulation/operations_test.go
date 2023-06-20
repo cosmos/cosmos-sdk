@@ -180,7 +180,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
 	require.NoError(err)
 	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))

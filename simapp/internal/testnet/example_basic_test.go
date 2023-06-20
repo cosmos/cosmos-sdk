@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"testing"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -13,10 +14,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
-func Example_basicUsage(t *testing.T) {
+func TestExampleBasicUsage(t *testing.T) {
 	const nVals = 2
 
 	// Set up new private keys for the set of validators.
@@ -94,15 +95,14 @@ func Example_basicUsage(t *testing.T) {
 			dir,             // Where to put files on disk.
 		).Logger(logger.With("root_module", fmt.Sprintf("comet_%d", idx)))
 	})
+	assert.NilError(t, err)
+
 	// StopAndWait must be deferred before the error check,
 	// as the nodes value may contain some successfully started instances.
 	defer func() {
 		err := nodes.StopAndWait()
-		if err != nil {
-			panic(err)
-		}
+		assert.NilError(t, err)
 	}()
-	require.NoError(t, err)
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check
 	// a couple simple properties of one node.

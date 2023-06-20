@@ -92,16 +92,16 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
 	).Return(sdkmath.NewInt(0), nil)
 
-	s.slashingKeeper.Slash(
+	err = s.slashingKeeper.Slash(
 		s.ctx,
 		consAddr,
 		slashFractionDoubleSign,
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 	)
-
+	s.Require().NoError(err)
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
-	s.slashingKeeper.Jail(s.ctx, consAddr)
+	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
 func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	).Return(sdkmath.NewInt(0), nil)
 
-	s.slashingKeeper.SlashWithInfractionReason(
+	err = s.slashingKeeper.SlashWithInfractionReason(
 		s.ctx,
 		consAddr,
 		slashFractionDoubleSign,
@@ -124,9 +124,9 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		s.ctx.BlockHeight(),
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
-
+	s.Require().NoError(err)
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
-	s.slashingKeeper.Jail(s.ctx, consAddr)
+	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

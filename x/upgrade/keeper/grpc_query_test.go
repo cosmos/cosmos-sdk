@@ -42,7 +42,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+	err := suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	})
 	suite.Require().NoError(err)

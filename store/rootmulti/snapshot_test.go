@@ -67,8 +67,9 @@ func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.LoadLatestVersion()
-
+	if err := store.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
 	return store
 }
 

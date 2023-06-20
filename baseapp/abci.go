@@ -747,14 +747,18 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
 		// check before every tx if we should abort
-		select {
-		case <-app.oeInfo.Abort:
-			app.oeInfo.Aborted = true
-			return nil, nil
-		default:
-			if _, err := app.txDecoder(rawTx); err == nil {
-				txResults = append(txResults, app.deliverTx(rawTx))
+		if app.oeEnabled && app.oeInfo != nil {
+			select {
+			case <-app.oeInfo.Abort:
+				app.oeInfo.Aborted = true
+				return nil, nil
+			default:
+				continue
 			}
+		}
+
+		if _, err := app.txDecoder(rawTx); err == nil {
+			txResults = append(txResults, app.deliverTx(rawTx))
 		}
 	}
 

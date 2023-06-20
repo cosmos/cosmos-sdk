@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"signer isn't gov account": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"invalid msg handler": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {

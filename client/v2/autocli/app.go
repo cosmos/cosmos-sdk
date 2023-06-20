@@ -4,10 +4,11 @@ import (
 	"errors"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/client/v2/autocli/flag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -266,7 +266,7 @@ func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {
 // Removes the first character "/" from the received name
 func implMsgNameCleanup(implMessages []string) (cleanImplMessages []string) {
 	for _, implMessage := range implMessages {
-		if len(implMessage) >= 1 && implMessage[1] == '/' {
+		if len(implMessage) >= 1 && implMessage[0] == '/' {
 			cleanImplMessages = append(cleanImplMessages, implMessage[1:])
 		} else {
 			cleanImplMessages = append(cleanImplMessages, implMessage)

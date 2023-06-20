@@ -30,7 +30,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 				InterfaceName: iface,
 			})
 			if err == nil {
-				interfaceImplNames = append(interfaceImplNames, implRes.ImplementationMessageNames...)
+				interfaceImplNames = append(interfaceImplNames, implMsgNameCleanup(implRes.ImplementationMessageNames)...)
 			}
 		}
 	}
@@ -56,6 +56,8 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			}
 
 			switch res := in.MessageResponse.(type) {
+			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
+				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // SA1019: we want to keep using v1alpha
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
@@ -259,6 +261,19 @@ func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {
 	})
 
 	return &autocliv1.AppOptionsResponse{ModuleOptions: res}
+}
+
+// Removes the first character "/" from the received name
+func implMsgNameCleanup(implMessages []string) (cleanImplMessages []string) {
+	for _, implMessage := range implMessages {
+		if len(implMessage) >= 1 && implMessage[0] == '/' {
+			cleanImplMessages = append(cleanImplMessages, implMessage[1:])
+		} else {
+			cleanImplMessages = append(cleanImplMessages, implMessage)
+		}
+	}
+
+	return cleanImplMessages
 }
 
 var defaultAutocliMappings = map[protoreflect.FullName]string{

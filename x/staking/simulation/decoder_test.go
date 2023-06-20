@@ -38,7 +38,7 @@ func TestDecodeStore(t *testing.T) {
 
 	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"))
 	require.NoError(t, err)
-	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
+	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec(), false)
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt(), 1)
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec(), 0)
 
@@ -47,7 +47,7 @@ func TestDecodeStore(t *testing.T) {
 			{Key: types.LastTotalPowerKey, Value: cdc.MustMarshal(&sdk.IntProto{Int: sdk.OneInt()})},
 			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
+			{Key: types.GetLiquidDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
 			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&ubd)},
 			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshal(&red)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},

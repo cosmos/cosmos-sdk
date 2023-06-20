@@ -536,9 +536,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	if app.oeEnabled {
 		if app.oeInfo == nil {
-			completionSignal := make(chan struct{})
 			app.oeInfo = &OptimisticExecutionInfo{
-				Completion: completionSignal,
+				Completion: make(chan struct{}),
+				Abort:      make(chan struct{}),
 				Request: &abci.RequestFinalizeBlock{
 					Txs:                req.Txs,
 					DecidedLastCommit:  req.ProposedLastCommit,
@@ -558,7 +558,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			}()
 
 		} else if !bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
-			app.oeInfo.Aborted = true
+			// if we got a new proposal, abort the previous one
+			app.oeInfo.Abort <- struct{}{}
 		}
 	}
 
@@ -745,8 +746,15 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
-		if _, err := app.txDecoder(rawTx); err == nil {
-			txResults = append(txResults, app.deliverTx(rawTx))
+		// check before every tx if we should abort
+		select {
+		case <-app.oeInfo.Abort:
+			app.oeInfo.Aborted = true
+			return nil, nil
+		default:
+			if _, err := app.txDecoder(rawTx); err == nil {
+				txResults = append(txResults, app.deliverTx(rawTx))
+			}
 		}
 	}
 

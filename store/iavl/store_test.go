@@ -47,7 +47,7 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	for i := 0; i < nMoreData; i++ {
 		key := randBytes(12)
 		value := randBytes(50)
-		_, err = tree.Set(key, value)
+		_, err := tree.Set(key, value)
 		if err != nil {
 			panic(err)
 		}

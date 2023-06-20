@@ -49,13 +49,13 @@ func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotype
 // CreateValidatorMsg returns a message used to create validator in this service.
 func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int) *stakingtypes.MsgCreateValidator {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	return msg
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	sh.Handle(msg, ok)
 }
@@ -75,10 +75,58 @@ func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress
 }
 
 // Undelegate calls handler to unbound some stake from a validator.
-func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Int, ok bool) *sdk.Result {
+func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Int, ok bool) {
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgUndelegate(delegator, val, unbondAmt)
-	return sh.Handle(msg, ok)
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) TokenizeShares(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    delegator.String(),
+		ValidatorAddress:    val.String(),
+		Amount:              amount,
+		TokenizedShareOwner: shareOwner.String(),
+	}
+	res, err := sh.msgSrvr.TokenizeShares(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
+}
+
+func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coin, ok bool) {
+	msg := &stakingtypes.MsgRedeemTokensforShares{
+		DelegatorAddress: delegator.String(),
+		Amount:           amount,
+	}
+	res, err := sh.msgSrvr.RedeemTokens(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
+}
+
+func (sh *Helper) TranserTokenizeShareRecord(recordID uint64, owner, newOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordID,
+		Sender:                owner.String(),
+		NewOwner:              newOwner.String(),
+	}
+	res, err := sh.msgSrvr.TransferTokenizeShareRecord(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
 }
 
 // Handle calls staking handler on a given message
@@ -96,8 +144,8 @@ func (sh *Helper) Handle(msg sdk.Msg, ok bool) *sdk.Result {
 
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
-func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {
-	v, ok := sh.k.GetValidator(sh.Ctx, addr)
+func (sh *Helper) CheckValidator(addr sdk.ValAddress, status sdkstaking.BondStatus, jailed bool) stakingtypes.Validator {
+	v, ok := sh.k.GetLiquidValidator(sh.Ctx, addr)
 	require.True(sh.t, ok)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")
 	if status >= 0 {
@@ -108,7 +156,7 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 
 // CheckDelegator asserts that a delegator exists
 func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
-	_, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
+	_, ok := sh.k.GetLiquidDelegation(sh.Ctx, delegator, val)
 	require.Equal(sh.t, ok, found)
 }
 

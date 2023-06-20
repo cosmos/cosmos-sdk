@@ -64,6 +64,7 @@ var (
 // LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
 // NOTE: it MUST NOT be used by other modules, distribution relies on this only for
 // state backwards compatibility.
+// Deprecated: use collections.Uint64Key instead.
 var LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
 
 type leUint64Key struct{}

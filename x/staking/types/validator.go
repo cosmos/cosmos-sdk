@@ -47,18 +47,19 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:         operator.String(),
-		ConsensusPubkey:         pkAny,
-		Jailed:                  false,
-		Status:                  Unbonded,
-		Tokens:                  sdk.ZeroInt(),
-		DelegatorShares:         sdk.ZeroDec(),
-		Description:             description,
-		UnbondingHeight:         int64(0),
-		UnbondingTime:           time.Unix(0, 0).UTC(),
-		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation:       sdk.OneInt(),
-		UnbondingOnHoldRefCount: 0,
+		OperatorAddress:          operator.String(),
+		ConsensusPubkey:          pkAny,
+		Jailed:                   false,
+		Status:                   Unbonded,
+		Tokens:                   sdk.ZeroInt(),
+		DelegatorShares:          sdk.ZeroDec(),
+		Description:              description,
+		UnbondingHeight:          int64(0),
+		UnbondingTime:            time.Unix(0, 0).UTC(),
+		Commission:               NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		UnbondingOnHoldRefCount:  0,
+		TotalValidatorBondShares: sdk.ZeroDec(),
+		TotalLiquidShares:        sdk.ZeroDec(),
 	}, nil
 }
 
@@ -444,7 +445,6 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Description.Equal(other.Description) &&
 		v.Commission.Equal(other.Commission) &&
 		v.Jailed == other.Jailed &&
-		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
 }
 
@@ -510,7 +510,7 @@ func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 	return v.ConsensusPower(r)
 }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
+func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

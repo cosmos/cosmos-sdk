@@ -168,7 +168,6 @@ const clearBatchSize = 10000
 // is that it uses batches to clear the store meaning that it will read
 // the keys within the domain close the iterator and then delete them.
 func deleteDomain(s store.KVStore, start, end []byte) error {
-
 	for {
 		iter, err := s.Iterator(start, end)
 		if err != nil {

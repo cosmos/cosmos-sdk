@@ -17,6 +17,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	k.TrackHistoricalInfo(ctx)
+	k.RemoveExpiredTokenizeShareLocks(ctx, ctx.BlockTime())
 }
 
 // Called every block, update validator set

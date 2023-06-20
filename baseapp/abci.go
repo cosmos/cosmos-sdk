@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -536,30 +535,13 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	if app.oeEnabled {
 		if app.oeInfo == nil {
-			app.oeInfo = &OptimisticExecutionInfo{
-				Completion: make(chan struct{}),
-				Abort:      make(chan struct{}),
-				Request: &abci.RequestFinalizeBlock{
-					Txs:                req.Txs,
-					DecidedLastCommit:  req.ProposedLastCommit,
-					Misbehavior:        req.Misbehavior,
-					Hash:               req.Hash,
-					Height:             req.Height,
-					Time:               req.Time,
-					NextValidatorsHash: req.NextValidatorsHash,
-					ProposerAddress:    req.ProposerAddress,
-				},
-			}
-
-			go func() {
-				log.Println("Running OE ✅")
-				app.oeInfo.Response, app.oeInfo.Error = app.internalFinalizeBlock(app.oeInfo.Request)
-				app.oeInfo.Completion <- struct{}{}
-			}()
-
-		} else if !bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
-			// if we got a new proposal, abort the previous one
-			app.oeInfo.Abort <- struct{}{}
+			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
+			app.oeInfo.Execute()
+		} else if app.oeInfo.AbortIfNeeded(req.Hash) {
+			// TODO: this will block until the OE is aborted, which can take a bit. Maybe do it async?
+			// if aborted, restart with the new proposal
+			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
+			app.oeInfo.Execute()
 		}
 	}
 
@@ -737,6 +719,14 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		return nil, err
 	}
 
+	// First check for an abort signal after beginBlock, as it's the first place
+	// we spend any significant amount of time.
+	if app.oeEnabled && app.oeInfo != nil {
+		if app.oeInfo.ShouldAbort() {
+			return nil, nil
+		}
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
@@ -748,12 +738,8 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	for _, rawTx := range req.Txs {
 		// check before every tx if we should abort
 		if app.oeEnabled && app.oeInfo != nil {
-			select {
-			case <-app.oeInfo.Abort:
-				app.oeInfo.Aborted = true
+			if app.oeInfo.ShouldAbort() {
 				return nil, nil
-			default:
-				continue
 			}
 		}
 
@@ -799,9 +785,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}()
 
 	if app.oeInfo != nil && app.oeEnabled {
-		<-app.oeInfo.Completion
-		if !app.oeInfo.Aborted && bytes.Equal(app.oeInfo.Request.Hash, req.Hash) {
-			return app.oeInfo.Response, app.oeInfo.Error
+		// check if the hash we got is the same as the one we are executing
+		if !app.oeInfo.AbortIfNeeded(req.Hash) {
+			// no need to abort OE, wait for the result
+			return app.oeInfo.WaitResult()
 		}
 	}
 

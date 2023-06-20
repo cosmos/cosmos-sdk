@@ -42,8 +42,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgRedeemTokensforShares:
-			res, err := msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgRedeemTokensForShares:
+			res, err := msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgTransferTokenizeShareRecord:
@@ -59,7 +59,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }

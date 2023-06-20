@@ -512,6 +512,7 @@ func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
+func (v Validator) GetTotalLiquidShares() sdk.Dec { return v.TotalLiquidShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

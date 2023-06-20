@@ -377,8 +377,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfDelegation := sdk.OneInt()
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
+	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil)
 	tstaking.Handle(msgEditValidator, false)
 }
 
@@ -408,8 +407,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfDelegation := initBond.Add(sdk.OneInt())
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
+	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil)
 	tstaking.Handle(msgEditValidator, false)
 }
 
@@ -1185,15 +1183,15 @@ func TestInvalidCoinDenom(t *testing.T) {
 	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 
 	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
-	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, false)
 
-	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 
-	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 
@@ -1225,7 +1223,7 @@ func TestTokenizeShares(t *testing.T) {
 		valIndex  int64
 		amount    sdk.Int
 		isSuccess bool
-		expStatus sdkstaking.BondStatus
+		expStatus types.BondStatus
 		expJailed bool
 	}{
 		{
@@ -1233,7 +1231,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.NewInt(10000),
 			true,
-			sdkstaking.Bonded,
+			types.Bonded,
 			false,
 		},
 		{
@@ -1241,7 +1239,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.TokensFromConsensusPower(initPower+1, sdk.DefaultPowerReduction),
 			false,
-			sdkstaking.Bonded,
+			types.Bonded,
 			false,
 		},
 		{
@@ -1249,7 +1247,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
 			true,
-			sdkstaking.Bonded,
+			types.Bonded,
 			false,
 		},
 		{
@@ -1257,7 +1255,7 @@ func TestTokenizeShares(t *testing.T) {
 			1, 0,
 			sdk.NewInt(1000),
 			true,
-			sdkstaking.Bonded,
+			types.Bonded,
 			false,
 		},
 		{
@@ -1265,7 +1263,7 @@ func TestTokenizeShares(t *testing.T) {
 			1, 0,
 			sdk.NewInt(20000),
 			false,
-			sdkstaking.Bonded,
+			types.Bonded,
 			false,
 		},
 	}

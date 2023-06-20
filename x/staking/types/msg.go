@@ -208,13 +208,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
@@ -426,9 +419,25 @@ func (msg MsgUnbondValidator) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgTokenizeShares creates a new MsgTokenizeShares instance.
+//
+//nolint:interfacer
+func NewMsgTokenizeShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin, owner sdk.AccAddress) *MsgTokenizeShares {
+	return &MsgTokenizeShares{
+		DelegatorAddress:    delAddr.String(),
+		ValidatorAddress:    valAddr.String(),
+		Amount:              amount,
+		TokenizedShareOwner: owner.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgTokenizeShares) Route() string { return RouterKey }
+
 // Type implements the sdk.Msg interface.
 func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
 
+// GetSigners implements the sdk.Msg interface.
 func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
 	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
@@ -437,11 +446,13 @@ func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{delegator}
 }
 
+// MsgTokenizeShares implements the sdk.Msg interface.
 func (msg MsgTokenizeShares) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
+// ValidateBasic implements the sdk.Msg interface.
 func (msg MsgTokenizeShares) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
@@ -463,9 +474,23 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgRedeemTokensForShares creates a new MsgRedeemTokensForShares instance.
+//
+//nolint:interfacer
+func NewMsgRedeemTokensForShares(delAddr sdk.AccAddress, amount sdk.Coin) *MsgRedeemTokensForShares {
+	return &MsgRedeemTokensForShares{
+		DelegatorAddress: delAddr.String(),
+		Amount:           amount,
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgRedeemTokensForShares) Route() string { return RouterKey }
+
 // Type implements the sdk.Msg interface.
 func (msg MsgRedeemTokensForShares) Type() string { return TypeMsgRedeemTokensForShares }
 
+// GetSigners implements the sdk.Msg interface.
 func (msg MsgRedeemTokensForShares) GetSigners() []sdk.AccAddress {
 	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
@@ -474,11 +499,13 @@ func (msg MsgRedeemTokensForShares) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{delegator}
 }
 
+// GetSignBytes implements the sdk.Msg interface.
 func (msg MsgRedeemTokensForShares) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
+// ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRedeemTokensForShares) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
@@ -494,9 +521,24 @@ func (msg MsgRedeemTokensForShares) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgTransferTokenizeShareRecord creates a new MsgTransferTokenizeShareRecord instance.
+//
+//nolint:interfacer
+func NewMsgTransferTokenizeShareRecord(recordId uint64, sender, newOwner sdk.AccAddress) *MsgTransferTokenizeShareRecord {
+	return &MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordId,
+		Sender:                sender.String(),
+		NewOwner:              newOwner.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgTransferTokenizeShareRecord) Route() string { return RouterKey }
+
 // Type implements the sdk.Msg interface.
 func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
 
+// GetSigners implements the sdk.Msg interface.
 func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -505,11 +547,13 @@ func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+// GetSignBytes implements the sdk.Msg interface.
 func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
+// ValidateBasic implements the sdk.Msg interface.
 func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
@@ -520,6 +564,18 @@ func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 
 	return nil
 }
+
+// NewMsgDisableTokenizeShares creates a new MsgDisableTokenizeShares instance.
+//
+//nolint:interfacer
+func NewMsgDisableTokenizeShares(delAddr sdk.AccAddress) *MsgDisableTokenizeShares {
+	return &MsgDisableTokenizeShares{
+		DelegatorAddress: delAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
 func (msg MsgDisableTokenizeShares) Type() string { return TypeMsgDisableTokenizeShares }
@@ -547,6 +603,18 @@ func (msg MsgDisableTokenizeShares) ValidateBasic() error {
 
 	return nil
 }
+
+// NewMsgEnableTokenizeShares creates a new MsgEnableTokenizeShares instance.
+//
+//nolint:interfacer
+func NewMsgEnableTokenizeShares(delAddr sdk.AccAddress) *MsgEnableTokenizeShares {
+	return &MsgEnableTokenizeShares{
+		DelegatorAddress: delAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
 func (msg MsgEnableTokenizeShares) Type() string { return TypeMsgEnableTokenizeShares }

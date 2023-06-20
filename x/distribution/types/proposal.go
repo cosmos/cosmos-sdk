@@ -35,7 +35,7 @@ func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
 }
 
 // validateAbstract is semantically duplicated from x/gov/types/v1beta1/proposal.go to avoid a cyclic dependency
-// between these two modules, x/distribution and x/gov.
+// between these two modules (x/distribution and x/gov).
 // See: https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/gov/types/v1beta1/proposal.go#L196-L214
 func validateAbstract(c *CommunityPoolSpendProposal) error {
 	const (

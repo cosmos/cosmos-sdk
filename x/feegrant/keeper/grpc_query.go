@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -9,11 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/feegrant"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -102,19 +99,31 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := q.storeService.OpenKVStore(ctx)
-	prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
-	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
-		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
-		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
-		if !bytes.Equal(granter, granterAddr) {
-			return nil, nil
-		}
+	var grants []*feegrant.Grant
+	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.FeeAllowance, req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
+			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
+				return false, nil
+			}
 
-		return grant, nil
-	}, func() *feegrant.Grant {
-		return &feegrant.Grant{}
-	})
+			grants = append(grants, &grant)
+			return false, nil
+		},
+	)
+
+	// store := q.storeService.OpenKVStore(ctx)
+	// prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
+	// grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
+	// 	// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
+	// 	granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
+	// 	if !bytes.Equal(granter, granterAddr) {
+	// 		return nil, nil
+	// 	}
+
+	// 	return grant, nil
+	// }, func() *feegrant.Grant {
+	// 	return &feegrant.Grant{}
+	// })
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

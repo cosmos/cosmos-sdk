@@ -648,6 +648,20 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
+	// don't execute blocks beyond the halt height
+	var halt bool
+	switch {
+	case app.haltHeight > 0 && uint64(req.Height) > app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && req.Time.Unix() > int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		return nil, fmt.Errorf("halt per configuration height %d time %d", app.haltHeight, app.haltTime)
+	}
+
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}

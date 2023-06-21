@@ -215,7 +215,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sd
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
-		validator, found := k.GetLiquidValidator(ctx, validatorAddr)
+		validator, found := k.GetValidator(ctx, validatorAddr)
 		if found {
 			shares := delegation.Shares
 			tokens := validator.TokensFromSharesTruncated(shares)
@@ -736,7 +736,7 @@ func (k Keeper) Unbond(
 	}
 
 	// get validator
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return amount, types.ErrNoValidatorFound
 	}
@@ -777,7 +777,7 @@ func (k Keeper) Unbond(
 func (k Keeper) getBeginInfo(
 	ctx sdk.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool) {
-	validator, found := k.GetLiquidValidator(ctx, valSrcAddr)
+	validator, found := k.GetValidator(ctx, valSrcAddr)
 
 	// TODO: When would the validator not be found?
 	switch {
@@ -807,7 +807,7 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (time.Time, error) {
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return time.Time{}, types.ErrNoDelegatorForAddress
 	}
@@ -893,12 +893,12 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrSelfRedelegation
 	}
 
-	dstValidator, found := k.GetLiquidValidator(ctx, valDstAddr)
+	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return time.Time{}, types.ErrBadRedelegationDst
 	}
 
-	srcValidator, found := k.GetLiquidValidator(ctx, valSrcAddr)
+	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
 	if !found {
 		return time.Time{}, types.ErrBadRedelegationDst
 	}
@@ -987,7 +987,7 @@ func (k Keeper) CompleteRedelegation(
 func (k Keeper) ValidateUnbondAmount(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
 ) (shares sdk.Dec, err error) {
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return shares, types.ErrNoValidatorFound
 	}

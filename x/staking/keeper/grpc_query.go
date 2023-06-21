@@ -76,7 +76,7 @@ func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
@@ -431,7 +431,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 			return err
 		}
 
-		validator, found := k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			return types.ErrNoValidatorFound
 		}
@@ -631,7 +631,7 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 			return nil, err
 		}
 
-		validator, found := k.GetLiquidValidator(ctx, valAddr)
+		validator, found := k.GetValidator(ctx, valAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound
 		}

@@ -54,19 +54,19 @@ func TestRevocation(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 
 	// initial state
-	val, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	val, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.False(t, val.IsJailed())
 
 	// test jail
 	app.StakingKeeper.Jail(ctx, consAddr)
-	val, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	val, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.True(t, val.IsJailed())
 
 	// test unjail
 	app.StakingKeeper.Unjail(ctx, consAddr)
-	val, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	val, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.False(t, val.IsJailed())
 }
@@ -140,7 +140,7 @@ func TestSlashRedelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
-	validator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVals[1])
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount := app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 1, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
@@ -148,7 +148,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
-	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[1])
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
@@ -158,7 +158,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// test valid slash, before expiration timestamp and to which stake contributed
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
-	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[1])
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
@@ -212,7 +212,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
-	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, validator.GetOperator())
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	require.True(t, found)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
@@ -243,7 +243,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
-	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, validator.GetOperator())
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	assert.True(t, found)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))

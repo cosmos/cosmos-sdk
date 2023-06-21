@@ -46,7 +46,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	// check to see if the pubkey or sender has been registered before
-	if _, found := k.GetLiquidValidator(ctx, valAddr); found {
+	if _, found := k.GetValidator(ctx, valAddr); found {
 		return nil, types.ErrValidatorOwnerExists
 	}
 
@@ -141,7 +141,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		return nil, err
 	}
 	// validator must already be registered
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -191,7 +191,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, valErr
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -272,11 +272,11 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	srcValidator, found := k.GetLiquidValidator(ctx, valSrcAddr)
+	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
-	dstValidator, found := k.GetLiquidValidator(ctx, valDstAddr)
+	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -385,7 +385,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, addr)
+	validator, found := k.GetValidator(ctx, addr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -477,7 +477,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		)
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -571,7 +571,7 @@ func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondVa
 		return nil, err
 	}
 	// validator must already be registered
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -588,7 +588,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if valErr != nil {
 		return nil, valErr
 	}
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -709,7 +709,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
-	validator, found = k.GetLiquidValidator(ctx, valAddr)
+	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -759,7 +759,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, valErr
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -822,7 +822,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
-	validator, found = k.GetLiquidValidator(ctx, valAddr)
+	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -944,7 +944,7 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 		return nil, valErr
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, valAddr)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}

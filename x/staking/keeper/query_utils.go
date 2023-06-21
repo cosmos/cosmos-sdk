@@ -21,7 +21,7 @@ func (k Keeper) GetDelegatorValidators(
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, found := k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			panic(types.ErrNoValidatorFound)
 		}
@@ -42,7 +42,7 @@ func (k Keeper) GetDelegatorValidator(
 		return validator, types.ErrNoDelegation
 	}
 
-	validator, found = k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
+	validator, found = k.GetValidator(ctx, delegation.GetValidatorAddr())
 	if !found {
 		panic(types.ErrNoValidatorFound)
 	}

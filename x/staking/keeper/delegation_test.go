@@ -217,7 +217,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddrs[0])
+	validator, found = app.StakingKeeper.GetValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
 	remainingTokens := startTokens.Sub(bondTokens)
@@ -508,7 +508,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
@@ -518,7 +518,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// tokenize share for 2nd account delegation
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
@@ -538,7 +538,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.Error(t, err)
 
 	// redeem full amount on 2nd account and try undelegation
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
@@ -555,7 +555,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }
 
@@ -592,7 +592,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
@@ -602,7 +602,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// tokenize share for 2nd account delegation
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
@@ -623,7 +623,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.Error(t, err)
 
 	// redeem full amount on 2nd account and try undelegation
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
@@ -641,6 +641,6 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }

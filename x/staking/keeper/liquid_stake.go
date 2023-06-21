@@ -295,7 +295,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 			return err
 		}
 
-		validator, found := k.GetLiquidValidator(ctx, validatorAddress)
+		validator, found := k.GetValidator(ctx, validatorAddress)
 		if !found {
 			return types.ErrNoValidatorFound
 		}

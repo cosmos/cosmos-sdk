@@ -100,7 +100,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 		for ; iterator.Valid(); iterator.Next() {
-			validator, found := k.GetLiquidValidator(ctx, iterator.Value())
+			validator, found := k.GetValidator(ctx, iterator.Value())
 			if !found {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}

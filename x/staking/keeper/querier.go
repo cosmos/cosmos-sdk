@@ -105,7 +105,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	validator, found := k.GetLiquidValidator(ctx, params.ValidatorAddr)
+	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -446,7 +446,7 @@ func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAm
 // util
 
 func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	val, found := k.GetLiquidValidator(ctx, del.GetValidatorAddr())
+	val, found := k.GetValidator(ctx, del.GetValidatorAddr())
 	if !found {
 		return types.DelegationResponse{}, types.ErrNoValidatorFound
 	}
@@ -499,7 +499,7 @@ func RedelegationsToRedelegationResponses(
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
 
-		val, found := k.GetLiquidValidator(ctx, valDstAddr)
+		val, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound
 		}

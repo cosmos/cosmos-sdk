@@ -155,7 +155,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator doesn't exist already
-		_, found := k.GetLiquidValidator(ctx, address)
+		_, found := k.GetValidator(ctx, address)
 		if found {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "validator already exists"), nil, nil
 		}

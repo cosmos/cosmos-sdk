@@ -289,7 +289,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
 
-		dstValidator, found := k.GetLiquidValidator(ctx, valDstAddr)
+		dstValidator, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			panic("destination validator not found")
 		}

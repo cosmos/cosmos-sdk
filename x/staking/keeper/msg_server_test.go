@@ -412,7 +412,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.True(t, found, "delegation not found after delegate")
 
 			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
-			oldValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			oldValidator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
@@ -442,7 +442,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.Equal(t, lastRecordID+1, app.StakingKeeper.GetLastTokenizeShareRecordID(ctx))
 
 			// ensure validator's total tokens is consistent
-			newValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			newValidator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
@@ -473,7 +473,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			shareToken := app.BankKeeper.GetBalance(ctx, delegatorAccount, resp.Amount.Denom)
 			require.Equal(t, resp.Amount, shareToken)
-			_, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			_, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found, true, "validator not found")
 
 			records := app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
@@ -489,27 +489,27 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				consAddr, err := val1.GetConsAddr()
 				require.NoError(t, err)
 				ctx = ctx.WithBlockHeight(100)
-				val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+				val1, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 				require.True(t, found)
 				power := app.StakingKeeper.TokensToConsensusPower(ctx, val1.Tokens)
 				app.StakingKeeper.Slash(ctx, consAddr, 10, power, tc.slashFactor, 0)
 				slashedTokens = sdk.NewDecFromInt(val1.Tokens).Mul(tc.slashFactor).TruncateInt()
 
-				val1, _ := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+				val1, _ := app.StakingKeeper.GetValidator(ctx, addrVal1)
 				redeemedShares = delegation.Shares.Mul(sdk.NewDecFromInt(tc.redeemAmount)).QuoInt(shareToken.Amount).TruncateInt()
 				redeemedTokens = val1.TokensFromShares(sdk.NewDecFromInt(redeemedShares)).TruncateInt()
 			}
 
 			// get deletagor balance and delegation
 			bondDenomAmountBefore := app.BankKeeper.GetBalance(ctx, delegatorAccount, app.StakingKeeper.BondDenom(ctx))
-			val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			val1, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 			delegation, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			if !found {
 				delegation = types.Delegation{Shares: sdk.ZeroDec()}
 			}
 			delAmountBefore := val1.TokensFromShares(delegation.Shares)
-			oldValidator, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			oldValidator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 
 			_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
@@ -523,7 +523,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.NoError(t, err)
 
 			// ensure validator's total tokens is consistent
-			newValidator, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			newValidator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
@@ -559,7 +559,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.Equal(t, bondDenomAmountAfter.Amount.String(), bondDenomAmountBefore.Amount.String())
 
 			// get delegation amount is changed correctly
-			val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			val1, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 			delegation, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			if !found {
@@ -570,7 +570,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			shareToken = app.BankKeeper.GetBalance(ctx, delegatorAccount, resp.Amount.Denom)
 			require.Equal(t, shareToken.Amount.String(), tc.tokenizeShareAmount.Sub(tc.redeemAmount).String())
-			_, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
+			_, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found, true, "validator not found")
 
 			if tc.recordAccountDelegationExists {
@@ -755,7 +755,7 @@ func TestValidatorBond(t *testing.T) {
 				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 
 				// check total validator bond shares
-				validator, found := app.StakingKeeper.GetLiquidValidator(ctx, validatorAddress)
+				validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
 				require.True(t, found, "validator should have been found after validator bond")
 
 				if tc.alreadyValidatorBond {

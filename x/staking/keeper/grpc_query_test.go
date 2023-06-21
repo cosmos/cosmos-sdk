@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
-	validator, found := app.StakingKeeper.GetLiquidValidator(ctx, vals[0].GetOperator())
+	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
 	suite.True(found)
 	var req *types.QueryValidatorRequest
 	testCases := []struct {

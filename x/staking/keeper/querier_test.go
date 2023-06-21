@@ -470,7 +470,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 	// Create Validators and Delegation
 	for _, addr := range addrs {
-		validator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
+		validator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 		if !found {
 			t.Error("expected validator not found")
 		}

@@ -2,7 +2,7 @@ package keeper_test
 
 import "testing"
 
-func BenchmarkGetLiquidValidator(b *testing.B) {
+func BenchmarkGetValidator(b *testing.B) {
 	// 900 is the max number we are allowed to use in order to avoid simapp.CreateTestPubKeys
 	// panic: encoding/hex: odd length hex string
 	powersNumber := 900
@@ -23,7 +23,7 @@ func BenchmarkGetLiquidValidator(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, addr := range valAddrs {
-			_, _ = app.StakingKeeper.GetLiquidValidator(ctx, addr)
+			_, _ = app.StakingKeeper.GetValidator(ctx, addr)
 		}
 	}
 }

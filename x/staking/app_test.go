@@ -16,7 +16,7 @@ import (
 
 func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	validator, found := app.StakingKeeper.GetLiquidValidator(ctxCheck, addr)
+	validator, found := app.StakingKeeper.GetValidator(ctxCheck, addr)
 
 	require.Equal(t, expFound, found)
 	return validator

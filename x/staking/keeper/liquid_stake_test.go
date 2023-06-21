@@ -598,7 +598,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 
 	// Helper function to check the validator's liquid shares
 	checkValidatorLiquidShares := func(expected sdk.Dec, description string) {
-		actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
+		actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 		require.True(t, found)
 		require.Equal(t, expected.TruncateInt64(), actualValidator.TotalLiquidShares.TruncateInt64(), description)
 	}
@@ -696,7 +696,7 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 
 	// Decrease the validator liquid shares, and confirm the new share amount has been updated
 	app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
-	actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
+	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
 	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
 }
@@ -1047,7 +1047,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		address := validatorAddresses[moniker]
 		expectedLiquidShares := expectedValidatorLiquidShares[moniker]
 
-		actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, address)
+		actualValidator, found := app.StakingKeeper.GetValidator(ctx, address)
 		require.True(t, found, "validator %s should have been found after refresh", moniker)
 
 		actualLiquidShares := actualValidator.TotalLiquidShares

@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
-	cosmossdk.io/x/evidence v0.0.0-20230616204757-46e5f3fb0376
+	cosmossdk.io/x/evidence v0.0.0-20230621081736-53941657a96b
 	cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc // indirect
 	cosmossdk.io/x/tx v0.8.0

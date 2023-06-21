@@ -5,22 +5,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
-
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -1284,6 +1283,43 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
+}
+
+func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
+	pool := mempool.NewSenderNonceMempool()
+	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	// set max block gas limit to 100
+	suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{MaxGas: 100},
+		},
+	})
+
+	// insert 100 txs, each with a gas limit of 10
+	_, _, addr := testdata.KeyTestPubAddr()
+	for i := int64(0); i < 100; i++ {
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msgs := []sdk.Msg{msg}
+
+		builder := suite.txConfig.NewTxBuilder()
+		builder.SetMsgs(msgs...)
+		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
+		builder.SetGasLimit(10)
+		setTxSignature(t, builder, uint64(i))
+
+		err := pool.Insert(sdk.Context{}, builder.GetTx())
+		require.NoError(t, err)
+	}
+
+	// ensure we only select transactions that fit within the block gas limit
+	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
+		MaxTxBytes: 1_000_000, // large enough to ignore restriction
+		Height:     1,
+	})
+	require.NoError(t, err)
+	require.Len(t, res.Txs, 10, "invalid number of transactions returned")
 }
 
 func TestABCI_PrepareProposal_Failures(t *testing.T) {

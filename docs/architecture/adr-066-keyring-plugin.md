@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* Jun 20, 2023: Initial Draft (@bizk)
+* Jun 20, 2023: Initial Draft (@JulianToledano & @bizk)
 
 ## Status
 

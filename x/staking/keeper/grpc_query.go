@@ -367,7 +367,7 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 		return nil, status.Error(codes.InvalidArgument, "height cannot be negative")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	hi, found := k.GetLiquidStakingHistoricalInfo(ctx, req.Height)
+	hi, found := k.GetHistoricalInfo(ctx, req.Height)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
 	}

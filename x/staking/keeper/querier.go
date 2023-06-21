@@ -397,7 +397,7 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legac
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	hi, found := k.GetLiquidStakingHistoricalInfo(ctx, params.Height)
+	hi, found := k.GetHistoricalInfo(ctx, params.Height)
 	if !found {
 		return nil, types.ErrNoHistoricalInfo
 	}

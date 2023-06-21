@@ -38,14 +38,14 @@ func TestHistoricalInfo(t *testing.T) {
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 2, &hi)
 
-	recv, found := app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 2)
+	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
 	require.True(t, IsValSetSorted(recv.Valset, app.StakingKeeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
 
 	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 
-	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 2)
+	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 2)
 	require.False(t, found, "HistoricalInfo found after delete")
 	require.Equal(t, types.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
 }
@@ -79,10 +79,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	hi5 := types.NewHistoricalInfo(h5, valSet, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 4, &hi4)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi5)
-	recv, found := app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 4)
+	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 4)
 	require.True(t, found)
 	require.Equal(t, hi4, recv)
-	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 5)
+	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 5)
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
@@ -115,15 +115,15 @@ func TestTrackHistoricalInfo(t *testing.T) {
 		Header: header,
 		Valset: vals,
 	}
-	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 10)
+	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")
 	require.Equal(t, expected, recv, "GetHistoricalInfo returned unexpected result")
 
 	// Check HistoricalInfo at height 5, 4 is pruned
-	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 4)
+	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 4)
 	require.False(t, found, "GetHistoricalInfo did not prune earlier height")
 	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
-	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 5)
+	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 5)
 	require.False(t, found, "GetHistoricalInfo did not prune first prune height")
 	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }

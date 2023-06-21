@@ -575,7 +575,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
 func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	hi, found := app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 5)
+	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
 	suite.True(found)
 
 	var req *types.QueryHistoricalInfoRequest

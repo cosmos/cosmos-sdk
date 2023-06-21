@@ -70,7 +70,7 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond1to1, resBonds[0])
 	require.Equal(t, bond1to2, resBonds[1])
 	require.Equal(t, bond1to3, resBonds[2])
-	resBonds = app.StakingKeeper.GetAllLiquidDelegatorDelegations(ctx, addrDels[0])
+	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
@@ -120,7 +120,7 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond2to1, resBonds[0])
 	require.Equal(t, bond2to2, resBonds[1])
 
-	resBonds = app.StakingKeeper.GetAllLiquidDelegatorDelegations(ctx, addrDels[1])
+	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2

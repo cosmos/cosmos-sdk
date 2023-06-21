@@ -233,28 +233,6 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint32) (validators [
 }
 
 // get the current group of bonded validators sorted by power-rank
-func (k Keeper) GetLiquidBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
-	maxValidators := k.MaxValidators(ctx)
-	validators := make([]types.Validator, maxValidators)
-
-	iterator := k.ValidatorsPowerStoreIterator(ctx)
-	defer iterator.Close()
-
-	i := 0
-	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
-		address := iterator.Value()
-		validator := k.mustGetValidator(ctx, address)
-
-		if validator.IsBonded() {
-			validators[i] = validator
-			i++
-		}
-	}
-
-	return validators[:i] // trim
-}
-
-// get the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	maxValidators := k.MaxValidators(ctx)
 	validators := make([]types.Validator, maxValidators)

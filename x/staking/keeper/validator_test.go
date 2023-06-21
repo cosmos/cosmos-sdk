@@ -102,7 +102,7 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validator, resVals[0]))
 
-	resVals = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resVals = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
@@ -371,7 +371,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	}
 
 	// first make sure everything made it in to the gotValidator group
-	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, n, len(resValidators))
 	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
@@ -387,14 +387,14 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	// test a basic increase in voting power
 	validators[3].Tokens = sdk.NewInt(500).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 
 	// test a decrease in voting power
 	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
@@ -403,7 +403,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	validators[3].Tokens = sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx))
 	ctx = ctx.WithBlockHeight(10)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
@@ -411,7 +411,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	// no change in voting power - no change in sort
 	ctx = ctx.WithBlockHeight(20)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[4], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
@@ -420,11 +420,11 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
 	validators[4].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	ctx = ctx.WithBlockHeight(30)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[4], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n, "%v", resValidators)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
@@ -481,7 +481,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	require.Equal(t, types.Bonded, val4.Status)
 
 	// first make sure everything made it in to the gotValidator group
-	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	// The validators returned should match the max validators
 	assert.Equal(t, 2, len(resValidators))
 	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
@@ -517,7 +517,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	}
 
 	// ensure that the first two bonded validators are the largest validators
-	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[2], resValidators[0]))
 	assert.True(ValEq(t, validators[3], resValidators[1]))
@@ -537,7 +537,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	//   a) validator 0 with 500 tokens
 	//   b) validator 2 with 400 tokens (delegated before validator 3)
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
@@ -566,7 +566,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[3], resValidators[1]))
@@ -581,7 +581,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
@@ -595,7 +595,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
@@ -632,7 +632,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], true)
 	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
 
-	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, uint32(len(resValidators)), params.MaxValidators)
 
 	assert.True(ValEq(t, validators[0], resValidators[0]))
@@ -643,7 +643,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[1], _ = validators[1].AddTokensFromDel(delTokens)
 	validators[2], _ = validators[2].AddTokensFromDel(delTokens)
 	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, params.MaxValidators, uint32(len(resValidators)))
 	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], true)
 	assert.True(ValEq(t, validators[0], resValidators[0]))
@@ -676,7 +676,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	assert.Equal(t, types.Bonded, validators[2].Status)
 	assert.Equal(t, types.Bonded, validators[3].Status)
 	assert.Equal(t, types.Unbonded, validators[4].Status)
-	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, max, len(resValidators))
 	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
 	assert.True(ValEq(t, validators[3], resValidators[1]))
@@ -686,7 +686,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 600)
 	validators[0], _ = validators[0].AddTokensFromDel(tokens)
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
-	resValidators = app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, max, len(resValidators))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))

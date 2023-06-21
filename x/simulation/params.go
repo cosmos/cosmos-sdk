@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -187,7 +188,7 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	consensusParams := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			MaxGas:   -1,
+			MaxGas:   math.MaxInt64,
 		},
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},

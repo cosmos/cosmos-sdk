@@ -13,7 +13,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -38,17 +37,6 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
-
-	// unbond genesis validator delegations
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
-	delegation := delegations[0]
-
-	_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
-	require.NoError(t, err)
-
-	// end block to unbond genesis validator
-	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	return app, ctx, addrDels, addrVals
 }
@@ -108,12 +96,14 @@ func TestSetValidator(t *testing.T) {
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 1)
 	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 10)
-	require.Equal(t, 2, len(resVals))
+	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
 
 	allVals := app.StakingKeeper.GetAllValidators(ctx)
-	require.Equal(t, 2, len(allVals))
+	require.Equal(t, 1, len(allVals))
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
@@ -953,7 +943,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 	app.StakingKeeper.SetValidator(ctx, validator)
 
-	validator, _ = validator.RemoveDelShares(sdk.NewDecFromInt(amt))
+	validator, _ = validator.RemoveDelShares(amt.ToDec())
 	app.StakingKeeper.SetValidator(ctx, validator)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
 

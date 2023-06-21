@@ -98,7 +98,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
-	vals := []types.Validator{val1, val1, val2}
+	vals := []types.Validator{val1, val2}
 	require.True(t, IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
@@ -131,11 +131,6 @@ func TestTrackHistoricalInfo(t *testing.T) {
 func TestGetAllHistoricalInfo(t *testing.T) {
 	_, app, ctx := createTestInput()
 
-	// clear historical info
-	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
-	require.Len(t, infos, 1)
-	app.StakingKeeper.DeleteHistoricalInfo(ctx, infos[0].Header.Height)
-
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
@@ -158,6 +153,6 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
 	}
 
-	infos = app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
 	require.Equal(t, expHistInfos, infos)
 }

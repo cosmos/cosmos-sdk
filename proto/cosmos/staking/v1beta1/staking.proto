@@ -113,21 +113,22 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
   // strictly positive if this validator's unbonding has been stopped by external modules
-  int64 unbonding_on_hold_ref_count = 11;
+  int64 unbonding_on_hold_ref_count = 12;
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
-  repeated uint64 unbonding_ids = 12;
+  repeated uint64 unbonding_ids = 13;
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 13 [
+  string total_validator_bond_shares = 14 [
     (gogoproto.moretags)   = "yaml:\"total_validator_bond_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // Total number of shares either tokenized or owned by a liquid staking provider
-  string total_liquid_shares = 14 [
+  string total_liquid_shares = 15 [
     (gogoproto.moretags)   = "yaml:\"total_liquid_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  reserved 11;
 }
 
 // BondStatus is the status of a validator.
@@ -404,7 +405,8 @@ message ValidatorUpdates {
 
 // TokenizeShareRecord represents a tokenized delegation
 message TokenizeShareRecord {
-  option (gogoproto.equal) = true;
+  option (gogoproto.description) = true;
+  option (gogoproto.equal)       = true;
 
   uint64 id             = 1;
   string owner          = 2;

@@ -166,9 +166,19 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	err := validateValidatorBondFactor(p.ValidatorBondFactor)
+	if err := validateValidatorBondFactor(p.ValidatorBondFactor); err != nil {
+		return err
+	}
 
-	return err
+	if err := validateGlobalLiquidStakingCap(p.GlobalLiquidStakingCap); err != nil {
+		return err
+	}
+
+	if err := validateValidatorLiquidStakingCap(p.ValidatorLiquidStakingCap); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func validateUnbondingTime(i interface{}) error {
@@ -229,9 +239,11 @@ func validateBondDenom(i interface{}) error {
 		return errors.New("bond denom cannot be blank")
 	}
 
-	err := sdk.ValidateDenom(v)
+	if err := sdk.ValidateDenom(v); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func ValidatePowerReduction(i interface{}) error {

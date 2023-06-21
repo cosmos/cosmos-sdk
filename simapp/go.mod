@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/tools/confix v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/tools/rosetta v0.2.1-0.20230614114324-f368ed5c62bc
 	cosmossdk.io/x/circuit v0.0.0-20230614114324-f368ed5c62bc
-	cosmossdk.io/x/evidence v0.0.0-20230616204757-46e5f3fb0376
+	cosmossdk.io/x/evidence v0.0.0-20230621081736-53941657a96b
 	cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/tx v0.8.0

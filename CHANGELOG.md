@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
+* (sims) [#16636](https://github.com/cosmos/cosmos-sdk/pull/16636) Avoid invalid consensus params when set unlimited max gas for sim test.
 
 ### Improvements
 

@@ -40,7 +40,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index in
 	i := int64(0)
 	for ; iterator.Valid() && i < int64(maxValidators); iterator.Next() {
 		address := iterator.Value()
-		validator := k.mustGetValidator(ctx, address)
+		validator := k.mustGetLiquidValidator(ctx, address)
 
 		if validator.IsBonded() {
 			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
@@ -62,7 +62,7 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 	for ; iterator.Valid(); iterator.Next() {
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
 
-		validator, found := k.GetValidator(ctx, address)
+		validator, found := k.GetLiquidValidator(ctx, address)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
 		}
@@ -77,7 +77,7 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 
 // Validator gets the Validator interface for a particular address
 func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) types.ValidatorI {
-	val, found := k.GetValidator(ctx, address)
+	val, found := k.GetLiquidValidator(ctx, address)
 	if !found {
 		return nil
 	}
@@ -104,7 +104,7 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 
 // Delegation get the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.DelegationI {
-	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
+	bond, ok := k.GetLiquidDelegation(ctx, addrDel, addrVal)
 	if !ok {
 		return nil
 	}
@@ -117,7 +117,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()

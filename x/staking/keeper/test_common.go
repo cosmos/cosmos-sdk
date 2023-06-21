@@ -48,7 +48,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		panic(err)
 	}
 
-	validator, found := keeper.GetValidator(ctx, validator.GetOperator())
+	validator, found := keeper.GetLiquidValidator(ctx, validator.GetOperator())
 	if !found {
 		panic("validator expected but not found")
 	}

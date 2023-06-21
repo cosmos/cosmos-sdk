@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
-	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
+	validator, found := app.StakingKeeper.GetLiquidValidator(ctx, vals[0].GetOperator())
 	suite.True(found)
 	var req *types.QueryValidatorRequest
 	testCases := []struct {
@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	addrVal := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegationRequest
 
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	addrVal1 := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegatorDelegationsRequest
 
@@ -360,7 +360,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 	addrVal2 := valAddrs[4]
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 
 	var req *types.QueryValidatorDelegationsRequest
@@ -575,7 +575,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
 func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
+	hi, found := app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 5)
 	suite.True(found)
 
 	var req *types.QueryHistoricalInfoRequest
@@ -642,7 +642,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
 	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	rdAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
 	suite.NoError(err)
 	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
@@ -804,12 +804,14 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+	require.NoError(t, err)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), types.Unbonded, val1, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), types.Unbonded, val1, true)
 	require.NoError(t, err)
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[1], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[1]), types.Unbonded, val2, true)
 	require.NoError(t, err)

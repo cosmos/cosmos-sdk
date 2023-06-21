@@ -26,9 +26,8 @@ import (
 //
 // CONTRACT:
 //
-//	   Infraction was committed at the current height or at a past height,
-//	   not at a height in the future
-//		  ---
+//	Infraction was committed at the current height or at a past height,
+//	not at a height in the future
 //
 // Slash implementation doesn't require the infraction (types.Infraction) to work but the IS one does. It is here to have IS satisfy the Slash signature.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.InfractionType) {
@@ -66,7 +65,10 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	operatorAddress := validator.GetOperator()
 
 	// call the before-modification hook
-	k.BeforeValidatorModified(ctx, operatorAddress)
+	err := k.BeforeValidatorModified(ctx, operatorAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -124,12 +126,20 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			effectiveFraction = sdk.OneDec()
 		}
 		// call the before-slashed hook
-		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+		err := k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+
+	// Proportionally deduct any liquid tokens from the global total
+	validatorLiquidRatio := validator.TotalLiquidShares.Quo(validator.DelegatorShares)
+	slashedLiquidTokens := validatorLiquidRatio.Mul(sdk.NewDecFromInt(slashAmount)).TruncateInt()
+	k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens)
 
 	switch validator.GetStatus() {
 	case types.Bonded:
@@ -264,7 +274,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redelegation.DelegatorAddress)
 
-		delegation, found := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+		delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valDstAddr)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue
@@ -279,7 +289,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
 
-		dstValidator, found := k.GetValidator(ctx, valDstAddr)
+		dstValidator, found := k.GetLiquidValidator(ctx, valDstAddr)
 		if !found {
 			panic("destination validator not found")
 		}

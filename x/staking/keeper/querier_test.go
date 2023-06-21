@@ -290,7 +290,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
 	res, err = querier(ctx, []string{types.QueryDelegation}, query)
@@ -305,6 +305,9 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
 
 	// Query Delegator Delegations
+	bz, errRes = cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
@@ -467,7 +470,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 	// Create Validators and Delegation
 	for _, addr := range addrs {
-		validator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
+		validator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 		if !found {
 			t.Error("expected validator not found")
 		}
@@ -483,11 +486,11 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	for _, c := range cases {
 		// Query Delegator bonded validators
 		queryParams := types.NewQueryDelegatorParams(addrs[0])
-		bz, errRes := cdc.MarshalJSON(queryParams)
+		_, errRes := cdc.MarshalJSON(queryParams)
 		require.NoError(t, errRes)
 
 		// Query valAddress delegations
-		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		bz, errRes := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
 		require.NoError(t, errRes)
 
 		query := abci.RequestQuery{
@@ -517,10 +520,10 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	for _, c := range cases {
 		// Query Unbonding delegations with pagination.
 		queryParams := types.NewQueryDelegatorParams(addrs[0])
-		bz, errRes := cdc.MarshalJSON(queryParams)
+		_, errRes := cdc.MarshalJSON(queryParams)
 		require.NoError(t, errRes)
 
-		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		bz, errRes := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
 		require.NoError(t, errRes)
 		query := abci.RequestQuery{
 			Data: bz,

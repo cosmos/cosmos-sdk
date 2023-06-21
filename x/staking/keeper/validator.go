@@ -11,6 +11,19 @@ import (
 )
 
 // get a single validator
+func (k Keeper) GetLiquidValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	value := store.Get(types.GetValidatorKey(addr))
+	if value == nil {
+		return validator, false
+	}
+
+	validator = types.MustUnmarshalValidator(k.cdc, value)
+	return validator, true
+}
+
+// get a single validator as sdktypes for other module use
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -21,6 +34,15 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 
 	validator = types.MustUnmarshalValidator(k.cdc, value)
 	return validator, true
+}
+
+func (k Keeper) mustGetLiquidValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
+	validator, found := k.GetLiquidValidator(ctx, addr)
+	if !found {
+		panic(fmt.Sprintf("validator record not found for address: %X\n", addr))
+	}
+
+	return validator
 }
 
 func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
@@ -41,7 +63,7 @@ func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress
 		return validator, false
 	}
 
-	return k.GetValidator(ctx, opAddr)
+	return k.GetLiquidValidator(ctx, opAddr)
 }
 
 func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) types.Validator {
@@ -142,6 +164,10 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 		return commission, err
 	}
 
+	if newRate.LT(k.MinCommissionRate(ctx)) {
+		return commission, fmt.Errorf("cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+	}
+
 	commission.Rate = newRate
 	commission.UpdateTime = blockTime
 
@@ -153,7 +179,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 // TODO, this function panics, and it's not good.
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	// first retrieve the old validator record
-	validator, found := k.GetValidator(ctx, address)
+	validator, found := k.GetLiquidValidator(ctx, address)
 	if !found {
 		return
 	}
@@ -177,7 +203,11 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
-	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	// call hooks
+	err = k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
 }
 
 // get groups of validators
@@ -213,6 +243,28 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint32) (validators [
 	}
 
 	return validators[:i] // trim if the array length < maxRetrieve
+}
+
+// get the current group of bonded validators sorted by power-rank
+func (k Keeper) GetLiquidBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
+	maxValidators := k.MaxValidators(ctx)
+	validators := make([]types.Validator, maxValidators)
+
+	iterator := k.ValidatorsPowerStoreIterator(ctx)
+	defer iterator.Close()
+
+	i := 0
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
+		address := iterator.Value()
+		validator := k.mustGetLiquidValidator(ctx, address)
+
+		if validator.IsBonded() {
+			validators[i] = validator
+			i++
+		}
+	}
+
+	return validators[:i] // trim
 }
 
 // get the current group of bonded validators sorted by power-rank
@@ -320,7 +372,7 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 		}
 
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		validator := k.mustGetValidator(ctx, address)
+		validator := k.mustGetLiquidValidator(ctx, address)
 
 		validators[i] = validator
 		i++
@@ -427,7 +479,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				if err != nil {
 					panic(err)
 				}
-				val, found := k.GetValidator(ctx, addr)
+				val, found := k.GetLiquidValidator(ctx, addr)
 				if !found {
 					panic("validator in the unbonding queue was not found")
 				}

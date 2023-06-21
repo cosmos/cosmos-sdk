@@ -128,7 +128,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
-		validator := k.mustGetValidator(ctx, valAddr)
+		validator := k.mustGetLiquidValidator(ctx, valAddr)
 
 		if validator.Jailed {
 			panic("should never retrieve a jailed validator from the power store")
@@ -165,7 +165,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		if err != nil {
 			return nil, err
 		}
-
 		oldPowerBytes, found := last[valAddrStr]
 		newPower := validator.ConsensusPower(powerReduction)
 		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
@@ -173,7 +172,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
-			// set the validator update and power
+
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
 
@@ -189,16 +188,14 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	}
 
 	for _, valAddrBytes := range noLongerBonded {
-		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+		validator := k.mustGetLiquidValidator(ctx, sdk.ValAddress(valAddrBytes))
 		validator, err = k.bondedToUnbonding(ctx, validator)
 		if err != nil {
 			return nil, err
 		}
-
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
-		update := validator.ABCIValidatorUpdateZero()
-		updates = append(updates, update)
+		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
 	// Update the pools based on the recent updates in the validator set:
@@ -303,8 +300,10 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
-
+	err = k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
 	return validator, err
 }
 

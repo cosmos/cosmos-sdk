@@ -12,7 +12,7 @@ func (k Keeper) GetDelegatorValidators(
 	validators := make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegatorAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
@@ -21,7 +21,7 @@ func (k Keeper) GetDelegatorValidators(
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		validator, found := k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			panic(types.ErrNoValidatorFound)
 		}
@@ -37,12 +37,12 @@ func (k Keeper) GetDelegatorValidators(
 func (k Keeper) GetDelegatorValidator(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
 		return validator, types.ErrNoDelegation
 	}
 
-	validator, found = k.GetValidator(ctx, delegation.GetValidatorAddr())
+	validator, found = k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
 	if !found {
 		panic(types.ErrNoValidatorFound)
 	}
@@ -51,11 +51,32 @@ func (k Keeper) GetDelegatorValidator(
 }
 
 // return all delegations for a delegator
+func (k Keeper) GetAllLiquidDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
+	delegations := make([]types.Delegation, 0)
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
+
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
+	defer iterator.Close()
+
+	i := 0
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		delegations = append(delegations, delegation)
+		i++
+	}
+
+	return delegations
+}
+
+// return all delegations for a delegator
 func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
 	delegations := make([]types.Delegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()

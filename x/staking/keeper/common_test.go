@@ -47,3 +47,9 @@ func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk
 
 	return addrDels, addrVals
 }
+
+func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
+	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
+
+	return err
+}

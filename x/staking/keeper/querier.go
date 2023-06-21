@@ -105,7 +105,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
+	validator, found := k.GetLiquidValidator(ctx, params.ValidatorAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -188,7 +188,7 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
+	delegations := k.GetAllLiquidDelegatorDelegations(ctx, params.DelegatorAddr)
 	delegationResps, err := DelegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegation
 	}
@@ -397,7 +397,7 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legac
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	hi, found := k.GetHistoricalInfo(ctx, params.Height)
+	hi, found := k.GetLiquidStakingHistoricalInfo(ctx, params.Height)
 	if !found {
 		return nil, types.ErrNoHistoricalInfo
 	}
@@ -446,7 +446,7 @@ func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAm
 // util
 
 func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	val, found := k.GetValidator(ctx, del.GetValidatorAddr())
+	val, found := k.GetLiquidValidator(ctx, del.GetValidatorAddr())
 	if !found {
 		return types.DelegationResponse{}, types.ErrNoValidatorFound
 	}
@@ -460,6 +460,7 @@ func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegat
 		delegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
+		del.ValidatorBond,
 		sdk.NewCoin(k.BondDenom(ctx), val.TokensFromShares(del.Shares).TruncateInt()),
 	), nil
 }
@@ -498,7 +499,7 @@ func RedelegationsToRedelegationResponses(
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
 
-		val, found := k.GetValidator(ctx, valDstAddr)
+		val, found := k.GetLiquidValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound
 		}
@@ -511,7 +512,6 @@ func RedelegationsToRedelegationResponses(
 				entry.SharesDst,
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
-				entry.UnbondingId,
 			)
 		}
 

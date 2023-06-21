@@ -549,12 +549,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 		}()
 	}
 
-	errCh := make(chan error)
-	go func() {
-		errCh <- callbackFn()
-	}()
-
-	return <-errCh
+	return callbackFn()
 }
 
 // emitServerInfoMetrics emits server info related metrics using application telemetry.

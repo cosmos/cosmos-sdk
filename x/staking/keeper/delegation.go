@@ -10,25 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GetLiquidDelegation returns a specific delegation.
-func (k Keeper) GetLiquidDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetLiquidDelegationKey(delAddr, valAddr)
-
-	value := store.Get(key)
-	if value == nil {
-		return delegation, false
-	}
-
-	delegation = types.MustUnmarshalDelegation(k.cdc, value)
-
-	return delegation, true
-}
-
-// GetLiquidDelegation returns a specific delegation.
+// GetDelegation returns a specific delegation.
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetLiquidDelegationKey(delAddr, valAddr)
+	key := types.GetDelegationKey(delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -88,7 +73,7 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (delegations []types.Delegation) {
 	delegations = make([]types.Delegation, maxRetrieve)
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
@@ -109,7 +94,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	store.Set(types.GetLiquidDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
+	store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // RemoveDelegation removes a delegation.
@@ -118,7 +103,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 	k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr())
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetLiquidDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
 }
 
 // GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations.
@@ -244,7 +229,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sd
 // IterateDelegatorDelegations iterates through one delegator's delegations.
 func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
@@ -661,7 +646,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Get or create the delegation object
-	delegation, found := k.GetLiquidDelegation(ctx, delAddr, validator.GetOperator())
+	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator())
 	if !found {
 		delegation = types.NewDelegation(delAddr, validator.GetOperator(), sdk.ZeroDec(), false)
 	}
@@ -737,7 +722,7 @@ func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (amount sdk.Int, err error) {
 	// check if a delegation object exists in the store
-	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return amount, types.ErrNoDelegatorForAddress
 	}
@@ -1007,7 +992,7 @@ func (k Keeper) ValidateUnbondAmount(
 		return shares, types.ErrNoValidatorFound
 	}
 
-	del, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
+	del, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return shares, types.ErrNoDelegation
 	}

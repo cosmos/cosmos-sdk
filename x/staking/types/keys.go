@@ -213,14 +213,14 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 	return ts, int64(height), nil
 }
 
-// GetLiquidDelegationKey creates the key for delegator bond with validator
+// GetDelegationKey creates the key for delegator bond with validator
 // VALUE: staking/Delegation
-func GetLiquidDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetLiquidDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
+func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
 }
 
-// GetLiquidDelegationsKey creates the prefix for a delegator for all validators
-func GetLiquidDelegationsKey(delAddr sdk.AccAddress) []byte {
+// GetDelegationsKey creates the prefix for a delegator for all validators
+func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
 	return append(DelegationKey, address.MustLengthPrefix(delAddr)...)
 }
 

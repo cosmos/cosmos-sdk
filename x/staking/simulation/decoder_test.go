@@ -47,7 +47,7 @@ func TestDecodeStore(t *testing.T) {
 			{Key: types.LastTotalPowerKey, Value: cdc.MustMarshal(&sdk.IntProto{Int: sdk.OneInt()})},
 			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: types.GetLiquidDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
+			{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
 			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&ubd)},
 			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshal(&red)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},

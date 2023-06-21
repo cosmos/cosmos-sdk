@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	addrVal := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegationRequest
 
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	addrVal1 := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegatorDelegationsRequest
 
@@ -360,7 +360,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 	addrVal2 := valAddrs[4]
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc, valAddr)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 
 	var req *types.QueryValidatorDelegationsRequest

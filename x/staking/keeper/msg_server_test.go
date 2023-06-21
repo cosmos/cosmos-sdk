@@ -408,7 +408,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// apply TM updates
 			applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
-			_, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+			_, found := app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			require.True(t, found, "delegation not found after delegate")
 
 			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
@@ -464,10 +464,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			}
 
 			if tc.prevAccountDelegationExists {
-				_, found = app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+				_, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 				require.True(t, found, "delegation found after partial tokenize share")
 			} else {
-				_, found = app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+				_, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 				require.False(t, found, "delegation found after full tokenize share")
 			}
 
@@ -478,7 +478,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			records := app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
 			require.Len(t, records, 1)
-			delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+			delegation, found := app.StakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
 			require.True(t, found, "delegation not found from tokenize share module account after tokenize share")
 
 			// slash before redeem
@@ -504,7 +504,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			bondDenomAmountBefore := app.BankKeeper.GetBalance(ctx, delegatorAccount, app.StakingKeeper.BondDenom(ctx))
 			val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 			require.True(t, found)
-			delegation, found = app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+			delegation, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			if !found {
 				delegation = types.Delegation{Shares: sdk.ZeroDec()}
 			}
@@ -548,7 +548,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			}
 
 			expectedDelegatedShares := sdk.NewDecFromInt(tc.delegationAmount.Sub(tc.tokenizeShareAmount).Add(tc.redeemAmount))
-			delegation, found = app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+			delegation, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			require.True(t, found, "delegation not found after redeem tokens")
 			require.Equal(t, delegatorAccount.String(), delegation.DelegatorAddress)
 			require.Equal(t, addrVal1.String(), delegation.ValidatorAddress)
@@ -561,7 +561,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// get delegation amount is changed correctly
 			val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 			require.True(t, found)
-			delegation, found = app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
+			delegation, found = app.StakingKeeper.GetDelegation(ctx, delegatorAccount, addrVal1)
 			if !found {
 				delegation = types.Delegation{Shares: sdk.ZeroDec()}
 			}
@@ -574,13 +574,13 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.True(t, found, true, "validator not found")
 
 			if tc.recordAccountDelegationExists {
-				_, found = app.StakingKeeper.GetLiquidDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+				_, found = app.StakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
 				require.True(t, found, "delegation not found from tokenize share module account after redeem partial amount")
 
 				records = app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
 				require.Len(t, records, 1)
 			} else {
-				_, found = app.StakingKeeper.GetLiquidDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+				_, found = app.StakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
 				require.False(t, found, "delegation found from tokenize share module account after redeem full amount")
 
 				records = app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
@@ -728,7 +728,7 @@ func TestValidatorBond(t *testing.T) {
 
 					// Optionally, convert the delegation into a validator bond
 					if tc.alreadyValidatorBond {
-						delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAddress, validatorAddress)
+						delegation, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
 						require.True(t, found, "delegation should have been found")
 
 						delegation.ValidatorBond = true
@@ -750,7 +750,7 @@ func TestValidatorBond(t *testing.T) {
 				require.NoError(t, err, "no error expected from validator bond transaction")
 
 				// check validator bond true
-				delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAddress, validatorAddress)
+				delegation, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddress, validatorAddress)
 				require.True(t, found, "delegation should have been found after validator bond")
 				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 

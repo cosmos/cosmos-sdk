@@ -299,7 +299,7 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, err
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegation
 	}

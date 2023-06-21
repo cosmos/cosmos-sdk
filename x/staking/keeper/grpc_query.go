@@ -198,7 +198,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 		return nil, err
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -268,7 +268,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	delStore := prefix.NewStore(store, types.GetLiquidDelegationsKey(delAddr))
+	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
@@ -424,7 +424,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		return nil, err
 	}
 
-	delStore := prefix.NewStore(store, types.GetLiquidDelegationsKey(delAddr))
+	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
@@ -636,7 +636,7 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 			return nil, types.ErrNoValidatorFound
 		}
 
-		delegation, found := k.GetLiquidDelegation(ctx, moduleAcc, valAddr)
+		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
 		if !found {
 			return nil, types.ErrNoDelegation
 		}

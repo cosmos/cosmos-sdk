@@ -36,19 +36,19 @@ func TestDelegation(t *testing.T) {
 	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(9), false)
 
 	// check the empty keeper first
-	_, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
+	_, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.False(t, found)
 
 	// set and retrieve a record
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, bond1to1, resBond)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewDec(99)
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, bond1to1, resBond)
 
@@ -113,7 +113,7 @@ func TestDelegation(t *testing.T) {
 
 	// delete a record
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
-	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[2])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
@@ -126,9 +126,9 @@ func TestDelegation(t *testing.T) {
 	// delete all the records from delegator 2
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
-	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[0])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
-	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[1])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
@@ -215,7 +215,7 @@ func TestUnbondDelegation(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delAddrs[0], valAddrs[0])
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
 	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddrs[0])
 	require.True(t, found)

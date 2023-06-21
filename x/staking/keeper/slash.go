@@ -274,7 +274,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redelegation.DelegatorAddress)
 
-		delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valDstAddr)
+		delegation, found := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue

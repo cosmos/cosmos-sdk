@@ -290,7 +290,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc2, addrVal1)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
 	res, err = querier(ctx, []string{types.QueryDelegation}, query)

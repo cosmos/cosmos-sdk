@@ -173,7 +173,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
-	del, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], addrVals[1])
+	del, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
 

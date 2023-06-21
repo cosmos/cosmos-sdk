@@ -286,7 +286,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valSrcAddr)
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -390,7 +390,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, types.ErrNoValidatorFound
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, addr)
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -607,7 +607,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valAddr)
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegatorForAddress
 	}
@@ -766,7 +766,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
-	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
+	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		return nil, types.ErrNoUnbondingDelegation
 	}
@@ -792,7 +792,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
-	_, found = k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
+	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
 			return nil, k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
@@ -949,7 +949,7 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 		return nil, types.ErrNoValidatorFound
 	}
 
-	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegation
 	}

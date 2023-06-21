@@ -27,7 +27,7 @@ func checkDelegation(
 	validatorAddr sdk.ValAddress, expFound bool, expShares sdk.Dec,
 ) {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctxCheck, delegatorAddr, validatorAddr)
+	delegation, found := app.StakingKeeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {
 		require.True(t, found)
 		require.True(sdk.DecEq(t, expShares, delegation.Shares))

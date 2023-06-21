@@ -12,7 +12,7 @@ func (k Keeper) GetDelegatorValidators(
 	validators := make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegatorAddr)
+	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
@@ -37,7 +37,7 @@ func (k Keeper) GetDelegatorValidators(
 func (k Keeper) GetDelegatorValidator(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddr, validatorAddr)
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
 		return validator, types.ErrNoDelegation
 	}
@@ -55,7 +55,7 @@ func (k Keeper) GetAllLiquidDelegatorDelegations(ctx sdk.Context, delegator sdk.
 	delegations := make([]types.Delegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
@@ -76,7 +76,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 	delegations := make([]types.Delegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()

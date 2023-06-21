@@ -191,16 +191,16 @@ func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (
 	key := types.GetTokenizeSharesLockKey(address)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return types.TokenizeShareLockStatus_UNLOCKED, time.Time{}
+		return types.TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED, time.Time{}
 	}
 	unlockTime, err := sdk.ParseTimeBytes(bz)
 	if err != nil {
 		panic(err)
 	}
 	if unlockTime.IsZero() {
-		return types.TokenizeShareLockStatus_LOCKED, time.Time{}
+		return types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED, time.Time{}
 	}
-	return types.TokenizeShareLockStatus_LOCK_EXPIRING, unlockTime
+	return types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING, unlockTime
 }
 
 // Stores a list of addresses pending tokenize share unlocking at the same time

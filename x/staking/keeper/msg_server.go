@@ -600,10 +600,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	// Check if the delegator has disabled tokenization
 	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegatorAddress)
-	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+	if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED {
 		return nil, types.ErrTokenizeSharesDisabledForAccount
 	}
-	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+	if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING {
 		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
 	}
 
@@ -736,7 +736,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}, nil
 }
 
-func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensforShares) (*types.MsgRedeemTokensforSharesResponse, error) {
+func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRedeemTokensForShares) (*types.MsgRedeemTokensForSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -843,7 +843,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		),
 	)
 
-	return &types.MsgRedeemTokensforSharesResponse{
+	return &types.MsgRedeemTokensForSharesResponse{
 		Amount: returnCoin,
 	}, nil
 }
@@ -897,7 +897,7 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 
 	// If tokenized shares is already disabled, alert the user
 	lockStatus, _ := k.GetTokenizeSharesLock(ctx, delegator)
-	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+	if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED {
 		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
 	}
 
@@ -917,10 +917,10 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 
 	// If tokenized shares aren't current disabled, alert the user
 	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegator)
-	if lockStatus == types.TokenizeShareLockStatus_UNLOCKED {
+	if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED {
 		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount
 	}
-	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+	if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING {
 		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount.Wrapf(
 			"tokenize shares re-enablement already in progress, ending at %s", unlockTime)
 	}

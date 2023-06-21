@@ -541,7 +541,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})
@@ -626,7 +626,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})

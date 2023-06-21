@@ -300,10 +300,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	if err != nil {
 		return validator, err
 	}
-	err = k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
-	if err != nil {
-		return validator, err
-	}
+	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
 	return validator, err
 }
 

@@ -728,7 +728,7 @@ func (k Keeper) Unbond(
 	}
 
 	// call the before-delegation-modified hook
-	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
+	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
@@ -749,7 +749,6 @@ func (k Keeper) Unbond(
 		return amount, err
 	}
 
-	
 	// remove the delegation
 	if delegation.Shares.IsZero() {
 		k.RemoveDelegation(ctx, delegation)

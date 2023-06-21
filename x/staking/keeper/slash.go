@@ -65,10 +65,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	operatorAddress := validator.GetOperator()
 
 	// call the before-modification hook
-	err := k.BeforeValidatorModified(ctx, operatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	k.BeforeValidatorModified(ctx, operatorAddress)
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -126,10 +123,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			effectiveFraction = sdk.OneDec()
 		}
 		// call the before-slashed hook
-		err := k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
-		if err != nil {
-			panic(err)
-		}
+		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.

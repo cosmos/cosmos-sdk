@@ -512,7 +512,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			oldValidator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 			require.True(t, found)
 
-			_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
+			_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
 				DelegatorAddress: delegatorAccount.String(),
 				Amount:           sdk.NewCoin(resp.Amount.Denom, tc.redeemAmount),
 			})
@@ -809,7 +809,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 		Amount:              stakeToken,
 		TokenizedShareOwner: delegatorAddress.String(),
 	}
-	redeemMsg := types.MsgRedeemTokensforShares{
+	redeemMsg := types.MsgRedeemTokensForShares{
 		DelegatorAddress: delegatorAddress.String(),
 	}
 	disableMsg := types.MsgDisableTokenizeShares{
@@ -832,7 +832,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 
 	// Redeem to remove all tokenized shares
 	redeemMsg.Amount = liquidToken
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &redeemMsg)
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &redeemMsg)
 	require.NoError(t, err, "no error expected when redeeming")
 
 	// Attempt to enable tokenizing shares when there is no lock in place, it should error

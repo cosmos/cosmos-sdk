@@ -37,7 +37,7 @@ func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) s
 
 // Tests Set/Get TotalLiquidStakedTokens
 func TestTotalLiquidStakedTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Update the total liquid staked
 	total := sdk.NewInt(100)
@@ -49,7 +49,7 @@ func TestTotalLiquidStakedTokens(t *testing.T) {
 
 // Tests Increase/Decrease TotalValidatorTotalLiquidShares
 func TestValidatorTotalLiquidShares(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Create a validator address
 	privKey := secp256k1.GenPrivKey()
@@ -67,7 +67,7 @@ func TestValidatorTotalLiquidShares(t *testing.T) {
 
 // Tests AccountIsLiquidStakingProvider
 func TestAccountIsLiquidStakingProvider(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Create base and ICA accounts
 	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
@@ -101,7 +101,7 @@ func fundPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context, amount s
 
 // Tests CheckExceedsGlobalLiquidStakingCap
 func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	testCases := []struct {
 		name             string
@@ -277,7 +277,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 
 // Tests SafelyIncreaseTotalLiquidStakedTokens
 func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	intitialTotalLiquidStaked := sdk.NewInt(100)
 	increaseAmount := sdk.NewInt(10)
@@ -313,7 +313,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 
 // Tests DecreaseTotalLiquidStakedTokens
 func TestDecreaseTotalLiquidStakedTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	intitialTotalLiquidStaked := sdk.NewInt(100)
 	decreaseAmount := sdk.NewInt(10)
@@ -328,7 +328,7 @@ func TestDecreaseTotalLiquidStakedTokens(t *testing.T) {
 
 // Tests CheckExceedsValidatorBondCap
 func TestCheckExceedsValidatorBondCap(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	testCases := []struct {
 		name                string
@@ -471,7 +471,7 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 
 // Tests TestCheckExceedsValidatorLiquidStakingCap
 func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	testCases := []struct {
 		name                  string
@@ -589,7 +589,7 @@ func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
 
 // Tests SafelyIncreaseValidatorTotalLiquidShares
 func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Generate a test validator address
 	privKey := secp256k1.GenPrivKey()
@@ -678,7 +678,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 
 // Tests DecreaseValidatorTotalLiquidShares
 func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	initialLiquidShares := sdk.NewDec(0)
 	decreaseAmount := sdk.NewDec(10)
@@ -703,14 +703,14 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 
 // Tests Add/Remove/Get/SetTokenizeSharesLock
 func TestTokenizeSharesLock(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	addresses := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1))
 	addressA, addressB := addresses[0], addresses[1]
 
-	unlocked := types.TokenizeShareLockStatus_UNLOCKED.String()
-	locked := types.TokenizeShareLockStatus_LOCKED.String()
-	lockExpiring := types.TokenizeShareLockStatus_LOCK_EXPIRING.String()
+	unlocked := types.TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED.String()
+	locked := types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String()
+	lockExpiring := types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String()
 
 	// Confirm both accounts start unlocked
 	status, _ := app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)
@@ -753,7 +753,7 @@ func TestTokenizeSharesLock(t *testing.T) {
 
 // Test Get/SetPendingTokenizeShareAuthorizations
 func TestPendingTokenizeShareAuthorizations(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Create dummy accounts and completion times
 	addresses := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1))
@@ -787,7 +787,7 @@ func TestPendingTokenizeShareAuthorizations(t *testing.T) {
 
 // Test QueueTokenizeSharesAuthorization and RemoveExpiredTokenizeShareLocks
 func TestTokenizeShareAuthorizationQueue(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// We'll start by adding the following addresses to the queue
 	//   Time 0: [address0]
@@ -875,7 +875,7 @@ func TestTokenizeShareAuthorizationQueue(t *testing.T) {
 
 // Test CalculateTotalLiquidStaked
 func TestCalculateTotalLiquidStaked(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(999))

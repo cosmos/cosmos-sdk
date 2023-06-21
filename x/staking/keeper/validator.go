@@ -32,15 +32,6 @@ func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Val
 	return validator
 }
 
-func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
-	validator, found := k.GetValidator(ctx, addr)
-	if !found {
-		panic(fmt.Sprintf("validator record not found for address: %X\n", addr))
-	}
-
-	return validator
-}
-
 // get a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -191,10 +182,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
-	err = k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
-	if err != nil {
-		panic(err)
-	}
+	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
 }
 
 // get groups of validators

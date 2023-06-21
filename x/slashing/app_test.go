@@ -64,7 +64,7 @@ func TestSlashingMsgs(t *testing.T) {
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commission, sdk.OneInt(),
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commission,
 	)
 	require.NoError(t, err)
 

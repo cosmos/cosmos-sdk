@@ -23,6 +23,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "query account address by account number",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
 				},
+				{
+					RpcMethod: "Params",
+					Use:       "params",
+					Short:     "Query the current auth parameters",
+				},
 			},
 		},
 		// Tx is purposely left empty, as the only tx is MsgUpdateParams which is gov gated.

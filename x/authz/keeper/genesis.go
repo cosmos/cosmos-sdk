@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-// InitGenesis new authz genesis
+// InitGenesis initializes new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	now := ctx.BlockTime()
 	for _, entry := range data.Authorization {

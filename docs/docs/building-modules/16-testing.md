@@ -81,7 +81,7 @@ Each query is tested using 2 methods:
 Here's an example of regression tests:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank/keeper/deterministic_test.go#L102-L115
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank/keeper/deterministic_test.go#L134-L151
 ```
 
 ## Simulations

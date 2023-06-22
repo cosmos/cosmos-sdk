@@ -16,7 +16,7 @@ import (
 // This method can be used to canonicalize JSON to be returned by GetSignBytes,
 // e.g. for the ledger integration.
 // If the passed JSON isn't valid it will return an error.
-// Deprecated
+// Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
 func SortJSON(toSortJSON []byte) ([]byte, error) {
 	var c interface{}
 	err := json.Unmarshal(toSortJSON, &c)
@@ -32,7 +32,7 @@ func SortJSON(toSortJSON []byte) ([]byte, error) {
 
 // MustSortJSON is like SortJSON but panic if an error occurs, e.g., if
 // the passed JSON isn't valid.
-// Deprecated
+// Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
 func MustSortJSON(toSortJSON []byte) []byte {
 	js, err := SortJSON(toSortJSON)
 	if err != nil {

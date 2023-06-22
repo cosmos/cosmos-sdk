@@ -83,9 +83,12 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	// TODO, recheck!
 	// Clear keeper
 	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
+	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NotEqual(genesis, newGenesis)
+	suite.Require().Empty(newGenesis)
 
 	suite.keeper.InitGenesis(suite.ctx, genesis)
-	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

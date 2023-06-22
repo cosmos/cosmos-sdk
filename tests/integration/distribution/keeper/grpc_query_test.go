@@ -101,10 +101,10 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	err := f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
 	assert.NilError(t, err)
 
-	rewards, err := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+	rewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
 	assert.NilError(t, err)
 
 	testCases := []struct {
@@ -515,11 +515,11 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))
-	assert.NilError(t, f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
+	assert.NilError(t, f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
 	expRes := &types.QueryDelegationRewardsResponse{
 		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},

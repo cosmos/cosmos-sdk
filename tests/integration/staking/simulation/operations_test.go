@@ -167,7 +167,8 @@ func (s *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -201,17 +202,18 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
 	// unbonding delegation
 	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight()+1, blockTime.Add(2*time.Minute), delTokens, 0)
-	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
+	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -239,7 +241,8 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
 
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -293,12 +296,13 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -334,14 +338,14 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	// setup accounts[3] as delegator
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
 	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 	s.setupValidatorRewards(ctx, validator1.GetOperator())
 
 	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -382,7 +386,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(ctx, 100)
 
-	s.stakingKeeper.SetValidator(ctx, validator)
+	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, validator))
 
 	return validator
 }
@@ -390,7 +394,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
+	s.Require().NoError(s.distrKeeper.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddress, uint64(2)), historicalRewards))
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	s.Require().NoError(s.distrKeeper.ValidatorCurrentRewards.Set(ctx, valAddress, currentRewards))

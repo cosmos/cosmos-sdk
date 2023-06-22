@@ -31,7 +31,6 @@ import (
 	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
@@ -249,7 +248,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}

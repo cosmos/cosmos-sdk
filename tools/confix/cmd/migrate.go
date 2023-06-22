@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/tools/confix"
@@ -33,7 +34,7 @@ In case of any error in updating the file, no output is written.`,
 			case clientCtx.HomeDir != "":
 				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
 			default:
-				return fmt.Errorf("must provide a path to the app.toml file")
+				return errors.New("must provide a path to the app.toml file")
 			}
 
 			targetVersion := args[0]
@@ -44,7 +45,7 @@ In case of any error in updating the file, no output is written.`,
 
 			rawFile, err := confix.LoadConfig(filename)
 			if err != nil {
-				return fmt.Errorf("failed to load config: %v", err)
+				return fmt.Errorf("failed to load config: %w", err)
 			}
 
 			ctx := context.Background()

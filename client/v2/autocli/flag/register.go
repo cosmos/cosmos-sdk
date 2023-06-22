@@ -36,6 +36,10 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 			return nil, fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
 		}
 
+		if arg.Optional && arg.Varargs {
+			return nil, fmt.Errorf("positional argument %s can't be both optional and varargs", arg.ProtoField)
+		}
+
 		if arg.Varargs {
 			if i != n-1 {
 				return nil, fmt.Errorf("varargs positional argument %s must be the last argument", arg.ProtoField)

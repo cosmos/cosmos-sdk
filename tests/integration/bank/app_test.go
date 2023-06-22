@@ -399,7 +399,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 				"invalid authority",
 				"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				addr1Str,
-				"expected gov account as only signer for proposal message",
+				"expected authority account as only signer for proposal message",
 			},
 		},
 		{

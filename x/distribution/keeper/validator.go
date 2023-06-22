@@ -35,7 +35,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 	}
 
 	// set outstanding rewards
-	err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	err = k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 	return err
 }
 
@@ -58,8 +58,8 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-		if err != nil {
+		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, val.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
 
@@ -70,7 +70,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+		err = k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), outstanding)
 		if err != nil {
 			return 0, err
 		}
@@ -147,7 +147,10 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	val := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	val, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
 
 	// increment current period
 	newPeriod, err := k.IncrementValidatorPeriod(ctx, val)

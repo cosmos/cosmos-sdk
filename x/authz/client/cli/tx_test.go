@@ -11,10 +11,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
-
-	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"

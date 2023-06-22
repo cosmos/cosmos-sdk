@@ -4,13 +4,14 @@ import (
 	"math/rand"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

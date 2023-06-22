@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
 
-	"github.com/cosmos/go-bip39"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

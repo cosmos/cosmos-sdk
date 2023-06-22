@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"sort"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
+
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -11,18 +11,16 @@ import (
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"

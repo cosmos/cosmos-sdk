@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/depinject"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"

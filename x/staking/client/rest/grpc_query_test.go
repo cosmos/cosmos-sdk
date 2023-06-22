@@ -50,7 +50,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(
+	stakingtestutil.MsgRedelegateExec(
+		s.T(),
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
@@ -64,8 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// unbonding
-	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
-	s.Require().NoError(err)
+	stakingtestutil.MsgUnbondExec(s.T(), val.ClientCtx, val.Address, val.ValAddress, unbond)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }

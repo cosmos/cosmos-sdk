@@ -786,6 +786,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 
 	validator.DelegatorShares = sdk.NewDec(1_000_000)
 	validator.Tokens = sdk.NewInt(1_000_000)
+	validator.Status = types.Bonded
 	app.StakingKeeper.SetValidator(ctx, validator)
 
 	// Fix block time and set unbonding period to 1 day

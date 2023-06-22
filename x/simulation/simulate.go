@@ -31,8 +31,12 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
+	blockMaxGas := int64(-1)
+	if config.BlockMaxGas != nil {
+		blockMaxGas = *config.BlockMaxGas
+	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
-	consensusParams := randomConsensusParams(r, appState, cdc, &config.BlockMaxGas)
+	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
 		ChainId:         chainID,

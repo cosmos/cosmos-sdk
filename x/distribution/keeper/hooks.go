@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"errors"
+
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,8 +38,8 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 
 	// force-withdraw commission
-	valCommission, err := h.k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if err != nil {
+	valCommission, err := h.k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -50,13 +53,13 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		coins, remainder := commission.TruncateDecimal()
 
 		// remainder to community pool
-		feePool, err := h.k.GetFeePool(ctx)
+		feePool, err := h.k.FeePool.Get(ctx)
 		if err != nil {
 			return err
 		}
 
 		feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-		err = h.k.SetFeePool(ctx, feePool)
+		err = h.k.FeePool.Set(ctx, feePool)
 		if err != nil {
 			return err
 		}
@@ -78,13 +81,13 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	// Add outstanding to community pool
 	// The validator is removed only after it has no more delegations.
 	// This operation sends only the remaining dust to the community pool.
-	feePool, err := h.k.GetFeePool(ctx)
+	feePool, err := h.k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(outstanding...)
-	err = h.k.SetFeePool(ctx, feePool)
+	err = h.k.FeePool.Set(ctx, feePool)
 	if err != nil {
 		return err
 	}
@@ -96,7 +99,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 
 	// remove commission record
-	err = h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
+	err = h.k.ValidatorsAccumulatedCommission.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}
@@ -108,7 +111,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	h.k.DeleteValidatorHistoricalRewards(ctx, valAddr)
 
 	// clear current rewards
-	err = h.k.DeleteValidatorCurrentRewards(ctx, valAddr)
+	err = h.k.ValidatorCurrentRewards.Remove(ctx, valAddr)
 	if err != nil {
 		return err
 	}

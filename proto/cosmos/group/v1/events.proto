@@ -79,3 +79,16 @@ message EventLeaveGroup {
   // address is the account address of the group member.
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+// EventProposalPruned is an event emitted when a proposal is pruned.
+message EventProposalPruned {
+
+  // proposal_id is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // status is the proposal status (UNSPECIFIED, SUBMITTED, ACCEPTED, REJECTED, ABORTED, WITHDRAWN).
+  ProposalStatus status = 2;
+
+  // tally_result is the proposal tally result (when applicable).
+  TallyResult tally_result = 3;
+}

@@ -38,6 +38,5 @@ func handleSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, p *types.S
 
 //nolint:staticcheck // we are intentionally using a deprecated proposal here.
 func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error {
-	k.ClearUpgradePlan(ctx)
-	return nil
+	return k.ClearUpgradePlan(ctx)
 }

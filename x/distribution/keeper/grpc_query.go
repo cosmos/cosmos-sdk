@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -77,8 +78,8 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 	}
 
 	// validator's commission
-	validatorCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
-	if err != nil {
+	validatorCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAdr)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
@@ -140,8 +141,8 @@ func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidato
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
 	}
-	commission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
-	if err != nil {
+	commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAdr)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
@@ -335,10 +336,10 @@ func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDel
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	pool, err := k.GetFeePoolCommunityCoins(c)
+	pool, err := k.FeePool.Get(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
+	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
 }

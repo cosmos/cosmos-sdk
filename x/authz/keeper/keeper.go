@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
@@ -30,13 +31,13 @@ const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
 	storeService corestoretypes.KVStoreService
-	cdc          codec.BinaryCodec
+	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
@@ -99,7 +100,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	now := sdkCtx.BlockTime()
 
 	for i, msg := range msgs {
-		signers := msg.GetSigners()
+		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+
 		if len(signers) != 1 {
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
@@ -108,7 +113,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
-		if !granter.Equals(grantee) {
+		if !bytes.Equal(granter, grantee) {
 			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
 
 			grant, found := k.getGrant(ctx, skey)
@@ -133,7 +138,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				err = k.update(ctx, grantee, granter, resp.Updated)
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

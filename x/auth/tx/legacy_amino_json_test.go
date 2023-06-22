@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +17,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -24,7 +26,7 @@ var (
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
-	msg     = banktypes.NewMsgSend(addr1, addr2, coins)
+	msg     = &types.MsgUpdateParams{Authority: addr1.String()}
 	memo    = "foo"
 	timeout = uint64(10)
 )
@@ -38,6 +40,7 @@ func buildTx(t *testing.T, bldr *wrapper) {
 }
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
+	legacytx.RegressionTestingAminoCodec = codec.NewLegacyAmino()
 	var (
 		chainID        = "test-chain"
 		accNum  uint64 = 7
@@ -152,6 +155,9 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 
 	modeHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
 	mode, _ := signing.APISignModeToInternal(modeHandler.Mode())
+	legacyAmino := codec.NewLegacyAmino()
+	legacytx.RegressionTestingAminoCodec = legacyAmino
+	legacy.RegisterAminoMsg(legacyAmino, &types.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
 
 	testcases := []struct {
 		name           string
@@ -221,6 +227,8 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 			require.Equal(t, string(tc.expectedSignBz), string(newSignBz))
 		})
 	}
+
+	legacytx.RegressionTestingAminoCodec = nil
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {

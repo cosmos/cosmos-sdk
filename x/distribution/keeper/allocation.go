@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -30,14 +32,14 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	feePool, err := k.GetFeePool(ctx)
+	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	if totalPreviousPower == 0 {
 		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected...)
-		return k.SetFeePool(ctx, feePool)
+		return k.FeePool.Set(ctx, feePool)
 	}
 
 	// calculate fraction allocated to validators
@@ -74,7 +76,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
-	return k.SetFeePool(ctx, feePool)
+	return k.FeePool.Set(ctx, feePool)
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator,
@@ -93,25 +95,26 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
-	currentCommission, err := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	if err != nil {
+	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, val.GetOperator())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, val.GetOperator(), currentCommission)
 	if err != nil {
 		return err
 	}
 
 	// update current rewards
-	currentRewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	if err != nil {
+	currentRewards, err := k.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
+	// if the rewards do not exist it's fine, we will just add to zero.
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
+	err = k.ValidatorCurrentRewards.Set(ctx, val.GetOperator(), currentRewards)
 	if err != nil {
 		return err
 	}

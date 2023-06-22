@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -52,12 +53,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"DelegatorWithdrawAddr",
 			v1.GetDelegatorWithdrawAddrKey(addr2),
-			types.GetDelegatorWithdrawAddrKey(addr2),
+			append(types.DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(addr2.Bytes())...),
 		},
 		{
 			"DelegatorStartingInfo",
 			v1.GetDelegatorStartingInfoKey(valAddr, addr2),
-			types.GetDelegatorStartingInfoKey(valAddr, addr2),
+			append(append(types.DelegatorStartingInfoPrefix, address.MustLengthPrefix(valAddr.Bytes())...), address.MustLengthPrefix(addr2.Bytes())...),
 		},
 		{
 			"ValidatorHistoricalRewards",
@@ -67,12 +68,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorCurrentRewards",
 			v1.GetValidatorCurrentRewardsKey(valAddr),
-			types.GetValidatorCurrentRewardsKey(valAddr),
+			append(types.ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorAccumulatedCommission",
 			v1.GetValidatorAccumulatedCommissionKey(valAddr),
-			types.GetValidatorAccumulatedCommissionKey(valAddr),
+			append(types.ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(valAddr.Bytes())...),
 		},
 		{
 			"ValidatorSlashEvent",

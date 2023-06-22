@@ -8,14 +8,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -64,36 +59,6 @@ func TestBaseSequence(t *testing.T) {
 	err := acc.SetSequence(seq)
 	require.Nil(t, err)
 	require.Equal(t, seq, acc.GetSequence())
-}
-
-func TestBaseAccountMarshal(t *testing.T) {
-	var accountKeeper authkeeper.AccountKeeper
-	err := depinject.Inject(depinject.Configs(
-		testutil.AppConfig,
-		depinject.Supply(log.NewNopLogger()),
-	), &accountKeeper)
-	require.NoError(t, err)
-
-	_, pub, addr := testdata.KeyTestPubAddr()
-	acc := types.NewBaseAccountWithAddress(addr)
-	seq := uint64(7)
-
-	// set everything on the account
-	err = acc.SetPubKey(pub)
-	require.Nil(t, err)
-	err = acc.SetSequence(seq)
-	require.Nil(t, err)
-
-	bz, err := accountKeeper.MarshalAccount(acc)
-	require.Nil(t, err)
-
-	acc2, err := accountKeeper.UnmarshalAccount(bz)
-	require.Nil(t, err)
-	require.Equal(t, acc, acc2)
-
-	// error on bad bytes
-	_, err = accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
-	require.NotNil(t, err)
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
@@ -227,4 +192,9 @@ func TestNewModuleAddressOrBech32Address(t *testing.T) {
 	input := "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv"
 	require.Equal(t, input, types.NewModuleAddressOrBech32Address(input).String())
 	require.Equal(t, "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", types.NewModuleAddressOrBech32Address("distribution").String())
+}
+
+func TestModuleAccountValidateNilBaseAccount(t *testing.T) {
+	ma := &types.ModuleAccount{Name: "foo"}
+	_ = ma.Validate()
 }

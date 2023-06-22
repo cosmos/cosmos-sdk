@@ -63,7 +63,6 @@ const (
 	FlagMinRetainBlocks     = "min-retain-blocks"
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
-	FlagIAVLLazyLoading     = "iavl-lazy-loading"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -255,15 +254,15 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
-	svr, err := server.NewServer(addr, transport, app)
+	cmtApp := NewCometABCIWrapper(app)
+	svr, err := server.NewServer(addr, transport, cmtApp)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
-	ctx := getCtx(svrCtx)
-	g, ctx := errgroup.WithContext(ctx)
+	g, ctx := getCtx(svrCtx, false)
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -315,8 +314,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		}
 	}
 
-	ctx := getCtx(svrCtx)
-	g, ctx := errgroup.WithContext(ctx)
+	g, ctx := getCtx(svrCtx, true)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -334,68 +332,30 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		}
 	}
 
-	// At this point it is safe to block the process if we're in gRPC-only mode as
-	// we do not need to handle any CometBFT related processes.
-	if gRPCOnly {
-		// wait for signal capture and gracefully return
-		return g.Wait()
-	}
-
-	// In case the operator has both gRPC and API servers disabled, there is
-	// nothing blocking this root process, so we need to block manually, so we'll
-	// create an empty blocking loop.
-	g.Go(func() error {
-		<-ctx.Done()
-		return nil
-	})
-
 	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
-func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
-	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
-	if err != nil {
-		return app, traceCleanupFn, err
-	}
-
-	home := svrCtx.Config.RootDir
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
-	if err != nil {
-		return app, traceCleanupFn, err
-	}
-
-	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-	cleanupFn = func() {
-		traceCleanupFn()
-		if localErr := app.Close(); localErr != nil {
-			svrCtx.Logger.Error(localErr.Error())
-		}
-	}
-	return app, cleanupFn, nil
-}
-
-func getCtx(svrCtx *Context) context.Context {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(cancelFn, svrCtx.Logger)
-	return ctx
-}
-
-func startCmtNode(cfg *cmtcfg.Config, app types.Application, svrCtx *Context) (tmNode *node.Node, cleanupFn func(), err error) {
-	cleanupFn = func() {}
+// TODO: Move nodeKey into being created within the function.
+func startCmtNode(
+	cfg *cmtcfg.Config,
+	app types.Application,
+	svrCtx *Context,
+) (tmNode *node.Node, cleanupFn func(), err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return nil, cleanupFn, err
 	}
 
+	cmtApp := NewCometABCIWrapper(app)
 	tmNode, err = node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(app),
+		proxy.NewLocalClientCreator(cmtApp),
 		getGenDocProvider(cfg),
-		node.DefaultDBProvider,
+		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
@@ -463,9 +423,14 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 	return traceWriter, cleanup, nil
 }
 
-func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig.GRPCConfig, clientCtx client.Context, svrCtx *Context, app types.Application) (
-	*grpc.Server, client.Context, error,
-) {
+func startGrpcServer(
+	ctx context.Context,
+	g *errgroup.Group,
+	config serverconfig.GRPCConfig,
+	clientCtx client.Context,
+	svrCtx *Context,
+	app types.Application,
+) (*grpc.Server, client.Context, error) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
@@ -517,22 +482,23 @@ func startGrpcServer(ctx context.Context, g *errgroup.Group, config serverconfig
 	return grpcSrv, clientCtx, nil
 }
 
-func startAPIServer(ctx context.Context, g *errgroup.Group, cmtCfg *cmtcfg.Config, svrCfg serverconfig.Config,
-	clientCtx client.Context, svrCtx *Context, app types.Application, home string, grpcSrv *grpc.Server, metrics *telemetry.Metrics,
+func startAPIServer(
+	ctx context.Context,
+	g *errgroup.Group,
+	cmtCfg *cmtcfg.Config,
+	svrCfg serverconfig.Config,
+	clientCtx client.Context,
+	svrCtx *Context,
+	app types.Application,
+	home string,
+	grpcSrv *grpc.Server,
+	metrics *telemetry.Metrics,
 ) error {
 	if !svrCfg.API.Enable {
 		return nil
 	}
-	// TODO: Why do we reload and unmarshal the entire genesis doc in order to get the chain ID.
-	// surely theres a better way. This is likely a serious node start time overhead.
-	// Shouldn't it be in cmtCfg.ChainID() ?
-	genDocProvider := getGenDocProvider(cmtCfg)
-	genDoc, err := genDocProvider()
-	if err != nil {
-		return err
-	}
 
-	clientCtx = clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
+	clientCtx = clientCtx.WithHomeDir(home)
 
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
@@ -608,4 +574,34 @@ func emitServerInfoMetrics() {
 	}
 
 	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
+}
+
+func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+	// listen for quit signals so the calling parent process can gracefully exit
+	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+	return g, ctx
+}
+
+func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
+	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
+	if err != nil {
+		return app, traceCleanupFn, err
+	}
+
+	home := svrCtx.Config.RootDir
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+	if err != nil {
+		return app, traceCleanupFn, err
+	}
+
+	app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	cleanupFn = func() {
+		traceCleanupFn()
+		if localErr := app.Close(); localErr != nil {
+			svrCtx.Logger.Error(localErr.Error())
+		}
+	}
+	return app, cleanupFn, nil
 }

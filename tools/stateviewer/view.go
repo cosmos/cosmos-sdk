@@ -1,6 +1,8 @@
 package stateviewer
 
 import (
+	"encoding/hex"
+
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +24,7 @@ func RawViewCommand() *cobra.Command {
 			}
 			defer db.Close()
 
-			cmd.Println(db.Print())
-			return nil
+			return db.Print()
 		},
 	}
 
@@ -49,19 +50,25 @@ func ViewCommand() *cobra.Command {
 }
 
 func view(cmd *cobra.Command, args []string) error {
-	home, key := args[0], args[1]
 	readDBOpts := []ReadDBOption{}
 	if backend := cmd.Flag(FlagDBBackend).Value.String(); cmd.Flag(FlagDBBackend).Changed && backend != "" {
 		readDBOpts = append(readDBOpts, ReadDBOptionWithBackend(backend))
 	}
 
-	db, err := ReadDB(home, readDBOpts...)
+	db, err := ReadDB(args[0], readDBOpts...)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	result, err := db.Get([]byte(key))
+	// TODO(@julienrbrt) verify that all db backends have hex encoded keys
+	// otherwise we should detect/assume the encoding per database backend
+	key, err := hex.DecodeString(args[1])
+	if err != nil {
+		return err
+	}
+
+	result, err := db.Get(key)
 	if err != nil {
 		return err
 	}
@@ -71,7 +78,7 @@ func view(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	cmd.Println(string(result))
+	cmd.Println(result)
 
 	return nil
 }

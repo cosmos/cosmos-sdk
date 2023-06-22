@@ -159,9 +159,7 @@ must be in this proposer's mempool.
 The next step of consensus is to execute the transactions to fully validate them. All full-nodes
 that receive a block proposal from the correct proposer execute the transactions by calling the ABCI function `FinalizeBlock`. 
 As mentioned throughout the documentation `BeginBlock`, `ExecuteTx` and `EndBlock` are called within FinalizeBlock. 
-While each full-node runs everything locally, this process yields a single, unambiguous result, 
-since the messages' state transitions are deterministic and transactions are
-explicitly ordered in the block proposal.
+Although every full-node operates individually and locally, the outcome is always consistent and unequivocal. This is because the state changes brought about by the messages are predictable, and the transactions are specifically sequenced in the proposed block.
 
 ```text
 		-----------------------

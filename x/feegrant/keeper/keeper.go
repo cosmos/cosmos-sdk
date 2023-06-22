@@ -163,7 +163,9 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 	}
 
 	if exp != nil {
-		store.Delete(feegrant.FeeAllowancePrefixQueue(exp, feegrant.FeeAllowanceKey(grantee, granter)[1:]))
+		if err := store.Delete(feegrant.FeeAllowancePrefixQueue(exp, feegrant.FeeAllowanceKey(grantee, granter)[1:])); err != nil {
+			return err
+		}
 	}
 
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(

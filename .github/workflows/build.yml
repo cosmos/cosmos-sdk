@@ -61,3 +61,6 @@ jobs:
       - name: Build Hubl
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make hubl
+      - name: Build StateViewer
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make stateviewer

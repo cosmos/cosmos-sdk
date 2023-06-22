@@ -135,7 +135,10 @@ confix:
 hubl:
 	$(MAKE) -C tools/hubl hubl
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
+stateviewer:
+	$(MAKE) -C tools/stateviewer stateviewer
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix stateviewer 
 
 
 mocks: $(MOCKS_DIR)

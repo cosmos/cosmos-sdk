@@ -21,6 +21,7 @@ cat ../x/README.md | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-
 cp ../tools/cosmovisor/README.md ./docs/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/tooling/03-hubl.md
+cp ../tools/stateviewer/README.md ./docs/tooling/04-stateviewer.md
 
 ## Add package documentation
 cp ../depinject/README.md ./docs/packages/01-depinject.md

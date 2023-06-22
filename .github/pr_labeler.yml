@@ -50,6 +50,8 @@
   - tools/confix/**/*
 "C:Hubl":
   - tools/hubl/**/*
+"C:StateViewer":
+  - tools/stateviewer/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":

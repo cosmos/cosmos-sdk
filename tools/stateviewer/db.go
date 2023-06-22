@@ -1,6 +1,7 @@
 package stateviewer
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,10 +62,10 @@ func ReadDBOptionWithBackend(backendType string) ReadDBOption {
 
 // ReadDB opens a database for reading.
 // It reads from the application config file to determine the database backend, unless overridden.
-func ReadDB(location string, options ...ReadDBOption) (ReadOnlyDB, error) {
+func ReadDB(location string, options ...ReadDBOption) (ReadOnlyDB, DBKeyFormat, error) {
 	defaultDBBackend, err := getDBBackendFromConfig(location)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	config := &ReadDBConfig{
@@ -78,10 +79,10 @@ func ReadDB(location string, options ...ReadDBOption) (ReadOnlyDB, error) {
 	fmt.Printf("opening %s (backend) database\n", config.BackendType)
 	db, err := openDB(location, config.BackendType)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return db, nil
+	return db, getDBKeyFormat(config.BackendType), nil
 }
 
 func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
@@ -127,4 +128,33 @@ func getDBBackendFromConfig(rootDir string) (dbm.BackendType, error) {
 	}
 
 	return dbm.BackendType(backend), nil
+}
+
+type DBKeyFormat func(input string) ([]byte, error)
+
+// getDBKeyFormat returns a function that decode a key argument from a db command.
+func getDBKeyFormat(backend dbm.BackendType) DBKeyFormat {
+	var defaultFn DBKeyFormat = func(input string) ([]byte, error) {
+		return []byte(input), nil
+	}
+
+	switch backend {
+	case dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend:
+		return func(input string) ([]byte, error) {
+			key, err := hex.DecodeString(input)
+			if err != nil {
+				fmt.Printf("failed to decode hex string '%s': %v. falling back to simple casting\n", input, err)
+				return defaultFn(input)
+			}
+
+			return key, nil
+		}
+	case dbm.MemDBBackend:
+		return func(input string) ([]byte, error) {
+			return []byte(input), nil
+		}
+	default:
+		fmt.Printf("unknown backend type: %s. falling back to simple casting\n", backend)
+		return defaultFn
+	}
 }

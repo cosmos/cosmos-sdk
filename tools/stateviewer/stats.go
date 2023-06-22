@@ -14,7 +14,7 @@ func StatsCmd() *cobra.Command {
 				readDBOpts = append(readDBOpts, ReadDBOptionWithBackend(backend))
 			}
 
-			db, err := ReadDB(home, readDBOpts...)
+			db, _, err := ReadDB(home, readDBOpts...)
 			if err != nil {
 				return err
 			}

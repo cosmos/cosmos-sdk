@@ -873,7 +873,6 @@ func TestImportPubKey(t *testing.T) {
 				require.NoError(t, err)
 			} else {
 				require.ErrorContains(t, err, tt.expectedErr)
-				// require.Equal(t, tt.expectedErr, err)
 			}
 		})
 	}

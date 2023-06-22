@@ -15,7 +15,7 @@ require (
 	github.com/regen-network/gocuke v0.6.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	google.golang.org/grpc v1.56.0
+	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v1.0.0

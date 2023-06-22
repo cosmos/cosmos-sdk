@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,7 @@ func Example() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)
@@ -129,6 +131,7 @@ func Example_oneModule() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)

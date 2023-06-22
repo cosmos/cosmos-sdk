@@ -268,10 +268,6 @@ func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAcc
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	if ak.bech32Prefix == "" {
-		return "bech32 is not used on this chain", nil
-	}
-
 	return ak.bech32Prefix, nil
 }
 

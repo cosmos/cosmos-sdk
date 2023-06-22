@@ -66,7 +66,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 				return err
 			}
 			msgAuthorized := ""
-			if len(args) >= 3 {
+			if len(args) == 3 {
 				msgAuthorized = args[2]
 			}
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

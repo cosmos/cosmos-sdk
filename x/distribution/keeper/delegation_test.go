@@ -177,7 +177,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 
 	shareTokenBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), record.GetShareTokenDenom())
 
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &stakingtypes.MsgRedeemTokensforShares{
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgRedeemTokensForShares{
 		DelegatorAddress: sdk.AccAddress(valAddrs[0]).String(),
 		Amount:           shareTokenBalance,
 	})

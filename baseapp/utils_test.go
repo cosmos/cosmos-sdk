@@ -25,6 +25,7 @@ import (
 
 	"cosmossdk.io/core/appconfig"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

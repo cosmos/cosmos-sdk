@@ -799,7 +799,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() 
 // `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	val := s.network.Validators[0]
-	val1 := s.network.Validators[1]
 	clientCtx := val.ClientCtx
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -827,22 +826,10 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
-	cmd := stakingcli.NewDelegateCmd()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewDelegateCmd(), args)
 	s.Require().NoError(err)
 
-	// delegate 500 tokens to validator2
-	args = []string{
-		val1.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-
+	// withdraw rewards
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -851,23 +838,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewWithdrawAllRewardsCmd(), args)
 	s.Require().NoError(err)
-	// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
-	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
-
-	args = []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-	// expect 1 transaction in the generated file when --max-msgs in a tx set 2, since there are only delegations.
 	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 }

@@ -257,7 +257,7 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	cmtApp := NewCometABCIWrapper(app)
 	svr, err := server.NewServer(addr, transport, cmtApp)
 	if err != nil {
-		return fmt.Errorf("error creating listener: %v", err)
+		return fmt.Errorf("error creating listener: %w", err)
 	}
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
@@ -549,12 +549,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 		}()
 	}
 
-	errCh := make(chan error)
-	go func() {
-		errCh <- callbackFn()
-	}()
-
-	return <-errCh
+	return callbackFn()
 }
 
 // emitServerInfoMetrics emits server info related metrics using application telemetry.

@@ -35,6 +35,8 @@ type Keeper struct {
 	ValidatorCurrentRewards         collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
 	DelegatorStartingInfo           collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
+	ValidatorOutstandingRewards     collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
+	ValidatorHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -89,6 +91,21 @@ func NewKeeper(
 			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorAccumulatedCommission](cdc),
 		),
+		ValidatorOutstandingRewards: collections.NewMap(
+			sb,
+			types.ValidatorOutstandingRewardsPrefix,
+			"validator_outstanding_rewards",
+			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorOutstandingRewards](cdc),
+		),
+
+		ValidatorHistoricalRewards: collections.NewMap(
+			sb,
+			types.ValidatorHistoricalRewardsPrefix,
+			"validator_historical_rewards",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
+		),
 	}
 
 	schema, err := sb.Build()
@@ -138,25 +155,32 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 
 // withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	val := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	val, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if val == nil {
 		return nil, types.ErrNoValidatorDistInfo
 	}
 
-	del := k.stakingKeeper.Delegation(sdkCtx, delAddr, valAddr)
+	del, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if del == nil {
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(sdkCtx, val, del)
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
 	if err != nil {
 		return nil, err
 	}
 
 	// reinitialize the delegation
-	err = k.initializeDelegation(sdkCtx, valAddr, delAddr)
+	err = k.initializeDelegation(ctx, valAddr, delAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -181,12 +205,12 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		return nil, err
 	}
 	// update outstanding
-	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: outstanding.Rewards.Sub(sdk.NewDecCoinsFromCoins(commission...))})
+	err = k.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: outstanding.Rewards.Sub(sdk.NewDecCoinsFromCoins(commission...))})
 	if err != nil {
 		return nil, err
 	}
@@ -217,12 +241,14 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store
 func (k Keeper) GetTotalRewards(ctx context.Context) (totalRewards sdk.DecCoins) {
-	k.IterateValidatorOutstandingRewards(ctx,
-		func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			totalRewards = totalRewards.Add(rewards.Rewards...)
-			return false
-		},
+	err := k.ValidatorOutstandingRewards.Walk(ctx, nil, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
+		totalRewards = totalRewards.Add(rewards.Rewards...)
+		return false, nil
+	},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	return totalRewards
 }

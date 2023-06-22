@@ -34,7 +34,7 @@ const DefaultGenTxGas = 10000000
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
-		MaxGas:   2000000,
+		MaxGas:   100_000_000,
 	},
 	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,

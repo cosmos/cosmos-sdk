@@ -15,6 +15,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -230,6 +231,19 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			"invalid separator index",
 		},
 		{
+			"Invalid spend limit",
+			[]string{
+				grantee.String(),
+				"send",
+				fmt.Sprintf("--%s=0stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			},
+			true,
+			"spend-limit should be greater than zero",
+		},
+		{
 			"Invalid expiration time",
 			[]string{
 				grantee.String(),
@@ -306,7 +320,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			"invalid denom",
 		},
 		{
-			"invalid bond denon for tx redelegate authorization",
+			"invalid bond denom for tx redelegate authorization",
 			[]string{
 				grantee.String(),
 				"redelegate",
@@ -336,6 +350,15 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			},
 			true,
 			"invalid decimal coin expression",
+		},
+		{
+			"invalid authorization type",
+			[]string{
+				grantee.String(),
+				"invalid authz type",
+			},
+			true,
+			"invalid authorization type",
 		},
 		{
 			"Valid tx send authorization",

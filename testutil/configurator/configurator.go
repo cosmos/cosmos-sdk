@@ -91,15 +91,16 @@ var initGenesisOrder = []string{
 	"circuit",
 }
 
-type appConfig struct {
+// Config should never need to be instantiated manually and is solely used for ModuleOption.
+type Config struct {
 	moduleConfigs  map[string]*appv1alpha1.ModuleConfig
 	setInitGenesis bool
 }
 
-type ModuleOption func(config *appConfig)
+type ModuleOption func(config *Config)
 
 func BankModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["bank"] = &appv1alpha1.ModuleConfig{
 			Name:   "bank",
 			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
@@ -108,7 +109,7 @@ func BankModule() ModuleOption {
 }
 
 func AuthModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["auth"] = &appv1alpha1.ModuleConfig{
 			Name: "auth",
 			Config: appconfig.WrapAny(&authmodulev1.Module{
@@ -128,7 +129,7 @@ func AuthModule() ModuleOption {
 }
 
 func ParamsModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["params"] = &appv1alpha1.ModuleConfig{
 			Name:   "params",
 			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
@@ -137,7 +138,7 @@ func ParamsModule() ModuleOption {
 }
 
 func TxModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["tx"] = &appv1alpha1.ModuleConfig{
 			Name:   "tx",
 			Config: appconfig.WrapAny(&txconfigv1.Config{}),
@@ -146,7 +147,7 @@ func TxModule() ModuleOption {
 }
 
 func StakingModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["staking"] = &appv1alpha1.ModuleConfig{
 			Name:   "staking",
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
@@ -155,7 +156,7 @@ func StakingModule() ModuleOption {
 }
 
 func SlashingModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["slashing"] = &appv1alpha1.ModuleConfig{
 			Name:   "slashing",
 			Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
@@ -164,7 +165,7 @@ func SlashingModule() ModuleOption {
 }
 
 func GenutilModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["genutil"] = &appv1alpha1.ModuleConfig{
 			Name:   "genutil",
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
@@ -173,7 +174,7 @@ func GenutilModule() ModuleOption {
 }
 
 func DistributionModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["distribution"] = &appv1alpha1.ModuleConfig{
 			Name:   "distribution",
 			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
@@ -182,7 +183,7 @@ func DistributionModule() ModuleOption {
 }
 
 func FeegrantModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["feegrant"] = &appv1alpha1.ModuleConfig{
 			Name:   "feegrant",
 			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
@@ -191,7 +192,7 @@ func FeegrantModule() ModuleOption {
 }
 
 func VestingModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["vesting"] = &appv1alpha1.ModuleConfig{
 			Name:   "vesting",
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
@@ -200,7 +201,7 @@ func VestingModule() ModuleOption {
 }
 
 func GovModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["gov"] = &appv1alpha1.ModuleConfig{
 			Name:   "gov",
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
@@ -209,7 +210,7 @@ func GovModule() ModuleOption {
 }
 
 func ConsensusModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["consensus"] = &appv1alpha1.ModuleConfig{
 			Name:   "consensus",
 			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
@@ -218,7 +219,7 @@ func ConsensusModule() ModuleOption {
 }
 
 func MintModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["mint"] = &appv1alpha1.ModuleConfig{
 			Name:   "mint",
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
@@ -233,7 +234,7 @@ func MintModule() ModuleOption {
 }
 
 func EvidenceModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["evidence"] = &appv1alpha1.ModuleConfig{
 			Name:   "evidence",
 			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
@@ -242,7 +243,7 @@ func EvidenceModule() ModuleOption {
 }
 
 func AuthzModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["authz"] = &appv1alpha1.ModuleConfig{
 			Name:   "authz",
 			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
@@ -251,7 +252,7 @@ func AuthzModule() ModuleOption {
 }
 
 func GroupModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["group"] = &appv1alpha1.ModuleConfig{
 			Name:   "group",
 			Config: appconfig.WrapAny(&groupmodulev1.Module{}),
@@ -260,7 +261,7 @@ func GroupModule() ModuleOption {
 }
 
 func NFTModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["nft"] = &appv1alpha1.ModuleConfig{
 			Name:   "nft",
 			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
@@ -269,7 +270,7 @@ func NFTModule() ModuleOption {
 }
 
 func CircuitModule() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.moduleConfigs["circuit"] = &appv1alpha1.ModuleConfig{
 			Name:   "circuit",
 			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
@@ -278,13 +279,13 @@ func CircuitModule() ModuleOption {
 }
 
 func OmitInitGenesis() ModuleOption {
-	return func(config *appConfig) {
+	return func(config *Config) {
 		config.setInitGenesis = false
 	}
 }
 
 func NewAppConfig(opts ...ModuleOption) depinject.Config {
-	cfg := &appConfig{
+	cfg := &Config{
 		moduleConfigs:  make(map[string]*appv1alpha1.ModuleConfig),
 		setInitGenesis: true,
 	}

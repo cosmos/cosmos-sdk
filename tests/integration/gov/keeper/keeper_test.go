@@ -87,7 +87,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	// set default staking params
 	stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams())

@@ -6,8 +6,9 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"cosmossdk.io/tools/cosmovisor"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 func NewVersionCmd() *cobra.Command {
@@ -45,7 +46,7 @@ func printVersion(cmd *cobra.Command, args []string, noAppVersion bool) error {
 		return nil
 	}
 
-	if err := Run(cmd, append([]string{"version"}, args...)); err != nil {
+	if err := run(append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
@@ -59,8 +60,7 @@ func printVersionJSON(cmd *cobra.Command, args []string, noAppVersion bool) erro
 	}
 
 	buf := new(strings.Builder)
-	if err := Run(
-		cmd,
+	if err := run(
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {

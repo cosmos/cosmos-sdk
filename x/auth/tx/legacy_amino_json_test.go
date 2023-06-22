@@ -17,7 +17,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -26,7 +26,7 @@ var (
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
-	msg     = banktypes.NewMsgSend(addr1, addr2, coins)
+	msg     = &types.MsgUpdateParams{Authority: addr1.String()}
 	memo    = "foo"
 	timeout = uint64(10)
 )
@@ -156,8 +156,8 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 	modeHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
 	mode, _ := signing.APISignModeToInternal(modeHandler.Mode())
 	legacyAmino := codec.NewLegacyAmino()
-	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
 	legacytx.RegressionTestingAminoCodec = legacyAmino
+	legacy.RegisterAminoMsg(legacyAmino, &types.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
 
 	testcases := []struct {
 		name           string

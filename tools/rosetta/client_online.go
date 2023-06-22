@@ -212,7 +212,7 @@ func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*r
 func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockResponse, error) {
 	bHash, err := hex.DecodeString(hash)
 	if err != nil {
-		return crgtypes.BlockResponse{}, fmt.Errorf("invalid block hash: %s", err)
+		return crgtypes.BlockResponse{}, fmt.Errorf("invalid block hash: %w", err)
 	}
 
 	block, err := c.tmRPC.BlockByHash(ctx, bHash)

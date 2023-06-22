@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -183,8 +182,11 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validator := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAddr.String())
 	}
@@ -211,7 +213,7 @@ func (k *Keeper) validateAuthority(authority string) error {
 	}
 
 	if k.authority != authority {
-		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
+		return errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
 	}
 
 	return nil

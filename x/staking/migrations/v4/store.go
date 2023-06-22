@@ -12,9 +12,7 @@ import (
 )
 
 // MigrateStore performs in-place store migrations from v3 to v4.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
-	store := ctx.KVStore(storeKey)
-
+func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	// migrate params
 	if err := migrateParams(ctx, store, cdc, legacySubspace); err != nil {
 		return err

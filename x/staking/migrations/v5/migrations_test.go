@@ -9,6 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -18,8 +21,6 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHistoricalKeysMigration(t *testing.T) {
@@ -62,7 +63,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	}
 
 	// migrate store to new key format
-	require.NoErrorf(t, v5.MigrateStore(ctx, storeKey, cdc), "v5.MigrateStore failed, seed: %d", seed)
+	require.NoErrorf(t, v5.MigrateStore(ctx, store, cdc), "v5.MigrateStore failed, seed: %d", seed)
 
 	// check results
 	for _, tc := range testCases {
@@ -97,7 +98,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	dels := getValDelegations(ctx, cdc, storeKey, valAddrs[0])
 	assert.Len(t, dels, 0)
 
-	err := v5.MigrateStore(ctx, storeKey, cdc)
+	err := v5.MigrateStore(ctx, store, cdc)
 	assert.NoError(t, err)
 
 	// after migration the state of delegations by val index should not be empty

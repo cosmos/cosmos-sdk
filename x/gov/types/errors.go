@@ -17,7 +17,7 @@ var (
 	ErrUnroutableProposalMsg   = errors.Register(ModuleName, 10, "proposal message not recognized by router")
 	ErrNoProposalMsgs          = errors.Register(ModuleName, 11, "no messages proposed")
 	ErrInvalidProposalMsg      = errors.Register(ModuleName, 12, "invalid proposal message")
-	ErrInvalidSigner           = errors.Register(ModuleName, 13, "expected gov account as only signer for proposal message")
+	ErrInvalidSigner           = errors.Register(ModuleName, 13, "expected authority account as only signer for proposal message")
 	ErrMetadataTooLong         = errors.Register(ModuleName, 15, "metadata too long")
 	ErrMinDepositTooSmall      = errors.Register(ModuleName, 16, "minimum deposit is too small")
 	ErrInvalidProposer         = errors.Register(ModuleName, 18, "invalid proposer")

@@ -360,10 +360,11 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	header.Time = blockTime
 	ctx = ctx.WithBlockHeader(header)
 
-	// unbond the all self-delegation to put validator in unbonding state
+	// unbond the and jail the validator to put it in an unbonding state
 	val0AccAddr := sdk.AccAddress(addrVals[0])
 	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
 	require.NoError(t, err)
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
@@ -436,9 +437,10 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
-	// unbond the all self-delegation to put validator in unbonding state
+	// unbond the and jail the validator to put it in an unbonding state
 	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
 	require.NoError(t, err)
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
@@ -520,9 +522,10 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
-	// unbond the all self-delegation to put validator in unbonding state
+	// unbond the and jail the validator to put it in an unbonding state
 	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
 	require.NoError(t, err)
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)

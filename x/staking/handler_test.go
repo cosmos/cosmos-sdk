@@ -605,8 +605,9 @@ func TestValidatorQueue(t *testing.T) {
 	tstaking.Delegate(delegatorAddr, validatorAddr, amt)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
-	// unbond the all self-delegation to put validator in unbonding state
+	// unbond the and jail the validator to put it in an unbonding state
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, amt, true)
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
 
 	var resData types.MsgUndelegateResponse
 	err := proto.Unmarshal(res.Data, &resData)

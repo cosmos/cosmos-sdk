@@ -95,7 +95,7 @@ You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [
 Following is an example for `x/gov/` simulations:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L406-L410
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L406-L430
 ```
 
 ```go reference

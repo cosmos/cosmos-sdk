@@ -63,7 +63,6 @@ var (
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
-
 const (
 	UnbondingType_Undefined UnbondingType = iota
 	UnbondingType_UnbondingDelegation

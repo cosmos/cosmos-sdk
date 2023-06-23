@@ -50,15 +50,9 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-<<<<<<< HEAD
 // Context with current {check, deliver}State of the app used by tests.
 func (app *BaseApp) NewContext(outOfConsensus bool, header cmtproto.Header) sdk.Context {
 	if outOfConsensus {
-=======
-// NewContextLegacy returns a new sdk.Context with the provided header
-func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	if isCheckTx {
->>>>>>> 6afece635cef9f8e044a04ce67d06e55ca300249
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}

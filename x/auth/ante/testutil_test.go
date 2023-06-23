@@ -63,13 +63,8 @@ func SetupTestSuite(t *testing.T, outOfConsensus bool) *AnteTestSuite {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-<<<<<<< HEAD
 	suite.ctx = testCtx.Ctx.WithInConsensus(outOfConsensus).WithBlockHeight(1) // app.BaseApp.NewContext(outOfConsensus, cmtproto.Header{}).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
-=======
-	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) // app.BaseApp.NewContext(isCheckTx, cmtproto.Header{}).WithBlockHeight(1)
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
->>>>>>> 6afece635cef9f8e044a04ce67d06e55ca300249
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

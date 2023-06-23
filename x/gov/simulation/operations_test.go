@@ -424,11 +424,7 @@ func createTestSuite(t *testing.T, outOfConsensus bool) (suite, sdk.Context) {
 		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
 	require.NoError(t, err)
 
-<<<<<<< HEAD
 	ctx := app.BaseApp.NewContext(outOfConsensus, cmtproto.Header{})
-=======
-	ctx := app.BaseApp.NewContext(isCheckTx)
->>>>>>> 6afece635cef9f8e044a04ce67d06e55ca300249
 
 	res.App = app
 	return res, ctx

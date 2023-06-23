@@ -464,14 +464,9 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	}
 
 	switch mode {
-<<<<<<< HEAD
 	case runTxModeCheck:
 		// Minimum gas prices are also set. It is set on InitChain and reset on Commit.
 		baseState.ctx = baseState.ctx.WithInConsensus(true).WithMinGasPrices(app.minGasPrices)
-=======
-	case execModeCheck:
-		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices)
->>>>>>> 6afece635cef9f8e044a04ce67d06e55ca300249
 		app.checkState = baseState
 
 	case execModePrepareProposal:

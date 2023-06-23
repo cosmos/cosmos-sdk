@@ -206,6 +206,73 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
+func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+		return sdk.BeginBlock{
+			Events: []abci.Event{
+				{
+					Type: "sometype",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "foo",
+							Value: "bar",
+						},
+					},
+				},
+			},
+		}, nil
+	})
+
+	app.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
+		return sdk.EndBlock{
+			Events: []abci.Event{
+				{
+					Type: "anothertype",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "foo",
+							Value: "bar",
+						},
+					},
+				},
+			},
+		}, nil
+	})
+
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+		},
+	)
+	require.NoError(t, err)
+
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+
+	require.Len(t, res.Events, 2)
+
+	require.Equal(t, "sometype", res.Events[0].Type)
+	require.Equal(t, "foo", res.Events[0].Attributes[0].Key)
+	require.Equal(t, "bar", res.Events[0].Attributes[0].Value)
+	require.Equal(t, "mode", res.Events[0].Attributes[1].Key)
+	require.Equal(t, "BeginBlock", res.Events[0].Attributes[1].Value)
+
+	require.Equal(t, "anothertype", res.Events[1].Type)
+	require.Equal(t, "foo", res.Events[1].Attributes[0].Key)
+	require.Equal(t, "bar", res.Events[1].Attributes[0].Value)
+	require.Equal(t, "mode", res.Events[1].Attributes[1].Key)
+	require.Equal(t, "EndBlock", res.Events[1].Attributes[1].Value)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
+
+	require.Equal(t, int64(1), app.LastBlockHeight())
+}
+
 func TestABCI_GRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(

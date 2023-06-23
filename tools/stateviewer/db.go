@@ -75,7 +75,7 @@ func ReadDB(location string, options ...ReadDBOption) (ReadOnlyDB, DBKeyFormat, 
 		opt(config)
 	}
 
-	// we do not need to check the backend type validaty as this will be done by the dbm package
+	// we do not need to check the backend type validity as this will be done by the dbm package
 	fmt.Printf("opening %s (backend) database\n", config.BackendType)
 	db, err := openDB(location, config.BackendType)
 	if err != nil {

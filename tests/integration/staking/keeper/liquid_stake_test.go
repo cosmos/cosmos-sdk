@@ -733,9 +733,9 @@ func TestTokenizeSharesLock(t *testing.T) {
 	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.NewInt(1))
 	addressA, addressB := addresses[0], addresses[1]
 
-	unlocked := types.TokenizeShareLockStatus_UNLOCKED.String()
-	locked := types.TokenizeShareLockStatus_LOCKED.String()
-	lockExpiring := types.TokenizeShareLockStatus_LOCK_EXPIRING.String()
+	unlocked := types.ShareLockStatusUnlocked.String()
+	locked := types.ShareLockStatusLocked.String()
+	lockExpiring := types.ShareLockStatusLockExpiring.String()
 
 	// Confirm both accounts start unlocked
 	status, _ := app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)

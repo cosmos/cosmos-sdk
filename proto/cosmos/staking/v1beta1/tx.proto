@@ -314,7 +314,7 @@ message MsgTransferTokenizeShareRecordResponse {}
 message MsgDisableTokenizeShares {
   option (cosmos.msg.v1.signer) = "delegator_address";
 
-  option (gogoproto.equal)      = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -330,8 +330,8 @@ message MsgDisableTokenizeSharesResponse {}
 // Since: cosmos-sdk 0.47-lsm
 message MsgEnableTokenizeShares {
   option (cosmos.msg.v1.signer) = "delegator_address";
-  
-  option (gogoproto.equal)      = false;
+
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

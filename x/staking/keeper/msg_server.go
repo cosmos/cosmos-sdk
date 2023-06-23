@@ -219,7 +219,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	// if this delegation is from a liquid staking provider, it cannot exceed
 	// the global or validator bond cap
-	if k.AccountIsLiquidStakingProvider( delegatorAddress) {
+	if k.AccountIsLiquidStakingProvider(delegatorAddress) {
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
@@ -495,7 +495,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
-	if k.AccountIsLiquidStakingProvider( delegatorAddress) {
+	if k.AccountIsLiquidStakingProvider(delegatorAddress) {
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
@@ -632,10 +632,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	// Check if the delegator has disabled tokenization
 	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegatorAddress)
-	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+	if lockStatus == types.ShareLockStatusLocked {
 		return nil, types.ErrTokenizeSharesDisabledForAccount
 	}
-	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+	if lockStatus == types.ShareLockStatusLockExpiring {
 		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
 	}
 
@@ -678,7 +678,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	//   confirm it does not exceed the global and validator liquid staking cap
 	// If the tokenization is from a liquid staking provider,
 	//   the shares are already considered liquid and there's no need to increment the totals
-	if !k.AccountIsLiquidStakingProvider( delegatorAddress) {
+	if !k.AccountIsLiquidStakingProvider(delegatorAddress) {
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
@@ -799,7 +799,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
 	// If the redemption was from a liquid staking provider, the shares are still considered
 	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)
-	if !k.AccountIsLiquidStakingProvider( delegatorAddress) {
+	if !k.AccountIsLiquidStakingProvider(delegatorAddress) {
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
 		}
@@ -923,12 +923,12 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 
 	// If tokenized shares is already disabled, alert the user
 	lockStatus, completionTime := k.GetTokenizeSharesLock(ctx, delegator)
-	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+	if lockStatus == types.ShareLockStatusLocked {
 		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
 	}
 
 	// If the tokenized shares lock is expiring, remove the pending unlock from the queue
-	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+	if lockStatus == types.ShareLockStatusLockExpiring {
 		k.CancelTokenizeShareLockExpiration(ctx, delegator, completionTime)
 	}
 
@@ -948,10 +948,10 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 
 	// If tokenized shares aren't current disabled, alert the user
 	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegator)
-	if lockStatus == types.TokenizeShareLockStatus_UNLOCKED {
+	if lockStatus == types.ShareLockStatusUnlocked {
 		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount
 	}
-	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+	if lockStatus == types.ShareLockStatusLockExpiring {
 		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount.Wrapf(
 			"tokenize shares re-enablement already in progress, ending at %s", unlockTime)
 	}

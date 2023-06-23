@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/stretchr/testify/require"
-
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -194,7 +194,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	err = f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards)
+	err = f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards)
 	require.NoError(t, err)
 	// setup current rewards and outstanding rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)

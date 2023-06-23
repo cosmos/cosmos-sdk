@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -130,39 +129,48 @@ func (r *Range[K]) RangeValues() (start, end *RangeKey[K], order Order, err erro
 	return r.start, r.end, r.order, nil
 }
 
-// iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
-// a nil Ranger can be seen as an ascending iteration over all the possible keys.
-func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
+// parseRangeInstruction converts a Ranger into start bytes, end bytes and order of a store iteration.
+func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r Ranger[K]) ([]byte, []byte, Order, error) {
 	var (
 		start *RangeKey[K]
 		end   *RangeKey[K]
 		order = OrderAscending
+		err   error
 	)
 
 	if r != nil {
 		start, end, order, err = r.RangeValues()
 		if err != nil {
-			return iter, err
+			return nil, nil, 0, err
 		}
 	}
 
-	startBytes := m.prefix
+	startBytes := prefix
 	if start != nil {
-		startBytes, err = encodeRangeBound(m.prefix, m.kc, start)
+		startBytes, err = encodeRangeBound(prefix, keyCodec, start)
 		if err != nil {
-			return iter, err
+			return nil, nil, 0, err
 		}
 	}
 	var endBytes []byte
 	if end != nil {
-		endBytes, err = encodeRangeBound(m.prefix, m.kc, end)
+		endBytes, err = encodeRangeBound(prefix, keyCodec, end)
 		if err != nil {
-			return iter, err
+			return nil, nil, 0, err
 		}
 	} else {
-		endBytes = nextBytesPrefixKey(m.prefix)
+		endBytes = nextBytesPrefixKey(prefix)
 	}
+	return startBytes, endBytes, order, nil
+}
 
+// iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
+// a nil Ranger can be seen as an ascending iteration over all the possible keys.
+func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
+	startBytes, endBytes, order, err := parseRangeInstruction(m.prefix, m.kc, r)
+	if err != nil {
+		return Iterator[K, V]{}, err
+	}
 	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 

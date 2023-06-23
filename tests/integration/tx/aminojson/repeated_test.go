@@ -5,9 +5,8 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
 

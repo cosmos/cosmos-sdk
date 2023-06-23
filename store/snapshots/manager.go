@@ -11,9 +11,8 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/log"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )

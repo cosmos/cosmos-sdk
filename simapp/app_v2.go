@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"

@@ -57,8 +57,6 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 
 // NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
 // granter and grantee
-//
-
 func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }

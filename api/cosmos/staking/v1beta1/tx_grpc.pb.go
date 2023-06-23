@@ -31,6 +31,8 @@ const (
 	Msg_RedeemTokens_FullMethodName                = "/cosmos.staking.v1beta1.Msg/RedeemTokens"
 	Msg_TransferTokenizeShareRecord_FullMethodName = "/cosmos.staking.v1beta1.Msg/TransferTokenizeShareRecord"
 	Msg_ValidatorBond_FullMethodName               = "/cosmos.staking.v1beta1.Msg/ValidatorBond"
+	Msg_DisableTokenizeShares_FullMethodName       = "/cosmos.staking.v1beta1.Msg/DisableTokenizeShares"
+	Msg_EnableTokenizeShares_FullMethodName        = "/cosmos.staking.v1beta1.Msg/EnableTokenizeShares"
 )
 
 // MsgClient is the client API for Msg service.
@@ -83,6 +85,15 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	ValidatorBond(ctx context.Context, in *MsgValidatorBond, opts ...grpc.CallOption) (*MsgValidatorBondResponse, error)
+	// DisableTokenizeShares defines a method to prevent the tokenization of an addresses stake
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	DisableTokenizeShares(ctx context.Context, in *MsgDisableTokenizeShares, opts ...grpc.CallOption) (*MsgDisableTokenizeSharesResponse, error)
+	// EnableTokenizeShares defines a method to re-enable the tokenization of an addresseses stake
+	// after it has been disabled
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	EnableTokenizeShares(ctx context.Context, in *MsgEnableTokenizeShares, opts ...grpc.CallOption) (*MsgEnableTokenizeSharesResponse, error)
 }
 
 type msgClient struct {
@@ -201,6 +212,24 @@ func (c *msgClient) ValidatorBond(ctx context.Context, in *MsgValidatorBond, opt
 	return out, nil
 }
 
+func (c *msgClient) DisableTokenizeShares(ctx context.Context, in *MsgDisableTokenizeShares, opts ...grpc.CallOption) (*MsgDisableTokenizeSharesResponse, error) {
+	out := new(MsgDisableTokenizeSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_DisableTokenizeShares_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) EnableTokenizeShares(ctx context.Context, in *MsgEnableTokenizeShares, opts ...grpc.CallOption) (*MsgEnableTokenizeSharesResponse, error) {
+	out := new(MsgEnableTokenizeSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_EnableTokenizeShares_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -251,6 +280,15 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	ValidatorBond(context.Context, *MsgValidatorBond) (*MsgValidatorBondResponse, error)
+	// DisableTokenizeShares defines a method to prevent the tokenization of an addresses stake
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	DisableTokenizeShares(context.Context, *MsgDisableTokenizeShares) (*MsgDisableTokenizeSharesResponse, error)
+	// EnableTokenizeShares defines a method to re-enable the tokenization of an addresseses stake
+	// after it has been disabled
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	EnableTokenizeShares(context.Context, *MsgEnableTokenizeShares) (*MsgEnableTokenizeSharesResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -293,6 +331,12 @@ func (UnimplementedMsgServer) TransferTokenizeShareRecord(context.Context, *MsgT
 }
 func (UnimplementedMsgServer) ValidatorBond(context.Context, *MsgValidatorBond) (*MsgValidatorBondResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorBond not implemented")
+}
+func (UnimplementedMsgServer) DisableTokenizeShares(context.Context, *MsgDisableTokenizeShares) (*MsgDisableTokenizeSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableTokenizeShares not implemented")
+}
+func (UnimplementedMsgServer) EnableTokenizeShares(context.Context, *MsgEnableTokenizeShares) (*MsgEnableTokenizeSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableTokenizeShares not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -523,6 +567,42 @@ func _Msg_ValidatorBond_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DisableTokenizeShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableTokenizeShares)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DisableTokenizeShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DisableTokenizeShares_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DisableTokenizeShares(ctx, req.(*MsgDisableTokenizeShares))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_EnableTokenizeShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgEnableTokenizeShares)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).EnableTokenizeShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_EnableTokenizeShares_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).EnableTokenizeShares(ctx, req.(*MsgEnableTokenizeShares))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -577,6 +657,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatorBond",
 			Handler:    _Msg_ValidatorBond_Handler,
+		},
+		{
+			MethodName: "DisableTokenizeShares",
+			Handler:    _Msg_DisableTokenizeShares_Handler,
+		},
+		{
+			MethodName: "EnableTokenizeShares",
+			Handler:    _Msg_EnableTokenizeShares_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

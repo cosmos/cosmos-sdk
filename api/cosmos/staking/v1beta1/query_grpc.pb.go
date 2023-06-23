@@ -39,6 +39,8 @@ const (
 	Query_AllTokenizeShareRecords_FullMethodName       = "/cosmos.staking.v1beta1.Query/AllTokenizeShareRecords"
 	Query_LastTokenizeShareRecordId_FullMethodName     = "/cosmos.staking.v1beta1.Query/LastTokenizeShareRecordId"
 	Query_TotalTokenizeSharedAssets_FullMethodName     = "/cosmos.staking.v1beta1.Query/TotalTokenizeSharedAssets"
+	Query_TotalLiquidStaked_FullMethodName             = "/cosmos.staking.v1beta1.Query/TotalLiquidStaked"
+	Query_TokenizeShareLockInfo_FullMethodName         = "/cosmos.staking.v1beta1.Query/TokenizeShareLockInfo"
 )
 
 // QueryClient is the client API for Query service.
@@ -122,6 +124,14 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TotalLiquidStaked(ctx context.Context, in *QueryTotalLiquidStaked, opts ...grpc.CallOption) (*QueryTotalLiquidStakedResponse, error)
+	// Query tokenize share locks
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TokenizeShareLockInfo(ctx context.Context, in *QueryTokenizeShareLockInfo, opts ...grpc.CallOption) (*QueryTokenizeShareLockInfoResponse, error)
 }
 
 type queryClient struct {
@@ -312,6 +322,24 @@ func (c *queryClient) TotalTokenizeSharedAssets(ctx context.Context, in *QueryTo
 	return out, nil
 }
 
+func (c *queryClient) TotalLiquidStaked(ctx context.Context, in *QueryTotalLiquidStaked, opts ...grpc.CallOption) (*QueryTotalLiquidStakedResponse, error) {
+	out := new(QueryTotalLiquidStakedResponse)
+	err := c.cc.Invoke(ctx, Query_TotalLiquidStaked_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareLockInfo(ctx context.Context, in *QueryTokenizeShareLockInfo, opts ...grpc.CallOption) (*QueryTokenizeShareLockInfoResponse, error) {
+	out := new(QueryTokenizeShareLockInfoResponse)
+	err := c.cc.Invoke(ctx, Query_TokenizeShareLockInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -393,6 +421,14 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TotalLiquidStaked(context.Context, *QueryTotalLiquidStaked) (*QueryTotalLiquidStakedResponse, error)
+	// Query tokenize share locks
+	//
+	// Since: cosmos-sdk 0.47-lsm
+	TokenizeShareLockInfo(context.Context, *QueryTokenizeShareLockInfo) (*QueryTokenizeShareLockInfoResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -459,6 +495,12 @@ func (UnimplementedQueryServer) LastTokenizeShareRecordId(context.Context, *Quer
 }
 func (UnimplementedQueryServer) TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalTokenizeSharedAssets not implemented")
+}
+func (UnimplementedQueryServer) TotalLiquidStaked(context.Context, *QueryTotalLiquidStaked) (*QueryTotalLiquidStakedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalLiquidStaked not implemented")
+}
+func (UnimplementedQueryServer) TokenizeShareLockInfo(context.Context, *QueryTokenizeShareLockInfo) (*QueryTokenizeShareLockInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareLockInfo not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -833,6 +875,42 @@ func _Query_TotalTokenizeSharedAssets_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TotalLiquidStaked_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalLiquidStaked)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalLiquidStaked(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TotalLiquidStaked_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalLiquidStaked(ctx, req.(*QueryTotalLiquidStaked))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareLockInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareLockInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareLockInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TokenizeShareLockInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareLockInfo(ctx, req.(*QueryTokenizeShareLockInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -919,6 +997,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TotalTokenizeSharedAssets",
 			Handler:    _Query_TotalTokenizeSharedAssets_Handler,
+		},
+		{
+			MethodName: "TotalLiquidStaked",
+			Handler:    _Query_TotalLiquidStaked_Handler,
+		},
+		{
+			MethodName: "TokenizeShareLockInfo",
+			Handler:    _Query_TokenizeShareLockInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

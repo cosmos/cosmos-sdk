@@ -10,16 +10,18 @@ import (
 	"syscall"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/rootmulti"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+
+	coreheader "cosmossdk.io/core/header"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/rootmulti"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -81,8 +83,18 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// handler, the block height is zero by default. However, after Commit is called
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
-		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader)
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader)
+		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader).
+			WithHeaderInfo(coreheader.Info{
+				ChainID: req.ChainId,
+				Height:  req.InitialHeight,
+				Time:    req.Time,
+			})
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader).
+			WithHeaderInfo(coreheader.Info{
+				ChainID: req.ChainId,
+				Height:  req.InitialHeight,
+				Time:    req.Time,
+			})
 	}()
 
 	if app.initChainer == nil {
@@ -405,7 +417,12 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
-		WithCometInfo(prepareProposalInfo{req})
+		WithCometInfo(prepareProposalInfo{req}).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+		})
 
 	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx)).
@@ -486,7 +503,12 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
 		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
-		WithExecMode(sdk.ExecModeProcessProposal)
+		WithExecMode(sdk.ExecModeProcessProposal).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+		})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx)).
@@ -545,7 +567,11 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
-		WithExecMode(sdk.ExecModeVoteExtension)
+		WithExecMode(sdk.ExecModeVoteExtension).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+		})
 
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
@@ -651,7 +677,13 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		// by InitChain. Context is now updated with Header information.
 		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
 			WithBlockHeader(header).
-			WithBlockHeight(req.Height)
+			WithBlockHeight(req.Height).
+			WithHeaderInfo(coreheader.Info{
+				ChainID: app.chainID,
+				Height:  req.Height,
+				Time:    req.Time,
+				Hash:    req.Hash,
+			})
 	}
 
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
@@ -661,7 +693,18 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithExecMode(sdk.ExecModeFinalize)
+		WithExecMode(sdk.ExecModeFinalize).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+			Hash:    req.Hash,
+		}).WithCometInfo(cometInfo{
+		Misbehavior:     req.Misbehavior,
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      req.DecidedLastCommit,
+	})
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
@@ -959,7 +1002,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{})
+		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithHeaderInfo(coreheader.Info{})
 		return ctx
 	}
 

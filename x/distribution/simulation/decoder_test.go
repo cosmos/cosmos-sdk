@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -31,18 +32,12 @@ func TestDecodeDistributionStore(t *testing.T) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	feePool := types.InitialFeePool()
 	feePool.CommunityPool = decCoins
-	outstanding := types.ValidatorOutstandingRewards{Rewards: decCoins}
-	commission := types.ValidatorAccumulatedCommission{Commission: decCoins}
-	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 100)
 	slashEvent := types.NewValidatorSlashEvent(10, math.LegacyOneDec())
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.FeePoolKey, Value: cdc.MustMarshal(&feePool)},
 			{Key: types.ProposerKey, Value: consAddr1.Bytes()},
-			{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshal(&outstanding)},
-			{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshal(&historicalRewards)},
-			{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshal(&commission)},
 			{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshal(&slashEvent)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
@@ -54,9 +49,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 	}{
 		{"FeePool", fmt.Sprintf("%v\n%v", feePool, feePool)},
 		{"Proposer", fmt.Sprintf("%v\n%v", consAddr1, consAddr1)},
-		{"ValidatorOutstandingRewards", fmt.Sprintf("%v\n%v", outstanding, outstanding)},
-		{"ValidatorHistoricalRewards", fmt.Sprintf("%v\n%v", historicalRewards, historicalRewards)},
-		{"ValidatorAccumulatedCommission", fmt.Sprintf("%v\n%v", commission, commission)},
 		{"ValidatorSlashEvent", fmt.Sprintf("%v\n%v", slashEvent, slashEvent)},
 		{"other", ""},
 	}

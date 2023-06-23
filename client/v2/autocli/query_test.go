@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
@@ -22,6 +22,20 @@ var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Comman
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
+	return cmd, err
+}
+
+var buildModuleQueryCommandOptional = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDescOptional)
+	return cmd, err
+}
+
+var buildModuleVargasOptional = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDescInvalidOptAndVargas)
 	return cmd, err
 }
 
@@ -117,6 +131,60 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
+var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
+	Service: testpb.Query_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod:  "Echo",
+			Use:        "echo [pos1] [pos2] [pos3...]",
+			Version:    "1.0",
+			Alias:      []string{"e"},
+			SuggestFor: []string{"eco"},
+			Example:    "echo 1 abc {}",
+			Short:      "echo echos the value provided by the user",
+			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{
+					ProtoField: "positional1",
+				},
+				{
+					ProtoField: "positional2",
+					Optional:   true,
+				},
+			},
+		},
+	},
+}
+
+var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
+	Service: testpb.Query_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod:  "Echo",
+			Use:        "echo [pos1] [pos2] [pos3...]",
+			Version:    "1.0",
+			Alias:      []string{"e"},
+			SuggestFor: []string{"eco"},
+			Example:    "echo 1 abc {}",
+			Short:      "echo echos the value provided by the user",
+			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{
+					ProtoField: "positional1",
+				},
+				{
+					ProtoField: "positional2",
+					Optional:   true,
+				},
+				{
+					ProtoField: "positional3_varargs",
+					Varargs:    true,
+				},
+			},
+		},
+	},
+}
+
 func TestCoin(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
@@ -128,6 +196,40 @@ func TestCoin(t *testing.T) {
 		"--duration", "4h3s",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestOptional(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+		"abc",
+	)
+	request := conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, request.Positional2, "abc")
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+	)
+	request = conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, request.Positional2, "")
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+		"abc",
+		"extra-arg",
+	)
+	assert.Equal(t, conn.errorOut.String(), "Error: accepts between 1 and 2 arg(s), received 3\n")
+
+	testExecCommonWithErr(t, "optional positional argument positional2 must be the last argument", buildModuleVargasOptional,
+		"echo",
+		"1",
+		"abc",
+		"extra-arg",
+	)
 }
 
 func TestMap(t *testing.T) {

@@ -82,14 +82,14 @@ func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(blockHeight, plan)
 			if err != nil {
-				return fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error())
+				return fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
 			}
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
 
 			// Returning an error will end up in a panic
-			return fmt.Errorf(upgradeMsg)
+			return errors.New(upgradeMsg)
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
@@ -105,7 +105,7 @@ func BeginBlocker(ctx context.Context, k *keeper.Keeper) error {
 		logger.Error(downgradeMsg)
 
 		// Returning an error will end up in a panic
-		return fmt.Errorf(downgradeMsg)
+		return errors.New(downgradeMsg)
 	}
 
 	return nil

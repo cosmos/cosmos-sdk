@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestMsgSendGetSignBytes(t *testing.T) {
@@ -163,7 +162,7 @@ func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 }
 
 func TestMsgSetSendEnabledGetSigners(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
+	govModuleAddr := authtypes.NewModuleAddress(GovModuleName)
 	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil)
 	expected := []sdk.AccAddress{govModuleAddr}
 	actual := msg.GetSigners()

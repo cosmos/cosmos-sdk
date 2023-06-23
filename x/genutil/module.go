@@ -11,7 +11,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
-
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"

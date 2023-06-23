@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/comet"
 	"github.com/cockroachdb/errors"
+
+	"cosmossdk.io/core/comet"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,12 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	consAddr := sdk.ConsAddress(addr)
 
 	// don't update missed blocks when validator's jailed
-	if k.sk.IsValidatorJailed(sdkCtx, consAddr) {
+	isJailed, err := k.sk.IsValidatorJailed(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+
+	if isJailed {
 		return nil
 	}
 
@@ -105,7 +111,10 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		validator := k.sk.ValidatorByConsAddr(sdkCtx, consAddr)
+		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		if err != nil {
+			return err
+		}
 		if validator != nil && !validator.IsJailed() {
 			// Downtime confirmed: slash and jail the validator
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
@@ -120,7 +129,11 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 				return err
 			}
 
-			coinsBurned := k.sk.SlashWithInfractionReason(sdkCtx, consAddr, distributionHeight, power, slashFractionDowntime, stakingtypes.Infraction_INFRACTION_DOWNTIME)
+			coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, slashFractionDowntime, stakingtypes.Infraction_INFRACTION_DOWNTIME)
+			if err != nil {
+				return err
+			}
+
 			sdkCtx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,

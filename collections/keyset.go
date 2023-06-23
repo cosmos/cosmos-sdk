@@ -57,6 +57,12 @@ func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key
 	return (Map[K, NoValue])(k).Walk(ctx, ranger, func(key K, value NoValue) (bool, error) { return walkFunc(key) })
 }
 
+// Clear clears the KeySet using the provided Ranger. Refer to Map.Clear for
+// behavioral documentation.
+func (k KeySet[K]) Clear(ctx context.Context, ranger Ranger[K]) error {
+	return (Map[K, NoValue])(k).Clear(ctx, ranger)
+}
+
 func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }
 func (k KeySet[K]) ValueCodec() codec.ValueCodec[NoValue] { return (Map[K, NoValue])(k).ValueCodec() }
 

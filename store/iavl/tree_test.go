@@ -3,10 +3,11 @@ package iavl
 import (
 	"testing"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 )
 
 func TestImmutableTreePanics(t *testing.T) {

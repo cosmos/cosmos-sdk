@@ -104,19 +104,19 @@ var defaultConfig = &Config{
 
 type ModuleOption func(config *Config)
 
-func WithBeginBlockersOrderOption(beginBlockOrder []string) ModuleOption {
+func WithCustomBeginBlockersOrder(beginBlockOrder []string) ModuleOption {
 	return func(config *Config) {
 		config.BeginBlockersOrder = beginBlockOrder
 	}
 }
 
-func WithEndBlockersOrderOption(endBlockersOrder []string) ModuleOption {
+func WithCustomEndBlockersOrder(endBlockersOrder []string) ModuleOption {
 	return func(config *Config) {
 		config.EndBlockersOrder = endBlockersOrder
 	}
 }
 
-func WithInitGenesisOrderOption(initGenesisOrder []string) ModuleOption {
+func WithCustomInitGenesisOrder(initGenesisOrder []string) ModuleOption {
 	return func(config *Config) {
 		config.InitGenesisOrder = initGenesisOrder
 	}

@@ -7,13 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -119,8 +118,10 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 				require.NoError(t, err)
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
-				require.Equal(t, expectedSigners, tx.GetSigners())
+				expectedSigners := [][]byte{addr0, addr1, addr2}
+				signers, err := tx.GetSigners()
+				require.NoError(t, err)
+				require.Equal(t, expectedSigners, signers)
 
 				return TestCaseArgs{
 					accNums: accNums,
@@ -1416,7 +1417,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	for _, tc := range testCases {
 
 		// set testcase parameters
-		err := suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		err := suite.accountKeeper.Params.Set(suite.ctx, tc.params)
 		require.NoError(t, err)
 
 		_, err = suite.anteHandler(suite.ctx, tx, false)
@@ -1424,7 +1425,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		require.NotNil(t, err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		err = suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+		err = suite.accountKeeper.Params.Set(suite.ctx, authtypes.DefaultParams())
 		require.NoError(t, err)
 	}
 

@@ -8,9 +8,6 @@ import (
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
-
-	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -25,6 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
+	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )

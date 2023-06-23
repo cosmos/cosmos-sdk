@@ -6,9 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -21,7 +22,7 @@ const (
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
 // provided clientCtx should have, at a minimum, a verifier, CometBFT RPC client,
 // and marshaler set.
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
@@ -31,8 +32,8 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetBalancesCmd(),
-		GetSpendableBalancesCmd(),
+		GetBalancesCmd(ac),
+		GetSpendableBalancesCmd(ac),
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
 		GetCmdQuerySendEnabled(),
@@ -41,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-func GetBalancesCmd() *cobra.Command {
+func GetBalancesCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balances by address",
@@ -70,7 +71,7 @@ Example:
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
+			addr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -117,7 +118,7 @@ Example:
 	return cmd
 }
 
-func GetSpendableBalancesCmd() *cobra.Command {
+func GetSpendableBalancesCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "spendable-balances [address]",
 		Short:   "Query for account spendable balances by address",
@@ -136,7 +137,7 @@ func GetSpendableBalancesCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
+			addr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}

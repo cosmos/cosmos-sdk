@@ -11,28 +11,24 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/version"
-
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmrpc "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	tmrpc "github.com/cometbft/cometbft/rpc/client"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // interface assertion
@@ -71,14 +67,12 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	var supportedOperations []string
 	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {
-		resolvedMsg, err := cfg.InterfaceRegistry.Resolve(ii)
+		_, err := cfg.InterfaceRegistry.Resolve(ii)
 		if err != nil {
 			continue
 		}
 
-		if _, ok := resolvedMsg.(sdk.Msg); ok {
-			supportedOperations = append(supportedOperations, ii)
-		}
+		supportedOperations = append(supportedOperations, ii)
 	}
 
 	supportedOperations = append(
@@ -213,7 +207,7 @@ func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*r
 func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockResponse, error) {
 	bHash, err := hex.DecodeString(hash)
 	if err != nil {
-		return crgtypes.BlockResponse{}, fmt.Errorf("invalid block hash: %s", err)
+		return crgtypes.BlockResponse{}, fmt.Errorf("invalid block hash: %w", err)
 	}
 
 	block, err := c.tmRPC.BlockByHash(ctx, bHash)
@@ -514,19 +508,11 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 		panic("block results transactions do now match block transactions")
 	}
 	// process begin and end block txs
-	beginBlockTx := &rosettatypes.Transaction{
+	finalizeBlockTx := &rosettatypes.Transaction{
 		TransactionIdentifier: &rosettatypes.TransactionIdentifier{Hash: c.converter.ToRosetta().BeginBlockTxHash(blockInfo.BlockID.Hash)},
 		Operations: AddOperationIndexes(
 			nil,
-			c.converter.ToRosetta().BalanceOps(StatusTxSuccess, blockResults.BeginBlockEvents),
-		),
-	}
-
-	endBlockTx := &rosettatypes.Transaction{
-		TransactionIdentifier: &rosettatypes.TransactionIdentifier{Hash: c.converter.ToRosetta().EndBlockTxHash(blockInfo.BlockID.Hash)},
-		Operations: AddOperationIndexes(
-			nil,
-			c.converter.ToRosetta().BalanceOps(StatusTxSuccess, blockResults.EndBlockEvents),
+			c.converter.ToRosetta().BalanceOps(StatusTxSuccess, blockResults.FinalizeBlockEvents),
 		),
 	}
 
@@ -541,9 +527,8 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 	}
 
 	finalTxs := make([]*rosettatypes.Transaction, 0, 2+len(deliverTx))
-	finalTxs = append(finalTxs, beginBlockTx)
 	finalTxs = append(finalTxs, deliverTx...)
-	finalTxs = append(finalTxs, endBlockTx)
+	finalTxs = append(finalTxs, finalizeBlockTx)
 
 	return crgtypes.BlockTransactionsResponse{
 		BlockResponse: c.converter.ToRosetta().BlockResponse(blockInfo),

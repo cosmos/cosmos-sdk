@@ -6,15 +6,13 @@ import (
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
-
-var cdc = codec.NewLegacyAmino()
 
 func (gi GasInfo) String() string {
 	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &gi)
@@ -49,6 +47,7 @@ func NewABCIMessageLog(i uint32, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
+		cdc := codec.NewLegacyAmino()
 		raw, err := cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
@@ -182,15 +181,15 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
-		var tx Tx
+		var tx HasMsgs
 		return unpacker.UnpackAny(r.Tx, &tx)
 	}
 	return nil
 }
 
 // GetTx unpacks the Tx from within a TxResponse and returns it
-func (r TxResponse) GetTx() Tx {
-	if tx, ok := r.Tx.GetCachedValue().(Tx); ok {
+func (r TxResponse) GetTx() HasMsgs {
+	if tx, ok := r.Tx.GetCachedValue().(HasMsgs); ok {
 		return tx
 	}
 	return nil

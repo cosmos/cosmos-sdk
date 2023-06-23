@@ -8,16 +8,15 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type PluginTestSuite struct {
@@ -27,13 +26,9 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	beginBlockReq abci.RequestBeginBlock
-	beginBlockRes abci.ResponseBeginBlock
-	endBlockReq   abci.RequestEndBlock
-	endBlockRes   abci.ResponseEndBlock
-	deliverTxReq  abci.RequestDeliverTx
-	deliverTxRes  abci.ResponseDeliverTx
-	commitRes     abci.ResponseCommit
+	finalizeBlockReq abci.RequestFinalizeBlock
+	finalizeBlockRes abci.ResponseFinalizeBlock
+	commitRes        abci.ResponseCommit
 
 	changeSet []*storetypes.StoreKVPair
 }
@@ -71,33 +66,28 @@ func (s *PluginTestSuite) SetupTest() {
 	s.loggerCtx = NewMockContext(header, logger, streamingService)
 
 	// test abci message types
-	s.beginBlockReq = abci.RequestBeginBlock{
-		Header:              s.loggerCtx.BlockHeader(),
-		ByzantineValidators: []abci.Misbehavior{},
-		Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
-		LastCommitInfo:      abci.CommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
+
+	s.finalizeBlockReq = abci.RequestFinalizeBlock{
+		Height:            s.loggerCtx.BlockHeight(),
+		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
+		Misbehavior:       []abci.Misbehavior{},
+		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+		DecidedLastCommit: abci.CommitInfo{},
 	}
-	s.beginBlockRes = abci.ResponseBeginBlock{
-		Events: []abci.Event{{Type: "testEventType1"}},
-	}
-	s.endBlockReq = abci.RequestEndBlock{Height: s.loggerCtx.BlockHeight()}
-	s.endBlockRes = abci.ResponseEndBlock{
+	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
-	}
-	s.deliverTxReq = abci.RequestDeliverTx{
-		Tx: []byte{9, 8, 7, 6, 5, 4, 3, 2, 1},
-	}
-	s.deliverTxRes = abci.ResponseDeliverTx{
-		Events:    []abci.Event{},
-		Code:      1,
-		Codespace: "mockCodeSpace",
-		Data:      []byte{5, 6, 7, 8},
-		GasUsed:   2,
-		GasWanted: 3,
-		Info:      "mockInfo",
-		Log:       "mockLog",
+		TxResults: []*abci.ExecTxResult{{
+			Events:    []abci.Event{},
+			Code:      1,
+			Codespace: "mockCodeSpace",
+			Data:      []byte{5, 6, 7, 8},
+			GasUsed:   2,
+			GasWanted: 3,
+			Info:      "mockInfo",
+			Log:       "mockLog",
+		}},
 	}
 	s.commitRes = abci.ResponseCommit{}
 
@@ -121,16 +111,9 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		abciListeners := s.loggerCtx.StreamingManager().ABCIListeners
 		for _, abciListener := range abciListeners {
 			for i := range [50]int{} {
-				err := abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
-				assert.NoError(t, err, "ListenBeginBlock")
 
-				err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
+				err := abciListener.ListenFinalizeBlock(s.loggerCtx, s.finalizeBlockReq, s.finalizeBlockRes)
 				assert.NoError(t, err, "ListenEndBlock")
-
-				for range [50]int{} {
-					err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
-					assert.NoError(t, err, "ListenDeliverTx")
-				}
 
 				err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
 				assert.NoError(t, err, "ListenCommit")

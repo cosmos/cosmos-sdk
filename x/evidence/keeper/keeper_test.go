@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetestutil "cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -125,7 +126,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper = accountKeeper
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, evidenceKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
 
@@ -167,7 +168,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.NoError(err)
 	suite.Equal(e, res)
 }
@@ -186,7 +187,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.NoError(err)
 	suite.Equal(e, res)
 }
@@ -204,8 +205,8 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
 	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
-	res, err := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.ErrorIs(err, types.ErrNoEvidenceExists)
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
+	suite.ErrorIs(err, collections.ErrNotFound)
 	suite.Nil(res)
 }
 
@@ -214,9 +215,12 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 
-	evidence, err := suite.evidenceKeeper.GetAllEvidence(ctx)
-	suite.Len(evidence, numEvidence)
-	suite.NoError(err)
+	var evidences []exported.Evidence
+	suite.Require().NoError(suite.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+		evidences = append(evidences, value)
+		return false, nil
+	}))
+	suite.Len(evidences, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {

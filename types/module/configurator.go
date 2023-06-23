@@ -3,14 +3,13 @@ package module
 import (
 	"fmt"
 
-	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/grpc"
-	"github.com/cosmos/gogoproto/proto"
 	googlegrpc "google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
+
+	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,17 +55,12 @@ type configurator struct {
 	// migrations is a map of moduleName -> fromVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
 
-	registryCache *protoregistry.Files
-	err           error
+	err error
 }
 
 // RegisterService implements the grpc.Server interface.
 func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
-	if c.registryCache == nil {
-		c.registryCache, c.err = proto.MergedRegistry()
-	}
-
-	desc, err := c.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	desc, err := c.cdc.InterfaceRegistry().FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
 	if err != nil {
 		c.err = err
 		return

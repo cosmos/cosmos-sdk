@@ -2,13 +2,14 @@ package flag
 
 import (
 	"context"
+	"strconv"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/util"
 )
 
@@ -60,8 +61,13 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	// use the built-in pflag StringP, Int32P, etc. functions
 	var val HasValue
+
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
+	} else if field.IsMap() {
+		keyKind := field.MapKey().Kind()
+		valKind := field.MapValue().Kind()
+		val = bindSimpleMapFlag(flagSet, keyKind, valKind, name, shorthand, usage)
 	} else {
 		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
 	}
@@ -81,7 +87,65 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 		if typ != nil {
 			return compositeListType{simpleType: typ}
 		}
+		return nil
+	}
+	if field.IsMap() {
+		keyKind := field.MapKey().Kind()
+		valType := b.resolveFlagType(field.MapValue())
+		if valType != nil {
+			switch keyKind {
+			case protoreflect.StringKind:
+				ct := new(compositeMapType[string])
+				ct.keyValueResolver = func(s string) (string, error) { return s, nil }
+				ct.valueType = valType
+				ct.keyType = "string"
+				return ct
+			case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+				ct := new(compositeMapType[int32])
+				ct.keyValueResolver = func(s string) (int32, error) {
+					i, err := strconv.ParseInt(s, 10, 32)
+					return int32(i), err
+				}
+				ct.valueType = valType
+				ct.keyType = "int32"
+				return ct
+			case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+				ct := new(compositeMapType[int64])
+				ct.keyValueResolver = func(s string) (int64, error) {
+					i, err := strconv.ParseInt(s, 10, 64)
+					return i, err
+				}
+				ct.valueType = valType
+				ct.keyType = "int64"
+				return ct
+			case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+				ct := new(compositeMapType[uint32])
+				ct.keyValueResolver = func(s string) (uint32, error) {
+					i, err := strconv.ParseUint(s, 10, 32)
+					return uint32(i), err
+				}
+				ct.valueType = valType
+				ct.keyType = "uint32"
+				return ct
+			case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+				ct := new(compositeMapType[uint64])
+				ct.keyValueResolver = func(s string) (uint64, error) {
+					i, err := strconv.ParseUint(s, 10, 64)
+					return i, err
+				}
+				ct.valueType = valType
+				ct.keyType = "uint64"
+				return ct
+			case protoreflect.BoolKind:
+				ct := new(compositeMapType[bool])
+				ct.keyValueResolver = strconv.ParseBool
+				ct.valueType = valType
+				ct.keyType = "bool"
+				return ct
+			}
+			return nil
 
+		}
 		return nil
 	}
 
@@ -107,7 +171,6 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 		if flagType, ok := b.messageFlagTypes[field.Message().FullName()]; ok {
 			return flagType
 		}
-
 		return jsonMessageFlagType{
 			messageDesc: field.Message(),
 		}

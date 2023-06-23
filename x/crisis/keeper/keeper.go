@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/log"
-
 	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,6 +31,9 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 
 	addressCodec address.Codec
+
+	Schema      collections.Schema
+	ConstantFee collections.Item[sdk.Coin]
 }
 
 // NewKeeper creates a new Keeper object
@@ -38,7 +41,8 @@ func NewKeeper(
 	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
-	return &Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := &Keeper{
 		storeService:     storeService,
 		cdc:              cdc,
 		routes:           make([]types.InvarRoute, 0),
@@ -47,7 +51,15 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		addressCodec:     ac,
+
+		ConstantFee: collections.NewItem(sb, types.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/crisis module's authority.

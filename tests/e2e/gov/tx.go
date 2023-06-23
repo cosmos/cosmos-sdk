@@ -4,13 +4,14 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil"
-
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -352,7 +353,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 			var balRes banktypes.QueryAllBalancesResponse
 			var newBalance banktypes.QueryAllBalancesResponse
 			if !tc.expectErr && tc.expectedCode == 0 {
-				resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address)
+				resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address, addresscodec.NewBech32Codec("cosmos"))
 				s.Require().NoError(err)
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 				s.Require().NoError(err)
@@ -368,7 +369,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
 
 				if !tc.expectErr && tc.expectedCode == 0 {
-					resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address)
+					resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address, addresscodec.NewBech32Codec("cosmos"))
 					s.Require().NoError(err)
 					err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &newBalance)
 					s.Require().NoError(err)

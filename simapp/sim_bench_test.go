@@ -5,10 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/viper"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	flag "github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -144,7 +143,7 @@ func BenchmarkInvariants(b *testing.B) {
 		simtestutil.PrintStats(db)
 	}
 
-	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight() + 1})
+	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight() + 1})
 
 	// 3. Benchmark each invariant separately
 	//

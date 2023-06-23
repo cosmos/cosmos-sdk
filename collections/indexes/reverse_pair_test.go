@@ -3,8 +3,9 @@ package indexes
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 )
 
 type (
@@ -59,4 +60,10 @@ func TestReversePair(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "address1", pks[0].K1())
 	require.Equal(t, "address2", pks[1].K1())
+
+	// assert if we remove address1 atom balance, we can no longer find it in the index
+	err = indexedMap.Remove(ctx, collections.Join("address1", "atom"))
+	require.NoError(t, err)
+	_, err = indexedMap.Indexes.Denom.MatchExact(ctx, "atom")
+	require.ErrorIs(t, collections.ErrInvalidIterator, err)
 }

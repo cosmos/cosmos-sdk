@@ -3,6 +3,9 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,9 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
 )
 
 const (
@@ -30,7 +30,7 @@ var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
@@ -38,7 +38,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgSend int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
 			weightMsgSend = WeightSend
 		},
@@ -54,7 +54,7 @@ func WeightedOperations(
 
 // SimulateMsgSend generates a MsgSend with random values.
 func SimulateMsgSend(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,

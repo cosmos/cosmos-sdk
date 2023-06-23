@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
-
-	"github.com/cosmos/cosmos-proto/anyutil"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestDecode(t *testing.T) {
@@ -61,7 +60,7 @@ func TestDecode(t *testing.T) {
 		{
 			name:  "empty signer option",
 			msg:   &testpb.A{},
-			error: "no cosmos.msg.v1.signer option found for message A: tx parse error",
+			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
 		},
 	}
 

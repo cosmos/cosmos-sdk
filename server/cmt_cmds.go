@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/log"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/light"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -17,6 +17,8 @@ import (
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -284,13 +286,13 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			blockStoreDB, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
+			blockStoreDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "blockstore", Config: cfg})
 			if err != nil {
 				return err
 			}
 			blockStore := store.NewBlockStore(blockStoreDB)
 
-			stateDB, err := node.DefaultDBProvider(&node.DBContext{ID: "state", Config: cfg})
+			stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: cfg})
 			if err != nil {
 				return err
 			}
@@ -343,7 +345,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided will use the latest block height in app state")
+	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
 }

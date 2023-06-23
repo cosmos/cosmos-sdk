@@ -1,9 +1,8 @@
 package ante
 
 import (
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -31,8 +30,10 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 		return next(ctx, tx, simulate)
 	}
 
-	if err := tx.ValidateBasic(); err != nil {
-		return ctx, err
+	if validateBasic, ok := tx.(sdk.HasValidateBasic); ok {
+		if err := validateBasic.ValidateBasic(); err != nil {
+			return ctx, err
+		}
 	}
 
 	return next(ctx, tx, simulate)
@@ -108,7 +109,12 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 		n := len(sigs)
 
-		for i, signer := range sigTx.GetSigners() {
+		signers, err := sigTx.GetSigners()
+		if err != nil {
+			return sdk.Context{}, err
+		}
+
+		for i, signer := range signers {
 			// if signature is already filled in, no need to simulate gas cost
 			if i < n && !isIncompleteSignature(sigs[i].Data) {
 				continue

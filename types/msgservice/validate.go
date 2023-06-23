@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/x/tx/signing"
 )
 
 // ValidateAnnotations validates that the proto annotations are correct.
@@ -18,7 +19,7 @@ import (
 // More validations can be added here in the future.
 //
 // If `protoFiles` is nil, then protoregistry.GlobalFile will be used.
-func ValidateProtoAnnotations(protoFiles *protoregistry.Files) error {
+func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 	if protoFiles == nil {
 		protoFiles = protoregistry.GlobalFiles
 	}
@@ -30,7 +31,7 @@ func ValidateProtoAnnotations(protoFiles *protoregistry.Files) error {
 			if sd.Name() == "Msg" {
 				// We use the heuristic that services name Msg are exactly the
 				// ones that need the proto annotations check.
-				err := validateMsgServiceAnnotations(protoFiles, sd)
+				err := validateMsgServiceAnnotations(sd)
 				if err != nil {
 					serviceErrs = append(serviceErrs, err)
 				}
@@ -45,7 +46,7 @@ func ValidateProtoAnnotations(protoFiles *protoregistry.Files) error {
 
 // validateMsgServiceAnnotations validates that the service has the
 // `(cosmos.msg.v1.service) = true` proto annotation.
-func validateMsgServiceAnnotations(protoFiles *protoregistry.Files, sd protoreflect.ServiceDescriptor) error {
+func validateMsgServiceAnnotations(sd protoreflect.ServiceDescriptor) error {
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
 	isService, ok := ext.(bool)
 	if !ok {

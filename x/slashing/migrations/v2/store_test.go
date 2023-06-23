@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/require"
 
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +20,8 @@ import (
 func TestStoreMigration(t *testing.T) {
 	slashingKey := storetypes.NewKVStoreKey("slashing")
 	ctx := testutil.DefaultContext(slashingKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(slashingKey)
+	storeService := runtime.NewKVStoreService(slashingKey)
+	store := storeService.OpenKVStore(ctx)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	consAddr := sdk.ConsAddress(addr1)
@@ -49,11 +52,12 @@ func TestStoreMigration(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store.Set(tc.oldKey, value)
+		err := store.Set(tc.oldKey, value)
+		require.NoError(t, err)
 	}
 
 	// Run migrations.
-	err := v2.MigrateStore(ctx, slashingKey)
+	err := v2.MigrateStore(ctx, storeService)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.
@@ -61,9 +65,13 @@ func TestStoreMigration(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, store.Get(tc.oldKey))
+				v, err := store.Get(tc.oldKey)
+				require.NoError(t, err)
+				require.Nil(t, v)
 			}
-			require.Equal(t, value, store.Get(tc.newKey))
+			v, err := store.Get(tc.newKey)
+			require.NoError(t, err)
+			require.Equal(t, value, v)
 		})
 	}
 }

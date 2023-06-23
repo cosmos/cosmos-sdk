@@ -4,16 +4,29 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/store/gaskv"
-	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/gaskv"
+	storetypes "cosmossdk.io/store/types"
+)
+
+// ExecMode defines the execution mode which can be set on a Context.
+type ExecMode uint8
+
+// All possible execution modes.
+const (
+	ExecModeCheck ExecMode = iota
+	ExecModeReCheck
+	ExecModeSimulate
+	ExecModePrepareProposal
+	ExecModeProcessProposal
+	ExecModeVoteExtension
+	ExecModeFinalize
 )
 
 /*
@@ -41,6 +54,7 @@ type Context struct {
 	checkTx              bool
 	outOfConsensus       bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
@@ -69,6 +83,7 @@ func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.block
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) InConsensus() bool                             { return c.outOfConsensus }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
@@ -232,6 +247,7 @@ func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Contex
 // WithInConsensus enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
+	c.execMode = ExecModeCheck
 	return c
 }
 
@@ -248,6 +264,13 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	c.execMode = ExecModeReCheck
+	return c
+}
+
+// WithExecMode returns a Context with an updated ExecMode.
+func (c Context) WithExecMode(m ExecMode) Context {
+	c.execMode = m
 	return c
 }
 
@@ -289,6 +312,8 @@ func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 
 // WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
+	// Settime to UTC
+	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
 	return c
 }

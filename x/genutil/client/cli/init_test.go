@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -215,7 +216,8 @@ func TestStartStandAlone(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, closeFn())
 
-	svr, err := abci_server.NewServer(svrAddr, "socket", app)
+	cmtApp := server.NewCometABCIWrapper(app)
+	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
 	require.NoError(t, err, "error creating listener")
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})

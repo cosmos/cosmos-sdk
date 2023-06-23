@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,11 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/registry"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func init() {
@@ -43,6 +43,7 @@ type ModuleInputs struct {
 	ProtoFileResolver   txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
+	MetadataBankKeeper     BankKeeper                         `optional:"true"`
 	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
 	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
@@ -65,7 +66,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
 	sdkConfig := sdk.GetConfig()
+
 	txConfigOptions := tx.ConfigOptions{
+		EnabledSignModes: tx.DefaultSignModes,
 		SigningOptions: &txsigning.Options{
 			FileResolver: in.ProtoFileResolver,
 			// From static config? But this is already in auth config.
@@ -77,7 +80,17 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		},
 		CustomSignModes: customSignModeHandlers,
 	}
-	txConfig := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+
+	// enable SIGN_MODE_TEXTUAL only if bank keeper is available
+	if in.MetadataBankKeeper != nil {
+		txConfigOptions.EnabledSignModes = append(txConfigOptions.EnabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
+	}
+
+	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	if err != nil {
+		panic(err)
+	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers
@@ -150,32 +163,12 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 // `NewTextualWithGRPCConn`.
 func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn {
 	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
+		res, err := bk.DenomMetadataV2(ctx, &bankv1beta1.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {
 			return nil, metadataExists(err)
 		}
 
-		m := &bankv1beta1.Metadata{
-			Base:    res.Metadata.Base,
-			Display: res.Metadata.Display,
-			// fields below are not strictly needed by Textual
-			// but added here for completeness.
-			Description: res.Metadata.Description,
-			Name:        res.Metadata.Name,
-			Symbol:      res.Metadata.Symbol,
-			Uri:         res.Metadata.URI,
-			UriHash:     res.Metadata.URIHash,
-		}
-		m.DenomUnits = make([]*bankv1beta1.DenomUnit, len(res.Metadata.DenomUnits))
-		for i, d := range res.Metadata.DenomUnits {
-			m.DenomUnits[i] = &bankv1beta1.DenomUnit{
-				Denom:    d.Denom,
-				Exponent: d.Exponent,
-				Aliases:  d.Aliases,
-			}
-		}
-
-		return m, nil
+		return res.Metadata, nil
 	}
 }
 

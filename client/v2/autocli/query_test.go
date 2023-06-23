@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
@@ -22,6 +22,20 @@ var buildModuleQueryCommand = func(moduleName string, b *Builder) (*cobra.Comman
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := b.AddQueryServiceCommands(cmd, testCmdDesc)
+	return cmd, err
+}
+
+var buildModuleQueryCommandOptional = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDescOptional)
+	return cmd, err
+}
+
+var buildModuleVargasOptional = func(moduleName string, b *Builder) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	err := b.AddQueryServiceCommands(cmd, testCmdDescInvalidOptAndVargas)
 	return cmd, err
 }
 
@@ -82,6 +96,15 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"bz": {
 					Usage: "some bytes",
 				},
+				"map_string_string": {
+					Usage: "some map of string to string",
+				},
+				"map_string_uint32": {
+					Usage: "some map of string to int32",
+				},
+				"map_string_coin": {
+					Usage: "some map of string to coin",
+				},
 			},
 		},
 	},
@@ -108,6 +131,60 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
+var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
+	Service: testpb.Query_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod:  "Echo",
+			Use:        "echo [pos1] [pos2] [pos3...]",
+			Version:    "1.0",
+			Alias:      []string{"e"},
+			SuggestFor: []string{"eco"},
+			Example:    "echo 1 abc {}",
+			Short:      "echo echos the value provided by the user",
+			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{
+					ProtoField: "positional1",
+				},
+				{
+					ProtoField: "positional2",
+					Optional:   true,
+				},
+			},
+		},
+	},
+}
+
+var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
+	Service: testpb.Query_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod:  "Echo",
+			Use:        "echo [pos1] [pos2] [pos3...]",
+			Version:    "1.0",
+			Alias:      []string{"e"},
+			SuggestFor: []string{"eco"},
+			Example:    "echo 1 abc {}",
+			Short:      "echo echos the value provided by the user",
+			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{
+					ProtoField: "positional1",
+				},
+				{
+					ProtoField: "positional2",
+					Optional:   true,
+				},
+				{
+					ProtoField: "positional3_varargs",
+					Varargs:    true,
+				},
+			},
+		},
+	},
+}
+
 func TestCoin(t *testing.T) {
 	conn := testExecCommon(t, buildModuleQueryCommand,
 		"echo",
@@ -117,6 +194,106 @@ func TestCoin(t *testing.T) {
 		"4321bar",
 		"--a-coin", "100000foo",
 		"--duration", "4h3s",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestOptional(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+		"abc",
+	)
+	request := conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, request.Positional2, "abc")
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+	)
+	request = conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, request.Positional2, "")
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommandOptional,
+		"echo",
+		"1",
+		"abc",
+		"extra-arg",
+	)
+	assert.Equal(t, conn.errorOut.String(), "Error: accepts between 1 and 2 arg(s), received 3\n")
+
+	testExecCommonWithErr(t, "optional positional argument positional2 must be the last argument", buildModuleVargasOptional,
+		"echo",
+		"1",
+		"abc",
+		"extra-arg",
+	)
+}
+
+func TestMap(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-string", "val=foo",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+		"--map-string-coin", "multi=100000bar,flag=100000foo",
+	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-coin", "baz,100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"baz,100000foo\" for \"--map-string-coin\" flag: invalid format, expected key=value\n", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=not-unint32",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"bar=not-unint32\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"not-unint32\": invalid syntax\n", conn.errorOut.String())
+
+	conn = testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123.9",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
+	)
+	assert.Equal(t, "Error: invalid argument \"bar=123.9\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"123.9\": invalid syntax\n", conn.errorOut.String())
+}
+
+func TestMapError(t *testing.T) {
+	conn := testExecCommon(t, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
+		"1234foo",
+		"4321bar",
+		"--map-string-uint32", "bar=123",
+		"--map-string-coin", "baz=100000foo",
+		"--map-string-coin", "sec=100000bar",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
@@ -163,9 +340,6 @@ func TestEverything(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
-	errOut := conn.errorOut.String()
-	res := conn.out.String()
-	fmt.Println(errOut, res)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 

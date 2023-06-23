@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -15,8 +15,7 @@ import (
 // AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
 	// Check if proposal is in voting period.
-	store := keeper.storeService.OpenKVStore(ctx)
-	inVotingPeriod, err := store.Has(types.VotingPeriodProposalKey(proposalID))
+	inVotingPeriod, err := keeper.VotingPeriodProposals.Has(ctx, proposalID)
 	if err != nil {
 		return err
 	}

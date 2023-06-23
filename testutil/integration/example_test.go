@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/google/go-cmp/cmp"
+
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	"github.com/google/go-cmp/cmp"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
@@ -68,7 +67,7 @@ func Example() {
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
 	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
-	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintKeeper)
+	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintkeeper.NewQueryServerImpl(mintKeeper))
 
 	params := minttypes.DefaultParams()
 	params.BlocksPerYear = 10000
@@ -98,7 +97,7 @@ func Example() {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// we should also check the state of the application
-	got, err := mintKeeper.GetParams(sdkCtx)
+	got, err := mintKeeper.Params.Get(sdkCtx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,7 +156,7 @@ func Example_oneModule() {
 		Params:    params,
 	},
 		// this allows to the begin and end blocker of the module before and after the message
-		integration.WithAutomaticBeginEndBlock(),
+		integration.WithAutomaticFinalizeBlock(),
 		// this allows to commit the state after the message
 		integration.WithAutomaticCommit(),
 	)

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/core/appmodule"
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
-
 	"cosmossdk.io/orm/types/ormerrors"
 )
 

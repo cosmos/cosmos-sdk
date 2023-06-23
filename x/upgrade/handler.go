@@ -1,10 +1,9 @@
 package upgrade
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
-
-	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,6 +37,5 @@ func handleSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, p *types.S
 
 //nolint:staticcheck // we are intentionally using a deprecated proposal here.
 func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error {
-	k.ClearUpgradePlan(ctx)
-	return nil
+	return k.ClearUpgradePlan(ctx)
 }

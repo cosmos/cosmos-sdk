@@ -28,7 +28,7 @@ There are several other options available, such as plugins over RPC or utilizing
 library plugin package. However, in the end, all these plugin alternatives share similarities.
 
 Another alternative is to reimplement the keystore [db](https://github.com/cosmos/cosmos-sdk/blob/v0.47.3/crypto/keyring/keyring.go#L207)
-interface. This db is where the `99desing` dependency lays. 
+interface. This db is where the `99designs` dependency lays. 
 
 ## Decision
 

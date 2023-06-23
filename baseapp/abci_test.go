@@ -346,6 +346,14 @@ func TestABCI_ExtendVote(t *testing.T) {
 	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+
+	// Reject because the verification failed (no error)
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return nil, errors.New("some error")
+	})
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {

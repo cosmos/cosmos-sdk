@@ -3,10 +3,10 @@ package cache
 import (
 	"fmt"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/types"
-
-	lru "github.com/hashicorp/golang-lru"
 )
 
 var (

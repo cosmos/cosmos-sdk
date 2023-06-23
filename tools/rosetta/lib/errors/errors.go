@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
-	grpccodes "google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	cmttypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 // ListErrors lists all the registered errors

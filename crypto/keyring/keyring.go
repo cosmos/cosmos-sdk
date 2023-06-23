@@ -12,12 +12,10 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/cockroachdb/errors"
-
 	"github.com/cosmos/go-bip39"
+	"golang.org/x/crypto/bcrypt"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"

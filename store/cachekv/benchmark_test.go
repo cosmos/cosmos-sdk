@@ -4,11 +4,12 @@ import (
 	fmt "fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 )
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {

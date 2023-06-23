@@ -56,8 +56,7 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 // Proposals implements the Query/Proposals gRPC method
 func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	var filteredProposals []*v1.Proposal
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (bool, error) {
+	res, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (include bool, err error) {
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied/valid)
@@ -90,11 +89,18 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// if all match, append to results
 		if matchVoter && matchDepositor && matchStatus {
-			filteredProposals = append(filteredProposals, &p)
+			return true, nil
 		}
 		// continue to next item, do not include because we're appending results above.
 		return false, nil
 	})
+
+	filteredProposals := make([]*v1.Proposal, len(res))
+
+	for i := 0; i < len(res); i++ {
+		filteredProposals[i] = &res[i].Value
+	}
+
 	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

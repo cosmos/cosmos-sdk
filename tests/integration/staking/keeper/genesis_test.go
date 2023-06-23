@@ -132,12 +132,13 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	}
 
 	params := types.Params{
-		UnbondingTime:          10000,
-		MaxValidators:          1,
-		MaxEntries:             10,
-		BondDenom:              "stake",
-		ValidatorBondFactor:    sdk.NewDecFromInt(sdk.NewInt(-1)),
-		GlobalLiquidStakingCap: sdk.NewDecFromInt(sdk.NewInt(1)),
+		UnbondingTime:             10000,
+		MaxValidators:             1,
+		MaxEntries:                10,
+		BondDenom:                 "stake",
+		ValidatorBondFactor:       types.ValidatorBondDisabled,
+		GlobalLiquidStakingCap:    sdk.NewDecFromInt(sdk.NewInt(1)),
+		ValidatorLiquidStakingCap: sdk.NewDecFromInt(sdk.NewInt(1)),
 	}
 
 	require.Panics(t, func() {

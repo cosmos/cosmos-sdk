@@ -557,7 +557,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+	if cp.Abci != nil && req.Height < cp.Abci.VoteExtensionsEnableHeight {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
@@ -570,6 +570,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
+			Hash:    req.Hash,
 		})
 
 	// add a deferred recover handler in case extendVote panics
@@ -608,7 +609,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+	if cp.Abci != nil && req.Height < cp.Abci.VoteExtensionsEnableHeight {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
 	}
 

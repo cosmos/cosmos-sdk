@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -271,6 +272,53 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, int64(1), app.LastBlockHeight())
+}
+
+func TestABCI_ExtendVote(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		voteExt := []byte("foo")
+		voteExt = append(voteExt, req.Hash...)
+		voteExt = append(voteExt, []byte(strconv.FormatInt(req.Height, 10))...)
+		return &abci.ResponseExtendVote{VoteExtension: voteExt}, nil
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 200,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Votes not enabled yet
+	_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 123, Hash: []byte("thehash")})
+	require.ErrorContains(t, err, "vote extensions are not enabled")
+
+	// First vote on the first enabled height
+	res, err := app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 200, Hash: []byte("thehash")})
+	require.NoError(t, err)
+	require.Len(t, res.VoteExtension, 13)
+
+	res, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1000, Hash: []byte("thehash")})
+	require.NoError(t, err)
+	require.Len(t, res.VoteExtension, 14)
+
+	// Error during vote extension should return an empty vote extension and no error
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return nil, errors.New("some error")
+	})
+	res, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1000, Hash: []byte("thehash")})
+	require.NoError(t, err)
+	require.Len(t, res.VoteExtension, 0)
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {

@@ -24,6 +24,8 @@ const (
 	TypeMsgTokenizeShares              = "tokenize_shares"
 	TypeMsgRedeemTokensForShares       = "redeem_tokens_for_shares"
 	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
+	TypeMsgDisableTokenizeShares       = "disable_tokenize_shares"
+	TypeMsgEnableTokenizeShares        = "enable_tokenize_shares"
 )
 
 var (
@@ -42,12 +44,16 @@ var (
 	_ sdk.Msg = &MsgTokenizeShares{}
 	_ sdk.Msg = &MsgRedeemTokensForShares{}
 	_ sdk.Msg = &MsgTransferTokenizeShareRecord{}
+	_ sdk.Msg = &MsgDisableTokenizeShares{}
+	_ sdk.Msg = &MsgEnableTokenizeShares{}
 
 	_ legacytx.LegacyMsg = &MsgValidatorBond{}
 	_ legacytx.LegacyMsg = &MsgUnbondValidator{}
 	_ legacytx.LegacyMsg = &MsgTokenizeShares{}
 	_ legacytx.LegacyMsg = &MsgRedeemTokensForShares{}
 	_ legacytx.LegacyMsg = &MsgTransferTokenizeShareRecord{}
+	_ legacytx.LegacyMsg = &MsgDisableTokenizeShares{}
+	_ legacytx.LegacyMsg = &MsgEnableTokenizeShares{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -342,6 +348,64 @@ func (msg MsgUndelegate) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) Type() string { return TypeMsgDisableTokenizeShares }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgDisableTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+
+	return nil
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) Type() string { return TypeMsgEnableTokenizeShares }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgEnableTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
 
 	return nil

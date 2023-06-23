@@ -49,7 +49,8 @@ func TestMigrateJSON(t *testing.T) {
 		"max_validators": 100,
 		"min_commission_rate": "0.000000000000000000",
 		"unbonding_time": "1814400s",
-		"validator_bond_factor": "-1.000000000000000000"
+		"validator_bond_factor": "-1.000000000000000000",
+		"validator_liquid_staking_cap": "1.000000000000000000"
 	},
 	"redelegations": [],
 	"tokenize_share_records": [],

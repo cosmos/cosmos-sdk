@@ -575,6 +575,41 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 	}, nil
 }
 
+// Query for total tokenized staked tokens
+// Liquid staked tokens are either tokenized delegations or delegations
+// owned by a module account
+func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiquidStaked) (*types.QueryTotalLiquidStakedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx)
+	return &types.QueryTotalLiquidStakedResponse{
+		Tokens: totalLiquidStaked,
+	}, nil
+}
+
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	address := sdk.MustAccAddressFromBech32(req.Address)
+	status, completionTime := k.GetTokenizeSharesLock(ctx, address)
+
+	timeString := ""
+	if !completionTime.IsZero() {
+		timeString = completionTime.String()
+	}
+
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         status.String(),
+		ExpirationTime: timeString,
+	}, nil
+}
+
 func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {

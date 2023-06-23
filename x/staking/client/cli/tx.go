@@ -51,6 +51,8 @@ func NewTxCmd() *cobra.Command {
 		NewTokenizeSharesCmd(),
 		NewRedeemTokensCmd(),
 		NewTransferTokenizeShareRecordCmd(),
+		NewDisableTokenizeShares(),
+		NewEnableTokenizeShares(),
 		NewValidatorBondCmd(),
 	)
 
@@ -757,6 +759,75 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 				Sender:                clientCtx.GetFromAddress().String(),
 				TokenizeShareRecordId: uint64(recordId),
 				NewOwner:              ownerAddr.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewDisableTokenizeShares defines a command to disable tokenization for an address
+func NewDisableTokenizeShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "disable-tokenize-shares",
+		Short: "Disable tokenization of shares",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Disables the tokenization of shares for an address. The account
+must explicitly re-enable if they wish to tokenize again, at which point they must wait 
+the chain's unbonding period. 
+
+Example:
+$ %s tx staking disable-tokenize-shares --from mykey
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgDisableTokenizeShares{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewEnableTokenizeShares defines a command to re-enable tokenization for an address
+func NewEnableTokenizeShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "enable-tokenize-shares",
+		Short: "Enable tokenization of shares",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Enables the tokenization of shares for an address after 
+it had been disable. This transaction queues the enablement of tokenization, but
+the address must wait 1 unbonding period from the time of this transaction before
+tokenization is permitted.
+
+Example:
+$ %s tx staking enable-tokenize-shares --from mykey
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgEnableTokenizeShares{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

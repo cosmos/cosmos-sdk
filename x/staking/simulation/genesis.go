@@ -46,8 +46,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 		minCommissionRate sdk.Dec
 
 		// TODO: radnomize LSM params
-		validatorBondFactor    sdk.Dec = types.DefaultValidatorBondFactor
-		globalLiquidStakingCap sdk.Dec = types.DefaultGlobalLiquidStakingCap
+		validatorBondFactor       sdk.Dec = types.DefaultValidatorBondFactor
+		globalLiquidStakingCap    sdk.Dec = types.DefaultGlobalLiquidStakingCap
+		validatorLiquidStakingCap sdk.Dec = types.DefaultValidatorLiquidStakingCap
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -68,7 +69,17 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom, minCommissionRate, validatorBondFactor, globalLiquidStakingCap)
+	params := types.NewParams(
+		simState.UnbondTime,
+		maxVals,
+		7,
+		histEntries,
+		sdk.DefaultBondDenom,
+		minCommissionRate,
+		validatorBondFactor,
+		globalLiquidStakingCap,
+		validatorLiquidStakingCap,
+	)
 
 	// validators & delegations
 	var (

@@ -63,20 +63,11 @@ func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
 	return k.GetParams(ctx).GlobalLiquidStakingCap
 }
 
-// Check whether the validator bond factor is enabled
-// A non-negative factor indicates that it is enabled
+// Liquid staking cap for each validator
 //
 // Since: cosmos-sdk 0.47-lsm
-func (k Keeper) ValidatorBondFactorEnabled(ctx sdk.Context) bool {
-	return k.ValidatorBondFactor(ctx).IsPositive()
-}
-
-// Check whether the global liquid staking cap is enabled
-// A cap less than 100% indicates that it is enabled
-//
-// Since: cosmos-sdk 0.47-lsm
-func (k Keeper) GlobalLiquidStakingCapEnabled(ctx sdk.Context) bool {
-	return k.GlobalLiquidStakingCap(ctx).LT(sdk.OneDec())
+func (k Keeper) ValidatorLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
+	return k.GetParams(ctx).ValidatorLiquidStakingCap
 }
 
 // SetParams sets the x/staking module parameters.

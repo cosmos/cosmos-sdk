@@ -139,6 +139,8 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
 				results = append(results, kv)
+				count++
+
 				// if predicate function is defined we check if the result matches the filtering criteria
 			} else {
 				include, err := predicateFunc(kv.Key, kv.Value)
@@ -147,9 +149,9 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 				}
 				if include {
 					results = append(results, kv)
+					count++
 				}
 			}
-			count++
 		// second case, we found all the objects specified within the limit
 		case count == limit:
 			key, err := iterator.Key()
@@ -175,9 +177,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			count++
 		}
 	}
+
 	resp := &PageResponse{
 		NextKey: nextKey,
 	}
+
 	if countTotal {
 		resp.Total = count + offset
 	}

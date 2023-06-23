@@ -32,8 +32,8 @@ func initChain(
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 	blockMaxGas := int64(-1)
-	if config.BlockMaxGas != nil {
-		blockMaxGas = *config.BlockMaxGas
+	if config.BlockMaxGas > 0 {
+		blockMaxGas = config.BlockMaxGas
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)

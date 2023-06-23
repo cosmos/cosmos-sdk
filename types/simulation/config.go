@@ -23,5 +23,5 @@ type Config struct {
 	AllInvariants bool // print all failed invariants if a broken invariant is found
 
 	DBBackend   string // custom db backend type
-	BlockMaxGas *int64 // custom max gas for block
+	BlockMaxGas int64  // custom max gas for block
 }

@@ -749,7 +749,6 @@ jobs:
         with:
           PATTERNS: |
             x/nft/**/*.go
-            x/nft/*.go
             x/nft/go.mod
             x/nft/go.sum
       - name: tests

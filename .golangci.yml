@@ -10,7 +10,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - depguard
     - dogsled
     - exportloopref
     - goconst
@@ -51,6 +50,15 @@ issues:
     - text: 'SA1019: codec.NewAminoCodec is deprecated' # TODO remove once migration path is set out
       linters:
         - staticcheck
+    - text: 'SA1019: legacybech32.MustMarshalPubKey' # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
+    - text: 'SA1019: legacybech32.MarshalPubKey' # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
+    - text: 'SA1019: legacybech32.UnmarshalPubKey' # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
     - text: 'leading space'
       linters:
         - nolintlint
@@ -66,6 +74,10 @@ linters-settings:
       - default # Default section: contains all imports that could not be matched to another section type.
       - prefix(cosmossdk.io)
       - prefix(github.com/cosmos/cosmos-sdk)
+  revive:
+    rules:
+      - name: redefines-builtin-id
+        disabled: true
 
   gosec:
     # To select a subset of rules to run.

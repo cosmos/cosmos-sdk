@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strconv"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -17,6 +15,8 @@ import (
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"

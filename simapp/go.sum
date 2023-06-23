@@ -190,8 +190,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.4.3-0.20230615032830-feb87fce5495 h1:wreIRQKuKccFCOI4TWoVy/6tQNiDX4ms7VKNrXP4DEM=
 cosmossdk.io/api v0.4.3-0.20230615032830-feb87fce5495/go.mod h1:qrVgOp7DIeAXa+Tt5dDjOC47bZCDrwx8ZHxrmy7STNE=
-cosmossdk.io/collections v0.2.0 h1:CgMfLtE16+qox3zBYrGh60i4yKV8SeExLnIdOS2sbQs=
-cosmossdk.io/collections v0.2.0/go.mod h1:Oc1FK0vlmxJZsgUn9/o3ldE6zNyWKvobVzaLhWknZJE=
+cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531 h1:6CxleI/IgdENrujwTY2yY9Wg52DVZr4eq4L71ANoLuQ=
+cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531/go.mod h1:k8IKBKC/lO+BKoIGae3RC8NCBV8+7JaAw+es51YylFs=
 cosmossdk.io/core v0.8.0 h1:LcJnu52E1a8f8E317VfQ1xK/RZe+IuhMNQAjnDLh25M=
 cosmossdk.io/core v0.8.0/go.mod h1:LF6VLOv2DdCiaHxYVmr0MZcZpaSM9ZgvyrQSYTeg6D0=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
@@ -1623,8 +1623,8 @@ google.golang.org/grpc v1.48.0/go.mod h1:vN9eftEi1UMyUsIF80+uQXhHjbXYbm0uXoFCACu
 google.golang.org/grpc v1.49.0/go.mod h1:ZgQEeidpAuNRZ8iRrlBKXZQP1ghovWIVhdJRyCDK+GI=
 google.golang.org/grpc v1.50.0/go.mod h1:ZgQEeidpAuNRZ8iRrlBKXZQP1ghovWIVhdJRyCDK+GI=
 google.golang.org/grpc v1.50.1/go.mod h1:ZgQEeidpAuNRZ8iRrlBKXZQP1ghovWIVhdJRyCDK+GI=
-google.golang.org/grpc v1.56.0 h1:+y7Bs8rtMd07LeXmL3NxcTLn7mUkbKZqEpPhMNkwJEE=
-google.golang.org/grpc v1.56.0/go.mod h1:I9bI3vqKfayGqPUAwGdOSu7kt6oIJLixfffKrpXqQ9s=
+google.golang.org/grpc v1.56.1 h1:z0dNfjIl0VpaZ9iSVjA6daGatAYwPGstTjt5vkRMFkQ=
+google.golang.org/grpc v1.56.1/go.mod h1:I9bI3vqKfayGqPUAwGdOSu7kt6oIJLixfffKrpXqQ9s=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0/go.mod h1:6Kw0yEErY5E/yWrBtf03jp27GLLJujG4z/JK95pnjjw=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=

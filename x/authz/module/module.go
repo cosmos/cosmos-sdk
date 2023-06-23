@@ -12,10 +12,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-
-	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

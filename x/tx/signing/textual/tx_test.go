@@ -20,7 +20,6 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"

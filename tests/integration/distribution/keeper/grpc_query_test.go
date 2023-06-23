@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"gotest.tools/v3/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -515,7 +516,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))

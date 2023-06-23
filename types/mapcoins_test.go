@@ -1,8 +1,9 @@
 package types_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *coinTestSuite) TestMapCoinsAdd() {

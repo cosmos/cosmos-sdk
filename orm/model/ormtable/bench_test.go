@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"google.golang.org/protobuf/proto"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"google.golang.org/protobuf/proto"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testkv"

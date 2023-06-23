@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -19,7 +18,6 @@ import (
 
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	sdkerrors "cosmossdk.io/errors"
-
 	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"

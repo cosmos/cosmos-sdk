@@ -3,8 +3,9 @@ package log_test
 import (
 	"testing"
 
-	"cosmossdk.io/log"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/log"
 )
 
 func TestParseLogLevel(t *testing.T) {

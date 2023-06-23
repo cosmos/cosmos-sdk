@@ -4,10 +4,11 @@ import (
 	"strconv"
 	"testing"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/upgrade/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 func TestParsePlan(t *testing.T) {

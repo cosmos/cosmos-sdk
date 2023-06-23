@@ -22,13 +22,14 @@ import (
 	"fmt"
 	"strconv"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

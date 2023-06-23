@@ -38,6 +38,12 @@ message GenesisState {
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false];
 
   bool exported = 8;
+
+  // store tokenize share records to provide reward to record owners
+  repeated TokenizeShareRecord tokenize_share_records = 9 [(gogoproto.nullable) = false];
+
+  // last tokenize share record id, used for next share record id calculation
+  uint64 last_tokenize_share_record_id = 10;
 }
 
 // LastValidatorPower required for validator set update logic.

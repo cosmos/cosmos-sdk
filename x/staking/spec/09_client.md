@@ -753,8 +753,7 @@ Example Output:
           "maxChangeRate": "10000000000000000"
         },
         "updateTime": "2021-10-01T05:52:50.380144238Z"
-      },
-      "minSelfDelegation": "1"
+      }
     }
   ],
   "pagination": {

@@ -49,13 +49,13 @@ func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotype
 // CreateValidatorMsg returns a message used to create validator in this service.
 func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int) *stakingtypes.MsgCreateValidator {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	return msg
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	sh.Handle(msg, ok)
 }
@@ -79,6 +79,21 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgUndelegate(delegator, val, unbondAmt)
 	return sh.Handle(msg, ok)
+}
+
+func (sh *Helper) TokenizeShares(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress, ok bool) {
+	msg := stakingtypes.NewMsgTokenizeShares(delegator, val, amount, shareOwner)
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coin, ok bool) {
+	msg := stakingtypes.NewMsgRedeemTokensForShares(delegator, amount)
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) TranserTokenizeShareRecord(recordID uint64, owner, newOwner sdk.AccAddress, ok bool) {
+	msg := stakingtypes.NewMsgTransferTokenizeShareRecord(recordID, owner, newOwner)
+	sh.Handle(msg, ok)
 }
 
 // Handle calls staking handler on a given message

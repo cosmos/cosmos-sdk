@@ -10,18 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-package staking
-
-import (
-"fmt"
-"strings"
-
-autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-v1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
-
-"github.com/cosmos/cosmos-sdk/version"
-)
-
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{

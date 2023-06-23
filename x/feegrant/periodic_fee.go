@@ -91,7 +91,7 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	if !a.PeriodCanSpend.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "can spend amount is invalid: %s", a.PeriodCanSpend)
 	}
-	// We allow 0 for CanSpend
+	// We allow 0 for `PeriodCanSpend`
 	if a.PeriodCanSpend.IsAnyNegative() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "can spend must not be negative")
 	}
@@ -109,6 +109,7 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	return nil
 }
 
+// ExpiresAt returns the expiry time of the PeriodicAllowance.
 func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Basic.ExpiresAt()
 }

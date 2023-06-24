@@ -8,11 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math/unsafe"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

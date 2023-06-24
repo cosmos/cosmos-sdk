@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"

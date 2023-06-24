@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-
 	"gotest.tools/v3/assert"
 )
 

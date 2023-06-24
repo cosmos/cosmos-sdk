@@ -11,9 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/upgrade/plan"
-
 	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 var initCmd = &cobra.Command{

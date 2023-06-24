@@ -197,7 +197,7 @@ func (l Launcher) doCustomPreUpgrade() error {
 	l.logger.Info().Str("Looking for COSMOVISOR_CUSTOM_PREUPGRADE file ", preupgradeFile)
 	info, err := os.Stat(preupgradeFile)
 	if err != nil {
-		l.logger.Error().Msg("COSMOVISOR_CUSTOM_PREUPGRADE file missing")
+		l.logger.Error().Str("file", preupgradeFile).Msg("COSMOVISOR_CUSTOM_PREUPGRADE file missing")
 		return err
 	}
 	if !info.Mode().IsRegular() {
@@ -216,7 +216,9 @@ func (l Launcher) doCustomPreUpgrade() error {
 	}
 
 	// Run preupgradeFile
-	result, err := exec.Command(preupgradeFile, uInfo.Name, fmt.Sprintf("%d", uInfo.Height)).Output()
+	cmd := exec.Command(preupgradeFile, uInfo.Name, fmt.Sprintf("%d", uInfo.Height))
+	cmd.Dir = l.cfg.Home
+	result, err := cmd.Output()
 	if err != nil {
 		return err
 	}

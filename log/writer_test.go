@@ -5,8 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/log"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/log"
 )
 
 func TestFilteredWriter(t *testing.T) {

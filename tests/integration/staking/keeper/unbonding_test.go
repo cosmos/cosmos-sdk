@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

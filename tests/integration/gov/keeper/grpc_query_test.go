@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

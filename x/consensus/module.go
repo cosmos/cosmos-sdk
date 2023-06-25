@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
-	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

@@ -188,8 +188,8 @@ func (l Launcher) doCustomPreUpgrade() error {
 		return err
 	}
 
-	if uInfo.Name == "" {
-		return fmt.Errorf("upgrade-info.json is empty")
+	if err = uInfo.ValidateBasic(); err != nil {
+		return fmt.Errorf("invalid upgrade plan: %w", err)
 	}
 
 	// check if preupgradeFile is executable file

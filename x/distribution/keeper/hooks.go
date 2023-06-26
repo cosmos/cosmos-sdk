@@ -130,3 +130,11 @@ func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.Va
 func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }
+
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+	err := h.k.WithdrawSingleShareRecordReward(ctx, recordId)
+	if err != nil {
+		h.k.Logger(ctx).Error(err.Error())
+	}
+	return err
+}

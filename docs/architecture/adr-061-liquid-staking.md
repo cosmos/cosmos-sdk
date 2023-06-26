@@ -54,9 +54,9 @@ The total amount of outstanding tokenized shares for the validator is checked ag
 MsgTokenizeSharesResponse provides the number of tokens generated and their denom.
 
 
-### `MsgRedeemTokensforShares`
+### `MsgRedeemTokensForShares`
 
-The MsgRedeemTokensforShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
+The MsgRedeemTokensForShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
 
 ### `MsgTransferTokenizeShareRecord`
 

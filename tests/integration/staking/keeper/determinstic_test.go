@@ -258,7 +258,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidator() {
 		ValidatorAddr: val.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 1915, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 1933, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidators() {
@@ -281,7 +281,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 	suite.getStaticValidator()
 	suite.getStaticValidator2()
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryValidatorsRequest{}, suite.queryClient.Validators, 3525, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryValidatorsRequest{}, suite.queryClient.Validators, 3597, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
@@ -317,7 +317,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 12615, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
@@ -361,7 +361,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 3719, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 3755, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegation() {
@@ -390,7 +390,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegation() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 4635, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 4845, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
@@ -425,7 +425,7 @@ func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 1621, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 1639, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
@@ -457,7 +457,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 4238, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 4448, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
@@ -488,7 +488,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 3563, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 3581, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
@@ -526,7 +526,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 1302, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 1338, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
@@ -579,7 +579,7 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 1930, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 1948, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorValidators() {
@@ -609,7 +609,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorValidators() {
 	suite.Require().NoError(err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 3166, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 3184, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCPool() {
@@ -621,7 +621,7 @@ func (suite *DeterministicTestSuite) TestGRPCPool() {
 
 	suite.SetupTest() // reset
 	suite.getStaticValidator()
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 6185, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 6377, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
@@ -683,18 +683,21 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3920, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3938, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCParams() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
-			UnbondingTime:     durationGenerator().Draw(t, "duration"),
-			MaxValidators:     rapid.Uint32Min(1).Draw(t, "max-validators"),
-			MaxEntries:        rapid.Uint32Min(1).Draw(t, "max-entries"),
-			HistoricalEntries: rapid.Uint32Min(1).Draw(t, "historical-entries"),
-			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+			BondDenom:                 rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
+			UnbondingTime:             durationGenerator().Draw(t, "duration"),
+			MaxValidators:             rapid.Uint32Min(1).Draw(t, "max-validators"),
+			MaxEntries:                rapid.Uint32Min(1).Draw(t, "max-entries"),
+			HistoricalEntries:         rapid.Uint32Min(1).Draw(t, "historical-entries"),
+			MinCommissionRate:         sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+			ValidatorBondFactor:       stakingtypes.ValidatorBondDisabled,
+			GlobalLiquidStakingCap:    sdk.NewDecWithPrec(1, 0),
+			ValidatorLiquidStakingCap: sdk.NewDecWithPrec(1, 0),
 		}
 
 		err := suite.stakingKeeper.SetParams(suite.ctx, params)
@@ -704,16 +707,19 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 	})
 
 	params := stakingtypes.Params{
-		BondDenom:         "denom",
-		UnbondingTime:     time.Hour,
-		MaxValidators:     85,
-		MaxEntries:        5,
-		HistoricalEntries: 5,
-		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+		BondDenom:                 "denom",
+		UnbondingTime:             time.Hour,
+		MaxValidators:             85,
+		MaxEntries:                5,
+		HistoricalEntries:         5,
+		MinCommissionRate:         sdk.NewDecWithPrec(5, 2),
+		ValidatorBondFactor:       stakingtypes.ValidatorBondDisabled,
+		GlobalLiquidStakingCap:    sdk.NewDecWithPrec(1, 0),
+		ValidatorLiquidStakingCap: sdk.NewDecWithPrec(1, 0),
 	}
 
 	err := suite.stakingKeeper.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 1114, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 1306, false)
 }

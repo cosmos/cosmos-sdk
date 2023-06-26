@@ -66,7 +66,7 @@ func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hook
 	require.True(t, validator1.IsBonded())
 
 	// Create a delegator
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// Create a validator to redelegate to

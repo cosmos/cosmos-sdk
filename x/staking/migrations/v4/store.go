@@ -24,6 +24,10 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		return err
 	}
 
+	if err := migrateTotalLiquidStakedTokens(ctx, store, cdc, sdk.ZeroInt()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -31,6 +35,10 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	var legacyParams types.Params
 	legacySubspace.GetParamSet(ctx, &legacyParams)
+
+	// add LSM-related params before validating
+	legacyParams.ValidatorBondFactor = types.DefaultValidatorBondFactor
+	legacyParams.GlobalLiquidStakingCap = types.DefaultGlobalLiquidStakingCap
 
 	if err := legacyParams.Validate(); err != nil {
 		return err
@@ -97,4 +105,15 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	key := types.GetUBDKey(delegatorAddress, addr)
 
 	store.Set(key, bz)
+}
+
+// migrateTotalLiquidStakedTokens migrates the total outstanding tokens owned by a liquid staking provider
+func migrateTotalLiquidStakedTokens(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, tokens sdk.Int) error {
+	tokensBz, err := tokens.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	store.Set(types.TotalLiquidStakedTokensKey, tokensBz)
+	return nil
 }

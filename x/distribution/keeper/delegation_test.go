@@ -55,7 +55,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// delegation mock
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
 
@@ -134,7 +134,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 
 	// set mock calls
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(4)
@@ -230,7 +230,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// delegation mocks
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(4)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
 
@@ -343,7 +343,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	del0 := stakingtypes.NewDelegation(addr0, valAddr, val.DelegatorShares)
+	del0 := stakingtypes.NewDelegation(addr0, valAddr, val.DelegatorShares, false)
 
 	// set mock calls
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(4)
@@ -434,7 +434,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// delegation mock
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(5)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del).Times(3)
 
@@ -506,7 +506,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// delegation mock
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(5)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
 
@@ -614,7 +614,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// validator and delegation mocks
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
 
@@ -739,7 +739,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	// validator and delegation mocks
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del).Times(5)
 
@@ -922,7 +922,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), math.LegacyNewDec(0))
 
 	// validator and delegation mocks
-	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares, false)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del).Times(3)
 

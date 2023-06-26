@@ -106,6 +106,54 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 	}
 }
 
+func (sh *Helper) TokenizeShares(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    delegator.String(),
+		ValidatorAddress:    val.String(),
+		Amount:              amount,
+		TokenizedShareOwner: shareOwner.String(),
+	}
+	res, err := sh.msgSrvr.TokenizeShares(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
+}
+
+func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coin, ok bool) {
+	msg := &stakingtypes.MsgRedeemTokensForShares{
+		DelegatorAddress: delegator.String(),
+		Amount:           amount,
+	}
+	res, err := sh.msgSrvr.RedeemTokens(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
+}
+
+func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordId,
+		Sender:                owner.String(),
+		NewOwner:              newOwner.String(),
+	}
+	res, err := sh.msgSrvr.TransferTokenizeShareRecord(sdk.WrapSDKContext(sh.Ctx), msg)
+	if ok {
+		require.NoError(sh.t, err)
+		require.NotNil(sh.t, res)
+	} else {
+		require.Error(sh.t, err)
+		require.Nil(sh.t, res)
+	}
+}
+
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
 func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {

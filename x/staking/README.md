@@ -32,10 +32,13 @@ network.
     * [Redelegation](#redelegation)
     * [Queues](#queues)
     * [HistoricalInfo](#historicalinfo)
+    * [TokenizeShareRecord](#tokenizesharerecord)
+    * [LastTokenizeShareRecordId](#lasttokenizesharerecordid)
 * [State Transitions](#state-transitions)
     * [Validators](#validators)
     * [Delegations](#delegations)
     * [Slashing](#slashing)
+    * [Tokenizing (LSM)](#tokenizing)
     * [How Shares are calculated](#how-shares-are-calculated)
 * [Messages](#messages)
     * [MsgCreateValidator](#msgcreatevalidator)
@@ -45,6 +48,10 @@ network.
     * [MsgCancelUnbondingDelegation](#msgcancelunbondingdelegation)
     * [MsgBeginRedelegate](#msgbeginredelegate)
     * [MsgUpdateParams](#msgupdateparams)
+    * [MsgTokenizeShares](#msgtokenizeshares)
+    * [MsgRedeemTokensForShares](#msgredeemtokensforshares)
+    * [MsgTransferTokenizeShareRecord](#msgtransfertokenizesharerecord)
+    * [MsgValidatorBond](#msgvalidatorbond)
 * [Begin-Block](#begin-block)
     * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
@@ -328,6 +335,33 @@ they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
+### TokenizeShareRecord
+
+TokenizeShareRecord objects are created when a user tokenize his delegation.
+
+Record is put on `0x81 | id -> TokenizeShareRecord`
+
+```go
+type TokenizeShareRecord struct {
+ Id              uint64
+ Owner           string
+ ShareTokenDenom string
+ ModuleAccount   string
+ Validator       string
+}
+```
+
+There are helper queues to manage the tokenize share records by owner and by share token denom.
+
+`0x82 | owner | id -> TokenizeShareRecordId`
+`0x83 | denom -> TokenizeShareRecordId`
+
+### LastTokenizeShareRecordId
+
+LastTokenizeShareRecordId is used to maintain unique id of tokenize share record.
+
+It is stored on `0x84 -> LastTokenizeShareRecordId`
+
 ## State Transitions
 
 ### Validators
@@ -504,6 +538,45 @@ The total number of tokens is now `T + T_j`, and the total number of shares is `
 A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T` is undefined.
 For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
 So a validator that hasn't received any rewards and has not been slashed will have `T = S`.
+
+### Tokenizing
+
+#### Tokenize delegation shares
+
+Tokenizing delegation shares tokenize the delegation shares to transferrable asset.
+
+The process of tokenizing delegation shares
+
+1. Get delegation from the delegator to the validator
+2. Verify that delegation amount is bigger than tokenize amount
+3. Create a new tokenize share record as the owner specified by the delegator
+4. Mint share tokens to delegator
+5. Unbond tokenizing amount from delegator and send it to toknize share record account
+6. Delegate the unbonded amount to the same validator from tokenize share record account
+
+#### Redeem delegation shares
+
+Redeeming of delegation shares is to convert tokenized delegation shares to regular delegation share.
+
+The process of redeeming delegation shares from tokenized share
+
+1. Verify that tokenize share tokens amount is not lower than redeeming share tokens amount
+2. Get tokenize share record from tokenized share denom
+3. Unbond the amount of tokens from the tokenize share record account
+4. If tokenize share record account's delegation amount is zero, delete the record
+5. Burn share tokens
+6. Delegate unbonded tokens from delegator address to the validator
+
+#### Transfer tokenize share record
+
+Transferring of tokenized share record is done to move the reward withdrawal rights.
+
+The process of transferring the tokenize share record
+
+1. Check tokenize share record exists and the owner is the sender of the message
+2. Delete old owner's reference to tokenize share record
+3. Update tokenize share record to have new owner
+4. Add new owner's reference to tokenize share record
 
 ## Messages
 
@@ -705,7 +778,6 @@ When this message is processed the following actions occur:
 
 ![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
 
-
 ### MsgUpdateParams
 
 The `MsgUpdateParams` update the staking module parameters.
@@ -718,6 +790,34 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1bet
 The message handling can fail if:
 
 * signer is not the authority defined in the staking keeper (usually the gov module account).
+
+### MsgTokenizeShares
+
+The `MsgTokenizeShares` message is used to create tokenize delegated tokens.
+This message can be executed by any delegator who has positive amount of delegation and after execution the specific amount of delegation disappear from the account and share tokens are provided. Share tokens are demoninated in the validator and record id of he underlying delegation.
+
+A user may tokenize some or all of their Delegation.
+
+They will recieved shares like ` cosmosvaloper1xxxx5` where 5 is the record id for the validator operator.
+
+A validator may tokenize their self bond but tokenizing more than their min self bond will be equivalent to unbonding their min self bond and cause the validator to be removed from the active set.
+
+`MsgTokenizeSharesResponse` provides the number of tokens generated and their denom.
+
+### MsgRedeemTokensForShares
+
+The `MsgRedeemTokensForShares` message is used to redeem the delegation from share tokens.
+This message can be executed by any user who owns share tokens and after execution the delegation appear for the user.
+
+### MsgTransferTokenizeShareRecord
+
+The `MsgTransferTokenizeShareRecord` message is used to transfer the ownership of rewards generated from the tokenized amount of delegation.
+The tokenize share record is created when a user tokenize his/her delegation and deleted and full amount of share tokens are redeemed.
+
+
+### MsgValidatorBond
+
+The `MsgValidatorBond` message is used to earmark a delegation as a validator self-bond. If the `validator-bond` factor is greater than 0, this will enable more delegation to the validator.
 
 ## Begin-Block
 
@@ -932,14 +1032,16 @@ The staking module emits the following events:
 
 The staking module contains the following parameters:
 
-| Key               | Type             | Example                |
-|-------------------|------------------|------------------------|
-| UnbondingTime     | string (time ns) | "259200000000000"      |
-| MaxValidators     | uint16           | 100                    |
-| KeyMaxEntries     | uint16           | 7                      |
-| HistoricalEntries | uint16           | 3                      |
-| BondDenom         | string           | "stake"                |
-| MinCommissionRate | string           | "0.000000000000000000" |
+| Key                    | Type             | Example                 |
+|------------------------|------------------|-------------------------|
+| UnbondingTime          | string (time ns) | "259200000000000"       |
+| MaxValidators          | uint16           | 100                     |
+| KeyMaxEntries          | uint16           | 7                       |
+| HistoricalEntries      | uint16           | 3                       |
+| BondDenom              | string           | "stake"                 |
+| MinCommissionRate      | string           | "0.000000000000000000"  |
+| ValidatorBondFactor    | string           | "-1.000000000000000000" |
+| GlobalLiquidStakingCap | string           | "1.000000000000000000"  |
 
 ## Client
 

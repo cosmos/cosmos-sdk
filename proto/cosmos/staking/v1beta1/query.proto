@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -127,6 +128,74 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/params";
+  }
+
+  // Query for individual tokenize share record information by share by id
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordById(QueryTokenizeShareRecordByIdRequest) returns (QueryTokenizeShareRecordByIdResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_record_by_id/{id}";
+  }
+
+  // Query for individual tokenize share record information by share denom
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest)
+      returns (QueryTokenizeShareRecordByDenomResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_record_by_denom/{denom}";
+  }
+
+  // Query tokenize share records by address
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest)
+      returns (QueryTokenizeShareRecordsOwnedResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_records_owned/{owner}";
+  }
+
+  // Query for all tokenize share records
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc AllTokenizeShareRecords(QueryAllTokenizeShareRecordsRequest) returns (QueryAllTokenizeShareRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/all_tokenize_share_records";
+  }
+
+  // Query for last tokenize share record id
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest)
+      returns (QueryLastTokenizeShareRecordIdResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/last_tokenize_share_record_id";
+  }
+
+  // Query for total tokenized staked assets
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest)
+      returns (QueryTotalTokenizeSharedAssetsResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/total_tokenize_shared_assets";
+  }
+
+  // Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TotalLiquidStaked(QueryTotalLiquidStaked) returns (QueryTotalLiquidStakedResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/total_liquid_staked";
+  }
+
+  // Query tokenize share locks
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  rpc TokenizeShareLockInfo(QueryTokenizeShareLockInfo) returns (QueryTokenizeShareLockInfoResponse) {
+    option (cosmos.query.v1.module_query_safe) = false;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/tokenize_share_lock_info";
   }
 }
 
@@ -384,4 +453,142 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryTokenizeShareRecordByIdRequest is request type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByIdRequest {
+  uint64 id = 1;
+}
+
+// QueryTokenizeShareRecordByIdRequest is response type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByIdResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordByDenomRequest is request type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByDenomRequest {
+  string denom = 1;
+}
+
+// QueryTokenizeShareRecordByDenomResponse is response type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordByDenomResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordsOwnedRequest is request type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordsOwnedRequest {
+  string owner = 1;
+}
+
+// QueryTokenizeShareRecordsOwnedResponse is response type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareRecordsOwnedResponse {
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTotalTokenizeSharedAssetsRequest is request type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryAllTokenizeShareRecordsRequest {}
+
+// QueryTotalTokenizeSharedAssetsResponse is response type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryAllTokenizeShareRecordsResponse {
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryLastTokenizeShareRecordIdRequest
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryLastTokenizeShareRecordIdRequest {}
+
+// QueryLastTokenizeShareRecordIdResponse
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryLastTokenizeShareRecordIdResponse {
+  uint64 id = 1;
+}
+
+// QueryTotalTokenizeSharedAssetsRequest is request type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalTokenizeSharedAssetsRequest {}
+
+// QueryTotalTokenizeSharedAssetsResponse is response type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalTokenizeSharedAssetsResponse {
+  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryQueryTotalLiquidStakedRequest is request type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalLiquidStaked {}
+
+// QueryQueryTotalLiquidStakedResponse is response type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTotalLiquidStakedResponse {
+  string tokens = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// QueryTokenizeShareLockInfo queries the tokenize share lock information
+// associated with given account.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareLockInfo {
+  string address = 1;
+}
+
+// QueryTokenizeShareLockInfoResponse is the response from the
+// QueryTokenizeShareLockInfo query.
+//
+// Since: cosmos-sdk 0.47-lsm
+message QueryTokenizeShareLockInfoResponse {
+  string status          = 1;
+  string expiration_time = 2;
+}
+
+// TokenizeShareLockStatus represents status of an account's tokenize share lock.
+//
+// Since: cosmos-sdk 0.47-lsm
+enum TokenizeShareLockStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+  // An empty value is not allowed.
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ShareLockStatusNil"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1 [(gogoproto.enumvalue_customname) = "ShareLockStatusLocked"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2 [(gogoproto.enumvalue_customname) = "ShareLockStatusUnlocked"];
+  // Status when lock is queued for unlocking.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3 [(gogoproto.enumvalue_customname) = "ShareLockStatusLockExpiring"];
 }

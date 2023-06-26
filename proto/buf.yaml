@@ -1,6 +1,6 @@
-# This module represents buf.build/cosmos/cosmos-sdk
+# This module represents buf.build/persistence/cosmos-sdk-lsm
 version: v1
-name: buf.build/cosmos/cosmos-sdk
+name: buf.build/persistence/cosmos-sdk-lsm
 deps:
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
@@ -19,5 +19,6 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
   ignore:
     - tendermint

@@ -1,6 +1,6 @@
 version: v1
 deps:
-  - buf.build/cosmos/cosmos-sdk
+  - buf.build/persistence/cosmos-sdk-lsm
   - buf.build/cosmos/cosmos-proto
 lint:
   use:

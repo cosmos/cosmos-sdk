@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/depinject"
 )
 
+<<<<<<< HEAD
 var beginBlockOrder = []string{
 	"upgrade",
 	"capability",
@@ -89,9 +90,104 @@ var initGenesisOrder = []string{
 type appConfig struct {
 	moduleConfigs  map[string]*appv1alpha1.ModuleConfig
 	setInitGenesis bool
+=======
+// Config should never need to be instantiated manually and is solely used for ModuleOption.
+type Config struct {
+	ModuleConfigs      map[string]*appv1alpha1.ModuleConfig
+	BeginBlockersOrder []string
+	EndBlockersOrder   []string
+	InitGenesisOrder   []string
+	setInitGenesis     bool
+}
+
+var defaultConfig = &Config{
+	ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
+	BeginBlockersOrder: []string{
+		"upgrade",
+		"mint",
+		"distribution",
+		"slashing",
+		"evidence",
+		"staking",
+		"auth",
+		"bank",
+		"gov",
+		"crisis",
+		"genutil",
+		"authz",
+		"feegrant",
+		"nft",
+		"group",
+		"params",
+		"consensus",
+		"vesting",
+		"circuit",
+	},
+	EndBlockersOrder: []string{
+		"crisis",
+		"gov",
+		"staking",
+		"auth",
+		"bank",
+		"distribution",
+		"slashing",
+		"mint",
+		"genutil",
+		"evidence",
+		"authz",
+		"feegrant",
+		"nft",
+		"group",
+		"params",
+		"consensus",
+		"upgrade",
+		"vesting",
+		"circuit",
+	},
+	InitGenesisOrder: []string{
+		"auth",
+		"bank",
+		"distribution",
+		"staking",
+		"slashing",
+		"gov",
+		"mint",
+		"crisis",
+		"genutil",
+		"evidence",
+		"authz",
+		"feegrant",
+		"nft",
+		"group",
+		"params",
+		"consensus",
+		"upgrade",
+		"vesting",
+		"circuit",
+	},
+	setInitGenesis: true,
+>>>>>>> dcc5afeac (feat: add configurator config options (#16672))
 }
 
 type ModuleOption func(config *appConfig)
+
+func WithCustomBeginBlockersOrder(beginBlockOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.BeginBlockersOrder = beginBlockOrder
+	}
+}
+
+func WithCustomEndBlockersOrder(endBlockersOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.EndBlockersOrder = endBlockersOrder
+	}
+}
+
+func WithCustomInitGenesisOrder(initGenesisOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.InitGenesisOrder = initGenesisOrder
+	}
+}
 
 func BankModule() ModuleOption {
 	return func(config *appConfig) {
@@ -233,10 +329,14 @@ func OmitInitGenesis() ModuleOption {
 }
 
 func NewAppConfig(opts ...ModuleOption) depinject.Config {
+<<<<<<< HEAD
 	cfg := &appConfig{
 		moduleConfigs:  make(map[string]*appv1alpha1.ModuleConfig),
 		setInitGenesis: true,
 	}
+=======
+	cfg := defaultConfig
+>>>>>>> dcc5afeac (feat: add configurator config options (#16672))
 	for _, opt := range opts {
 		opt(cfg)
 	}
@@ -246,20 +346,35 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	initGenesis := make([]string, 0)
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
 
+<<<<<<< HEAD
 	for _, s := range beginBlockOrder {
 		if _, ok := cfg.moduleConfigs[s]; ok {
+=======
+	for _, s := range cfg.BeginBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+>>>>>>> dcc5afeac (feat: add configurator config options (#16672))
 			beginBlockers = append(beginBlockers, s)
 		}
 	}
 
+<<<<<<< HEAD
 	for _, s := range endBlockersOrder {
 		if _, ok := cfg.moduleConfigs[s]; ok {
+=======
+	for _, s := range cfg.EndBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+>>>>>>> dcc5afeac (feat: add configurator config options (#16672))
 			endBlockers = append(endBlockers, s)
 		}
 	}
 
+<<<<<<< HEAD
 	for _, s := range initGenesisOrder {
 		if _, ok := cfg.moduleConfigs[s]; ok {
+=======
+	for _, s := range cfg.InitGenesisOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+>>>>>>> dcc5afeac (feat: add configurator config options (#16672))
 			initGenesis = append(initGenesis, s)
 		}
 	}

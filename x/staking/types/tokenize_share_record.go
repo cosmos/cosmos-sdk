@@ -6,11 +6,15 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func (r TokenizeShareRecord) GetModuleAddress() sdk.AccAddress {
-	return authtypes.NewModuleAddress(r.ModuleAccount)
+	// NOTE: The module name is intentionally hard coded so that, if this
+	// function were to move to a different module in future SDK version,
+	// it would not break all the address lookups
+	moduleName := "lsm"
+	return address.Module(moduleName, []byte(r.ModuleAccount))
 }
 
 func (r TokenizeShareRecord) GetShareTokenDenom() string {

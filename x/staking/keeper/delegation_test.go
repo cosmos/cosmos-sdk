@@ -813,7 +813,8 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	startPoolToken := sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens.Mul(sdk.NewInt(2))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), startPoolToken))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator and a delegator to that validator
@@ -832,12 +833,17 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	// set total liquid stake
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(100))
 
-	// convert to validator self-bond
-	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-
+	// delegate to each validator
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
+
+	validator2, _ = app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator2)
+	require.NoError(t, err)
+
+	// convert to validator self-bond
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),

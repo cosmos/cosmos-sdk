@@ -151,7 +151,6 @@ message SaveLedgerKeyRequest {
 }
 message SaveLedgerKeyResponse{}
 
-// TODO: can pubkey be sent over gRCP
 message SaveOfflineKeyRequest {
   string uid = 1;
   google.protobuf.Any pubKey = 2;

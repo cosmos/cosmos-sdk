@@ -19,7 +19,7 @@ import (
 
 var _ feegrant.QueryServer = Keeper{}
 
-// Allowance returns fee granted to the grantee by the granter.
+// Allowance returns granted allowance to the grantee by the granter.
 func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

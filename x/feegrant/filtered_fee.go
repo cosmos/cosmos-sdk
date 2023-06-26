@@ -128,6 +128,7 @@ func (a *AllowedMsgAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
+// ExpiresAt returns the expiry time of the AllowedMsgAllowance.
 func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
 	allowance, err := a.GetAllowance()
 	if err != nil {

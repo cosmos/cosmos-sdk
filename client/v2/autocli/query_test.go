@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 

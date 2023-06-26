@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

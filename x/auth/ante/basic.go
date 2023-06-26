@@ -1,9 +1,8 @@
 package ante
 
 import (
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

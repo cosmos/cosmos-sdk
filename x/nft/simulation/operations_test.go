@@ -5,12 +5,11 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"

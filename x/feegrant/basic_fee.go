@@ -58,6 +58,7 @@ func (a BasicAllowance) ValidateBasic() error {
 	return nil
 }
 
+// ExpiresAt returns the expiry time of the BasicAllowance.
 func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Expiration, nil
 }

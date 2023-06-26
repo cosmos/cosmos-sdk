@@ -3,13 +3,13 @@ package mint
 import (
 	"fmt"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-
-	"github.com/cosmos/gogoproto/proto"
-
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 

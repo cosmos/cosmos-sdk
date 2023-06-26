@@ -14,9 +14,8 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"

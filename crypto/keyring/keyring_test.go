@@ -833,35 +833,35 @@ func TestImportPubKey(t *testing.T) {
 		uid         string
 		backend     string
 		armor       string
-		expectedErr error
+		expectedErr string
 	}{
 		{
 			name:        "correct import",
 			uid:         "correctTest",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			name:        "modified armor",
 			uid:         "modified",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: fmt.Errorf("couldn't unarmor bytes: openpgp: invalid data: armor invalid"),
+			expectedErr: "couldn't unarmor bytes: openpgp: invalid data: armor invalid",
 		},
 		{
 			name:        "empty armor",
 			uid:         "empty",
 			backend:     BackendTest,
 			armor:       "",
-			expectedErr: fmt.Errorf("couldn't unarmor bytes: EOF"),
+			expectedErr: "couldn't unarmor bytes: EOF",
 		},
 		{
 			name:        "correct in memory import",
 			uid:         "inMemory",
 			backend:     BackendMemory,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: nil,
+			expectedErr: "",
 		},
 	}
 	for _, tt := range tests {
@@ -869,10 +869,10 @@ func TestImportPubKey(t *testing.T) {
 			kb, err := New("keybasename", tt.backend, t.TempDir(), nil, cdc)
 			require.NoError(t, err)
 			err = kb.ImportPubKey(tt.uid, tt.armor)
-			if tt.expectedErr == nil {
+			if tt.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.Equal(t, err, tt.expectedErr)
+				require.ErrorContains(t, err, tt.expectedErr)
 			}
 		})
 	}

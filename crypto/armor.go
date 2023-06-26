@@ -3,15 +3,16 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck //TODO: remove this dependency
 
 	errorsmod "cosmossdk.io/errors"
-	"golang.org/x/crypto/chacha20poly1305"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
@@ -104,7 +105,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
 	}
 
 	switch header[headerVersion] {
@@ -117,7 +118,7 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 
 		return bz, header[headerType], err
 	case "":
-		return nil, "", fmt.Errorf("header's version field is empty")
+		return nil, "", errors.New("header's version field is empty")
 	default:
 		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
 		return nil, "", err
@@ -192,12 +193,12 @@ func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.Pri
 	}
 
 	if header["salt"] == "" {
-		return privKey, "", fmt.Errorf("missing salt bytes")
+		return privKey, "", errors.New("missing salt bytes")
 	}
 
 	saltBytes, err := hex.DecodeString(header["salt"])
 	if err != nil {
-		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
+		return privKey, "", fmt.Errorf("error decoding salt: %w", err)
 	}
 
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header[kdfHeader])
@@ -261,15 +262,15 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 	buf := new(bytes.Buffer)
 	w, err := armor.Encode(buf, blockType, headers)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %v", err))
 	}
 	_, err = w.Write(data)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %v", err))
 	}
 	err = w.Close()
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %v", err))
 	}
 	return buf.String()
 }

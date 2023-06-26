@@ -305,7 +305,12 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 }
 
 func jsonMarshal(w io.Writer, v interface{}) error {
-	return json.NewEncoder(w).Encode(v)
+	blob, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(blob)
+	return err
 }
 
 func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {

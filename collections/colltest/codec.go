@@ -6,11 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/collections/codec"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-
-	"github.com/stretchr/testify/require"
+	"cosmossdk.io/collections/codec"
 )
 
 // TestKeyCodec asserts the correct behavior of a KeyCodec over the type T.

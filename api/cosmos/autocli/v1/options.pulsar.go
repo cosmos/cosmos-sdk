@@ -4678,8 +4678,8 @@ type PositionalArgDescriptor struct {
 	// applied to last positional parameter and the proto_field must a repeated
 	// field. Note: It is mutually exclusive with optional.
 	Varargs bool `protobuf:"varint,2,opt,name=varargs,proto3" json:"varargs,omitempty"`
-	// optional makes a positional parameter optional. This can only be applied
-	// to the last positional parameter. Note: It is mutually exclusive with varargs.
+	// optional makes the last positional parameter optional.
+	// Note: It is mutually exclusive with varargs.
 	Optional bool `protobuf:"varint,3,opt,name=optional,proto3" json:"optional,omitempty"`
 }
 

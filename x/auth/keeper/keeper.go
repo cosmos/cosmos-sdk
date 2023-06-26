@@ -5,15 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections/indexes"
-
 	"cosmossdk.io/collections"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

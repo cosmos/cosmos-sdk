@@ -50,7 +50,7 @@ type (
 
 // ValidateVoteExtensions defines a helper function for verifying vote extension
 // signatures that may be passed or manually injected into a block proposal from
-// a proposer in ProcessProposal. It returns an error if any signature is invalid
+// a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
 func ValidateVoteExtensions(
@@ -58,10 +58,11 @@ func ValidateVoteExtensions(
 	valStore ValidatorStore,
 	currentHeight int64,
 	chainID string,
-	extCommit abci.ExtendedCommitInfo,
+	votes []abci.ExtendedVoteInfo,
+	round int32,
 ) error {
 	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight > 0
+	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight
 
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
@@ -72,8 +73,8 @@ func ValidateVoteExtensions(
 		return buf.Bytes(), nil
 	}
 
-	var sumVP math.Int
-	for _, vote := range extCommit.Votes {
+	sumVP := math.NewInt(0)
+	for _, vote := range votes {
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
 				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
@@ -112,7 +113,7 @@ func ValidateVoteExtensions(
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: vote.VoteExtension,
 			Height:    currentHeight - 1, // the vote extension was signed in the previous height
-			Round:     int64(extCommit.Round),
+			Round:     int64(round),
 			ChainId:   chainID,
 		}
 

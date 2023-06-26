@@ -11,20 +11,28 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -287,7 +295,6 @@ func TestABCI_ExtendVote(t *testing.T) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			fmt.Println(expectedVoteExt)
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 
@@ -1587,6 +1594,119 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, req.Txs, res.Txs)
 	})
+}
+
+func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
+	// set up mocks
+	ctrl := gomock.NewController(t)
+	valStore := mock.NewMockValidatorStore(ctrl)
+	privkey := secp256k1.GenPrivKey()
+	pubkey := privkey.PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	tmPk := cmtprotocrypto.PublicKey{
+		Sum: &cmtprotocrypto.PublicKey_Secp256K1{
+			Secp256K1: pubkey.Bytes(),
+		},
+	}
+
+	val1 := mock.NewMockValidator(ctrl)
+	val1.EXPECT().BondedTokens().Return(math.NewInt(667))
+	val1.EXPECT().CmtConsPublicKey().Return(tmPk, nil).AnyTimes()
+
+	consAddr := sdk.ConsAddress(addr.String())
+	valStore.EXPECT().GetValidatorByConsAddr(gomock.Any(), consAddr.Bytes()).Return(val1, nil).AnyTimes()
+	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000)).AnyTimes()
+
+	// set up baseapp
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			cp := ctx.ConsensusParams()
+			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight
+			if extsEnabled {
+				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit.Votes, req.LocalLastCommit.Round)
+				if err != nil {
+					return nil, err
+				}
+
+				req.Txs = append(req.Txs, []byte("some-tx-that-does-something-from-votes"))
+
+			}
+			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		InitialHeight: 1,
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Abci: &cmtproto.ABCIParams{
+				VoteExtensionsEnableHeight: 2,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	// first test without vote extensions, no new txs should be added
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1, // this value can't be 0
+	}
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
+
+	// now we try with vote extensions, a new tx should show up
+	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
+		var buf bytes.Buffer
+		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
+			return nil, err
+		}
+
+		return buf.Bytes(), nil
+	}
+
+	ext := []byte("something")
+	cve := cmtproto.CanonicalVoteExtension{
+		Extension: ext,
+		Height:    2, // the vote extension was signed in the previous height
+		Round:     int64(0),
+		ChainId:   suite.baseApp.ChainID(),
+	}
+
+	bz, err := marshalDelimitedFn(&cve)
+	require.NoError(t, err)
+
+	extSig, err := privkey.Sign(bz)
+	require.NoError(t, err)
+
+	reqPrepareProposal = abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     3, // this value can't be 0
+		LocalLastCommit: abci.ExtendedCommitInfo{
+			Round: 0,
+			Votes: []abci.ExtendedVoteInfo{
+				{
+					Validator: abci.Validator{
+						Address: consAddr.Bytes(),
+						// this is being ignored by our validation function
+						Power: sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction),
+					},
+					VoteExtension:      ext,
+					ExtensionSignature: extSig,
+				},
+			},
+		},
+	}
+	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(resPrepareProposal.Txs))
+
+	// now vote extensions but our sole voter doesn't reach majority
+	val1.EXPECT().BondedTokens().Return(math.NewInt(666))
+	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
 }
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {

@@ -184,13 +184,6 @@ func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg 
 		}
 	}()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.OwnerAddress),
-		),
-	)
-
 	return &types.MsgWithdrawTokenizeShareRecordRewardResponse{}, nil
 }
 
@@ -218,13 +211,6 @@ func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, m
 			}
 		}
 	}()
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.OwnerAddress),
-		),
-	)
 
 	return &types.MsgWithdrawAllTokenizeShareRecordRewardResponse{}, nil
 }

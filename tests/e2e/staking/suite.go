@@ -68,14 +68,24 @@ func (s *E2ETestSuite) SetupSuite() {
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-	// unbonding
-	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-	_, err = s.network.WaitForHeight(1)
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
 	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	s.Require().NoError(err)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *E2ETestSuite) TearDownSuite() {

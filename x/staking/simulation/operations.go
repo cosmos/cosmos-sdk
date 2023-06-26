@@ -781,6 +781,11 @@ func SimulateMsgTransferTokenizeShareRecord(ak types.AccountKeeper, bk types.Ban
 		if len(records) > 0 {
 			record := records[r.Intn(len(records))]
 			for _, acc := range accs {
+				if acc.Address.String() != record.GetOwner() {
+					// can't transfer record if not owner
+					continue
+				}
+
 				balance := bk.GetBalance(ctx, acc.Address, record.GetShareTokenDenom())
 				if balance.Amount.IsPositive() {
 					simAccount = acc

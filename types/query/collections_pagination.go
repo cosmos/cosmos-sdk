@@ -174,7 +174,24 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 		// but we need to count how many possible results exist in total.
 		// so we keep increasing the count until the iterator is fully consumed.
 		case count > limit:
-			count++
+			if predicateFunc == nil {
+				count++
+
+				// if predicate function is defined we check if the result matches the filtering criteria
+			} else {
+				kv, err := iterator.KeyValue()
+				if err != nil {
+					return nil, nil, err
+				}
+
+				include, err := predicateFunc(kv.Key, kv.Value)
+				if err != nil {
+					return nil, nil, err
+				}
+				if include {
+					count++
+				}
+			}
 		}
 	}
 

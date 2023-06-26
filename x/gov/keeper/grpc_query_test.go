@@ -334,6 +334,30 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			},
 			true,
 		},
+		{
+			"request with filter of status deposit period with limit 2",
+			func() {
+				req = &v1.QueryProposalsRequest{
+					ProposalStatus: v1.StatusDepositPeriod,
+					Pagination: &query.PageRequest{
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+
+				var proposals []*v1.Proposal
+				for i := 0; i < len(testProposals) && len(proposals) < 2; i++ {
+					if testProposals[i].GetStatus() == v1.StatusDepositPeriod {
+						proposals = append(proposals, testProposals[i])
+					}
+				}
+
+				expRes = &v1.QueryProposalsResponse{
+					Proposals: proposals,
+				}
+			},
+			true,
+		},
 	}
 
 	for _, testCase := range testCases {

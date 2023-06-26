@@ -29,8 +29,7 @@ cd ..
 (cd baseapp/testutil; buf generate)
 
 # move proto files to the right places
-pwd
-ls
+git diff
 cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
 rm -rf github.com cosmossdk.io

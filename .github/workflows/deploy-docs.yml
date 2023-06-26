@@ -38,6 +38,7 @@ jobs:
         run: |
           npm install -g npm@8.5.5
           make build-docs
+          
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.4.2
         with:

@@ -493,6 +493,7 @@
 - [cosmos/staking/v1beta1/genesis.proto](#cosmos/staking/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.staking.v1beta1.GenesisState)
     - [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower)
+    - [TokenizeShareLock](#cosmos.staking.v1beta1.TokenizeShareLock)
   
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
     - [QueryAllTokenizeShareRecordsRequest](#cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest)
@@ -7084,6 +7085,8 @@ GenesisState defines the staking module's genesis state.
 | `exported` | [bool](#bool) |  |  |
 | `tokenize_share_records` | [TokenizeShareRecord](#cosmos.staking.v1beta1.TokenizeShareRecord) | repeated | store tokenize share records to provide reward to record owners |
 | `last_tokenize_share_record_id` | [uint64](#uint64) |  | last tokenize share record id, used for next share record id calculation |
+| `total_liquid_staked_tokens` | [bytes](#bytes) |  | total number of liquid staked tokens at genesis |
+| `tokenize_share_locks` | [TokenizeShareLock](#cosmos.staking.v1beta1.TokenizeShareLock) | repeated | tokenize shares locks at genesis |
 
 
 
@@ -7100,6 +7103,23 @@ LastValidatorPower required for validator set update logic.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the address of the validator. |
 | `power` | [int64](#int64) |  | power defines the power of the validator. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.TokenizeShareLock"></a>
+
+### TokenizeShareLock
+TokenizeSharesLock required for specifying account locks at genesis
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | Address of the account that is locked |
+| `status` | [string](#string) |  | Status of the lock (LOCKED or LOCK_EXPIRING) |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Completion time if the lock is expiring |
 
 
 

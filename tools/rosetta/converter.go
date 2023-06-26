@@ -612,7 +612,7 @@ func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation,
 		var signerStr string
 		signerStr, err = c.ir.SigningContext().AddressCodec().BytesToString(signer)
 		if err != nil {
-			return
+			return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 		}
 
 		signers = append(signers, &rosettatypes.AccountIdentifier{

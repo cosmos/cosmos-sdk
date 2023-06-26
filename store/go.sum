@@ -39,8 +39,8 @@ github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b h1:LCs8gDhg6vt8
 github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b/go.mod h1:TkdVsGYRqtULUppt2RbC+YaKtTHnHoWa2apfFrSKABw=
 github.com/cockroachdb/redact v1.1.5 h1:u1PMllDkdFfPWaNGMyLD1+so+aq3uUItthCFqzwPJ30=
 github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
-github.com/cometbft/cometbft v0.38.0-rc1 h1:ph6smlqX82aH+d72KuxDHqu29M7LyusSp/obfGsGX/w=
-github.com/cometbft/cometbft v0.38.0-rc1/go.mod h1:5Jz0Z8YsHSf0ZaAqGvi/ifioSdVFPtEGrm8Y9T/993k=
+github.com/cometbft/cometbft v0.38.0-rc2 h1:qyEDCJ9P5uPl1qccc074PxNgcOO0UghvoIk39AM5K64=
+github.com/cometbft/cometbft v0.38.0-rc2/go.mod h1:5Jz0Z8YsHSf0ZaAqGvi/ifioSdVFPtEGrm8Y9T/993k=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0E=
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=

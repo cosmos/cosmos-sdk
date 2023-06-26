@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (testutil) [#16704](https://github.com/cosmos/cosmos-sdk/pull/16704) Make app config configurator for testing for configurable.
 * (deps) [#16565](https://github.com/cosmos/cosmos-sdk/pull/16565) Bump CometBFT to [v0.37.2](https://github.com/cometbft/cometbft/blob/v0.37.2/CHANGELOG.md).
 
 ### Bug Fixes

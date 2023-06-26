@@ -10,7 +10,7 @@ permissions:
   contents: read
 jobs:
   proto-gen-checks:
-    name: Proto-Gen Checks
+    name: make proto-gen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,10 +26,13 @@ jobs:
             **/Makefile
             **/*.proto
             *.proto
+            **/*.pb.gb.go
+            **/*.pb.go
+            **/*.pulsar.go
       - name: check proto up to date
         if: env.GIT_DIFF
         run: |
           make proto-gen
           git add .
-          git diff ${{ github.head_ref || github.ref_name }}  --exit-code 
+          git diff ${{ github.head_ref || github.ref_name }} --exit-code 
 

@@ -85,13 +85,13 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// fetch starting info for delegation
 	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return
+		return sdk.DecCoins{}, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) {
 		// started this height, no rewards yet
-		return
+		return sdk.DecCoins{}, nil
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod

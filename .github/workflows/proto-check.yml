@@ -1,4 +1,4 @@
-name: Proto-Gen Checks
+name: Proto Checks
 on:
   push:
     branches:

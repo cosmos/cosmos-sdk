@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
-
 	"cosmossdk.io/orm/internal/fieldnames"
 	"cosmossdk.io/orm/model/ormtable"
 )

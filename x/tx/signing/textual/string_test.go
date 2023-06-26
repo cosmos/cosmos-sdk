@@ -7,9 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 type stringJSONTest struct {

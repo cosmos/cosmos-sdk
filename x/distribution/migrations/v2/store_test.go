@@ -2,9 +2,9 @@ package v2_test
 
 import (
 	"bytes"
+	"encoding/binary"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -63,7 +64,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorHistoricalRewards",
 			v1.GetValidatorHistoricalRewardsKey(valAddr, 6),
-			types.GetValidatorHistoricalRewardsKey(valAddr, 6),
+			getValidatorHistoricalRewardsKey(valAddr, 6),
 		},
 		{
 			"ValidatorCurrentRewards",
@@ -101,4 +102,12 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+// getValidatorHistoricalRewardsKey creates the key for a validator's historical rewards.
+// TODO: remove me
+func getValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, k)
+	return append(append(types.ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
 }

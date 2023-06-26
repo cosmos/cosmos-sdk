@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"google.golang.org/protobuf/proto"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"google.golang.org/protobuf/proto"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testkv"
@@ -69,7 +68,7 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 	})
 }
 
-func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchInsert(b *testing.B, ctx context.Context) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
@@ -80,7 +79,7 @@ func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore 
 	}
 }
 
-func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchUpdate(b *testing.B, ctx context.Context) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
@@ -91,7 +90,7 @@ func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore 
 	}
 }
 
-func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchGet(b *testing.B, ctx context.Context) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
@@ -100,7 +99,7 @@ func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for
 	}
 }
 
-func benchDelete(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchDelete(b *testing.B, ctx context.Context) {
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{

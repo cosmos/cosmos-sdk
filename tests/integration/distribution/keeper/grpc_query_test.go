@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -100,10 +102,10 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	err := f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
 	assert.NilError(t, err)
 
-	rewards, err := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+	rewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
 	assert.NilError(t, err)
 
 	testCases := []struct {
@@ -172,7 +174,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
-	assert.NilError(t, f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
+	assert.NilError(t, f.distrKeeper.ValidatorsAccumulatedCommission.Set(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
 
 	testCases := []struct {
 		name      string
@@ -509,16 +511,16 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr, f.valAddr, issuedShares)
 	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
-	assert.NilError(t, f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
+	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
 
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	assert.NilError(t, f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards))
-	assert.NilError(t, f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
+	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
 	expRes := &types.QueryDelegationRewardsResponse{
 		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},

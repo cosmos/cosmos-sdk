@@ -242,7 +242,7 @@ func (coins DecCoins) Add(coinsB ...DecCoin) DecCoins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 func (coins DecCoins) safeAdd(coinsB DecCoins) DecCoins {
-	sum := ([]DecCoin)(nil)
+	sum := make(DecCoins, 0, len(coins)+len(coinsB))
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
 
@@ -634,7 +634,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	}
 
 	if err := ValidateDenom(denomStr); err != nil {
-		return DecCoin{}, fmt.Errorf("invalid denom cannot contain spaces: %s", err)
+		return DecCoin{}, fmt.Errorf("invalid denom cannot contain spaces: %w", err)
 	}
 
 	return NewDecCoinFromDec(denomStr, amount), nil

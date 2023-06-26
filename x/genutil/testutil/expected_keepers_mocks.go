@@ -40,7 +40,7 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // ApplyAndReturnValidatorSetUpdates mocks base method.
-func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 types0.Context) ([]types.ValidatorUpdate, error) {
+func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 context.Context) ([]types.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ApplyAndReturnValidatorSetUpdates", arg0)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)

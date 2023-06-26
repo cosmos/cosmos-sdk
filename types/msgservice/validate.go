@@ -9,7 +9,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
-
 	"cosmossdk.io/x/tx/signing"
 )
 

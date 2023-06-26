@@ -3,8 +3,9 @@ package gov_test
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"

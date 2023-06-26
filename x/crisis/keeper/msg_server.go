@@ -89,8 +89,7 @@ func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "negative constant fee")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if err := k.ConstantFee.Set(sdkCtx, msg.ConstantFee); err != nil {
+	if err := k.ConstantFee.Set(ctx, msg.ConstantFee); err != nil {
 		return nil, err
 	}
 

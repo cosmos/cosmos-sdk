@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"gotest.tools/v3/assert"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +26,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
 	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi)
+	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi))
 
 	return addrs, validators
 }
@@ -126,8 +125,10 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	params := f.stakingKeeper.GetParams(ctx)
-	delValidators := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	delValidators, err := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	assert.NilError(t, err)
 	var req *types.QueryDelegatorValidatorsRequest
 	testCases := []struct {
 		msg       string
@@ -712,7 +713,9 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	assert.NilError(t, err)
-	assert.DeepEqual(t, f.stakingKeeper.GetParams(ctx), resp.Params)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, params, resp.Params)
 }
 
 func TestGRPCQueryHistoricalInfo(t *testing.T) {

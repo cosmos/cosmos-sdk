@@ -87,6 +87,7 @@ Use of `cosmovisor` without one of the action arguments is deprecated. For backw
 * `DAEMON_HOME` is the location where the `cosmovisor/` directory is kept that contains the genesis binary, the upgrade binaries, and any additional auxiliary files associated with each binary (e.g. `$HOME/.gaiad`, `$HOME/.regend`, `$HOME/.simd`, etc.).
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
+* `DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM` (*optional*, default = `false`), if `true` cosmovisor will require that a checksum is provided in the upgrade plan for the binary to be downloaded. If `false`, cosmovisor will not require a checksum to be provided, but still check the checksum if one is provided.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_RESTART_DELAY` (*optional*, default none), allow a node operator to define a delay between the node halt (for upgrade) and backup by the specified time. The value must be a duration (e.g. `1s`).
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
@@ -94,6 +95,8 @@ Use of `cosmovisor` without one of the action arguments is deprecated. For backw
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
 * `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call [`pre-upgrade`](https://docs.cosmos.network/main/building-apps/app-upgrade#pre-upgrade-handling) in the application after exit status of `31`. After the maximum number of retries, Cosmovisor fails the upgrade.
 * `COSMOVISOR_DISABLE_LOGS` (defaults to `false`). If set to true, this will disable Cosmovisor logs (but not the underlying process) completely. This may be useful, for example, when a Cosmovisor subcommand you are executing returns a valid JSON you are then parsing, as logs added by Cosmovisor make this output not a valid JSON.
+* `COSMOVISOR_COLOR_LOGS` (defaults to `true`). If set to true, this will colorise Cosmovisor logs (but not the underlying process).
+* `COSMOVISOR_TIMEFORMAT_LOGS` (defaults to `kitchen`). If set to a value (`layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen`), this will add timestamp prefix to Cosmovisor logs (but not the underlying process).
 
 ### Folder Layout
 

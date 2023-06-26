@@ -150,6 +150,48 @@ func InitGenesis(
 		}
 	}
 
+	// Set the total liquid staked tokens
+	keeper.SetTotalLiquidStakedTokens(ctx, data.TotalLiquidStakedTokens)
+
+	// Set each tokenize share record, as well as the last tokenize share record ID
+	latestId := uint64(0)
+	for _, tokenizeShareRecord := range data.TokenizeShareRecords {
+		if err := keeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord); err != nil {
+			panic(err)
+		}
+		if tokenizeShareRecord.Id > latestId {
+			latestId = tokenizeShareRecord.Id
+		}
+	}
+	if data.LastTokenizeShareRecordId < latestId {
+		panic("Tokenize share record specified with ID greater than the latest ID")
+	}
+	keeper.SetLastTokenizeShareRecordID(ctx, data.LastTokenizeShareRecordId)
+
+	// Set the tokenize shares locks for accounts that have disabled tokenizing shares
+	// The lock can either be in status LOCKED or LOCK_EXPIRING
+	// If it is in status LOCK_EXPIRING, a the unlocking must also be queued
+	for _, tokenizeShareLock := range data.TokenizeShareLocks {
+		address := sdk.MustAccAddressFromBech32(tokenizeShareLock.Address)
+
+		switch tokenizeShareLock.Status {
+		case types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String():
+			keeper.AddTokenizeSharesLock(ctx, address)
+
+		case types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String():
+			completionTime := tokenizeShareLock.CompletionTime
+
+			authorizations := keeper.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
+			authorizations.Addresses = append(authorizations.Addresses, address.String())
+
+			keeper.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
+			keeper.SetTokenizeSharesUnlockTime(ctx, address, completionTime)
+
+		default:
+			panic(fmt.Sprintf("Unsupported tokenize share lock status %s", tokenizeShareLock.Status))
+		}
+	}
+
 	return res
 }
 
@@ -179,14 +221,18 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	})
 
 	return &types.GenesisState{
-		Params:               keeper.GetParams(ctx),
-		LastTotalPower:       keeper.GetLastTotalPower(ctx),
-		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           keeper.GetAllValidators(ctx),
-		Delegations:          keeper.GetAllDelegations(ctx),
-		UnbondingDelegations: unbondingDelegations,
-		Redelegations:        redelegations,
-		Exported:             true,
+		Params:                    keeper.GetParams(ctx),
+		LastTotalPower:            keeper.GetLastTotalPower(ctx),
+		LastValidatorPowers:       lastValidatorPowers,
+		Validators:                keeper.GetAllValidators(ctx),
+		Delegations:               keeper.GetAllDelegations(ctx),
+		UnbondingDelegations:      unbondingDelegations,
+		Redelegations:             redelegations,
+		Exported:                  true,
+		TokenizeShareRecords:      keeper.GetAllTokenizeShareRecords(ctx),
+		LastTokenizeShareRecordId: keeper.GetLastTokenizeShareRecordID(ctx),
+		TotalLiquidStakedTokens:   keeper.GetTotalLiquidStakedTokens(ctx),
+		TokenizeShareLocks:        keeper.GetAllTokenizeSharesLocks(ctx),
 	}
 }
 

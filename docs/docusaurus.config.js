@@ -53,10 +53,6 @@ const config = {
               path: "v0.47",
               label: "v0.47",
             },
-            // "v0.50": {
-            //   path: "v0.50",
-            //   label: "v0.50",
-            // },
           },
         },
         theme: {

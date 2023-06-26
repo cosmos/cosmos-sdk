@@ -93,7 +93,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 func getDBBackendFromConfig(rootDir string) (dbm.BackendType, error) {
 	path := filepath.Join(rootDir, "config")
 
-	var configKeys = []struct {
+	configKeys := []struct {
 		filename string
 		key      string
 	}{

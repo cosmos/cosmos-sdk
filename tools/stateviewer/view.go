@@ -41,9 +41,7 @@ func ViewCommand() *cobra.Command {
 		Use:   "view [home] [key]",
 		Short: "View a specific key in an application database",
 		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return view(cmd, args)
-		},
+		RunE:  view,
 	}
 
 	cmd.Flags().String(FlagDBBackend, "", "The application database backend (if none specified, fallback to application config)")

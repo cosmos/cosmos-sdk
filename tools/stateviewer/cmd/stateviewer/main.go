@@ -3,8 +3,9 @@ package main
 import (
 	"os"
 
-	"cosmossdk.io/tools/stateviewer"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/stateviewer"
 )
 
 func main() {

@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/jhump/protoreflect/grpcreflect"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 

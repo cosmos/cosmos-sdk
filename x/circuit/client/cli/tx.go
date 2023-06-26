@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/spf13/cobra"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/circuit/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/circuit transaction commands.

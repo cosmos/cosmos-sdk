@@ -3,12 +3,12 @@ package keeper
 import (
 	context "context"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/circuit/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Keeper defines the circuit module's keeper.

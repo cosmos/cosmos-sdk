@@ -12,10 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names

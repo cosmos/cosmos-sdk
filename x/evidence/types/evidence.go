@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/tmhash"
+
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/exported"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

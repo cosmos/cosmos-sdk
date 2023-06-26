@@ -3,10 +3,11 @@ package codec_test
 import (
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"github.com/stretchr/testify/require"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

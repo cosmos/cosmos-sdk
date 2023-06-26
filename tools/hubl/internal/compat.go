@@ -6,14 +6,15 @@ import (
 	"io"
 	"strings"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1beta1 "cosmossdk.io/api/cosmos/base/reflection/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1beta1 "cosmossdk.io/api/cosmos/base/reflection/v1beta1"
 )
 
 // loadFileDescriptorsGRPCReflection attempts to load the file descriptor set using gRPC reflection when cosmos.reflection.v1

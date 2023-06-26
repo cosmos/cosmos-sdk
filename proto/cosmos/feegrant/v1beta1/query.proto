@@ -12,7 +12,7 @@ option go_package = "cosmossdk.io/x/feegrant";
 // Query defines the gRPC querier service.
 service Query {
 
-  // Allowance returns granted allwance to the grantee by the granter.
+  // Allowance returns granted allowance to the grantee by the granter.
   rpc Allowance(QueryAllowanceRequest) returns (QueryAllowanceResponse) {
     option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}";
   }

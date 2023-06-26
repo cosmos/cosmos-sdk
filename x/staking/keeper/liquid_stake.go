@@ -224,8 +224,9 @@ func (k Keeper) GetAllTokenizeSharesLocks(ctx sdk.Context) (tokenizeShareLocks [
 			status = types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING
 		}
 
+		bechPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		lock := types.TokenizeShareLock{
-			Address:        sdk.MustBech32ifyAddressBytes(sdk.Bech32MainPrefix, addressBz),
+			Address:        sdk.MustBech32ifyAddressBytes(bechPrefix, addressBz),
 			Status:         status.String(),
 			CompletionTime: unlockTime,
 		}

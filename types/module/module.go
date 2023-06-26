@@ -35,16 +35,17 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

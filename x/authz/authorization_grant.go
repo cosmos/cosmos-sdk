@@ -3,8 +3,9 @@ package authz
 import (
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	proto "github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

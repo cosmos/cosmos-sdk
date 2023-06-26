@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
 )
 

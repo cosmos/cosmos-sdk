@@ -207,7 +207,7 @@ func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (
 func (k Keeper) GetAllTokenizeSharesLocks(ctx sdk.Context) (tokenizeShareLocks []types.TokenizeShareLock) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.TokenizeSharesLockKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.TokenizeSharesLockPrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -284,7 +284,7 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 
 	// iterators all time slices from time 0 until the current block time
 	prefixEnd := sdk.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(blockTime))
-	iterator := store.Iterator(types.TokenizeSharesUnlockQueueKey, prefixEnd)
+	iterator := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
 	defer iterator.Close()
 
 	unlockedAddresses = []string{}

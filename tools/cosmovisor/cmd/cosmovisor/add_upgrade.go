@@ -7,10 +7,10 @@ import (
 	"path"
 	"strings"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {

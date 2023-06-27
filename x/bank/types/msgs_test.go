@@ -9,11 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-<<<<<<< HEAD
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-=======
->>>>>>> 7c8236d2e (refactor: x/bank audit changes (#16690))
 )
 
 func TestMsgSendGetSignBytes(t *testing.T) {
@@ -154,14 +149,3 @@ func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	actual := string(actualBz)
 	assert.Equal(t, expected, actual)
 }
-<<<<<<< HEAD
-
-func TestMsgSetSendEnabledGetSigners(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
-	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil)
-	expected := []sdk.AccAddress{govModuleAddr}
-	actual := msg.GetSigners()
-	assert.Equal(t, expected, actual)
-}
-=======
->>>>>>> 7c8236d2e (refactor: x/bank audit changes (#16690))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/spf13/cobra"
@@ -36,7 +37,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	logger := cfg.Logger(os.Stdout)
 
-	upgradeName := args[0]
+	upgradeName := strings.ToLower(args[0])
 	if len(upgradeName) == 0 {
 		return fmt.Errorf("upgrade name cannot be empty")
 	}

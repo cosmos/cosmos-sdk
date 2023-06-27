@@ -10,10 +10,6 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	"github.com/google/go-cmp/cmp"
-
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"

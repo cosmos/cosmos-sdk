@@ -205,9 +205,11 @@ func (l Launcher) doCustomPreUpgrade() error {
 		return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE: %s is not a regular file", f)
 	}
 
-	// Set execute bit if necessary
+	// Set the execute bit for only the current user
+	// Given:  Current user - Group - Everyone
+	//       0o     RWX     - RWX   - RWX
 	oldMode := info.Mode().Perm()
-	newMode := oldMode | 0o100 // Set the three execute bits to on (a+x).
+	newMode := oldMode | 0o100
 	if oldMode != newMode {
 		if err := os.Chmod(preupgradeFile, newMode); err != nil {
 			l.logger.Info().Msg("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")

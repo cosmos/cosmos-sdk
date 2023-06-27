@@ -151,7 +151,11 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 // Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
+<<<<<<< HEAD
 func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
+=======
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec, maxGas int64) *cmtproto.ConsensusParams {
+>>>>>>> 9b2fd7bad (feat: add custom max gas for block for sim config (#16656))
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -162,7 +166,7 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	consensusParams := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			MaxGas:   -1,
+			MaxGas:   maxGas,
 		},
 		Validator: &tmproto.ValidatorParams{
 			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},

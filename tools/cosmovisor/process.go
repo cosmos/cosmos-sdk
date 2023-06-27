@@ -172,6 +172,7 @@ func (l Launcher) doBackup() error {
 	return nil
 }
 
+// doCustomPreUpgrade executes the custom preupgrade script if provided.
 func (l Launcher) doCustomPreUpgrade() error {
 	if l.cfg.CustomPreupgrade == "" {
 		return nil

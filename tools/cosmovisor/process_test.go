@@ -6,7 +6,6 @@ package cosmovisor_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/fs"
 	"path/filepath"
 	"sync"
@@ -94,7 +93,6 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	start := time.Now()
-
 	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdout, stderr)
 	require.NoError(err)
 	require.True(doUpgrade)
@@ -116,7 +114,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	logger := log.NewLogger(io.Discard, log.ColorOption(false)).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -179,13 +177,14 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{
-		Home: home, Name: "autod",
+		Home:                  home,
+		Name:                  "autod",
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
 		CustomPreupgrade:      "missing.sh",
 	}
-	logger := log.NewLogger(io.Discard).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

@@ -186,6 +186,10 @@ func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 		return upgradetypes.Plan{}, err
 	}
 
+	if len(f) == 0 {
+		return upgradetypes.Plan{}, errors.New("empty upgrade-info.json")
+	}
+
 	var upgradePlan upgradetypes.Plan
 	if err := json.Unmarshal(f, &upgradePlan); err != nil {
 		return upgradetypes.Plan{}, err

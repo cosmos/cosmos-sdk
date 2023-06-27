@@ -77,6 +77,10 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
+		if err := l.doCustomPreUpgrade(); err != nil {
+			return false, err
+		}
+
 		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
@@ -164,6 +168,64 @@ func (l Launcher) doBackup() error {
 		et := time.Now()
 		l.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
 	}
+
+	return nil
+}
+
+func (l Launcher) doCustomPreUpgrade() error {
+	if l.cfg.CustomPreupgrade == "" {
+		return nil
+	}
+
+	// check if upgrade-info.json is not empty.
+	var uInfo upgradetypes.Plan
+	upgradeInfoFile, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
+	if err != nil {
+		return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+	}
+
+	if err = json.Unmarshal(upgradeInfoFile, &uInfo); err != nil {
+		return err
+	}
+
+	if err = uInfo.ValidateBasic(); err != nil {
+		return fmt.Errorf("invalid upgrade plan: %w", err)
+	}
+
+	// check if preupgradeFile is executable file
+	preupgradeFile := filepath.Join(l.cfg.Home, "cosmovisor", l.cfg.CustomPreupgrade)
+	l.logger.Info("looking for COSMOVISOR_CUSTOM_PREUPGRADE file", "file", preupgradeFile)
+	info, err := os.Stat(preupgradeFile)
+	if err != nil {
+		l.logger.Error("COSMOVISOR_CUSTOM_PREUPGRADE file missing", "file", preupgradeFile)
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		_, f := filepath.Split(preupgradeFile)
+		return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE: %s is not a regular file", f)
+	}
+
+	// Set the execute bit for only the current user
+	// Given:  Current user - Group - Everyone
+	//       0o     RWX     - RWX   - RWX
+	oldMode := info.Mode().Perm()
+	newMode := oldMode | 0o100
+	if oldMode != newMode {
+		if err := os.Chmod(preupgradeFile, newMode); err != nil {
+			l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
+			return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
+		}
+	}
+
+	// Run preupgradeFile
+	cmd := exec.Command(preupgradeFile, uInfo.Name, fmt.Sprintf("%d", uInfo.Height))
+	cmd.Dir = l.cfg.Home
+	result, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE result", "command", preupgradeFile, "argv1", uInfo.Name, "argv2", fmt.Sprintf("%d", uInfo.Height), "result", result)
 
 	return nil
 }

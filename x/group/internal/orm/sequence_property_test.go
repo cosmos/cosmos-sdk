@@ -3,10 +3,10 @@ package orm
 import (
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestSequence(t *testing.T) {
@@ -30,7 +30,7 @@ func testSequenceMachine(t *rapid.T) {
 	// Create model state
 	state := initSeqVal
 
-	t.Run(map[string]func(*rapid.T){
+	t.Repeat(map[string]func(*rapid.T){
 		// NextVal is one of the model commands. It checks that the next value of the
 		// sequence matches the model and increments the model state.
 		"NextVal": func(t *rapid.T) {

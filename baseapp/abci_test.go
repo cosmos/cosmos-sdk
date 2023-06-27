@@ -5,11 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -17,6 +16,8 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -1236,7 +1237,9 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
+
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -1263,7 +1266,9 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
+
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -1282,13 +1287,52 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 }
 
+func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
+	pool := mempool.NewSenderNonceMempool()
+	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	// set max block gas limit to 100
+	suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{MaxGas: 100},
+		},
+	})
+
+	// insert 100 txs, each with a gas limit of 10
+	_, _, addr := testdata.KeyTestPubAddr()
+	for i := int64(0); i < 100; i++ {
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msgs := []sdk.Msg{msg}
+
+		builder := suite.txConfig.NewTxBuilder()
+		builder.SetMsgs(msgs...)
+		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
+		builder.SetGasLimit(10)
+		setTxSignature(t, builder, uint64(i))
+
+		err := pool.Insert(sdk.Context{}, builder.GetTx())
+		require.NoError(t, err)
+	}
+
+	// ensure we only select transactions that fit within the block gas limit
+	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
+		MaxTxBytes: 1_000_000, // large enough to ignore restriction
+		Height:     1,
+	})
+	require.NoError(t, err)
+	require.Len(t, res.Txs, 10, "invalid number of transactions returned")
+}
+
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
+
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -1421,5 +1465,44 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	}
+}
+
+func TestABCI_HaltChain(t *testing.T) {
+	testCases := []struct {
+		name        string
+		haltHeight  uint64
+		haltTime    uint64
+		blockHeight int64
+		blockTime   int64
+		expHalt     bool
+	}{
+		{"default", 0, 0, 10, 0, false},
+		{"halt-height-edge", 10, 0, 10, 0, false},
+		{"halt-height", 10, 0, 11, 0, true},
+		{"halt-time-edge", 0, 10, 1, 10, false},
+		{"halt-time", 0, 10, 1, 11, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
+			suite.baseApp.InitChain(&abci.RequestInitChain{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+				InitialHeight:   tc.blockHeight,
+			})
+
+			app := suite.baseApp
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: tc.blockHeight,
+				Time:   time.Unix(tc.blockTime, 0),
+			})
+			if !tc.expHalt {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, strings.HasPrefix(err.Error(), "halt per configuration"))
+			}
+		})
 	}
 }

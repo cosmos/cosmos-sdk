@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16607) - Introduces `Clear` method for `Map` and `KeySet`
+
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.2.0)
 
 ### Features

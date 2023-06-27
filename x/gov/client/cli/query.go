@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -163,7 +165,7 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			if len(res.GetProposals()) == 0 {
-				return fmt.Errorf("no proposals found")
+				return errors.New("no proposals found")
 			}
 
 			return clientCtx.PrintProto(res)
@@ -215,7 +217,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				&v1.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
-				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %w", proposalID, err)
 			}
 
 			voterAddr, err := ac.StringToBytes(args[1])
@@ -289,7 +291,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				&v1.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
-				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %w", proposalID, err)
 			}
 
 			propStatus := proposalRes.GetProposal().Status
@@ -370,7 +372,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				&v1.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
-				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %w", proposalID, err)
 			}
 
 			res, err := queryClient.Deposit(
@@ -426,7 +428,7 @@ $ %s query gov deposits 1
 				&v1.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
-				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %w", proposalID, err)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -488,7 +490,7 @@ $ %s query gov tally 1
 				&v1.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
-				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %w", proposalID, err)
 			}
 
 			// Query store

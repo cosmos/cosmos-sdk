@@ -1,8 +1,9 @@
 package testutil
 
 import (
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"

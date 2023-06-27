@@ -33,12 +33,6 @@ func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *t
 	return m, nil
 }
 
-// GetSigners implements Msg
-func (msg MsgGrant) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
 func (msg *MsgGrant) GetAuthorization() (Authorization, error) {
 	return msg.Grant.GetAuthorization()
@@ -85,12 +79,6 @@ func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke 
 	}
 }
 
-// GetSigners implements Msg
-func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
 // NewMsgExec creates a new MsgExecAuthorized
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
@@ -121,10 +109,4 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	}
 
 	return msgs, nil
-}
-
-// GetSigners implements Msg
-func (msg MsgExec) GetSigners() []sdk.AccAddress {
-	grantee, _ := sdk.AccAddressFromBech32(msg.Grantee)
-	return []sdk.AccAddress{grantee}
 }

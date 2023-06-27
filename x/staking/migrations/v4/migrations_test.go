@@ -69,7 +69,7 @@ func TestMigrate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.doMigration {
-				require.NoError(t, v4.MigrateStore(ctx, storeKey, cdc, legacySubspace))
+				require.NoError(t, v4.MigrateStore(ctx, store, cdc, legacySubspace))
 			}
 
 			ubd := getUBD(t, accAddr, valAddr, store, cdc)

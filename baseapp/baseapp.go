@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strconv"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -17,6 +15,8 @@ import (
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
@@ -832,6 +832,13 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		return sdk.GasInfo{}, nil, nil, err
 	}
 
+	for _, msg := range msgs {
+		handler := app.msgServiceRouter.Handler(msg)
+		if handler == nil {
+			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
+		}
+	}
+
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -948,7 +955,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 
 		// ADR 031 request type routing

@@ -43,7 +43,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		unbondTime                time.Duration
 		maxVals                   uint32
 		histEntries               uint32
-		minCommissionRate         sdk.Dec
 		validatorBondFactor       sdk.Dec
 		globalLiquidStakingCap    sdk.Dec
 		validatorLiquidStakingCap sdk.Dec
@@ -73,7 +72,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		7,
 		histEntries,
 		sdk.DefaultBondDenom,
-		minCommissionRate,
 		validatorBondFactor,
 		globalLiquidStakingCap,
 		validatorLiquidStakingCap,

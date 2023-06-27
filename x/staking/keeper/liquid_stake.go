@@ -210,6 +210,40 @@ func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (
 	return types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING, unlockTime
 }
 
+// Returns all tokenize share locks
+func (k Keeper) GetAllTokenizeSharesLocks(ctx sdk.Context) (tokenizeShareLocks []types.TokenizeShareLock) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.TokenizeSharesLockPrefix)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		addressBz := iterator.Key()[2:] // remove prefix bytes and address length
+		unlockTime, err := sdk.ParseTimeBytes(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
+
+		var status types.TokenizeShareLockStatus
+		if unlockTime.IsZero() {
+			status = types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED
+		} else {
+			status = types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING
+		}
+
+		bechPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+		lock := types.TokenizeShareLock{
+			Address:        sdk.MustBech32ifyAddressBytes(bechPrefix, addressBz),
+			Status:         status.String(),
+			CompletionTime: unlockTime,
+		}
+
+		tokenizeShareLocks = append(tokenizeShareLocks, lock)
+	}
+
+	return tokenizeShareLocks
+}
+
 // Stores a list of addresses pending tokenize share unlocking at the same time
 func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time, authorizations types.PendingTokenizeShareAuthorizations) {
 	store := ctx.KVStore(k.storeKey)
@@ -273,7 +307,7 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 
 	// iterators all time slices from time 0 until the current block time
 	prefixEnd := sdk.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(blockTime))
-	iterator := store.Iterator(types.TokenizeSharesUnlockQueueKey, prefixEnd)
+	iterator := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
 	defer iterator.Close()
 
 	unlockedAddresses = []string{}

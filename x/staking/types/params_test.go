@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -28,11 +27,4 @@ func Test_validateParams(t *testing.T) {
 
 	// default params have no error
 	require.NoError(t, params.Validate())
-
-	// validate mincommision
-	params.MinCommissionRate = sdk.NewDec(-1)
-	require.Error(t, params.Validate())
-
-	params.MinCommissionRate = sdk.NewDec(2)
-	require.Error(t, params.Validate())
 }

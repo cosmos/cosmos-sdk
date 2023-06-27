@@ -773,6 +773,51 @@ func TestTokenizeSharesLock(t *testing.T) {
 	require.Equal(t, unlocked, status.String(), "addressB unlocked at end")
 }
 
+// Tests GetAllTokenizeSharesLocks
+func TestGetAllTokenizeSharesLocks(t *testing.T) {
+	_, app, ctx := createTestInput()
+
+	addresses := simapp.AddTestAddrs(app, ctx, 4, sdk.NewInt(1))
+
+	// Set 2 locked accounts, and two accounts with a lock expiring
+	app.StakingKeeper.AddTokenizeSharesLock(ctx, addresses[0])
+	app.StakingKeeper.AddTokenizeSharesLock(ctx, addresses[1])
+
+	unlockTime1 := time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC)
+	unlockTime2 := time.Date(2023, 1, 2, 1, 0, 0, 0, time.UTC)
+	app.StakingKeeper.SetTokenizeSharesUnlockTime(ctx, addresses[2], unlockTime1)
+	app.StakingKeeper.SetTokenizeSharesUnlockTime(ctx, addresses[3], unlockTime2)
+
+	// Defined expected locks after GetAll
+	expectedLocks := map[string]types.TokenizeShareLock{
+		addresses[0].String(): {
+			Status: types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
+		},
+		addresses[1].String(): {
+			Status: types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
+		},
+		addresses[2].String(): {
+			Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
+			CompletionTime: unlockTime1,
+		},
+		addresses[3].String(): {
+			Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
+			CompletionTime: unlockTime2,
+		},
+	}
+
+	// Check output from GetAll
+	actualLocks := app.StakingKeeper.GetAllTokenizeSharesLocks(ctx)
+	require.Len(t, actualLocks, len(expectedLocks), "number of locks")
+
+	for i, actual := range actualLocks {
+		expected, ok := expectedLocks[actual.Address]
+		require.True(t, ok, "address %s not expected", actual.Address)
+		require.Equal(t, expected.Status, actual.Status, "tokenize share lock #%d status", i)
+		require.Equal(t, expected.CompletionTime, actual.CompletionTime, "tokenize share lock #%d completion time", i)
+	}
+}
+
 // Test Get/SetPendingTokenizeShareAuthorizations
 func TestPendingTokenizeShareAuthorizations(t *testing.T) {
 	_, app, ctx := createTestInput()

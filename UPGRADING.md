@@ -29,6 +29,18 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
+### Enable Vote Extensions
+
+To enable vote extensions, the consensus param `Abci.VoteExtensionsEnableHeight` must be set to a value greater
+than zero.
+
+For new chains this can be done in the `genesis.json` file.
+
+For existing chains this can be done in two ways:
+
+- An upgrade handler that sets this value.
+- A governance proposal that changes the consensus param.
+
 ### BaseApp
 
 All ABCI methods now accept a pointer to the request and response types defined

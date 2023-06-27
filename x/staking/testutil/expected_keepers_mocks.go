@@ -12,7 +12,6 @@ import (
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -168,43 +167,6 @@ func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types.Mo
 func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), arg0, arg1)
-}
-
-// MockConsensusKeeper is a mock of ConsensusParamKeeper interface.
-type MockConsensusKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockConsensusKeeperMockRecorder
-}
-
-// MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
-type MockConsensusKeeperMockRecorder struct {
-	mock *MockConsensusKeeper
-}
-
-// NewMockConsensusKeeper creates a new mock instance.
-func NewMockConsensusKeeper(ctrl *gomock.Controller) *MockConsensusKeeper {
-	mock := &MockConsensusKeeper{ctrl: ctrl}
-	mock.recorder = &MockConsensusKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
-	return m.recorder
-}
-
-// BurnCoins mocks base method.
-func (m *MockConsensusKeeper) Params(ctx context.Context, req *types1.QueryParamsRequest) (*types1.QueryParamsResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Params", ctx, req)
-	ret0, ret1 := ret[0].(*types1.QueryParamsResponse), ret[0].(error)
-	return ret0, ret1
-}
-
-// GetBalance indicates an expected call of GetBalance.
-func (mr *MockConsensusKeeperMockRecorder) Params(ctx, req interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Params", reflect.TypeOf((*MockConsensusKeeper)(nil).Params), ctx, req)
 }
 
 // MockBankKeeper is a mock of BankKeeper interface.

@@ -82,13 +82,6 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cp := sdkCtx.ConsensusParams()
-	if cp.Block == nil {
-		res, err := k.consensusKeeper.Params(ctx, nil)
-		if err != nil {
-			return nil, err
-		}
-		cp = *res.Params
-	}
 	if cp.Validator != nil {
 		pkType := pk.Type()
 		hasKeyType := false

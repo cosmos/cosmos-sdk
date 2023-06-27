@@ -211,7 +211,7 @@ type AddressCodecInputs struct {
 	depinject.In
 
 	Config              *modulev1.Module
-	AddressCodecFactory AddressCodecFactory `optional:"true"`
+	AddressCodecFactory func() address.Codec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any

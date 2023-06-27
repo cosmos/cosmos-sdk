@@ -200,7 +200,27 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideAddressCodec),
 	)
+}
+
+// AddressCodecFactory is a type alias for a function that returns an address.Codec
+type AddressCodecFactory func() address.Codec
+
+type AddressCodecInputs struct {
+	depinject.In
+
+	Config              *modulev1.Module
+	AddressCodecFactory func() address.Codec `optional:"true"`
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(in AddressCodecInputs) address.Codec {
+	if in.AddressCodecFactory != nil {
+		return in.AddressCodecFactory()
+	}
+	return authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 }
 
 type ModuleInputs struct {
@@ -210,7 +230,7 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
-	AddressCodec            address.Codec                 `optional:"true"`
+	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -235,10 +255,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	authority := types.NewModuleAddress(GovModuleName)
 	if in.Config.Authority != "" {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	if in.AddressCodec == nil {
-		in.AddressCodec = authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 	}
 
 	if in.RandomGenesisAccountsFn == nil {

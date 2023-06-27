@@ -69,6 +69,6 @@ func marshalDuration(message protoreflect.Message, writer io.Writer) error {
 
 	nanos := message.Get(nanosField).Int()
 	totalNanos := nanos + (seconds * 1e9)
-	_, err := writer.Write([]byte(fmt.Sprintf(`"%d"`, totalNanos)))
+	_, err := fmt.Fprintf(writer, `"%d"`, totalNanos)
 	return err
 }

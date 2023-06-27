@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
 * (all) [#16497](https://github.com/cosmos/cosmos-sdk/pull/16497) Removed all exported vestiges of `sdk.MustSortJSON` and `sdk.SortJSON`.
 * (x/distribution) [#16218](https://github.com/cosmos/cosmos-sdk/pull/16218) Add Autocli config to distribution module.
+* (cli) [#16206](https://github.com/cosmos/cosmos-sdk/pull/16206) Make ABCI handshake profileable.
 
 ### API Breaking Changes
 
@@ -67,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
 * (x/auth/types) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
 * (baseapp) [#16613](https://github.com/cosmos/cosmos-sdk/pull/16613) Ensure each message in a transaction has a registered handler, otherwise `CheckTx` will fail.
+* [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 
@@ -291,6 +293,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (cli) The majority of Cosmos SDK modules now use [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli) for their queries. Allowing for a more consistent CLI experience between modules and CLI and gRPC. These changes led to no changes in UX but a [small change in CLI outputs for some commands returning a JSON or a YAML](https://github.com/cosmos/cosmos-sdk/issues/16651).
 * (cli) [#15826](https://github.com/cosmos/cosmos-sdk/pull/15826) Remove `<appd> q account` command. Use `<appd> q auth account` instead.
 * (x/staking) [#14864](https://github.com/cosmos/cosmos-sdk/pull/14864) `create-validator` CLI command now takes a json file as an arg instead of having a bunch of required flags to it.
 * (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659) `<app> q block <height>` is removed as it just output json. The new command allows either height/hash and is `<app> q block --type=height|hash <height|hash>`. 

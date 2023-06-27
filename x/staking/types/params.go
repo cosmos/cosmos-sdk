@@ -33,8 +33,11 @@ const (
 )
 
 var (
+	// ValidatorBondFactor of -1 indicates that it's disabled
+	ValidatorBondDisabled = sdk.NewDecFromInt(sdk.NewInt(-1))
+
 	// DefaultValidatorBondFactor is set to -1 (disabled)
-	DefaultValidatorBondFactor = sdk.NewDecFromInt(sdk.NewInt(-1))
+	DefaultValidatorBondFactor = ValidatorBondDisabled
 	// DefaultGlobalLiquidStakingCap is set to 100%
 	DefaultGlobalLiquidStakingCap = sdk.OneDec()
 	// DefaultValidatorLiquidStakingCap is set to 100%

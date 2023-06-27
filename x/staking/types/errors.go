@@ -67,4 +67,6 @@ var (
 	ErrUnableToDisableTokenizeShares            = sdkerrors.Register(ModuleName, 55, "unable to disable tokenize shares for account")
 	ErrTokenizeSharesAlreadyEnabledForAccount   = sdkerrors.Register(ModuleName, 57, "tokenize shares is already enabled for this account")
 	ErrTokenizeSharesAlreadyDisabledForAccount  = sdkerrors.Register(ModuleName, 58, "tokenize shares is already disabled for this account")
+	ErrValidatorLiquidSharesUnderflow           = sdkerrors.Register(ModuleName, 59, "validator liquid shares underflow")
+	ErrTotalLiquidStakedUnderflow               = sdkerrors.Register(ModuleName, 60, "total liquid staked underflow")
 )

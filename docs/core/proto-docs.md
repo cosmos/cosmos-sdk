@@ -7611,7 +7611,7 @@ Query/QueryTokenizeShareRecordsOwned RPC method.
 <a name="cosmos.staking.v1beta1.QueryTotalLiquidStaked"></a>
 
 ### QueryTotalLiquidStaked
-QueryQueryTotalLiquidStakedRequest is request type for the
+QueryTotalLiquidStakedRequest is request type for the
 Query/QueryQueryTotalLiquidStaked RPC method.
 
 
@@ -7622,7 +7622,7 @@ Query/QueryQueryTotalLiquidStaked RPC method.
 <a name="cosmos.staking.v1beta1.QueryTotalLiquidStakedResponse"></a>
 
 ### QueryTotalLiquidStakedResponse
-QueryQueryTotalLiquidStakedResponse is response type for the
+QueryTotalLiquidStakedResponse is response type for the
 Query/QueryQueryTotalLiquidStaked RPC method.
 
 

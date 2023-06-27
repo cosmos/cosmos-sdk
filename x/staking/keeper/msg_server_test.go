@@ -347,7 +347,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// Create ICA module account
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Fund module account
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
@@ -695,7 +695,7 @@ func TestValidatorBond(t *testing.T) {
 
 			delegatorAddress := sdk.AccAddress(delegatorPubKey.Address())
 			validatorAddress := sdk.ValAddress(validatorPubKey.Address())
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Set the delegator address to either be a user account or an ICA account depending on the test case
 			if tc.delegatorIsLSTP {
@@ -797,6 +797,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	params.UnbondingTime = unbondingPeriod
 	app.StakingKeeper.SetParams(ctx, params)
+	unlockTime := blockTime.Add(unbondingPeriod)
 
 	// Build test messages (some of which will be reused)
 	delegateMsg := types.MsgDelegate{
@@ -856,15 +857,31 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
 	require.NoError(t, err, "no error expected when enabling tokenization")
 
-	// Attempt to tokenize again, it should still fail since the unboning period has
+	// Attempt to tokenize again, it should still fail since the unbonding period has
 	// not passed and the lock is still active
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
 	require.ErrorContains(t, err, fmt.Sprintf("tokenization will be allowed at %s",
 		blockTime.Add(unbondingPeriod)))
 
+	// Confirm the unlock is queued
+	authorizations := app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, unlockTime)
+	require.Equal(t, []string{delegatorAddress.String()}, authorizations.Addresses,
+		"pending tokenize share authorizations")
+
+	// Disable tokenization again - it should remove the pending record from the queue
+	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	require.NoError(t, err, "no error expected when re-enabling tokenization")
+
+	authorizations = app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, unlockTime)
+	require.Empty(t, authorizations.Addresses, "there should be no pending authorizations in the queue")
+
+	// Enable one more time
+	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	require.NoError(t, err, "no error expected when enabling tokenization again")
+
 	// Increment the block time by the unbonding period and remove the expired locks
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingPeriod))
+	ctx = ctx.WithBlockTime(unlockTime)
 	app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, ctx.BlockTime())
 
 	// Attempt to tokenize again, it should succeed this time since the lock has expired

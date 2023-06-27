@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -39,22 +38,21 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 }
 
 // Check if an account is a owned by a liquid staking provider
-// This is determined by checking if the account is a 32-length module account
-func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccAddress) bool {
-	account := k.authKeeper.GetAccount(ctx, address)
-	_, isModuleAccount := account.(*authtypes.ModuleAccount)
-	return isModuleAccount && len(address) == 32
+// This is determined by checking if the account has a 32-length address
+// NOTE: This will have to be refactored before adapting it to chains beyond gaia
+func (k Keeper) AccountIsLiquidStakingProvider(address sdk.AccAddress) bool {
+	return len(address) == 32
 }
 
 // CheckExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
 // global liquid staking cap to be exceeded
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // The total stake is determined by the balance of the bonded pool
-// If the delegation is for a tokenized share, the tokens are already included in the bonded pool
-// If the delegation is from an ICA account, we need to add the tokens to the current bonded pool
-// balance to get the total staked
-// Returns true if the cap is exceeded
-func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int, tokenizingShares bool) bool {
+// If the delegation's shares are already bonded (e.g. in the event of a tokenized share)
+// the tokens are already included in the bonded pool
+// If the delegation's shares are not bonded (e.g. normal delegation),
+// we need to add the tokens to the current bonded pool balance to get the total staked
+func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int, sharesAlreadyBonded bool) bool {
 	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
 	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
 
@@ -63,7 +61,7 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 	// they would not have been counted yet
 	// If this is for a tokenized delegation, the tokens are already included in the pool balance
 	totalStakedAmount := k.TotalBondedTokens(ctx)
-	if !tokenizingShares {
+	if !sharesAlreadyBonded {
 		totalStakedAmount = totalStakedAmount.Add(tokens)
 	}
 
@@ -80,7 +78,7 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 // Returns true if the cap is exceeded
 func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec) bool {
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
-	if validatorBondFactor.Equal(sdk.NewDec(-1)) {
+	if validatorBondFactor.Equal(types.ValidatorBondDisabled) {
 		return false
 	}
 	maxValLiquidShares := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
@@ -103,8 +101,8 @@ func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
 // if the global cap is not surpassed by this delegation
-func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int, tokenizingShares bool) error {
-	if k.CheckExceedsGlobalLiquidStakingCap(ctx, amount, tokenizingShares) {
+func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int, sharesAlreadyBonded bool) error {
+	if k.CheckExceedsGlobalLiquidStakingCap(ctx, amount, sharesAlreadyBonded) {
 		return types.ErrGlobalLiquidStakingCapExceeded
 	}
 
@@ -113,8 +111,13 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 }
 
 // DecreaseTotalLiquidStakedTokens decrements the total liquid staked tokens
-func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) {
-	k.SetTotalLiquidStakedTokens(ctx, k.GetTotalLiquidStakedTokens(ctx).Sub(amount))
+func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error {
+	totalLiquidStake := k.GetTotalLiquidStakedTokens(ctx)
+	if amount.GT(totalLiquidStake) {
+		return types.ErrTotalLiquidStakedUnderflow
+	}
+	k.SetTotalLiquidStakedTokens(ctx, totalLiquidStake.Sub(amount))
+	return nil
 }
 
 // SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator, if:
@@ -136,9 +139,13 @@ func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, valida
 }
 
 // DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
-func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+	if shares.GT(validator.TotalLiquidShares) {
+		return types.ErrValidatorLiquidSharesUnderflow
+	}
 	validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
+	return nil
 }
 
 // SafelyDecreaseValidatorBond decrements the total validator's self bond
@@ -278,6 +285,21 @@ func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.Ac
 	return completionTime
 }
 
+// Cancels a pending tokenize share authorization by removing the lock from the queue
+func (k Keeper) CancelTokenizeShareLockExpiration(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+	authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
+
+	updatedAddresses := []string{}
+	for _, expiringAddress := range authorizations.Addresses {
+		if address.String() != expiringAddress {
+			updatedAddresses = append(updatedAddresses, expiringAddress)
+		}
+	}
+
+	authorizations.Addresses = updatedAddresses
+	k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
+}
+
 // Unlocks all queued tokenize share authorizations that have matured
 // (i.e. have waited the full unbonding period)
 func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.Time) (unlockedAddresses []string) {
@@ -305,8 +327,8 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 
 // Calculates and sets the global liquid staked tokens and total liquid shares by validator
 // The totals are determined by looping each delegation record and summing the stake
-// if the delegator is a module account. Checking for a module account will capture
-// ICA accounts, as well as tokenized delegationswhich are owned by module accounts
+// if the delegator has a 32-length address. Checking for a 32-length address will capture
+// ICA accounts, as well as tokenized delegations which are owned by module accounts
 // under the hood
 // This function must be called in the upgrade handler which onboards LSM, as
 // well as any time the liquid staking cap is re-enabled
@@ -336,7 +358,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 
 		// If the account is a liquid staking provider, increment the global number
 		// of liquid staked tokens, and the total liquid shares on the validator
-		if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		if k.AccountIsLiquidStakingProvider(delegatorAddress) {
 			liquidShares := delegation.Shares
 			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
 

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -22,17 +23,30 @@ func createBaseAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) 
 	return baseAccountAddress
 }
 
-// Helper function to create a module account from an account name
+// Helper function to create 32-length account
 // Used to mock an liquid staking provider's ICA account
-func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
-	accountAddress := address.Module(accountName, []byte(accountName))
-	account := authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(accountAddress),
-		accountName,
-	)
+func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
+	icahost := "icahost"
+	connectionID := "connection-0"
+	portID := icahost
+
+	moduleAddress := app.AccountKeeper.GetModuleAddress(icahost)
+	icaAddress := sdk.AccAddress(address.Derive(moduleAddress, []byte(connectionID+portID)))
+
+	account := authtypes.NewBaseAccountWithAddress(icaAddress)
 	app.AccountKeeper.SetAccount(ctx, account)
 
-	return accountAddress
+	return icaAddress
+}
+
+// Helper function to create a module account address from a tokenized share
+// Used to mock the delegation owner of a tokenized share
+func createTokenizeShareModuleAccount(recordID uint64) sdk.AccAddress {
+	record := types.TokenizeShareRecord{
+		Id:            recordID,
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
+	}
+	return record.GetModuleAddress()
 }
 
 // Tests Set/Get TotalLiquidStakedTokens
@@ -71,11 +85,11 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 
 	// Create base and ICA accounts
 	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
-	icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+	icaAccountAddress := createICAAccount(app, ctx)
 
 	// Only the ICA module account should be considered a liquid staking provider
-	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, baseAccountAddress), "base account")
-	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, icaAccountAddress), "ICA module account")
+	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(baseAccountAddress), "base account")
+	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(icaAccountAddress), "ICA module account")
 }
 
 // Helper function to clear the Bonded pool balances before a unit test
@@ -322,8 +336,13 @@ func TestDecreaseTotalLiquidStakedTokens(t *testing.T) {
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
 
 	// Decrease the total liquid stake and confirm the total was updated
-	app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
+	err := app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing total liquid staked tokens")
 	require.Equal(t, intitialTotalLiquidStaked.Sub(decreaseAmount), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
+
+	// Attempt to decrease by an excessive amount, it should error
+	err = app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
+	require.ErrorIs(t, err, types.ErrTotalLiquidStakedUnderflow)
 }
 
 // Tests CheckExceedsValidatorBondCap
@@ -680,7 +699,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput()
 
-	initialLiquidShares := sdk.NewDec(0)
+	initialLiquidShares := sdk.NewDec(100)
 	decreaseAmount := sdk.NewDec(10)
 
 	// Create a validator with designated self-bond shares
@@ -695,10 +714,16 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
 	// Decrease the validator liquid shares, and confirm the new share amount has been updated
-	app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
+	err := app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing validator total liquid shares")
+
 	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
+	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "total liquid shares")
+
+	// Attempt to decrease by a larger amount than it has, it should fail
+	err = app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, actualValidator, initialLiquidShares)
+	require.ErrorIs(t, err, types.ErrValidatorLiquidSharesUnderflow)
 }
 
 // Tests Add/Remove/Get/SetTokenizeSharesLock
@@ -964,8 +989,9 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	}
 
 	delegations := []struct {
-		delegation types.Delegation
-		isLSTP     bool
+		delegation  types.Delegation
+		isLSTP      bool
+		isTokenized bool
 	}{
 		// Delegator A - Not a liquid staking provider
 		// Number of tokens/shares is irrelevant for this test
@@ -1022,11 +1048,11 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 				Shares:           sdk.NewDec(900),
 			},
 		},
-		// Delegator C - Liquid staking provider, tokens included in total
+		// Delegator C - Tokenized shares, tokens included in total
 		// Total liquid staked: 325 + 522 + 75 = 922
 		{
 			// Shares: 325 shares, Exchange Rate: 1.0, Tokens: 325
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valA",
@@ -1035,7 +1061,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		},
 		{
 			// Shares: 580 shares, Exchange Rate: 0.9, Tokens: 522
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valB",
@@ -1044,7 +1070,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		},
 		{
 			// Shares: 100 shares, Exchange Rate: 0.75, Tokens: 75
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valC",
@@ -1068,9 +1094,12 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	// Create the delegations based on the above (must use actual delegator addresses)
 	for _, delegationCase := range delegations {
 		var delegatorAddress sdk.AccAddress
-		if delegationCase.isLSTP {
-			delegatorAddress = createICAAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
-		} else {
+		switch {
+		case delegationCase.isLSTP:
+			delegatorAddress = createICAAccount(app, ctx)
+		case delegationCase.isTokenized:
+			delegatorAddress = createTokenizeShareModuleAccount(1)
+		default:
 			delegatorAddress = createBaseAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
 		}
 

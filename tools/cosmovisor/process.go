@@ -139,7 +139,7 @@ func (l Launcher) doBackup() error {
 	if !l.cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
 		var uInfo upgradetypes.Plan
-		upgradeInfoFile, err := os.ReadFile(filepath.Join(l.cfg.Home, "data", "upgrade-info.json"))
+		upgradeInfoFile, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 		}
@@ -179,17 +179,17 @@ func (l Launcher) doCustomPreUpgrade() error {
 	}
 
 	// check if upgrade-info.json is not empty.
-	var uInfo upgradetypes.Plan
+	var upgradePlan upgradetypes.Plan
 	upgradeInfoFile, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
 	if err != nil {
 		return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 	}
 
-	if err = json.Unmarshal(upgradeInfoFile, &uInfo); err != nil {
+	if err = json.Unmarshal(upgradeInfoFile, &upgradePlan); err != nil {
 		return err
 	}
 
-	if err = uInfo.ValidateBasic(); err != nil {
+	if err = upgradePlan.ValidateBasic(); err != nil {
 		return fmt.Errorf("invalid upgrade plan: %w", err)
 	}
 
@@ -219,14 +219,14 @@ func (l Launcher) doCustomPreUpgrade() error {
 	}
 
 	// Run preupgradeFile
-	cmd := exec.Command(preupgradeFile, uInfo.Name, fmt.Sprintf("%d", uInfo.Height))
+	cmd := exec.Command(preupgradeFile, upgradePlan.Name, fmt.Sprintf("%d", upgradePlan.Height))
 	cmd.Dir = l.cfg.Home
 	result, err := cmd.Output()
 	if err != nil {
 		return err
 	}
 
-	l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE result", "command", preupgradeFile, "argv1", uInfo.Name, "argv2", fmt.Sprintf("%d", uInfo.Height), "result", result)
+	l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE result", "command", preupgradeFile, "argv1", upgradePlan.Name, "argv2", fmt.Sprintf("%d", upgradePlan.Height), "result", result)
 
 	return nil
 }

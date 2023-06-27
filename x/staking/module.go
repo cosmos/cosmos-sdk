@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -209,11 +210,12 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	Cdc           codec.Codec
-	StoreService  store.KVStoreService
+	Config          *modulev1.Module
+	AccountKeeper   types.AccountKeeper
+	BankKeeper      types.BankKeeper
+	consensusKeeper consensusparamkeeper.Keeper
+	Cdc             codec.Codec
+	StoreService    store.KVStoreService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -239,6 +241,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.consensusKeeper,
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)

@@ -57,11 +57,14 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
+	consensusKeeper := stakingtestutil.NewMockConsensusKeeper(ctrl)
+
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
+		consensusKeeper,
 		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
 	)
 	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))

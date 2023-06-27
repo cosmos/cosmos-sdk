@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -23,12 +24,13 @@ var _ types.DelegationSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
-	authKeeper   types.AccountKeeper
-	bankKeeper   types.BankKeeper
-	hooks        types.StakingHooks
-	authority    string
+	storeService    storetypes.KVStoreService
+	cdc             codec.BinaryCodec
+	authKeeper      types.AccountKeeper
+	bankKeeper      types.BankKeeper
+	hooks           types.StakingHooks
+	consensusKeeper consensustypes.ConsensusKeeper
+	authority       string
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -37,6 +39,7 @@ func NewKeeper(
 	storeService storetypes.KVStoreService,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	ck consensustypes.ConsensusKeeper,
 	authority string,
 ) *Keeper {
 	// ensure bonded and not bonded module accounts are set
@@ -54,12 +57,13 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		storeService: storeService,
-		cdc:          cdc,
-		authKeeper:   ak,
-		bankKeeper:   bk,
-		hooks:        nil,
-		authority:    authority,
+		storeService:    storeService,
+		cdc:             cdc,
+		authKeeper:      ak,
+		bankKeeper:      bk,
+		consensusKeeper: ck,
+		hooks:           nil,
+		authority:       authority,
 	}
 }
 

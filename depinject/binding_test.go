@@ -5,10 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
 )

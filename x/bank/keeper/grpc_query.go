@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 
-	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"

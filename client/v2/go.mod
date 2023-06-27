@@ -12,8 +12,8 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	google.golang.org/grpc v1.56.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/grpc v1.56.1
+	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -38,7 +38,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230606202032-d96868fd481e // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cometbft/cometbft v0.38.0-rc1 // indirect
+	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -53,7 +53,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		return err
 	}
 	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -85,7 +85,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	}
 
 	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {

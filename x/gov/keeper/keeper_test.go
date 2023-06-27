@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

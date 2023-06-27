@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	txsigning "cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"

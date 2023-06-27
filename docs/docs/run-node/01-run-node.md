@@ -30,7 +30,12 @@ Before actually running the node, we need to initialize the chain, and most impo
 simd init <moniker> --chain-id my-test-chain
 ```
 
-The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network. All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag.
+The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network.
+
+:::tip
+All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag to each commands,
+or set an `$APPD_HOME` environment variable (where `APPD` is the name of the binary).
+:::
 
 The `~/.simapp` folder has the following structure:
 
@@ -152,7 +157,7 @@ You should see blocks come in.
 
 The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
-The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/docker-compose.yml).
+The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/docker-compose.yml).
 
 ## Logging
 

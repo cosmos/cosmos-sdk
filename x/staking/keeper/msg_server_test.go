@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-
 	"github.com/golang/mock/gomock"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

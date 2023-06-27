@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/google/go-cmp/cmp"
+
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 

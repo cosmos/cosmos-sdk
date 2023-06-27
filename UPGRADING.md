@@ -31,15 +31,18 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 
 ### Enable Vote Extensions
 
-To enable vote extensions, the consensus param `Abci.VoteExtensionsEnableHeight` must be set to a value greater
-than zero.
+> This is an optional feature that is disabled by default.
 
-For new chains this can be done in the `genesis.json` file.
+Once all the code changes required to implement Vote Extensions are in place,
+they can be enabled by setting the consensus param `Abci.VoteExtensionsEnableHeight`
+to a value greater than zero.
+
+In a new chain, this can be done in the `genesis.json` file.
 
 For existing chains this can be done in two ways:
 
-- An upgrade handler that sets this value.
-- A governance proposal that changes the consensus param.
+- During an upgrade the value is set in an upgrade handler.
+- A governance proposal that changes the consensus param **after a coordinated upgrade has taken place**.
 
 ### BaseApp
 

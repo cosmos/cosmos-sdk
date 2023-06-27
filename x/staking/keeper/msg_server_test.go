@@ -347,7 +347,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// Create ICA module account
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Fund module account
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
@@ -695,7 +695,7 @@ func TestValidatorBond(t *testing.T) {
 
 			delegatorAddress := sdk.AccAddress(delegatorPubKey.Address())
 			validatorAddress := sdk.ValAddress(validatorPubKey.Address())
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Set the delegator address to either be a user account or an ICA account depending on the test case
 			if tc.delegatorIsLSTP {

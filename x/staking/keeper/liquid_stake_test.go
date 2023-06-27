@@ -25,15 +25,18 @@ func createBaseAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) 
 
 // Helper function to create 32-length account
 // Used to mock an liquid staking provider's ICA account
-func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
-	accountAddress := address.Module(accountName, []byte(accountName))
-	account := authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(accountAddress),
-		accountName,
-	)
+func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
+	icahost := "icahost"
+	connectionID := "connection-0"
+	portID := icahost
+
+	moduleAddress := app.AccountKeeper.GetModuleAddress(icahost)
+	icaAddress := sdk.AccAddress(address.Derive(moduleAddress, []byte(connectionID+portID)))
+
+	account := authtypes.NewBaseAccountWithAddress(icaAddress)
 	app.AccountKeeper.SetAccount(ctx, account)
 
-	return accountAddress
+	return icaAddress
 }
 
 // Helper function to create a module account address from a tokenized share
@@ -82,7 +85,7 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 
 	// Create base and ICA accounts
 	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
-	icaAccountAddress := createICAAccount(app, ctx, "ica-account")
+	icaAccountAddress := createICAAccount(app, ctx)
 
 	// Only the ICA module account should be considered a liquid staking provider
 	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(baseAccountAddress), "base account")
@@ -1093,7 +1096,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		var delegatorAddress sdk.AccAddress
 		switch {
 		case delegationCase.isLSTP:
-			delegatorAddress = createICAAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
+			delegatorAddress = createICAAccount(app, ctx)
 		case delegationCase.isTokenized:
 			delegatorAddress = createTokenizeShareModuleAccount(1)
 		default:

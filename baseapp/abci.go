@@ -624,10 +624,28 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 	}
 }
 
+// This comes from ICA, and is made out of an abundance of caution.
+// Should be deleted during the next Osmosis major release, as we don't need this extra safety check.
+var stateMachineQueryList = []string{"/ibc.applications.transfer.v1.Query/DenomTrace", "/cosmos.auth.v1beta1.Query/Account", "/cosmos.auth.v1beta1.Query/Params", "/cosmos.bank.v1beta1.Query/Balance", "/cosmos.bank.v1beta1.Query/DenomMetadata", "/cosmos.bank.v1beta1.Query/Params", "/cosmos.bank.v1beta1.Query/SupplyOf", "/cosmos.distribution.v1beta1.Query/Params", "/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", "/cosmos.distribution.v1beta1.Query/ValidatorCommission", "/cosmos.gov.v1beta1.Query/Deposit", "/cosmos.gov.v1beta1.Query/Params", "/cosmos.gov.v1beta1.Query/Vote", "/cosmos.slashing.v1beta1.Query/Params", "/cosmos.slashing.v1beta1.Query/SigningInfo", "/cosmos.staking.v1beta1.Query/Delegation", "/cosmos.staking.v1beta1.Query/Params", "/cosmos.staking.v1beta1.Query/Validator", "/osmosis.epochs.v1beta1.Query/EpochInfos", "/osmosis.epochs.v1beta1.Query/CurrentEpoch", "/osmosis.gamm.v1beta1.Query/NumPools", "/osmosis.gamm.v1beta1.Query/TotalLiquidity", "/osmosis.gamm.v1beta1.Query/Pool", "/osmosis.gamm.v1beta1.Query/PoolParams", "/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", "/osmosis.gamm.v1beta1.Query/TotalShares", "/osmosis.gamm.v1beta1.Query/CalcJoinPoolShares", "/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares", "/osmosis.gamm.v1beta1.Query/CalcJoinPoolNoSwapShares", "/osmosis.gamm.v1beta1.Query/PoolType", "/osmosis.gamm.v2.Query/SpotPrice", "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountOut", "/osmosis.incentives.Query/ModuleToDistributeCoins", "/osmosis.incentives.Query/LockableDurations", "/osmosis.lockup.Query/ModuleBalance", "/osmosis.lockup.Query/ModuleLockedAmount", "/osmosis.lockup.Query/AccountUnlockableCoins", "/osmosis.lockup.Query/AccountUnlockingCoins", "/osmosis.lockup.Query/LockedDenom", "/osmosis.lockup.Query/LockedByID", "/osmosis.lockup.Query/NextLockID", "/osmosis.mint.v1beta1.Query/EpochProvisions", "/osmosis.mint.v1beta1.Query/Params", "/osmosis.poolincentives.v1beta1.Query/GaugeIds", "/osmosis.superfluid.Query/Params", "/osmosis.superfluid.Query/AssetType", "/osmosis.superfluid.Query/AllAssets", "/osmosis.superfluid.Query/AssetMultiplier", "/osmosis.poolmanager.v1beta1.Query/NumPools", "/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn", "/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut", "/osmosis.txfees.v1beta1.Query/FeeTokens", "/osmosis.txfees.v1beta1.Query/DenomSpotPrice", "/osmosis.txfees.v1beta1.Query/DenomPoolId", "/osmosis.txfees.v1beta1.Query/BaseDenom", "/osmosis.tokenfactory.v1beta1.Query/Params", "/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", "/osmosis.twap.v1beta1.Query/ArithmeticTwap", "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", "/osmosis.twap.v1beta1.Query/GeometricTwap", "/osmosis.twap.v1beta1.Query/GeometricTwapToNow", "/osmosis.twap.v1beta1.Query/Params", "/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength"}
+
+func queryListContainsReq(req abci.RequestQuery) bool {
+	for _, query := range stateMachineQueryList {
+		if req.Path == query {
+			return true
+		}
+	}
+	return false
+}
+
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResultWithDebug(err, app.trace)
+	}
+	// use infinite gas metering for potential state machine queries
+	// delete in next major release
+	if queryListContainsReq(req) {
+		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
 
 	res, err := handler(ctx, req)
@@ -705,10 +723,16 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{}, fmt.Errorf("failed to load cache multi store for height %d: %w", height, err)
 	}
 
+	gasLimit := app.queryGasLimit
+	// arbitrarily declare that historical queries cause 2x gas load.
+	if height != lastBlockHeight {
+		gasLimit /= 2
+	}
+
 	// branch the commit-multistore for safety
 	ctx := sdk.NewContext(
 		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
+	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height).WithGasMeter(sdk.NewGasMeter(gasLimit))
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

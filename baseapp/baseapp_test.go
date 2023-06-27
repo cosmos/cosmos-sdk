@@ -76,6 +76,20 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	}
 }
 
+func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, defaultLogger(), db, nil)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
+	return app
+}
+
 func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
 	snapshotTimeout := 1 * time.Minute
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), t.TempDir())
@@ -537,16 +551,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
 
-	logger := defaultLogger()
-	db := dbm.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
-
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
-	app.Commit()
-
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
-	app.Commit()
+	app := getQueryBaseapp(t)
 
 	testCases := []struct {
 		name   string
@@ -578,6 +583,61 @@ func TestSetMinGasPrices(t *testing.T) {
 
 	ctx := getCheckStateCtx(suite.baseApp)
 	require.Equal(t, minGasPrices, ctx.MinGasPrices())
+}
+
+type ctxType string
+
+const (
+	QueryCtx     ctxType = "query"
+	CheckTxCtx   ctxType = "checkTx"
+	DeliverTxCtx ctxType = "deliverTx"
+)
+
+var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}
+
+func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
+	if c == QueryCtx {
+		ctx, err := bapp.CreateQueryContext(1, false)
+		require.NoError(t, err)
+		return ctx
+	} else if c == CheckTxCtx {
+		return getCheckStateCtx(bapp)
+	}
+	// TODO: Not supported yet
+	return getDeliverStateCtx(bapp)
+}
+
+func TestQueryGasLimit(t *testing.T) {
+	testCases := []struct {
+		queryGasLimit   uint64
+		gasActuallyUsed uint64
+		shouldQueryErr  bool
+	}{
+		{queryGasLimit: 100, gasActuallyUsed: 50, shouldQueryErr: false},  // Valid case
+		{queryGasLimit: 100, gasActuallyUsed: 150, shouldQueryErr: true},  // gasActuallyUsed > queryGasLimit
+		{queryGasLimit: 0, gasActuallyUsed: 50, shouldQueryErr: false},    // fuzzing with queryGasLimit = 0
+		{queryGasLimit: 0, gasActuallyUsed: 0, shouldQueryErr: false},     // both queryGasLimit and gasActuallyUsed are 0
+		{queryGasLimit: 200, gasActuallyUsed: 200, shouldQueryErr: true},  // gasActuallyUsed > queryGasLimit
+		{queryGasLimit: 100, gasActuallyUsed: 1000, shouldQueryErr: true}, // gasActuallyUsed > queryGasLimit
+	}
+
+	for _, tc := range testCases {
+		for _, ctxType := range ctxTypes {
+			t.Run(fmt.Sprintf("%s: %d - %d", ctxType, tc.queryGasLimit, tc.gasActuallyUsed), func(t *testing.T) {
+				app := getQueryBaseapp(t)
+				baseapp.SetQueryGasLimit(tc.queryGasLimit)(app)
+				ctx := ctxType.GetCtx(t, app)
+
+				// query gas limit should have no effect when CtxType != QueryCtx
+				f := func() { ctx.GasMeter().ConsumeGas(tc.gasActuallyUsed, "test") }
+				if tc.shouldQueryErr && ctxType == QueryCtx {
+					require.Panics(t, f)
+				} else {
+					require.NotPanics(t, f)
+				}
+			})
+		}
+	}
 }
 
 func TestGetMaximumBlockGas(t *testing.T) {

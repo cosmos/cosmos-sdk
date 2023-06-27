@@ -79,6 +79,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 				// write state to the underlying multi-store
 				writeCache()
+				// emit events from cache context manually
+				// required due to https://github.com/osmosis-labs/cosmos-sdk/pull/384 which makes `writeCache` omit emitting events
+				ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 			} else {
 				proposal.Status = types.StatusFailed
 				tagValue = types.AttributeValueProposalFailed

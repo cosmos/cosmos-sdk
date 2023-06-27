@@ -275,10 +275,10 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
-func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomsMetadataRequest() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata{}
+		expMetadata = []types.Metadata(nil)
 	)
 
 	testCases := []struct {
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
 	}
 }
 
-func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomMetadataRequest() {
 	var (
 		req         *types.QueryDenomMetadataRequest
 		expMetadata = types.Metadata{}
@@ -407,7 +407,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 		{
 			"success",
 			func() {
-				expMetadata := types.Metadata{
+				expMetadata = types.Metadata{
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{

@@ -50,7 +50,7 @@ const (
 
 var (
 	holderAcc    = authtypes.NewEmptyModuleAccount(holder)
-	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner)
+	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
 	minterAcc    = authtypes.NewEmptyModuleAccount(authtypes.Minter, authtypes.Minter)
 	mintAcc      = authtypes.NewEmptyModuleAccount(minttypes.ModuleName, authtypes.Minter)
 	multiPermAcc = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
@@ -220,6 +220,16 @@ func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.Accoun
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
+func (suite *KeeperTestSuite) mockDelegateCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+	suite.mockDelegateCoins(suite.ctx, acc, moduleAcc)
+}
+
+func (suite *KeeperTestSuite) mockUndelegateCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr *authtypes.BaseAccount) {
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+	suite.mockUnDelegateCoins(suite.ctx, accAddr, moduleAcc)
+}
+
 func (suite *KeeperTestSuite) mockDelegateCoins(ctx context.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
@@ -314,6 +324,67 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	require.Error(keeper.SendCoinsFromModuleToAccount(
 		ctx, minttypes.ModuleName, accAddrs[4], initCoins,
 	))
+}
+
+func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
+	ctx := suite.ctx
+	require := suite.Require()
+	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
+
+	// set initial balances
+	suite.mockMintCoins(mintAcc)
+	require.NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+
+	suite.mockSendCoinsFromModuleToAccount(mintAcc, holderAcc.GetAddress())
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
+
+	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+	})
+
+	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
+	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // we're testing for a panic, not an error
+	})
+
+	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+	})
+
+	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
+	authKeeper.EXPECT().GetAccount(suite.ctx, holderAcc.GetAddress()).Return(holderAcc)
+	require.Error(
+		keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+	)
+	suite.mockSendCoinsFromModuleToModule(holderAcc, burnerAcc)
+	require.NoError(
+		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), authtypes.Burner, initCoins),
+	)
+
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+
+	suite.mockSendCoinsFromModuleToAccount(burnerAcc, baseAcc.GetAddress())
+	require.NoError(
+		keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins),
+	)
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+
+	suite.mockDelegateCoinsFromAccountToModule(baseAcc, burnerAcc)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	require.NoError(keeper.DelegateCoinsFromAccountToModule(sdkCtx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+
+	suite.mockUndelegateCoinsFromModuleToAccount(burnerAcc, baseAcc)
+	require.NoError(keeper.UndelegateCoinsFromModuleToAccount(sdkCtx, authtypes.Burner, baseAcc.GetAddress(), initCoins))
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 }
 
 func (suite *KeeperTestSuite) TestSupply_SendCoins() {

@@ -333,10 +333,10 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)
-	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
+	require.NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, holderAcc.GetAddress())
-	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, banktypes.MintModuleName, holderAcc.GetAddress(), initCoins))
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {

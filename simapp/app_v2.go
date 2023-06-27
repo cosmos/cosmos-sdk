@@ -138,7 +138,7 @@ func NewSimApp(
 				// By default the auth module uses a Bech32 address codec,
 				// with the prefix defined in the auth module configuration.
 				//
-				// auth.CustomAddressCodec{ <- address codec implementation -> }
+				// func() address.Codec { return <- custom address codec type -> }
 
 				//
 				// MINT

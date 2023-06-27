@@ -200,12 +200,27 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideAddressCodec),
 	)
 }
 
-// CustomAddressCodec defines a wrapper of an address.Codec for avoding cycling dependency in auth.
-type CustomAddressCodec struct {
-	address.Codec
+// AddressCodecFactory is a type alias for a function that returns an address.Codec
+type AddressCodecFactory func() address.Codec
+
+type AddressCodecInputs struct {
+	depinject.In
+
+	Config              *modulev1.Module
+	AddressCodecFactory AddressCodecFactory `optional:"true"`
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(in AddressCodecInputs) address.Codec {
+	if in.AddressCodecFactory != nil {
+		return in.AddressCodecFactory()
+	}
+	return authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 }
 
 type ModuleInputs struct {
@@ -215,7 +230,7 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
-	AddressCodec            CustomAddressCodec            `optional:"true"`
+	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -226,7 +241,6 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	AddressCodec  address.Codec
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
@@ -243,10 +257,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	if in.AddressCodec == (CustomAddressCodec{}) {
-		in.AddressCodec = CustomAddressCodec{authcodec.NewBech32Codec(in.Config.Bech32Prefix)}
-	}
-
 	if in.RandomGenesisAccountsFn == nil {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}
@@ -258,5 +268,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return ModuleOutputs{AccountKeeper: k, Module: m, AddressCodec: in.AddressCodec.Codec}
+	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

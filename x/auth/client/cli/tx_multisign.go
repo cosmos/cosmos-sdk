@@ -10,8 +10,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
-
 	txsigning "cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -73,7 +73,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		}
 		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
-			return
+			return err
 		}
 
 		txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
@@ -183,7 +183,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 		if outputDoc == "" {
 			cmd.Printf("%s\n", json)
-			return
+			return nil
 		}
 
 		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
@@ -200,7 +200,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		err = clientCtx.PrintBytes(json)
 
-		return
+		return err
 	}
 }
 

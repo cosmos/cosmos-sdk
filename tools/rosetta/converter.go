@@ -15,7 +15,6 @@ import (
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
 	sdkmath "cosmossdk.io/math"
-
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 
@@ -613,7 +612,7 @@ func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation,
 		var signerStr string
 		signerStr, err = c.ir.SigningContext().AddressCodec().BytesToString(signer)
 		if err != nil {
-			return
+			return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 		}
 
 		signers = append(signers, &rosettatypes.AccountIdentifier{

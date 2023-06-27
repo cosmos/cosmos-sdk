@@ -10,9 +10,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"cosmossdk.io/core/address"
-
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/address"
 )
 
 // Context is a context for retrieving the list of signers from a

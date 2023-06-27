@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
-
 	"cosmossdk.io/orm/encoding/encodeutil"
 	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/internal/fieldnames"

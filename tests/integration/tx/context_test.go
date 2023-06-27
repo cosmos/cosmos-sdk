@@ -3,11 +3,12 @@ package tx
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/tx/signing"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"

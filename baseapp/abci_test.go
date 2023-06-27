@@ -1622,7 +1622,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 			cp := ctx.ConsensusParams()
 			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 			if extsEnabled {
-				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit.Votes, req.LocalLastCommit.Round)
+				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
 				if err != nil {
 					return nil, err
 				}

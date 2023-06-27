@@ -58,8 +58,7 @@ func ValidateVoteExtensions(
 	valStore ValidatorStore,
 	currentHeight int64,
 	chainID string,
-	votes []abci.ExtendedVoteInfo,
-	round int32,
+	extCommit abci.ExtendedCommitInfo,
 ) error {
 	cp := ctx.ConsensusParams()
 	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
@@ -74,7 +73,7 @@ func ValidateVoteExtensions(
 	}
 
 	sumVP := math.NewInt(0)
-	for _, vote := range votes {
+	for _, vote := range extCommit.Votes {
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
 				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
@@ -113,7 +112,7 @@ func ValidateVoteExtensions(
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: vote.VoteExtension,
 			Height:    currentHeight - 1, // the vote extension was signed in the previous height
-			Round:     int64(round),
+			Round:     int64(extCommit.Round),
 			ChainId:   chainID,
 		}
 

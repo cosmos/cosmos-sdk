@@ -62,7 +62,7 @@ func ValidateVoteExtensions(
 	round int32,
 ) error {
 	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight
+	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer

@@ -28,7 +28,7 @@ You can read more about mockgen [here](https://github.com/golang/mock).
 
 As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper_test.go) of the `x/gov` module.
 
-The `x/gov` module has a `Keeper` type which requires a few external dependencies (ie. imports outside `x/gov` to work properly).
+The `x/gov` module has a `Keeper` type, which requires a few external dependencies (ie. imports outside `x/gov` to work properly).
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper.go#L22-L24

@@ -36,7 +36,6 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -51,6 +50,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module/interfaces"
 )
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
@@ -262,11 +262,6 @@ func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error
 	return []abci.ValidatorUpdate{}, nil
 }
 
-// ConsensusParamsGetter is an interface to retrieve consensus parameters for a given context.
-type ConsensusParamsGetter interface {
-	GetConsensusParams(ctx sdk.Context) tmproto.ConsensusParams
-}
-
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
@@ -278,7 +273,7 @@ type Manager struct {
 	OrderPrepareCheckStaters []string
 	OrderPrecommiters        []string
 	OrderMigrations          []string
-	consensusParamsGetter    ConsensusParamsGetter
+	consensusParamsGetter    interfaces.ConsensusParamsGetter
 }
 
 // NewManager creates a new Manager object.
@@ -326,7 +321,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 }
 
 // WithConsensusParamsGetter sets ConsensusParamsGetter for Manager.
-func (m *Manager) WithConsensusParamsGetter(g ConsensusParamsGetter) *Manager {
+func (m *Manager) WithConsensusParamsGetter(g interfaces.ConsensusParamsGetter) *Manager {
 	m.consensusParamsGetter = g
 	return m
 }

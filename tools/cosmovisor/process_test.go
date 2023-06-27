@@ -6,7 +6,7 @@ package cosmovisor_test
 import (
 	"bytes"
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -115,7 +115,8 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	buf := newBuffer() // inspect output using buf.String()
+	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -178,8 +179,15 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true, CustomPreupgrade: "missing.sh"}
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	cfg := &cosmovisor.Config{
+		Home: home, Name: "autod",
+		AllowDownloadBinaries: true,
+		PollInterval:          100,
+		UnsafeSkipBackup:      true,
+		CustomPreupgrade:      "missing.sh",
+	}
+	buf := newBuffer() // inspect output using buf.String()
+	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -194,7 +202,8 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	args := []string{"some", "args", upgradeFilename}
 	_, err = launcher.Run(args, stdout, stderr)
 
-	require.Error(err)
+	require.ErrorContains(err, "missing.sh")
+	require.ErrorIs(err, fs.ErrNotExist)
 }
 
 // TestCustomPreupgrade will try running the script a few times and watch upgrades work properly
@@ -206,8 +215,16 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndPreupgrade() {
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true, CustomPreupgrade: "preupgrade.sh"}
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	cfg := &cosmovisor.Config{
+		Home:                  home,
+		Name:                  "autod",
+		AllowDownloadBinaries: true,
+		PollInterval:          100,
+		UnsafeSkipBackup:      true,
+		CustomPreupgrade:      "preupgrade.sh",
+	}
+	buf := newBuffer() // inspect output using buf.String()
+	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

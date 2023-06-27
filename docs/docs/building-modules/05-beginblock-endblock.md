@@ -20,7 +20,7 @@ sidebar_position: 1
 
 `BeginBlocker` and `EndBlocker` are a way for module developers to add automatic execution of logic to their module. This is a powerful tool that should be used carefully, as complex automatic functions can slow down or even halt the chain. 
 
-`BeginBlock` gets called at the start of the execution phase. In 0.47.0, Prepare and Process Proposal were added that allow app developers to do arbitrary work at those phases, but they do not influence the work that will be done in BeginBlock. If an application required `BeginBlock` to execute prior to any sort of work is done then this is not possible today (0.50.0). 
+In 0.47.0, Prepare and Process Proposal were added that allow app developers to do arbitrary work at those phases, but they do not influence the work that will be done in BeginBlock. If an application required `BeginBlock` to execute prior to any sort of work is done then this is not possible today (0.50.0). 
 
 When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`HasBeginBlocker`, `HasABCIEndblocker` and `EndBlocker` interfaces](./01-module-manager.md#appmodule). This means either can be left-out if not required. The `BeginBlock` and `EndBlock` methods of the interface implemented in `module.go` generally defer to `BeginBlocker` and `EndBlocker` methods respectively, which are usually implemented in `abci.go`.
 

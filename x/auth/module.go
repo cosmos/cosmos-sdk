@@ -203,6 +203,11 @@ func init() {
 	)
 }
 
+// CustomAddressCodec defines a wrapper of an address.Codec for avoding cycling dependency in auth.
+type CustomAddressCodec struct {
+	address.Codec
+}
+
 type ModuleInputs struct {
 	depinject.In
 
@@ -210,7 +215,7 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
-	AddressCodec            address.Codec                 `optional:"true"`
+	AddressCodec            CustomAddressCodec            `optional:"true"`
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -221,6 +226,7 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
+	AddressCodec  address.Codec
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
@@ -237,8 +243,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	if in.AddressCodec == nil {
-		in.AddressCodec = authcodec.NewBech32Codec(in.Config.Bech32Prefix)
+	if in.AddressCodec == (CustomAddressCodec{}) {
+		in.AddressCodec = CustomAddressCodec{authcodec.NewBech32Codec(in.Config.Bech32Prefix)}
 	}
 
 	if in.RandomGenesisAccountsFn == nil {
@@ -252,5 +258,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return ModuleOutputs{AccountKeeper: k, Module: m}
+	return ModuleOutputs{AccountKeeper: k, Module: m, AddressCodec: in.AddressCodec.Codec}
 }

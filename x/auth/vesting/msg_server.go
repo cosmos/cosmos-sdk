@@ -186,6 +186,11 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
 	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 
+	// Enforce and sanity check that we don't have any negative endTime.
+	if bva := vestingAccount.BaseVestingAccount; bva != nil && bva.EndTime < 0 {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "cumulative endtime is negative")
+	}
+
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 
 	defer func() {

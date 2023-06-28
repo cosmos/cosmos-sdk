@@ -397,6 +397,67 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, vestedCoins)
 }
 
+func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
+	now := tmtime.Now()
+	tests := []struct {
+		name      string
+		periods   []types.Period
+		wantPanic string
+	}{
+		{
+			"negative .Length",
+			types.Periods{
+				types.Period{Length: -1, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+				types.Period{Length: 6 * 60 * 60, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+			},
+			"period #0 has a negative length: -1",
+		},
+		{
+			"overflow after .Length additions",
+			types.Periods{
+				types.Period{Length: 9223372036854775108, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+				types.Period{Length: 6 * 60 * 60, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+			},
+			"cumulative endTime overflowed, and/or is less than startTime",
+		},
+		{
+			"good periods that are not negative nor overflow",
+			types.Periods{
+				types.Period{Length: now.Unix() - 1000, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+				types.Period{Length: 60, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+			},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bacc, origCoins := initBaseAccount()
+			defer func() {
+				r := recover()
+				if r == nil {
+					if tt.wantPanic != "" {
+						t.Fatalf("expected a panic with substring: %q", tt.wantPanic)
+					}
+					return
+				}
+
+				// Otherwise ensure we match the panic substring.
+				require.Contains(t, r, tt.wantPanic)
+			}()
+
+			pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), tt.periods)
+			if pva == nil {
+				return
+			}
+
+			if pbva := pva.BaseVestingAccount; pbva.EndTime < 0 {
+				t.Fatalf("Unfortunately we still have negative .EndTime :-(: %d", pbva.EndTime)
+			}
+		})
+	}
+}
+
 func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)

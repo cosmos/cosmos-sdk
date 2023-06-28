@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -259,8 +260,14 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
 func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, periods Periods) *PeriodicVestingAccount {
 	endTime := startTime
-	for _, p := range periods {
+	for i, p := range periods {
+		if p.Length < 0 {
+			panic(fmt.Sprintf("period #%d has a negative length: %d", i, p.Length))
+		}
 		endTime += p.Length
+	}
+	if endTime < 0 || endTime < startTime {
+		panic("cumulative endTime overflowed, and/or is less than startTime")
 	}
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,

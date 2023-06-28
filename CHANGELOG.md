@@ -60,7 +60,34 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [#16324](https://github.com/cosmos/cosmos-sdk/pull/16324) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey`, and methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. Notable changes:
     * `Validator` method now returns `types.ErrNoValidatorFound` instead of `nil` when not found.
+<<<<<<< HEAD
 * (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codec to auth new keeper constructor.
+=======
+* (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
+    * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
+* (x/distribution) [#16459](https://github.com/cosmos/cosmos-sdk/pull/16459) use collections for `ValidatorCurrentRewards` state management:
+    * remove `Keeper`: `IterateValidatorCurrentRewards`, `GetValidatorCurrentRewards`, `SetValidatorCurrentRewards`, `DeleteValidatorCurrentRewards`
+* (x/authz) [#16509](https://github.com/cosmos/cosmos-sdk/pull/16509) `AcceptResponse` has been moved to sdk/types/authz and the `Updated` field is now of the type `sdk.Msg` instead of `authz.Authorization`.
+* (x/distribution) [#16483](https://github.com/cosmos/cosmos-sdk/pull/16483) use collections for `DelegatorStartingInfo` state management:
+    * remove `Keeper`: `IterateDelegatorStartingInfo`, `GetDelegatorStartingInfo`, `SetDelegatorStartingInfo`, `DeleteDelegatorStartingInfo`, `HasDelegatorStartingInfo`
+* (x/distribution) [#16571](https://github.com/cosmos/cosmos-sdk/pull/16571) use collections for `ValidatorAccumulatedCommission` state management:
+    * remove `Keeper`: `IterateValidatorAccumulatedCommission`, `GetValidatorAccumulatedCommission`, `SetValidatorAccumulatedCommission`, `DeleteValidatorAccumulatedCommission`
+* (x/distribution) [#16590](https://github.com/cosmos/cosmos-sdk/pull/16590) use collections for `ValidatorOutstandingRewards` state management:
+    * remove `Keeper`: `IterateValidatorOutstandingRewards`, `GetValidatorOutstandingRewards`, `SetValidatorOutstandingRewards`, `DeleteValidatorOutstandingRewards`
+* (x/distribution) [#16607](https://github.com/cosmos/cosmos-sdk/pull/16607) use collections for `ValidatorHistoricalRewards` state management:
+    * remove `Keeper`: `IterateValidatorHistoricalRewards`, `GetValidatorHistoricalRewards`, `SetValidatorHistoricalRewards`, `DeleteValidatorHistoricalRewards`, `DeleteValidatorHistoricalReward`, `DeleteAllValidatorHistoricalRewards`
+* (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codec to auth new keeper constructor
+
+### Bug Fixes
+
+* (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount
+* [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
+* (x/auth/types) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
+* (baseapp) [#16613](https://github.com/cosmos/cosmos-sdk/pull/16613) Ensure each message in a transaction has a registered handler, otherwise `CheckTx` will fail.
+* (x/consensus) [#16713](https://github.com/cosmos/cosmos-sdk/pull/16713) Add missing ABCI param in MsgUpdateParams.
+* [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
+* (baseapp) [#16700](https://github.com/cosmos/cosmos-sdk/pull/16700) Fix: Consensus Failure in returning no response to malformed transactions
+>>>>>>> 078e7cb4a (fix(baseapp): ABCI Consensus Failure Fix (#16700))
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 

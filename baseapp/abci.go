@@ -731,7 +731,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			// we still want to return a default response to comet. This is because comet
 			// expects a response for each transaction included in a block proposal.
 			response = sdkerrors.ResponseExecTxResultWithEvents(
-				fmt.Errorf("transaction included in block proposal could not be decoded: %s", err),
+				sdkerrors.ErrTxDecode,
 				0,
 				0,
 				nil,

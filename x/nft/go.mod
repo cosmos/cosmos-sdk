@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v0.2.0 // indirect
+	cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531 // indirect
 	cosmossdk.io/x/tx v0.8.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -155,3 +155,5 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
+
+replace github.com/cosmos/cosmos-sdk => ../../

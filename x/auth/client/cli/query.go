@@ -1,12 +1,9 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/address"
-	errorsmod "cosmossdk.io/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,11 +13,9 @@ import (
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
-	FlagEvents  = "events" // TODO: Remove when #14758 is merged
 	FlagQuery   = "query"
 	FlagType    = "type"
 	FlagOrderBy = "order_by"
@@ -32,100 +27,6 @@ const (
 
 	EventFormat = "{eventType}.{eventAttribute}={value}"
 )
-
-// GetQueryCmd returns the transaction commands for this module
-func GetQueryCmd(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the auth module",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
-	cmd.AddCommand(
-		GetAccountCmd(ac),
-		GetAccountsCmd(),
-	)
-
-	return cmd
-}
-
-// GetAccountCmd returns a query account that will display the state of the
-// account at a given address.
-func GetAccountCmd(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account [address]",
-		Short: "Query for account by address",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			_, err = ac.StringToBytes(args[0])
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: args[0]})
-			if err != nil {
-				node, err2 := clientCtx.GetNode()
-				if err2 != nil {
-					return err2
-				}
-				status, err2 := node.Status(context.Background())
-				if err2 != nil {
-					return err2
-				}
-				catchingUp := status.SyncInfo.CatchingUp
-				if !catchingUp {
-					return errorsmod.Wrapf(err, "your node may be syncing, please check node status using `/status`")
-				}
-				return err
-			}
-
-			return clientCtx.PrintProto(res.Account)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetAccountsCmd returns a query command that will display a list of accounts
-func GetAccountsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "accounts",
-		Short: "Query all the accounts",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Accounts(cmd.Context(), &types.QueryAccountsRequest{Pagination: pageReq})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "all-accounts")
-
-	return cmd
-}
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
 func QueryTxsByEventsCmd() *cobra.Command {

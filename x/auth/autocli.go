@@ -15,15 +15,26 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: authv1beta1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
+					RpcMethod: "Accounts",
+					Use:       "accounts",
+					Short:     "Query all the accounts",
+				},
+				{
 					RpcMethod:      "Account",
 					Use:            "account [address]",
-					Short:          "query account by address",
+					Short:          "Qsuery account by address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
+				{
+					RpcMethod:      "AccountInfo",
+					Use:            "account-info [address]",
+					Short:          "Query account info which is common to all account types.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
 				{
 					RpcMethod:      "AccountAddressByID",
 					Use:            "address-by-acc-num [acc-num]",
-					Short:          "query account address by account number",
+					Short:          "Query account address by account number",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
 				},
 				{
@@ -37,6 +48,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query module account info by module name",
 					Example:        fmt.Sprintf("%s q auth module-account gov", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}},
+				},
+				{
+					RpcMethod: "Bech32Prefix",
+					Use:       "bech32-prefix",
+					Short:     "Query the chain bech32 prefix (if applicable)",
 				},
 				{
 					RpcMethod: "Params",

@@ -17,8 +17,20 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
+=======
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/evidence"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
+
+>>>>>>> 256e37c52 (feat(auth): make address codec pluggable (#16621))
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -294,4 +306,45 @@ func TestProtoAnnotations(t *testing.T) {
 	require.NoError(t, err)
 	err = msgservice.ValidateProtoAnnotations(r)
 	require.NoError(t, err)
+}
+
+var _ address.Codec = (*customAddressCodec)(nil)
+
+type customAddressCodec struct{}
+
+func (c customAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return []byte(text), nil
+}
+
+func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
+	return string(bz), nil
+}
+
+func TestAddressCodecFactory(t *testing.T) {
+	var addrCodec address.Codec
+	err := depinject.Inject(
+		depinject.Configs(
+			network.MinimumAppConfig(),
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&addrCodec)
+	require.NoError(t, err)
+	require.NotNil(t, addrCodec)
+	_, ok := addrCodec.(customAddressCodec)
+	require.False(t, ok)
+
+	// Set the address codec to the custom one
+	err = depinject.Inject(
+		depinject.Configs(
+			network.MinimumAppConfig(),
+			depinject.Supply(
+				log.NewNopLogger(),
+				func() address.Codec { return customAddressCodec{} },
+			),
+		),
+		&addrCodec)
+	require.NoError(t, err)
+	require.NotNil(t, addrCodec)
+	_, ok = addrCodec.(customAddressCodec)
+	require.True(t, ok)
 }

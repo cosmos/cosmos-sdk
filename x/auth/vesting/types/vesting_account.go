@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
@@ -152,12 +151,8 @@ func (bva BaseVestingAccount) Validate() error {
 		return errors.New("end time cannot be negative")
 	}
 
-	if !bva.OriginalVesting.IsValid() {
-		return sdkerrors.ErrInvalidCoins.Wrap(bva.OriginalVesting.String())
-	}
-
-	if !bva.OriginalVesting.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrap(bva.OriginalVesting.String())
+	if !bva.OriginalVesting.IsValid() || !bva.OriginalVesting.IsAllPositive() {
+		return fmt.Errorf("invalid coins: %s", bva.OriginalVesting.String())
 	}
 
 	if !(bva.DelegatedVesting.IsAllLTE(bva.OriginalVesting)) {
@@ -373,12 +368,8 @@ func (pva PeriodicVestingAccount) Validate() error {
 		}
 		endTime += p.Length
 
-		if !p.Amount.IsValid() {
-			return sdkerrors.ErrInvalidCoins.Wrap(p.Amount.String())
-		}
-
-		if !p.Amount.IsAllPositive() {
-			return sdkerrors.ErrInvalidCoins.Wrap(p.Amount.String())
+		if !p.Amount.IsValid() || !p.Amount.IsAllPositive() {
+			return fmt.Errorf("period #%d has invalid coins: %s", i, p.Amount.String())
 		}
 
 		originalVesting = originalVesting.Add(p.Amount...)

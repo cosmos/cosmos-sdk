@@ -22,6 +22,9 @@ const (
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
+
+	// GovModuleName is the name of the gov module
+	GovModuleName = "gov"
 )
 
 var (
@@ -60,7 +63,6 @@ var (
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
-//nolint:revive // we want these underscores, they make life easier
 const (
 	UnbondingType_Undefined UnbondingType = iota
 	UnbondingType_UnbondingDelegation

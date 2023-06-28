@@ -23,16 +23,26 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	previousPeriod := valCurrentRewards.Period - 1
 
 	// increment reference count for the period we're going to track
-	k.incrementReferenceCount(ctx, val, previousPeriod)
+	err = k.incrementReferenceCount(ctx, val, previousPeriod)
+	if err != nil {
+		return err
+	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validator := k.stakingKeeper.Validator(sdkCtx, val)
-	delegation := k.stakingKeeper.Delegation(sdkCtx, del, val)
+	validator, err := k.stakingKeeper.Validator(ctx, val)
+	if err != nil {
+		return err
+	}
+
+	delegation, err := k.stakingKeeper.Delegation(ctx, del, val)
+	if err != nil {
+		return err
+	}
 
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 
@@ -51,12 +61,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 	}
 
 	// return staking * (ending - starting)
-	starting, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
+	starting, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(val.GetOperator(), startingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-	ending, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
+	ending, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(val.GetOperator(), endingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -75,13 +85,13 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// fetch starting info for delegation
 	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return
+		return sdk.DecCoins{}, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) {
 		// started this height, no rewards yet
-		return
+		return sdk.DecCoins{}, nil
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod
@@ -226,7 +236,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 
 	// update the outstanding rewards and the community pool only if the
 	// transaction was successful
-	err = k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+	err = k.ValidatorOutstandingRewards.Set(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
 	if err != nil {
 		return nil, err
 	}

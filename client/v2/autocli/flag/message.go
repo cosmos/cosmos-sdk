@@ -15,6 +15,7 @@ type MessageBinder struct {
 	positionalFlagSet *pflag.FlagSet
 	positionalArgs    []fieldBinding
 	hasVarargs        bool
+	hasOptional       bool
 
 	flagBindings []fieldBinding
 	messageType  protoreflect.MessageType
@@ -32,8 +33,8 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 	// first set positional args in the positional arg flag set
 	n := len(positionalArgs)
 	for i := range m.positionalArgs {
-		if i >= n {
-			panic("unexpected: validate args should have caught this")
+		if i == n {
+			break
 		}
 
 		name := fmt.Sprintf("%d", i)

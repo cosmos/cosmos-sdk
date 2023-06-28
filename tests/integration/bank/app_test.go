@@ -3,13 +3,14 @@ package bank_test
 import (
 	"testing"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -399,7 +400,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 				"invalid authority",
 				"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				addr1Str,
-				"expected gov account as only signer for proposal message",
+				"expected authority account as only signer for proposal message",
 			},
 		},
 		{

@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,8 +109,8 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
 func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {
-	v, ok := sh.k.GetValidator(sh.Ctx, addr)
-	require.True(sh.t, ok)
+	v, err := sh.k.GetValidator(sh.Ctx, addr)
+	require.NoError(sh.t, err)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")
 	if status >= 0 {
 		require.Equal(sh.t, status, v.Status)
@@ -126,7 +127,8 @@ func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, f
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(newTime)
-	sh.k.EndBlocker(sh.Ctx)
+	_, err := sh.k.EndBlocker(sh.Ctx)
+	require.NoError(sh.t, err)
 	return sh.Ctx
 }
 
@@ -134,7 +136,8 @@ func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.BlockHeader().Time.Add(diff))
-	sh.k.EndBlocker(sh.Ctx)
+	_, err := sh.k.EndBlocker(sh.Ctx)
+	require.NoError(sh.t, err)
 	return sh.Ctx
 }
 

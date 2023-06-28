@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -51,19 +52,23 @@ func TestBeginBlocker(t *testing.T) {
 	power := int64(100)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
 	stakingKeeper.EndBlocker(ctx)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
 	require.Equal(
 		t, bankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, testutil.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(bondDenom, testutil.InitTokens.Sub(amt))),
 	)
-	require.Equal(t, amt, stakingKeeper.Validator(ctx, addr).GetBondedTokens())
+	val, err := stakingKeeper.Validator(ctx, addr)
+	require.NoError(t, err)
+	require.Equal(t, amt, val.GetBondedTokens())
 
-	val := abci.Validator{
+	abciVal := abci.Validator{
 		Address: pk.Address(),
 		Power:   power,
 	}
 
 	ctx = ctx.WithVoteInfos([]abci.VoteInfo{{
-		Validator:   val,
+		Validator:   abciVal,
 		BlockIdFlag: cmtproto.BlockIDFlagCommit,
 	}})
 
@@ -85,7 +90,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < signedBlocksWindow; height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
-				Validator:   val,
+				Validator:   abciVal,
 				BlockIdFlag: cmtproto.BlockIDFlagCommit,
 			}})
 
@@ -99,7 +104,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
 		ctx = ctx.WithBlockHeight(height).
 			WithVoteInfos([]abci.VoteInfo{{
-				Validator:   val,
+				Validator:   abciVal,
 				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
 			}})
 
@@ -112,7 +117,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 
 	// validator should be jailed
-	validator, found := stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
+	require.NoError(t, err)
 	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 }

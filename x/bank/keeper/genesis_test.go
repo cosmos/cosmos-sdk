@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestExportGenesis() {
@@ -30,11 +29,11 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		suite.mockMintCoins(mintAcc)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedBalances[i].Coins))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, accAddr)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, accAddr, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, accAddr, expectedBalances[i].Coins))
 	}
 
 	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))

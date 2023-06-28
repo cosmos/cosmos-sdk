@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

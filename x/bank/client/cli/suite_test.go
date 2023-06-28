@@ -22,7 +22,7 @@ type CLITestSuite struct {
 	baseCtx client.Context
 }
 
-func TestMigrateTestSuite(t *testing.T) {
+func TestCLITestSuite(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
 

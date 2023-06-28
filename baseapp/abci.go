@@ -667,6 +667,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
 	}
 
 	// Initialize the FinalizeBlock state. If this is the first block, it should
@@ -685,6 +686,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 				Height:  req.Height,
 				Time:    req.Time,
 				Hash:    req.Hash,
+				Apphash: app.LastCommitID().Hash,
 			})
 	}
 
@@ -701,6 +703,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
+			Apphash: app.LastCommitID().Hash,
 		}).WithCometInfo(cometInfo{
 		Misbehavior:     req.Misbehavior,
 		ValidatorsHash:  req.NextValidatorsHash,

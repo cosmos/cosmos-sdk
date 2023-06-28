@@ -779,6 +779,7 @@ func TestFuncTypes(t *testing.T) {
 		),
 		&duck)
 	_, ok = duck.(smallMallard)
+	require.True(t, ok)
 	require.NoError(t, err)
 
 	err = depinject.Inject(
@@ -787,5 +788,6 @@ func TestFuncTypes(t *testing.T) {
 		),
 		&duck)
 	_, ok = duck.(Mallard)
+	require.True(t, ok)
 	require.NoError(t, err)
 }

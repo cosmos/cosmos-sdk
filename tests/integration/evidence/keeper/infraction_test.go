@@ -20,7 +20,6 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

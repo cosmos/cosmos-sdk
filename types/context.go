@@ -374,6 +374,17 @@ func (c Context) CacheContextWithErrorEvents() (cc Context, writeCache func(), w
 	return cc, writeCache, writeErrorEvents
 }
 
+func (c Context) CacheContextWithoutEvents() (cc Context, writeCache func()) {
+	cms := c.ms.CacheMultiStore()
+	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
+
+	writeCache = func() {
+		cms.Write()
+	}
+
+	return cc, writeCache
+}
+
 var (
 	_ context.Context    = Context{}
 	_ storetypes.Context = Context{}

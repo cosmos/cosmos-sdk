@@ -154,14 +154,15 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		msgResp, err := handler(sdkCtx, msg)
+		cachedCtx, writeCache := sdkCtx.CacheContextWithoutEvents()
+		msgResp, err := handler(&cachedCtx, msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
 		results[i] = msgResp.Data
 
-		// emit the events from the dispatched actions
+		writeCache()
 		events := msgResp.Events
 		sdkEvents := make([]sdk.Event, 0, len(events))
 		for _, event := range events {

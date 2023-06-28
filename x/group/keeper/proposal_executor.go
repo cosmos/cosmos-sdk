@@ -47,7 +47,7 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 		if handler == nil {
 			return nil, errorsmod.Wrapf(errors.ErrInvalid, "no message handler found for %q", sdk.MsgTypeURL(msg))
 		}
-		r, err := handler(ctx, msg)
+		r, err := handler(&ctx, msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}

@@ -145,7 +145,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
 	}
 
-	msgResult, err := handler(app.ctx, msg)
+	msgResult, err := handler(&app.ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
 	}

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -17,17 +19,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/upgrade"
-
->>>>>>> 256e37c52 (feat(auth): make address codec pluggable (#16621))
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

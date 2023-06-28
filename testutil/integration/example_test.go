@@ -6,15 +6,10 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-<<<<<<< HEAD
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"github.com/google/go-cmp/cmp"
 
-=======
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
->>>>>>> 256e37c52 (feat(auth): make address codec pluggable (#16621))
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"

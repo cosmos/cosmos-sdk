@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Evidence:  defaultConsensusParams.Evidence,
 			},
 			expErr:    true,
-			expErrMsg: "block.MaxBytes must be greater than 0. Got -10",
+			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
 		},
 		{
 			name: "invalid authority",

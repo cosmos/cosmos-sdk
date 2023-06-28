@@ -47,12 +47,12 @@ func TestWeightedOperations(t *testing.T) {
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simappparams.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
-		// {simappparams.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
-		// {simappparams.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
-		// {simappparams.DefaultWeightMsgRedeemTokensforShares, types.ModuleName, types.TypeMsgRedeemTokensForShares},
-		// {simappparams.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
-		// {simappparams.DefaultWeightMsgDisableTokenizeShares, types.ModuleName, types.TypeMsgDisableTokenizeShares},
-		// {simappparams.DefaultWeightMsgEnableTokenizeShares, types.ModuleName, types.TypeMsgEnableTokenizeShares},
+		{simappparams.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
+		{simappparams.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
+		{simappparams.DefaultWeightMsgRedeemTokensforShares, types.ModuleName, types.TypeMsgRedeemTokensForShares},
+		{simappparams.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
+		{simappparams.DefaultWeightMsgDisableTokenizeShares, types.ModuleName, types.TypeMsgDisableTokenizeShares},
+		{simappparams.DefaultWeightMsgEnableTokenizeShares, types.ModuleName, types.TypeMsgEnableTokenizeShares},
 	}
 
 	for i, w := range weightesOps {

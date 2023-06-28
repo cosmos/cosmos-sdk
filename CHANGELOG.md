@@ -70,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/staking)[#16740](https://github.com/cosmos/cosmos-sdk/issues/16740)] make staking Infraction enum consistent with v45-ics type when sending over the wire.
 * (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
 * (x/auth/types) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.

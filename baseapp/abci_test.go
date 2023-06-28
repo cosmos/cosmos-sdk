@@ -1289,7 +1289,6 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 		Txs:    resPrepareProposal.Txs,
 		Height: reqPrepareProposal.Height,
 	}
-
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)

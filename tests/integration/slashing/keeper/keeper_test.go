@@ -4,15 +4,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -72,6 +73,7 @@ func initFixture(t testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -88,7 +90,7 @@ func initFixture(t testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, keys[stakingtypes.StoreKey], accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, &codec.LegacyAmino{}, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
@@ -133,7 +135,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	p := f.stakingKeeper.GetParams(f.ctx)
+	p, err := f.stakingKeeper.GetParams(f.ctx)
+	assert.NilError(t, err)
 	p.MaxValidators = 5
 	f.stakingKeeper.SetParams(f.ctx, p)
 
@@ -212,7 +215,7 @@ func TestHandleNewValidator(t *testing.T) {
 	f := initFixture(t)
 
 	pks := simtestutil.CreateTestPubKeys(1)
-	addr, val := f.valAddrs[0], pks[0]
+	addr, valpubkey := f.valAddrs[0], pks[0]
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
 	assert.NilError(t, err)
@@ -220,27 +223,33 @@ func TestHandleNewValidator(t *testing.T) {
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
 
-	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info)
-	assert.NilError(t, err)
+	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
 
 	// Validator created
-	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
 
 	_, err = f.stakingKeeper.EndBlocker(f.ctx)
-	assert.NilError(t, err)
+	require.NoError(t, err)
+
+	bondDenom, err := f.stakingKeeper.BondDenom(f.ctx)
+	require.NoError(t, err)
+
 	assert.DeepEqual(
 		t, f.bankKeeper.GetAllBalances(f.ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.GetParams(f.ctx).BondDenom, testutil.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(bondDenom, testutil.InitTokens.Sub(amt))),
 	)
-	assert.DeepEqual(t, amt, f.stakingKeeper.Validator(f.ctx, addr).GetBondedTokens())
+
+	val, err := f.stakingKeeper.Validator(f.ctx, addr)
+	require.NoError(t, err)
+	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
 	// Now a validator, for two blocks
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagCommit))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagCommit))
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2)
-	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), 100, comet.BlockIDFlagAbsent))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagAbsent))
 
-	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()))
+	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()))
 	assert.Assert(t, found)
 	assert.Equal(t, signedBlocksWindow+1, info.StartHeight)
 	assert.Equal(t, int64(2), info.IndexOffset)
@@ -248,11 +257,11 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed
-	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
+	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(valpubkey))
 	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(f.ctx)
 	expTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 100)
-	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), f.stakingKeeper.BondDenom(f.ctx)).Amount))
+	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), bondDenom).Amount))
 }
 
 // Test a jailed validator being "down" twice
@@ -326,7 +335,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	params := f.stakingKeeper.GetParams(f.ctx)
+	params, err := f.stakingKeeper.GetParams(f.ctx)
+	require.NoError(t, err)
 	params.MaxValidators = 1
 	f.stakingKeeper.SetParams(f.ctx, params)
 	power := int64(100)

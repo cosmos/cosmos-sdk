@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/collections"
-
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

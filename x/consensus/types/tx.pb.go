@@ -192,7 +192,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// UpdateParams defines a governance operation for updating the x/consensus_param module parameters.
+	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
@@ -218,7 +218,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// UpdateParams defines a governance operation for updating the x/consensus_param module parameters.
+	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47

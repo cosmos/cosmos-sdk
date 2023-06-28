@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

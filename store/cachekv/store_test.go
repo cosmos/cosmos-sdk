@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math/unsafe"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/types"

@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -134,6 +134,12 @@ func NewSimApp(
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
 
+				// For providing a different address codec, add it below.
+				// By default the auth module uses a Bech32 address codec,
+				// with the prefix defined in the auth module configuration.
+				//
+				// func() address.Codec { return <- custom address codec type -> }
+
 				//
 				// MINT
 				//
@@ -197,6 +203,13 @@ func NewSimApp(
 	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
 	// }
 	// baseAppOptions = append(baseAppOptions, prepareOpt)
+
+	// create and set dummy vote extension handler
+	voteExtOp := func(bApp *baseapp.BaseApp) {
+		voteExtHandler := NewVoteExtensionHandler()
+		voteExtHandler.SetHandlers(bApp)
+	}
+	baseAppOptions = append(baseAppOptions, voteExtOp)
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 

@@ -284,6 +284,11 @@ func (c Context) WithEventManager(em EventManagerI) Context {
 	return c
 }
 
+// SetEventManager returns a Context with an updated event manager
+func (c *Context) SetEventManager(em EventManagerI) {
+	c.eventManager = em
+}
+
 // WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p

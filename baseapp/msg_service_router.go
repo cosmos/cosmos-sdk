@@ -43,7 +43,7 @@ func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
+type MsgServiceHandler = func(ctx *sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
@@ -120,10 +120,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			)
 		}
 
-		msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			//ctx = ctx.WithEventManager(sdk.NewEventManager())  // ToDO: Is there a reason for the event manager to be reset here?
+		msr.routes[requestTypeName] = func(ctx *sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			ctx.SetEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
+				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, *ctx)
 				return handler(goCtx, msg)
 			}
 
@@ -135,7 +135,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 
 			if msr.circuitBreaker != nil {
 				msgURL := sdk.MsgTypeURL(msg)
-				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				isAllowed, err := msr.circuitBreaker.IsAllowed(*ctx, msgURL)
 				if err != nil {
 					return nil, err
 				}
@@ -147,7 +147,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
-			res, err := methodHandler(handler, ctx, noopDecoder, interceptor)
+			res, err := methodHandler(handler, *ctx, noopDecoder, interceptor)
 			if err != nil {
 				return nil, err
 			}
@@ -157,7 +157,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 			}
 
-			return sdk.WrapServiceResult(ctx, resMsg, err)
+			return sdk.WrapServiceResult(*ctx, resMsg, err)
 		}
 	}
 }

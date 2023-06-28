@@ -744,3 +744,50 @@ func TestConditionalDebugging(t *testing.T) {
 	require.Empty(t, logs)
 	require.True(t, success)
 }
+
+type TestFuncTypesInputs struct {
+	depinject.In
+
+	DuckReturner func() Duck `optional:"true"`
+}
+
+type smallMallard struct{}
+
+func (smallMallard) quack() {}
+
+func DuckProvider(in TestFuncTypesInputs) Duck {
+	if in.DuckReturner != nil {
+		return in.DuckReturner()
+	}
+	return Mallard{}
+}
+
+func TestFuncTypes(t *testing.T) {
+	var duckReturnerFactory func() Duck
+	err := depinject.Inject(
+		depinject.Supply(func() Duck { return smallMallard{} }),
+		&duckReturnerFactory)
+	require.NoError(t, err)
+	_, ok := duckReturnerFactory().(smallMallard)
+	require.True(t, ok)
+
+	var duck Duck
+	err = depinject.Inject(
+		depinject.Configs(
+			depinject.Supply(func() Duck { return smallMallard{} }),
+			depinject.Provide(DuckProvider),
+		),
+		&duck)
+	_, ok = duck.(smallMallard)
+	require.True(t, ok)
+	require.NoError(t, err)
+
+	err = depinject.Inject(
+		depinject.Configs(
+			depinject.Provide(DuckProvider),
+		),
+		&duck)
+	_, ok = duck.(Mallard)
+	require.True(t, ok)
+	require.NoError(t, err)
+}

@@ -134,6 +134,12 @@ func NewSimApp(
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
 
+				// For providing a different address codec, add it below.
+				// By default the auth module uses a Bech32 address codec,
+				// with the prefix defined in the auth module configuration.
+				//
+				// func() address.Codec { return <- custom address codec type -> }
+
 				//
 				// MINT
 				//

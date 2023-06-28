@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"fmt"
+
 	authv1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -22,6 +25,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "address-by-acc-num [acc-num]",
 					Short:          "query account address by account number",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+				},
+				{
+					RpcMethod: "ModuleAccounts",
+					Use:       "module-accounts",
+					Short:     "Query all module accounts",
+				},
+				{
+					RpcMethod:      "ModuleAccountByName",
+					Use:            "module-account [module-name]",
+					Short:          "Query module account info by module name",
+					Example:        fmt.Sprintf("%s q auth module-account gov", version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}},
 				},
 				{
 					RpcMethod: "Params",

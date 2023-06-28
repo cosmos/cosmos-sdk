@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"cosmossdk.io/core/address"
@@ -46,10 +45,7 @@ func GetQueryCmd(ac address.Codec) *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(ac),
-		GetAccountAddressByIDCmd(),
 		GetAccountsCmd(),
-		QueryModuleAccountsCmd(),
-		QueryModuleAccountByNameCmd(),
 	)
 
 	return cmd
@@ -99,42 +95,6 @@ func GetAccountCmd(ac address.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetAccountAddressByIDCmd returns a query account that will display the account address of a given account id.
-func GetAccountAddressByIDCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "address-by-acc-num [acc-num]",
-		Aliases: []string{"address-by-id"},
-		Short:   "Query for an address by account number",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf("%s q auth address-by-acc-num 1", version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			accNum, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{
-				AccountId: accNum,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
 // GetAccountsCmd returns a query command that will display a list of accounts
 func GetAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -163,67 +123,6 @@ func GetAccountsCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all-accounts")
-
-	return cmd
-}
-
-// QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
-func QueryModuleAccountsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "module-accounts",
-		Short: "Query all module accounts",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleAccounts(context.Background(), &types.QueryModuleAccountsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// QueryModuleAccountByNameCmd returns a command to
-func QueryModuleAccountByNameCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "module-account [module-name]",
-		Short:   "Query module account info by module name",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf("%s q auth module-account auth", version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			moduleName := args[0]
-			if len(moduleName) == 0 {
-				return fmt.Errorf("module name should not be empty")
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleAccountByName(context.Background(), &types.QueryModuleAccountByNameRequest{Name: moduleName})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

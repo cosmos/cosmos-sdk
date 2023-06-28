@@ -6,11 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/tools/confix/cmd"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"gotest.tools/v3/assert"
 )
 
 // initClientContext initiates client Context for tests

@@ -112,8 +112,10 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	h.k.DeleteValidatorSlashEvents(ctx, valAddr)
 
 	// clear historical rewards
-	h.k.DeleteValidatorHistoricalRewards(ctx, valAddr)
-
+	err = h.k.ValidatorHistoricalRewards.Clear(ctx, collections.NewPrefixedPairRange[sdk.ValAddress, uint64](valAddr))
+	if err != nil {
+		return err
+	}
 	// clear current rewards
 	err = h.k.ValidatorCurrentRewards.Remove(ctx, valAddr)
 	if err != nil {

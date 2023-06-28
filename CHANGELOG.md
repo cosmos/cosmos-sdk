@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (sims) [#16656](https://github.com/cosmos/cosmos-sdk/pull/16656) Add custom max gas for block for sim config with unlimited as default.
+
 ### Improvements
 
 * (deps) [#16553](https://github.com/cosmos/cosmos-sdk/pull/16553) Bump CometBFT to [v0.34.29](https://github.com/cometbft/cometbft/blob/v0.34.29/CHANGELOG.md#v03429).

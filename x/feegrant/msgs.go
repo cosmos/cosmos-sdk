@@ -33,12 +33,6 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 	}, nil
 }
 
-// GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
 // GetFeeAllowanceI returns unpacked FeeAllowance
 func (msg MsgGrantAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
@@ -59,11 +53,4 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 // granter and grantee
 func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
-}
-
-// GetSigners gets the granter address associated with an Allowance
-// to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
 }

@@ -3,10 +3,10 @@ package proofs
 import (
 	"sort"
 
-	"cosmossdk.io/math/unsafe"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
 
+	"cosmossdk.io/math/unsafe"
 	sdkmaps "cosmossdk.io/store/internal/maps"
 )
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-
 	"cosmossdk.io/core/store"
 )
 

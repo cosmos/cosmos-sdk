@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

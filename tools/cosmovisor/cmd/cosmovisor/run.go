@@ -1,10 +1,11 @@
 package main
 
 import (
-	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 var runCmd = &cobra.Command{

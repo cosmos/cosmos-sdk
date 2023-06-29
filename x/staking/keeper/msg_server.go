@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-
 	"github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"

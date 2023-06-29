@@ -15,6 +15,7 @@ linters:
     - exportloopref
     - goconst
     - gocritic
+    - gci
     - gofumpt
     - gosec
     - gosimple
@@ -58,6 +59,14 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(cosmossdk.io)
+      - prefix(github.com/cosmos/cosmos-sdk)
+
   gosec:
     # To select a subset of rules to run.
     # Available rules: https://github.com/securego/gosec#available-rules

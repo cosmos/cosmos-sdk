@@ -6,13 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

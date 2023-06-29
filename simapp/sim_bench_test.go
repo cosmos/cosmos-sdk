@@ -5,10 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/viper"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	flag "github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"

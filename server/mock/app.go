@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
-
 	storetypes "cosmossdk.io/store/types"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"

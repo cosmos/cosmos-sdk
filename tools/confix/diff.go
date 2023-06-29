@@ -10,9 +10,12 @@ import (
 	"github.com/creachadair/tomledit/transform"
 )
 
+type DiffType string
+
 const (
-	Section = "S"
-	Mapping = "M"
+	Section    DiffType = "S"
+	SubSection DiffType = "SS"
+	Mapping    DiffType = "M"
 )
 
 type KV struct {
@@ -22,7 +25,7 @@ type KV struct {
 }
 
 type Diff struct {
-	Type    string // "section" or "mapping"
+	Type    DiffType
 	Deleted bool
 
 	KV KV
@@ -41,7 +44,6 @@ func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 	i, j := 0, 0
 	for i < len(lsec) && j < len(rsec) {
 		switch {
-
 		case lsec[i].Name.Before(rsec[j].Name):
 			diff = append(diff, Diff{Type: Section, Deleted: true, KV: KV{Key: lsec[i].Name.String()}})
 			for _, kv := range allKVs(lsec[i]) {

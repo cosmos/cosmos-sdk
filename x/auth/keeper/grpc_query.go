@@ -162,6 +162,10 @@ func (s queryServer) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRe
 		return nil, err
 	}
 
+	if bech32Prefix == "" {
+		return &types.Bech32PrefixResponse{Bech32Prefix: "bech32 is not used on this chain"}, nil
+	}
+
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -98,7 +99,11 @@ func initFixture(t testing.TB) *fixture {
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, nil, cdc.InterfaceRegistry())
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, bankModule, stakingModule, slashingModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		banktypes.ModuleName:     bankModule,
+		stakingtypes.ModuleName:  stakingModule,
+		slashingtypes.ModuleName: slashingModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

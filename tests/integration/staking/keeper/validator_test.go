@@ -45,13 +45,13 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*fixture, 
 	return f, addrDels, addrVals
 }
 
-func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
-	f, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
+func initValidators(tb testing.TB, power int64, numAddrs int, powers []int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	f, addrs, valAddrs := bootstrapValidatorTest(tb, power, numAddrs)
 	pks := simtestutil.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
-		vs[i] = testutil.NewValidator(t, sdk.ValAddress(addrs[i]), pks[i])
+		vs[i] = testutil.NewValidator(tb, sdk.ValAddress(addrs[i]), pks[i])
 		tokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, power)
 		vs[i], _ = vs[i].AddTokensFromDel(tokens)
 	}
@@ -844,6 +844,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 }
 
 func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k *keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+	t.Helper()
 	updates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
 	assert.NilError(t, err)
 	if expectedUpdatesLen >= 0 {

@@ -21,6 +21,7 @@ func TestCodec(t *testing.T) {
 }
 
 func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
+	t.Helper()
 	t.Run(fmt.Sprintf("%s %v", spec.FieldName, false), func(t *testing.T) {
 		testCodecNT(t, spec.FieldName, spec.Gen, false)
 	})
@@ -30,6 +31,7 @@ func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
 }
 
 func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator[any], nonTerminal bool) {
+	t.Helper()
 	cdc, err := testutil.MakeTestCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {

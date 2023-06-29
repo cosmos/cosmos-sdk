@@ -62,7 +62,10 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
+	baseVestingAccount, err := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
 	var vestingAccount sdk.AccountI
 	if msg.Delayed {
@@ -124,7 +127,10 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
+	vestingAccount, err := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 
@@ -188,11 +194,9 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
-
-	// Enforce and sanity check that we don't have any negative endTime.
-	if bva := vestingAccount.BaseVestingAccount; bva != nil && bva.EndTime < 0 {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "cumulative endtime is negative")
+	vestingAccount, err := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)

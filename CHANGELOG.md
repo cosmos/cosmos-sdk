@@ -78,7 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/consensus) [#16713](https://github.com/cosmos/cosmos-sdk/pull/16713) Add missing ABCI param in MsgUpdateParams.
 * [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
 * (baseapp) [#16700](https://github.com/cosmos/cosmos-sdk/pull/16700) Fix: Consensus Failure in returning no response to malformed transactions
-* [#16776](https://github.com/cosmos/cosmos-sdk/pull/16776) Add read lock for `GetBech32AccountAddrPrefix` to avoid data race.
+* [#16776](https://github.com/cosmos/cosmos-sdk/pull/16776) Add read lock for bech32 getters to avoid data race.
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 

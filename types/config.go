@@ -166,26 +166,36 @@ func (config *Config) GetBech32AccountAddrPrefix() string {
 
 // GetBech32ValidatorAddrPrefix returns the Bech32 prefix for validator address
 func (config *Config) GetBech32ValidatorAddrPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["validator_addr"]
 }
 
 // GetBech32ConsensusAddrPrefix returns the Bech32 prefix for consensus node address
 func (config *Config) GetBech32ConsensusAddrPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["consensus_addr"]
 }
 
 // GetBech32AccountPubPrefix returns the Bech32 prefix for account public key
 func (config *Config) GetBech32AccountPubPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["account_pub"]
 }
 
 // GetBech32ValidatorPubPrefix returns the Bech32 prefix for validator public key
 func (config *Config) GetBech32ValidatorPubPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["validator_pub"]
 }
 
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["consensus_pub"]
 }
 

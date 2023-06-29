@@ -7,9 +7,11 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -79,6 +81,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -98,7 +101,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName: authModule,
+		banktypes.ModuleName: bankModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

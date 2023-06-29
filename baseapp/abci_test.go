@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -566,6 +567,19 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		Height: 1,
 	})
 
+	// malformed transaction bytes
+	{
+		bz := []byte("example vote extension")
+		result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: 1,
+			Txs:    [][]byte{bz},
+		})
+
+		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), result.TxResults[0].Codespace, err)
+		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), result.TxResults[0].Code, err)
+		require.EqualValues(t, 0, result.TxResults[0].GasUsed, err)
+		require.EqualValues(t, 0, result.TxResults[0].GasWanted, err)
+	}
 	// transaction with no messages
 	{
 		emptyTx := suite.txConfig.NewTxBuilder().GetTx()
@@ -1230,6 +1244,69 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	// })
 }
 
+func TestABCI_Proposals_WithVE(t *testing.T) {
+	someVoteExtension := []byte("some-vote-extension")
+
+	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+			return &abci.ResponseInitChain{}, nil
+		})
+	}
+
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			// Inject the vote extension to the beginning of the proposal
+			txs := make([][]byte, len(req.Txs)+1)
+			txs[0] = someVoteExtension
+			copy(txs[1:], req.Txs)
+
+			return &abci.ResponsePrepareProposal{Txs: txs}, nil
+		})
+
+		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+			// Check that the vote extension is still there
+			require.Equal(t, someVoteExtension, req.Txs[0])
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
+
+	suite.baseApp.InitChain(&abci.RequestInitChain{
+		InitialHeight:   1,
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 100000,
+		Height:     1, // this value can't be 0
+	}
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(resPrepareProposal.Txs))
+
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs:    resPrepareProposal.Txs,
+		Height: reqPrepareProposal.Height,
+	}
+	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	// Run finalize block and ensure that the vote extension is still there and that
+	// the proposal is accepted
+	result, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Txs:    resPrepareProposal.Txs,
+		Height: reqPrepareProposal.Height,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(result.TxResults))
+	require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), result.TxResults[0].Codespace, err)
+	require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), result.TxResults[0].Code, err)
+	require.EqualValues(t, 0, result.TxResults[0].GasUsed, err)
+	require.EqualValues(t, 0, result.TxResults[0].GasWanted, err)
+}
+
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
@@ -1464,5 +1541,44 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	}
+}
+
+func TestABCI_HaltChain(t *testing.T) {
+	testCases := []struct {
+		name        string
+		haltHeight  uint64
+		haltTime    uint64
+		blockHeight int64
+		blockTime   int64
+		expHalt     bool
+	}{
+		{"default", 0, 0, 10, 0, false},
+		{"halt-height-edge", 10, 0, 10, 0, false},
+		{"halt-height", 10, 0, 11, 0, true},
+		{"halt-time-edge", 0, 10, 1, 10, false},
+		{"halt-time", 0, 10, 1, 11, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
+			suite.baseApp.InitChain(&abci.RequestInitChain{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+				InitialHeight:   tc.blockHeight,
+			})
+
+			app := suite.baseApp
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				Height: tc.blockHeight,
+				Time:   time.Unix(tc.blockTime, 0),
+			})
+			if !tc.expHalt {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, strings.HasPrefix(err.Error(), "halt per configuration"))
+			}
+		})
 	}
 }

@@ -4133,6 +4133,7 @@ type MsgSetSendEnabled struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// authority is the address that controls the module.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// send_enabled is the list of entries to add or update.
 	SendEnabled []*SendEnabled `protobuf:"bytes,2,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`

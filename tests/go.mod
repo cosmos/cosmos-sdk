@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/api v0.4.3-0.20230615032830-feb87fce5495
 	cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531
-	cosmossdk.io/core v0.8.0
+	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	cosmossdk.io/log v1.1.0

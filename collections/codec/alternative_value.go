@@ -16,7 +16,7 @@ func NewAltValueCodec[V any](canonicalValueCodec ValueCodec[V], alternativeDecod
 // The AltValueCodec will be trying to decode the value as math.Int, and if that fails,
 // it will attempt to decode it as sdk.Coin.
 // NOTE: if the canonical format can also decode the alternative format, then this codec
-// will produce undefined and undesirable behaviour.
+// will produce undefined and undesirable behavior.
 type AltValueCodec[V any] struct {
 	canonicalValueCodec ValueCodec[V]
 	alternativeDecoder  func([]byte) (V, error)

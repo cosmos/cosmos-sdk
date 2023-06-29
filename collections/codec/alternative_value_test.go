@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections/codec"
 	"cosmossdk.io/collections/colltest"
-	"github.com/stretchr/testify/require"
 )
 
 type altValue struct {

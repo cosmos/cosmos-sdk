@@ -83,13 +83,13 @@ func TestUncheckedReversePair(t *testing.T) {
 	require.NoError(t, sk.OpenKVStore(ctx).Set(rawKey, []byte("i should not be here")))
 
 	// normal reverse pair fails
-	err = rp.Walk(ctx, nil, func(denom string, address string) (bool, error) {
+	err = rp.Walk(ctx, nil, func(denom, address string) (bool, error) {
 		return false, nil
 	})
 	require.ErrorIs(t, err, collections.ErrEncoding)
 
 	// unchecked reverse pair succeeds
-	err = uncheckedRp.Walk(ctx, nil, func(indexingKey string, indexedKey string) (stop bool, err error) {
+	err = uncheckedRp.Walk(ctx, nil, func(indexingKey, indexedKey string) (stop bool, err error) {
 		require.Equal(t, "atom", indexingKey)
 		return true, nil
 	})

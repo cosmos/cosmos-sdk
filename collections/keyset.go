@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
-// WithKeySetUncheckedValue changes the behaviour of the KeySet when it encounters
+// WithKeySetUncheckedValue changes the behavior of the KeySet when it encounters
 // a value different from '[]byte{}', by default the KeySet errors when this happens.
 // This option allows to ignore the value and continue with the operation, in turn
 // the value will be cleared out and set to '[]byte{}'.

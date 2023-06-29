@@ -1979,6 +1979,7 @@ func TestChangeBcrypt(t *testing.T) {
 }
 
 func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool) {
+	t.Helper()
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}
@@ -1997,6 +1998,7 @@ func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool)
 }
 
 func newKeyring(t *testing.T, name string) Keyring {
+	t.Helper()
 	cdc := getCodec()
 	kr, err := New(name, "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)

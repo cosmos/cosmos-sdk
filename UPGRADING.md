@@ -72,7 +72,7 @@ More information about [confix](https://docs.cosmos.network/main/tooling/confix)
 
 #### gRPC-Web
 
-gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+gRPC-Web is now listening to the same address and port as the gRPC Gateway API server (default: `localhost:1317`).
 The possibility to listen to a different address has been removed, as well as its settings.
 Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
 

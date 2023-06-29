@@ -106,7 +106,6 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 					T:    transform.Remove(keys),
 				}
 			}
-
 		}
 
 		plan = append(plan, step)

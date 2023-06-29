@@ -13,8 +13,8 @@ import (
 type DiffType string
 
 const (
-	Section    DiffType = "S"
-	Mapping    DiffType = "M"
+	Section DiffType = "S"
+	Mapping DiffType = "M"
 )
 
 type KV struct {

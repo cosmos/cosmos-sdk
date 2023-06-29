@@ -91,17 +91,22 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 		} else {
 			if diff.Type == Section {
 				deletedSections[kv.Key] = true
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s section", kv.Key),
+					T:    transform.Remove(keys),
+				}
+			} else {
+				// when the whole section is deleted we don't need to remove the keys
+				if len(keys) > 1 && deletedSections[keys[0]] {
+					continue
+				}
+
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s key", kv.Key),
+					T:    transform.Remove(keys),
+				}
 			}
 
-			// when the whole section is deleted we don't need to remove the keys
-			if len(keys) > 1 && deletedSections[keys[0]] {
-				continue
-			}
-
-			step = transform.Step{
-				Desc: fmt.Sprintf("remove %s key", kv.Key),
-				T:    transform.Remove(keys),
-			}
 		}
 
 		plan = append(plan, step)

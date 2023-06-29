@@ -296,6 +296,7 @@ func benchManualUpdate(b *testing.B, store kv.Store) {
 }
 
 func benchManualDelete(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, deleteBalance(store, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -305,6 +306,7 @@ func benchManualDelete(b *testing.B, store kv.Store) {
 }
 
 func benchManualGet(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		balance, err := getBalance(store, fmt.Sprintf("acct%d", i), "bar")
 		assert.NilError(b, err)

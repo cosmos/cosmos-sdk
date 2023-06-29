@@ -14,7 +14,6 @@ type DiffType string
 
 const (
 	Section    DiffType = "S"
-	SubSection DiffType = "SS"
 	Mapping    DiffType = "M"
 )
 

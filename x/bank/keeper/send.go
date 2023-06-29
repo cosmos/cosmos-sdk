@@ -206,12 +206,12 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	var err error
-	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}

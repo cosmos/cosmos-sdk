@@ -6,6 +6,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -129,7 +130,13 @@ func initFixture(t testing.TB) *fixture {
 	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
 	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule, distrModule, govModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName:    authModule,
+		banktypes.ModuleName:    bankModule,
+		distrtypes.ModuleName:   distrModule,
+		stakingtypes.ModuleName: stakingModule,
+		types.ModuleName:        govModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

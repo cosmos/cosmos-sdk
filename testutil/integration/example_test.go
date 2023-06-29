@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -29,7 +31,7 @@ import (
 func Example() {
 	// in this example we are testing the integration of the following modules:
 	// - mint, which directly depends on auth, bank and staking
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, mint.AppModuleBasic{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}), mint.AppModuleBasic{})
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, minttypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
@@ -63,7 +65,10 @@ func Example() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule, mintModule,
+		map[string]appmodule.AppModule{
+			"auth": authModule,
+			"mint": mintModule,
+		},
 	)
 
 	// register the message and query servers
@@ -115,7 +120,7 @@ func Example() {
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}))
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey)
 	authority := authtypes.NewModuleAddress("gov").String()
 
@@ -144,7 +149,9 @@ func Example_oneModule() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule,
+		map[string]appmodule.AppModule{
+			"auth": authModule,
+		},
 	)
 
 	// register the message and query servers

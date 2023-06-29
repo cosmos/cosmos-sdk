@@ -29,41 +29,40 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// ConsensusVersion defines the current x/auth module consensus version.
 const (
+	// ConsensusVersion defines the current x/auth module consensus version.
 	ConsensusVersion = 5
 	GovModuleName    = "gov"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ appmodule.AppModule        = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the auth module.
-type AppModuleBasic struct {
-	ac address.Codec
-}
+// AppModule implements an application module for the auth module.
+type AppModule struct {
+	addressCodec      address.Codec
+	accountKeeper     keeper.AccountKeeper
+	randGenAccountsFn types.RandomGenesisAccountsFn
 
-// Name returns the auth module's name.
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace exported.Subspace
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the auth
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the auth module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -73,39 +72,21 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetTxCmd returns the root tx command for the auth module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
 // GetQueryCmd returns the root query command for the auth module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
+func (ab AppModule) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ab.addressCodec)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the auth module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
-
-// AppModule implements an application module for the auth module.
-type AppModule struct {
-	AppModuleBasic
-
-	accountKeeper     keeper.AccountKeeper
-	randGenAccountsFn types.RandomGenesisAccountsFn
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
-}
-
-var _ appmodule.AppModule = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -116,7 +97,7 @@ func (am AppModule) IsAppModule() {}
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
+		addressCodec:      accountKeeper.AddressCodec(),
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		legacySubspace:    ss,

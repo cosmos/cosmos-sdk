@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -69,8 +70,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
-
-			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
+			moduletestutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}))
+			appCodec := moduletestutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{})).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 

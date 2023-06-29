@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -73,7 +74,7 @@ func TestReadTxFromFile(t *testing.T) {
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}))
 	txConfig := encodingConfig.TxConfig
 
 	clientCtx := client.Context{}

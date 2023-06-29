@@ -48,6 +48,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -93,7 +94,7 @@ import (
 // by the mutation of genOpts passed to the generator.
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
+		module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}), authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
@@ -203,7 +204,7 @@ func newAny(t *testing.T, msg proto.Message) *anypb.Any {
 
 // TestAminoJSON_LegacyParity tests that the Encoder encoder produces the same output as the Encoder encoder.
 func TestAminoJSON_LegacyParity(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
+	encCfg := testutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}), authzmodule.AppModuleBasic{},
 		bank.AppModuleBasic{}, distribution.AppModuleBasic{}, slashing.AppModuleBasic{}, staking.AppModuleBasic{},
 		vesting.AppModuleBasic{}, gov.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
@@ -497,7 +498,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 }
 
 func TestSendAuthorization(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
+	encCfg := testutil.MakeTestEncodingConfig(module.CoreAppModuleBasicAdaptor("auth", auth.AppModule{}), authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})

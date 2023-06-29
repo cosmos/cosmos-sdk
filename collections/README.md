@@ -1117,3 +1117,30 @@ func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, 
     return k.Accounts.Get(ctx, addr)
 }
 ```
+
+## Advanced Usages
+
+### Alternative Value Codec
+
+The `codec.AltValueCodec` allows a collection to decode values using a different codec than the one used to encode them.
+Basically it enables to decode two different byte representations of the same concrete value.
+It can be used to lazily migrate values from one bytes representation to another, as long as the new representation is
+not able to decode the old one.
+
+A concrete example can be found in `x/bank` where the balance was initially stored as `Coin` and then migrated to `Int`.
+
+```go
+
+var BankBalanceValueCodec = codec.NewAltValueCodec(sdk.IntValue, func(b []byte) (sdk.Int, error) {
+    coin := sdk.Coin{}
+    err := coin.Unmarshal(b)
+    if err != nil {
+        return sdk.Int{}, err
+    }
+    return coin.Amount, nil
+})
+```
+
+The above example shows how to create an `AltValueCodec` that can decode both `sdk.Int` and `sdk.Coin` values. The provided 
+decoder function will be used as a fallback in case the default decoder fails. When the value will be encoded back into state
+it will use the default encoder. This allows to lazily migrate values to a new bytes representation.

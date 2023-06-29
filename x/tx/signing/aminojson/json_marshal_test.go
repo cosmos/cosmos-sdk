@@ -118,6 +118,7 @@ func TestAminoJSON(t *testing.T) {
 }
 
 func naiveSortedJSON(tb testing.TB, jsonToSort []byte) []byte {
+	tb.Helper()
 	var c interface{}
 	err := json.Unmarshal(jsonToSort, &c)
 	assert.NilError(tb, err)

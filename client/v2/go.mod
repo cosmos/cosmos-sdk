@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.3-0.20230629213050-620db732ba65
+	cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.10.0

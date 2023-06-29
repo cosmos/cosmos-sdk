@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -63,7 +64,10 @@ func Example() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule, mintModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+			minttypes.ModuleName: mintModule,
+		},
 	)
 
 	// register the message and query servers
@@ -144,7 +148,9 @@ func Example_oneModule() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+		},
 	)
 
 	// register the message and query servers

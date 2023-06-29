@@ -170,6 +170,10 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 
+		if err := validateAmount(period.Amount); err != nil {
+			return nil, err
+		}
+
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 

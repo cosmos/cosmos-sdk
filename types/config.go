@@ -159,6 +159,8 @@ func (config *Config) Seal() *Config {
 
 // GetBech32AccountAddrPrefix returns the Bech32 prefix for account address
 func (config *Config) GetBech32AccountAddrPrefix() string {
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 	return config.bech32AddressPrefix["account_addr"]
 }
 

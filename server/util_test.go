@@ -295,6 +295,7 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 }
 
 func (v precedenceCommon) setAll(t *testing.T, setFlag, setEnvVar, setConfigFile *string) {
+	t.Helper()
 	if setFlag != nil {
 		if err := v.cmd.Flags().Set(v.flagName, *setFlag); err != nil {
 			t.Fatalf("Failed setting flag %q", v.flagName)

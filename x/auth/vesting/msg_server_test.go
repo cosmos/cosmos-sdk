@@ -59,6 +59,7 @@ func (s *VestingTestSuite) SetupTest() {
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
+		authcodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

@@ -45,7 +45,10 @@ func AddGenesisAccount(
 	baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
 	if !vestingAmt.IsZero() {
-		baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+		baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+		if err != nil {
+			return fmt.Errorf("failed to create base vesting account: %w", err)
+		}
 
 		if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 			baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {

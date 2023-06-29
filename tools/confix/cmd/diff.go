@@ -3,10 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"cosmossdk.io/tools/confix"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
+
+	"cosmossdk.io/tools/confix"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func DiffCommand() *cobra.Command {

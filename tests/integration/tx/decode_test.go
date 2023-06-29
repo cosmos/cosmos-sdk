@@ -3,13 +3,13 @@ package tx
 import (
 	"testing"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"

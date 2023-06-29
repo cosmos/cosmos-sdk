@@ -13,10 +13,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/client/v2/autocli/flag"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 var (

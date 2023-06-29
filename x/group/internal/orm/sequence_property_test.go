@@ -3,10 +3,10 @@ package orm
 import (
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestSequence(t *testing.T) {

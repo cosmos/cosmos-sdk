@@ -7,8 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

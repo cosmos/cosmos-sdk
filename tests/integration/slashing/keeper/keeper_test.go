@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

@@ -66,8 +66,8 @@ func Example() {
 		keys,
 		encodingCfg.Codec,
 		map[string]appmodule.AppModule{
-			"auth": authModule,
-			"mint": mintModule,
+			authtypes.ModuleName: authModule,
+			minttypes.ModuleName: mintModule,
 		},
 	)
 
@@ -150,7 +150,7 @@ func Example_oneModule() {
 		keys,
 		encodingCfg.Codec,
 		map[string]appmodule.AppModule{
-			"auth": authModule,
+			authtypes.ModuleName: authModule,
 		},
 	)
 

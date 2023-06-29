@@ -22,7 +22,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "Account",
 					Use:            "account [address]",
-					Short:          "Qsuery account by address",
+					Short:          "Query account by address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
 				{

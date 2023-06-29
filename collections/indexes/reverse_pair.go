@@ -7,6 +7,21 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
+type reversePairOptions struct {
+	uncheckedValue bool
+}
+
+// WithReversePairUncheckedValue is an option that can be passed to NewReversePair to
+// ignore index values different from '[]byte{}' and continue with the operation.
+// This should be used only if you are migrating to collections and have used a different
+// placeholder value in your storage index keys.
+// Refer to WithKeySetUncheckedValue for more information.
+func WithReversePairUncheckedValue() func(*reversePairOptions) {
+	return func(o *reversePairOptions) {
+		o.uncheckedValue = true
+	}
+}
+
 // ReversePair is an index that is used with collections.Pair keys. It indexes objects by their second part of the key.
 // When the value is being indexed by collections.IndexedMap then ReversePair will create a relationship between
 // the second part of the primary key and the first part.
@@ -31,10 +46,20 @@ func NewReversePair[Value, K1, K2 any](
 	prefix collections.Prefix,
 	name string,
 	pairCodec codec.KeyCodec[collections.Pair[K1, K2]],
+	options ...func(*reversePairOptions),
 ) *ReversePair[K1, K2, Value] {
 	pkc := pairCodec.(pairKeyCodec[K1, K2])
+	ks := collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()))
+	o := new(reversePairOptions)
+	for _, option := range options {
+		option(o)
+	}
+	if o.uncheckedValue {
+		ks = collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()), collections.WithKeySetUncheckedValue())
+	}
+
 	mi := &ReversePair[K1, K2, Value]{
-		refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1())),
+		refKeys: ks,
 	}
 
 	return mi
@@ -67,7 +92,7 @@ func (i *ReversePair[K1, K2, Value]) Unreference(ctx context.Context, pk collect
 func (i *ReversePair[K1, K2, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[K2, K1]],
-	walkFunc func(indexingKey K2, indexedKey K1) (stop bool, err error),
+	walkFunc func(indexedKey K2, indexingKey K1) (stop bool, err error),
 ) error {
 	return i.refKeys.Walk(ctx, ranger, func(key collections.Pair[K2, K1]) (bool, error) {
 		return walkFunc(key.K1(), key.K2())

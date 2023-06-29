@@ -67,3 +67,33 @@ func TestReversePair(t *testing.T) {
 	_, err = indexedMap.Indexes.Denom.MatchExact(ctx, "atom")
 	require.ErrorIs(t, collections.ErrInvalidIterator, err)
 }
+
+func TestUncheckedReversePair(t *testing.T) {
+	sk, ctx := deps()
+	sb := collections.NewSchemaBuilder(sk)
+	// we create an indexed map that maps balances, which are saved as
+	// key: Pair[Address, Denom]
+	// value: Amount
+	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
+
+	uncheckedRp := NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec, WithReversePairUncheckedValue())
+	rp := NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec)
+
+	rawKey, err := collections.EncodeKeyWithPrefix(collections.NewPrefix("denom_index"), uncheckedRp.KeyCodec(), collections.Join("address1", "atom"))
+	require.NoError(t, err)
+
+	require.NoError(t, sk.OpenKVStore(ctx).Set(rawKey, []byte("i should not be here")))
+
+	// normal reverse pair fails
+	err = rp.Walk(ctx, nil, func(denom string, address string) (bool, error) {
+		return false, nil
+	})
+	require.ErrorIs(t, err, collections.ErrEncoding)
+
+	// unchecked reverse pair succeeds
+	err = uncheckedRp.Walk(ctx, nil, func(indexingKey string, indexedKey string) (stop bool, err error) {
+		t.Log(indexingKey, indexedKey)
+		return false, nil
+	})
+	require.NoError(t, err)
+}

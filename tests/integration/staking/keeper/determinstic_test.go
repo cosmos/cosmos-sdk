@@ -113,13 +113,11 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
-		map[string]appmodule.AppModule{
-			authtypes.ModuleName:    authModule,
-			banktypes.ModuleName:    bankModule,
-			stakingtypes.ModuleName: stakingModule,
-		},
-	)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName:    authModule,
+		banktypes.ModuleName:    bankModule,
+		stakingtypes.ModuleName: stakingModule,
+	})
 
 	ctx := integrationApp.Context()
 

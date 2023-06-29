@@ -206,6 +206,7 @@ func (m *mockErrorSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
+	t.Helper()
 	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
 	hung := newHungSnapshotter()

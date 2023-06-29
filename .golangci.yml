@@ -27,6 +27,7 @@ linters:
     - revive
     - stylecheck
     - typecheck
+    - thelper
     - unconvert
     - unused
 

@@ -170,6 +170,10 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 
+		if err := validateAmount(period.Amount); err != nil {
+			return nil, err
+		}
+
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
@@ -185,6 +189,11 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
 	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+
+	// Enforce and sanity check that we don't have any negative endTime.
+	if bva := vestingAccount.BaseVestingAccount; bva != nil && bva.EndTime < 0 {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "cumulative endtime is negative")
+	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 

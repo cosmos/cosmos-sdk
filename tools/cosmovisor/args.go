@@ -34,6 +34,7 @@ const (
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
+	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 )
 
 const (
@@ -61,6 +62,8 @@ type Config struct {
 	DisableLogs              bool
 	ColorLogs                bool
 	TimeFormatLogs           string
+	CustomPreupgrade         string
+
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
 }
@@ -148,9 +151,10 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:           os.Getenv(EnvHome),
-		Name:           os.Getenv(EnvName),
-		DataBackupPath: os.Getenv(EnvDataBackupPath),
+		Home:             os.Getenv(EnvHome),
+		Name:             os.Getenv(EnvName),
+		DataBackupPath:   os.Getenv(EnvDataBackupPath),
+		CustomPreupgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -431,6 +435,7 @@ func (cfg Config) DetailString() string {
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
+		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
 	}
 
 	derivedEntries := []struct{ name, value string }{

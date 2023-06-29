@@ -254,6 +254,7 @@ type precedenceCommon struct {
 }
 
 func newPrecedenceCommon(t *testing.T) precedenceCommon {
+	t.Helper()
 	retval := precedenceCommon{}
 
 	// Determine the env. var. name based off the executable name

@@ -2004,12 +2004,14 @@ func newKeyring(t *testing.T, name string) Keyring {
 }
 
 func newKeyRecord(t *testing.T, kr Keyring, name string) *Record {
+	t.Helper()
 	k, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	return k
 }
 
 func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
+	t.Helper()
 	for _, n := range names {
 		_, err := kr.Key(n)
 		require.NoError(t, err)

@@ -18,19 +18,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+	tb.Helper()
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	return v
 }
 
-func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
-	f := initFixture(t)
+func bootstrapValidatorTest(tb testing.TB, power int64, numAddrs int) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
+	tb.Helper()
+	f := initFixture(tb)
 
 	addrDels, addrVals := generateAddresses(f, numAddrs)
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(bondDenom, amt.MulRaw(int64(len(addrDels)))))
@@ -40,12 +42,13 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*fixture, 
 	// set bonded pool supply
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), totalSupply))
+	assert.NilError(tb, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), totalSupply))
 
 	return f, addrDels, addrVals
 }
 
 func initValidators(tb testing.TB, power int64, numAddrs int, powers []int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	tb.Helper()
 	f, addrs, valAddrs := bootstrapValidatorTest(tb, power, numAddrs)
 	pks := simtestutil.CreateTestPubKeys(numAddrs)
 

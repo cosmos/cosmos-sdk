@@ -19,6 +19,7 @@ import (
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
 func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
+	t.Helper()
 	t.Parallel()
 	f := initFixture(t)
 

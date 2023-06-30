@@ -9,8 +9,13 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: cosmos-sdk
+<<<<<<< HEAD
     commit: ac19acae80184f13a51b20b07d7042f8
     digest: shake256:34a78fa1bc59098ea755d6beb9491dc200d3d8bbc60fbf668c721345423d5a980b5a30db0e208de14296756047658b99c7b61e347880d549418e777cae11ebd4
+=======
+    commit: 3f4118bb2b864eb19158c0e27927078a
+    digest: shake256:a5f63174bc40e740e16e937417a20e480dfe5720f89c14ebbb10cb664f19dd8db34090f8107bcd28dbcf248041714328fad2ae41b5110457764d8c96063616c5
+>>>>>>> 8c72f6639 (refactor!: remove `types/math` aliases (#16798))
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto

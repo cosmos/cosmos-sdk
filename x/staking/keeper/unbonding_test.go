@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(0, 0).UTC(),
-				sdk.NewInt(5),
+				math.NewInt(5),
 				0,
 			),
 		},
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(0, 0).UTC(),
-				sdk.NewInt(5),
+				math.NewInt(5),
 				0,
 			),
 		},
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(0, 0).UTC(),
-				sdk.NewInt(5),
+				math.NewInt(5),
 				0,
 			),
 		},
@@ -154,7 +154,7 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(5, 0).UTC(),
-				sdk.NewInt(10),
+				math.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
 			),
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(5, 0).UTC(),
-				sdk.NewInt(10),
+				math.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
 			),
@@ -182,7 +182,7 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(5, 0).UTC(),
-				sdk.NewInt(10),
+				math.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
 			),
@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 		valAddrs[0],
 		0,
 		time.Unix(0, 0).UTC(),
-		sdk.NewInt(5),
+		math.NewInt(5),
 		unbondingID,
 	)
 	require.NoError(s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd))
@@ -292,7 +292,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 
 	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
 	require.NoError(err)
-	s.bankKeeper.EXPECT().UndelegateCoinsFromModuleToAccount(s.ctx, types.NotBondedPoolName, delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))).Return(nil)
+	s.bankKeeper.EXPECT().UndelegateCoinsFromModuleToAccount(s.ctx, types.NotBondedPoolName, delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))).Return(nil)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
 	require.NoError(err)
 
@@ -308,7 +308,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 		valAddrs[1],
 		0,
 		time.Unix(5, 0).UTC(),
-		sdk.NewInt(10),
+		math.NewInt(10),
 		math.LegacyNewDec(10),
 		unbondingID,
 	)

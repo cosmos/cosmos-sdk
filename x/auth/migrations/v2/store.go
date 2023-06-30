@@ -26,6 +26,14 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+<<<<<<< HEAD
+=======
+	"google.golang.org/protobuf/proto"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/math"
+>>>>>>> 8c72f6639 (refactor!: remove `types/math` aliases (#16798))
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -163,7 +171,16 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {
+<<<<<<< HEAD
 		res = res.Add(i.Balance)
+=======
+		bal, err := strconv.Atoi(i.Balance.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
+		}
+		coin := sdk.NewCoin(i.Balance.Denom, math.NewInt(int64(bal)))
+		res = res.Add(coin)
+>>>>>>> 8c72f6639 (refactor!: remove `types/math` aliases (#16798))
 	}
 
 	return res, nil
@@ -208,7 +225,15 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 	res := sdk.NewCoins()
 	for _, i := range balance.UnbondingResponses {
 		for _, r := range i.Entries {
+<<<<<<< HEAD
 			res = res.Add(sdk.NewCoin(bondDenom, r.Balance))
+=======
+			bal, err := strconv.Atoi(r.Balance)
+			if err != nil {
+				return nil, fmt.Errorf("unable to convert unbonding balance to int: %w", err)
+			}
+			res = res.Add(sdk.NewCoin(bondDenom, math.NewInt(int64(bal))))
+>>>>>>> 8c72f6639 (refactor!: remove `types/math` aliases (#16798))
 		}
 	}
 
@@ -246,7 +271,19 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 	if err := proto.Unmarshal(resp.Value, balance); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
+<<<<<<< HEAD
 	return balance.Balances, nil
+=======
+	coins := make(sdk.Coins, len(balance.Balances))
+	for i, b := range balance.Balances {
+		amount, err := strconv.Atoi(b.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
+		}
+		coins[i] = sdk.NewCoin(b.Denom, math.NewInt(int64(amount)))
+	}
+	return coins, nil
+>>>>>>> 8c72f6639 (refactor!: remove `types/math` aliases (#16798))
 }
 
 // We use the baseapp.QueryRouter here to do inter-module state querying.

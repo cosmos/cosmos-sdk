@@ -18,10 +18,6 @@ func mustReadConfig(t *testing.T, path string) []byte {
 	return f
 }
 
-func TestUpgrade(t *testing.T) {
-	// TODO: add more test cases
-}
-
 func TestCheckValid(t *testing.T) {
 	err := confix.CheckValid("foo", []byte{})
 	assert.ErrorContains(t, err, "unknown config")

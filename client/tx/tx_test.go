@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -390,7 +390,7 @@ func TestPreprocessHook(t *testing.T) {
 
 	coin := sdk.Coin{
 		Denom:  "atom",
-		Amount: sdkmath.NewInt(20),
+		Amount: math.NewInt(20),
 	}
 	newTip := &txtypes.Tip{
 		Amount: sdk.Coins{coin},

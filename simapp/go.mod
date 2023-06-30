@@ -3,8 +3,8 @@ module cosmossdk.io/simapp
 go 1.20
 
 require (
-	cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b
-	cosmossdk.io/client/v2 v2.0.0-20230614103911-b3da8bb4e801
+	cosmossdk.io/api v0.5.0
+	cosmossdk.io/client/v2 v2.0.0-20230630101240-f99e56f470e1
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.0

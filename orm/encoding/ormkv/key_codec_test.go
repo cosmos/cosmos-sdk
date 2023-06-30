@@ -206,7 +206,7 @@ func TestDecodePrefixKey(t *testing.T) {
 			bz, err := cdc.EncodeKey(test.values)
 			assert.NilError(t, err)
 			values, err := cdc.DecodeKey(bytes.NewReader(bz))
-			assert.ErrorType(t, err, io.EOF)
+			assert.ErrorIs(t, err, io.EOF)
 			assert.Equal(t, 0, cdc.CompareKeys(test.values, values))
 		})
 	}

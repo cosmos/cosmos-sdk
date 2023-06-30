@@ -63,7 +63,7 @@ func TestIntJSONTestcases(t *testing.T) {
 				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
 			}
 
-			// Parse test case strings as sdk.Ints
+			// Parse test case strings as math.Ints
 			_, ok := math.NewIntFromString(tc[0])
 			if ok {
 				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKINT"))

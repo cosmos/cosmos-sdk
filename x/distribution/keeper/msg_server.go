@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 
@@ -195,7 +195,9 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.
 	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
-	k.AllocateTokensToValidator(ctx, validator, reward)
+	if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
+		return nil, err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(

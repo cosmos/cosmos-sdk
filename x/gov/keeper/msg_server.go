@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -218,7 +218,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 		if !option.IsValid() {
 			return nil, errors.Wrap(govtypes.ErrInvalidVote, option.String())
 		}
-		weight, err := sdk.NewDecFromStr(option.Weight)
+		weight, err := math.LegacyNewDecFromStr(option.Weight)
 		if err != nil {
 			return nil, errors.Wrapf(govtypes.ErrInvalidVote, "invalid weight: %s", err)
 		}

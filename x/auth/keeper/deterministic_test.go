@@ -21,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -72,6 +73,8 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec("cosmos"),
+		authcodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)
@@ -291,6 +294,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
+			authcodec.NewBech32Codec("cosmos"),
+			authcodec.NewBech32Codec("cosmosvaloper"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)
@@ -337,6 +342,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
+			authcodec.NewBech32Codec("cosmos"),
+			authcodec.NewBech32Codec("cosmosvaloper"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)

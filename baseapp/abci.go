@@ -4,10 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -558,7 +556,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
@@ -571,6 +571,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
+			Hash:    req.Hash,
 		})
 
 	// add a deferred recover handler in case extendVote panics
@@ -609,7 +610,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
 	}
 
@@ -649,6 +652,10 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
+	if err := app.checkHalt(req.Height, req.Time); err != nil {
+		return nil, err
+	}
+
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -665,6 +672,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
 	}
 
 	// Initialize the FinalizeBlock state. If this is the first block, it should
@@ -683,6 +691,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 				Height:  req.Height,
 				Time:    req.Time,
 				Hash:    req.Hash,
+				AppHash: app.LastCommitID().Hash,
 			})
 	}
 
@@ -699,6 +708,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
+			AppHash: app.LastCommitID().Hash,
 		}).WithCometInfo(cometInfo{
 		Misbehavior:     req.Misbehavior,
 		ValidatorsHash:  req.NextValidatorsHash,
@@ -722,9 +732,24 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
+		var response *abci.ExecTxResult
+
 		if _, err := app.txDecoder(rawTx); err == nil {
-			txResults = append(txResults, app.deliverTx(rawTx))
+			response = app.deliverTx(rawTx)
+		} else {
+			// In the case where a transaction included in a block proposal is malformed,
+			// we still want to return a default response to comet. This is because comet
+			// expects a response for each transaction included in a block proposal.
+			response = sdkerrors.ResponseExecTxResultWithEvents(
+				sdkerrors.ErrTxDecode,
+				0,
+				0,
+				nil,
+				false,
+			)
 		}
+
+		txResults = append(txResults, response)
 	}
 
 	if app.finalizeBlockState.ms.TracingEnabled() {
@@ -746,6 +771,24 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		ConsensusParamUpdates: &cp,
 		AppHash:               app.workingHash(),
 	}, nil
+}
+
+// checkHalt checkes if height or time exceeds halt-height or halt-time respectively.
+func (app *BaseApp) checkHalt(height int64, time time.Time) error {
+	var halt bool
+	switch {
+	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		return fmt.Errorf("halt per configuration height %d time %d", app.haltHeight, app.haltTime)
+	}
+
+	return nil
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -799,23 +842,6 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.prepareCheckStater(app.checkState.ctx)
 	}
 
-	var halt bool
-	switch {
-	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
-		halt = true
-
-	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
-		halt = true
-	}
-
-	if halt {
-		// Halt the binary and allow CometBFT to receive the ResponseCommit
-		// response with the commit ID hash. This will allow the node to successfully
-		// restart and process blocks assuming the halt configuration has been
-		// reset or moved to a more distant value.
-		app.halt()
-	}
-
 	go app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
@@ -837,28 +863,6 @@ func (app *BaseApp) workingHash() []byte {
 	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
 
 	return commitHash
-}
-
-// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
-// back on os.Exit if both fail.
-func (app *BaseApp) halt() {
-	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
-
-	p, err := os.FindProcess(os.Getpid())
-	if err == nil {
-		// attempt cascading signals in case SIGINT fails (os dependent)
-		sigIntErr := p.Signal(syscall.SIGINT)
-		sigTermErr := p.Signal(syscall.SIGTERM)
-
-		if sigIntErr == nil || sigTermErr == nil {
-			return
-		}
-	}
-
-	// Resort to exiting immediately if the process could not be found or killed
-	// via SIGINT/SIGTERM signals.
-	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
-	os.Exit(0)
 }
 
 func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {

@@ -8,11 +8,13 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -87,6 +89,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -109,7 +113,11 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule, stakingModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName:    authModule,
+		banktypes.ModuleName:    bankModule,
+		stakingtypes.ModuleName: stakingModule,
+	})
 
 	ctx := integrationApp.Context()
 
@@ -186,8 +194,8 @@ func createValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) staking
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          rapid.Bool().Draw(rt, "jailed"),
 		Status:          bondTypeGenerator().Draw(rt, "bond-status"),
-		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
-		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
+		Tokens:          math.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
+		DelegatorShares: math.LegacyNewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
 		Description: stakingtypes.NewDescription(
 			rapid.StringN(5, 250, 255).Draw(rt, "moniker"),
 			rapid.StringN(5, 250, 255).Draw(rt, "identity"),
@@ -198,11 +206,11 @@ func createValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) staking
 		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
 		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
 		),
-		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
+		MinSelfDelegation: math.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
 	}
 }
 
@@ -246,8 +254,8 @@ func getStaticValidator(f *deterministicFixture, t *testing.T) stakingtypes.Vali
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          false,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDecWithPrec(5, 2),
+		Tokens:          math.NewInt(100),
+		DelegatorShares: math.LegacyNewDecWithPrec(5, 2),
 		Description: stakingtypes.NewDescription(
 			"moniker",
 			"identity",
@@ -258,11 +266,11 @@ func getStaticValidator(f *deterministicFixture, t *testing.T) stakingtypes.Vali
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(5, 2),
-			sdk.NewDecWithPrec(5, 2),
-			sdk.NewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(10),
+		MinSelfDelegation: math.NewInt(10),
 	}
 
 	setValidator(f, t, validator)
@@ -280,8 +288,8 @@ func getStaticValidator2(f *deterministicFixture, t *testing.T) stakingtypes.Val
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          true,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(10012),
-		DelegatorShares: sdk.NewDecWithPrec(96, 2),
+		Tokens:          math.NewInt(10012),
+		DelegatorShares: math.LegacyNewDecWithPrec(96, 2),
 		Description: stakingtypes.NewDescription(
 			"moniker",
 			"identity",
@@ -292,11 +300,11 @@ func getStaticValidator2(f *deterministicFixture, t *testing.T) stakingtypes.Val
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(15, 2),
-			sdk.NewDecWithPrec(59, 2),
-			sdk.NewDecWithPrec(51, 2),
+			math.LegacyNewDecWithPrec(15, 2),
+			math.LegacyNewDecWithPrec(59, 2),
+			math.LegacyNewDecWithPrec(51, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(1),
+		MinSelfDelegation: math.NewInt(1),
 	}
 	setValidator(f, t, validator)
 
@@ -814,7 +822,7 @@ func TestGRPCParams(t *testing.T) {
 			MaxValidators:     rapid.Uint32Min(1).Draw(rt, "max-validators"),
 			MaxEntries:        rapid.Uint32Min(1).Draw(rt, "max-entries"),
 			HistoricalEntries: rapid.Uint32Min(1).Draw(rt, "historical-entries"),
-			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
+			MinCommissionRate: math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
 		}
 
 		err := f.stakingKeeper.SetParams(f.ctx, params)
@@ -829,7 +837,7 @@ func TestGRPCParams(t *testing.T) {
 		MaxValidators:     85,
 		MaxEntries:        5,
 		HistoricalEntries: 5,
-		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+		MinCommissionRate: math.LegacyNewDecWithPrec(5, 2),
 	}
 
 	err := f.stakingKeeper.SetParams(f.ctx, params)

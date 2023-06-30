@@ -1862,7 +1862,7 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 			require.NoError(migrator.Migrate3to4(ctx))
 
 			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0)
+			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 			require.Equal(def, newParams.DefaultSendEnabled)
 
 			for _, se := range params.SendEnabled {
@@ -1887,7 +1887,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	suite.Run("stored params are as expected", func() {
 		actual := bankKeeper.GetParams(ctx)
 		require.True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		require.Len(actual.SendEnabled, 0, "SendEnabled")
+		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // we're testing the old way here
 	})
 
 	suite.Run("send enabled params converted to store", func() {

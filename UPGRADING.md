@@ -29,9 +29,9 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
-### Enable Vote Extensions
+#### Enable Vote Extensions
 
-> This is an optional feature that is disabled by default.
+:::tip This is an optional feature that is disabled by default.
 
 Once all the code changes required to implement Vote Extensions are in place,
 they can be enabled by setting the consensus param `Abci.VoteExtensionsEnableHeight`

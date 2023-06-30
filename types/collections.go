@@ -144,10 +144,10 @@ func (i intValueCodec) Encode(value math.Int) ([]byte, error) {
 }
 
 func (i intValueCodec) Decode(b []byte) (math.Int, error) {
-	v := new(Int)
+	v := new(math.Int)
 	err := v.Unmarshal(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
@@ -156,16 +156,16 @@ func (i intValueCodec) EncodeJSON(value math.Int) ([]byte, error) {
 	return value.MarshalJSON()
 }
 
-func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
-	v := new(Int)
+func (i intValueCodec) DecodeJSON(b []byte) (math.Int, error) {
+	v := new(math.Int)
 	err := v.UnmarshalJSON(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
 
-func (i intValueCodec) Stringify(value Int) string {
+func (i intValueCodec) Stringify(value math.Int) string {
 	return value.String()
 }
 

@@ -3,20 +3,12 @@ module cosmossdk.io/client/v2
 go 1.20
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b
-=======
-	cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3
->>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
+	cosmossdk.io/api v0.5.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0
-=======
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230630082137-cba58097ef9a
->>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
@@ -151,10 +143,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-<<<<<<< HEAD
-	pgregory.net/rapid v0.6.2 // indirect
-=======
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.0.0 // indirect
->>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
 )

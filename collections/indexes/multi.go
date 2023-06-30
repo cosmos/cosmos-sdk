@@ -44,19 +44,20 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
 	options ...func(*multiOptions),
 ) *Multi[ReferenceKey, PrimaryKey, Value] {
-	ks := collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec))
-
 	o := new(multiOptions)
 	for _, opt := range options {
 		opt(o)
 	}
 	if o.uncheckedValue {
-		ks = collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec), collections.WithKeySetUncheckedValue())
+		return &Multi[ReferenceKey, PrimaryKey, Value]{
+			getRefKey: getRefKeyFunc,
+			refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec), collections.WithKeySetUncheckedValue()),
+		}
 	}
 
 	return &Multi[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
-		refKeys:   ks,
+		refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec)),
 	}
 }
 

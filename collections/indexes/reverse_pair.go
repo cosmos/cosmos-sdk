@@ -49,17 +49,18 @@ func NewReversePair[Value, K1, K2 any](
 	options ...func(*reversePairOptions),
 ) *ReversePair[K1, K2, Value] {
 	pkc := pairCodec.(pairKeyCodec[K1, K2])
-	ks := collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()))
 	o := new(reversePairOptions)
 	for _, option := range options {
 		option(o)
 	}
 	if o.uncheckedValue {
-		ks = collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()), collections.WithKeySetUncheckedValue())
+		return &ReversePair[K1, K2, Value]{
+			refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()), collections.WithKeySetUncheckedValue()),
+		}
 	}
 
 	mi := &ReversePair[K1, K2, Value]{
-		refKeys: ks,
+		refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1())),
 	}
 
 	return mi

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
 	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0
+	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0.0.20230630103340-0bbfc654a32e
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0
@@ -131,7 +131,7 @@ require (
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
-	go.etcd.io/bbolt v1.3.6 // indirect
+	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.11.0 // indirect

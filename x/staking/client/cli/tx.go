@@ -27,8 +27,8 @@ import (
 var (
 	DefaultTokens                  = sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 	defaultAmount                  = DefaultTokens.String() + sdk.DefaultBondDenom
-	defaultCommissionRate          = "0.1"
-	defaultCommissionMaxRate       = "0.2"
+	defaultCommissionRate          = "1"
+	defaultCommissionMaxRate       = "1"
 	defaultCommissionMaxChangeRate = "0.01"
 	defaultMinSelfDelegation       = "1"
 )

@@ -8,6 +8,7 @@ import (
 )
 
 type OptimisticExecutionInfo struct {
+	// we could use generics here in the future to allow other types of req/resp
 	completeSignal chan struct{}
 	abortSignal    chan struct{}
 	fn             func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)
@@ -62,6 +63,7 @@ func (oe *OptimisticExecutionInfo) AbortIfNeeded(reqHash []byte) bool {
 
 // ShouldAbort must only be used in the fn passed to SetupOptimisticExecution to
 // check if the OE was aborted and return as soon as possible.
+// TODO: figure out a better name, maybe ReturnEarly?
 func (oe *OptimisticExecutionInfo) ShouldAbort() bool {
 	select {
 	case <-oe.abortSignal:

@@ -532,12 +532,15 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
-	if app.oeEnabled {
+	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
+	// This is to simplify the logic and avoid having to deal with the InitChain state.
+	if app.oeEnabled && req.Height > app.initialHeight {
 		if app.oeInfo == nil {
 			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
 			app.oeInfo.Execute()
 		} else if app.oeInfo.AbortIfNeeded(req.Hash) {
 			// TODO: this will block until the OE is aborted, which can take a bit. Maybe do it async?
+			// IMO it's not worth it, we could defer it but that's going to open up a whole can of worms.
 			// if aborted, restart with the new proposal
 			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
 			app.oeInfo.Execute()
@@ -688,14 +691,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		// by InitChain. Context is now updated with Header information.
 		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
 			WithBlockHeader(header).
-			WithBlockHeight(req.Height).
-			WithHeaderInfo(coreheader.Info{
-				ChainID: app.chainID,
-				Height:  req.Height,
-				Time:    req.Time,
-				Hash:    req.Hash,
-				AppHash: app.LastCommitID().Hash,
-			})
+			WithBlockHeight(req.Height)
 	}
 
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
@@ -732,7 +728,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.oeEnabled && app.oeInfo != nil {
+	if app.oeInfo != nil {
 		if app.oeInfo.ShouldAbort() {
 			return nil, nil
 		}
@@ -748,11 +744,12 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
 		// check before every tx if we should abort
-		if app.oeEnabled && app.oeInfo != nil {
+		if app.oeInfo != nil {
 			if app.oeInfo.ShouldAbort() {
 				return nil, nil
 			}
 		}
+
 		var response *abci.ExecTxResult
 
 		if _, err := app.txDecoder(rawTx); err == nil {

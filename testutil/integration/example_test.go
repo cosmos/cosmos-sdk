@@ -167,7 +167,7 @@ func Example_oneModule() {
 		Params:    params,
 	},
 		// this allows to the begin and end blocker of the module before and after the message
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		// this allows to commit the state after the message
 		integration.WithAutomaticCommit(),
 	)

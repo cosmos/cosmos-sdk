@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.0
 )
 
 require (

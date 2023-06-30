@@ -46,6 +46,7 @@ func Example() {
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		authority,
 	)
@@ -135,6 +136,7 @@ func Example_oneModule() {
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		authority,
 	)

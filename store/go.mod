@@ -14,6 +14,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/go-hclog v1.5.0
+	github.com/hashicorp/go-metrics v0.5.1
 	github.com/hashicorp/go-plugin v1.4.10
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/spf13/cast v1.5.1 // indirect
@@ -24,8 +25,6 @@ require (
 	google.golang.org/protobuf v1.30.0
 	gotest.tools/v3 v3.4.0
 )
-
-require github.com/hashicorp/go-metrics v0.5.1
 
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect

@@ -339,7 +339,7 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	}
 
 	for denom, cL := range uniqCoins { //#nosec
-		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		comboCoin := Coin{Denom: denom, Amount: math.NewInt(0)}
 		for _, c := range cL {
 			comboCoin = comboCoin.Add(c)
 		}

@@ -7,6 +7,7 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -81,6 +82,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -100,7 +102,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName: authModule,
+		banktypes.ModuleName: bankModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

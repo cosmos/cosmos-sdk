@@ -10,6 +10,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -81,7 +82,8 @@ func initFixture(t testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -124,7 +126,12 @@ func initFixture(t testing.TB) *fixture {
 		},
 	})
 
-	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, authModule, bankModule, stakingModule, distrModule)
+	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName:    authModule,
+		banktypes.ModuleName:    bankModule,
+		stakingtypes.ModuleName: stakingModule,
+		distrtypes.ModuleName:   distrModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -174,7 +181,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	assert.NilError(t, err)
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
-	f.stakingKeeper.SetValidator(f.sdkCtx, validator)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validator))
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
@@ -190,7 +197,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), issuedShares)
-	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
+	require.NoError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 	err = f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20))
 	require.NoError(t, err)
 	// setup validator rewards
@@ -890,8 +897,8 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 	// mint a non-staking token and send to an account
 	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
-	f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt)
-	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt)
+	require.NoError(t, f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amt))
+	require.NoError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amt))
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	require.NoError(t, err)

@@ -49,7 +49,8 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: addresscodec.NewBech32Codec("cosmos"),
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
@@ -98,7 +99,8 @@ func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand 
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: addresscodec.NewBech32Codec("cosmos"),
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

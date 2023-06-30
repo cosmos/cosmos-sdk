@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
-	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.10
@@ -23,8 +22,10 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.0
 )
+
+require github.com/hashicorp/go-metrics v0.5.1
 
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect

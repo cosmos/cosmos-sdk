@@ -98,7 +98,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(200)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -127,7 +128,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 				baseAccount := createBaseAccount(delegatorAddr)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(200)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -149,7 +151,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(200)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -175,7 +178,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(200)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -195,7 +199,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(200)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -219,7 +224,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -243,7 +249,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(1, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -263,7 +270,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -287,7 +295,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				delayedAccount, err := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -311,7 +320,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				delayedAccount, err := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -335,7 +345,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				bondDenom, err := stakingKeeper.BondDenom(ctx)
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewInt(300)))
-				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				delayedAccount, err := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
@@ -367,7 +378,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 					},
 				}
 
-				account := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, start, periods)
+				account, err := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, start, periods)
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, account)
 
@@ -412,7 +424,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 					},
 				}
 
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				delayedAccount, err := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -458,7 +471,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 					},
 				}
 
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				delayedAccount, err := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+15897600+15897600+1, 0))
 
@@ -506,7 +520,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 					},
 				}
 
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				delayedAccount, err := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+1, 0))
 
@@ -554,7 +569,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 					},
 				}
 
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				delayedAccount, err := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				require.NoError(t, err)
 
 				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+15638400+1, 0))
 
@@ -578,7 +594,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(300)))
 
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
@@ -609,7 +626,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(300)))
 
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 			},
@@ -627,7 +645,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(300)))
 
-				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				delayedAccount, err := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().AddDate(10, 0, 0).Unix())
+				require.NoError(t, err)
 
 				accountKeeper.SetAccount(ctx, delayedAccount)
 			},

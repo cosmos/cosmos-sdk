@@ -204,23 +204,31 @@ func init() {
 	)
 }
 
-// AddressCodecFactory is a type alias for a function that returns an address.Codec
-type AddressCodecFactory func() address.Codec
-
 type AddressCodecInputs struct {
 	depinject.In
 
-	Config              *modulev1.Module
-	AddressCodecFactory func() address.Codec `optional:"true"`
+	Config                       *modulev1.Module
+	AddressCodecFactory          func() address.Codec               `optional:"true"`
+	ValidatorAddressCodecFactory func() types.ValidatorAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) address.Codec {
-	if in.AddressCodecFactory != nil {
-		return in.AddressCodecFactory()
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, types.ValidatorAddressCodec) {
+	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil {
+		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory()
 	}
-	return authcodec.NewBech32Codec(in.Config.Bech32Prefix)
+
+	if (in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory == nil) ||
+		(in.AddressCodecFactory == nil && in.ValidatorAddressCodecFactory != nil) {
+		panic("either both or none of AddressCodecFactory and ValidatorAddressCodecFactory must be provided")
+	}
+
+	if in.Config.Bech32PrefixValidator == "" {
+		in.Config.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.Config.Bech32Prefix)
+	}
+
+	return authcodec.NewBech32Codec(in.Config.Bech32Prefix), authcodec.NewBech32Codec(in.Config.Bech32PrefixValidator)
 }
 
 type ModuleInputs struct {
@@ -231,6 +239,7 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 
 	AddressCodec            address.Codec
+	ValidatorAddressCodec   types.ValidatorAddressCodec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -265,7 +274,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
+	k := keeper.NewAccountKeeper(
+		in.Cdc, in.StoreService, in.AccountI,
+		maccPerms, in.AddressCodec, in.ValidatorAddressCodec,
+		in.Config.Bech32Prefix, authority.String(),
+	)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

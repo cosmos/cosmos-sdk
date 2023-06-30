@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -314,15 +315,20 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 
 func TestAddressCodecFactory(t *testing.T) {
 	var addrCodec address.Codec
+	var valAddressCodec authtypes.ValidatorAddressCodec
+
 	err := depinject.Inject(
 		depinject.Configs(
 			network.MinimumAppConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&addrCodec)
+		&addrCodec, &valAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok := addrCodec.(customAddressCodec)
+	require.False(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
 	require.False(t, ok)
 
 	// Set the address codec to the custom one
@@ -332,11 +338,15 @@ func TestAddressCodecFactory(t *testing.T) {
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },
+				func() authtypes.ValidatorAddressCodec { return customAddressCodec{} },
 			),
 		),
-		&addrCodec)
+		&addrCodec, &valAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok = addrCodec.(customAddressCodec)
+	require.True(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
 	require.True(t, ok)
 }

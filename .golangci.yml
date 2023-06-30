@@ -48,9 +48,6 @@ issues:
       text: 'SA1019:'
       linters:
         - staticcheck
-    - text: ' SA1019: params.SendEnabled is deprecated' # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
     - text: 'SA1019: codec.NewAminoCodec is deprecated' # TODO remove once migration path is set out
       linters:
         - staticcheck

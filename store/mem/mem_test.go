@@ -3,12 +3,11 @@ package mem_test
 import (
 	"testing"
 
-	"cosmossdk.io/store/cachekv"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/mem"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/types"
 )
 

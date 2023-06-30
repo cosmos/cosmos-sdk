@@ -6,12 +6,12 @@ import (
 	"os"
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
@@ -71,7 +71,7 @@ func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 
 	for i := 0; i < l1.Len(); i++ {
 		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
-		require.True(t, ok)
+		require.True(t, ok, "not a *basev1beta1.Coin: %#v", l1.Get(i).Message().Interface())
 		coinsMap[coin.Denom] = coin
 	}
 
@@ -90,7 +90,7 @@ func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
 	require.True(t, ok)
 	v1, ok := math.NewIntFromString(coin1.Amount)
 	require.True(t, ok)
-	require.True(t, v.Equal(v1))
+	require.True(t, v.Equal(v1), "Mismatch\n\tv:  %+v\n\tv1: %+v", v, v1)
 }
 
 // coinsJSONTest is the type of test cases in the testdata file.

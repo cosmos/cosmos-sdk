@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/tools/confix"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/tools/confix"
 )
 
 func mustReadConfig(t *testing.T, path string) []byte {
@@ -15,10 +16,6 @@ func mustReadConfig(t *testing.T, path string) []byte {
 	}
 
 	return f
-}
-
-func TestUpgrade(t *testing.T) {
-	// TODO: add more test cases
 }
 
 func TestCheckValid(t *testing.T) {

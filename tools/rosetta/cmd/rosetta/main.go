@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/log"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )

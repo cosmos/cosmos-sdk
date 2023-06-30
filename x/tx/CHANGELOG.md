@@ -31,6 +31,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#16681](https://github.com/cosmos/cosmos-sdk/pull/16681): catch and fix `(*Decoder).Decode` crash from invalid length prefix in Tx bytes
+
+### Improvements
+
+* [#16684](https://github.com/cosmos/cosmos-sdk/pull/16684): x/tx/signing/aminojson: use io.WriteString+fmt.Fprintf to remove unnecessary string->[]byte roundtrip
+
 ## v0.8.0
 
 ### Improvements

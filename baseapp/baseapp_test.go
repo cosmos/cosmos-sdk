@@ -103,9 +103,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err = suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
@@ -462,9 +463,10 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
 		err, ok := recoveryObj.(error)
@@ -501,9 +503,10 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	// execute a tx that will fail ante handler execution
 	//
@@ -573,11 +576,15 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	app.Commit()
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
-	app.Commit()
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name   string
@@ -613,7 +620,9 @@ func TestSetMinGasPrices(t *testing.T) {
 
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	suite.baseApp.InitChain(&abci.RequestInitChain{})
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
 	ctx := suite.baseApp.NewContext(true)
 
 	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})

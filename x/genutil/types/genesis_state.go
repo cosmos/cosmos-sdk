@@ -64,8 +64,8 @@ func SetGenesisStateInAppState(
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromAppGenesis(gesnsis *AppGenesis) (genesisState map[string]json.RawMessage, err error) {
-	if err = json.Unmarshal(gesnsis.AppState, &genesisState); err != nil {
+func GenesisStateFromAppGenesis(genesis *AppGenesis) (genesisState map[string]json.RawMessage, err error) {
+	if err = json.Unmarshal(genesis.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}
 	return genesisState, nil

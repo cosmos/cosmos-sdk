@@ -14,7 +14,7 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.0
 	sigs.k8s.io/yaml v1.3.0
 )
 

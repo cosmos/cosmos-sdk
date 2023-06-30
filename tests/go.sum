@@ -216,8 +216,8 @@ cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc h1:jSfbIQybYPjsHEoqxefBsS9
 cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:IDhmJssYxQN4n/BXZM1mJUnU7DOmHfZZfY1Aum3+gnA=
 cosmossdk.io/x/tx v0.8.0 h1:gLiGRL/Fy7fs6dd0IX8jOf0PrVr56/SG6XVMGQjyvJU=
 cosmossdk.io/x/tx v0.8.0/go.mod h1:T9uEumGNgKU61gJYRv1t3uzQwLnASpJGmSE229HM3xA=
-cosmossdk.io/x/upgrade v0.0.0-20230614114324-f368ed5c62bc h1:kN1EZJU/O9txyY+3gXtstb1Rxgd3RFpo8f3cjPs94tE=
-cosmossdk.io/x/upgrade v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:tRzevmbDHJXNr5M5pfYLlRq9V3AWMutNQHKm8rrWS20=
+cosmossdk.io/x/upgrade v0.0.0-20230630143327-f9a69688217f h1:v9tX9UFL6U41yLmeryyFJibYnZD+ahno7HZ8W4ma93Q=
+cosmossdk.io/x/upgrade v0.0.0-20230630143327-f9a69688217f/go.mod h1:ysqr/nkj2dpjKZHc7Iu6nymWx6wGDsFgm+ni1Xw4gEA=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -645,6 +645,8 @@ github.com/hashicorp/go-hclog v1.5.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVH
 github.com/hashicorp/go-immutable-radix v1.0.0/go.mod h1:0y9vanUI8NX6FsYoO3zeMjhV/C5i9g4Q3DwcSNZ4P60=
 github.com/hashicorp/go-immutable-radix v1.3.1 h1:DKHmCUm2hRBK510BaiZlwvpD40f8bJFeZnpfm2KLowc=
 github.com/hashicorp/go-immutable-radix v1.3.1/go.mod h1:0y9vanUI8NX6FsYoO3zeMjhV/C5i9g4Q3DwcSNZ4P60=
+github.com/hashicorp/go-metrics v0.5.1 h1:rfPwUqFU6uZXNvGl4hzjY8LEBsqFVU4si1H9/Hqck/U=
+github.com/hashicorp/go-metrics v0.5.1/go.mod h1:KEjodfebIOuBYSAe/bHTm+HChmKSxAOXPBieMLYozDE=
 github.com/hashicorp/go-msgpack v0.5.3/go.mod h1:ahLV/dePpqEmjfWmKiqvPkv/twdG7iPBM1vqhUKIvfM=
 github.com/hashicorp/go-multierror v1.0.0/go.mod h1:dHtQlpGsu+cZNNAkkCN/P3hoUDHhCYQXV3UM06sGGrk=
 github.com/hashicorp/go-plugin v1.4.10 h1:xUbmA4jC6Dq163/fWcp8P3JuHilrHHMLNRxzGQJ9hNk=

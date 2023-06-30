@@ -3,8 +3,13 @@ go 1.20
 module github.com/cosmos/cosmos-sdk
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b
 	cosmossdk.io/collections v0.2.0
+=======
+	cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3
+	cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531
+>>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741

@@ -35,10 +35,17 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
+<<<<<<< HEAD
 cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b h1:/NpCKB5Fcyk3WpoCvcKkhHe+ZPJ3APNUK1x/qWOti9Y=
 cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b/go.mod h1:CjFB/a1EBCOgM0GTi60LWgDKcs/VHJAIVGzq57PzrQk=
 cosmossdk.io/collections v0.2.0 h1:CgMfLtE16+qox3zBYrGh60i4yKV8SeExLnIdOS2sbQs=
 cosmossdk.io/collections v0.2.0/go.mod h1:Oc1FK0vlmxJZsgUn9/o3ldE6zNyWKvobVzaLhWknZJE=
+=======
+cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3 h1:YpUL4O+wdN2uBL/9QugCL4tq6Nw6jIO1/NTganuBjjo=
+cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3/go.mod h1:5Jc00Q4tSTcrZXvvE3J/ybvZK6DopLcp3ThK3X703QE=
+cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531 h1:6CxleI/IgdENrujwTY2yY9Wg52DVZr4eq4L71ANoLuQ=
+cosmossdk.io/collections v0.2.1-0.20230620134406-d4f1e88b6531/go.mod h1:k8IKBKC/lO+BKoIGae3RC8NCBV8+7JaAw+es51YylFs=
+>>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=
 cosmossdk.io/core v0.9.0/go.mod h1:NFgl5r41Q36+RixTvyrfsS6qQ65agCbZ1FTpnN7/G1Y=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=

@@ -3,7 +3,11 @@ module cosmossdk.io/simapp
 go 1.20
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.4.3-0.20230620040119-e078f1a49e8b
+=======
+	cosmossdk.io/api v0.4.3-0.20230629234936-392b7c2b68c3
+>>>>>>> 02b760776 (feat(auth,client/v2): add validator address codec (#16768))
 	cosmossdk.io/client/v2 v2.0.0-20230614103911-b3da8bb4e801
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3

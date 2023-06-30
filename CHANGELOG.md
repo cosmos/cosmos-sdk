@@ -65,8 +65,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codec to auth new keeper constructor.
 * (x/auth/vesting) [#16741](https://github.com/cosmos/cosmos-sdk/pull/16741) Vesting account constructor now return an error with the result of their validate function.
 
-<<<<<<< HEAD
-=======
 ### Bug Fixes
 
 * (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount
@@ -78,7 +76,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
 * (baseapp) [#16700](https://github.com/cosmos/cosmos-sdk/pull/16700) Fix: Consensus Failure in returning no response to malformed transactions
 
->>>>>>> b93081de0 (fix(baseapp): audit changes (#16596))
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07
 
 ### Features

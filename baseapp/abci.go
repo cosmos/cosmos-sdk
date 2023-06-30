@@ -675,46 +675,32 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		AppHash:            app.LastCommitID().Hash,
 	}
 
-	// Initialize the FinalizeBlock state. If this is the first block, it should
-	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
-	// nil, since it is reset on Commit.
-	if app.finalizeBlockState == nil {
-		app.setState(execModeFinalize, header)
-	} else {
-		// In the first block, app.finalizeBlockState.ctx will already be initialized
-		// by InitChain. Context is now updated with Header information.
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-			WithBlockHeader(header).
-			WithBlockHeight(req.Height).
-			WithHeaderInfo(coreheader.Info{
-				ChainID: app.chainID,
-				Height:  req.Height,
-				Time:    req.Time,
-				Hash:    req.Hash,
-				AppHash: app.LastCommitID().Hash,
-			})
-	}
-
-	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
-
+	// app.finalizeBlockState.ctx will already be initialized
+	// by InitChain or by ProcessProposal. Context is now updated with Header information.
 	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-		WithBlockGasMeter(gasMeter).
+		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
-		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithExecMode(sdk.ExecModeFinalize).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
 			AppHash: app.LastCommitID().Hash,
-		}).WithCometInfo(cometInfo{
-		Misbehavior:     req.Misbehavior,
-		ValidatorsHash:  req.NextValidatorsHash,
-		ProposerAddress: req.ProposerAddress,
-		LastCommit:      req.DecidedLastCommit,
-	})
+		}).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithExecMode(sdk.ExecModeFinalize).
+		WithCometInfo(cometInfo{
+			Misbehavior:     req.Misbehavior,
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      req.DecidedLastCommit,
+		})
+
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
+
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+		WithBlockGasMeter(gasMeter)
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.

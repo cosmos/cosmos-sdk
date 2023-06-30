@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -39,7 +39,7 @@ type AppOptions struct {
 
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec auth.ValidatorAddressCodec
+	ValidatorAddressCodec authtypes.ValidatorAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,

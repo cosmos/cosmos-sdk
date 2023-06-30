@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
@@ -204,22 +205,24 @@ func init() {
 	)
 }
 
-// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-type ValidatorAddressCodec address.Codec
-
 type AddressCodecInputs struct {
 	depinject.In
 
 	Config                       *modulev1.Module
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                   `optional:"true"`
+	ValidatorAddressCodecFactory func() authtypes.ValidatorAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec) {
-	if in.AddressCodecFactory != nil {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, authtypes.ValidatorAddressCodec) {
+	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory()
+	}
+
+	if (in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory == nil) ||
+		(in.AddressCodecFactory == nil && in.ValidatorAddressCodecFactory != nil) {
+		panic("either both or none of AddressCodecFactory and ValidatorAddressCodecFactory must be provided")
 	}
 
 	if in.Config.Bech32PrefixValidator == "" {
@@ -237,7 +240,7 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 
 	AddressCodec            address.Codec
-	ValidatorAddressCodec   ValidatorAddressCodec
+	ValidatorAddressCodec   authtypes.ValidatorAddressCodec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 

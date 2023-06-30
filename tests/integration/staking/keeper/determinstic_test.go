@@ -90,7 +90,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)

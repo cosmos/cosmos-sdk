@@ -66,11 +66,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove `Keeper`: `IterateValidatorOutstandingRewards`, `GetValidatorOutstandingRewards`, `SetValidatorOutstandingRewards`, `DeleteValidatorOutstandingRewards`
 * (x/distribution) [#16607](https://github.com/cosmos/cosmos-sdk/pull/16607) use collections for `ValidatorHistoricalRewards` state management:
     * remove `Keeper`: `IterateValidatorHistoricalRewards`, `GetValidatorHistoricalRewards`, `SetValidatorHistoricalRewards`, `DeleteValidatorHistoricalRewards`, `DeleteValidatorHistoricalReward`, `DeleteAllValidatorHistoricalRewards`
-* (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codec to auth new keeper constructor.
+* (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621), [#16768](https://github.com/cosmos/cosmos-sdk/pull/16768) Pass address codecs to auth new keeper constructor.
 * (x/auth/vesting) [#16741](https://github.com/cosmos/cosmos-sdk/pull/16741) Vesting account constructor now return an error with the result of their validate function.
 
 ### Bug Fixes
 
+* (x/slashing) [#16784](https://github.com/cosmos/cosmos-sdk/pull/16784) Emit event with the correct reason in SlashWithInfractionReason.
 * (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
 * (x/auth/types) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.

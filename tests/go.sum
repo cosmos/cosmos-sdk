@@ -216,8 +216,8 @@ cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc h1:jSfbIQybYPjsHEoqxefBsS9
 cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc/go.mod h1:IDhmJssYxQN4n/BXZM1mJUnU7DOmHfZZfY1Aum3+gnA=
 cosmossdk.io/x/tx v0.8.0 h1:gLiGRL/Fy7fs6dd0IX8jOf0PrVr56/SG6XVMGQjyvJU=
 cosmossdk.io/x/tx v0.8.0/go.mod h1:T9uEumGNgKU61gJYRv1t3uzQwLnASpJGmSE229HM3xA=
-cosmossdk.io/x/upgrade v0.0.0-20230630143127-3c5543726401 h1:n3iVa1zPRA9LSPsiyVlISsOnaod2FBiabRTJT1wnVNY=
-cosmossdk.io/x/upgrade v0.0.0-20230630143127-3c5543726401/go.mod h1:M37TVJkeasFJPEHBTQ3XOwAOQNAuxCfc3wMgA16hBAs=
+cosmossdk.io/x/upgrade v0.0.0-20230630143327-f9a69688217f h1:v9tX9UFL6U41yLmeryyFJibYnZD+ahno7HZ8W4ma93Q=
+cosmossdk.io/x/upgrade v0.0.0-20230630143327-f9a69688217f/go.mod h1:ysqr/nkj2dpjKZHc7Iu6nymWx6wGDsFgm+ni1Xw4gEA=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

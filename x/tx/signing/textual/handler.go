@@ -95,7 +95,7 @@ func (r *SignModeHandler) SpecVersion() uint64 {
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
 func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
-	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
+	// Scalars, such as math.Int and math.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind:
 		if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
 			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)

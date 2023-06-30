@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +25,8 @@ func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []feegrant.Grant {
 
 func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) feegrant.Grant {
 	allowances := make([]feegrant.Grant, 3)
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
-	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
+	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10)))
 
 	basic := feegrant.BasicAllowance{
 		SpendLimit: spendLimit,

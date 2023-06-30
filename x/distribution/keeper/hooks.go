@@ -162,8 +162,7 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 
 // record the slash event
 func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec) error {
-	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
-	return nil
+	return h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 }
 
 func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {

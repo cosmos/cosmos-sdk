@@ -51,12 +51,13 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 				step = transform.Step{
 					Desc: fmt.Sprintf("add %s section", kv.Key),
 					T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+						title := fmt.Sprintf("###                    %s Configuration                    ###", strings.Title(kv.Key))
 						doc.Sections = append(doc.Sections, &tomledit.Section{
 							Heading: &parser.Heading{
 								Block: parser.Comments{
-									"###############################################################################",
-									fmt.Sprintf("###							%s Configuration							###", strings.Title(kv.Key)),
-									"###############################################################################",
+									strings.Repeat("#", len(title)),
+									title,
+									strings.Repeat("#", len(title)),
 								},
 								Name: keys,
 							},
@@ -77,9 +78,9 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 				} else if len(keys) > 1 {
 					step = transform.Step{
 						Desc: fmt.Sprintf("add %s key", kv.Key),
-						T: transform.EnsureKey(parser.Key{keys[0]}, &parser.KeyValue{
+						T: transform.EnsureKey(keys[0:len(keys)-1], &parser.KeyValue{
 							Block: kv.Block,
-							Name:  parser.Key{keys[1]},
+							Name:  parser.Key{keys[len(keys)-1]},
 							Value: parser.MustValue(kv.Value),
 						}),
 					}
@@ -90,16 +91,20 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 		} else {
 			if diff.Type == Section {
 				deletedSections[kv.Key] = true
-			}
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s section", kv.Key),
+					T:    transform.Remove(keys),
+				}
+			} else {
+				// when the whole section is deleted we don't need to remove the keys
+				if len(keys) > 1 && deletedSections[keys[0]] {
+					continue
+				}
 
-			// when the whole section is deleted we don't need to remove the keys
-			if len(keys) > 1 && deletedSections[keys[0]] {
-				continue
-			}
-
-			step = transform.Step{
-				Desc: fmt.Sprintf("remove %s key", kv.Key),
-				T:    transform.Remove(keys),
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s key", kv.Key),
+					T:    transform.Remove(keys),
+				}
 			}
 		}
 

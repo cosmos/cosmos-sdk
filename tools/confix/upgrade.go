@@ -83,7 +83,7 @@ func CheckValid(fileName string, data []byte) error {
 		}
 
 		if err := cfg.ValidateBasic(); err != nil {
-			return fmt.Errorf("server config invalid : %w", err)
+			return fmt.Errorf("server config invalid: %w", err)
 		}
 	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig

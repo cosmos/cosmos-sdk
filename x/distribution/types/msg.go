@@ -21,12 +21,6 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithd
 	}
 }
 
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
-}
-
 func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
 	return &MsgWithdrawDelegatorReward{
 		DelegatorAddress: delAddr.String(),
@@ -34,22 +28,10 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 	}
 }
 
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
-}
-
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {
 	return &MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr.String(),
 	}
-}
-
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
-	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
 }
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
@@ -61,27 +43,6 @@ func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFun
 	}
 }
 
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes.
-func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
-}
-
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes.
-func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
-}
-
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes, which is the authority.
-func (msg MsgCommunityPoolSpend) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
-}
-
 // NewMsgDepositValidatorRewardsPool returns a new MsgDepositValidatorRewardsPool
 // with a depositor and a funding amount.
 func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coins) *MsgDepositValidatorRewardsPool {
@@ -90,11 +51,4 @@ func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.Val
 		Depositor:        depositor.String(),
 		ValidatorAddress: valAddr.String(),
 	}
-}
-
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes, which is the depositor.
-func (msg MsgDepositValidatorRewardsPool) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
 }

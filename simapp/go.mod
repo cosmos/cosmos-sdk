@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/feegrant v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/nft v0.0.0-20230614114324-f368ed5c62bc
 	cosmossdk.io/x/tx v0.8.0
-	cosmossdk.io/x/upgrade v0.0.0-20230614114324-f368ed5c62bc
+	cosmossdk.io/x/upgrade v0.0.0-20230630143327-f9a69688217f
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
@@ -113,6 +113,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.1 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-metrics v0.5.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.10 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect

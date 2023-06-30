@@ -23,7 +23,7 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the bank MsgServer interface
+// NewMsgServerImpl returns an implementation of the staking MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
@@ -301,7 +301,7 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 	return &types.MsgDelegateResponse{}, nil
 }
 
-// BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator
+// BeginRedelegate defines a method for performing a redelegation of coins from a source validator to a destination validator of given delegator
 func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
 	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
 	if err != nil {
@@ -576,6 +576,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
+// UpdateParams defines a method to perform updation of params exist in x/staking module.
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)

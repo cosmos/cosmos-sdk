@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing/textual"
 )
@@ -208,6 +210,90 @@ func FuzzMessageValueRendererParse(f *testing.F) {
 			if diff != "" {
 				t.Fatalf("Roundtrip mismatch\n\tGot:  %#v\n\tWant: %#v", gotMsg, tc.Proto)
 			}
+		}
+	})
+}
+
+// Copied from types/coin.go but pasted in here so as to avoid any imports
+// of that package as has been mandated by team decisions.
+var (
+	reCoinDenom  = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`)
+	reCoinAmount = regexp.MustCompile(`[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`)
+)
+
+func FuzzCoinsJSONTestcases(f *testing.F) {
+	// Generate some seeds.
+	seed, err := os.ReadFile("./internal/testdata/coins.json")
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(seed)
+
+	txt, err := textual.NewSignModeHandler(textual.SignModeOptions{CoinMetadataQuerier: mockCoinMetadataQuerier})
+	if err != nil {
+		f.Fatal(err)
+	}
+	rend, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
+	if err != nil {
+		f.Fatal(err)
+	}
+	vrr := rend.(textual.RepeatedValueRenderer)
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var testCases []coinsJSONTest
+		if err := json.Unmarshal(input, &testCases); err != nil {
+			return
+		}
+
+		for _, tc := range testCases {
+			if tc.Proto == nil {
+				continue
+			}
+
+			// Create a context.Context containing all coins metadata, to simulate
+			// that they are in state.
+			ctx := context.Background()
+			for _, v := range tc.Metadata {
+				ctx = addMetadataToContext(ctx, v)
+			}
+
+			listValue := NewGenericList(tc.Proto)
+			screens, err := vrr.FormatRepeated(ctx, protoreflect.ValueOf(listValue))
+			if err != nil {
+				cpt := tc.Proto[0]
+				likeEmpty := err.Error() == "cannot format empty string" || err.Error() == "decimal string cannot be empty"
+				if likeEmpty && (!reCoinDenom.MatchString(cpt.Denom) || cpt.Amount == "") {
+					return
+				}
+				if !reCoinDenom.MatchString(cpt.Denom) {
+					return
+				}
+				if !reCoinAmount.MatchString(cpt.Amount) {
+					return
+				}
+				t.Fatalf("%v\n%q\n%#v => %t", err, tc.Text, cpt, cpt.Amount == "")
+			}
+
+			if g, w := len(screens), 1; g != w {
+				t.Fatalf("Screens mismatch: got=%d want=%d", g, w)
+			}
+
+			wantContent := tc.Text
+			if wantContent == "" {
+				wantContent = "zero"
+			}
+			if false {
+				if g, w := screens[0].Content, wantContent; g != w {
+					t.Fatalf("Content mismatch:\n\tGot:  %s\n\tWant: %s", g, w)
+				}
+			}
+
+			// Round trip.
+			parsedValue := NewGenericList([]*basev1beta1.Coin{})
+			if err := vrr.ParseRepeated(ctx, screens, parsedValue); err != nil {
+				return
+			}
+			checkCoinsEqual(t, listValue, parsedValue)
 		}
 	})
 }

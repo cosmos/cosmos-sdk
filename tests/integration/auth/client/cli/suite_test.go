@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -816,43 +815,6 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "connect: connection refused")
 	s.Require().Contains(out.String(), "connect: connection refused")
-}
-
-func (s *CLITestSuite) TestQueryParamsCmd() {
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"happy case",
-			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-		{
-			"with specific height",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := authcli.QueryParamsCmd()
-			clientCtx := s.clientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var authParams authtypes.Params
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &authParams))
-				s.Require().NotNil(authParams.MaxMemoCharacters)
-			}
-		})
-	}
 }
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the

@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
+func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	var (
 		req       *types.QueryParamsRequest
 		expParams types.Params

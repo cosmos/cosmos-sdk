@@ -208,7 +208,7 @@ type AddressCodecInputs struct {
 	depinject.In
 
 	Config                       *modulev1.Module
-	AddressCodecFactory          func() address.Codec                   `optional:"true"`
+	AddressCodecFactory          func() address.Codec               `optional:"true"`
 	ValidatorAddressCodecFactory func() types.ValidatorAddressCodec `optional:"true"`
 }
 

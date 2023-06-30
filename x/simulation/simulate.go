@@ -179,6 +179,21 @@ func SimulateFromSeed(
 		// Run the BeginBlock handler
 		logWriter.AddEntry(BeginBlockEntry(blockHeight))
 
+		// Run ProcessProposal to remain compliant with the ABCI spec
+		_, err := app.ProcessProposal(&abci.RequestProcessProposal{
+			Txs:                finalizeBlockReq.Txs,
+			ProposedLastCommit: finalizeBlockReq.DecidedLastCommit,
+			Misbehavior:        finalizeBlockReq.Misbehavior,
+			Hash:               finalizeBlockReq.Hash,
+			Height:             finalizeBlockReq.Height,
+			Time:               finalizeBlockReq.Time,
+			NextValidatorsHash: finalizeBlockReq.NextValidatorsHash,
+			ProposerAddress:    finalizeBlockReq.ProposerAddress,
+		})
+		if err != nil {
+			return true, params, err
+		}
+
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
 			return true, params, err

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"

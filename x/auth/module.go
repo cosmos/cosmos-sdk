@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
@@ -210,12 +209,12 @@ type AddressCodecInputs struct {
 
 	Config                       *modulev1.Module
 	AddressCodecFactory          func() address.Codec                   `optional:"true"`
-	ValidatorAddressCodecFactory func() authtypes.ValidatorAddressCodec `optional:"true"`
+	ValidatorAddressCodecFactory func() types.ValidatorAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, authtypes.ValidatorAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, types.ValidatorAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory()
 	}
@@ -240,7 +239,7 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 
 	AddressCodec            address.Codec
-	ValidatorAddressCodec   authtypes.ValidatorAddressCodec
+	ValidatorAddressCodec   types.ValidatorAddressCodec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 

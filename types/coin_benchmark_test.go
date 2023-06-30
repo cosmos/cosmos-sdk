@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"testing"
+
+	"cosmossdk.io/math"
 )
 
 func coinName(suffix int) string {
@@ -18,10 +20,10 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 			coinsB := Coins(make([]Coin, numCoinsB))
 
 			for i := 0; i < numCoinsA; i++ {
-				coinsA[i] = NewCoin(coinName(i), NewInt(int64(i)))
+				coinsA[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
 			for i := 0; i < numCoinsB; i++ {
-				coinsB[i] = NewCoin(coinName(i), NewInt(int64(i)))
+				coinsB[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
 
 			b.ResetTimer()
@@ -49,10 +51,10 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 			coinsB := Coins(make([]Coin, numCoinsB))
 
 			for i := 0; i < numCoinsA; i++ {
-				coinsA[i] = NewCoin(coinName(numCoinsB+i), NewInt(int64(i)))
+				coinsA[i] = NewCoin(coinName(numCoinsB+i), math.NewInt(int64(i)))
 			}
 			for i := 0; i < numCoinsB; i++ {
-				coinsB[i] = NewCoin(coinName(i), NewInt(int64(i)))
+				coinsB[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
 
 			b.ResetTimer()
@@ -84,7 +86,7 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 
 			for i := 0; i < numAdds; i++ {
 				intersectCoins := make([]Coin, numIntersectingCoins)
-				num := NewInt(int64(i))
+				num := math.NewInt(int64(i))
 				for j := 0; j < numIntersectingCoins; j++ {
 					intersectCoins[j] = NewCoin(coinName(j+1_000_000_000), num)
 				}

@@ -29,6 +29,7 @@ linters:
     - typecheck
     - unconvert
     - unused
+    - errcheck
 
 issues:
   exclude-rules:

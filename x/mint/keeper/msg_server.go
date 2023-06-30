@@ -5,11 +5,7 @@ import (
 
 	"cosmossdk.io/errors"
 
-<<<<<<< HEAD
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-=======
->>>>>>> ec789b739 (refactor(mint): audit (#16760))
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 

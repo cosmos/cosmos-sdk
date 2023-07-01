@@ -287,7 +287,7 @@ func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
 // Example to add dynamic fee extension options:
 //
 //	extOpt := ethermint.ExtensionOptionDynamicFeeTx{
-//		MaxPriorityPrice: sdk.NewInt(1000000),
+//		MaxPriorityPrice: math.NewInt(1000000),
 //	}
 //
 //	extBytes, _ := extOpt.Marshal()

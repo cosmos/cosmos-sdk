@@ -196,8 +196,8 @@ func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) staking
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          rapid.Bool().Draw(rt, "jailed"),
 		Status:          bondTypeGenerator().Draw(rt, "bond-status"),
-		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
-		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
+		Tokens:          math.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
+		DelegatorShares: math.LegacyNewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
 		Description: stakingtypes.NewDescription(
 			rapid.StringN(5, 250, 255).Draw(rt, "moniker"),
 			rapid.StringN(5, 250, 255).Draw(rt, "identity"),
@@ -208,11 +208,11 @@ func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) staking
 		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
 		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
+			math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
 		),
-		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
+		MinSelfDelegation: math.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
 	}
 }
 
@@ -260,8 +260,8 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          false,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDecWithPrec(5, 2),
+		Tokens:          math.NewInt(100),
+		DelegatorShares: math.LegacyNewDecWithPrec(5, 2),
 		Description: stakingtypes.NewDescription(
 			"moniker",
 			"identity",
@@ -272,11 +272,11 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(5, 2),
-			sdk.NewDecWithPrec(5, 2),
-			sdk.NewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
+			math.LegacyNewDecWithPrec(5, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(10),
+		MinSelfDelegation: math.NewInt(10),
 	}
 
 	setValidator(t, f, validator)
@@ -295,8 +295,8 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          true,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(10012),
-		DelegatorShares: sdk.NewDecWithPrec(96, 2),
+		Tokens:          math.NewInt(10012),
+		DelegatorShares: math.LegacyNewDecWithPrec(96, 2),
 		Description: stakingtypes.NewDescription(
 			"moniker",
 			"identity",
@@ -307,11 +307,11 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(15, 2),
-			sdk.NewDecWithPrec(59, 2),
-			sdk.NewDecWithPrec(51, 2),
+			math.LegacyNewDecWithPrec(15, 2),
+			math.LegacyNewDecWithPrec(59, 2),
+			math.LegacyNewDecWithPrec(51, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(1),
+		MinSelfDelegation: math.NewInt(1),
 	}
 	setValidator(t, f, validator)
 
@@ -831,7 +831,7 @@ func TestGRPCParams(t *testing.T) {
 			MaxValidators:     rapid.Uint32Min(1).Draw(rt, "max-validators"),
 			MaxEntries:        rapid.Uint32Min(1).Draw(rt, "max-entries"),
 			HistoricalEntries: rapid.Uint32Min(1).Draw(rt, "historical-entries"),
-			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
+			MinCommissionRate: math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
 		}
 
 		err := f.stakingKeeper.SetParams(f.ctx, params)
@@ -846,7 +846,7 @@ func TestGRPCParams(t *testing.T) {
 		MaxValidators:     85,
 		MaxEntries:        5,
 		HistoricalEntries: 5,
-		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+		MinCommissionRate: math.LegacyNewDecWithPrec(5, 2),
 	}
 
 	err := f.stakingKeeper.SetParams(f.ctx, params)

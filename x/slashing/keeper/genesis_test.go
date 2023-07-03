@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	keeper.SetParams(ctx, testutil.TestParams())
+	keeper.Params.Set(ctx, testutil.TestParams())
 
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))

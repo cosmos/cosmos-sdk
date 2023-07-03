@@ -42,7 +42,7 @@ func initChain(
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
-		InitialHeight:   1,
+		InitialHeight:   int64(config.InitialBlockHeight),
 	}
 	res, err := app.InitChain(&req)
 	if err != nil {

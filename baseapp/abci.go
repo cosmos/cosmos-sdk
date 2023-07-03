@@ -45,13 +45,15 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
-	app.initialHeight = req.InitialHeight
 
 	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// Set the initial height, which will be used to determine if we are proposing
 	// or processing the first block or not.
 	app.initialHeight = req.InitialHeight
+	if app.initialHeight == 0 { // If initial height is 0, set it to 1
+		app.initialHeight = 1
+	}
 
 	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {

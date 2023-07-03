@@ -352,7 +352,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 	return nil
 }
 
-// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries.
+// HasMaxUnbondingDelegationEntries checks if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if err != nil && !errors.Is(err, types.ErrNoUnbondingDelegation) {
@@ -616,7 +616,7 @@ func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAdd
 	return iterator.Valid(), nil
 }
 
-// HasMaxRedelegationEntries checks if redelegation has maximum number of entries.
+// HasMaxRedelegationEntries checks if the redelegation entries reached maximum limit.
 func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (bool, error) {
 	red, err := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if err != nil {
@@ -634,7 +634,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk
 	return len(red.Entries) >= int(maxEntries), nil
 }
 
-// SetRedelegation set a redelegation and associated index.
+// SetRedelegation sets a redelegation and associated index.
 func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) error {
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(red.DelegatorAddress)
 	if err != nil {
@@ -1319,7 +1319,7 @@ func (k Keeper) CompleteRedelegation(
 }
 
 // ValidateUnbondAmount validates that a given unbond or redelegation amount is
-// valied based on upon the converted shares. If the amount is valid, the total
+// valid based on upon the converted shares. If the amount is valid, the total
 // amount of respective shares is returned, otherwise an error is returned.
 func (k Keeper) ValidateUnbondAmount(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,

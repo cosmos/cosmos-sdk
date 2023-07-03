@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// does a certain by-power index record exist
+// ValidatorByPowerIndexExists does a certain by-power index record exist
 func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []byte) bool {
 	store := keeper.storeService.OpenKVStore(ctx)
 	has, err := store.Has(power)
@@ -20,7 +20,7 @@ func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []by
 	return has
 }
 
-// update validator for testing
+// TestingUpdateValidator updates a validator for testing
 func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	err := keeper.SetValidator(ctx, validator)
 	if err != nil {

@@ -95,6 +95,10 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
+				app.ProcessProposal(&abci.RequestProcessProposal{
+					Height: i,
+				})
+
 				app.FinalizeBlock(&abci.RequestFinalizeBlock{
 					Height: i,
 				})

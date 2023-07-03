@@ -133,7 +133,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 		pageRes = pageResponse
 	}
 
-	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
+	delResponses, err := delegationsToDelegationResponses(ctx, k.Keeper, dels)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -234,7 +234,7 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 			req.DelegatorAddr, req.ValidatorAddr)
 	}
 
-	delResponse, err := DelegationToDelegationResponse(ctx, k.Keeper, delegation)
+	delResponse, err := delegationToDelegationResponse(ctx, k.Keeper, delegation)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -242,7 +242,7 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 	return &types.QueryDelegationResponse{DelegationResponse: &delResponse}, nil
 }
 
-// UnbondingDelegation queries unbonding info for give validator delegator pair
+// UnbondingDelegation queries unbonding info for given validator delegator pair
 func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbondingDelegationRequest) (*types.QueryUnbondingDelegationResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -276,7 +276,7 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil
 }
 
-// DelegatorDelegations queries all delegations of a give delegator address
+// DelegatorDelegations queries all delegations of a given delegator address
 func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryDelegatorDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -306,7 +306,7 @@ func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDeleg
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
+	delegationResps, err := delegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -420,7 +420,7 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k.Keeper, redels)
+	redelResponses, err := redelegationsToRedelegationResponses(ctx, k.Keeper, redels)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -564,7 +564,7 @@ func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.Query
 
 // util
 
-func DelegationToDelegationResponse(ctx context.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
+func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
 	val, err := k.GetValidator(ctx, del.GetValidatorAddr())
 	if err != nil {
 		return types.DelegationResponse{}, err
@@ -588,11 +588,11 @@ func DelegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 	), nil
 }
 
-func DelegationsToDelegationResponses(ctx context.Context, k *Keeper, delegations types.Delegations) (types.DelegationResponses, error) {
+func delegationsToDelegationResponses(ctx context.Context, k *Keeper, delegations types.Delegations) (types.DelegationResponses, error) {
 	resp := make(types.DelegationResponses, len(delegations))
 
 	for i, del := range delegations {
-		delResp, err := DelegationToDelegationResponse(ctx, k, del)
+		delResp, err := delegationToDelegationResponse(ctx, k, del)
 		if err != nil {
 			return nil, err
 		}
@@ -603,7 +603,7 @@ func DelegationsToDelegationResponses(ctx context.Context, k *Keeper, delegation
 	return resp, nil
 }
 
-func RedelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels types.Redelegations) (types.RedelegationResponses, error) {
+func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels types.Redelegations) (types.RedelegationResponses, error) {
 	resp := make(types.RedelegationResponses, len(redels))
 
 	for i, redel := range redels {

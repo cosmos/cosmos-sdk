@@ -42,6 +42,7 @@ func initChain(
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
+		InitialHeight:   1,
 	}
 	res, err := app.InitChain(&req)
 	if err != nil {

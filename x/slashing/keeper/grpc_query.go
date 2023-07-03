@@ -25,8 +25,8 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params returns parameters of x/slashing module
-func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.Keeper.Params.Get(c)
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

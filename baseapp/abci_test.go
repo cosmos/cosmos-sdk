@@ -164,6 +164,8 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = app.Commit()

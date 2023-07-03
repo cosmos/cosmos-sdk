@@ -44,7 +44,8 @@ type GenesisState struct {
 	UnbondingDelegations []UnbondingDelegation `protobuf:"bytes,6,rep,name=unbonding_delegations,json=unbondingDelegations,proto3" json:"unbonding_delegations"`
 	// redelegations defines the redelegations active at genesis.
 	Redelegations []Redelegation `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations"`
-	Exported      bool           `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
+	// exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
+	Exported bool `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }

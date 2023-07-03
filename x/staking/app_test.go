@@ -3,6 +3,8 @@ package staking_test
 import (
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
@@ -11,13 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -82,15 +79,18 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
 	ctxCheck = app.BaseApp.NewContext(true)
-	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.NoError(t, err)
+
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, types.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
@@ -101,8 +101,8 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	ctxCheck = app.BaseApp.NewContext(true)
-	validator, found = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
-	require.True(t, found)
+	validator, err = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.NoError(t, err)
 	require.Equal(t, description, validator.Description)
 
 	// delegate
@@ -115,8 +115,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	ctxCheck = app.BaseApp.NewContext(true)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
-	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
-	require.True(t, found)
+	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
+	require.NoError(t, err)
 
 	// begin unbonding
 	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
@@ -126,8 +126,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	// delegation should exist anymore
 	ctxCheck = app.BaseApp.NewContext(true)
-	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
-	require.False(t, found)
+	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
+	require.ErrorIs(t, err, types.ErrNoDelegation)
 
 	// balance should be the same because bonding not yet complete
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))

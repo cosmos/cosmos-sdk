@@ -22,11 +22,10 @@ done
 
 cd ..
 
-# generate codec/testdata proto code
+# generate tests proto code
 (cd testutil/testdata; buf generate)
-
-# generate baseapp test messages
 (cd baseapp/testutil; buf generate)
+(cd tests/integration/tx/internal; make codegen)
 
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./

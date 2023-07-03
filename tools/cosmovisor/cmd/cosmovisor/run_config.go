@@ -26,7 +26,7 @@ func StdOutRunOption(w io.Writer) RunOption {
 	}
 }
 
-// SdErrRunOption sets the StdErr writer for the Run command
+// StdErrRunOption sets the StdErr writer for the Run command
 func StdErrRunOption(w io.Writer) RunOption {
 	return func(cfg *RunConfig) {
 		cfg.StdErr = w

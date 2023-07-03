@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -138,7 +138,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				err = k.update(ctx, grantee, granter, resp.Updated)
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

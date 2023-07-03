@@ -4,23 +4,22 @@ import (
 	"context"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
-	cbtypes "cosmossdk.io/x/circuit/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit/ante"
+	cbtypes "cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-
-	"cosmossdk.io/x/circuit/ante"
-	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type fixture struct {
@@ -40,6 +39,7 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 }
 
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	mockclientCtx := client.Context{}.

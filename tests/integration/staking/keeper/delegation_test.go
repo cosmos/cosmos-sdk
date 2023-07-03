@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -21,23 +22,20 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	ctx := f.sdkCtx
 
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, int64(1000))
-	f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	assert.NilError(t, f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	addrDel := sdk.AccAddress([]byte("addr"))
-	accAmt := sdk.NewInt(10000)
-	initCoins := sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), accAmt))
-	if err := f.bankKeeper.MintCoins(ctx, types.ModuleName, initCoins); err != nil {
-		panic(err)
-	}
+	accAmt := math.NewInt(10000)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
+	assert.NilError(t, err)
 
-	if err := f.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrDel, initCoins); err != nil {
-		panic(err)
-	}
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
+	assert.NilError(t, f.bankKeeper.MintCoins(ctx, types.ModuleName, initCoins))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrDel, initCoins))
 	addrVal := sdk.ValAddress(addrDel)
 
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
 
-	bondDenom := f.stakingKeeper.BondDenom(ctx)
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 
 	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
@@ -54,9 +52,10 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	assert.Assert(t, validator.IsBonded())
 
 	delegation := types.NewDelegation(addrDel, addrVal, issuedShares)
-	f.stakingKeeper.SetDelegation(ctx, delegation)
+	assert.NilError(t, f.stakingKeeper.SetDelegation(ctx, delegation))
 
-	maxEntries := f.stakingKeeper.MaxEntries(ctx)
+	maxEntries, err := f.stakingKeeper.MaxEntries(ctx)
+	assert.NilError(t, err)
 
 	oldBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -69,8 +68,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 		ctx = ctx.WithBlockHeight(i)
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
-		totalUnbonded = totalUnbonded.Add(amount)
 		assert.NilError(t, err)
+		totalUnbonded = totalUnbonded.Add(amount)
 	}
 
 	newBonded := f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -84,7 +83,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	oldNotBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	// an additional unbond should fail due to max entries
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 	assert.Error(t, err, "too many unbonding delegation entries for (delegator, validator) tuple")
 
 	newBonded = f.bankKeeper.GetBalance(ctx, f.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount

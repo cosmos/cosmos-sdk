@@ -20,7 +20,6 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
@@ -118,6 +117,7 @@ func TestTxJSONTestcases(t *testing.T) {
 // createTextualData creates a Textual data give then JSON
 // test case.
 func createTextualData(t *testing.T, jsonTx txJSONTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
+	t.Helper()
 	body := &txv1beta1.TxBody{}
 	authInfo := &txv1beta1.AuthInfo{}
 	protoSignerData := &textualpb.SignerData{}

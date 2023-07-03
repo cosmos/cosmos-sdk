@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we're using this to support the legacy way of dealing with bech32
 )
 
 type addressTestSuite struct {
@@ -308,7 +308,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -322,7 +322,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -336,7 +336,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))

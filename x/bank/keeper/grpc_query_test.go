@@ -12,7 +12,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
@@ -148,12 +147,13 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -195,12 +195,13 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -235,7 +236,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -256,7 +257,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -275,10 +276,10 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
-func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomsMetadataRequest() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata{}
+		expMetadata = []types.Metadata(nil)
 	)
 
 	testCases := []struct {
@@ -377,7 +378,7 @@ func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
 	}
 }
 
-func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomMetadataRequest() {
 	var (
 		req         *types.QueryDenomMetadataRequest
 		expMetadata = types.Metadata{}
@@ -407,7 +408,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 		{
 			"success",
 			func() {
-				expMetadata := types.Metadata{
+				expMetadata = types.Metadata{
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{
@@ -460,7 +461,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
-	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
@@ -470,7 +471,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
 		))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, addr)
-		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, bal))
+		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, addr, bal))
 	}
 
 	testCases := map[string]struct {

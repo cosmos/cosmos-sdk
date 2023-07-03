@@ -37,6 +37,6 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Assert(t, ok)
 
 	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
-	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing deprecated code here
+	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing the old way here
 	assert.Equal(t, true, msgUpdateParams.Params.DefaultSendEnabled)
 }

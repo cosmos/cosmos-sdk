@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
+
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -89,7 +89,7 @@ func TestGRPCQueryTally(t *testing.T) {
 
 				expRes = &v1.QueryTallyResultResponse{
 					Tally: &v1.TallyResult{
-						YesCount:        sdk.NewInt(3 * 5 * 1000000).String(),
+						YesCount:        math.NewInt(3 * 5 * 1000000).String(),
 						NoCount:         "0",
 						AbstainCount:    "0",
 						NoWithVetoCount: "0",
@@ -211,10 +211,10 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 
 				expRes = &v1beta1.QueryTallyResultResponse{
 					Tally: v1beta1.TallyResult{
-						Yes:        sdk.NewInt(3 * 5 * 1000000),
-						No:         sdk.NewInt(0),
-						Abstain:    sdk.NewInt(0),
-						NoWithVeto: sdk.NewInt(0),
+						Yes:        math.NewInt(3 * 5 * 1000000),
+						No:         math.NewInt(0),
+						Abstain:    math.NewInt(0),
+						NoWithVeto: math.NewInt(0),
 					},
 				}
 			},

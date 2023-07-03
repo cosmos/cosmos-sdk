@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -820,26 +820,27 @@ func unmountStore(rootStore *Store, storeKeyName string) {
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
+	t.Helper()
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 }
 
-func checkContains(t testing.TB, info []types.StoreInfo, wanted []string) {
-	t.Helper()
+func checkContains(tb testing.TB, info []types.StoreInfo, wanted []string) {
+	tb.Helper()
 
 	for _, want := range wanted {
-		checkHas(t, info, want)
+		checkHas(tb, info, want)
 	}
 }
 
-func checkHas(t testing.TB, info []types.StoreInfo, want string) {
-	t.Helper()
+func checkHas(tb testing.TB, info []types.StoreInfo, want string) {
+	tb.Helper()
 	for _, i := range info {
 		if i.Name == want {
 			return
 		}
 	}
-	t.Fatalf("storeInfo doesn't contain %s", want)
+	tb.Fatalf("storeInfo doesn't contain %s", want)
 }
 
 func getExpectedCommitID(store *Store, ver int64) types.CommitID {

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
@@ -17,6 +16,7 @@ import (
 	iavltree "github.com/cosmos/iavl"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -1037,7 +1037,8 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
 		store := rs.stores[key]
-		if store.GetStoreType() == types.StoreTypeTransient {
+		storeType := store.GetStoreType()
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
 			continue
 		}
 		storeInfos = append(storeInfos, types.StoreInfo{

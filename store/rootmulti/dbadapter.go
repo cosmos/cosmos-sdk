@@ -2,9 +2,8 @@ package rootmulti
 
 import (
 	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/types"
-
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/types"
 )
 
 var commithash = []byte("FAKE_HASH")

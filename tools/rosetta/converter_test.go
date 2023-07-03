@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"testing"
 
-	"cosmossdk.io/tools/rosetta"
-	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
-
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/tools/rosetta"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

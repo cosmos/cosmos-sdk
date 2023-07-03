@@ -3,25 +3,25 @@ module cosmossdk.io/tools/confix
 go 1.20
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230524212735-6cabb6aa5741
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230614103911-b3da8bb4e801
 	github.com/creachadair/atomicfile v0.3.1
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.0
 )
 
 require (
-	cosmossdk.io/api v0.4.2 // indirect
-	cosmossdk.io/collections v0.0.0-20230606190835-3e18f4088b2c // indirect
-	cosmossdk.io/core v0.7.0 // indirect
+	cosmossdk.io/api v0.5.0 // indirect
+	cosmossdk.io/collections v0.2.0 // indirect
+	cosmossdk.io/core v0.9.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741 // indirect
 	cosmossdk.io/log v1.1.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c // indirect
-	cosmossdk.io/x/tx v0.6.3 // indirect
+	cosmossdk.io/x/tx v0.8.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -33,11 +33,11 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cockroachdb/errors v1.9.1 // indirect
+	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230606152911-c4be581b807f // indirect
-	github.com/cockroachdb/redact v1.1.4 // indirect
-	github.com/cometbft/cometbft v0.38.0-rc1 // indirect
+	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
@@ -113,7 +113,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20230518223814-80aa455d8761 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.15.1 // indirect
+	github.com/prometheus/client_golang v1.16.0 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
@@ -135,32 +135,26 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/term v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230525234025-438c736192d0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230525234020-1aefcd67740a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
-	google.golang.org/grpc v1.55.0 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/grpc v1.56.1 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v0.6.2 // indirect
+	pgregory.net/rapid v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 // TODO investigate if we can outright delete this dependency, otherwise go install won't work :(
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
-
-replace (
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1

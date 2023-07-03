@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/hashicorp/go-metrics"
+
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -19,8 +21,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/types"
-
-	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -30,10 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
-
-// Deprecated: UpgradeInfoFileName file to store upgrade information
-// use x/upgrade/types.UpgradeInfoFilename instead.
-const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
 	homePath           string                          // root directory of app config

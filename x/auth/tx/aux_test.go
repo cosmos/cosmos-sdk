@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -191,6 +192,7 @@ func TestBuilderWithAux(t *testing.T) {
 }
 
 func makeTipperTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
+	t.Helper()
 	tipperBuilder := clienttx.NewAuxTxBuilder()
 	tipperBuilder.SetAddress(tipperAddr.String())
 	tipperBuilder.SetAccountNumber(1)

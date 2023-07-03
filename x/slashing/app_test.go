@@ -4,12 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -94,8 +94,9 @@ func TestSlashingMsgs(t *testing.T) {
 	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 
 	ctxCheck = baseApp.NewContext(true)
-	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.NoError(t, err)
+
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))

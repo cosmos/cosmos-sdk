@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/comet"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +16,8 @@ type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
-		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
-		GetParams(ctx sdk.Context) (params stakingtypes.Params)
+		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
@@ -27,9 +27,9 @@ type (
 		IsTombstoned(context.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
 		Tombstone(context.Context, sdk.ConsAddress) error
-		Slash(context.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64) error
-		SlashWithInfractionReason(context.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64, stakingtypes.Infraction) error
-		SlashFractionDoubleSign(context.Context) (sdkmath.LegacyDec, error)
+		Slash(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64) error
+		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, stakingtypes.Infraction) error
+		SlashFractionDoubleSign(context.Context) (math.LegacyDec, error)
 		Jail(context.Context, sdk.ConsAddress) error
 		JailUntil(context.Context, sdk.ConsAddress, time.Time) error
 	}

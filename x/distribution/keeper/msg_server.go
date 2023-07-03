@@ -3,14 +3,14 @@ package keeper
 import (
 	"context"
 
+	"github.com/hashicorp/go-metrics"
+
 	"cosmossdk.io/errors"
-	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -183,8 +183,11 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validator := k.stakingKeeper.Validator(sdkCtx, valAddr)
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if validator == nil {
 		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAddr.String())
 	}
@@ -192,7 +195,9 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.
 	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
-	k.AllocateTokensToValidator(ctx, validator, reward)
+	if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
+		return nil, err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(
@@ -211,7 +216,7 @@ func (k *Keeper) validateAuthority(authority string) error {
 	}
 
 	if k.authority != authority {
-		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
+		return errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
 	}
 
 	return nil

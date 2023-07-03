@@ -4,21 +4,19 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/tools/confix"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/tools/confix"
 )
 
 func mustReadConfig(t *testing.T, path string) []byte {
+	t.Helper()
 	f, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("failed to open file: %v", err)
 	}
 
 	return f
-}
-
-func TestUpgrade(t *testing.T) {
-	// TODO: add more test cases
 }
 
 func TestCheckValid(t *testing.T) {

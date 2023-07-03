@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -124,14 +128,20 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		delegations, err := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting delegations"), nil, err
+		}
 		if len(delegations) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "number of delegators equal 0"), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
-		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
+		validator, err := sk.Validator(ctx, delegation.GetValidatorAddr())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting validator"), nil, err
+		}
 		if validator == nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
@@ -166,13 +176,18 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{})
 
-		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
+		allVals, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting all validators"), nil, err
+		}
+
+		validator, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission, err := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
-		if err != nil {
+		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, validator.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
 

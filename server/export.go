@@ -88,11 +88,13 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
+			// set current binary version
+			appGenesis.AppName = version.AppName
+			appGenesis.AppVersion = version.Version
+
 			appGenesis.AppState = exported.AppState
 			appGenesis.InitialHeight = exported.Height
 			appGenesis.Consensus = genutiltypes.NewConsensusGenesis(exported.ConsensusParams, exported.Validators)
-			appGenesis.AppName = version.AppName
-			appGenesis.AppVersion = version.Version
 
 			out, err := json.Marshal(appGenesis)
 			if err != nil {

@@ -23,7 +23,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -72,7 +72,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 		},
 	}
 
@@ -160,6 +160,7 @@ func incrementCounter(ctx context.Context,
 	deliverKey []byte,
 	msg sdk.Msg,
 ) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(capKey)
 
@@ -202,6 +203,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+	t.Helper()
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		counter, failOnAnte := parseTxMemo(t, tx)
@@ -225,6 +227,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 }
 
 func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+	t.Helper()
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
@@ -275,6 +278,7 @@ func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
+	t.Helper()
 	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	pubKey := privKey.PubKey()
 	err := builder.SetSignatures(
@@ -288,6 +292,7 @@ func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
 }
 
 func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID storetypes.CommitID) {
+	t.Helper()
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -309,6 +314,7 @@ func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
+	t.Helper()
 	txWithMemo, ok := tx.(sdk.TxWithMemo)
 	require.True(t, ok)
 
@@ -324,6 +330,7 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 }
 
 func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	t.Helper()
 	_, _, addr := testdata.KeyTestPubAddr()
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
@@ -340,6 +347,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 }
 
 func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
+	t.Helper()
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0
@@ -352,6 +360,7 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 }
 
 func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
+	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(tx.GetMsgs()...)
 

@@ -16,6 +16,7 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
+	t.Helper()
 	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 

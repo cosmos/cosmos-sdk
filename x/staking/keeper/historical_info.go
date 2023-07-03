@@ -46,11 +46,9 @@ func (k Keeper) DeleteHistoricalInfo(ctx context.Context, height int64) error {
 	return store.Delete(key)
 }
 
-// IterateHistoricalInfo provides an interator over all stored HistoricalInfo
-//
-//	objects. For each HistoricalInfo object, cb will be called. If the cb returns
-//
-// true, the iterator will close and stop.
+// IterateHistoricalInfo provides an iterator over all stored HistoricalInfo
+// objects. For each HistoricalInfo object, cb will be called. If the cb returns
+// true, the iterator will break and close.
 func (k Keeper) IterateHistoricalInfo(ctx context.Context, cb func(types.HistoricalInfo) bool) error {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.HistoricalInfoKey, storetypes.PrefixEndBytes(types.HistoricalInfoKey))

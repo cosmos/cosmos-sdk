@@ -98,7 +98,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)
 	s.Require().NoError(err)
 
-	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
+	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)))
 	args := []string{
 		keyName, // from keyname
 		val2.Address.String(),
@@ -204,8 +204,8 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 func (s *E2ETestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
 
 	generatedStd, err := s.createBankMsg(val, val.Address,
@@ -528,7 +528,7 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -539,7 +539,7 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf(
 					"--query=tx.fee='%s'",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String(),
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(0))).String(),
 				),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -752,7 +752,7 @@ func (s *E2ETestSuite) TestCLIMultisignInsufficientCosigners() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -870,7 +870,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -948,7 +948,7 @@ func (s *E2ETestSuite) TestSignWithMultisig() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1013,7 +1013,7 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1102,12 +1102,12 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 		addr,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1168,12 +1168,12 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 		addr,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1316,11 +1316,11 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
 	msg := banktypes.NewMsgSend(val1.Address, val1.Address, sdk.NewCoins(
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	// Set empty signature to set signer infos.
 	sigV2 := signing.SignatureV2{
@@ -1373,8 +1373,8 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require := s.Require()
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
-	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
-	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), math.NewInt(10))
+	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
@@ -1386,7 +1386,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	signers, err := txBuilder.GetTx().GetSigners()
 	require.NoError(err)
@@ -1445,7 +1445,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 func (s *E2ETestSuite) TestAuxSigner() {
 	require := s.Require()
 	val := s.network.Validators[0]
-	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10))
 
 	testCases := []struct {
 		name      string
@@ -1511,11 +1511,11 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 
 	tipper, err := acc.GetAddress()
 	require.NoError(err)
-	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
+	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10000))
 
 	feePayer := val.Address
-	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
-	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
+	fee := sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1000))
+	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(1000))
 
 	require.NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
@@ -1594,7 +1594,7 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 			name:     "--tip flag unset: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
@@ -1665,7 +1665,7 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 			name:     "wrong denom in tip: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1684,7 +1684,7 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 			name:     "insufficient fees: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: math.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1762,7 +1762,7 @@ func (s *E2ETestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddre
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 
 	flags = append(flags, extraFlags...)

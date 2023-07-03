@@ -101,6 +101,8 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		}
 
 		appGenesis = AppGenesis{
+			AppName: version.AppName,
+			// AppVersion is not filled as we do not know it from a CometBFT genesis
 			GenesisTime:   ctmGenesis.GenesisTime,
 			ChainID:       ctmGenesis.ChainID,
 			InitialHeight: ctmGenesis.InitialHeight,

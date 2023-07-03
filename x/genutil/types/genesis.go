@@ -101,6 +101,8 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		}
 
 		appGenesis = AppGenesis{
+			AppName:       version.AppName,
+			AppVersion:    version.Version,
 			GenesisTime:   ctmGenesis.GenesisTime,
 			ChainID:       ctmGenesis.ChainID,
 			InitialHeight: ctmGenesis.InitialHeight,

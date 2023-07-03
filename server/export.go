@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -90,6 +91,8 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			appGenesis.AppState = exported.AppState
 			appGenesis.InitialHeight = exported.Height
 			appGenesis.Consensus = genutiltypes.NewConsensusGenesis(exported.ConsensusParams, exported.Validators)
+			appGenesis.AppName = version.AppName
+			appGenesis.AppVersion = version.Version
 
 			out, err := json.Marshal(appGenesis)
 			if err != nil {

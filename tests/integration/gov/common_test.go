@@ -24,6 +24,7 @@ var (
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
 func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
+	t.Helper()
 	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
 	assert.NilError(t, err)
 

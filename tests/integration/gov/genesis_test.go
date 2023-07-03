@@ -189,6 +189,7 @@ func TestImportExportQueues(t *testing.T) {
 }
 
 func clearDB(t *testing.T, db *dbm.MemDB) {
+	t.Helper()
 	iter, err := db.Iterator(nil, nil)
 	assert.NilError(t, err)
 	defer iter.Close()

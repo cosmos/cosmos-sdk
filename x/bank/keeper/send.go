@@ -105,8 +105,8 @@ func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) erro
 	// Normally SendEnabled is deprecated but we still support it for backwards
 	// compatibility. Using params.Validate() would fail due to the SendEnabled
 	// deprecation.
-	if len(params.SendEnabled) > 0 { //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
-		k.SetAllSendEnabled(ctx, params.SendEnabled) //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
+	if len(params.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, params.SendEnabled)
 
 		// override params without SendEnabled
 		params = types.NewParams(params.DefaultSendEnabled)

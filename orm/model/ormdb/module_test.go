@@ -259,6 +259,7 @@ func TestModuleDB(t *testing.T) {
 }
 
 func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"

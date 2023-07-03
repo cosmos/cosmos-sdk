@@ -56,6 +56,7 @@ type AnteTestSuite struct {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+	t.Helper()
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
@@ -156,6 +157,7 @@ func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for
 // example to test for replay protection.
 func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, simulate bool) (sdk.Context, error) {
+	t.Helper()
 	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
@@ -169,6 +171,7 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
+	t.Helper()
 	require.NoError(t, suite.txBuilder.SetMsgs(args.msgs...))
 	suite.txBuilder.SetFeeAmount(args.feeAmount)
 	suite.txBuilder.SetGasLimit(args.gasLimit)

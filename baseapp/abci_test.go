@@ -580,6 +580,12 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			txs = append(txs, txBytes)
 		}
 
+		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
+			Height: int64(blockN) + 1,
+			Txs:    txs,
+		})
+		require.NoError(t, err)
+
 		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: int64(blockN) + 1,
 			Txs:    txs,

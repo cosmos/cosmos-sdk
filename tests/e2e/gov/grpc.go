@@ -5,8 +5,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -149,10 +150,10 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBech32),
 			false,
 			v1.WeightedVoteOptions{
-				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: sdk.NewDecWithPrec(60, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: sdk.NewDecWithPrec(30, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: math.LegacyNewDecWithPrec(60, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: math.LegacyNewDecWithPrec(30, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
 			},
 		},
 	}

@@ -35,7 +35,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(10))),
 				),
 				Pagination: &query.PageResponse{
 					Total: 2,
@@ -50,7 +50,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(10))),
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(20))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(20))),
 			},
 		},
 		{
@@ -72,7 +72,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(10))),
 			},
 		},
 		{
@@ -267,7 +267,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "foobar",
-					Amount: sdk.NewInt(0),
+					Amount: math.NewInt(0),
 				},
 			},
 		},

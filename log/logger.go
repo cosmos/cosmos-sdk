@@ -70,13 +70,15 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		output = NewFilterWriter(output, logCfg.Filter)
 	}
 
+	logger := zerolog.New(output)
 	if logCfg.StackTrace {
 		zerolog.ErrorStackMarshaler = func(err error) interface{} {
 			return pkgerrors.MarshalStack(errors.WithStack(err))
 		}
+
+		logger = logger.With().Stack().Logger()
 	}
 
-	logger := zerolog.New(output)
 	if logCfg.TimeFormat != "" {
 		logger = logger.With().Timestamp().Logger()
 	}

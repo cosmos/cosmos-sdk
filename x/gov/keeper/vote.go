@@ -58,7 +58,8 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 
 // deleteVotes deletes the all votes from a given proposalID.
 func (keeper Keeper) deleteVotes(ctx context.Context, proposalID uint64) error {
-	iter, err := keeper.Votes.Iterate(ctx, nil)
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
+	iter, err := keeper.Votes.Iterate(ctx, rng)
 	if err != nil {
 		return err
 	}

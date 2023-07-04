@@ -78,12 +78,6 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	return nil
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return []sdk.AccAddress{proposer}
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
@@ -95,30 +89,12 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// GetSigners returns the expected signers for a MsgDeposit.
-func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
-}
-
 // NewMsgVote creates a message to cast a vote on an active proposal
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option}
 }
 
-// GetSigners returns the expected signers for a MsgVote.
-func (msg MsgVote) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
-}
-
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal.
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
-}
-
-// GetSigners returns the expected signers for a MsgVoteWeighted.
-func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
 }

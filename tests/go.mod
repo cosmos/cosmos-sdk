@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
-	cosmossdk.io/log v1.1.0
+	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.0
 	pgregory.net/rapid v1.0.0
 )
 

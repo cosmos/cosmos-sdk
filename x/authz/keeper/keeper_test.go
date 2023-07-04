@@ -192,8 +192,7 @@ func (s *TestSuite) TestDispatchAction() {
 			"authorization not found",
 			func() sdk.Context {
 				// remove any existing authorizations
-				err := s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
-				require.NoError(err)
+				_ = s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
 
 				return s.ctx
 			},

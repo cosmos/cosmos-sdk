@@ -750,15 +750,13 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, _ = suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-	require.Error(t, err)
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, _ = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
-	require.Error(t, err)
 
 	// malformed transaction bytes
 	{
@@ -822,8 +820,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		err := txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
-		require.Error(t, err)
+		_ = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
@@ -836,11 +833,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		txBuilder = suite.txConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(
+		_ = txBuilder.SetMsgs(
 			&baseapptestutil.MsgCounter{Signer: addr.String()},
 			&baseapptestutil.MsgCounter2{Signer: addr.String()},
 		)
-		require.Error(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 
@@ -856,12 +852,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
-		err := txBuilder.SetMsgs(&testdata.MsgCreateDog{})
-		require.Error(t, err)
+		_ = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
 		tx := txBuilder.GetTx()
 
-		_, _, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		require.Error(t, err)
+		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)

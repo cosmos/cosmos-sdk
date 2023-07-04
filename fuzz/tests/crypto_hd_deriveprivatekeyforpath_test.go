@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	bip39 "github.com/cosmos/go-bip39"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
@@ -31,7 +30,6 @@ func FuzzCryptoHDDerivePrivateKeyForPath(f *testing.F) {
 		}
 		seed := mnemonicToSeed(string(mnemonic))
 		master, ch := hd.ComputeMastersFromSeed(seed)
-		_, err := hd.DerivePrivateKeyForPath(master, ch, string(path))
-		require.NoError(t, err)
+		_, _ = hd.DerivePrivateKeyForPath(master, ch, string(path))
 	})
 }

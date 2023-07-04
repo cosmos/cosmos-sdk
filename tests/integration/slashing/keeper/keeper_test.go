@@ -50,13 +50,14 @@ type fixture struct {
 	valAddrs []sdk.ValAddress
 }
 
-func initFixture(t testing.TB) *fixture {
+func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, slashingtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(t)
+	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)

@@ -65,7 +65,7 @@ func (s *SimTestSuite) SetupTest() {
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
-		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))},
+		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000)))},
 	}
 
 	// create validator set with single validator

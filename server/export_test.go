@@ -93,6 +93,7 @@ func (s *ExportSystem) Run(args ...string) cmdtest.RunResult {
 
 // MustRun wraps (*cmdtest.System).MustRunC, providing e's context.
 func (s *ExportSystem) MustRun(t *testing.T, args ...string) cmdtest.RunResult {
+	t.Helper()
 	return s.sys.MustRunC(t, s.Ctx, args...)
 }
 

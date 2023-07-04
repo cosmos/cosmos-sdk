@@ -192,6 +192,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 }
 
 func newAny(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
 	bz, err := proto.Marshal(msg)
 	require.NoError(t, err)
 	typeName := fmt.Sprintf("/%s", msg.ProtoReflect().Descriptor().FullName())
@@ -217,7 +218,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
 	dec10bz, _ := math.LegacyNewDec(10).Marshal()
-	int123bz, _ := types.NewInt(123).Marshal()
+	int123bz, _ := math.NewInt(123).Marshal()
 
 	cases := map[string]struct {
 		gogo               gogoproto.Message
@@ -396,7 +397,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &vestingapi.BaseVestingAccount{BaseAccount: &authapi.BaseAccount{PubKey: pubkeyAnyPulsar}},
 		},
 		"math/int_as_string": {
-			gogo:   &gogo_testpb.IntAsString{IntAsString: types.NewInt(123)},
+			gogo:   &gogo_testpb.IntAsString{IntAsString: math.NewInt(123)},
 			pulsar: &pulsar_testpb.IntAsString{IntAsString: "123"},
 		},
 		"math/int_as_string/empty": {
@@ -404,7 +405,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &pulsar_testpb.IntAsString{},
 		},
 		"math/int_as_bytes": {
-			gogo:   &gogo_testpb.IntAsBytes{IntAsBytes: types.NewInt(123)},
+			gogo:   &gogo_testpb.IntAsBytes{IntAsBytes: math.NewInt(123)},
 			pulsar: &pulsar_testpb.IntAsBytes{IntAsBytes: int123bz},
 		},
 		"math/int_as_bytes/empty": {

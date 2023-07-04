@@ -10,6 +10,7 @@ import (
 
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -50,7 +51,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 
 	var err error
@@ -72,11 +73,11 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.ClientCtx,
 		val.Address,
 		account,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
 		address.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -229,7 +230,7 @@ func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom,
 	msg := banktypes.MsgSend{
 		FromAddress: sendFrom,
 		ToAddress:   sendTo,
-		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(20))),
 	}
 	msgJSON, err := s.cfg.Codec.MarshalInterfaceJSON(&msg)
 	s.Require().NoError(err)
@@ -281,7 +282,7 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
 	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(tokens))),
 		address.NewBech32Codec("cosmos"),
 		s.commonFlags...,
 	)

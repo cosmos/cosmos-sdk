@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	// default params
-	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	err := s.keeper.ConstantFee.Set(s.ctx, constantFee)
 	s.Require().NoError(err)
 
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params
-	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 
 	testCases := []struct {
 		name      string

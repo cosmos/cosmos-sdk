@@ -379,7 +379,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	suite.StakingKeeper.EndBlocker(ctx)
 
-	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
 	require.NoError(t, err)
 
@@ -602,6 +602,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 }
 
 func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+	t.Helper()
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
@@ -629,6 +630,7 @@ func getDepositMultiplier(expedited bool) int64 {
 }
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper, invalid bool) {
+	t.Helper()
 	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
@@ -640,6 +642,7 @@ func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper, 
 }
 
 func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper, invalid bool) {
+	t.Helper()
 	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})

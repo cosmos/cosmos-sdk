@@ -13,7 +13,7 @@ import (
 )
 
 // NewIntValueRenderer returns a ValueRenderer for uint32, uint64, int32 and
-// int64, and sdk.Int scalars.
+// int64, and math.Int scalars.
 func NewIntValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
 	return intValueRenderer{fd}
 }

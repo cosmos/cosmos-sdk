@@ -11,7 +11,7 @@ import (
 
 // Validator Set
 
-// iterate through the validator set and perform the provided function
+// IterateValidators iterates through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
@@ -38,7 +38,7 @@ func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, vali
 	return nil
 }
 
-// iterate through the bonded validator set and perform the provided function
+// IterateBondedValidatorsByPower iterates through the bonded validator set and perform the provided function
 func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	maxValidators, err := k.MaxValidators(ctx)
@@ -69,7 +69,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 	return nil
 }
 
-// iterate through the active validator set and perform the provided function
+// IterateLastValidators iterates through the active validator set and perform the provided function
 func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	iterator, err := k.LastValidatorsIterator(ctx)
 	if err != nil {
@@ -108,12 +108,12 @@ func (k Keeper) ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (
 
 // Delegation Set
 
-// Returns self as it is both a validatorset and delegationset
+// GetValidatorSet returns self as it is both a validatorset and delegationset
 func (k Keeper) GetValidatorSet() types.ValidatorSet {
 	return k
 }
 
-// Delegation get the delegation interface for a particular set of delegator and validator addresses
+// Delegation gets the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
 	bond, err := k.GetDelegation(ctx, addrDel, addrVal)
 	if err != nil {
@@ -123,7 +123,7 @@ func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal 
 	return bond, nil
 }
 
-// iterate through all of the delegations from a delegator
+// IterateDelegations iterates through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
 ) error {
@@ -151,7 +151,7 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	return nil
 }
 
-// return all delegations used during genesis dump
+// GetAllSDKDelegations returns all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
 func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.Delegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)

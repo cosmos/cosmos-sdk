@@ -25,7 +25,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	assert.NilError(t, f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	addrDel := sdk.AccAddress([]byte("addr"))
-	accAmt := sdk.NewInt(10000)
+	accAmt := math.NewInt(10000)
 	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
 

@@ -118,6 +118,7 @@ func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
 }
 
 func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper) {
+	t.Helper()
 	t.Parallel()
 
 	qr := baseapp.NewGRPCQueryRouter()

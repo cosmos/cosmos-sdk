@@ -16,7 +16,7 @@ type Migrator struct {
 	legacySubspace exported.Subspace
 }
 
-// NewMigrator returns a new Migrator.
+// NewMigrator returns a new Migrator instance.
 func NewMigrator(keeper *Keeper, legacySubspace exported.Subspace) Migrator {
 	return Migrator{
 		keeper:         keeper,

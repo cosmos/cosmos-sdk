@@ -66,12 +66,13 @@ func TestCoinsJSONTestcases(t *testing.T) {
 // rendering, so we lose initial Coins ordering. Instead, we just check
 // set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
+	t.Helper()
 	require.Equal(t, l1.Len(), l2.Len())
 	coinsMap := make(map[string]*basev1beta1.Coin, l1.Len())
 
 	for i := 0; i < l1.Len(); i++ {
 		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
-		require.True(t, ok)
+		require.True(t, ok, "not a *basev1beta1.Coin: %#v", l1.Get(i).Message().Interface())
 		coinsMap[coin.Denom] = coin
 	}
 
@@ -85,12 +86,13 @@ func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 }
 
 func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
+	t.Helper()
 	require.Equal(t, coin1.Denom, coin.Denom)
 	v, ok := math.NewIntFromString(coin.Amount)
 	require.True(t, ok)
 	v1, ok := math.NewIntFromString(coin1.Amount)
 	require.True(t, ok)
-	require.True(t, v.Equal(v1))
+	require.True(t, v.Equal(v1), "Mismatch\n\tv:  %+v\n\tv1: %+v", v, v1)
 }
 
 // coinsJSONTest is the type of test cases in the testdata file.

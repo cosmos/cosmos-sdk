@@ -13,6 +13,7 @@ Flags:
       --a-bool                                                               
       --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
+      --a-validator-address bech32 account address key name                  
   -a, --account-number uint                                                  The account number of the signing account (offline mode only)
       --an-address bech32 account address key name                           
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)

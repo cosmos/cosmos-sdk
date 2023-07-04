@@ -66,6 +66,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
+		authcodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)

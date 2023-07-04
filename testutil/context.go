@@ -37,13 +37,14 @@ type TestContext struct {
 	CMS store.CommitMultiStore
 }
 
-func DefaultContextWithDB(t testing.TB, key, tkey storetypes.StoreKey) TestContext {
+func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestContext {
+	tb.Helper()
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
-	assert.NoError(t, err)
+	assert.NoError(tb, err)
 
 	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 

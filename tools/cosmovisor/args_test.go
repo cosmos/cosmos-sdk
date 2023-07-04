@@ -119,7 +119,7 @@ func (s *argsTestSuite) clearEnv() *cosmovisorEnv {
 // setEnv sets environment variables to the values provided.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *argsTestSuite) setEnv(t *testing.T, env *cosmovisorEnv) {
+func (s *argsTestSuite) setEnv(t *testing.T, env *cosmovisorEnv) { //nolint:thelper // false positive
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}

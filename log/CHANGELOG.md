@@ -31,13 +31,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.0) - 2023-07-04
-
-* [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce extra options for enabling error stack trace.
+* [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce an option for enabling error stack trace.
 
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.1.0) - 2023-04-27
 
-* [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce extra options to configure logger (enable/disable colored output, customize log timestamps).
+* [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce options to configure logger (enable/disable colored output, customize log timestamps).
 
 ## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.0.0) - 2023-03-30
 

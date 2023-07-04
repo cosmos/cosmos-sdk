@@ -33,7 +33,7 @@ func (b boolKey[T]) Decode(buffer []byte) (int, T, error) {
 	}
 }
 
-func (b boolKey[T]) Size(key T) int { return 1 }
+func (b boolKey[T]) Size(_ T) int { return 1 }
 
 func (b boolKey[T]) EncodeJSON(value T) ([]byte, error) {
 	return json.Marshal(value)

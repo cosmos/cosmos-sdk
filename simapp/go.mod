@@ -6,6 +6,10 @@ require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
+<<<<<<< HEAD
+=======
+	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
+>>>>>>> 8d80df8e3 (fix: properly use `--trace` flag (#16827))
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/cometbft/cometbft v0.37.2

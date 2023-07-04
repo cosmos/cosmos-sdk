@@ -181,12 +181,25 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		default:
 			opts = append(opts, log.LevelOption(logLvl))
 		}
+<<<<<<< HEAD
 	}
 
 	logger := log.NewLogger(tmlog.NewSyncWriter(os.Stdout), opts...).With(log.ModuleKey, "server")
 	serverCtx.Logger = serverlog.CometLoggerWrapper{Logger: logger}
 
 	return SetCmdServerContext(cmd, serverCtx)
+=======
+
+		opts = append(opts, log.FilterOption(filterFunc))
+	default:
+		opts = append(opts, log.LevelOption(logLvl))
+	}
+
+	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
+	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
+
+	return log.NewLogger(out, opts...), nil
+>>>>>>> 8d80df8e3 (fix: properly use `--trace` flag (#16827))
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

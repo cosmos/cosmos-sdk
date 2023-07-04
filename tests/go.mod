@@ -5,6 +5,11 @@ go 1.19
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
+<<<<<<< HEAD
+=======
+	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
+	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
+>>>>>>> 8d80df8e3 (fix: properly use `--trace` flag (#16827))
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.37.2

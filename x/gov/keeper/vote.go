@@ -58,6 +58,22 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 
 // deleteVotes deletes the all votes from a given proposalID.
 func (keeper Keeper) deleteVotes(ctx context.Context, proposalID uint64) error {
-	// TODO(tip): fix https://github.com/cosmos/cosmos-sdk/issues/16162
+	iter, err := keeper.Votes.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return err
+		}
+		err = keeper.Votes.Remove(ctx, key)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

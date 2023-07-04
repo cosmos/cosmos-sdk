@@ -3,7 +3,8 @@ package v3
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -71,19 +72,19 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 }
 
 func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, error) {
-	yes, ok := sdkmath.NewIntFromString(tally.YesCount)
+	yes, ok := math.NewIntFromString(tally.YesCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.YesCount)
 	}
-	no, ok := sdkmath.NewIntFromString(tally.NoCount)
+	no, ok := math.NewIntFromString(tally.NoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.NoCount)
 	}
-	veto, ok := sdkmath.NewIntFromString(tally.NoWithVetoCount)
+	veto, ok := math.NewIntFromString(tally.NoWithVetoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVetoCount)
 	}
-	abstain, ok := sdkmath.NewIntFromString(tally.AbstainCount)
+	abstain, ok := math.NewIntFromString(tally.AbstainCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.AbstainCount)
 	}
@@ -111,7 +112,7 @@ func ConvertToLegacyVote(vote v1.Vote) (v1beta1.Vote, error) {
 func ConvertToLegacyVoteOptions(voteOptions []*v1.WeightedVoteOption) ([]v1beta1.WeightedVoteOption, error) {
 	options := make([]v1beta1.WeightedVoteOption, len(voteOptions))
 	for i, option := range voteOptions {
-		weight, err := types.NewDecFromStr(option.Weight)
+		weight, err := math.LegacyNewDecFromStr(option.Weight)
 		if err != nil {
 			return options, err
 		}

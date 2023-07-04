@@ -7,11 +7,11 @@ import (
 	"sort"
 	"testing"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
@@ -35,6 +35,7 @@ func randBytes(numBytes int) []byte {
 
 // make a tree with data from above and save it
 func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
+	t.Helper()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	for k, v := range treeData {
@@ -300,6 +301,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	iavlStore.Set([]byte{0x01}, []byte("1"))
 
 	testReverseIterator := func(t *testing.T, start, end []byte, expected []string) {
+		t.Helper()
 		iter := iavlStore.ReverseIterator(start, end)
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {

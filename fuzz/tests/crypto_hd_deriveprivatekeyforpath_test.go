@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"testing"
 
+	bip39 "github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"

@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -155,7 +155,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		var remainingAmount sdk.Coins
 
 		for _, coins := range deposit.Amount {
-			burnAmount := sdk.NewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
+			burnAmount := sdkmath.LegacyNewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
 			// remaining amount = deposits amount - burn amount
 			remainingAmount = remainingAmount.Add(
 				sdk.NewCoin(
@@ -240,7 +240,7 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 		return err
 	}
 
-	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 	}
 
 	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+		minDepositCoins[i].Amount = sdkmath.LegacyNewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)

@@ -22,13 +22,15 @@ import (
 	"fmt"
 	"strconv"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -168,7 +170,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
 		}
-		coin := sdk.NewCoin(i.Balance.Denom, sdk.NewInt(int64(bal)))
+		coin := sdk.NewCoin(i.Balance.Denom, math.NewInt(int64(bal)))
 		res = res.Add(coin)
 	}
 
@@ -218,7 +220,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert unbonding balance to int: %w", err)
 			}
-			res = res.Add(sdk.NewCoin(bondDenom, sdk.NewInt(int64(bal))))
+			res = res.Add(sdk.NewCoin(bondDenom, math.NewInt(int64(bal))))
 		}
 	}
 
@@ -262,7 +264,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		if err != nil {
 			return nil, fmt.Errorf("cannot convert balance amount to int, %w", err)
 		}
-		coins[i] = sdk.NewCoin(b.Denom, sdk.NewInt(int64(amount)))
+		coins[i] = sdk.NewCoin(b.Denom, math.NewInt(int64(amount)))
 	}
 	return coins, nil
 }

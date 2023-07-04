@@ -3,10 +3,10 @@ package autocli
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/internal/strcase"
-	"github.com/spf13/cobra"
 )
 
 // findSubCommand finds a sub-command of the provided command whose Use

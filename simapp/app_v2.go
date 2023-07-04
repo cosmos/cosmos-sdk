@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -133,6 +133,15 @@ func NewSimApp(
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
+
+				// For providing a different address codec, add it below.
+				// By default the auth module uses a Bech32 address codec,
+				// with the prefix defined in the auth module configuration.
+				// NOTE, if a custom address codec is provided, a custom validator
+				// address codec must be provided as well.
+				//
+				// func() address.Codec { return <- custom address codec type -> }
+				// func() auth.ValidatorAddressCodec { return <- custom validator address codec type -> }
 
 				//
 				// MINT

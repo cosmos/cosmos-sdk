@@ -20,6 +20,7 @@ import (
 )
 
 func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
+	t.Helper()
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {

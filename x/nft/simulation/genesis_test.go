@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/nft"
 	nftmodule "cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/nft/simulation"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

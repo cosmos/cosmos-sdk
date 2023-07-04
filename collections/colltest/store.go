@@ -3,8 +3,9 @@ package colltest
 import (
 	"context"
 
-	"cosmossdk.io/core/store"
 	db "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/core/store"
 )
 
 type contextStoreKey struct{}

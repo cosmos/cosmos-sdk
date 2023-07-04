@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/bits-and-blooms/bitset"
+
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/bits-and-blooms/bitset"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"

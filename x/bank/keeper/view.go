@@ -4,17 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-
 	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/collections"
-
-	"cosmossdk.io/math"
-
+	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -148,7 +145,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	amt, err := k.Balances.Get(ctx, collections.Join(addr, denom))
 	if err != nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt())
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 	return sdk.NewCoin(denom, amt)
 }

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 	dur "google.golang.org/protobuf/types/known/durationpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
+
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 // timestampJSONTest is the type of test cases in the testdata file.
@@ -43,6 +43,7 @@ func TestTimestampJsonTestcasesExtraneousNanos(t *testing.T) {
 }
 
 func testTimestampJSONTestcases(t *testing.T, raw []byte) {
+	t.Helper()
 	var testcases []timestampJSONTest
 	err := json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)

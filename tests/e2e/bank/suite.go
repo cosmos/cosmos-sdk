@@ -11,10 +11,9 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/testutil"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -188,7 +187,7 @@ func (s *E2ETestSuite) TestGetCmdQueryTotalSupply() {
 			expected: &types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(10))),
 				),
 				Pagination: &query.PageResponse{Total: 0},
 			},
@@ -203,7 +202,7 @@ func (s *E2ETestSuite) TestGetCmdQueryTotalSupply() {
 			respType: &sdk.Coin{},
 			expected: &sdk.Coin{
 				Denom:  s.cfg.BondDenom,
-				Amount: s.cfg.StakingTokens.Add(sdk.NewInt(10)),
+				Amount: s.cfg.StakingTokens.Add(math.NewInt(10)),
 			},
 		},
 		{
@@ -375,13 +374,13 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 	from := val.Address
 	to := val.Address
 	amount := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
@@ -400,13 +399,13 @@ func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
 	from := val.Address
 	to := val.Address
 	amount := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 	}
 
@@ -441,13 +440,13 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 			val.Address,
 			val.Address,
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -456,13 +455,13 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 			val.Address,
 			val.Address,
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
@@ -473,13 +472,13 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 			val.Address,
 			val.Address,
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))).String()),
 			},
 			false,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
@@ -490,13 +489,13 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 			val.Address,
 			val.Address,
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				"--gas=10",
 			},
 			false,
@@ -545,13 +544,13 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address, testAddr},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -560,14 +559,14 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address, testAddr},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", cli.FlagSplit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -576,13 +575,13 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			true, 0, &sdk.TxResponse{},
 		},
@@ -591,13 +590,13 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address, testAddr},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
@@ -608,13 +607,13 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address, testAddr},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))).String()),
 			},
 			false,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
@@ -625,13 +624,13 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			val.Address,
 			[]sdk.AccAddress{val.Address, testAddr},
 			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				"--gas=10",
 			},
 			false,

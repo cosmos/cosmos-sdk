@@ -9,9 +9,10 @@ import (
 	"cosmossdk.io/orm/model/ormtable"
 )
 
-func NewGoLevelDBBackend(t testing.TB) ormtable.Backend {
-	db, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
-	assert.NilError(t, err)
+func NewGoLevelDBBackend(tb testing.TB) ormtable.Backend {
+	tb.Helper()
+	db, err := dbm.NewGoLevelDB("test", tb.TempDir(), nil)
+	assert.NilError(tb, err)
 	return ormtable.NewBackend(ormtable.BackendOptions{
 		CommitmentStore: db,
 	})

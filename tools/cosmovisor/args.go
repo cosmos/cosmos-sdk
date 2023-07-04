@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -33,6 +32,7 @@ const (
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
+	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 )
 
 const (
@@ -41,9 +41,6 @@ const (
 	upgradesDir = "upgrades"
 	currentLink = "current"
 )
-
-// must be the same as x/upgrade/types.UpgradeInfoFilename
-const defaultFilename = "upgrade-info.json"
 
 // Config is the information passed in to control the daemon
 type Config struct {
@@ -60,6 +57,8 @@ type Config struct {
 	DisableLogs              bool
 	ColorLogs                bool
 	TimeFormatLogs           string
+	CustomPreupgrade         string
+
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
 }
@@ -92,7 +91,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", defaultFilename)
+	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -147,9 +146,10 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:           os.Getenv(EnvHome),
-		Name:           os.Getenv(EnvName),
-		DataBackupPath: os.Getenv(EnvDataBackupPath),
+		Home:             os.Getenv(EnvHome),
+		Name:             os.Getenv(EnvName),
+		DataBackupPath:   os.Getenv(EnvDataBackupPath),
+		CustomPreupgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -219,7 +219,7 @@ func (cfg *Config) Logger(dst io.Writer) log.Logger {
 	var logger log.Logger
 
 	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
+		logger = log.NewNopLogger()
 	} else {
 		logger = log.NewLogger(dst,
 			log.ColorOption(cfg.ColorLogs),
@@ -430,6 +430,7 @@ func (cfg Config) DetailString() string {
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
+		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
 	}
 
 	derivedEntries := []struct{ name, value string }{

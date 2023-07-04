@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
 
-	"github.com/cosmos/go-bip39"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -287,7 +287,7 @@ func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
 // Example to add dynamic fee extension options:
 //
 //	extOpt := ethermint.ExtensionOptionDynamicFeeTx{
-//		MaxPriorityPrice: sdk.NewInt(1000000),
+//		MaxPriorityPrice: math.NewInt(1000000),
 //	}
 //
 //	extBytes, _ := extOpt.Marshal()

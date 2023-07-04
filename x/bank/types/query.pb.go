@@ -648,6 +648,7 @@ var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 type QueryParamsResponse struct {
+	// params provides the parameters of the bank module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 

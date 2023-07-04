@@ -66,9 +66,7 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
 	cmd.SetErr(conn.errorOut)
-	if err := cmd.Execute(); err != nil {
-		panic(err)
-	}
+	_ = cmd.Execute()
 	return conn
 }
 

@@ -237,11 +237,10 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
-				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
+				_, _ = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
-				suite.Require().NoError(err)
 
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{

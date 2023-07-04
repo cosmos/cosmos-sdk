@@ -248,7 +248,9 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	if remove {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
 		_ = k.revokeAllowance(ctx, granter, grantee)
-
+		if err != nil {
+			return err
+		}
 		emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 		return nil
@@ -307,9 +309,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 		grants = append(grants, grant)
 		return false
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	return &feegrant.GenesisState{
 		Allowances: grants,

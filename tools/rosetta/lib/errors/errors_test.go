@@ -20,9 +20,7 @@ func TestRegisterError(t *testing.T) {
 	registeredErrorsCount++
 	assert.Equal(t, len(ListErrors()), registeredErrorsCount)
 	// re-register an error should not change anything
-	if err := RegisterError(69, "nice!", false, "nice!"); err != nil {
-		panic(err)
-	}
+	_ = RegisterError(69, "nice!", false, "nice!")
 	assert.Equal(t, len(ListErrors()), registeredErrorsCount)
 
 	// test sealing

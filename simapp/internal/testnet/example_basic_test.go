@@ -8,6 +8,7 @@ import (
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
+	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -16,7 +17,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"gotest.tools/v3/assert"
 )
 
 func TestExampleBasicUsage(t *testing.T) {

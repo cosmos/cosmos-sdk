@@ -5,9 +5,10 @@ package tests
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/stretchr/testify/require"
 )
 
 func FuzzUnknownProto(f *testing.F) {

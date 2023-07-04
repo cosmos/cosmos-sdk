@@ -1481,11 +1481,11 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-
+	require.NoError(t, err)
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 100000,
 		Height:     1, // this value can't be 0
@@ -1892,13 +1892,13 @@ func TestABCI_HaltChain(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
-			suite.baseApp.InitChain(&abci.RequestInitChain{
+			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 				InitialHeight:   tc.blockHeight,
 			})
-
+			require.NoError(t, err)
 			app := suite.baseApp
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: tc.blockHeight,
 				Time:   time.Unix(tc.blockTime, 0),
 			})

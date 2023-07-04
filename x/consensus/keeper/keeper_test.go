@@ -95,7 +95,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 						VoteExtensionsEnableHeight: 1234,
 					},
 				}
-				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{

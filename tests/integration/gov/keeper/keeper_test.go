@@ -97,7 +97,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	// set default staking params
 	err := stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams())
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
@@ -118,7 +118,7 @@ func initFixture(tb testing.TB) *fixture {
 		types.DefaultConfig(),
 		authority.String(),
 	)
-	assert.NilError(t, govKeeper.ProposalID.Set(newCtx, 1))
+	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))
 	govRouter := v1beta1.NewRouter()
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)

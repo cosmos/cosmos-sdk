@@ -5,8 +5,9 @@ package tests
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 func FuzzCryptoHDNewParamsFromPath(f *testing.F) {

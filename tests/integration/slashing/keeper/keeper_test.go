@@ -115,10 +115,10 @@ func initFixture(tb testing.TB) *fixture {
 
 	// set default staking params
 	err := stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	err = slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
@@ -126,9 +126,9 @@ func initFixture(tb testing.TB) *fixture {
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
 
 	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	return &fixture{
 		app:            integrationApp,
 		ctx:            sdkCtx,

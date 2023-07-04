@@ -338,18 +338,18 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())

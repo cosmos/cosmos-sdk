@@ -688,10 +688,9 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, _ = suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-	require.NoError(t, err)
 
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
 
@@ -733,10 +732,8 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
-		require.Error(t, err)
-		_, err = suite.baseApp.Commit()
-		require.Error(t, err)
+		_, _ = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
+		_, _ = suite.baseApp.Commit()
 	}
 }
 

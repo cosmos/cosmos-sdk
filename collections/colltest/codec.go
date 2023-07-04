@@ -40,6 +40,11 @@ func TestKeyCodec[T any](t *testing.T, keyCodec codec.KeyCodec[T], key T) {
 	decoded, err := keyCodec.DecodeJSON(keyJSON)
 	require.NoError(t, err)
 	require.Equal(t, key, decoded, "json encoding and decoding did not produce the same results")
+
+	// check type
+	require.NotEmpty(t, keyCodec.KeyType())
+	// check string
+	_ = keyCodec.Stringify(key)
 }
 
 // TestValueCodec asserts the correct behavior of a ValueCodec over the type T.

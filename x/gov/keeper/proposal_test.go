@@ -182,9 +182,9 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 
-	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
+	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
 	suite.Require().NoError(err)
-	proposal2ID := proposal2Resp.Id
+	proposal2ID := proposal2.Id
 	makeProposalPass := func() {
 		proposal2, err := suite.govKeeper.Proposals.Get(suite.ctx, proposal2ID)
 		suite.Require().Nil(err)
@@ -192,6 +192,21 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
 		suite.govKeeper.SetProposal(suite.ctx, proposal2)
 	}
+
+	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false)
+	suite.Require().NoError(err)
+	proposal3ID := proposal3.Id
+
+	// add votes for proposal 3
+	suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal3))
+
+	proposal3, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal3ID)
+	suite.Require().Nil(err)
+	suite.Require().True(proposal3.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+	// add vote
+	voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+	err = suite.govKeeper.AddVote(suite.ctx, proposal3ID, suite.addrs[0], voteOptions, "")
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name        string
@@ -275,6 +290,11 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	}
 	_, err = suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposalID, suite.addrs[0]))
 	suite.Require().ErrorContains(err, collections.ErrNotFound.Error())
+
+	// check that proposal 3 votes are still present in the state
+	votes, err := suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposal3ID, suite.addrs[0]))
+	suite.Require().NoError(err)
+	suite.Require().NotNil(votes)
 }
 
 func TestMigrateProposalMessages(t *testing.T) {

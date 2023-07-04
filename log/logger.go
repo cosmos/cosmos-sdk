@@ -3,7 +3,9 @@ package log
 import (
 	"io"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 // ModuleKey defines a module logging key.
@@ -66,6 +68,12 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 
 	if logCfg.Filter != nil {
 		output = NewFilterWriter(output, logCfg.Filter)
+	}
+
+	if logCfg.StackTrace {
+		zerolog.ErrorStackMarshaler = func(err error) interface{} {
+			return pkgerrors.MarshalStack(errors.WithStack(err))
+		}
 	}
 
 	logger := zerolog.New(output)

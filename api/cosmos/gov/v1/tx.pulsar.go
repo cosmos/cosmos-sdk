@@ -7036,7 +7036,7 @@ type MsgSubmitProposal struct {
 	//
 	// Since: cosmos-sdk 0.47
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
-	// expedided defines if the proposal is expedited or not
+	// expedited defines if the proposal is expedited or not
 	//
 	// Since: cosmos-sdk 0.50
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
@@ -7574,8 +7574,10 @@ type MsgCancelProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Proposer   string `protobuf:"bytes,2,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// proposer is the account address of the proposer.
+	Proposer string `protobuf:"bytes,2,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 
 func (x *MsgCancelProposal) Reset() {
@@ -7621,6 +7623,7 @@ type MsgCancelProposalResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	// canceled_time is the time when proposal is canceled.
 	CanceledTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=canceled_time,json=canceledTime,proto3" json:"canceled_time,omitempty"`

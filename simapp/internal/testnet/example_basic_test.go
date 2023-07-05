@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"testing"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -19,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestExampleBasicUsage(t *testing.T) {
+func Example_basicUsage() {
 	const nVals = 2
 
 	// Set up new private keys for the set of validators.
@@ -97,13 +95,17 @@ func TestExampleBasicUsage(t *testing.T) {
 			dir,             // Where to put files on disk.
 		).Logger(logger.With("root_module", fmt.Sprintf("comet_%d", idx)))
 	})
-	assert.NilError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
-	// StopAndWait must be deferred before the error check,
+	// StopAndWait must be deferred before the error check,"os"
 	// as the nodes value may contain some successfully started instances.
 	defer func() {
 		err := nodes.StopAndWait()
-		assert.NilError(t, err)
+		if err != nil {
+			panic(err)
+		}
 	}()
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check

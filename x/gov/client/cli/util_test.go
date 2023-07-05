@@ -41,17 +41,20 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	fs := NewCmdSubmitLegacyProposal().Flags()
 
 	// nonexistent json
-	_ = fs.Set(FlagProposal, "fileDoesNotExist")
-	_, err := parseSubmitLegacyProposal(fs)
+	err := fs.Set(FlagProposal, "fileDoesNotExist")
+	require.NoError(t, err)
+	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// invalid json
-	_ = fs.Set(FlagProposal, badJSON.Name())
+	err = fs.Set(FlagProposal, badJSON.Name())
+	require.NoError(t, err)
 	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// ok json
-	_ = fs.Set(FlagProposal, okJSON.Name())
+	err = fs.Set(FlagProposal, okJSON.Name())
+	require.NoError(t, err)
 	proposal1, err := parseSubmitLegacyProposal(fs)
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
@@ -61,10 +64,12 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 
 	// flags that can't be used with --proposal
 	for _, incompatibleFlag := range ProposalFlags {
-		_ = fs.Set(incompatibleFlag, "some value")
+		err = fs.Set(incompatibleFlag, "some value")
+		require.NoError(t, err)
 		_, err := parseSubmitLegacyProposal(fs)
 		require.Error(t, err)
-		_ = fs.Set(incompatibleFlag, "")
+		err = fs.Set(incompatibleFlag, "")
+		require.NoError(t, err)
 	}
 
 	// no --proposal, only flags
@@ -103,10 +108,14 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	}
 	for name, tc := range flagTestCases {
 		t.Run(name, func(t *testing.T) {
-			_ = fs.Set(FlagTitle, tc.pTitle)
-			_ = fs.Set(FlagDescription, tc.pDescription)
-			_ = fs.Set(FlagProposalType, tc.pType)
-			_ = fs.Set(FlagDeposit, proposal1.Deposit)
+			err = fs.Set(FlagTitle, tc.pTitle)
+			require.Error(t, err)
+			err = fs.Set(FlagDescription, tc.pDescription)
+			require.Error(t, err)
+			err = fs.Set(FlagProposalType, tc.pType)
+			require.Error(t, err)
+			err = fs.Set(FlagDeposit, proposal1.Deposit)
+			require.Error(t, err)
 			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {

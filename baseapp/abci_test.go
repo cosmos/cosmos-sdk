@@ -688,9 +688,10 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	_, _ = suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
 
@@ -732,8 +733,10 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		_, _ = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
-		_, _ = suite.baseApp.Commit()
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
+		require.NoError(t, err)
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
 	}
 }
 
@@ -747,14 +750,14 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 
-	_, _ = suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-
-	_, _ = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	require.NoError(t, err)
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
-
+	require.NoError(t, err)
 	// malformed transaction bytes
 	{
 		bz := []byte("example vote extension")
@@ -817,7 +820,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		_ = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
@@ -830,10 +834,11 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		txBuilder = suite.txConfig.NewTxBuilder()
-		_ = txBuilder.SetMsgs(
+		err = txBuilder.SetMsgs(
 			&baseapptestutil.MsgCounter{Signer: addr.String()},
 			&baseapptestutil.MsgCounter2{Signer: addr.String()},
 		)
+		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 
@@ -849,7 +854,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
-		_ = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		require.NoError(t, err)
 		tx := txBuilder.GetTx()
 
 		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)

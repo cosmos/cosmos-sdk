@@ -917,14 +917,14 @@ func (stub *commitKVStoreStub) Commit() types.CommitID {
 	return commitID
 }
 
-func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
+func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
 	if err := store.LoadLatestVersion(); err != nil {
-		panic(err)
+		return nil, err
 	}
 	return map[types.StoreKey]types.CommitKVStore{
 		testStoreKey1: &commitKVStoreStub{
@@ -936,7 +936,7 @@ func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 		testStoreKey3: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
 		},
-	}
+	}, nil
 }
 
 func TestCommitStores(t *testing.T) {
@@ -963,7 +963,8 @@ func TestCommitStores(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			storeMap := prepareStoreMap()
+			storeMap, err := prepareStoreMap()
+			require.NoError(t, err)
 			store := storeMap[testStoreKey1].(*commitKVStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()

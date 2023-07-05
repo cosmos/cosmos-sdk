@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (keeper) [#15825](https://github.com/cosmos/cosmos-sdk/pull/15825) Evidence constructor now requires an `address.Codec` (`import "cosmossdk.io/core/address"`)
 * [#16336](https://github.com/cosmos/cosmos-sdk/pull/16336) Use collections for state management:
     * Removed: keeper `SetEvidence`, `GetEvidence`, `IterateEvidences`, `GetAllEvidences`, `MustMarshalEvidence`, `MustUnmarshalEvidence`, `MarshalEvidence`, `UnmarshalEvidence`
-* [#16441](https://github.com/cosmos/cosmos-sdk/pull/16441) Params state is migrated to collections
+* [#16441](https://github.com/cosmos/cosmos-sdk/pull/16441) Params state is migrated to collections. `GetParams` has been removed
 
 ### Client Breaking Changes
 

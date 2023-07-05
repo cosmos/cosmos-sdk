@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -60,6 +62,8 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          proto.HybridResolver,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 		},

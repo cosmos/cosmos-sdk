@@ -23,11 +23,8 @@ message ValidatorSigningInfo {
   // signed_blocks_window param determines the index in the missed block bitmap.
   int64 index_offset = 3;
   // Timestamp until which the validator is jailed due to liveness downtime.
-  google.protobuf.Timestamp jailed_until = 4 [
-    (gogoproto.stdtime)    = true,
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+  google.protobuf.Timestamp jailed_until = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // Whether or not a validator has been tombstoned (killed out of validator
   // set). It is set once the validator commits an equivocation or for any other
   // configured misbehavior.
@@ -48,11 +45,8 @@ message Params {
     (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
-  google.protobuf.Duration downtime_jail_duration = 3 [
-    (gogoproto.nullable)    = false,
-    (amino.dont_omitempty)  = true,
-    (gogoproto.stdduration) = true
-  ];
+  google.protobuf.Duration downtime_jail_duration = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
   bytes slash_fraction_double_sign = 4 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,

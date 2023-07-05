@@ -81,7 +81,6 @@ message RpcCommandOptions {
 
   // skip specifies whether to skip this rpc method when generating commands.
   bool skip = 12;
-
 }
 
 // FlagOptions are options for flags generated from rpc request fields.
@@ -123,7 +122,7 @@ message PositionalArgDescriptor {
   // field. Note: It is mutually exclusive with optional.
   bool varargs = 2;
 
-  // optional makes the last positional parameter optional. 
+  // optional makes the last positional parameter optional.
   // Note: It is mutually exclusive with varargs.
   bool optional = 3;
 }

@@ -15,11 +15,8 @@ message GenesisState {
 
   // last_total_power tracks the total amounts of bonded tokens recorded during
   // the previous end block.
-  bytes last_total_power = 2 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+  bytes last_total_power = 2
+      [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // last_validator_powers is a special index that provides a historical list
   // of the last-block's bonded validators.

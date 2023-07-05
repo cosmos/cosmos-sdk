@@ -80,7 +80,8 @@ message Proposal {
   google.protobuf.Timestamp voting_end_time = 9 [(gogoproto.stdtime) = true];
 
   // metadata is any arbitrary metadata attached to the proposal.
-  // the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#proposal-3
+  // the recommended format of the metadata is to be found here:
+  // https://docs.cosmos.network/v0.47/modules/gov#proposal-3
   string metadata = 10;
 
   // title is the title of the proposal
@@ -244,14 +245,15 @@ message Params {
   string expedited_threshold = 11 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   //  Minimum expedited deposit for a proposal to enter voting period.
-  repeated cosmos.base.v1beta1.Coin expedited_min_deposit = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin expedited_min_deposit = 12
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // burn deposits if a proposal does not meet quorum
   bool burn_vote_quorum = 13;
- 
+
   // burn deposits if the proposal does not enter voting period
   bool burn_proposal_deposit_prevote = 14;
- 
+
   // burn deposits if quorum with vote type no_veto is met
   bool burn_vote_veto = 15;
 }

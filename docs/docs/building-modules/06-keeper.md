@@ -43,7 +43,7 @@ type Keeper struct {
 For example, here is the type definition of the `keeper` from the `staking` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/keeper/keeper.go#L23-L31
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keeper.go#L23-L31
 ```
 
 Let us go through the different parameters:
@@ -82,12 +82,12 @@ and the method will go through the following steps:
 2. Marshal `value` to `[]byte` using the codec `cdc`.
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store.
 
-For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/keeper/keeper.go).
+For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keeper.go).
 
 The [module `KVStore`](../core/04-store.md#kvstore-and-commitkvstore-interfaces) also provides an `Iterator()` method which returns an `Iterator` object to iterate over a domain of keys.
 
 This is an example from the `auth` module to iterate accounts:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/keeper/account.go#L94-L108
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/keeper/account.go
 ```

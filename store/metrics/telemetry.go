@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 )
 
 // StoreMetrics defines the set of metrics for the store package

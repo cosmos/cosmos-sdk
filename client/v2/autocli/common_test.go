@@ -20,6 +20,7 @@ import (
 )
 
 func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
+	t.Helper()
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
@@ -49,7 +50,8 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: addresscodec.NewBech32Codec("cosmos"),
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
@@ -69,6 +71,7 @@ func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*co
 }
 
 func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) {
+	t.Helper()
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
@@ -98,7 +101,8 @@ func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand 
 	}
 	b := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: addresscodec.NewBech32Codec("cosmos"),
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

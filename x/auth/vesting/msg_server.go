@@ -3,7 +3,7 @@ package vesting
 import (
 	"context"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -62,7 +62,10 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
+	baseVestingAccount, err := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
 	var vestingAccount sdk.AccountI
 	if msg.Delayed {
@@ -124,7 +127,10 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
+	vestingAccount, err := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 
@@ -170,6 +176,10 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 
+		if err := validateAmount(period.Amount); err != nil {
+			return nil, err
+		}
+
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
@@ -184,7 +194,10 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
 	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
-	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	vestingAccount, err := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 

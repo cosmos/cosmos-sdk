@@ -13,7 +13,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := types.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(s.genesisAccountBalance))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(s.genesisAccountBalance))),
 	}
 
 	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -129,7 +129,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	)
 	s.Require().NoError(err)
 	bal := res.GetBalance()
-	s.Equal(sdk.NewCoin(denom, sdkmath.NewInt(s.genesisAccountBalance)), *bal)
+	s.Equal(sdk.NewCoin(denom, math.NewInt(s.genesisAccountBalance)), *bal)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

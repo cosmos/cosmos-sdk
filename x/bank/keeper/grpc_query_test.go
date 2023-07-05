@@ -147,12 +147,13 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -194,12 +195,13 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -274,10 +276,10 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
-func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomsMetadataRequest() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata{}
+		expMetadata = []types.Metadata(nil)
 	)
 
 	testCases := []struct {
@@ -376,7 +378,7 @@ func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
 	}
 }
 
-func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomMetadataRequest() {
 	var (
 		req         *types.QueryDenomMetadataRequest
 		expMetadata = types.Metadata{}
@@ -406,7 +408,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 		{
 			"success",
 			func() {
-				expMetadata := types.Metadata{
+				expMetadata = types.Metadata{
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{

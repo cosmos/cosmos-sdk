@@ -47,7 +47,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, previousProposer)
+	if err = k.SetPreviousProposerConsAddr(ctx, previousProposer); err != nil {
+		panic(err)
+	}
 
 	for _, rew := range data.OutstandingRewards {
 		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)

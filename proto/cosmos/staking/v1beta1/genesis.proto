@@ -16,7 +16,7 @@ message GenesisState {
   // last_total_power tracks the total amounts of bonded tokens recorded during
   // the previous end block.
   bytes last_total_power = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -37,6 +37,7 @@ message GenesisState {
   // redelegations defines the redelegations active at genesis.
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
+  // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
   bool exported = 8;
 }
 

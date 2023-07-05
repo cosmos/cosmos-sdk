@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -37,7 +38,8 @@ type AppOptions struct {
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
 	// AddressCodec is the address codec to use for the app.
-	AddressCodec address.Codec
+	AddressCodec          address.Codec
+	ValidatorAddressCodec authtypes.ValidatorAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -58,7 +60,8 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: appOptions.AddressCodec,
+			AddressCodec:          appOptions.AddressCodec,
+			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -71,7 +74,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if builder.AddressCodec == nil {
+	if builder.AddressCodec == nil || builder.ValidatorAddressCodec == nil {
 		return errors.New("address codec is required in builder")
 	}
 

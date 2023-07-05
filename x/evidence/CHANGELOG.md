@@ -39,4 +39,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
-* [#16625](https://github.com/cosmos/cosmos-sdk/pull/16625) The `simd q evidence evidence` command supports only querying an evidence by hash. For querying all evidences, use `simd q evidence list` instad.
+* [#16625](https://github.com/cosmos/cosmos-sdk/pull/16625) The `simd q evidence evidence` command supports only querying an evidence by hash. For querying all evidences, use `simd q evidence list` instead.

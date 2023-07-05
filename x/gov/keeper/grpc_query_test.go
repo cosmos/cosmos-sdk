@@ -443,7 +443,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},

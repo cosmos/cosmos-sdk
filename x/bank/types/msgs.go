@@ -26,24 +26,6 @@ func NewMsgMultiSend(in Input, out []Output) *MsgMultiSend {
 	return &MsgMultiSend{Inputs: []Input{in}, Outputs: out}
 }
 
-// GetSigners Implements Msg.
-func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	// should not happen as ValidateBasic would have failed
-	if len(msg.Inputs) == 0 {
-		return nil
-	}
-
-	addrs, _ := sdk.AccAddressFromBech32(msg.Inputs[0].Address)
-	return []sdk.AccAddress{addrs}
-}
-
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes.
-func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
-}
-
 // NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
 func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string) *MsgSetSendEnabled {
 	return &MsgSetSendEnabled{
@@ -51,10 +33,4 @@ func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefau
 		SendEnabled:   sendEnabled,
 		UseDefaultFor: useDefaultFor,
 	}
-}
-
-// GetSigners returns the expected signers for MsgSoftwareUpgrade.
-func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }

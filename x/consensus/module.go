@@ -35,20 +35,20 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-// AppModuleBasic defines the basic application module used by the consensus_param module.
+// AppModuleBasic defines the basic application module used by the consensus module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the consensus_param module's name.
+// Name returns the consensus module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the consensus_param module's types on the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the consensus_param
+// DefaultGenesis returns default genesis state as raw bytes for the consensus
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	// nil is returned since default genesis of consensus params is handled by tendermint
@@ -115,10 +115,10 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the consensus_param module's name.
+// Name returns the consensus module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
-// InitGenesis is handled by for init genesis of consensus_param
+// InitGenesis is handled by for init genesis of consensus
 func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate {
 	// nil is returned since initgenesis of consensus params is handled by tendermint
 	return nil

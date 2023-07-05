@@ -17,6 +17,10 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 // AllInvariants runs all invariants of the X/bank module.
 func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
+		res, stop := NonnegativeBalanceInvariant(k)(ctx)
+		if stop {
+			return res, stop
+		}
 		return TotalSupply(k)(ctx)
 	}
 }

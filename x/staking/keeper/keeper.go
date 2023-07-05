@@ -79,7 +79,7 @@ func (k *Keeper) Hooks() types.StakingHooks {
 	return k.hooks
 }
 
-// SetHooks Set the validator hooks.  In contrast to other receivers, this method must take a pointer due to nature
+// SetHooks sets the validator hooks.  In contrast to other receivers, this method must take a pointer due to nature
 // of the hooks interface and SDK start up sequence.
 func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	if k.hooks != nil {
@@ -89,7 +89,7 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
-// GetLastTotalPower Load the last total validator power.
+// GetLastTotalPower loads the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.LastTotalPowerKey)
@@ -110,7 +110,7 @@ func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
 	return ip.Int, nil
 }
 
-// SetLastTotalPower Set the last total validator power.
+// SetLastTotalPower sets the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&sdk.IntProto{Int: power})

@@ -45,6 +45,7 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
+	t.Helper()
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -103,6 +104,7 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 }
 
 func VerifyDoUpgrade(t *testing.T) {
+	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
 
@@ -121,6 +123,7 @@ func VerifyDoUpgrade(t *testing.T) {
 }
 
 func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 
 	err := s.module.BeginBlock(newCtx)
@@ -171,6 +174,7 @@ func TestHaltIfTooNew(t *testing.T) {
 }
 
 func VerifyCleared(t *testing.T, newCtx sdk.Context) {
+	t.Helper()
 	t.Log("Verify that the upgrade plan has been cleared")
 	_, err := s.keeper.GetUpgradePlan(newCtx)
 	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
@@ -213,6 +217,7 @@ func TestPlanStringer(t *testing.T) {
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
 	t.Log("Verify that upgrade was not done")
 	height, err := s.keeper.GetDoneHeight(newCtx, name)
 	require.Zero(t, height)
@@ -220,6 +225,7 @@ func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
 }
 
 func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
 	t.Log("Verify that the upgrade plan has been executed")
 	height, err := s.keeper.GetDoneHeight(newCtx, name)
 	require.NotZero(t, height)
@@ -227,6 +233,7 @@ func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
 }
 
 func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
+	t.Helper()
 	t.Log("Verify if the skip upgrade has been set")
 
 	for k := range skipUpgradeHeights {

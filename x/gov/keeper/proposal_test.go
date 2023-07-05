@@ -193,6 +193,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		suite.govKeeper.SetProposal(suite.ctx, proposal2)
 	}
 
+	// proposal3 is only used to check the votes for proposals which doesn't go through `CancelProposal` are still present in state
 	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false)
 	suite.Require().NoError(err)
 	proposal3ID := proposal3.Id

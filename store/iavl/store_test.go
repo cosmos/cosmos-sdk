@@ -586,7 +586,7 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		key := randBytes(4)
 		value := randBytes(50)
 		_, err := tree.Set(key, value)
-		require.NoError(t, err)
+		require.NoError(b, err)
 	}
 
 	iavlStore := UnsafeNewStore(tree)

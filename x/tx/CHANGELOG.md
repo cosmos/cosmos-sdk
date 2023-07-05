@@ -31,13 +31,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.9.0
+
 ### Bug Fixes
 
-* [#16681](https://github.com/cosmos/cosmos-sdk/pull/16681): catch and fix `(*Decoder).Decode` crash from invalid length prefix in Tx bytes
+* [#16681](https://github.com/cosmos/cosmos-sdk/pull/16681): Catch and fix `(*Decoder).Decode` crash from invalid length prefix in Tx bytes.
 
 ### Improvements
 
-* [#16684](https://github.com/cosmos/cosmos-sdk/pull/16684): x/tx/signing/aminojson: use io.WriteString+fmt.Fprintf to remove unnecessary string->[]byte roundtrip
+* [](): Harmonize interface `signing.TypeResolver` with the rest of the codebase (orm and client/v2).
+* [#16684](https://github.com/cosmos/cosmos-sdk/pull/16684): Use `io.WriteString`+`fmt.Fprintf` to remove unnecessary `string`->`[]byte` roundtrip.
 
 ## v0.8.0
 

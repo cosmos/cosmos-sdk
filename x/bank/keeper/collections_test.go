@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
@@ -11,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"

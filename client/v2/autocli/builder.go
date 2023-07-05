@@ -24,8 +24,12 @@ type Builder struct {
 }
 
 func (b *Builder) Validate() error {
-	if b.AddressCodec == nil || b.ValidatorAddressCodec == nil {
+	if b.AddressCodec == nil {
 		return errors.New("address codec is required in builder")
+	}
+
+	if b.ValidatorAddressCodec == nil {
+		return errors.New("validator address codec is required in builder")
 	}
 
 	if b.TypeResolver == nil {

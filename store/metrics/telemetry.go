@@ -37,7 +37,7 @@ func NewMetrics(labels [][]string) Metrics {
 	return gatherer
 }
 
-// MeasureSince provides a wrapper functionality for emitting a a time measure
+// MeasureSince provides a wrapper functionality for emitting a time measure
 // metric with global labels (if any).
 func (m Metrics) MeasureSince(keys ...string) {
 	start := time.Now()

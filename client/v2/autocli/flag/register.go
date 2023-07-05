@@ -75,7 +75,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	if hasVarargs {
-		handler.CobraArgs = cobra.MinimumNArgs(n)
+		handler.CobraArgs = cobra.MinimumNArgs(n-1)
 		handler.hasVarargs = true
 	} else if hasOptional {
 		handler.CobraArgs = cobra.RangeArgs(n-1, n)

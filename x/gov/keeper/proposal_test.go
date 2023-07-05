@@ -185,13 +185,6 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
 	suite.Require().NoError(err)
 	proposal2ID := proposal2.Id
-	makeProposalPass := func() {
-		proposal2, err := suite.govKeeper.Proposals.Get(suite.ctx, proposal2ID)
-		suite.Require().Nil(err)
-
-		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
-		suite.govKeeper.SetProposal(suite.ctx, proposal2)
-	}
 
 	// proposal3 is only used to check the votes for proposals which doesn't go through `CancelProposal` are still present in state
 	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false)
@@ -211,49 +204,56 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 	testCases := []struct {
 		name        string
-		malleate    func()
+		malleate    func() (proposalID uint64, proposer string)
 		proposalID  uint64
 		proposer    string
 		expectedErr bool
 	}{
 		{
-			name:        "without proposer",
-			malleate:    func() {},
-			proposalID:  1,
-			proposer:    "",
+			name: "without proposer",
+			malleate: func() (uint64, string) {
+				return 1, ""
+			},
 			expectedErr: true,
 		},
 		{
-			name:        "invalid proposal id",
-			malleate:    func() {},
-			proposalID:  1,
-			proposer:    string(suite.addrs[0]),
+			name: "invalid proposal id",
+			malleate: func() (uint64, string) {
+				return 1, suite.addrs[1].String()
+			},
 			expectedErr: true,
 		},
 		{
-			name:        "valid proposalID but invalid proposer",
-			malleate:    func() {},
-			proposalID:  proposalID,
-			proposer:    suite.addrs[1].String(),
+			name: "valid proposalID but invalid proposer",
+			malleate: func() (uint64, string) {
+				return proposalID, suite.addrs[1].String()
+			},
 			expectedErr: true,
 		},
 		{
-			name:        "valid proposalID but invalid proposal which has already passed",
-			malleate:    func() {},
-			proposalID:  proposal2ID,
-			proposer:    suite.addrs[1].String(),
+			name: "valid proposalID but invalid proposal which has already passed",
+			malleate: func() (uint64, string) {
+				// making proposal status pass
+				proposal2, err := suite.govKeeper.Proposals.Get(suite.ctx, proposal2ID)
+				suite.Require().Nil(err)
+
+				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+				suite.govKeeper.SetProposal(suite.ctx, proposal2)
+
+				return proposal2ID, suite.addrs[1].String()
+			},
 			expectedErr: true,
 		},
 		{
-			name:        "valid proposer and proposal id",
-			malleate:    func() {},
-			proposalID:  proposalID,
-			proposer:    suite.addrs[0].String(),
+			name: "valid proposer and proposal id",
+			malleate: func() (uint64, string) {
+				return proposalID, suite.addrs[0].String()
+			},
 			expectedErr: false,
 		},
 		{
 			name: "valid case with deletion of votes",
-			malleate: func() {
+			malleate: func() (uint64, string) {
 				suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
 
 				proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
@@ -267,21 +267,17 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				vote, err := suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposalID, suite.addrs[0]))
 				suite.Require().NoError(err)
 				suite.Require().NotNil(vote)
+
+				return proposalID, suite.addrs[0].String()
 			},
-			proposalID:  proposalID,
-			proposer:    suite.addrs[0].String(),
 			expectedErr: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			tc.malleate()
-			if tc.proposalID == proposal2ID {
-				// making proposal status pass
-				makeProposalPass()
-			}
-			err = suite.govKeeper.CancelProposal(suite.ctx, tc.proposalID, tc.proposer)
+			pID, proposer := tc.malleate()
+			err = suite.govKeeper.CancelProposal(suite.ctx, pID, proposer)
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {

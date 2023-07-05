@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
@@ -75,7 +76,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	require.Equal(t, pks[0], collections.Join(sdk.AccAddress("test"), "atom"))
 
 	// assert the index value will be updated to the new format
-	err = k.Balances.Indexes.Denom.Reference(ctx, collections.Join(sdk.AccAddress("test"), "atom"), sdk.ZeroInt(), nil)
+	err = k.Balances.Indexes.Denom.Reference(ctx, collections.Join(sdk.AccAddress("test"), "atom"), math.ZeroInt(), nil)
 	require.NoError(t, err)
 
 	newRawValue, err := storeService.OpenKVStore(ctx).Get(rawKey)

@@ -133,6 +133,26 @@ func TestProposalQueues(t *testing.T) {
 	require.True(t, has)
 }
 
+func TestSetHooks(t *testing.T) {
+	govKeeper, _, _, _, _, _, _ := setupGovKeeper(t)
+	require.Empty(t, govKeeper.Hooks())
+
+	govHooksReceiver := MockGovHooksReceiver{}
+	govKeeper.SetHooks(types.NewMultiGovHooks(&govHooksReceiver))
+	require.NotNil(t, govKeeper.Hooks())
+	require.Panics(t, func() {
+		govKeeper.SetHooks(&govHooksReceiver)
+	})
+}
+
+func TestGetGovGovernanceAndModuleAccountAddress(t *testing.T) {
+	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+	mAcc := authKeeper.GetModuleAccount(ctx, "gov")
+	require.Equal(t, mAcc, govKeeper.GetGovernanceAccount(ctx))
+	mAddr := authKeeper.GetModuleAddress("gov")
+	require.Equal(t, mAddr, govKeeper.ModuleAccountAddress())
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

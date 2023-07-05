@@ -105,6 +105,8 @@ func setupGovKeeper(t *testing.T) (
 	govKeeper.SetLegacyRouter(govRouter)
 	err := govKeeper.Params.Set(ctx, v1.DefaultParams())
 	require.NoError(t, err)
+	err = govKeeper.Constitution.Set(ctx, "constitution")
+	require.NoError(t, err)
 
 	// Register all handlers for the MegServiceRouter.
 	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)

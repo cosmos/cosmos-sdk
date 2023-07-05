@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.5.0
-	cosmossdk.io/collections v0.2.0
+	cosmossdk.io/collections v0.3.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
@@ -60,7 +60,7 @@ require (
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
-	pgregory.net/rapid v0.6.2
+	pgregory.net/rapid v1.0.0
 	sigs.k8s.io/yaml v1.3.0
 )
 

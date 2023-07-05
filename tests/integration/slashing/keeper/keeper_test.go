@@ -117,7 +117,7 @@ func initFixture(tb testing.TB) *fixture {
 	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
+	slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 

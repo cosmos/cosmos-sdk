@@ -329,7 +329,7 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
-			false, 1,
+			false, 0,
 		},
 		{
 			"proposal not exists after cancel",

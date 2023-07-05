@@ -1,8 +1,6 @@
 package autocli
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -78,8 +76,8 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if builder.AddressCodec == nil || builder.ValidatorAddressCodec == nil {
-		return errors.New("address codec is required in builder")
+	if err := builder.Validate(); err != nil {
+		return err
 	}
 
 	// extract any custom commands from modules

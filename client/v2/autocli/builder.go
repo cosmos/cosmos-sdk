@@ -1,6 +1,8 @@
 package autocli
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -19,4 +21,20 @@ type Builder struct {
 	AddQueryConnFlags func(*cobra.Command)
 
 	AddTxConnFlags func(*cobra.Command)
+}
+
+func (b *Builder) Validate() error {
+	if b.AddressCodec == nil || b.ValidatorAddressCodec == nil {
+		return errors.New("address codec is required in builder")
+	}
+
+	if b.TypeResolver == nil {
+		return errors.New("type resolver is required in builder")
+	}
+
+	if b.FileResolver == nil {
+		return errors.New("file resolver is required in builder")
+	}
+
+	return nil
 }

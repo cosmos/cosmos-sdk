@@ -110,13 +110,13 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	for name, tc := range flagTestCases {
 		t.Run(name, func(t *testing.T) {
 			err = fs.Set(FlagTitle, tc.pTitle)
-			require.Error(t, err)
+			require.NoError(t, err)
 			err = fs.Set(FlagDescription, tc.pDescription)
-			require.Error(t, err)
+			require.NoError(t, err)
 			err = fs.Set(FlagProposalType, tc.pType)
-			require.Error(t, err)
+			require.NoError(t, err)
 			err = fs.Set(FlagDeposit, proposal1.Deposit)
-			require.Error(t, err)
+			require.NoError(t, err)
 			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {

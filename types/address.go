@@ -308,11 +308,15 @@ func (aa AccAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(aa)
-	accAddrMu.Lock()
-	defer accAddrMu.Unlock()
-	addr, ok := accAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		accAddrMu.Lock()
+		defer accAddrMu.Unlock()
+
+		addr, ok := accAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
@@ -458,11 +462,15 @@ func (va ValAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(va)
-	valAddrMu.Lock()
-	defer valAddrMu.Unlock()
-	addr, ok := valAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		valAddrMu.Lock()
+		defer valAddrMu.Unlock()
+
+		addr, ok := valAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
@@ -603,11 +611,15 @@ func (ca ConsAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(ca)
-	consAddrMu.Lock()
-	defer consAddrMu.Unlock()
-	addr, ok := consAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		consAddrMu.Lock()
+		defer consAddrMu.Unlock()
+
+		addr, ok := consAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }

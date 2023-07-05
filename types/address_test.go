@@ -158,12 +158,6 @@ func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
-func setConfigWithPrefix(conf *types.Config, prefix string) {
-	conf.SetBech32PrefixForAccount(prefix, types.GetBech32PrefixAccPub(prefix))
-	conf.SetBech32PrefixForValidator(types.GetBech32PrefixValAddr(prefix), types.GetBech32PrefixValPub(prefix))
-	conf.SetBech32PrefixForConsensusNode(types.GetBech32PrefixConsAddr(prefix), types.GetBech32PrefixConsPub(prefix))
-}
-
 // Test that the account address cache ignores the bech32 prefix setting, retrieving bech32 addresses from the cache.
 // This will cause the AccAddress.String() to print out unexpected prefixes if the config was changed between bech32 lookups.
 // See https://github.com/cosmos/cosmos-sdk/issues/15317.
@@ -171,19 +165,23 @@ func (s *addressTestSuite) TestAddrCache() {
 	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
-	_, err := rand.Read(pub.Key)
-	s.Require().NoError(err)
+	rand.Read(pub.Key)
+
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	setConfigWithPrefix(conf, prefix)
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	setConfigWithPrefix(conf, prefix)
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
 
 	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
 	addrCosmos := types.AccAddress(pub.Address())
@@ -204,19 +202,23 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
-	_, err := rand.Read(pub.Key)
-	s.Require().NoError(err)
+	rand.Read(pub.Key)
+
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	setConfigWithPrefix(conf, prefix)
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	setConfigWithPrefix(conf, prefix)
+	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
+	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
+	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
 
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()

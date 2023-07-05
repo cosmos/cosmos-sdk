@@ -248,8 +248,8 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.Require().Nil(err)
 
 				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
-				suite.govKeeper.SetProposal(suite.ctx, proposal2)
-
+				err = suite.govKeeper.SetProposal(suite.ctx, proposal2)
+				suite.Require().NoError(err)
 				return proposal2ID, suite.addrs[1].String()
 			},
 			expectedErr: true,

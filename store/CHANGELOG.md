@@ -29,10 +29,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#15568](https://github.com/cosmos/cosmos-sdk/pull/15568) Migrate the `iavl` to the new key format.
   * Remove `DeleteVersion`, `DeleteVersions`, `LazyLoadVersionForOverwriting` from `iavl` tree API.
-  * Add `DeleteVersionsTo` and `SaveChangeSet`, since it will keep versions sequentially like `fromVersion` to `toVersion`.
+  * Add `DeleteVersionsTo`, since it will keep versions sequentially like `fromVersion` to `toVersion`.
   * Refactor the pruning manager to use `DeleteVersionsTo`.
 * [#15712](https://github.com/cosmos/cosmos-sdk/pull/15712) Add `WorkingHash` function to the store interface  to get the current app hash before commit.
-
+* [#15432](https://github.com/cosmos/cosmos-sdk/pull/15432) Add `TraverseStateChanges` to the store interface to get the state changes between two versions.
 * [#14645](https://github.com/cosmos/cosmos-sdk/pull/14645) Add limit to the length of key and value.
 * [#15683](https://github.com/cosmos/cosmos-sdk/pull/15683) `rootmulti.Store.CacheMultiStoreWithVersion` now can handle loading archival states that don't persist any of the module stores the current state has.
 * [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving restoring snapshot locally.

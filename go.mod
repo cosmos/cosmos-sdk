@@ -182,6 +182,8 @@ replace (
 )
 
 retract (
+	// initial lsm version that has a bug
+	v0.47.3-lsm
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331
 	v0.46.12
 	// subject to a bug in the group module and gov module migration

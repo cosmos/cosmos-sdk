@@ -39,6 +39,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	// add LSM-related params before validating
 	legacyParams.ValidatorBondFactor = types.DefaultValidatorBondFactor
 	legacyParams.GlobalLiquidStakingCap = types.DefaultGlobalLiquidStakingCap
+	legacyParams.ValidatorLiquidStakingCap = types.DefaultValidatorLiquidStakingCap
 
 	if err := legacyParams.Validate(); err != nil {
 		return err

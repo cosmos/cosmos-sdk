@@ -42,12 +42,8 @@ func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 	return BalancesIndexes{
 		Denom: indexes.NewReversePair[math.Int](
 			sb, types.DenomAddressPrefix, "address_by_denom_index",
-<<<<<<< HEAD
-			collections.PairKeyCodec(sdk.AddressKeyAsIndexKey(sdk.AccAddressKey), collections.StringKey), // nolint:staticcheck // Note: refer to the AddressKeyAsIndexKey docs to understand why we do this.
-=======
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), collections.StringKey), // nolint:staticcheck // Note: refer to the LengthPrefixedAddressKey docs to understand why we do this.
 			indexes.WithReversePairUncheckedValue(),                                                          // denom to address indexes were stored as Key: Join(denom, address) Value: []byte{0}, this will migrate the value to []byte{} in a lazy way.
->>>>>>> acce343a1 (fix(bank): make `DenomAddressIndex` less strict with respect to index values. (#16841))
 		),
 	}
 }

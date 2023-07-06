@@ -1,10 +1,8 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
@@ -14,6 +12,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+
+	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -34,6 +34,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+
+	// stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -64,12 +66,7 @@ func initFixture(tb testing.TB) *fixture {
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
-
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -114,27 +111,16 @@ func initFixture(tb testing.TB) *fixture {
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
-	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
-		{
-			Validator: cmtabcitypes.Validator{
-				Address: valAddr,
-				Power:   100,
-			},
-			BlockIdFlag: types.BlockIDFlagCommit,
-		},
-	})
-
-	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
 		banktypes.ModuleName:    bankModule,
 		stakingtypes.ModuleName: stakingModule,
 		distrtypes.ModuleName:   distrModule,
 	})
 
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+	// Use FinalizeBlockStateCtx to be able to pre-set values for the upcoming block
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.GetFinalizeBlockStateCtx())
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
@@ -228,7 +214,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "empty validator address",
@@ -237,7 +223,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: emptyValAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid validator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "both empty addresses",
@@ -246,7 +232,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: emptyValAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid validator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "delegator with no delegations",
@@ -275,10 +261,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			expErr: false,
 		},
 	}
-	height := f.app.LastBlockHeight()
-
-	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	assert.Error(t, err, "previous proposer not set")
 
 	for _, tc := range testCases {
 		tc := tc
@@ -286,14 +268,21 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
 				integration.WithAutomaticProcessProposal(),
-				integration.WithAutomaticFinalizeBlock(),
-				integration.WithAutomaticCommit(),
+				integration.WithFinalizeBlockRequest(&cmtabcitypes.RequestFinalizeBlock{
+					ProposerAddress: valConsAddr,
+					DecidedLastCommit: cmtabcitypes.CommitInfo{
+						Votes: []cmtabcitypes.VoteInfo{
+							{
+								Validator: cmtabcitypes.Validator{
+									Address: f.valAddr,
+									Power:   100,
+								},
+								BlockIdFlag: types.BlockIDFlagCommit,
+							},
+						},
+					},
+				}),
 			)
-
-			height++
-			if f.app.LastBlockHeight() != height {
-				panic(fmt.Errorf("expected block height to be %d, got %d", height, f.app.LastBlockHeight()))
-			}
 
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -301,29 +290,31 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
 
-				// check the result
+				// check the result of the 1st tx
 				result := distrtypes.MsgWithdrawDelegatorRewardResponse{}
-				err := f.cdc.Unmarshal(res.Value, &result)
+				err := f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// check current balance is greater than initial balance
-				curBalance := f.bankKeeper.GetAllBalances(f.sdkCtx, sdk.AccAddress(f.valAddr))
+				curBalance := f.bankKeeper.GetAllBalances(f.app.Context(), sdk.AccAddress(f.valAddr))
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
 
 				// check rewards
-				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
+				curFeePool, _ := f.distrKeeper.FeePool.Get(f.app.Context())
 				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
+				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.app.Context(), f.valAddr)
+				assert.Assert(t, !curOutstandingRewards.Rewards.IsZero())
 				assert.NilError(t, err)
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.app.Context())
 			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
+
 			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
+			sdkCtx := sdk.UnwrapSDKContext(f.app.GetFinalizeBlockStateCtx())
+			for _, voteInfo := range sdkCtx.VoteInfos() {
 				previousTotalPower += voteInfo.Validator.Power
 			}
 			assert.Equal(t, previousTotalPower, int64(100))
@@ -359,7 +350,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 				WithdrawAddress:  withdrawAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "empty withdraw address",
@@ -373,7 +364,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 				WithdrawAddress:  emptyDelAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid withdraw address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "both empty addresses",
@@ -387,7 +378,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 				WithdrawAddress:  emptyDelAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid delegator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "withdraw address disabled",
@@ -437,7 +428,6 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
 				integration.WithAutomaticProcessProposal(),
-				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -451,7 +441,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgSetWithdrawAddressResponse{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// query the delegator withdraw address
@@ -478,7 +468,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	// send funds to val addr
 	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 	require.NoError(t, err)
-	coins := sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(2)), sdk.NewCoin("stake", math.NewInt(2)))
+	coins := sdk.NewCoins(sdk.NewInt64Coin("mytoken", 2), sdk.NewInt64Coin("stake", 2))
 	err = f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, coins)
 	require.NoError(t, err)
 
@@ -508,7 +498,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				ValidatorAddress: emptyValAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid validator address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "validator with no commission",
@@ -543,14 +533,14 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgWithdrawValidatorCommissionResponse{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// check balance increase
 				balance = f.bankKeeper.GetAllBalances(f.sdkCtx, sdk.AccAddress(f.valAddr))
 				assert.DeepEqual(t, sdk.NewCoins(
-					sdk.NewCoin("mytoken", math.NewInt(1)),
-					sdk.NewCoin("stake", expTokens.AddRaw(1)),
+					sdk.NewInt64Coin("mytoken", 1),
+					sdk.NewInt64Coin("stake", expTokens.AddRaw(1).Int64()),
 				), balance)
 
 				// check remainder
@@ -597,11 +587,11 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		{
 			name: "no depositor address",
 			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Amount:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 				Depositor: emptyDelAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "invalid depositor address",
+			expErrMsg: "empty address string is not allowed",
 		},
 		{
 			name: "invalid coin",
@@ -615,7 +605,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		{
 			name: "depositor address with no funds",
 			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Amount:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 				Depositor: addr2.String(),
 			},
 			expErr:    true,
@@ -624,7 +614,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		{
 			name: "valid message",
 			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Amount:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 				Depositor: addr.String(),
 			},
 			expErr: false,
@@ -636,7 +626,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
 				integration.WithAutomaticProcessProposal(),
-				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -646,7 +635,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgFundCommunityPool{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// query the community pool funds
@@ -685,7 +674,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "invalid authority",
+			expErrMsg: "invalid bech32 string length 7",
 		},
 		{
 			name: "community tax > 1",
@@ -773,8 +762,8 @@ func TestMsgUpdateParams(t *testing.T) {
 				assert.Assert(t, res != nil)
 
 				// check the result
-				result := distrtypes.MsgUpdateParams{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				result := distrtypes.MsgUpdateParamsResponse{}
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// query the params and verify it has been updated
@@ -815,7 +804,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
 			expErr:    true,
-			expErrMsg: "invalid authority",
+			expErrMsg: "invalid bech32 string length 7",
 		},
 		{
 			name: "invalid recipient",
@@ -843,7 +832,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
 				integration.WithAutomaticProcessProposal(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -853,7 +842,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgCommunityPoolSpend{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				// query the community pool to verify it has been updated
@@ -945,7 +934,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
 				integration.WithAutomaticProcessProposal(),
-				integration.WithAutomaticCommit(),
+				// integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -955,7 +944,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 
 				// check the result
 				result := distrtypes.MsgDepositValidatorRewardsPoolResponse{}
-				err = f.cdc.Unmarshal(res.Value, &result)
+				err = f.cdc.Unmarshal(res.TxResults[0].Data, &result)
 				assert.NilError(t, err)
 
 				val, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress)

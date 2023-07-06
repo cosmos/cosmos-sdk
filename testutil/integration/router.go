@@ -3,6 +3,8 @@ package integration
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"time"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -16,11 +18,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
@@ -33,16 +36,16 @@ const appName = "integration-app"
 type App struct {
 	*baseapp.BaseApp
 
-	ctx           sdk.Context
 	logger        log.Logger
 	moduleManager module.Manager
 	queryHelper   *baseapp.QueryServiceTestHelper
+
+	cdc codec.Codec
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
 // is able to route messages to their respective handlers.
 func NewIntegrationApp(
-	sdkCtx sdk.Context,
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
@@ -50,7 +53,7 @@ func NewIntegrationApp(
 ) *App {
 	db := dbm.NewMemDB()
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry := appCodec.InterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
 	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
@@ -69,16 +72,13 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
-	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
-		return moduleManager.BeginBlock(sdkCtx)
-	})
-	bApp.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
-		return moduleManager.EndBlock(sdkCtx)
-	})
+	bApp.SetBeginBlocker(moduleManager.BeginBlock)
+	bApp.SetEndBlocker(moduleManager.EndBlock)
 
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
+	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
@@ -102,16 +102,14 @@ func NewIntegrationApp(
 		}
 	}
 
-	bApp.Commit()
-
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
+	ctx := bApp.NewContext(true).WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp:       bApp,
 		logger:        logger,
-		ctx:           ctx,
 		moduleManager: *moduleManager,
 		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
+		cdc:           appCodec,
 	}
 }
 
@@ -121,60 +119,90 @@ func NewIntegrationApp(
 // The result of the message execution is returned as an Any type.
 // That any type can be unmarshaled to the expected response type.
 // If the message execution fails, an error is returned.
-func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
+func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*cmtabcitypes.ResponseFinalizeBlock, error) {
 	// set options
 	cfg := &Config{}
 	for _, opt := range option {
 		opt(cfg)
 	}
 
+	txConfig := tx.NewTxConfig(app.cdc, tx.DefaultSignModes)
+	app.SetTxDecoder(txConfig.TxDecoder())
+	app.SetTxEncoder(txConfig.TxEncoder())
+
+	tx, err := simtestutil.GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
+		txConfig,
+		[]sdk.Msg{msg},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		simtestutil.DefaultGenTxGas,
+		app.ChainID(),
+		[]uint64{0},
+		[]uint64{0},
+		secp256k1.GenPrivKey(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate signed tx: %w", err)
+	}
+
+	bz, err := txConfig.TxEncoder()(tx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode tx: %w", err)
+	}
+
 	if cfg.AutomaticCommit {
 		defer app.Commit()
 	}
 
+	height := app.LastBlockHeight() + 1
+
 	if cfg.AutomaticProcessProposal {
-		height := app.LastBlockHeight() + 1
-		if _, err := app.ProcessProposal(&cmtabcitypes.RequestProcessProposal{Height: height}); err != nil {
+		req := &cmtabcitypes.RequestProcessProposal{
+			Height: height,
+			Txs:    [][]byte{bz},
+		}
+
+		if cfg.FinalizeBlockRequest != nil {
+			req.ProposedLastCommit = cfg.FinalizeBlockRequest.DecidedLastCommit
+			req.ProposerAddress = cfg.FinalizeBlockRequest.ProposerAddress
+			req.Misbehavior = cfg.FinalizeBlockRequest.Misbehavior
+			req.Time = cfg.FinalizeBlockRequest.Time
+		}
+
+		_, err = app.ProcessProposal(req)
+
+		if err != nil {
 			return nil, fmt.Errorf("failed to run process proposal: %w", err)
 		}
 	}
 
-	if cfg.AutomaticFinalizeBlock {
-		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height}); err != nil {
-			return nil, fmt.Errorf("failed to run finalize block: %w", err)
-		}
+	req := &cmtabcitypes.RequestFinalizeBlock{
+		Height: height,
+		Txs:    [][]byte{bz},
 	}
 
-	app.logger.Info("Running msg", "msg", msg.String())
-
-	handler := app.MsgServiceRouter().Handler(msg)
-	if handler == nil {
-		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
+	if cfg.FinalizeBlockRequest != nil {
+		req.DecidedLastCommit = cfg.FinalizeBlockRequest.DecidedLastCommit
+		req.ProposerAddress = cfg.FinalizeBlockRequest.ProposerAddress
+		req.Misbehavior = cfg.FinalizeBlockRequest.Misbehavior
+		req.Time = cfg.FinalizeBlockRequest.Time
 	}
-
-	msgResult, err := handler(app.ctx, msg)
+	res, err := app.FinalizeBlock(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
+		return nil, fmt.Errorf("failed to run finalize block: %w", err)
 	}
 
-	var response *codectypes.Any
-	if len(msgResult.MsgResponses) > 0 {
-		msgResponse := msgResult.MsgResponses[0]
-		if msgResponse == nil {
-			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
-		}
-
-		response = msgResponse
+	if res.TxResults[0].Code != 0 {
+		return res, fmt.Errorf("tx returned a non-zero code: %s", res.TxResults[0].Log)
 	}
 
-	return response, nil
+	return res, nil
 }
 
 // Context returns the application context. It can be unwrapped to a sdk.Context,
 // with the sdk.UnwrapSDKContext function.
 func (app *App) Context() context.Context {
-	return app.ctx
+	return app.NewContext(true)
 }
 
 // QueryHelper returns the application query helper.

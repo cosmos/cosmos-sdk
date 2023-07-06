@@ -110,11 +110,8 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 }
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
-<<<<<<< HEAD
-=======
 	t.Helper()
 	s := TestSuite{}
->>>>>>> d9800d9c7 (chore(upgrade): clean up handler and typo (#16845))
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -160,46 +157,7 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 
-<<<<<<< HEAD
-	VerifyDoUpgrade(t)
-}
-
-func VerifyDoUpgrade(t *testing.T) {
-	t.Log("Verify that a panic happens at the upgrade height")
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
-
-	err := s.module.BeginBlock(newCtx)
-	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-
-	err = s.module.BeginBlock(newCtx)
-	require.NoError(t, err)
-
-	VerifyCleared(t, newCtx)
-}
-
-func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
-	t.Log("Verify that a panic happens at the upgrade height")
-
-	err := s.module.BeginBlock(newCtx)
-	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-
-	err = s.module.BeginBlock(newCtx)
-	require.NoError(t, err)
-
-	VerifyCleared(t, newCtx)
-=======
 	s.VerifyDoUpgrade(t)
->>>>>>> d9800d9c7 (chore(upgrade): clean up handler and typo (#16845))
 }
 
 func TestHaltIfTooNew(t *testing.T) {
@@ -232,17 +190,7 @@ func TestHaltIfTooNew(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, called)
 
-<<<<<<< HEAD
-	VerifyCleared(t, futCtx)
-}
-
-func VerifyCleared(t *testing.T, newCtx sdk.Context) {
-	t.Log("Verify that the upgrade plan has been cleared")
-	_, err := s.keeper.GetUpgradePlan(newCtx)
-	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
-=======
 	s.VerifyCleared(t, futCtx)
->>>>>>> d9800d9c7 (chore(upgrade): clean up handler and typo (#16845))
 }
 
 func TestCanClear(t *testing.T) {
@@ -281,31 +229,6 @@ func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `name:"test" time:<seconds:-62135596800 > height:100 `, (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
 }
 
-<<<<<<< HEAD
-func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Log("Verify that upgrade was not done")
-	height, err := s.keeper.GetDoneHeight(newCtx, name)
-	require.Zero(t, height)
-	require.NoError(t, err)
-}
-
-func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Log("Verify that the upgrade plan has been executed")
-	height, err := s.keeper.GetDoneHeight(newCtx, name)
-	require.NotZero(t, height)
-	require.NoError(t, err)
-}
-
-func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
-	t.Log("Verify if the skip upgrade has been set")
-
-	for k := range skipUpgradeHeights {
-		require.True(t, s.keeper.IsSkipHeight(k))
-	}
-}
-
-=======
->>>>>>> d9800d9c7 (chore(upgrade): clean up handler and typo (#16845))
 func TestContains(t *testing.T) {
 	var skipOne int64 = 11
 	s := setupTest(t, 10, map[int64]bool{skipOne: true})

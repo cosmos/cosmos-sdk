@@ -42,8 +42,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16798) Remove aliases in `types/math.go` (part 2).
 * (x/staking) [#16795](https://github.com/cosmos/cosmos-sdk/pull/16795) `DelegationToDelegationResponse`, `DelegationsToDelegationResponses`, `RedelegationsToRedelegationResponses` are no longer exported.
-* (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
-    * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
 
 ## [v0.50.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.1) - 2023-06-30
 

@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -31,7 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
+		err = k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -147,17 +145,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	var dwi []types.DelegatorWithdrawInfo
-	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
+	dwi := make([]types.DelegatorWithdrawInfo, 0)
+	k.IterateDelegatorWithdrawAddrs(ctx, func(del, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddress: key.String(),
-			WithdrawAddress:  value.String(),
+			DelegatorAddress: del.String(),
+			WithdrawAddress:  addr.String(),
 		})
-		return false, nil
+		return false
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
-		panic(err)
-	}
 
 	pp, err := k.GetPreviousProposerConsAddr(ctx)
 	if err != nil {

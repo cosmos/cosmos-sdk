@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -53,7 +52,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"DelegatorWithdrawAddr",
 			v1.GetDelegatorWithdrawAddrKey(addr2),
-			append(types.DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(addr2.Bytes())...),
+			types.GetDelegatorWithdrawAddrKey(addr2),
 		},
 		{
 			"DelegatorStartingInfo",

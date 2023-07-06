@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -27,10 +26,9 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                    collections.Schema
-	Params                    collections.Item[types.Params]
-	FeePool                   collections.Item[types.FeePool]
-	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
+	Schema  collections.Schema
+	Params  collections.Item[types.Params]
+	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -57,13 +55,6 @@ func NewKeeper(
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
-		DelegatorsWithdrawAddress: collections.NewMap(
-			sb,
-			types.DelegatorWithdrawAddrPrefix,
-			"delegators_withdraw_address",
-			sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			collcodec.KeyToValueCodec(sdk.AccAddressKey),
-		),
 	}
 
 	schema, err := sb.Build()
@@ -108,7 +99,8 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		),
 	)
 
-	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+	return nil
 }
 
 // withdraw rewards from a delegation

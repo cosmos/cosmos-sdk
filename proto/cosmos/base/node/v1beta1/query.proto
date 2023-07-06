@@ -35,9 +35,9 @@ message StatusRequest {}
 
 // StateResponse defines the response structure for the status of a node.
 message StatusResponse {
-  uint64                    earliest_store_height = 1; // earliest block height available in the store
-  uint64                    height                = 2; // current block height
-  google.protobuf.Timestamp timestamp             = 3 [(gogoproto.stdtime) = true]; // block height timestamp
-  bytes                     app_hash              = 4;                              // app hash of the current block
-  bytes                     validator_hash        = 5; // validator hash provided by the consensus header
+  uint64                    earliest_store_height = 1;                               // earliest block height available in the store
+  uint64                    height                = 2;                               // current block height
+  google.protobuf.Timestamp timestamp             = 3 [(gogoproto.stdtime) = true];  // block height timestamp
+  bytes                     app_hash              = 4;                               // app hash of the current block
+  bytes                     validator_hash        = 5;                               // validator hash provided by the consensus header
 }

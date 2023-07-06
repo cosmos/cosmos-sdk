@@ -20,59 +20,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
-<<<<<<< HEAD
-func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
-	server := grpc.NewServer()
-	testpb.RegisterQueryServer(server, &testEchoServer{})
-	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	assert.NilError(t, err)
-	go func() {
-		err := server.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-		errorOut:   &bytes.Buffer{},
-	}
-	b := &Builder{
-		Builder: flag.Builder{
-			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
-			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
-		},
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
-		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    flags.AddTxFlagsToCmd,
-	}
-
-	cmd, err := buildModuleCommand("test", b)
-	assert.NilError(t, err)
-	assert.NilError(t, err)
-	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
-	cmd.SetErr(conn.errorOut)
-	cmd.Execute()
-	return conn
-}
-
-func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) {
-=======
 type fixture struct {
 	conn *testClientConn
 	b    *Builder
@@ -80,7 +27,6 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
->>>>>>> 57ee5a23d (fix(client/v2): improve resolver and tests (#16842))
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})

@@ -35,14 +35,15 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 
 	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
+		SilenceUsage: true,
+		Use:          use,
+		Long:         long,
+		Short:        options.Short,
+		Example:      options.Example,
+		Aliases:      options.Alias,
+		SuggestFor:   options.SuggestFor,
+		Deprecated:   options.Deprecated,
+		Version:      options.Version,
 	}
 
 	cmd.SetContext(context.Background())

@@ -1,6 +1,7 @@
 package rootmulti_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -24,16 +25,21 @@ func TestRollback(t *testing.T) {
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
 	ver0 := app.LastBlockHeight()
+	appStateBz, _ := json.Marshal(app.DefaultGenesis())
+
+	app.InitChain(&abci.RequestInitChain{
+		ConsensusParams: simtestutil.DefaultConsensusParams,
+		AppStateBytes:   appStateBz,
+		InitialHeight:   1,
+	})
+
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
 		header := cmtproto.Header{
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
-			Height: header.Height,
-		})
+		app.ProcessProposal(&abci.RequestProcessProposal{Height: header.Height})
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
@@ -63,6 +69,7 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
+		app.ProcessProposal(&abci.RequestProcessProposal{Height: header.Height})
 		app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))

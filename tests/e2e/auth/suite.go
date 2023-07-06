@@ -1183,10 +1183,10 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	defer filename.Close()
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+	queryResJSON, err := testutil.GetRequest(val.APIAddress + fmt.Sprintf("/cosmos/auth/v1beta1/accounts/%s", addr.String()))
 	s.Require().NoError(err)
 	var account sdk.AccountI
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON, &account))
 
 	// sign-batch file
 	addr1, err := account1.GetAddress()
@@ -1222,45 +1222,6 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 			s.Require().NoError(err)
 			s.Require().NoError(s.network.WaitForNextBlock())
 		}()
-	}
-}
-
-func (s *E2ETestSuite) TestGetAccountCmd() {
-	val := s.network.Validators[0]
-	_, _, addr1 := testdata.KeyTestPubAddr()
-
-	testCases := []struct {
-		name      string
-		address   sdk.AccAddress
-		expectErr bool
-	}{
-		{
-			"invalid address",
-			addr1,
-			true,
-		},
-		{
-			"valid address",
-			val.Address,
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address, addresscodec.NewBech32Codec("cosmos"))
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var acc sdk.AccountI
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
-				s.Require().Equal(val.Address, acc.GetAddress())
-			}
-		})
 	}
 }
 

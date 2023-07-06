@@ -5,6 +5,7 @@ import (
 
 	authv1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -57,7 +58,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "AddressStringToBytes",
-					Use:            "address-string-to-bytes [addres-string]",
+					Use:            "address-string-to-bytes [address-string]",
 					Short:          "Transform an address string to bytes",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address_string"}},
 				},

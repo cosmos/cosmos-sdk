@@ -21,7 +21,7 @@ const FlagAppDBBackend = "app-db-backend"
 
 // Cmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
-func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
+func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -38,7 +38,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 		'--home' and '--app-db-backend'.
 		valid app-db-backend type includes 'goleveldb', 'rocksdb', 'pebbledb'.
 		`,
-		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
+		Example: "prune --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			vp := viper.New()
 
@@ -56,6 +56,10 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 			)
 
 			home := vp.GetString(flags.FlagHome)
+			if home == "" {
+				home = defaultNodeHome
+			}
+
 			db, err := openDB(home, server.GetAppDBBackend(vp))
 			if err != nil {
 				return err
@@ -90,7 +94,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The database home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
 	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(server.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")

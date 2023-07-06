@@ -42,7 +42,7 @@ func TestBankStateCompatibility(t *testing.T) {
 		storeService,
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
+		authtypes.NewModuleAddress("gov").String(),
 		log.NewNopLogger(),
 	)
 

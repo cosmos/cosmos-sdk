@@ -337,10 +337,10 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 }
 
 // PruneSnapshotHeight prunes the given height according to the prune strategy.
-// If PruneNothing, this is a no-op.
-// If other strategy, this height is persisted until the snapshot is operated.
+// If the strategy is PruneNothing, this is a no-op.
+// For other strategies, this height is persisted until the snapshot is operated.
 func (rs *Store) PruneSnapshotHeight(height int64) {
-	rs.pruningManager.HandleHeightSnapshot(height)
+	rs.pruningManager.HandleSnapshotHeight(height)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -654,7 +654,7 @@ func (rs *Store) handlePruning(version int64) error {
 // PruneStores prunes all history upto the specific height of the multi store.
 func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if pruningHeight <= 0 {
-		rs.logger.Debug("pruning skipped, height is smaller than 0")
+		rs.logger.Debug("pruning skipped, height is less than or equal to 0")
 		return nil
 	}
 
@@ -676,9 +676,11 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 			continue
 		}
 
-		if errors.Is(err, iavltree.ErrVersionDoesNotExist) && err != nil {
+		if errors.Is(err, iavltree.ErrVersionDoesNotExist) {
 			return err
 		}
+
+		rs.logger.Error("failed to prune store", "key", key, "err", err)
 	}
 	return nil
 }

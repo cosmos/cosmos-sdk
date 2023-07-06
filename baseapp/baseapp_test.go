@@ -136,7 +136,13 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			txs = append(txs, txBytes)
 		}
 
-		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
+			Height: height,
+			Txs:    txs,
+		})
+		require.NoError(t, err)
+
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
 			Txs:    txs,
 		})
@@ -188,6 +194,8 @@ func TestLoadVersion(t *testing.T) {
 	require.Equal(t, emptyCommitID, lastID)
 
 	// execute a block, collect commit ID
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
@@ -195,6 +203,8 @@ func TestLoadVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// execute a block, collect commit ID
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
 	res, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	commitID2 := storetypes.CommitID{Version: 2, Hash: res.AppHash}
@@ -218,6 +228,8 @@ func TestLoadVersion(t *testing.T) {
 
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
@@ -304,6 +316,8 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
+			_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+			require.NoError(t, err)
 			res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 			require.NoError(t, err)
 			require.NotNil(t, res.AppHash)
@@ -353,6 +367,8 @@ func TestLoadVersionInvalid(t *testing.T) {
 	err = app.LoadVersion(-1)
 	require.Error(t, err)
 
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
@@ -572,11 +588,15 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
 
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
@@ -662,6 +682,8 @@ func TestLoadVersionPruning(t *testing.T) {
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
+		_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: i})
+		require.NoError(t, err)
 		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
 		_, err = app.Commit()

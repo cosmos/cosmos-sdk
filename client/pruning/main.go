@@ -26,16 +26,15 @@ func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Comma
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
 		Long: `Prune app history states by keeping the recent heights and deleting old heights.
-		The pruning option is provided via the 'pruning' argument or alternatively with '--pruning-keep-recent'
-		
-		- default: the last 362880 states are kept
-		- nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-		- everything: 2 latest states will be kept
-		- custom: allow pruning options to be manually specified through 'pruning-keep-recent'.
+The pruning option is provided via the 'pruning' argument or alternatively with '--pruning-keep-recent'
 
-		Note: When the --app-db-backend flag is not specified, the default backend type is 'goleveldb'.
-		Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.
-		`,
+- default: the last 362880 states are kept
+- nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+- everything: 2 latest states will be kept
+- custom: allow pruning options to be manually specified through 'pruning-keep-recent'
+
+Note: When the --app-db-backend flag is not specified, the default backend type is 'goleveldb'.
+Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		Example: "prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'",
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {

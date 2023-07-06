@@ -21,7 +21,7 @@ func TestCollectionsCorrectness(t *testing.T) {
 	})
 
 	t.Run("AddressIndexingKey", func(t *testing.T) {
-		colltest.TestKeyCodec(t, AddressKeyAsIndexKey(AccAddressKey), AccAddress{0x2, 0x5, 0x8})
+		colltest.TestKeyCodec(t, LengthPrefixedAddressKey(AccAddressKey), AccAddress{0x2, 0x5, 0x8})
 	})
 
 	t.Run("Time", func(t *testing.T) {

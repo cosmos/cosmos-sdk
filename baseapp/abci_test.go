@@ -1590,8 +1590,8 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
-		require.NoError(t, err)
 		err = builder.SetMsgs(msgs...)
+		require.NoError(t, err)
 		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))

@@ -190,7 +190,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	}
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
@@ -206,7 +206,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// verify we can immediately unjail
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)

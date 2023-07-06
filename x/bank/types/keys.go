@@ -34,27 +34,13 @@ var (
 	ParamsKey = collections.NewPrefix(5)
 )
 
-// NewBalanceCompatValueCodec is a codec for encoding Balances in a backwards compatible way
-// with respect to the old format.
-func NewBalanceCompatValueCodec() collcodec.ValueCodec[math.Int] {
-	return balanceCompatValueCodec{
-		sdk.IntValue,
-	}
-}
-
-type balanceCompatValueCodec struct {
-	collcodec.ValueCodec[math.Int]
-}
-
-func (v balanceCompatValueCodec) Decode(b []byte) (math.Int, error) {
-	i, err := v.ValueCodec.Decode(b)
-	if err == nil {
-		return i, nil
-	}
+// BalanceValueCodec is a codec for encoding bank balances in a backwards compatible way.
+// Historically, balances were represented as Coin, now they're represented as a simple math.Int
+var BalanceValueCodec = collcodec.NewAltValueCodec(sdk.IntValue, func(bytes []byte) (math.Int, error) {
 	c := new(sdk.Coin)
-	err = c.Unmarshal(b)
+	err := c.Unmarshal(bytes)
 	if err != nil {
 		return math.Int{}, err
 	}
 	return c.Amount, nil
-}
+})

@@ -8,7 +8,12 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.50.0-alpha.1
+=======
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230630082137-cba58097ef9a
+	github.com/cosmos/gogoproto v1.4.10
+>>>>>>> 57ee5a23d (fix(client/v2): improve resolver and tests (#16842))
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
@@ -46,7 +51,6 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.10 // indirect
 	github.com/cosmos/iavl v1.0.0-beta.2 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect

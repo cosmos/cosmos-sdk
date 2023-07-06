@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 	for _, window := range []int64{100, 32_000} {
 		params := testutil.TestParams()
 		params.SignedBlocksWindow = window
-		require.NoError(keeper.SetParams(ctx, params))
+		require.NoError(keeper.Params.Set(ctx, params))
 
 		// validator misses all blocks in the window
 		var valIdxOffset int64

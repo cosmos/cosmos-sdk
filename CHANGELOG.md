@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16798) Remove aliases in `types/math.go` (part 2).
 * (x/staking) [#16795](https://github.com/cosmos/cosmos-sdk/pull/16795) `DelegationToDelegationResponse`, `DelegationsToDelegationResponses`, `RedelegationsToRedelegationResponses` are no longer exported.
+* (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
+    * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
 
 ## [v0.50.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.1) - 2023-06-30
 
@@ -284,13 +286,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/*all*) [#16052](https://github.com/cosmos/cosmos-sdk/pull/16062) `GetSignBytes` implementations on messages and global legacy amino codec definitions have been removed from all modules.
 * (sims) [#16052](https://github.com/cosmos/cosmos-sdk/pull/16062) `GetOrGenerate` no longer requires a codec argument is now 4-arity instead of 5-arity.
 * (baseapp) [#16342](https://github.com/cosmos/cosmos-sdk/pull/16342) NewContext was renamed to NewContextLegacy. The replacement (NewContext) now does not take a header, instead you should set the header via `WithHeaderInfo` or `WithBlockHeight`. Note that `WithBlockHeight` will soon be depreacted and its recommneded to use `WithHeaderInfo`
-<<<<<<< HEAD
 * (x/auth) [#16423](https://github.com/cosmos/cosmos-sdk/pull/16423) `helpers.AddGenesisAccount` has been moved to `x/genutil` to remove the cyclic dependency between `x/auth` and `x/genutil`.
-=======
-* (x/auth) [#16112](https://github.com/cosmos/cosmos-sdk/issues/16112) `helpers.AddGenesisAccount` has been moved to `x/genutil` to remove the cyclic dependency between `x/auth` and `x/genutil`.
-* (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
-  * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
->>>>>>> 5235593e7 (refactor(distribution)!: use collections for DelegatorWithdrawAddress state management. (#16440))
 
 ### Client Breaking Changes
 

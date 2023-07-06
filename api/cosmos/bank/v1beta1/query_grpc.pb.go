@@ -75,7 +75,7 @@ type QueryClient interface {
 	// DenomsMetadata queries the client metadata of a given coin denomination.
 	DenomMetadata(ctx context.Context, in *QueryDenomMetadataRequest, opts ...grpc.CallOption) (*QueryDenomMetadataResponse, error)
 	// DenomsMetadata queries the client metadata of a given coin denomination.
-	DenomMetadataByQueryString(ctx context.Context, in *DenomMetadataByQueryStringRequest, opts ...grpc.CallOption) (*DenomMetadataByQueryStringResponse, error)
+	DenomMetadataByQueryString(ctx context.Context, in *QueryDenomMetadataByQueryStringRequest, opts ...grpc.CallOption) (*QueryDenomMetadataByQueryStringResponse, error)
 	// DenomsMetadata queries the client metadata for all registered coin
 	// denominations.
 	DenomsMetadata(ctx context.Context, in *QueryDenomsMetadataRequest, opts ...grpc.CallOption) (*QueryDenomsMetadataResponse, error)
@@ -177,8 +177,8 @@ func (c *queryClient) DenomMetadata(ctx context.Context, in *QueryDenomMetadataR
 	return out, nil
 }
 
-func (c *queryClient) DenomMetadataByQueryString(ctx context.Context, in *DenomMetadataByQueryStringRequest, opts ...grpc.CallOption) (*DenomMetadataByQueryStringResponse, error) {
-	out := new(DenomMetadataByQueryStringResponse)
+func (c *queryClient) DenomMetadataByQueryString(ctx context.Context, in *QueryDenomMetadataByQueryStringRequest, opts ...grpc.CallOption) (*QueryDenomMetadataByQueryStringResponse, error) {
+	out := new(QueryDenomMetadataByQueryStringResponse)
 	err := c.cc.Invoke(ctx, Query_DenomMetadataByQueryString_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -255,7 +255,7 @@ type QueryServer interface {
 	// DenomsMetadata queries the client metadata of a given coin denomination.
 	DenomMetadata(context.Context, *QueryDenomMetadataRequest) (*QueryDenomMetadataResponse, error)
 	// DenomsMetadata queries the client metadata of a given coin denomination.
-	DenomMetadataByQueryString(context.Context, *DenomMetadataByQueryStringRequest) (*DenomMetadataByQueryStringResponse, error)
+	DenomMetadataByQueryString(context.Context, *QueryDenomMetadataByQueryStringRequest) (*QueryDenomMetadataByQueryStringResponse, error)
 	// DenomsMetadata queries the client metadata for all registered coin
 	// denominations.
 	DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
@@ -306,7 +306,7 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 func (UnimplementedQueryServer) DenomMetadata(context.Context, *QueryDenomMetadataRequest) (*QueryDenomMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomMetadata not implemented")
 }
-func (UnimplementedQueryServer) DenomMetadataByQueryString(context.Context, *DenomMetadataByQueryStringRequest) (*DenomMetadataByQueryStringResponse, error) {
+func (UnimplementedQueryServer) DenomMetadataByQueryString(context.Context, *QueryDenomMetadataByQueryStringRequest) (*QueryDenomMetadataByQueryStringResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomMetadataByQueryString not implemented")
 }
 func (UnimplementedQueryServer) DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error) {
@@ -476,7 +476,7 @@ func _Query_DenomMetadata_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _Query_DenomMetadataByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DenomMetadataByQueryStringRequest)
+	in := new(QueryDenomMetadataByQueryStringRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -488,7 +488,7 @@ func _Query_DenomMetadataByQueryString_Handler(srv interface{}, ctx context.Cont
 		FullMethod: Query_DenomMetadataByQueryString_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).DenomMetadataByQueryString(ctx, req.(*DenomMetadataByQueryStringRequest))
+		return srv.(QueryServer).DenomMetadataByQueryString(ctx, req.(*QueryDenomMetadataByQueryStringRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

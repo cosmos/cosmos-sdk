@@ -84,7 +84,8 @@ service Query {
   }
 
   // DenomsMetadata queries the client metadata of a given coin denomination.
-  rpc DenomMetadataByQueryString(DenomMetadataByQueryStringRequest) returns (DenomMetadataByQueryStringResponse) {
+  rpc DenomMetadataByQueryString(QueryDenomMetadataByQueryStringRequest)
+      returns (QueryDenomMetadataByQueryStringResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata_by_query_string";
   }
@@ -305,15 +306,16 @@ message QueryDenomMetadataResponse {
   Metadata metadata = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// QueryDenomMetadataRequest is the request type for the Query/DenomMetadata RPC method.
-message DenomMetadataByQueryStringRequest {
+// QueryDenomMetadataByQueryStringRequest is the request type for the Query/DenomMetadata RPC method.
+// Identical with QueryDenomMetadataRequest but receives denom as query string.
+message QueryDenomMetadataByQueryStringRequest {
   // denom is the coin denom to query the metadata for.
   string denom = 1;
 }
 
-// QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
-// method.
-message DenomMetadataByQueryStringResponse {
+// QueryDenomMetadataByQueryStringResponse is the response type for the Query/DenomMetadata RPC
+// method. Identical with QueryDenomMetadataResponse but receives denom as query string in request.
+message QueryDenomMetadataByQueryStringResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

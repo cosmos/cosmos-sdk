@@ -40,10 +40,78 @@ type TestSuite struct {
 	encCfg  moduletestutil.TestEncodingConfig
 }
 
-var s TestSuite
+func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
+	t.Helper()
+	t.Log("Verify that a panic happens at the upgrade height")
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
+
+	s.VerifyCleared(t, newCtx)
+}
+
+func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+	t.Helper()
+	t.Log("Verify that a panic happens at the upgrade height")
+
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
+
+	s.VerifyCleared(t, newCtx)
+}
+
+func (s *TestSuite) VerifyCleared(t *testing.T, newCtx sdk.Context) {
+	t.Helper()
+	t.Log("Verify that the upgrade plan has been cleared")
+	_, err := s.keeper.GetUpgradePlan(newCtx)
+	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
+}
+
+func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
+	t.Log("Verify that upgrade was not done")
+	height, err := s.keeper.GetDoneHeight(newCtx, name)
+	require.Zero(t, height)
+	require.NoError(t, err)
+}
+
+func (s *TestSuite) VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
+	t.Log("Verify that the upgrade plan has been executed")
+	height, err := s.keeper.GetDoneHeight(newCtx, name)
+	require.NotZero(t, height)
+	require.NoError(t, err)
+}
+
+func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
+	t.Helper()
+	t.Log("Verify if the skip upgrade has been set")
+
+	for k := range skipUpgradeHeights {
+		require.True(t, s.keeper.IsSkipHeight(k))
+	}
+}
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	t.Helper()
+	s := TestSuite{}
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -78,7 +146,7 @@ func TestDoHeightUpgrade(t *testing.T) {
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 
-	VerifyDoUpgrade(t)
+	s.VerifyDoUpgrade(t)
 }
 
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
@@ -89,44 +157,7 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 
-	VerifyDoUpgrade(t)
-}
-
-func VerifyDoUpgrade(t *testing.T) {
-	t.Helper()
-	t.Log("Verify that a panic happens at the upgrade height")
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
-
-	err := s.module.BeginBlock(newCtx)
-	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-
-	err = s.module.BeginBlock(newCtx)
-	require.NoError(t, err)
-
-	VerifyCleared(t, newCtx)
-}
-
-func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
-	t.Helper()
-	t.Log("Verify that a panic happens at the upgrade height")
-
-	err := s.module.BeginBlock(newCtx)
-	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-
-	err = s.module.BeginBlock(newCtx)
-	require.NoError(t, err)
-
-	VerifyCleared(t, newCtx)
+	s.VerifyDoUpgrade(t)
 }
 
 func TestHaltIfTooNew(t *testing.T) {
@@ -159,14 +190,7 @@ func TestHaltIfTooNew(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, called)
 
-	VerifyCleared(t, futCtx)
-}
-
-func VerifyCleared(t *testing.T, newCtx sdk.Context) {
-	t.Helper()
-	t.Log("Verify that the upgrade plan has been cleared")
-	_, err := s.keeper.GetUpgradePlan(newCtx)
-	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
+	s.VerifyCleared(t, futCtx)
 }
 
 func TestCanClear(t *testing.T) {
@@ -178,7 +202,7 @@ func TestCanClear(t *testing.T) {
 	err = s.keeper.ClearUpgradePlan(s.ctx)
 	require.NoError(t, err)
 
-	VerifyCleared(t, s.ctx)
+	s.VerifyCleared(t, s.ctx)
 }
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
@@ -186,7 +210,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 	height := s.ctx.HeaderInfo().Height + 1
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.NoError(t, err)
-	VerifyDoUpgrade(t)
+	s.VerifyDoUpgrade(t)
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.Error(t, err)
@@ -205,36 +229,11 @@ func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `name:"test" time:<seconds:-62135596800 > height:100 `, (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
 }
 
-func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Helper()
-	t.Log("Verify that upgrade was not done")
-	height, err := s.keeper.GetDoneHeight(newCtx, name)
-	require.Zero(t, height)
-	require.NoError(t, err)
-}
-
-func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Helper()
-	t.Log("Verify that the upgrade plan has been executed")
-	height, err := s.keeper.GetDoneHeight(newCtx, name)
-	require.NotZero(t, height)
-	require.NoError(t, err)
-}
-
-func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
-	t.Helper()
-	t.Log("Verify if the skip upgrade has been set")
-
-	for k := range skipUpgradeHeights {
-		require.True(t, s.keeper.IsSkipHeight(k))
-	}
-}
-
 func TestContains(t *testing.T) {
 	var skipOne int64 = 11
 	s := setupTest(t, 10, map[int64]bool{skipOne: true})
 
-	VerifySet(t, map[int64]bool{skipOne: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")
 	require.True(t, s.keeper.IsSkipHeight(11))
 
@@ -255,7 +254,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
 	err = s.module.BeginBlock(newCtx)
@@ -271,9 +270,9 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	// To ensure verification is being done only after both upgrades are cleared
 	t.Log("Verify if both proposals are cleared")
-	VerifyCleared(t, s.ctx)
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyNotDone(t, s.ctx, "test2")
+	s.VerifyCleared(t, s.ctx)
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyNotDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOne(t *testing.T) {
@@ -289,7 +288,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	VerifySet(t, map[int64]bool{skipOne: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true})
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
@@ -301,11 +300,11 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	require.NoError(t, err)
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
-	VerifyDoUpgradeWithCtx(t, newCtx, "test2")
+	s.VerifyDoUpgradeWithCtx(t, newCtx, "test2")
 
 	t.Log("Verify first proposal is cleared and second is done")
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyDone(t, s.ctx, "test2")
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOnlyTwo(t *testing.T) {
@@ -322,7 +321,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	// Setting block height of proposal test
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
@@ -341,12 +340,12 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test3", Height: skipThree})
 	require.NoError(t, err)
 	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipThree})
-	VerifyDoUpgradeWithCtx(t, newCtx, "test3")
+	s.VerifyDoUpgradeWithCtx(t, newCtx, "test3")
 
 	t.Log("Verify two proposals are cleared and third is done")
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyNotDone(t, s.ctx, "test2")
-	VerifyDone(t, s.ctx, "test3")
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyNotDone(t, s.ctx, "test2")
+	s.VerifyDone(t, s.ctx, "test3")
 }
 
 func TestUpgradeWithoutSkip(t *testing.T) {
@@ -359,8 +358,8 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	err = s.module.BeginBlock(newCtx)
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
-	VerifyDoUpgrade(t)
-	VerifyDone(t, s.ctx, "test")
+	s.VerifyDoUpgrade(t)
+	s.VerifyDone(t, s.ctx, "test")
 }
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
@@ -461,17 +460,16 @@ func TestDowngradeVerification(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}
-	tempDir := t.TempDir()
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// submit a plan.
 	planName := "downgrade"
-	err := s.keeper.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
+	err := k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
@@ -497,7 +495,7 @@ func TestDowngradeVerification(t *testing.T) {
 		},
 		"downgrade with an active plan": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				err := s.keeper.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: ctx.HeaderInfo().Height + 1})
+				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: ctx.HeaderInfo().Height + 1})
 				require.NoError(t, err, name)
 			},
 			expectError: true,
@@ -511,7 +509,7 @@ func TestDowngradeVerification(t *testing.T) {
 		ctx, _ := ctx.CacheContext()
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions

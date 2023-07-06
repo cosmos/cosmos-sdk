@@ -42,7 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory.
+* (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default).
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
 
 ### Bug Fixes

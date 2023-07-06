@@ -50,7 +50,7 @@ func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Comma
 			if err != nil {
 				return err
 			}
-			fmt.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
+			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
 				pruningOptions.Strategy,
 				pruningOptions.KeepRecent,
 			)
@@ -80,16 +80,14 @@ func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Comma
 			}
 
 			pruningHeight := latestHeight - int64(pruningOptions.KeepRecent)
-			fmt.Printf(
-				"pruning heights up to %v\n",
-				pruningHeight,
-			)
+			cmd.Printf("pruning heights up to %v\n", pruningHeight)
 
 			err = rootMultiStore.PruneStores(pruningHeight)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("successfully pruned the application root multi stores\n")
+
+			cmd.Println("successfully pruned the application root multi stores")
 			return nil
 		},
 	}

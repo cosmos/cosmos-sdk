@@ -38,6 +38,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+### Features
+
+### Improvements
+
+* (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
+* (x/authz) [#16869](https://github.com/cosmos/cosmos-sdk/pull/16869) Error message has been improvised in `Exec` command when grant not found.
+
+>>>>>>> bf7a298c2 (fix(authz): error msg (#16869))
 ### Bug Fixes
 
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) Correctly process legacy `DenomAddressIndex` values.

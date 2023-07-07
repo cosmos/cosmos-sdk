@@ -154,18 +154,18 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 
 		var remainingAmount sdk.Coins
 
-		for _, coins := range deposit.Amount {
-			burnAmount := sdkmath.LegacyNewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
+		for _, coin := range deposit.Amount {
+			burnAmount := sdkmath.LegacyNewDecFromInt(coin.Amount).Mul(rate).TruncateInt()
 			// remaining amount = deposits amount - burn amount
 			remainingAmount = remainingAmount.Add(
 				sdk.NewCoin(
-					coins.Denom,
-					coins.Amount.Sub(burnAmount),
+					coin.Denom,
+					coin.Amount.Sub(burnAmount),
 				),
 			)
 			cancellationCharges = cancellationCharges.Add(
 				sdk.NewCoin(
-					coins.Denom,
+					coin.Denom,
 					burnAmount,
 				),
 			)
@@ -190,7 +190,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		// get the distribution module account address
 		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
 		switch {
-		case len(destAddress) == 0:
+		case destAddress == "":
 			// burn the cancellation charges from deposits
 			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
 			if err != nil {

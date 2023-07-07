@@ -658,10 +658,6 @@ func (k Keeper) Delegate(
 		k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
 	}
 
-	if err != nil {
-		return sdk.ZeroDec(), err
-	}
-
 	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 	// if subtractAccount is true then we are

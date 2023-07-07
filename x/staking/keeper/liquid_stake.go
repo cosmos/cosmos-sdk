@@ -170,8 +170,10 @@ func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator ty
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
+	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)
 	maxValTotalShare := validator.TotalValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
-	if validator.TotalLiquidShares.GT(maxValTotalShare) {
+
+	if validatorBondEnabled && validator.TotalLiquidShares.GT(maxValTotalShare) {
 		return types.ErrInsufficientValidatorBondShares
 	}
 

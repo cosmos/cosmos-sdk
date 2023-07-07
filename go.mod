@@ -48,7 +48,7 @@ require (
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.29
+	github.com/tendermint/tendermint v0.34.28
 	github.com/tendermint/tm-db v0.6.7
 	github.com/tidwall/btree v1.5.0
 	golang.org/x/crypto v0.7.0

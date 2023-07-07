@@ -37,11 +37,19 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 	return tokens
 }
 
-// Check if an account is a owned by a liquid staking provider
+// Checks if an account associated with a given delegation is related to liquid staking
+//
 // This is determined by checking if the account has a 32-length address
+// which will identify the following scenarios:
+//   - An account has tokenized their shares, and thus the delegation is
+//     owned by the tokenize share record module account
+//   - A liquid staking provider is delegating through an ICA account
+//
+// Both ICA accounts and tokenize share record module accounts have 32-length addresses
 // NOTE: This will have to be refactored before adapting it to chains beyond gaia
-func (k Keeper) AccountIsLiquidStakingProvider(address sdk.AccAddress) bool {
-	return len(address) == 32
+// as other chains may have 32-length addresses that are not related to the above scenarios
+func (k Keeper) DelegatorIsLiquidStaker(delegatorAddress sdk.AccAddress) bool {
+	return len(delegatorAddress) == 32
 }
 
 // CheckExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
@@ -356,9 +364,11 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 			return types.ErrNoValidatorFound
 		}
 
-		// If the account is a liquid staking provider, increment the global number
-		// of liquid staked tokens, and the total liquid shares on the validator
-		if k.AccountIsLiquidStakingProvider(delegatorAddress) {
+		// If the delegator is either an ICA account or a tokenize share module account,
+		// the delegation should be considered to be associated with liquid staking
+		// Consequently, the global number of liquid staked tokens, and the total
+		// liquid shares on the validator should be incremented
+		if k.DelegatorIsLiquidStaker(delegatorAddress) {
 			liquidShares := delegation.Shares
 			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
 

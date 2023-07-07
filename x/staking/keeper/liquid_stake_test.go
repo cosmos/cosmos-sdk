@@ -79,8 +79,8 @@ func TestValidatorTotalLiquidShares(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validator)
 }
 
-// Tests AccountIsLiquidStakingProvider
-func TestAccountIsLiquidStakingProvider(t *testing.T) {
+// Tests DelegatorIsLiquidStaker
+func TestDelegatorIsLiquidStaker(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	// Create base and ICA accounts
@@ -88,8 +88,8 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 	icaAccountAddress := createICAAccount(app, ctx)
 
 	// Only the ICA module account should be considered a liquid staking provider
-	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(baseAccountAddress), "base account")
-	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(icaAccountAddress), "ICA module account")
+	require.False(t, app.StakingKeeper.DelegatorIsLiquidStaker(baseAccountAddress), "base account")
+	require.True(t, app.StakingKeeper.DelegatorIsLiquidStaker(icaAccountAddress), "ICA module account")
 }
 
 // Helper function to clear the Bonded pool balances before a unit test

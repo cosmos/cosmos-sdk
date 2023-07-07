@@ -110,7 +110,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					Plan:      p,
 				},
 			}); err != nil {
-				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+				return fmt.Errorf("failed to create submit upgrade proposal message: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
@@ -167,7 +167,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					Authority: authority,
 				},
 			}); err != nil {
-				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+				return fmt.Errorf("failed to create cancel upgrade proposal message: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)

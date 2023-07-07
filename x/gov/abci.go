@@ -91,7 +91,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		// the deposit at this point since the proposal is converted to regular.
 		// As a result, the deposits are either deleted or refunded in all cases
 		// EXCEPT when an expedited proposal fails.
-		if !(proposal.Expedited && !passes) {
+		if passes || !proposal.Expedited {
 			if burnDeposits {
 				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {

@@ -117,7 +117,7 @@ func initFixture(tb testing.TB) *fixture {
 	err := stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	err = slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
+	err = slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
 	assert.NilError(tb, err)
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
@@ -194,7 +194,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	}
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
@@ -212,7 +212,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// verify we can immediately unjail
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)

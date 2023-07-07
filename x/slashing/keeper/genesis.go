@@ -51,7 +51,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 		}
 	}
 
-	if err := keeper.SetParams(ctx, data.Params); err != nil {
+	if err := keeper.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 }
@@ -60,7 +60,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 // to a genesis file, which can be imported again
 // with InitGenesis
 func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

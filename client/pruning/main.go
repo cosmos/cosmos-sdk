@@ -21,41 +21,60 @@ const FlagAppDBBackend = "app-db-backend"
 
 // PruningCmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
+// Deprecated: Use Cmd instead.
 func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
+	cmd := Cmd(appCreator, "")
+	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+
+	return cmd
+}
+
+// Cmd prunes the sdk root multi store history versions based on the pruning options
+// specified by command flags.
+func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "prune",
+		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
 		Long: `Prune app history states by keeping the recent heights and deleting old heights.
-		The pruning option is provided via the '--pruning' flag or alternatively with '--pruning-keep-recent'
-		
-		For '--pruning' the options are as follows:
-		
-		default: the last 362880 states are kept
-		nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-		everything: 2 latest states will be kept
-		custom: allow pruning options to be manually specified through 'pruning-keep-recent'.
-		besides pruning options, database home directory and database backend type should also be specified via flags
-		'--home' and '--app-db-backend'.
-		valid app-db-backend type includes 'goleveldb', 'cleveldb', 'rocksdb', 'boltdb', and 'badgerdb'.
-		`,
-		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			vp := viper.New()
+The pruning option is provided via the 'pruning' argument or alternatively with '--pruning-keep-recent'
 
-			// Bind flags to the Context's Viper so we can get pruning options.
+- default: the last 362880 states are kept
+- nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+- everything: 2 latest states will be kept
+- custom: allow pruning options to be manually specified through 'pruning-keep-recent'
+
+Note: When the --app-db-backend flag is not specified, the default backend type is 'goleveldb'.
+Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
+		Example: "prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'",
+		Args:    cobra.RangeArgs(0, 1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// bind flags to the Context's Viper so we can get pruning options.
+			vp := viper.New()
 			if err := vp.BindPFlags(cmd.Flags()); err != nil {
 				return err
+			}
+
+			// use the first argument if present to set the pruning method
+			if len(args) > 0 {
+				vp.Set(server.FlagPruning, args[0])
+			} else if vp.GetString(server.FlagPruning) == "" { // this differs from orignal https://github.com/cosmos/cosmos-sdk/pull/16856 for compatibility
+				vp.Set(server.FlagPruning, pruningtypes.PruningOptionDefault)
 			}
 			pruningOptions, err := server.GetPruningOptionsFromFlags(vp)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
+
+			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
 				pruningOptions.Strategy,
 				pruningOptions.KeepRecent,
 			)
 
 			home := vp.GetString(flags.FlagHome)
+			if home == "" {
+				home = defaultNodeHome
+			}
+
 			db, err := openDB(home, server.GetAppDBBackend(vp))
 			if err != nil {
 				return err
@@ -82,27 +101,22 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				}
 			}
 			if len(pruningHeights) == 0 {
-				fmt.Printf("no heights to prune\n")
+				cmd.Println("no heights to prune")
 				return nil
 			}
-			fmt.Printf(
-				"pruning heights start from %v, end at %v\n",
-				pruningHeights[0],
-				pruningHeights[len(pruningHeights)-1],
-			)
+			cmd.Printf("pruning heights start from %v, end at %v\n", pruningHeights[0], pruningHeights[len(pruningHeights)-1])
 
-			err = rootMultiStore.PruneStores(false, pruningHeights)
-			if err != nil {
+			if err = rootMultiStore.PruneStores(false, pruningHeights); err != nil {
 				return err
 			}
-			fmt.Printf("successfully pruned the application root multi stores\n")
+
+			cmd.Println("successfully pruned the application root multi stores")
 			return nil
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The database home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(server.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(server.FlagPruningInterval, 10,
 		`Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom'), 

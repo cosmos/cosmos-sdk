@@ -331,7 +331,7 @@ func (suite *TestSuite) TestExec() {
 			errMsg: "empty address string is not allowed",
 		},
 		{
-			name: "no existing grant",
+			name: "non existing grant",
 			malleate: func() authz.MsgExec {
 				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
 			},

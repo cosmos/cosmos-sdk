@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
+* (x/authz) [#16869](https://github.com/cosmos/cosmos-sdk/pull/16869) Error message has been improvised in `Exec` command when grant not found.
 
 ### Bug Fixes
 

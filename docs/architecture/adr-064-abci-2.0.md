@@ -282,7 +282,7 @@ decision based on the vote extensions.
 In certain contexts, it may be useful or necessary for applications to persist
 data derived from vote extensions. In order to facilitate this use case, we propose
 to allow app developers to define a pre-FinalizeBlock hook which will be called
-at the very beginning of FinalizeBlock, i.e. before `BeginBlock` (see below).
+at the very beginning of `FinalizeBlock`, i.e. before `BeginBlock` (see below).
 
 Note, we cannot allow applications to directly write to the application state
 during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessProposal`,
@@ -340,7 +340,7 @@ we can come up with new types and names altogether.
 ```go
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	ctx := ...
-	
+
 	if app.preFinalizeBlockHook != nil {
 		if err := app.preFinalizeBlockHook(ctx, req); err != nil {
 			return nil, err

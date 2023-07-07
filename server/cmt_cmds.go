@@ -259,7 +259,7 @@ $ %s query block --%s=%s <hash>
 }
 
 // QueryBlockResultCmd implements the default command for a BlockResults query.
-func QueryBlockResultCmd() *cobra.Command {
+func QueryBlockResultsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block-results [height]",
 		Short: "Query for a committed block's results by height",

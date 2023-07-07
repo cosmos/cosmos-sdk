@@ -1060,3 +1060,51 @@ func TestUnbondValidator(t *testing.T) {
 	require.True(t, found)
 	require.True(t, validator.Jailed)
 }
+
+func TestICADelegateUndelegate(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	// Create a delegator and validator
+	delegateAmount := sdk.NewInt(1000)
+	delegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegateAmount)
+
+	// Create ICA module account
+	icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+
+	// Fund module account
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegateCoin))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegateCoin))
+	require.NoError(t, err)
+
+	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 1, sdk.NewInt(0))
+	pubKeys := simtestutil.CreateTestPubKeys(1)
+	validatorAddress := sdk.ValAddress(addresses[0])
+	validator := stakingtestutil.NewValidator(t, validatorAddress, pubKeys[0])
+
+	validator.DelegatorShares = sdk.NewDec(1_000_000)
+	validator.Tokens = sdk.NewInt(1_000_000)
+	validator.TotalLiquidShares = sdk.NewDec(0)
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	delegateMsg := types.MsgDelegate{
+		DelegatorAddress: icaAccountAddress.String(),
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           delegateCoin,
+	}
+
+	undelegateMsg := types.MsgUndelegate{
+		DelegatorAddress: icaAccountAddress.String(),
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           delegateCoin,
+	}
+
+	// Delegate normally
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
+	require.NoError(t, err, "no error expected when delegating")
+
+	// Try to undelegate
+	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &undelegateMsg)
+	require.NoError(t, err, "no error expected when sequentially undelegating")
+}

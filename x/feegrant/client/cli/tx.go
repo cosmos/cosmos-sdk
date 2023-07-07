@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	"cosmossdk.io/x/feegrant"
 )
 
 // flag for feegrant module
@@ -26,11 +26,11 @@ const (
 	FlagAllowedMsgs = "allowed-messages"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for feegrant module
 func GetTxCmd(ac address.Codec) *cobra.Command {
 	feegrantTxCmd := &cobra.Command{
 		Use:                        feegrant.ModuleName,
-		Short:                      "Feegrant transactions subcommands",
+		Short:                      "Feegrant transactions sub-commands",
 		Long:                       "Grant and revoke fee allowance for a grantee by a granter",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -45,14 +45,14 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 	return feegrantTxCmd
 }
 
-// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
+// NewCmdFeeGrant returns a CLI command handler to create a MsgGrantAllowance transaction.
 func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [granter_key_or_address] [grantee]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
-				`Grant authorization to pay fees from your address. Note, the'--from' flag is
+				`Grant authorization to pay fees from your address. Note, the '--from' flag is
 				ignored as it is implied from [granter].
 
 Examples:
@@ -65,7 +65,10 @@ Examples:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -82,7 +85,8 @@ Examples:
 				return err
 			}
 
-			// if `FlagSpendLimit` isn't set, limit will be nil
+			// if `FlagSpendLimit` isn't set, limit will be nil.
+			// Hence, there won't be any spendlimit for the grantee.
 			limit, err := sdk.ParseCoinsNormalized(sl)
 			if err != nil {
 				return err
@@ -119,7 +123,8 @@ Examples:
 				return err
 			}
 
-			// Check any of period or periodLimit flags set, If set consider it as periodic fee allowance.
+			// check any of period or periodLimit flags are set,
+			// if set consider it as periodic fee allowance.
 			if periodClock > 0 || periodLimitVal != "" {
 				periodLimit, err := sdk.ParseCoinsNormalized(periodLimitVal)
 				if err != nil {
@@ -181,13 +186,13 @@ Examples:
 	return cmd
 }
 
-// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeAllowance transaction.
+// NewCmdRevokeFeegrant returns a CLI command handler to create a MsgRevokeAllowance transaction.
 func NewCmdRevokeFeegrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [granter] [grantee]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the'--from' flag is
+			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the '--from' flag is
 			ignored as it is implied from [granter].
 
 Example:

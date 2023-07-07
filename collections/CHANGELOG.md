@@ -29,11 +29,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.3.0)
 
 ### Features
 
-* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) – makes the generic Collection interface public, still highly unstable.
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16607) - Introduces `Clear` method for `Map` and `KeySet`
+* [#16773](https://github.com/cosmos/cosmos-sdk/pull/16773)
+  * Adds `AltValueCodec` which provides a way to decode a value in two ways.
+  * Adds the possibility to specify an alternative way to decode the values of `KeySet`, `indexes.Multi`, `indexes.ReversePair`. 
+
+## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.2.0)
+
+### Features
+
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) – Makes the generic Collection interface public, still highly unstable.
 
 ### API Breaking
 
@@ -41,4 +50,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.1.0)
 
-Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs. 
+Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs.

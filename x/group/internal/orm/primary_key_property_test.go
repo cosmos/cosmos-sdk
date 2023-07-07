@@ -3,14 +3,14 @@ package orm
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
+
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	"github.com/stretchr/testify/require"
-	"pgregory.net/rapid"
 )
 
 func TestPrimaryKeyTable(t *testing.T) {
@@ -37,7 +37,7 @@ func testPrimaryKeyMachine(t *rapid.T) {
 	// Create model state
 	state := make(map[string]*testdata.TableModel)
 
-	t.Run(map[string]func(*rapid.T){
+	t.Repeat(map[string]func(*rapid.T){
 		// Create is one of the model commands. It adds an object to the table, creating
 		// an error if it already exists.
 		"Create": func(t *rapid.T) {

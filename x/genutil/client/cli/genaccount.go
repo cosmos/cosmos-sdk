@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/helpers"
-
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 const (
@@ -74,7 +74,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			return auth.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
+			return genutil.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 

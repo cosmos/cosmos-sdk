@@ -7,10 +7,9 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -85,6 +84,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryConstitution() {
+	suite.reset()
+	queryClient := suite.queryClient
+
+	expRes := &v1.QueryConstitutionResponse{Constitution: "constitution"}
+
+	constitution, err := queryClient.Constitution(gocontext.Background(), &v1.QueryConstitutionRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(expRes, constitution)
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
@@ -444,7 +454,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},

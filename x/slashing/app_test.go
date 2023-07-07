@@ -4,12 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -91,11 +91,15 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	require.NoError(t, err)
 
 	ctxCheck = baseApp.NewContext(true)
-	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
-	require.True(t, found)
+	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.NoError(t, err)
+
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))

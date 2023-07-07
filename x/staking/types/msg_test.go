@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

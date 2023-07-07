@@ -76,9 +76,12 @@ func (s *E2ETestSuite) TestModuleVersionsCLI() {
 	// avoid printing as yaml from CLI command
 	clientCtx.OutputFormat = "JSON"
 
-	vm := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
-	mv := s.upgradeKeeper.GetModuleVersions(s.ctx)
+	vm, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
+	s.Require().NoError(err)
 	s.Require().NotEmpty(vm)
+
+	mv, err := s.upgradeKeeper.GetModuleVersions(s.ctx)
+	s.Require().NoError(err)
 
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {

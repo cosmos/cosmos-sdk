@@ -3,6 +3,8 @@ package rosetta
 import (
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,11 +20,13 @@ func MakeCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(
 		codectypes.InterfaceRegistryOptions{
 			ProtoFiles: proto.HybridResolver,
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			SigningOptions: signing.Options{
+				AddressCodec: address.Bech32Codec{
+					Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+				},
+				ValidatorAddressCodec: address.Bech32Codec{
+					Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+				},
 			},
 		},
 	)

@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 

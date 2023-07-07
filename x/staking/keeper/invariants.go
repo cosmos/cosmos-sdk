@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -51,9 +52,12 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 		notBonded := math.ZeroInt()
 		bondedPool := k.GetBondedPool(ctx)
 		notBondedPool := k.GetNotBondedPool(ctx)
-		bondDenom := k.BondDenom(ctx)
+		bondDenom, err := k.BondDenom(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
+		err = k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case types.Bonded:
 				bonded = bonded.Add(validator.GetTokens())
@@ -64,13 +68,19 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
+		err = k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
 			for _, entry := range ubd.Entries {
 				notBonded = notBonded.Add(entry.Balance)
 			}
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
 		poolBonded := k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom)
 		poolNotBonded := k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
@@ -99,10 +109,13 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 			broken bool
 		)
 
-		iterator := k.ValidatorsPowerStoreIterator(ctx)
+		iterator, err := k.ValidatorsPowerStoreIterator(ctx)
+		if err != nil {
+			panic(err)
+		}
 		for ; iterator.Valid(); iterator.Next() {
-			validator, found := k.GetValidator(ctx, iterator.Value())
-			if !found {
+			validator, err := k.GetValidator(ctx, iterator.Value())
+			if err != nil {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
@@ -134,7 +147,10 @@ func PositiveDelegationInvariant(k *Keeper) sdk.Invariant {
 			count int
 		)
 
-		delegations := k.GetAllDelegations(ctx)
+		delegations, err := k.GetAllDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
 		for _, delegation := range delegations {
 			if delegation.Shares.IsNegative() {
 				count++
@@ -164,7 +180,11 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 			broken bool
 		)
 
-		validators := k.GetAllValidators(ctx)
+		validators, err := k.GetAllValidators(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		validatorsDelegationShares := map[string]math.LegacyDec{}
 
 		// initialize a map: validator -> its delegation shares
@@ -173,7 +193,11 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		}
 
 		// iterate through all the delegations to calculate the total delegation shares for each validator
-		delegations := k.GetAllDelegations(ctx)
+		delegations, err := k.GetAllDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		for _, delegation := range delegations {
 			delegationValidatorAddr := delegation.GetValidatorAddr().String()
 			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]

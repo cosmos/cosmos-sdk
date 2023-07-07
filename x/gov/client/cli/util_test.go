@@ -9,10 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -213,6 +214,7 @@ func TestParseSubmitProposal(t *testing.T) {
 }
 
 func getCommandHelp(t *testing.T, cmd *cobra.Command) string {
+	t.Helper()
 	// Create a pipe, so we can capture the help sent to stdout.
 	reader, writer, err := os.Pipe()
 	require.NoError(t, err, "creating os.Pipe()")

@@ -4,13 +4,12 @@ import (
 	"context"
 	"strconv"
 
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
-
 	"cosmossdk.io/client/v2/internal/util"
 )
 

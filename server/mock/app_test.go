@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -59,7 +60,7 @@ func TestInitApp(t *testing.T) {
 	require.Equal(t, []byte("bar"), qres.Value)
 }
 
-func TestDeliverTx(t *testing.T) {
+func TestFinalizeBlock(t *testing.T) {
 	app := SetupApp(t)
 
 	key := "my-special-key"
@@ -70,6 +71,13 @@ func TestDeliverTx(t *testing.T) {
 
 	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
+
+	_, err := app.ProcessProposal(&abci.RequestProcessProposal{
+		Hash:   []byte("apphash"),
+		Height: 1,
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
 
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Hash:   []byte("apphash"),

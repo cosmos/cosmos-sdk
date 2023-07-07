@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestMsgSendGetSignBytes(t *testing.T) {
@@ -122,16 +120,6 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	require.Equal(t, expected, string(res))
 }
 
-func TestMsgMultiSendGetSigners(t *testing.T) {
-	addr := sdk.AccAddress([]byte("input111111111111111"))
-	input := NewInput(addr, nil)
-	msg := NewMsgMultiSend(input, nil)
-
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, addr.Equals(res[0]))
-}
-
 func TestNewMsgSetSendEnabled(t *testing.T) {
 	// Punt. Just setting one to all non-default values and making sure they're as expected.
 	msg := NewMsgSetSendEnabled("milton", []*SendEnabled{{"barrycoin", true}}, []string{"billcoin"})
@@ -159,13 +147,5 @@ func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	actualBz, err := codec.NewProtoCodec(types.NewInterfaceRegistry()).MarshalAminoJSON(msg)
 	require.NoError(t, err)
 	actual := string(actualBz)
-	assert.Equal(t, expected, actual)
-}
-
-func TestMsgSetSendEnabledGetSigners(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
-	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil)
-	expected := []sdk.AccAddress{govModuleAddr}
-	actual := msg.GetSigners()
 	assert.Equal(t, expected, actual)
 }

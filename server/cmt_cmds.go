@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/light"
 	"github.com/cometbft/cometbft/node"
@@ -18,6 +17,8 @@ import (
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

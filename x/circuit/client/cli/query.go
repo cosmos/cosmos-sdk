@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/x/circuit/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the parent command for all circuit CLI query commands.

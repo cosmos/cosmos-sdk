@@ -10,11 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/rs/zerolog"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -22,9 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 )
 
 // ExportSystem wraps a (*cmdtest).System
@@ -91,6 +93,7 @@ func (s *ExportSystem) Run(args ...string) cmdtest.RunResult {
 
 // MustRun wraps (*cmdtest.System).MustRunC, providing e's context.
 func (s *ExportSystem) MustRun(t *testing.T, args ...string) cmdtest.RunResult {
+	t.Helper()
 	return s.sys.MustRunC(t, s.Ctx, args...)
 }
 

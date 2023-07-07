@@ -9,8 +9,6 @@ import (
 	"os"
 	"runtime/pprof"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -21,11 +19,14 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -63,7 +64,6 @@ const (
 	FlagMinRetainBlocks     = "min-retain-blocks"
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
-	FlagIAVLLazyLoading     = "iavl-lazy-loading"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -258,7 +258,7 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	cmtApp := NewCometABCIWrapper(app)
 	svr, err := server.NewServer(addr, transport, cmtApp)
 	if err != nil {
-		return fmt.Errorf("error creating listener: %v", err)
+		return fmt.Errorf("error creating listener: %w", err)
 	}
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
@@ -289,13 +289,15 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
+	g, ctx := getCtx(svrCtx, true)
+
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, cleanupFn, err := startCmtNode(cmtCfg, app, svrCtx)
+		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
@@ -314,8 +316,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
 	}
-
-	g, ctx := getCtx(svrCtx, true)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -340,6 +340,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 // TODO: Move nodeKey into being created within the function.
 func startCmtNode(
+	ctx context.Context,
 	cfg *cmtcfg.Config,
 	app types.Application,
 	svrCtx *Context,
@@ -350,7 +351,8 @@ func startCmtNode(
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNode(
+	tmNode, err = node.NewNodeWithContext(
+		ctx,
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
@@ -550,12 +552,7 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 		}()
 	}
 
-	errCh := make(chan error)
-	go func() {
-		errCh <- callbackFn()
-	}()
-
-	return <-errCh
+	return callbackFn()
 }
 
 // emitServerInfoMetrics emits server info related metrics using application telemetry.

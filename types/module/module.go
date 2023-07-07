@@ -35,16 +35,15 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	storetypes "cosmossdk.io/store/types"
-
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -598,7 +597,7 @@ type VersionMap map[string]uint64
 // Example:
 //
 //	cfg := module.NewConfigurator(...)
-//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //	    return app.mm.RunMigrations(ctx, cfg, fromVM)
 //	})
 //
@@ -625,7 +624,7 @@ type VersionMap map[string]uint64
 // Example:
 //
 //	cfg := module.NewConfigurator(...)
-//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //	    // Assume "foo" is a new module.
 //	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
 //	    // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
@@ -638,7 +637,7 @@ type VersionMap map[string]uint64
 //	})
 //
 // Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
@@ -648,6 +647,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	updatedVM := VersionMap{}
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
@@ -666,14 +666,14 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
-			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
+			err := c.runModuleMigrations(sdkCtx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-				moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

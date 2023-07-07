@@ -6,12 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/math"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -142,7 +141,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			if commissionRate != "" {
 				rate, err := math.LegacyNewDecFromStr(commissionRate)
 				if err != nil {
-					return fmt.Errorf("invalid new commission rate: %v", err)
+					return fmt.Errorf("invalid new commission rate: %w", err)
 				}
 
 				newRate = &rate

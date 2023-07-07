@@ -3,8 +3,9 @@ package indexes
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 )
 
 type (
@@ -65,4 +66,39 @@ func TestReversePair(t *testing.T) {
 	require.NoError(t, err)
 	_, err = indexedMap.Indexes.Denom.MatchExact(ctx, "atom")
 	require.ErrorIs(t, collections.ErrInvalidIterator, err)
+}
+
+func TestUncheckedReversePair(t *testing.T) {
+	sk, ctx := deps()
+	sb := collections.NewSchemaBuilder(sk)
+	prefix := collections.NewPrefix("prefix")
+	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
+
+	uncheckedRp := NewReversePair[Amount](sb, prefix, "denom_index", keyCodec, WithReversePairUncheckedValue())
+	rp := NewReversePair[Amount](sb, prefix, "denom_index", keyCodec)
+
+	rawKey, err := collections.EncodeKeyWithPrefix(prefix, uncheckedRp.KeyCodec(), collections.Join("atom", "address1"))
+	require.NoError(t, err)
+
+	require.NoError(t, sk.OpenKVStore(ctx).Set(rawKey, []byte("i should not be here")))
+
+	// normal reverse pair fails
+	err = rp.Walk(ctx, nil, func(denom, address string) (bool, error) {
+		return false, nil
+	})
+	require.ErrorIs(t, err, collections.ErrEncoding)
+
+	// unchecked reverse pair succeeds
+	err = uncheckedRp.Walk(ctx, nil, func(indexingKey, indexedKey string) (stop bool, err error) {
+		require.Equal(t, "atom", indexingKey)
+		return true, nil
+	})
+	require.NoError(t, err)
+
+	// unchecked reverse pair lazily updates
+	err = uncheckedRp.Reference(ctx, collections.Join("address1", "atom"), 0, nil)
+	require.NoError(t, err)
+	rawValue, err := sk.OpenKVStore(ctx).Get(rawKey)
+	require.NoError(t, err)
+	require.Equal(t, []byte{}, rawValue)
 }

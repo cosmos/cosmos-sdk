@@ -3,11 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -58,11 +57,11 @@ func (s *KeeperTestSuite) SetupTest() {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// set test params
-	s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams())
+	s.slashingKeeper.Params.Set(ctx, slashingtestutil.TestParams())
 
 	slashingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	slashingtypes.RegisterQueryServer(queryHelper, s.slashingKeeper)
+	slashingtypes.RegisterQueryServer(queryHelper, slashingkeeper.NewQuerier(s.slashingKeeper))
 
 	s.queryClient = slashingtypes.NewQueryClient(queryHelper)
 	s.msgServer = slashingkeeper.NewMsgServerImpl(s.slashingKeeper)
@@ -90,7 +89,7 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		slashFractionDoubleSign,
 		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
-	).Return(sdkmath.NewInt(0))
+	).Return(sdkmath.NewInt(0), nil)
 
 	s.slashingKeeper.Slash(
 		s.ctx,
@@ -100,7 +99,7 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		s.ctx.BlockHeight(),
 	)
 
-	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()
+	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
 	s.slashingKeeper.Jail(s.ctx, consAddr)
 }
 
@@ -114,7 +113,7 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		slashFractionDoubleSign,
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
-	).Return(sdkmath.NewInt(0))
+	).Return(sdkmath.NewInt(0), nil)
 
 	s.slashingKeeper.SlashWithInfractionReason(
 		s.ctx,
@@ -125,7 +124,7 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 
-	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()
+	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
 	s.slashingKeeper.Jail(s.ctx, consAddr)
 }
 

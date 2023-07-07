@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var address1 = "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
@@ -51,9 +50,9 @@ func (suite *KeeperTestSuite) reset() {
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
-	err := bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	err := bankKeeper.MintCoins(suite.ctx, mintModuleName, coins)
 	suite.NoError(err)
-	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, mintModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -131,6 +130,26 @@ func TestProposalQueues(t *testing.T) {
 	has, err = govKeeper.ActiveProposalsQueue.Has(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
 	require.NoError(t, err)
 	require.True(t, has)
+}
+
+func TestSetHooks(t *testing.T) {
+	govKeeper, _, _, _, _, _, _ := setupGovKeeper(t)
+	require.Empty(t, govKeeper.Hooks())
+
+	govHooksReceiver := MockGovHooksReceiver{}
+	govKeeper.SetHooks(types.NewMultiGovHooks(&govHooksReceiver))
+	require.NotNil(t, govKeeper.Hooks())
+	require.Panics(t, func() {
+		govKeeper.SetHooks(&govHooksReceiver)
+	})
+}
+
+func TestGetGovGovernanceAndModuleAccountAddress(t *testing.T) {
+	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+	mAcc := authKeeper.GetModuleAccount(ctx, "gov")
+	require.Equal(t, mAcc, govKeeper.GetGovernanceAccount(ctx))
+	mAddr := authKeeper.GetModuleAddress("gov")
+	require.Equal(t, mAddr, govKeeper.ModuleAccountAddress())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

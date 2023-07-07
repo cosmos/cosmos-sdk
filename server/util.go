@@ -190,14 +190,12 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		}
 
 		opts = append(opts, log.FilterOption(filterFunc))
-
-	case ctx.Viper.GetBool("trace"): // cmtcli.TraceFlag
-		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
-		// Note it overrides log level passed in `log_levels`.
-		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
 	default:
 		opts = append(opts, log.LevelOption(logLvl))
 	}
+
+	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
+	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
 
 	return log.NewLogger(out, opts...), nil
 }
@@ -517,7 +515,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		defaultMempool,
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
 	}
 }

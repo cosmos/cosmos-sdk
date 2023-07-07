@@ -5,11 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/upgrade"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -17,13 +12,23 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/evidence"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -270,7 +275,8 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false)
-	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	require.NoError(t, err)
 	for v, i := range app.ModuleManager.Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
@@ -293,4 +299,54 @@ func TestProtoAnnotations(t *testing.T) {
 	require.NoError(t, err)
 	err = msgservice.ValidateProtoAnnotations(r)
 	require.NoError(t, err)
+}
+
+var _ address.Codec = (*customAddressCodec)(nil)
+
+type customAddressCodec struct{}
+
+func (c customAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return []byte(text), nil
+}
+
+func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
+	return string(bz), nil
+}
+
+func TestAddressCodecFactory(t *testing.T) {
+	var addrCodec address.Codec
+	var valAddressCodec authtypes.ValidatorAddressCodec
+
+	err := depinject.Inject(
+		depinject.Configs(
+			network.MinimumAppConfig(),
+			depinject.Supply(log.NewNopLogger()),
+		),
+		&addrCodec, &valAddressCodec)
+	require.NoError(t, err)
+	require.NotNil(t, addrCodec)
+	_, ok := addrCodec.(customAddressCodec)
+	require.False(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
+	require.False(t, ok)
+
+	// Set the address codec to the custom one
+	err = depinject.Inject(
+		depinject.Configs(
+			network.MinimumAppConfig(),
+			depinject.Supply(
+				log.NewNopLogger(),
+				func() address.Codec { return customAddressCodec{} },
+				func() authtypes.ValidatorAddressCodec { return customAddressCodec{} },
+			),
+		),
+		&addrCodec, &valAddressCodec)
+	require.NoError(t, err)
+	require.NotNil(t, addrCodec)
+	_, ok = addrCodec.(customAddressCodec)
+	require.True(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
+	require.True(t, ok)
 }

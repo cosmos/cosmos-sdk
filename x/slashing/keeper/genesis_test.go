@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	keeper.SetParams(ctx, testutil.TestParams())
+	keeper.Params.Set(ctx, testutil.TestParams())
 
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	require.NotEqual(info1, newInfo1)
 
 	// Initialize genesis with genesis state before tombstone
-	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return()
+	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return(nil)
 	keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
 
 	// Validator isTombstoned should return false as GenesisState is initialized

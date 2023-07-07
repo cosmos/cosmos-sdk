@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/simd/cmd"
+
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

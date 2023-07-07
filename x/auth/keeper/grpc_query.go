@@ -6,13 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -161,6 +160,10 @@ func (s queryServer) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRe
 	bech32Prefix, err := s.k.getBech32Prefix()
 	if err != nil {
 		return nil, err
+	}
+
+	if bech32Prefix == "" {
+		return &types.Bech32PrefixResponse{Bech32Prefix: "bech32 is not used on this chain"}, nil
 	}
 
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil

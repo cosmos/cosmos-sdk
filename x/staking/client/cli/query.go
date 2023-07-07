@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -133,13 +134,13 @@ $ %s query staking validators
 	return cmd
 }
 
-// GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
+// GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegations from a validator command.
 func GetCmdQueryValidatorUnbondingDelegations() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
-		Short: "Query all unbonding delegatations from a validator",
+		Short: "Query all unbonding delegations from a validator",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query delegations that are unbonding _from_ a validator.
 
@@ -187,14 +188,14 @@ $ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9l
 	return cmd
 }
 
-// GetCmdQueryValidatorRedelegations implements the query all redelegatations
+// GetCmdQueryValidatorRedelegations implements the query all redelegations
 // from a validator command.
 func GetCmdQueryValidatorRedelegations() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
-		Short: "Query all outgoing redelegatations from a validator",
+		Short: "Query all outgoing redelegations from a validator",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query delegations that are redelegating _from_ a validator.
 
@@ -647,7 +648,7 @@ $ %s query staking historical-info 5
 
 			height, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil || height < 0 {
-				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
+				return fmt.Errorf("height argument provided must be a non-negative-integer: %w", err)
 			}
 
 			params := &types.QueryHistoricalInfoRequest{Height: height}

@@ -2,7 +2,6 @@ package codec
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -194,27 +193,7 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	jsonBytes, err := encoder.Marshal(protoMsg)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: remove this sort once https://github.com/cosmos/cosmos-sdk/issues/2350#issuecomment-1542715157 lands
-	// the encoder should be rendering in lexical order
-	return sortJSON(jsonBytes)
-}
-
-// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
-func sortJSON(toSortJSON []byte) ([]byte, error) {
-	var c interface{}
-	err := json.Unmarshal(toSortJSON, &c)
-	if err != nil {
-		return nil, err
-	}
-	js, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return js, nil
+	return encoder.Marshal(protoMsg)
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,

@@ -5,6 +5,8 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
+
 ### Migration to CometBFT (Part 2)
 
 The Cosmos SDK has migrated in its previous versions, to CometBFT.
@@ -27,23 +29,69 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 * The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
-### Configuration
+#### Enable Vote Extensions
 
-A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+:::tip
+This is an optional feature that is disabled by default.
+:::
+
+Once all the code changes required to implement Vote Extensions are in place,
+they can be enabled by setting the consensus param `Abci.VoteExtensionsEnableHeight`
+to a value greater than zero.
+
+In a new chain, this can be done in the `genesis.json` file.
+
+For existing chains this can be done in two ways:
+
+* During an upgrade the value is set in an upgrade handler.
+* A governance proposal that changes the consensus param **after a coordinated upgrade has taken place**.
+
+### BaseApp
+
+All ABCI methods now accept a pointer to the request and response types defined
+by CometBFT. In addition, they also return errors. An ABCI method should only
+return errors in cases where a catastrophic failure has occurred and the application
+should halt. However, this is abstracted away from the application developer. Any
+handler that an application can define or set that returns an error, will gracefully
+by handled by `BaseApp` on behalf of the application.
+
+BaseApp calls of `BeginBlock` & `Endblock` are now private but are still exposed
+to the application to define via the `Manager` type. `FinalizeBlock` is public
+and should be used in order to test and run operations. This means that although
+`BeginBlock` & `Endblock` no longer exist in the ABCI interface, they are automatically
+called by `BaseApp` during `FinalizeBlock`. Specifically, the order of operations
+is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
+
+ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
+methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
+allows an application to define handlers for these methods via `ExtendVoteHandler`
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+for more info.
+
+#### Events
+
+The log section of `abci.TxResult` is not populated in the case of successful
+msg(s) execution. Instead a new attribute is added to all messages indicating
+the `msg_index` which identifies which events and attributes relate the same
+transaction.
+
+`BeginBlock` & `EndBlock` Events are now emitted through `FinalizeBlock` but have
+an added attribute, `mode=BeginBlock|EndBlock`, to identify if the event belongs
+to `BeginBlock` or `EndBlock`.
+
+### Config files
+
+A new tool has been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
 
 ```bash
 simd config migrate v0.50
 ```
 
-More information about [confix](https://docs.cosmos.network/main/tooling/confix).
-
-#### Events
-
-The log section of abci.TxResult is not populated in the case of successful msg(s) execution. Instead a new attribute is added to all messages indicating the `msg_index` which identifies which events and attributes relate the same transaction
+More information about [confix](https://docs.cosmos.network/main/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/tooling/confix).
 
 #### gRPC-Web
 
-gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+gRPC-Web is now listening to the same address and port as the gRPC Gateway API server (default: `localhost:1317`).
 The possibility to listen to a different address has been removed, as well as its settings.
 Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
 
@@ -51,13 +99,15 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
+**TODO: talk about db migration tool.**
+
 ### Protobuf
 
 With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
 For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
 
-TODO: summarize proto annotation requirements.
+**TODO: summarize proto annotation requirements.**
 
 #### Stringer
 
@@ -66,14 +116,14 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 ### SimApp
 
-<!-- TODO(@julienrbrt) collapse this section in 3 parts, general, app v1 and app v2 changes, now it is a bit confusing -->
+In this section we describe the changes made in Cosmos SDK' SimApp.
+These changes are directly applicable to your application wiring.
 
 #### Module Assertions
 
-Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
-This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
-#### Modules Keepers
+#### Module wiring
 
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
@@ -89,6 +139,9 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/mint`
 * `x/nft`
 * `x/slashing`
+* `x/upgrade`
+
+**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
 
 Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
@@ -101,26 +154,9 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 )
 ```
 
-The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
-
-* `x/authz`
-* `x/bank`
-* `x/mint`
-* `x/crisis`
-* `x/distribution`
-* `x/evidence`
-* `x/gov`
-* `x/slashing`
-
-**Users using depinject do not need any changes, this is automatically done for them.**
-
 #### Logger
 
-The following modules `NewKeeper` function now take a `log.Logger`:
-
-* `x/bank`
-
-`depinject` users must now supply the logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+`depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -137,14 +173,14 @@ appConfig = depinject.Configs(
 + app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
 
-User manually wiring their chain need to add the logger argument when creating the keeper.
+User manually wiring their chain need to add the logger argument when creating the `x/bank` keeper.
 
 #### Module Basics
 
 Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
-This is automatically done for depinject users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
 
 ```go
 depinject.Supply(
@@ -164,9 +200,14 @@ Users manually wiring their chain need to use the new `module.NewBasicManagerFro
 
 ### Packages
 
+#### Math
+
+References to `types/math.go` which contained aliases for math types aliasing the `cosmossdk.io/math` package have been removed.
+Import directly the `cosmossdk.io/math` package instead.
+
 #### Store
 
-References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
+References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate `store/types`, hence the `types/store.go` file is no longer needed and has been removed.
 
 ##### Extract Store to a standalone module
 
@@ -185,7 +226,19 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted.  Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+
+The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+
+* `x/authz`
+* `x/bank`
+* `x/mint`
+* `x/crisis`
+* `x/distribution`
+* `x/evidence`
+* `x/gov`
+* `x/slashing`
+* `x/upgrade`
 
 #### `x/auth`
 
@@ -193,7 +246,7 @@ For ante handler construction via `ante.NewAnteHandler`, the field `ante.Handler
 
 #### `x/capability`
 
-Capability was moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC V8 will contain the necessary changes to incorporate the new module location
+Capability has been moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
 
 #### `x/gov`
 
@@ -224,6 +277,7 @@ All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instea
 ##### Extract nft to a standalone module
 
 The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+All the evidence imports are now renamed to use `cosmossdk.io/x/nft` instead of `github.com/cosmos/cosmos-sdk/x/nft` across the SDK.
 
 #### x/feegrant
 
@@ -415,6 +469,19 @@ The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
+#### `x/crisis`
+
+With the migrations of all modules away from `x/params`, the crisis module now has a store.
+The store must be created during a chain upgrade to v0.47.x.
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				crisistypes.ModuleName,
+			},
+}
+```
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission
@@ -427,7 +494,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### New Proposal.Proposer field
+##### New `Proposal.Proposer` field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
@@ -483,7 +550,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-The old params module is required to still be imported in your app.go in order to handle this migration. 
+The `x/params` module should still be imported in your app.go in order to handle this migration.
+
+Because the `x/consensus` module is a new module, its store must be added while upgrading to v0.47.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				consensustypes.ModuleName,
+			},
+}
+```
 
 ##### `app.go` changes
 

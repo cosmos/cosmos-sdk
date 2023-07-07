@@ -20,14 +20,14 @@ type ParamSubspace interface {
 type StakingKeeper interface {
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
-		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
-	)
+		context.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
+	) error
 
-	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
+	TotalBondedTokens(context.Context) (math.Int, error) // total bonded tokens within the validator set
 	IterateDelegations(
-		ctx sdk.Context, delegator sdk.AccAddress,
+		ctx context.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),
-	)
+	) error
 }
 
 // DistributionKeeper defines the expected distribution keeper (noalias)

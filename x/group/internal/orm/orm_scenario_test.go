@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -395,6 +396,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 }
 
 func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
+	t.Helper()
 	it, err := index.Get(store, searchKey)
 	require.NoError(t, err)
 
@@ -406,6 +408,7 @@ func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata
 }
 
 func first(t *testing.T, it Iterator) ([]byte, testdata.TableModel) {
+	t.Helper()
 	var loaded testdata.TableModel
 	key, err := First(it, &loaded)
 	require.NoError(t, err)

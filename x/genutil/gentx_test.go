@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/math"
-
-	storetypes "cosmossdk.io/store/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"

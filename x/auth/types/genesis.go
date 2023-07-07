@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -136,7 +137,7 @@ func ValidateGenAccounts(accounts GenesisAccounts) error {
 
 		// check account specific validation
 		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %w", addrStr, err)
 		}
 	}
 	return nil
@@ -186,7 +187,7 @@ func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
 	for i, any := range accountsAny {
 		acc, ok := any.GetCachedValue().(GenesisAccount)
 		if !ok {
-			return nil, fmt.Errorf("expected genesis account")
+			return nil, errors.New("expected genesis account")
 		}
 		accounts[i] = acc
 	}

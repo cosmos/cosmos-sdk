@@ -3,12 +3,13 @@ package module
 import (
 	"fmt"
 
-	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/grpc"
 	googlegrpc "google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

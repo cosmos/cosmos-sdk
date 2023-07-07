@@ -1,9 +1,11 @@
 package types
 
+import "cosmossdk.io/math"
+
 // map coins is a map representation of sdk.Coins
 // intended solely for use in bulk additions.
 // All serialization and iteration should be done after conversion to sdk.Coins.
-type MapCoins map[string]Int
+type MapCoins map[string]math.Int
 
 func NewMapCoins(coins Coins) MapCoins {
 	m := make(MapCoins, len(coins))

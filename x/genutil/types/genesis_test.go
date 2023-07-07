@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

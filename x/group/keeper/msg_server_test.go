@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/mock/gomock"
-
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
@@ -1588,6 +1588,14 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(dp1, dp2)
 	}
 
+	// no group policy
+	noPolicies, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
+		Admin: addrs[2].String(),
+	})
+	s.Require().NoError(err)
+	policyAccs = noPolicies.GroupPolicies
+	s.Require().Equal(len(policyAccs), 0)
+
 	// query group policy by admin
 	policiesByAdminRes, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
 		Admin: admin.String(),
@@ -2072,12 +2080,31 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	myProposalID := proposalRes.ProposalId
 
-	// proposals by group policy
+	// no group policy
 	proposalsRes, err := s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
-		Address: accountAddr,
+		Address: addrs[2].String(),
 	})
 	s.Require().NoError(err)
 	proposals := proposalsRes.Proposals
+	s.Require().Equal(len(proposals), 0)
+
+	// proposals by group policy (request with pagination)
+	proposalsRes, err = s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
+		Address: accountAddr,
+		Pagination: &query.PageRequest{
+			Limit: 2,
+		},
+	})
+	s.Require().NoError(err)
+	proposals = proposalsRes.Proposals
+	s.Require().Equal(len(proposals), 1)
+
+	// proposals by group policy
+	proposalsRes, err = s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
+		Address: accountAddr,
+	})
+	s.Require().NoError(err)
+	proposals = proposalsRes.Proposals
 	s.Require().Equal(len(proposals), 1)
 	s.Assert().Equal(req.GroupPolicyAddress, proposals[0].GroupPolicyAddress)
 	s.Assert().Equal(req.Metadata, proposals[0].Metadata)

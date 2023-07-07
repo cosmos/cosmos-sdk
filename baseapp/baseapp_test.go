@@ -7,19 +7,20 @@ import (
 	"testing"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -58,6 +59,7 @@ type (
 )
 
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
+	t.Helper()
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -85,6 +87,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 }
 
 func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
+	t.Helper()
 	snapshotTimeout := 1 * time.Minute
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
@@ -100,9 +103,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err = suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
@@ -134,7 +138,13 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			txs = append(txs, txBytes)
 		}
 
-		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
+			Height: height,
+			Txs:    txs,
+		})
+		require.NoError(t, err)
+
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
 			Txs:    txs,
 		})
@@ -186,6 +196,8 @@ func TestLoadVersion(t *testing.T) {
 	require.Equal(t, emptyCommitID, lastID)
 
 	// execute a block, collect commit ID
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
@@ -193,6 +205,8 @@ func TestLoadVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// execute a block, collect commit ID
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
 	res, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	commitID2 := storetypes.CommitID{Version: 2, Hash: res.AppHash}
@@ -216,6 +230,8 @@ func TestLoadVersion(t *testing.T) {
 
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
@@ -230,6 +246,7 @@ func TestSetLoader(t *testing.T) {
 	}
 
 	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
@@ -250,6 +267,7 @@ func TestSetLoader(t *testing.T) {
 	}
 
 	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 
@@ -302,6 +320,8 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
+			_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+			require.NoError(t, err)
 			res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 			require.NoError(t, err)
 			require.NotNil(t, res.AppHash)
@@ -351,6 +371,8 @@ func TestLoadVersionInvalid(t *testing.T) {
 	err = app.LoadVersion(-1)
 	require.Error(t, err)
 
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
@@ -453,11 +475,14 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 			panic(errorsmod.Wrap(anteErr, "anteHandler"))
 		})
 	}
-	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
 		err, ok := recoveryObj.(error)
@@ -494,9 +519,10 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	// execute a tx that will fail ante handler execution
 	//
@@ -566,11 +592,19 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	app.Commit()
+	_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
-	app.Commit()
+	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: 2})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name   string
@@ -606,7 +640,9 @@ func TestSetMinGasPrices(t *testing.T) {
 
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	suite.baseApp.InitChain(&abci.RequestInitChain{})
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
 	ctx := suite.baseApp.NewContext(true)
 
 	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
@@ -650,6 +686,8 @@ func TestLoadVersionPruning(t *testing.T) {
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
+		_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: i})
+		require.NoError(t, err)
 		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
 		_, err = app.Commit()

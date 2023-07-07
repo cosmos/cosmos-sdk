@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -46,11 +45,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		return nil
 	}
 
-	resolver := b.FileResolver
-	if resolver == nil {
-		resolver = protoregistry.GlobalFiles
-	}
-	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
+	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
 		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
@@ -121,11 +116,10 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 		bz, err := jsonMarshalOptions.Marshal(output.Interface())
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
 		}
 
-		err = b.outOrStdoutFormat(cmd, bz)
-		return err
+		return b.outOrStdoutFormat(cmd, bz)
 	})
 	if err != nil {
 		return nil, err

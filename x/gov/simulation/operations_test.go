@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -404,6 +405,7 @@ type suite struct {
 
 // returns context and an app with updated mint keeper
 func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
+	t.Helper()
 	res := suite{}
 
 	app, err := simtestutil.Setup(
@@ -434,6 +436,7 @@ func getTestingAccounts(
 	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
 	ctx sdk.Context, n int,
 ) []simtypes.Account {
+	t.Helper()
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)

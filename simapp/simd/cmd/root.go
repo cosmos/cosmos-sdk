@@ -169,13 +169,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
 		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-<<<<<<< HEAD
 		config.Cmd(),
-		pruning.PruningCmd(newApp),
-=======
-		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp, simapp.DefaultNodeHome),
->>>>>>> 317fb0b33 (fix(cli): improve `prune` command ux (#16856))
 		snapshot.Cmd(newApp),
 	)
 

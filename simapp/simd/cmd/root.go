@@ -168,15 +168,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-<<<<<<< HEAD
 		config.Cmd(),
-		pruning.PruningCmd(a.newApp),
+		pruning.Cmd(a.newApp, simapp.DefaultNodeHome),
 		snapshot.Cmd(a.newApp),
-=======
-		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, simapp.DefaultNodeHome),
-		snapshot.Cmd(newApp),
->>>>>>> 317fb0b33 (fix(cli): improve `prune` command ux (#16856))
 	)
 
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)

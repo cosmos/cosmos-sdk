@@ -5,14 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -21,34 +20,22 @@ const FlagAppDBBackend = "app-db-backend"
 
 // PruningCmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
-<<<<<<< HEAD
+// Deprecated: Use Cmd instead.
 func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
-=======
+	cmd := Cmd(appCreator, "")
+	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+
+	return cmd
+}
+
+// Cmd prunes the sdk root multi store history versions based on the pruning options
+// specified by command flags.
 func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
->>>>>>> 317fb0b33 (fix(cli): improve `prune` command ux (#16856))
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
 		Long: `Prune app history states by keeping the recent heights and deleting old heights.
-<<<<<<< HEAD
-		The pruning option is provided via the '--pruning' flag or alternatively with '--pruning-keep-recent'
-		
-		For '--pruning' the options are as follows:
-		
-		default: the last 362880 states are kept
-		nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-		everything: 2 latest states will be kept
-		custom: allow pruning options to be manually specified through 'pruning-keep-recent'.
-		besides pruning options, database home directory and database backend type should also be specified via flags
-		'--home' and '--app-db-backend'.
-		valid app-db-backend type includes 'goleveldb', 'cleveldb', 'rocksdb', 'boltdb', and 'badgerdb'.
-		`,
-		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			vp := viper.New()
-=======
 The pruning option is provided via the 'pruning' argument or alternatively with '--pruning-keep-recent'
->>>>>>> 317fb0b33 (fix(cli): improve `prune` command ux (#16856))
 
 - default: the last 362880 states are kept
 - nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
@@ -69,7 +56,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
 				vp.Set(server.FlagPruning, args[0])
-			} else {
+			} else if vp.GetString(server.FlagPruning) == "" { // this differs from orignal https://github.com/cosmos/cosmos-sdk/pull/16856 for compatibility
 				vp.Set(server.FlagPruning, pruningtypes.PruningOptionDefault)
 			}
 			pruningOptions, err := server.GetPruningOptionsFromFlags(vp)
@@ -106,7 +93,6 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-<<<<<<< HEAD
 			var pruningHeights []int64
 			for height := int64(1); height < latestHeight; height++ {
 				if height < latestHeight-int64(pruningOptions.KeepRecent) {
@@ -114,21 +100,12 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				}
 			}
 			if len(pruningHeights) == 0 {
-				fmt.Printf("no heights to prune\n")
+				cmd.Println("no heights to prune")
 				return nil
 			}
-			fmt.Printf(
-				"pruning heights start from %v, end at %v\n",
-				pruningHeights[0],
-				pruningHeights[len(pruningHeights)-1],
-			)
-=======
-			pruningHeight := latestHeight - int64(pruningOptions.KeepRecent)
-			cmd.Printf("pruning heights up to %v\n", pruningHeight)
->>>>>>> 317fb0b33 (fix(cli): improve `prune` command ux (#16856))
+			cmd.Printf("pruning heights start from %v, end at %v\n", pruningHeights[0], pruningHeights[len(pruningHeights)-1])
 
-			err = rootMultiStore.PruneStores(false, pruningHeights)
-			if err != nil {
+			if err = rootMultiStore.PruneStores(false, pruningHeights); err != nil {
 				return err
 			}
 

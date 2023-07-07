@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	v1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1" // register to that it shows up in protoregistry.GlobalTypes
+	_ "cosmossdk.io/api/cosmos/crypto/secp256r1" // register to that it shows up in protoregistry.GlobalTypes
+	stakingv1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -12,7 +14,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: v1beta.Query_ServiceDesc.ServiceName,
+			Service: stakingv1beta.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Validators",
@@ -134,7 +136,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: v1beta.Msg_ServiceDesc.ServiceName,
+			Service: stakingv1beta.Msg_ServiceDesc.ServiceName,
 		},
 	}
 }

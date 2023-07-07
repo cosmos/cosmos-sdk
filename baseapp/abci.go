@@ -677,6 +677,14 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		AppHash:            app.LastCommitID().Hash,
 	}
 
+	// If the node crashed after ProcessProposal but before FinalizeBlock, then
+	// app.finalizeBlockState will be nil. In this case, we need to
+	// reinitialize the state. This also means that anything written to finalizeBlockState
+	// during ProcessProposal wasn't persisted and is now lost.
+	if app.finalizeBlockState == nil {
+		app.setState(execModeFinalize, header)
+	}
+
 	// app.finalizeBlockState.ctx will already be initialized
 	// by InitChain or by ProcessProposal. Context is now updated with Header information.
 	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
@@ -699,10 +707,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			LastCommit:      req.DecidedLastCommit,
 		})
 
+	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
-
-	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-		WithBlockGasMeter(gasMeter)
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.

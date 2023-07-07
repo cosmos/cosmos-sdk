@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-* (types) [#16272](https://github.com/cosmos/cosmos-sdk/pull/16272)Now the FeeGranter in the FeeTx takes the byte type. 
+
 
 ### Improvements
 
@@ -51,7 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
 
 ### API Breaking Changes
-
+* (types) [#16272](https://github.com/cosmos/cosmos-sdk/pull/16272) Now the FeeGranter in the FeeTx takes the byte type . 
 * (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16798) Remove aliases in `types/math.go` (part 2).
 * (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
     * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.

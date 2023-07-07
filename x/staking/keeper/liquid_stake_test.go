@@ -30,7 +30,7 @@ func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
 	connectionID := "connection-0"
 	portID := icahost
 
-	moduleAddress := app.AccountKeeper.GetModuleAddress(icahost)
+	moduleAddress := authtypes.NewModuleAddress(icahost)
 	icaAddress := sdk.AccAddress(address.Derive(moduleAddress, []byte(connectionID+portID)))
 
 	account := authtypes.NewBaseAccountWithAddress(icaAddress)

@@ -210,7 +210,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	}
 
 	// if this delegation is from a liquid staking provider (identified if the delegator
-	// is and ICA account), it cannot exceed the global or validator bond cap
+	// is an ICA account), it cannot exceed the global or validator bond cap
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
@@ -404,7 +404,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}
 
 	// if this delegation is from a liquid staking provider (identified if the delegator
-	// is and ICA account), the global and validator liquid totals should be decremented
+	// is an ICA account), the global and validator liquid totals should be decremented
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
@@ -509,7 +509,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	}
 
 	// if this undelegation was from a liquid staking provider (identified if the delegator
-	// is and ICA account), the global and validator liquid totals should be incremented
+	// is an ICA account), the global and validator liquid totals should be incremented
 	tokens := msg.Amount.Amount
 	shares, err := validator.SharesFromTokens(tokens)
 	if err != nil {

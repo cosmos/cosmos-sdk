@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-* (types) [#16272](https://github.com/cosmos/cosmos-sdk/pull/16272)Now the FeeGranter in the FeeTx takes the byte type. 
+
 
 ### Improvements
 

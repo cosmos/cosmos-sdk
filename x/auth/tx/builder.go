@@ -211,9 +211,9 @@ func (w *wrapper) FeePayer() []byte {
 }
 
 func (w *wrapper) FeeGranter() []byte {
-	feePayer := w.tx.AuthInfo.Fee.Granter
-	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+	feeGranter := w.tx.AuthInfo.Fee.Granter
+	if feeGranter != "" {
+		return sdk.MustAccAddressFromBech32(feeGranter)
 	}
 	return nil
 }

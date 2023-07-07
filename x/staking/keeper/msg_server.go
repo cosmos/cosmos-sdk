@@ -585,7 +585,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 }
 
 // UnbondValidator defines a method for performing the status transition for
-// a validator from bonded to unbonded
+// a validator from bonded to unbonding
+// This allows a validator to stop their services and jail themselves without
+// experiencing a slash
 func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
@@ -603,6 +605,8 @@ func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondVa
 	return &types.MsgUnbondValidatorResponse{}, nil
 }
 
+// Tokenizes shares associated with a delegation by creating a tokenize share record
+// and returning tokens with a denom of the format {validatorAddress}/{recordId}
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -758,6 +762,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}, nil
 }
 
+// Converts tokenized shares back into a native delegation
 func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRedeemTokensForShares) (*types.MsgRedeemTokensForSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -876,6 +881,7 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	}, nil
 }
 
+// Transfers the ownership of rewards associated with a tokenize share record
 func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -965,6 +971,8 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
 }
 
+// Designates a delegation as a validator bond
+// This enables the validator to recieve more liquid staking delegations
 func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

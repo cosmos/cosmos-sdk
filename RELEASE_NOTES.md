@@ -1,8 +1,6 @@
 # Cosmos SDK v0.46.14 Release Notes
 
-<!-- todo -->
-
-Did you know Cosmos SDK Twilight (a.k.a v0.47) has been released? Upgrade easily by reading the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/UPGRADING.md#v047x).
+This patch release introduces a few bug fixes and improvements to the v0.46.x line of the Cosmos SDK. Notably, an improvement to `<appd> prune` UX and improving the error handling when there is a snapshot creation failure.
 
 Ensure you have the following replaces in the `go.mod` of your application:
 

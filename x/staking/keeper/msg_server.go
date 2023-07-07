@@ -458,6 +458,11 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation
 // and delegate back to the validator.
+//
+// This has been backported from SDK 46 as a desirable safety feature for LSM.
+// If a liquid staking provider is exploited and the exploiter initiates an undelegation,
+// having access to CancelUnbondingDelegation allows the liquid staking provider to cancel
+// the undelegation with a software upgrade and thus avoid loss of user funds
 func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -250,7 +250,7 @@ func queryCommand() *cobra.Command {
 	)
 
 	return cmd
-}``
+}
 
 func txCommand() *cobra.Command {
 	cmd := &cobra.Command{

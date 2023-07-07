@@ -7,7 +7,8 @@
 Missed the v0.47.0 announcement? Read it [here](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
 For this fourth patch release of the `v0.47.x` line, some of the notable changes include:
 
-* <!-- todo -->
+* An improvement in `<appd> prune` UX.
+* Improving the error handling when there is a snapshot creation failure.
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.4/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/release/v0.47.3...v0.47.4) from last release.
 

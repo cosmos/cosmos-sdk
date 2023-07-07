@@ -1,8 +1,8 @@
 package tx
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -58,7 +58,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 
 	// Fee payer cannot use SIGN_MODE_DIRECT_AUX, because SIGN_MODE_DIRECT_AUX
 	// does not sign over fees, which would create malleability issues.
-	if bytes.EqualFold([]byte(feepayer.String()), []byte(data.Address)) {
+	if strings.EqualFold(feepayer.String(), data.Address) {
 		return nil, sdkerrors.ErrUnauthorized.Wrapf("fee payer %s cannot sign with %s", feepayer, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 

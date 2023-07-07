@@ -27,12 +27,12 @@ func TestRollback(t *testing.T) {
 	ver0 := app.LastBlockHeight()
 	appStateBz, _ := json.Marshal(app.DefaultGenesis())
 
-	app.InitChain(&abci.RequestInitChain{
+	_, err := app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appStateBz,
 		InitialHeight:   1,
 	})
-
+	assert.NilError(t, err)
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
 		header := cmtproto.Header{

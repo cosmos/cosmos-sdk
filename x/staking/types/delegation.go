@@ -30,12 +30,12 @@ func (dvv DVVTriplet) String() string {
 // NewDelegation creates a new delegation object
 //
 //nolint:interfacer
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, validatorBond bool) Delegation {
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
-		ValidatorBond:    validatorBond,
+		ValidatorBond:    false,
 	}
 }
 
@@ -334,8 +334,13 @@ func NewDelegationResp(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, validatorBond bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares, validatorBond),
-		Balance:    balance,
+		Delegation: Delegation{
+			DelegatorAddress: delegatorAddr.String(),
+			ValidatorAddress: validatorAddr.String(),
+			Shares:           shares,
+			ValidatorBond:    validatorBond,
+		},
+		Balance: balance,
 	}
 }
 

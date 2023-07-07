@@ -74,7 +74,7 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 	require.True(t, validator1.IsBonded())
 
 	// Create a delegator
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1, false)
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// Create a validator to redelegate to

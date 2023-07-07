@@ -13,7 +13,7 @@ import (
 )
 
 func TestDelegationEqual(t *testing.T) {
-	d1 := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(100), false)
+	d1 := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(100))
 	d2 := d1
 
 	ok := d1.String() == d2.String()
@@ -27,7 +27,7 @@ func TestDelegationEqual(t *testing.T) {
 }
 
 func TestDelegationString(t *testing.T) {
-	d := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(100), false)
+	d := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(100))
 	require.NotEmpty(t, d.String())
 }
 

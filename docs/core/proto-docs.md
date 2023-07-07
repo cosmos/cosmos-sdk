@@ -6984,6 +6984,7 @@ multiplied by exchange rate.
 | `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.** Deprecated: This field has been deprecated with LSM in favor of the validator bond |
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
 | `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
 | `total_validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
@@ -8276,7 +8277,7 @@ Msg defines the staking Msg service.
 | `UnbondValidator` | [MsgUnbondValidator](#cosmos.staking.v1beta1.MsgUnbondValidator) | [MsgUnbondValidatorResponse](#cosmos.staking.v1beta1.MsgUnbondValidatorResponse) | UnbondValidator defines a method for performing the status transition for a validator from bonded to unbonded | |
 | `CancelUnbondingDelegation` | [MsgCancelUnbondingDelegation](#cosmos.staking.v1beta1.MsgCancelUnbondingDelegation) | [MsgCancelUnbondingDelegationResponse](#cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse) | CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation and delegate back to previous validator.
 
-Since: cosmos-sdk 0.46 | |
+This has been backported from SDK 46 as a desirable safety feature for LSM. If a liquid staking provider is exploited and the exploiter initiates an undelegation, having access to CancelUnbondingDelegation allows the liquid staking provider to cancel the undelegation with a software upgrade and thus avoid loss of user funds | |
 | `TokenizeShares` | [MsgTokenizeShares](#cosmos.staking.v1beta1.MsgTokenizeShares) | [MsgTokenizeSharesResponse](#cosmos.staking.v1beta1.MsgTokenizeSharesResponse) | TokenizeShares defines a method for tokenizing shares from a validator. | |
 | `RedeemTokensForShares` | [MsgRedeemTokensForShares](#cosmos.staking.v1beta1.MsgRedeemTokensForShares) | [MsgRedeemTokensForSharesResponse](#cosmos.staking.v1beta1.MsgRedeemTokensForSharesResponse) | RedeemTokensForShares defines a method for redeeming tokens from a validator for shares. | |
 | `TransferTokenizeShareRecord` | [MsgTransferTokenizeShareRecord](#cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord) | [MsgTransferTokenizeShareRecordResponse](#cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse) | TransferTokenizeShareRecord defines a method to transfer ownership of TokenizeShareRecord | |

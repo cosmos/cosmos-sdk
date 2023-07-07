@@ -1343,7 +1343,10 @@ type MsgClient interface {
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
 	//
-	// Since: cosmos-sdk 0.46
+	// This has been backported from SDK 46 as a desirable safety feature for LSM.
+	// If a liquid staking provider is exploited and the exploiter initiates an undelegation,
+	// having access to CancelUnbondingDelegation allows the liquid staking provider to cancel
+	// the undelegation with a software upgrade and thus avoid loss of user funds
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
 	// TokenizeShares defines a method for tokenizing shares from a validator.
 	TokenizeShares(ctx context.Context, in *MsgTokenizeShares, opts ...grpc.CallOption) (*MsgTokenizeSharesResponse, error)
@@ -1508,7 +1511,10 @@ type MsgServer interface {
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
 	//
-	// Since: cosmos-sdk 0.46
+	// This has been backported from SDK 46 as a desirable safety feature for LSM.
+	// If a liquid staking provider is exploited and the exploiter initiates an undelegation,
+	// having access to CancelUnbondingDelegation allows the liquid staking provider to cancel
+	// the undelegation with a software upgrade and thus avoid loss of user funds
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
 	// TokenizeShares defines a method for tokenizing shares from a validator.
 	TokenizeShares(context.Context, *MsgTokenizeShares) (*MsgTokenizeSharesResponse, error)

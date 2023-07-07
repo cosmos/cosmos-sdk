@@ -2,12 +2,20 @@ package integration
 
 // Config is the configuration for the integration app.
 type Config struct {
-	AutomaticFinalizeBlock bool
-	AutomaticCommit        bool
+	AutomaticProcessProposal bool
+	AutomaticFinalizeBlock   bool
+	AutomaticCommit          bool
 }
 
 // Option is a function that can be used to configure the integration app.
 type Option func(*Config)
+
+// WithAutomaticProcessProposal calls ABCI process proposal.
+func WithAutomaticProcessProposal() Option {
+	return func(cfg *Config) {
+		cfg.AutomaticProcessProposal = true
+	}
+}
 
 // WithAutomaticFinalizeBlock calls ABCI finalize block.
 func WithAutomaticFinalizeBlock() Option {

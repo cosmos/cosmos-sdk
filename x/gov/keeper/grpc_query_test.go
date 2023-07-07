@@ -86,6 +86,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryConstitution() {
+	suite.reset()
+	queryClient := suite.queryClient
+
+	expRes := &v1.QueryConstitutionResponse{Constitution: "constitution"}
+
+	constitution, err := queryClient.Constitution(gocontext.Background(), &v1.QueryConstitutionRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(expRes, constitution)
+}
+
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs

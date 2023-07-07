@@ -37,6 +37,7 @@ message GenesisState {
   // redelegations defines the redelegations active at genesis.
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
+  // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
   bool exported = 8;
 }
 

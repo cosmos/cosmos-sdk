@@ -43,6 +43,7 @@ func TestTimestampJsonTestcasesExtraneousNanos(t *testing.T) {
 }
 
 func testTimestampJSONTestcases(t *testing.T, raw []byte) {
+	t.Helper()
 	var testcases []timestampJSONTest
 	err := json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)

@@ -78,6 +78,7 @@ func TestIntJSONTestcases(t *testing.T) {
 // checkNumberTest checks that the output of a number value renderer
 // matches the expected string. Only use it to test numbers.
 func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {
+	t.Helper()
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)

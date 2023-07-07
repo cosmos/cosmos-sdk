@@ -96,6 +96,7 @@ func SignCheckDeliver(
 	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header types.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
+	t.Helper()
 	tx, err := GenSignedMockTx(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
@@ -140,7 +141,8 @@ func SignCheckDeliver(
 		require.False(t, finalizeSuccess)
 	}
 
-	app.Commit()
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
 	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}

@@ -18,6 +18,7 @@ import (
 )
 
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*fixture, []sdk.AccAddress) {
+	t.Helper()
 	t.Parallel()
 	f := initFixture(t)
 

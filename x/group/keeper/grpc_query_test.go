@@ -26,6 +26,7 @@ import (
 )
 
 func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAddress, group.QueryClient) {
+	t.Helper()
 	var (
 		groupKeeper       groupkeeper.Keeper
 		interfaceRegistry codectypes.InterfaceRegistry

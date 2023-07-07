@@ -66,6 +66,7 @@ func TestCoinsJSONTestcases(t *testing.T) {
 // rendering, so we lose initial Coins ordering. Instead, we just check
 // set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
+	t.Helper()
 	require.Equal(t, l1.Len(), l2.Len())
 	coinsMap := make(map[string]*basev1beta1.Coin, l1.Len())
 
@@ -85,6 +86,7 @@ func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 }
 
 func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
+	t.Helper()
 	require.Equal(t, coin1.Denom, coin.Denom)
 	v, ok := math.NewIntFromString(coin.Amount)
 	require.True(t, ok)

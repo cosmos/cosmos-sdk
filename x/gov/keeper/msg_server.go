@@ -119,7 +119,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}, nil
 }
 
-// CancelProposals implements the MsgServer.CancelProposal method.
+// CancelProposal implements the MsgServer.CancelProposal method.
 func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
 	_, err := k.authKeeper.AddressCodec().StringToBytes(msg.Proposer)
 	if err != nil {

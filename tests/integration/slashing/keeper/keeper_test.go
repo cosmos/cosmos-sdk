@@ -50,13 +50,14 @@ type fixture struct {
 	valAddrs []sdk.ValAddress
 }
 
-func initFixture(t testing.TB) *fixture {
+func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, slashingtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(t)
+	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
@@ -116,7 +117,7 @@ func initFixture(t testing.TB) *fixture {
 	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
 
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	slashingKeeper.SetParams(sdkCtx, testutil.TestParams())
+	slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
@@ -189,7 +190,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	}
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
@@ -205,7 +206,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// verify we can immediately unjail
 	_, err = f.app.RunMsg(
 		&msgUnjail,
-		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticProcessProposal(),
 		integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)

@@ -99,6 +99,7 @@ func TestMigrate(t *testing.T) {
 // createOldStateUnbonding will create the ubd entries with duplicate heights
 // 10 duplicate heights and 10 unique ubd with creation height
 func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
+	t.Helper()
 	unbondBalance := math.NewInt(100)
 	completionTime := time.Now()
 	ubdEntries := make([]types.UnbondingDelegationEntry, 0, 10)
@@ -131,6 +132,7 @@ func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.Val
 }
 
 func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
+	t.Helper()
 	// get the unbonding delegations
 	var ubdRes types.UnbondingDelegation
 	ubdbz := store.Get(getUBDKey(accAddr, valAddr))

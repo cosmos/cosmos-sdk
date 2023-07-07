@@ -52,10 +52,10 @@ To install the latest version of `cosmovisor`, run the following command:
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
+To install a previous version, you can specify the version:
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.5.0
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.
@@ -367,7 +367,7 @@ Open a new terminal window and submit an upgrade proposal along with a deposit a
 **>= v0.50+**:
 
 ```shell
-./build/simd tx upgrade software-upgrade test1 --title upgrade --summary upgrade --upgrade-height 200 --from validator --yes
+./build/simd tx upgrade software-upgrade test1 --title upgrade --summary upgrade --upgrade-height 200 --upgrade-info "{}" --no-validate --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

@@ -76,6 +76,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		// ref: https://github.com/cosmos/cosmos-sdk/pull/10868#discussion_r784872842
 		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			cacheCtx, _ := sdkCtx.CacheContext()
+			cacheCtx = cacheCtx.WithIsCheckTx(true)
 			if _, err := handler(cacheCtx, msg); err != nil {
 				if errors.Is(types.ErrNoProposalHandlerExists, err) {
 					return v1.Proposal{}, err

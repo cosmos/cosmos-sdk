@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!-- update here and better mention autocli -->
+
 # Command-Line Interface
 
 :::note Synopsis

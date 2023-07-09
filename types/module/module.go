@@ -57,8 +57,6 @@ type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(types.InterfaceRegistry)
-
-	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 

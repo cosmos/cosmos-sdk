@@ -6,7 +6,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -67,12 +66,6 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig cl
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {
 }
-
-// GetTxCmd returns no root tx command for the genutil module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
-
-// GetQueryCmd returns no root query command for the genutil module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
 // AppModule implements an application module for the genutil module.
 type AppModule struct {

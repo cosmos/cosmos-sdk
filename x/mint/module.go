@@ -83,11 +83,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 // GetTxCmd returns no root tx command for the mint module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
-// GetQueryCmd returns the root query command for the mint module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // AppModule implements an application module for the mint module.
 type AppModule struct {
 	AppModuleBasic

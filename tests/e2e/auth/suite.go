@@ -1183,10 +1183,8 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	defer filename.Close()
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := testutil.GetRequest(val.APIAddress + fmt.Sprintf("/cosmos/auth/v1beta1/accounts/%s", addr.String()))
+	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)
 	s.Require().NoError(err)
-	var account sdk.AccountI
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON, &account))
 
 	// sign-batch file
 	addr1, err := account1.GetAddress()

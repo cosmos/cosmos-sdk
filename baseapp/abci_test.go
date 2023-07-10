@@ -2008,7 +2008,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				// we process the average price and store it in the context to make it available for FinalizeBlock
 				avgPrice := pricesSum / count
 				buf := make([]byte, 8)
-				binary.BigEndian.PutUint64(buf, uint64(avgPrice))
+				binary.BigEndian.PutUint64(buf, avgPrice)
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
@@ -2092,7 +2092,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	suite.baseApp.Commit()
 
-	// check if avgPrice was commited
-	commitedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
-	require.Equal(t, avgPrice, commitedAvgPrice)
+	// check if avgPrice was committed
+	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
+	require.Equal(t, avgPrice, committedAvgPrice)
 }

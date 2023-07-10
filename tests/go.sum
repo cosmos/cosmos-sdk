@@ -208,8 +208,8 @@ cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c h1:A+FMPW9GtfcPB
 cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c/go.mod h1:RbYGvXCbz8uNBCXrwS9Z8SyydeWi+W5x5MZ33muyzMw=
 cosmossdk.io/x/circuit v0.0.0-20230710134821-641c6a79f97c h1:oXH8E67knESVPzLdNDglffB7Ti7/P02qL8iuiTda3fA=
 cosmossdk.io/x/circuit v0.0.0-20230710134821-641c6a79f97c/go.mod h1:rUBiMrg2mukTuTJCyZEicbFMH9PLyQQJxgAsQLB3UwQ=
-cosmossdk.io/x/evidence v0.0.0-20230710134821-641c6a79f97c h1:5KO5cIt1bbb8uh7XqPixPS/sy9GxMy7+siK8sPSvyhA=
-cosmossdk.io/x/evidence v0.0.0-20230710134821-641c6a79f97c/go.mod h1:xSR0VvL9g9B6ryC6Qe82XGr8Y4QihBA5usLVaH91r4M=
+cosmossdk.io/x/evidence v0.0.0-20230710135718-3bfd00f47bde h1:TNx2sOZSH5N9FqmUwVP52iTJVqZKRUkJC65Ff0nqWpA=
+cosmossdk.io/x/evidence v0.0.0-20230710135718-3bfd00f47bde/go.mod h1:cnxLSV33Lfru9og/l3mCQBi10NHi3PJqWsKY+tKh+xc=
 cosmossdk.io/x/feegrant v0.0.0-20230710134821-641c6a79f97c h1:HzPM4vJMlFArXj7tmwpV87vPiVjyPpY88/pfZgNE4FU=
 cosmossdk.io/x/feegrant v0.0.0-20230710134821-641c6a79f97c/go.mod h1:TlHm+UK7zPwcQ83f24ISDzejJf56/dadAdiJf4SPgeE=
 cosmossdk.io/x/nft v0.0.0-20230710134821-641c6a79f97c h1:8SKwHSXNN5kCBlRaGV2YRwoYL1wxh1A4S8Nk8eTcx/s=

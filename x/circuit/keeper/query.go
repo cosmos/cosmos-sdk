@@ -17,7 +17,7 @@ type QueryServer struct {
 	keeper Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the circuit MsgServer interface
+// NewQueryServer returns an implementation of the circuit QueryServer interface
 // for the provided Keeper.
 func NewQueryServer(keeper Keeper) types.QueryServer {
 	return &QueryServer{keeper: keeper}
@@ -27,12 +27,12 @@ func NewQueryServer(keeper Keeper) types.QueryServer {
 func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(c)
 
-	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
+	addr, err := qs.keeper.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	perms, err := qs.keeper.Permissions.Get(sdkCtx, add)
+	perms, err := qs.keeper.Permissions.Get(sdkCtx, addr)
 	if err != nil {
 		return nil, err
 	}

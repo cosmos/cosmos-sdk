@@ -1280,11 +1280,11 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 }
 
 func (s *CLITestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr, s.ac)
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", s.baseCtx.NodeURI, addr.String(), denom))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(denom)
 	return startTokens

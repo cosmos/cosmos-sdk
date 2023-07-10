@@ -657,11 +657,11 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(sigs))
 
-	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address, addresscodec.NewBech32Codec("cosmos"))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(s.cfg.BondDenom)
 
@@ -724,10 +724,9 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure foo has right amount of funds
-	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address, addresscodec.NewBech32Codec("cosmos"))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
 	s.Require().NoError(err)
-
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	s.Require().Equal(startTokens, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
@@ -746,20 +745,20 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	// Ensure destiny account state
 	err = s.network.RetryForBlocks(func() error {
-		resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+		s.Require().NoError(err)
 		return err
 	}, 3)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address, addresscodec.NewBech32Codec("cosmos"))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
 	s.Require().NoError(err)
-
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 }
 
@@ -878,11 +877,11 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
-	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	intialCoins := balRes.Balances
 
@@ -896,10 +895,10 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	diff, _ := balRes.Balances.SafeSub(intialCoins...)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
@@ -1038,11 +1037,12 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 
 	var balRes banktypes.QueryAllBalancesResponse
 	err = s.network.RetryForBlocks(func() error {
-		resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, addr))
+		s.Require().NoError(err)
 		if err != nil {
 			return err
 		}
-		return val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+		return val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	}, 3)
 	s.Require().NoError(err)
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
@@ -1594,10 +1594,10 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
-	queryResJSON, err := clitestutil.QueryBalancesExec(val0.ClientCtx, addr1, addresscodec.NewBech32Codec("cosmos"))
-	require.NoError(err)
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val0.ClientCtx.NodeURI, addr1))
+	s.Require().NoError(err)
 	var queryRes banktypes.QueryAllBalancesResponse
-	err = val0.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
+	err = val0.ClientCtx.Codec.UnmarshalJSON(resp, &queryRes)
 	require.NoError(err)
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
@@ -1930,11 +1930,11 @@ func (s *E2ETestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddre
 }
 
 func (s *E2ETestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", s.cfg.APIAddress, addr.String(), denom))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(denom)
 	return startTokens

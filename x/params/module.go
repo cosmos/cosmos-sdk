@@ -52,9 +52,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetTxCmd returns no root tx command for the params module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
-
 // GetQueryCmd returns no root query command for the params module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()

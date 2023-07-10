@@ -116,7 +116,8 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
+				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
+					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), grantee, sdk.MsgTypeURL(msg))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {

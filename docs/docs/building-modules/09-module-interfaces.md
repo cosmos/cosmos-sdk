@@ -54,7 +54,7 @@ Each module can implement `NewTxCmd()`, which aggregates all of the transaction 
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/client/cli/tx.go#L20-L35
 ```
 
-Each module can also implement the `GetTxCmd()` method that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
+Each module then can also implement a `GetTxCmd()` method that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L86

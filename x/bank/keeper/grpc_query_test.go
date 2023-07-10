@@ -286,13 +286,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 
 	suite.mockMintCoins(mintAcc)
-<<<<<<< HEAD
-	suite.
-		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
-=======
-	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
->>>>>>> febeced2e (feat(bank): autocli query support (#16899))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -311,13 +305,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	expectedTotalSupply := sdk.NewCoins(test1Supply, test2Supply)
 
 	suite.mockMintCoins(mintAcc)
-<<<<<<< HEAD
-	suite.
-		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
-=======
-	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
->>>>>>> febeced2e (feat(bank): autocli query support (#16899))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)

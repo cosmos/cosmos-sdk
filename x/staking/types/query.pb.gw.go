@@ -2122,7 +2122,7 @@ var (
 
 	pattern_Query_TokenizeShareRecordByDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta1", "tokenize_share_record_by_denom", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TokenizeShareRecordsOwned_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta1", "tokenize_share_record_by_owner", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TokenizeShareRecordsOwned_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta1", "tokenize_share_record_owned", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_AllTokenizeShareRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta1", "tokenize_share_records"}, "", runtime.AssumeColonVerbOpt(false)))
 

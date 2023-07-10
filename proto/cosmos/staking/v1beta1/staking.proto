@@ -405,8 +405,7 @@ message ValidatorUpdates {
 
 // TokenizeShareRecord represents a tokenized delegation
 message TokenizeShareRecord {
-  option (gogoproto.description) = true;
-  option (gogoproto.equal)       = true;
+  option (gogoproto.equal) = true;
 
   uint64 id             = 1;
   string owner          = 2;

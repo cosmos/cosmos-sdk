@@ -106,7 +106,7 @@ service Query {
   // Query tokenize share records by address
   rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest)
       returns (QueryTokenizeShareRecordsOwnedResponse) {
-    option (google.api.http).get = "/cosmos/staking/v1beta1/tokenize_share_record_by_owner/{owner}";
+    option (google.api.http).get = "/cosmos/staking/v1beta1/tokenize_share_record_owned/{owner}";
   }
 
   // Query for all tokenize share records

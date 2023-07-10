@@ -113,7 +113,12 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
   // Deprecated: This field has been deprecated with LSM in favor of the validator bond
-  string min_self_delegation = 11 [deprecated = true];
+  string min_self_delegation = 11 [
+    deprecated             = true,
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
   // list of unbonding ids, each uniquely identifing an unbonding of this validator

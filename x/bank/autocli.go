@@ -1,14 +1,10 @@
 package bank
 
 import (
-	"fmt"
 	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -34,8 +30,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "SpendableBalances",
 					Use:            "spendable-balances [address]",
 					Short:          "Query for account spendable balances by address",
-					Example:        fmt.Sprintf("$ %s query %s spendable-balances [address]", version.AppName, types.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
+				{
+					RpcMethod:      "SpendableBalanceByDenom",
+					Use:            "spendable-balances [address] [denom]",
+					Short:          "Query the spendable balance of a single denom for a single account.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
 				},
 				{
 					RpcMethod: "TotalSupply",
@@ -52,8 +53,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Params",
-					Use:       "supply-of [denom]",
-					Short:     "Query the parameters of x/bank module",
+					Use:       "params",
+					Short:     "Query the current bank parameters",
 				},
 				{
 					RpcMethod:      "DenomMetadata",
@@ -68,7 +69,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "DenomOwners",
-					Use:            "denom-metadata [denom]",
+					Use:            "denom-owners [denom]",
 					Short:          "Query for all account addresses that own a particular token denomination.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},

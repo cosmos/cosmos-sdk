@@ -40,11 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
 * (x/bank) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) Align CLI queries with gRPC queries thanks to AutoCLI.
-=======
 * (types) [#16890](https://github.com/cosmos/cosmos-sdk/pull/16890) Remove `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` from `module.AppModuleBasic` interface.
->>>>>>> f3e469719 (feat!: simplify `AppModuleBasic` interface for CLI (#16890))
 * (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default).
 * (x/authz) [#16869](https://github.com/cosmos/cosmos-sdk/pull/16869) Improve error message when grant not found.
 

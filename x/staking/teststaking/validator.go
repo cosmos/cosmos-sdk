@@ -14,5 +14,6 @@ import (
 func NewValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{})
 	require.NoError(t, err)
+	v.MinSelfDelegation = sdk.ZeroInt()
 	return v
 }

@@ -657,7 +657,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(sigs))
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -724,7 +724,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure foo has right amount of funds
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 	s.Require().NoError(err)
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
@@ -745,7 +745,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	// Ensure destiny account state
 	err = s.network.RetryForBlocks(func() error {
-		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 		s.Require().NoError(err)
 		return err
 	}, 3)
@@ -756,7 +756,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 	s.Require().NoError(err)
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
@@ -877,7 +877,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -895,9 +895,8 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, val1.Address))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
 	s.Require().NoError(err)
-
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
 	diff, _ := balRes.Balances.SafeSub(intialCoins...)
@@ -1037,7 +1036,7 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 
 	var balRes banktypes.QueryAllBalancesResponse
 	err = s.network.RetryForBlocks(func() error {
-		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.ClientCtx.NodeURI, addr))
+		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
 		s.Require().NoError(err)
 		if err != nil {
 			return err
@@ -1594,7 +1593,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val0.ClientCtx.NodeURI, addr1))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val0.APIAddress, addr1))
 	s.Require().NoError(err)
 	var queryRes banktypes.QueryAllBalancesResponse
 	err = val0.ClientCtx.Codec.UnmarshalJSON(resp, &queryRes)

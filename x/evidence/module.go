@@ -94,11 +94,6 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(evidenceCLIHandlers)
 }
 
-// GetQueryCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)

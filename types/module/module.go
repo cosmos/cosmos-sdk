@@ -57,11 +57,7 @@ type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(types.InterfaceRegistry)
-
-	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
-	GetTxCmd() *cobra.Command
-	GetQueryCmd() *cobra.Command
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -163,8 +159,12 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 // AddTxCommands adds all tx commands to the rootTxCmd.
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 	for _, b := range bm {
-		if cmd := b.GetTxCmd(); cmd != nil {
-			rootTxCmd.AddCommand(cmd)
+		if mod, ok := b.(interface {
+			GetTxCmd() *cobra.Command
+		}); ok {
+			if cmd := mod.GetTxCmd(); cmd != nil {
+				rootTxCmd.AddCommand(cmd)
+			}
 		}
 	}
 }
@@ -172,8 +172,12 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 // AddQueryCommands adds all query commands to the rootQueryCmd.
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	for _, b := range bm {
-		if cmd := b.GetQueryCmd(); cmd != nil {
-			rootQueryCmd.AddCommand(cmd)
+		if mod, ok := b.(interface {
+			GetQueryCmd() *cobra.Command
+		}); ok {
+			if cmd := mod.GetQueryCmd(); cmd != nil {
+				rootQueryCmd.AddCommand(cmd)
+			}
 		}
 	}
 }

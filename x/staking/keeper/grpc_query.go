@@ -657,7 +657,7 @@ func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiqui
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx)
+	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx).String()
 	return &types.QueryTotalLiquidStakedResponse{
 		Tokens: totalLiquidStaked,
 	}, nil

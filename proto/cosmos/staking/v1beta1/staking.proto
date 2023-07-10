@@ -112,6 +112,13 @@ message Validator {
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
+  // Deprecated: This field has been deprecated with LSM in favor of the validator bond
+  string min_self_delegation = 11 [
+    deprecated             = true,
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
@@ -128,7 +135,6 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  reserved 11;
 }
 
 // BondStatus is the status of a validator.
@@ -308,29 +314,23 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
-  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
-  string min_commission_rate = 6 [
-    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
   // validator_bond_factor is required as a safety check for tokenizing shares and
   // delegations from liquid staking providers
-  string validator_bond_factor = 7 [
+  string validator_bond_factor = 6 [
     (gogoproto.moretags)   = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // global_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers
-  string global_liquid_staking_cap = 8 [
+  string global_liquid_staking_cap = 7 [
     (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // validator_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers for a specific validator
-  string validator_liquid_staking_cap = 9 [
+  string validator_liquid_staking_cap = 8 [
     (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

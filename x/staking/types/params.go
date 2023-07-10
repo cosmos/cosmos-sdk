@@ -33,10 +33,11 @@ const (
 )
 
 var (
-	// DefaultMinCommissionRate is set to 0%
-	DefaultMinCommissionRate = sdk.ZeroDec()
+	// ValidatorBondFactor of -1 indicates that it's disabled
+	ValidatorBondCapDisabled = sdk.NewDecFromInt(sdk.NewInt(-1))
+
 	// DefaultValidatorBondFactor is set to -1 (disabled)
-	DefaultValidatorBondFactor = sdk.NewDecFromInt(sdk.NewInt(-1))
+	DefaultValidatorBondFactor = ValidatorBondCapDisabled
 	// DefaultGlobalLiquidStakingCap is set to 100%
 	DefaultGlobalLiquidStakingCap = sdk.OneDec()
 	// DefaultValidatorLiquidStakingCap is set to 100%
@@ -50,7 +51,6 @@ var (
 	KeyBondDenom                 = []byte("BondDenom")
 	KeyHistoricalEntries         = []byte("HistoricalEntries")
 	KeyPowerReduction            = []byte("PowerReduction")
-	KeyMinCommissionRate         = []byte("MinCommissionRate")
 	KeyValidatorBondFactor       = []byte("ValidatorBondFactor")
 	KeyGlobalLiquidStakingCap    = []byte("GlobalLiquidStakingCap")
 	KeyValidatorLiquidStakingCap = []byte("ValidatorLiquidStakingCap")
@@ -70,7 +70,6 @@ func NewParams(
 	maxEntries uint32,
 	historicalEntries uint32,
 	bondDenom string,
-	minCommissionRate sdk.Dec,
 	validatorBondFactor sdk.Dec,
 	globalLiquidStakingCap sdk.Dec,
 	validatorLiquidStakingCap sdk.Dec,
@@ -81,7 +80,6 @@ func NewParams(
 		MaxEntries:                maxEntries,
 		HistoricalEntries:         historicalEntries,
 		BondDenom:                 bondDenom,
-		MinCommissionRate:         minCommissionRate,
 		ValidatorBondFactor:       validatorBondFactor,
 		GlobalLiquidStakingCap:    globalLiquidStakingCap,
 		ValidatorLiquidStakingCap: validatorLiquidStakingCap,
@@ -96,7 +94,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
-		paramtypes.NewParamSetPair(KeyMinCommissionRate, &p.MinCommissionRate, validateMinCommissionRate),
 		paramtypes.NewParamSetPair(KeyValidatorBondFactor, &p.ValidatorBondFactor, validateValidatorBondFactor),
 		paramtypes.NewParamSetPair(KeyGlobalLiquidStakingCap, &p.GlobalLiquidStakingCap, validateGlobalLiquidStakingCap),
 		paramtypes.NewParamSetPair(KeyValidatorLiquidStakingCap, &p.ValidatorLiquidStakingCap, validateValidatorLiquidStakingCap),
@@ -111,7 +108,6 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
-		DefaultMinCommissionRate,
 		DefaultValidatorBondFactor,
 		DefaultGlobalLiquidStakingCap,
 		DefaultValidatorLiquidStakingCap,
@@ -159,10 +155,6 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateBondDenom(p.BondDenom); err != nil {
-		return err
-	}
-
-	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
 		return err
 	}
 
@@ -254,22 +246,6 @@ func ValidatePowerReduction(i interface{}) error {
 
 	if v.LT(sdk.NewInt(1)) {
 		return fmt.Errorf("power reduction cannot be lower than 1")
-	}
-
-	return nil
-}
-
-func validateMinCommissionRate(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNegative() {
-		return fmt.Errorf("minimum commission rate cannot be negative: %s", v)
-	}
-	if v.GT(sdk.OneDec()) {
-		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
 	}
 
 	return nil

@@ -347,7 +347,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// Create ICA module account
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Fund module account
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
@@ -695,7 +695,7 @@ func TestValidatorBond(t *testing.T) {
 
 			delegatorAddress := sdk.AccAddress(delegatorPubKey.Address())
 			validatorAddress := sdk.ValAddress(validatorPubKey.Address())
-			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Set the delegator address to either be a user account or an ICA account depending on the test case
 			if tc.delegatorIsLSTP {
@@ -797,6 +797,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	params.UnbondingTime = unbondingPeriod
 	app.StakingKeeper.SetParams(ctx, params)
+	unlockTime := blockTime.Add(unbondingPeriod)
 
 	// Build test messages (some of which will be reused)
 	delegateMsg := types.MsgDelegate{
@@ -856,15 +857,31 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
 	require.NoError(t, err, "no error expected when enabling tokenization")
 
-	// Attempt to tokenize again, it should still fail since the unboning period has
+	// Attempt to tokenize again, it should still fail since the unbonding period has
 	// not passed and the lock is still active
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
 	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
 	require.ErrorContains(t, err, fmt.Sprintf("tokenization will be allowed at %s",
 		blockTime.Add(unbondingPeriod)))
 
+	// Confirm the unlock is queued
+	authorizations := app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, unlockTime)
+	require.Equal(t, []string{delegatorAddress.String()}, authorizations.Addresses,
+		"pending tokenize share authorizations")
+
+	// Disable tokenization again - it should remove the pending record from the queue
+	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	require.NoError(t, err, "no error expected when re-enabling tokenization")
+
+	authorizations = app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, unlockTime)
+	require.Empty(t, authorizations.Addresses, "there should be no pending authorizations in the queue")
+
+	// Enable one more time
+	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	require.NoError(t, err, "no error expected when enabling tokenization again")
+
 	// Increment the block time by the unbonding period and remove the expired locks
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingPeriod))
+	ctx = ctx.WithBlockTime(unlockTime)
 	app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, ctx.BlockTime())
 
 	// Attempt to tokenize again, it should succeed this time since the lock has expired
@@ -906,4 +923,77 @@ func TestUnbondValidator(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
 	require.True(t, found)
 	require.True(t, validator.Jailed)
+}
+
+// TestICADelegateUndelegate tests that an ICA account can undelegate
+// sequentially right after delegating.
+func TestICADelegateUndelegate(t *testing.T) {
+	_, app, ctx := createTestInput()
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	// Create a delegator and validator (the delegator will be an ICA account)
+	delegateAmount := sdk.NewInt(1000)
+	delegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegateAmount)
+	icaAccountAddress := createICAAccount(app, ctx)
+
+	// Fund ICA account
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegateCoin))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegateCoin))
+	require.NoError(t, err)
+
+	addresses := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(0))
+	pubKeys := simapp.CreateTestPubKeys(1)
+	validatorAddress := sdk.ValAddress(addresses[0])
+	validator := teststaking.NewValidator(t, validatorAddress, pubKeys[0])
+
+	validator.DelegatorShares = sdk.NewDec(1_000_000)
+	validator.Tokens = sdk.NewInt(1_000_000)
+	validator.TotalLiquidShares = sdk.NewDec(0)
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	delegateMsg := types.MsgDelegate{
+		DelegatorAddress: icaAccountAddress.String(),
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           delegateCoin,
+	}
+
+	undelegateMsg := types.MsgUndelegate{
+		DelegatorAddress: icaAccountAddress.String(),
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           delegateCoin,
+	}
+
+	// Delegate normally
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
+	require.NoError(t, err, "no error expected when delegating")
+
+	// Confirm delegation record
+	_, found := app.StakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.True(t, found, "delegation should have been found")
+
+	// Confirm liquid staking totals were incremented
+	expectedTotalLiquidStaked := delegateAmount.Int64()
+	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
+	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked, "total liquid staked tokens after delegation")
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
+	require.True(t, found, "validator should have been found")
+	require.Equal(t, delegateAmount.ToDec(), validator.TotalLiquidShares, "validator total liquid shares after delegation")
+
+	// Try to undelegate
+	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &undelegateMsg)
+	require.NoError(t, err, "no error expected when sequentially undelegating")
+
+	// Confirm delegation record was removed
+	_, found = app.StakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.False(t, found, "delegation not have been found")
+
+	// Confirm liquid staking totals were decremented
+	actualTotalLiquidStaked = app.StakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
+	require.Zero(t, actualTotalLiquidStaked, "total liquid staked tokens after undelegation")
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
+	require.True(t, found, "validator should have been found")
+	require.Equal(t, sdk.ZeroDec(), validator.TotalLiquidShares, "validator total liquid shares after undelegation")
 }

@@ -47,12 +47,6 @@ func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction
 }
 
-// MinCommissionRate - Minimum validator commission rate
-func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, types.KeyMinCommissionRate, &res)
-	return
-}
-
 // Validator bond factor for all validators
 func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyValidatorBondFactor, &res)
@@ -79,7 +73,6 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
-		k.MinCommissionRate(ctx),
 		k.ValidatorBondFactor(ctx),
 		k.GlobalLiquidStakingCap(ctx),
 		k.ValidatorLiquidStakingCap(ctx),

@@ -648,7 +648,7 @@ func (k Keeper) Delegate(
 	// Get or create the delegation object
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator())
 	if !found {
-		delegation = types.NewDelegation(delAddr, validator.GetOperator(), sdk.ZeroDec(), false)
+		delegation = types.NewDelegation(delAddr, validator.GetOperator(), sdk.ZeroDec())
 	}
 
 	// call the appropriate hook if present
@@ -656,10 +656,6 @@ func (k Keeper) Delegate(
 		k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else {
 		k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
-	}
-
-	if err != nil {
-		return sdk.ZeroDec(), err
 	}
 
 	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)

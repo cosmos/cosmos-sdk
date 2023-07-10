@@ -500,6 +500,7 @@
 - [cosmos/staking/v1beta1/genesis.proto](#cosmos/staking/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.staking.v1beta1.GenesisState)
     - [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower)
+    - [TokenizeShareLock](#cosmos.staking.v1beta1.TokenizeShareLock)
   
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
     - [QueryAllTokenizeShareRecordsRequest](#cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest)
@@ -6877,7 +6878,6 @@ Params defines the parameters for the staking module.
 | `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
-| `min_commission_rate` | [string](#string) |  | min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators |
 | `validator_bond_factor` | [string](#string) |  | validator_bond_factor is required as a safety check for tokenizing shares and delegations from liquid staking providers |
 | `global_liquid_staking_cap` | [string](#string) |  | global_liquid_staking_cap represents a cap on the portion of stake that comes from liquid staking providers |
 | `validator_liquid_staking_cap` | [string](#string) |  | validator_liquid_staking_cap represents a cap on the portion of stake that comes from liquid staking providers for a specific validator |
@@ -7095,6 +7095,7 @@ multiplied by exchange rate.
 | `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.** Deprecated: This field has been deprecated with LSM in favor of the validator bond |
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
 | `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
 | `total_validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
@@ -7195,6 +7196,8 @@ GenesisState defines the staking module's genesis state.
 | `exported` | [bool](#bool) |  |  |
 | `tokenize_share_records` | [TokenizeShareRecord](#cosmos.staking.v1beta1.TokenizeShareRecord) | repeated | store tokenize share records to provide reward to record owners |
 | `last_tokenize_share_record_id` | [uint64](#uint64) |  | last tokenize share record id, used for next share record id calculation |
+| `total_liquid_staked_tokens` | [bytes](#bytes) |  | total number of liquid staked tokens at genesis |
+| `tokenize_share_locks` | [TokenizeShareLock](#cosmos.staking.v1beta1.TokenizeShareLock) | repeated | tokenize shares locks at genesis |
 
 
 
@@ -7211,6 +7214,23 @@ LastValidatorPower required for validator set update logic.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the address of the validator. |
 | `power` | [int64](#int64) |  | power defines the power of the validator. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.TokenizeShareLock"></a>
+
+### TokenizeShareLock
+TokenizeSharesLock required for specifying account locks at genesis
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | Address of the account that is locked |
+| `status` | [string](#string) |  | Status of the lock (LOCKED or LOCK_EXPIRING) |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Completion time if the lock is expiring |
 
 
 
@@ -7703,7 +7723,7 @@ Query/QueryTokenizeShareRecordsOwned RPC method.
 <a name="cosmos.staking.v1beta1.QueryTotalLiquidStaked"></a>
 
 ### QueryTotalLiquidStaked
-QueryQueryTotalLiquidStakedRequest is request type for the
+QueryTotalLiquidStakedRequest is request type for the
 Query/QueryQueryTotalLiquidStaked RPC method.
 
 
@@ -7714,7 +7734,7 @@ Query/QueryQueryTotalLiquidStaked RPC method.
 <a name="cosmos.staking.v1beta1.QueryTotalLiquidStakedResponse"></a>
 
 ### QueryTotalLiquidStakedResponse
-QueryQueryTotalLiquidStakedResponse is response type for the
+QueryTotalLiquidStakedResponse is response type for the
 Query/QueryQueryTotalLiquidStaked RPC method.
 
 
@@ -7949,7 +7969,7 @@ Query defines the gRPC querier service.
 | `TokenizeShareRecordsOwned` | [QueryTokenizeShareRecordsOwnedRequest](#cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedRequest) | [QueryTokenizeShareRecordsOwnedResponse](#cosmos.staking.v1beta1.QueryTokenizeShareRecordsOwnedResponse) | Query tokenize share records by address | GET|/cosmos/staking/v1beta1/tokenize_share_record_owned/{owner}|
 | `AllTokenizeShareRecords` | [QueryAllTokenizeShareRecordsRequest](#cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsRequest) | [QueryAllTokenizeShareRecordsResponse](#cosmos.staking.v1beta1.QueryAllTokenizeShareRecordsResponse) | Query for all tokenize share records | GET|/cosmos/staking/v1beta1/tokenize_share_records|
 | `LastTokenizeShareRecordId` | [QueryLastTokenizeShareRecordIdRequest](#cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdRequest) | [QueryLastTokenizeShareRecordIdResponse](#cosmos.staking.v1beta1.QueryLastTokenizeShareRecordIdResponse) | Query for last tokenize share record id | GET|/cosmos/staking/v1beta1/last_tokenize_share_record_id|
-| `TotalTokenizeSharedAssets` | [QueryTotalTokenizeSharedAssetsRequest](#cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest) | [QueryTotalTokenizeSharedAssetsResponse](#cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse) | Query for total tokenized staked assets | GET|/cosmos/staking/v1beta1/total_tokenize_share_assets|
+| `TotalTokenizeSharedAssets` | [QueryTotalTokenizeSharedAssetsRequest](#cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsRequest) | [QueryTotalTokenizeSharedAssetsResponse](#cosmos.staking.v1beta1.QueryTotalTokenizeSharedAssetsResponse) | Query for total tokenized staked assets | GET|/cosmos/staking/v1beta1/total_tokenize_shared_assets|
 | `TotalLiquidStaked` | [QueryTotalLiquidStaked](#cosmos.staking.v1beta1.QueryTotalLiquidStaked) | [QueryTotalLiquidStakedResponse](#cosmos.staking.v1beta1.QueryTotalLiquidStakedResponse) | Query for total liquid staked (including tokenized shares or owned by an liquid staking provider) | GET|/cosmos/staking/v1beta1/total_liquid_staked|
 | `TokenizeShareLockInfo` | [QueryTokenizeShareLockInfo](#cosmos.staking.v1beta1.QueryTokenizeShareLockInfo) | [QueryTokenizeShareLockInfoResponse](#cosmos.staking.v1beta1.QueryTokenizeShareLockInfoResponse) | Query tokenize share locks | GET|/cosmos/staking/v1beta1/tokenize_share_lock_info/{address}|
 
@@ -8364,11 +8384,11 @@ Msg defines the staking Msg service.
 | `EditValidator` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse) | EditValidator defines a method for editing an existing validator. | |
 | `Delegate` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse) | Delegate defines a method for performing a delegation of coins from a delegator to a validator. | |
 | `BeginRedelegate` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse) | BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator. | |
-| `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. | |
-| `UnbondValidator` | [MsgUnbondValidator](#cosmos.staking.v1beta1.MsgUnbondValidator) | [MsgUnbondValidatorResponse](#cosmos.staking.v1beta1.MsgUnbondValidatorResponse) | UnbondValidator defines a method for performing the status transition for a validator from bonded to unbonded | |
+| `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. This allows a validator to stop their services and jail themselves without experiencing a slash | |
+| `UnbondValidator` | [MsgUnbondValidator](#cosmos.staking.v1beta1.MsgUnbondValidator) | [MsgUnbondValidatorResponse](#cosmos.staking.v1beta1.MsgUnbondValidatorResponse) | UnbondValidator defines a method for performing the status transition for a validator from bonded to unbonding | |
 | `CancelUnbondingDelegation` | [MsgCancelUnbondingDelegation](#cosmos.staking.v1beta1.MsgCancelUnbondingDelegation) | [MsgCancelUnbondingDelegationResponse](#cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse) | CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation and delegate back to previous validator.
 
-Since: cosmos-sdk 0.46 | |
+This has been backported from SDK 46 as a desirable safety feature for LSM. If a liquid staking provider is exploited and the exploiter initiates an undelegation, having access to CancelUnbondingDelegation allows the liquid staking provider to cancel the undelegation with a software upgrade and thus avoid loss of user funds | |
 | `TokenizeShares` | [MsgTokenizeShares](#cosmos.staking.v1beta1.MsgTokenizeShares) | [MsgTokenizeSharesResponse](#cosmos.staking.v1beta1.MsgTokenizeSharesResponse) | TokenizeShares defines a method for tokenizing shares from a validator. | |
 | `RedeemTokensForShares` | [MsgRedeemTokensForShares](#cosmos.staking.v1beta1.MsgRedeemTokensForShares) | [MsgRedeemTokensForSharesResponse](#cosmos.staking.v1beta1.MsgRedeemTokensForSharesResponse) | RedeemTokensForShares defines a method for redeeming tokens from a validator for shares. | |
 | `TransferTokenizeShareRecord` | [MsgTransferTokenizeShareRecord](#cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord) | [MsgTransferTokenizeShareRecordResponse](#cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse) | TransferTokenizeShareRecord defines a method to transfer ownership of TokenizeShareRecord | |

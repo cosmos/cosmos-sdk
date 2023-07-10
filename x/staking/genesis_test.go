@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -241,4 +242,50 @@ func TestValidateGenesis(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInitExportLiquidStakingGenesis(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	addresses := simapp.AddTestAddrs(app, ctx, 2, sdk.OneInt())
+	address1, address2 := addresses[0], addresses[1]
+
+	// Mock out a genesis state
+	inGenesisState := types.GenesisState{
+		Params: types.DefaultParams(),
+		TokenizeShareRecords: []types.TokenizeShareRecord{
+			{Id: 1, Owner: address1.String(), ModuleAccount: "module1", Validator: "val1"},
+			{Id: 2, Owner: address2.String(), ModuleAccount: "module2", Validator: "val2"},
+		},
+		LastTokenizeShareRecordId: 2,
+		TotalLiquidStakedTokens:   sdk.NewInt(1_000_000),
+		TokenizeShareLocks: []types.TokenizeShareLock{
+			{
+				Address: address1.String(),
+				Status:  types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
+			},
+			{
+				Address:        address2.String(),
+				Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
+				CompletionTime: time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+
+	// Call init and then export genesis - confirming the same state is returned
+	staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &inGenesisState)
+	outGenesisState := *staking.ExportGenesis(ctx, app.StakingKeeper)
+
+	require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
+		"tokenize share records")
+
+	require.Equal(t, inGenesisState.LastTokenizeShareRecordId, outGenesisState.LastTokenizeShareRecordId,
+		"last tokenize share record ID")
+
+	require.Equal(t, inGenesisState.TotalLiquidStakedTokens.Int64(), outGenesisState.TotalLiquidStakedTokens.Int64(),
+		"total liquid staked")
+
+	require.ElementsMatch(t, inGenesisState.TokenizeShareLocks, outGenesisState.TokenizeShareLocks,
+		"tokenize share locks")
 }

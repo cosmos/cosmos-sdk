@@ -2128,7 +2128,7 @@ var (
 
 	pattern_Query_LastTokenizeShareRecordId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta1", "last_tokenize_share_record_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TotalTokenizeSharedAssets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta1", "total_tokenize_share_assets"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TotalTokenizeSharedAssets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta1", "total_tokenize_shared_assets"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_TotalLiquidStaked_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta1", "total_liquid_staked"}, "", runtime.AssumeColonVerbOpt(false)))
 

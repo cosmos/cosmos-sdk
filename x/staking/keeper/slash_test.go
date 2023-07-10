@@ -136,7 +136,7 @@ func TestSlashRedelegation(t *testing.T) {
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10), false)
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10))
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
@@ -394,7 +394,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec(), false)
+	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec())
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -548,7 +548,7 @@ func TestSlashBoth(t *testing.T) {
 	app.StakingKeeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec(), false)
+	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec())
 	app.StakingKeeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the

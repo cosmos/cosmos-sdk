@@ -17,12 +17,13 @@ const (
 	DefaultWeightMsgDelegate                             int = 100
 	DefaultWeightMsgUndelegate                           int = 100
 	DefaultWeightMsgBeginRedelegate                      int = 100
-	DefaultWeightMsgCancelUnbondingDelegation            int = 100
-	DefaultWeightMsgTokenizeShares                       int = 100
-	DefaultWeightMsgRedeemTokensforShares                int = 100
-	DefaultWeightMsgTransferTokenizeShareRecord          int = 50
-	DefaultWeightMsgEnableTokenizeShares                 int = 100
-	DefaultWeightMsgDisableTokenizeShares                int = 100
+	DefaultWeightMsgCancelUnbondingDelegation            int = 5
+	DefaultWeightMsgValidatorBond                        int = 100
+	DefaultWeightMsgTokenizeShares                       int = 25
+	DefaultWeightMsgRedeemTokensforShares                int = 25
+	DefaultWeightMsgTransferTokenizeShareRecord          int = 5
+	DefaultWeightMsgEnableTokenizeShares                 int = 1
+	DefaultWeightMsgDisableTokenizeShares                int = 1
 	DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 	DefaultWeightCommunitySpendProposal int = 5

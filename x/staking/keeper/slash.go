@@ -133,7 +133,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// Proportionally deduct any liquid tokens from the global total
 	validatorLiquidRatio := validator.TotalLiquidShares.Quo(validator.DelegatorShares)
 	slashedLiquidTokens := validatorLiquidRatio.Mul(sdk.NewDecFromInt(slashAmount)).TruncateInt()
-	k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens)
+	if err := k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens); err != nil {
+		panic(err)
+	}
 
 	switch validator.GetStatus() {
 	case types.Bonded:

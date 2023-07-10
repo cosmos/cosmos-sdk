@@ -44,7 +44,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "UpgradedConsensusState",
-					Skip: true, // Skipping this command as the query is deprecated.
+					Skip:      true, // Skipping this command as the query is deprecated.
 				},
 			},
 		},

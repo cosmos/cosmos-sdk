@@ -36,6 +36,7 @@ type Collection[K, V any] interface {
 }
 
 // CollectionPaginate follows the same behavior as Paginate but works on a Collection.
+// Returns a list of the key-value pairs and a PageResponse.
 func CollectionPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
@@ -44,8 +45,9 @@ func CollectionPaginate[K, V any, C Collection[K, V]](
 	return CollectionFilteredPaginate[K, V](ctx, coll, pageReq, nil)
 }
 
-// CollectionFilteredPaginate works in the same way as FilteredPaginate but for collection types.
-// A nil predicateFunc means no filtering is applied and results are collected as is.
+// CollectionFilteredPaginate works in the same way as CollectionPaginate but allows to filter
+// the results using the predicateFunc.
+// NOTE: results should not be collected using the predicateFunc
 func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
@@ -53,6 +55,50 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	predicateFunc func(key K, value V) (include bool, err error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
+	return CollectionFilteredPaginateTransform(
+		ctx,
+		coll,
+		pageReq,
+		predicateFunc,
+		func(key K, value V) (collections.KeyValue[K, V], error) {
+			return collections.KeyValue[K, V]{Key: key, Value: value}, nil
+		},
+		opts...,
+	)
+}
+
+// Collection
+func CollectionPaginateTransform[K, V any, C Collection[K, V], T any](
+	ctx context.Context,
+	coll C,
+	pageReq *PageRequest,
+	transformFunc func(key K, value V) (T, error),
+	opts ...func(opt *CollectionsPaginateOptions[K]),
+) ([]T, *PageResponse, error) {
+	return CollectionFilteredPaginateTransform[K, V, C, T](
+		ctx,
+		coll,
+		pageReq,
+		nil,
+		transformFunc,
+		opts...,
+	)
+}
+
+// CollectionFilteredPaginateTransform works in the same way as FilteredPaginate but for collection types.
+// A nil predicateFunc means no filtering is applied and results are collected as is.
+// TransformFunc is applied only to results which are in range of the pagination and allow
+// to convert the result to a different type.
+// NOTE: do not collect results using the values/keys passed to predicateFunc as they are not
+// guaranteed to be in the pagination range requested.
+func CollectionFilteredPaginateTransform[K, V any, C Collection[K, V], T any](
+	ctx context.Context,
+	coll C,
+	pageReq *PageRequest,
+	predicateFunc func(key K, value V) (include bool, err error),
+	transformFunc func(key K, value V) (T, error),
+	opts ...func(opt *CollectionsPaginateOptions[K]),
+) (results []T, pageRes *PageResponse, err error) {
 	pageReq = initPageRequestDefaults(pageReq)
 
 	offset := pageReq.Offset
@@ -64,12 +110,6 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	if offset > 0 && key != nil {
 		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
-
-	var (
-		results []collections.KeyValue[K, V]
-		pageRes *PageResponse
-		err     error
-	)
 
 	opt := new(CollectionsPaginateOptions[K])
 	for _, o := range opts {
@@ -85,9 +125,9 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	}
 
 	if len(key) != 0 {
-		results, pageRes, err = collFilteredPaginateByKey(ctx, coll, prefix, key, reverse, limit, predicateFunc)
+		results, pageRes, err = collFilteredPaginateByKey(ctx, coll, prefix, key, reverse, limit, predicateFunc, transformFunc)
 	} else {
-		results, pageRes, err = collFilteredPaginateNoKey(ctx, coll, prefix, reverse, offset, limit, countTotal, predicateFunc)
+		results, pageRes, err = collFilteredPaginateNoKey(ctx, coll, prefix, reverse, offset, limit, countTotal, predicateFunc, transformFunc)
 	}
 	// invalid iter error is ignored to retain Paginate behavior
 	if errors.Is(err, collections.ErrInvalidIterator) {
@@ -102,7 +142,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 
 // collFilteredPaginateNoKey applies the provided pagination on the collection when the starting key is not set.
 // If predicateFunc is nil no filtering is applied.
-func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
+func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 	ctx context.Context,
 	coll C,
 	prefix []byte,
@@ -111,7 +151,8 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 	limit uint64,
 	countTotal bool,
 	predicateFunc func(K, V) (bool, error),
-) ([]collections.KeyValue[K, V], *PageResponse, error) {
+	transformFunc func(K, V) (T, error),
+) ([]T, *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, nil, reverse)
 	if err != nil {
 		return nil, nil, err
@@ -125,7 +166,7 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 	var (
 		count   uint64
 		nextKey []byte
-		results []collections.KeyValue[K, V]
+		results []T
 	)
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -138,7 +179,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			}
 			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
-				results = append(results, kv)
+				transformed, err := transformFunc(kv.Key, kv.Value)
+				if err != nil {
+					return nil, nil, err
+				}
+				results = append(results, transformed)
 				count++
 
 				// if predicate function is defined we check if the result matches the filtering criteria
@@ -148,7 +193,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 					return nil, nil, err
 				}
 				if include {
-					results = append(results, kv)
+					transformed, err := transformFunc(kv.Key, kv.Value)
+					if err != nil {
+						return nil, nil, err
+					}
+					results = append(results, transformed)
 					count++
 				}
 			}
@@ -221,15 +270,16 @@ func advanceIter[I interface {
 
 // collFilteredPaginateByKey paginates a collection when a starting key
 // is provided in the PageRequest. Predicate is applied only if not nil.
-func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
+func collFilteredPaginateByKey[K, V any, C Collection[K, V], T any](
 	ctx context.Context,
 	coll C,
 	prefix []byte,
 	key []byte,
 	reverse bool,
 	limit uint64,
-	predicateFunc func(K, V) (bool, error),
-) ([]collections.KeyValue[K, V], *PageResponse, error) {
+	predicateFunc func(key K, value V) (bool, error),
+	transformFunc func(key K, value V) (transformed T, err error),
+) (results []T, pageRes *PageResponse, err error) {
 	iterator, err := getCollIter[K, V](ctx, coll, prefix, key, reverse)
 	if err != nil {
 		return nil, nil, err
@@ -239,7 +289,6 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 	var (
 		count   uint64
 		nextKey []byte
-		results []collections.KeyValue[K, V]
 	)
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -264,7 +313,11 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 		}
 		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
-			results = append(results, kv)
+			transformed, err := transformFunc(kv.Key, kv.Value)
+			if err != nil {
+				return nil, nil, err
+			}
+			results = append(results, transformed)
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
 		} else {
@@ -273,7 +326,11 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 				return nil, nil, err
 			}
 			if include {
-				results = append(results, kv)
+				transformed, err := transformFunc(kv.Key, kv.Value)
+				if err != nil {
+					return nil, nil, err
+				}
+				results = append(results, transformed)
 			}
 		}
 		count++

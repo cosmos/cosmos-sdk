@@ -56,7 +56,7 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 // Proposals implements the Query/Proposals gRPC method
 func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	res, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (include bool, err error) {
+	filteredProposals, pageRes, err := query.CollectionFilteredPaginateTransform(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (include bool, err error) {
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied/valid)
@@ -93,13 +93,9 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 		}
 		// continue to next item, do not include because we're appending results above.
 		return false, nil
+	}, func(_ uint64, value v1.Proposal) (*v1.Proposal, error) {
+		return &value, nil
 	})
-
-	filteredProposals := make([]*v1.Proposal, len(res))
-
-	for i := 0; i < len(res); i++ {
-		filteredProposals[i] = &res[i].Value
-	}
 
 	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -148,10 +144,8 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	var votes v1.Votes
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
-		votes = append(votes, &value)
-		return false, nil // not including results because they're being appended.
+	votes, pageRes, err := query.CollectionPaginateTransform(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (vote *v1.Vote, err error) {
+		return &value, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -233,9 +227,8 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 	}
 
 	var deposits []*v1.Deposit
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
-		deposits = append(deposits, &deposit)
-		return false, nil // we don't include results as they're being appended to the slice above.
+	deposits, pageRes, err := query.CollectionPaginateTransform(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (*v1.Deposit, error) {
+		return &deposit, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

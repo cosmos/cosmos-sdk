@@ -100,7 +100,7 @@ func TestCollectionPagination(t *testing.T) {
 				Limit: 3,
 			},
 			expResp: &PageResponse{
-				NextKey: encodeKey(3),
+				NextKey: encodeKey(5),
 			},
 			filter: func(key, value uint64) (bool, error) {
 				return key%2 == 0, nil
@@ -108,6 +108,7 @@ func TestCollectionPagination(t *testing.T) {
 			expResults: []collections.KeyValue[uint64, uint64]{
 				{Key: 0, Value: 0},
 				{Key: 2, Value: 2},
+				{Key: 4, Value: 4},
 			},
 		},
 		"filtered with key": {

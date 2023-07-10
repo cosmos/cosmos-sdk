@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
-	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,7 +45,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	ac := addresscodec.NewBech32Codec("cosmos")
 
 	bz, err := ac.StringToBytes(authority.String())
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 	s.addrBytes = bz
 
 	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), authority.String(), ac)
@@ -57,7 +57,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		LimitTypeUrls: []string{"test"},
 	}
 	err := s.keeper.Permissions.Set(s.ctx, s.addrBytes, perms)
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	var accounts []*types.GenesisAccountPermissions
 	genAccsPerms := types.GenesisAccountPermissions{
@@ -68,7 +68,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	url := "test_url"
 	err = s.keeper.DisableList.Set(s.ctx, url)
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	genesisState := &types.GenesisState{
 		AccountPermissions: accounts,
@@ -79,7 +79,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	exported := s.keeper.ExportGenesis(s.ctx)
 	bz, err := s.cdc.MarshalJSON(exported)
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	var exportedGenesisState types.GenesisState
 	err = s.cdc.UnmarshalJSON(bz, &exportedGenesisState)

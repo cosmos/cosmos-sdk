@@ -44,6 +44,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default).
 * (all) [#16537](https://github.com/cosmos/cosmos`osmos/cosmos-sdk/pull/16798) Remove aliases in `types/math.go` (part 2).
+* (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
+* (x/authz) [#16869](https://github.com/cosmos/cosmos-sdk/pull/16869) Error message has been improvised in `Exec` command when grant not found.
+
+### Bug Fixes
+
+* (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
+* (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
+
+### API Breaking Changes
+
+* (types/math) [#16040](https://github.com/cosmos/cosmos-sdk/pull/16798) Remove aliases in `types/math.go` (part 2).
 * (x/distribution) [#16440](https://github.com/cosmos/cosmos-sdk/pull/16440) use collections for `DelegatorWithdrawAddresState`:
     * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
 * (x/distribution) [#16459](https://github.com/cosmos/cosmos-sdk/pull/16459) use collections for `ValidatorCurrentRewards` state management:
@@ -62,7 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## CLI Breaking Changes
 
-* (x/bank) []() With the migration to AutoCLI some bank commands have been split in two: 
+* (x/bank) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) With the migration to AutoCLI some bank commands have been split in two: 
     * Use `denoms-metadata` for querying all denom metadata and `denom-metadata` for querying a specific denom metadata.
     * Use `total-supply` (or `total`) for querying the total supply and `total-supply-of` for querying the supply of a specific denom. 
 

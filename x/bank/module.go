@@ -84,11 +84,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd(ab.ac)
 }
 
-// GetQueryCmd returns no root query command for the bank module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // RegisterInterfaces registers interfaces and implementations of the bank module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)

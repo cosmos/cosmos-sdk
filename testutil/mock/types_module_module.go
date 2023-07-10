@@ -17,7 +17,6 @@ import (
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	cobra "github.com/spf13/cobra"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface.
@@ -41,34 +40,6 @@ func NewMockAppModuleBasic(ctrl *gomock.Controller) *MockAppModuleBasic {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAppModuleBasic) EXPECT() *MockAppModuleBasicMockRecorder {
 	return m.recorder
-}
-
-// GetQueryCmd mocks base method.
-func (m *MockAppModuleBasic) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockAppModuleBasicMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockAppModuleBasic) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockAppModuleBasicMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetTxCmd))
 }
 
 // Name mocks base method.
@@ -260,34 +231,6 @@ func (mr *MockAppModuleGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).ExportGenesis), arg0, arg1)
 }
 
-// GetQueryCmd mocks base method.
-func (m *MockAppModuleGenesis) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockAppModuleGenesisMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockAppModuleGenesis) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetTxCmd))
-}
-
 // InitGenesis mocks base method.
 func (m *MockAppModuleGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
@@ -466,34 +409,6 @@ func NewMockAppModule(ctrl *gomock.Controller) *MockAppModule {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAppModule) EXPECT() *MockAppModuleMockRecorder {
 	return m.recorder
-}
-
-// GetQueryCmd mocks base method.
-func (m *MockAppModule) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModule)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockAppModule) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockAppModuleMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModule)(nil).GetTxCmd))
 }
 
 // Name mocks base method.
@@ -689,34 +604,6 @@ func (m *MockHasABCIEndblock) EndBlock(arg0 context.Context) ([]types.ValidatorU
 func (mr *MockHasABCIEndblockMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockHasABCIEndblock)(nil).EndBlock), arg0)
-}
-
-// GetQueryCmd mocks base method.
-func (m *MockHasABCIEndblock) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockHasABCIEndblockMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockHasABCIEndblock)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockHasABCIEndblock) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockHasABCIEndblockMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockHasABCIEndblock)(nil).GetTxCmd))
 }
 
 // Name mocks base method.

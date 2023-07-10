@@ -64,12 +64,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetQueryCmd returns the CLI query commands for this module
-// TODO to delete after https://github.com/cosmos/cosmos-sdk/pull/16890
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // GetTxCmd returns the CLI transaction commands for this module
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)

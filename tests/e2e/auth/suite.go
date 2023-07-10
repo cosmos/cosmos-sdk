@@ -700,7 +700,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	// Ensure destiny account state
 	err = s.network.RetryForBlocks(func() error {
-		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
+		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
 		s.Require().NoError(err)
 		return err
 	}, 3)
@@ -832,7 +832,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -850,7 +850,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, val1.Address))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
 	s.Require().NoError(err)
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)

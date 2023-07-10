@@ -27,6 +27,12 @@ import (
 
 var errFoo = errors.New("dummy")
 
+func (MockCoreAppModule) GetQueryCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "foo",
+	}
+}
+
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -80,8 +86,8 @@ func TestBasicManager(t *testing.T) {
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
-
 	mm.AddQueryCommands(mockCmd)
+	require.Equal(t, 1, len(mockCmd.Commands()))
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))

@@ -162,7 +162,9 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 		if mod, ok := b.(interface {
 			GetTxCmd() *cobra.Command
 		}); ok {
-			rootTxCmd.AddCommand(mod.GetTxCmd())
+			if cmd := mod.GetTxCmd(); cmd != nil {
+				rootTxCmd.AddCommand(cmd)
+			}
 		}
 	}
 }
@@ -173,7 +175,9 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 		if mod, ok := b.(interface {
 			GetQueryCmd() *cobra.Command
 		}); ok {
-			rootQueryCmd.AddCommand(mod.GetQueryCmd())
+			if cmd := mod.GetQueryCmd(); cmd != nil {
+				rootQueryCmd.AddCommand(cmd)
+			}
 		}
 	}
 }

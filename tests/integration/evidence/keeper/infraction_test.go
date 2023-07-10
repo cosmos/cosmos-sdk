@@ -151,7 +151,7 @@ func initFixture(tb testing.TB) *fixture {
 	evidencetypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), keeper.NewMsgServerImpl(*evidenceKeeper))
 	evidencetypes.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQuerier(evidenceKeeper))
 
-	assert.NilError(tb, slashingKeeper.SetParams(sdkCtx, testutil.TestParams()))
+	assert.NilError(tb, slashingKeeper.Params.Set(sdkCtx, testutil.TestParams()))
 
 	// set default staking params
 	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))

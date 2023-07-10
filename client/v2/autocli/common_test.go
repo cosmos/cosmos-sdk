@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"gotest.tools/v3/assert"
 
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
@@ -19,58 +20,12 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
-func testExecCommon(t *testing.T, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) *testClientConn {
-	t.Helper()
-	server := grpc.NewServer()
-	testpb.RegisterQueryServer(server, &testEchoServer{})
-	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	assert.NilError(t, err)
-	go func() {
-		err := server.Serve(listener)
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-		errorOut:   &bytes.Buffer{},
-	}
-	b := &Builder{
-		Builder: flag.Builder{
-			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
-			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
-		},
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
-		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    flags.AddTxFlagsToCmd,
-	}
-
-	cmd, err := buildModuleCommand("test", b)
-	assert.NilError(t, err)
-	assert.NilError(t, err)
-	cmd.SetArgs(args)
-	cmd.SetOut(conn.out)
-	cmd.SetErr(conn.errorOut)
-	cmd.Execute()
-	return conn
+type fixture struct {
+	conn *testClientConn
+	b    *Builder
 }
 
-func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand func(string, *Builder) (*cobra.Command, error), args ...string) {
+func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
@@ -86,21 +41,12 @@ func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand 
 
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
-	defer func() {
-		err := clientConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
 
-	conn := &testClientConn{
-		ClientConn: clientConn,
-		t:          t,
-		out:        &bytes.Buffer{},
-		errorOut:   &bytes.Buffer{},
-	}
+	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          protoregistry.GlobalFiles,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		},
@@ -110,9 +56,24 @@ func testExecCommonWithErr(t *testing.T, expectedErr string, buildModuleCommand 
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
+	assert.NilError(t, b.Validate())
 
-	_, err = buildModuleCommand("test", b)
-	assert.Equal(t, expectedErr, err.Error())
+	return &fixture{
+		conn: conn,
+		b:    b,
+	}
+}
+
+func runCmd(conn *testClientConn, b *Builder, command func(moduleName string, b *Builder) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {
+	out := &bytes.Buffer{}
+	cmd, err := command("test", b)
+	if err != nil {
+		return out, err
+	}
+
+	cmd.SetArgs(args)
+	cmd.SetOut(out)
+	return out, cmd.Execute()
 }
 
 type testReflectionServer struct {
@@ -128,3 +89,26 @@ func (t testReflectionServer) GetConfigurationDescriptor(_ context.Context, clie
 }
 
 var _ reflectionv2alpha1.ReflectionServiceServer = testReflectionServer{}
+
+type testClientConn struct {
+	*grpc.ClientConn
+	lastRequest  interface{}
+	lastResponse interface{}
+}
+
+func (t *testClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
+	t.lastRequest = args
+	t.lastResponse = reply
+	return err
+}
+
+type testEchoServer struct {
+	testpb.UnimplementedQueryServer
+}
+
+func (t testEchoServer) Echo(_ context.Context, request *testpb.EchoRequest) (*testpb.EchoResponse, error) {
+	return &testpb.EchoResponse{Request: request}, nil
+}
+
+var _ testpb.QueryServer = testEchoServer{}

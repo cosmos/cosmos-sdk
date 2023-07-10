@@ -27,7 +27,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "ModuleVersions",
-					Use:       "module_versions [optional module_name]",
+					Use:       "module-versions [optional module_name]",
+					Alias:     []string{"module_versions"},
 					Short:     "Query the list of module versions",
 					Long:      "Gets a list of module names and their respective consensus versions. Following the command with a specific module name will return only that module's information.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{

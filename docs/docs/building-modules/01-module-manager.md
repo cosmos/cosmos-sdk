@@ -240,8 +240,8 @@ It implements the following methods:
 * `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.
 * `ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`](./08-genesis.md#validategenesis) function of modules implementing the `HasGenesisBasics` interface.
 * `RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux)`: Registers gRPC routes for modules.
-* `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands (when defined) to the application's [`rootTxCommand`](../core/07-cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
-* `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands (when defined) to the application's [`rootQueryCommand`](../core/07-cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
+* `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands (defined as `GetTxCmd() *cobra.Command`) to the application's [`rootTxCommand`](../core/07-cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
+* `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands (defined as `GetQueryCmd() *cobra.Command`) to the application's [`rootQueryCommand`](../core/07-cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
 
 ### `Manager`
 

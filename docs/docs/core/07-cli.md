@@ -103,7 +103,7 @@ This `txCommand` function adds all the transaction available to end-users for th
 
 * **Sign command** from the [`auth`](../modules/auth/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 * **Broadcast command** from the Cosmos SDK client tools, to broadcast transactions.
-* **All [module transaction commands](../building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function.
+* **All [module transaction commands](../building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started).
 
 Here is an example of a `txCommand` aggregating these subcommands from the `simapp` application:
 
@@ -130,7 +130,7 @@ This `queryCommand` function adds all the queries available to end-users for the
 * **Account command** from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
 * **Validator command** from the Cosmos SDK rpc client tools, which displays the validator set of a given height.
 * **Block command** from the Cosmos SDK RPC client tools, which displays the block data for a given height.
-* **All [module query commands](../building-modules/09-module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddQueryCommands()` function.
+* **All [module query commands](../building-modules/09-module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddQueryCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started).
 
 Here is an example of a `queryCommand` aggregating subcommands from the `simapp` application:
 

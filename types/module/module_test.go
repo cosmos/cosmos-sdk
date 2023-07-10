@@ -52,8 +52,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)

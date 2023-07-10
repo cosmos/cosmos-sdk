@@ -1903,3 +1903,37 @@ func TestABCI_HaltChain(t *testing.T) {
 		})
 	}
 }
+
+func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := log.NewTestLogger(t)
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
+	wasHookCalled := false
+	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		wasHookCalled = true
+		return nil
+	})
+	app.Seal()
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	require.Equal(t, true, wasHookCalled)
+
+	// Now try erroring
+	app = baseapp.NewBaseApp(name, logger, db, nil)
+	_, err = app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
+	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		return errors.New("some error")
+	})
+	app.Seal()
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.Error(t, err)
+}

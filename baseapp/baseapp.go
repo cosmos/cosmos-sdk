@@ -73,15 +73,16 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
 
-	initChainer        sdk.InitChainer                // ABCI InitChain handler
-	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	initChainer          sdk.InitChainer                // ABCI InitChain handler
+	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
+	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal      sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote           sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt        sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+	prepareCheckStater   sdk.PrepareCheckStater         // logic to run during commit using the checkState
+	precommiter          sdk.Precommiter                // logic to run during commit using the deliverState
+	preFinalizeBlockHook sdk.PreFinalizeBlockHook       // logic to run before FinalizeBlock
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID

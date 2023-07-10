@@ -31,6 +31,3 @@ func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sd
 func (h StakingHooksTemplate) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
 	return nil
 }
-func (h StakingHooksTemplate) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
-	return nil
-}

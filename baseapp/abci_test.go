@@ -164,8 +164,6 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
-	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
@@ -580,12 +578,6 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			txs = append(txs, txBytes)
 		}
 
-		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
-			Height: int64(blockN) + 1,
-			Txs:    txs,
-		})
-		require.NoError(t, err)
-
 		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: int64(blockN) + 1,
 			Txs:    txs,
@@ -737,8 +729,6 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 
-		_, err = suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: count})
-		require.NoError(t, err)
 		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: count})
 		require.NoError(t, err)
 		_, err = suite.baseApp.Commit()
@@ -907,10 +897,6 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
-		Height: 1,
-	})
-	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
@@ -948,12 +934,6 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	}
 
 	// Deliver the txs
-	_, err = suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
-		Height: 2,
-		Txs:    txs,
-	})
-	require.NoError(t, err)
-
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 2,
 		Txs:    txs,
@@ -1319,9 +1299,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
-	require.NoError(t, err)
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -1345,9 +1323,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	_, err := app.ProcessProposal(&abci.RequestProcessProposal{Height: 1})
-	require.NoError(t, err)
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)

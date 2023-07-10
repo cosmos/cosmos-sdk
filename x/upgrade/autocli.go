@@ -1,0 +1,46 @@
+package upgrade
+
+import (
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	upgradev1beta1 "cosmossdk.io/api/cosmos/upgrade/v1beta1"
+)
+
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: upgradev1beta1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "CurrentPlan",
+					Use:       "plan",
+					Short:     "get upgrade plan (if one exists)",
+					Long:      "Gets the currently scheduled upgrade plan, if one exists",
+				},
+				{
+					RpcMethod: "AppliedPlan",
+					Use:       "applied [upgrade-name]",
+					Short:     "block header for height at which a completed upgrade was applied",
+					Long: "If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied.\n" +
+						"This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "name"},
+					},
+				},
+				{
+					RpcMethod: "ModuleVersions",
+					Use:       "module_versions [optional module_name]",
+					Short:     "get the list of module versions",
+					Long: "Gets a list of module names and their respective consensus versions.\n" +
+						"Following the command with a specific module name will return only\n" +
+						"that module's information.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "module_name", Optional: true},
+					},
+				},
+			},
+		},
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service: upgradev1beta1.Query_ServiceDesc.ServiceName,
+		},
+	}
+}

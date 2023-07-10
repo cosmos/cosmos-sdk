@@ -283,7 +283,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
 				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
@@ -433,7 +432,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -529,7 +528,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -631,7 +630,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -759,7 +758,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -838,7 +837,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {
@@ -940,7 +939,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
-				integration.WithAutomaticProcessProposal(),
+				integration.WithAutomaticFinalizeBlock(),
 				integration.WithAutomaticCommit(),
 			)
 			if tc.expErr {

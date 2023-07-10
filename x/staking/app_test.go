@@ -79,8 +79,6 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	ctxCheck = app.BaseApp.NewContext(true)
@@ -91,8 +89,6 @@ func TestStakingMsgs(t *testing.T) {
 	require.Equal(t, types.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 
-	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 
@@ -114,8 +110,6 @@ func TestStakingMsgs(t *testing.T) {
 	delegateMsg := types.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
 	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: header.Height})
-	require.NoError(t, err)
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
@@ -127,8 +121,6 @@ func TestStakingMsgs(t *testing.T) {
 	// begin unbonding
 	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, err = app.ProcessProposal(&abci.RequestProcessProposal{Height: header.Height})
-	require.NoError(t, err)
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 

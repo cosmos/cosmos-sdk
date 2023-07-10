@@ -42,6 +42,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "authority",
 					Short:     "Get the upgrade authority address",
 				},
+				{
+					RpcMethod: "UpgradedConsensusState",
+					Skip: true, // Skipping this command as the query is deprecated.
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

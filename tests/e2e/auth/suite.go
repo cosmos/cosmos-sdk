@@ -31,7 +31,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -287,50 +286,6 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	sigs, err := s.cfg.TxConfig.UnmarshalSignatureJSON([]byte(signedTxs[0]))
 	s.Require().NoError(err)
 	s.Require().Equal(sigs[0].Sequence, seq1)
-}
-
-func (s *E2ETestSuite) TestCliGetAccountAddressByID() {
-	require := s.Require()
-	val1 := s.network.Validators[0]
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"not enough args",
-			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			true,
-		},
-		{
-			"invalid account id",
-			[]string{fmt.Sprint(-1), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			true,
-		},
-		{
-			"valid account id",
-			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := authcli.GetAccountAddressByIDCmd()
-			clientCtx := val1.ClientCtx
-
-			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var res authtypes.QueryAccountAddressByIDResponse
-				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
-				require.NotNil(res.GetAccountAddress())
-			}
-		})
-	}
 }
 
 func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
@@ -1228,10 +1183,8 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	defer filename.Close()
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr, addresscodec.NewBech32Codec("cosmos"))
+	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)
 	s.Require().NoError(err)
-	var account sdk.AccountI
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
 	addr1, err := account1.GetAddress()
@@ -1268,121 +1221,6 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 			s.Require().NoError(s.network.WaitForNextBlock())
 		}()
 	}
-}
-
-func (s *E2ETestSuite) TestGetAccountCmd() {
-	val := s.network.Validators[0]
-	_, _, addr1 := testdata.KeyTestPubAddr()
-
-	testCases := []struct {
-		name      string
-		address   sdk.AccAddress
-		expectErr bool
-	}{
-		{
-			"invalid address",
-			addr1,
-			true,
-		},
-		{
-			"valid address",
-			val.Address,
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			out, err := authclitestutil.QueryAccountExec(clientCtx, tc.address, addresscodec.NewBech32Codec("cosmos"))
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var acc sdk.AccountI
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
-				s.Require().Equal(val.Address, acc.GetAddress())
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetAccountsCmd() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.GetAccountsCmd(), []string{
-		fmt.Sprintf("--%s=json", flags.FlagOutput),
-	})
-	s.Require().NoError(err)
-
-	var res authtypes.QueryAccountsResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().NotEmpty(res.Accounts)
-}
-
-func (s *E2ETestSuite) TestQueryModuleAccountByNameCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name       string
-		moduleName string
-		expectErr  bool
-	}{
-		{
-			"invalid module name",
-			"gover",
-			true,
-		},
-		{
-			"valid module name",
-			"mint",
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountByNameCmd(), []string{
-				tc.moduleName,
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			})
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var res authtypes.QueryModuleAccountByNameResponse
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-
-				var account sdk.AccountI
-				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
-				s.Require().NoError(err)
-
-				moduleAccount, ok := account.(sdk.ModuleAccountI)
-				s.Require().True(ok)
-				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestQueryModuleAccountsCmd() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountsCmd(), []string{
-		fmt.Sprintf("--%s=json", flags.FlagOutput),
-	})
-	s.Require().NoError(err)
-
-	var res authtypes.QueryModuleAccountsResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().NotEmpty(res.Accounts)
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
@@ -1425,45 +1263,6 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "connect: connection refused")
 	require.Contains(t, out.String(), "connect: connection refused")
-}
-
-func (s *E2ETestSuite) TestQueryParamsCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"happy case",
-			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-		{
-			"with specific height",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := authcli.QueryParamsCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var authParams authtypes.Params
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &authParams))
-				s.Require().NotNil(authParams.MaxMemoCharacters)
-			}
-		})
-	}
 }
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the

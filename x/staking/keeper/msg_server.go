@@ -794,10 +794,6 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
 	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
-		if k.hooks != nil {
-			return nil, k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
-		}
-
 		err = k.DeleteTokenizeShareRecord(ctx, record.Id)
 		if err != nil {
 			return nil, err

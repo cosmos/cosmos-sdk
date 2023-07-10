@@ -59,8 +59,6 @@ Let us go through the methods:
 * `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
 * `RegisterInterfaces(codectypes.InterfaceRegistry)`: Registers a module's interface types and their concrete implementations as `proto.Message`.
 * `RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)`: Registers gRPC routes for the module.
-* `GetTxCmd()`: Returns the root [`Tx` command](./09-module-interfaces.md#tx) for the module. The subcommands of this root command are used by end-users to generate new transactions containing [`message`s](./02-messages-and-queries.md#queries) defined in the module.
-* `GetQueryCmd()`: Return the root [`query` command](./09-module-interfaces.md#query) for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module.
 
 All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#basicmanager).
 
@@ -242,8 +240,8 @@ It implements the following methods:
 * `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.
 * `ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`](./08-genesis.md#validategenesis) function of modules implementing the `HasGenesisBasics` interface.
 * `RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux)`: Registers gRPC routes for modules.
-* `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands to the application's [`rootTxCommand`](../core/07-cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
-* `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands to the application's [`rootQueryCommand`](../core/07-cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
+* `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands (when defined) to the application's [`rootTxCommand`](../core/07-cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
+* `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands (when defined) to the application's [`rootQueryCommand`](../core/07-cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/07-cli.md).
 
 ### `Manager`
 

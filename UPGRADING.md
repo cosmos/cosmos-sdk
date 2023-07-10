@@ -222,23 +222,25 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 
 #### `**all**`
 
-[RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
+* [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
 The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
 It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
-The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager registers detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
-* `x/authz`
-* `x/bank`
-* `x/mint`
-* `x/crisis`
-* `x/distribution`
-* `x/evidence`
-* `x/gov`
-* `x/slashing`
-* `x/upgrade`
+* The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+
+    * `x/authz`
+    * `x/bank`
+    * `x/mint`
+    * `x/crisis`
+    * `x/distribution`
+    * `x/evidence`
+    * `x/gov`
+    * `x/slashing`
+    * `x/upgrade`
 
 #### `x/auth`
 

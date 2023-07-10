@@ -1336,9 +1336,11 @@ type MsgClient interface {
 	BeginRedelegate(ctx context.Context, in *MsgBeginRedelegate, opts ...grpc.CallOption) (*MsgBeginRedelegateResponse, error)
 	// Undelegate defines a method for performing an undelegation from a
 	// delegate and a validator.
+	// This allows a validator to stop their services and jail themselves without
+	// experiencing a slash
 	Undelegate(ctx context.Context, in *MsgUndelegate, opts ...grpc.CallOption) (*MsgUndelegateResponse, error)
 	// UnbondValidator defines a method for performing the status transition for a validator
-	// from bonded to unbonded
+	// from bonded to unbonding
 	UnbondValidator(ctx context.Context, in *MsgUnbondValidator, opts ...grpc.CallOption) (*MsgUnbondValidatorResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
@@ -1504,9 +1506,11 @@ type MsgServer interface {
 	BeginRedelegate(context.Context, *MsgBeginRedelegate) (*MsgBeginRedelegateResponse, error)
 	// Undelegate defines a method for performing an undelegation from a
 	// delegate and a validator.
+	// This allows a validator to stop their services and jail themselves without
+	// experiencing a slash
 	Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
 	// UnbondValidator defines a method for performing the status transition for a validator
-	// from bonded to unbonded
+	// from bonded to unbonding
 	UnbondValidator(context.Context, *MsgUnbondValidator) (*MsgUnbondValidatorResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.

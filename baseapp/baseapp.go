@@ -486,18 +486,6 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	}
 }
 
-// GetFinalizeBlockStateCtx returns the Context associated with the FinalizeBlock
-// state. This Context can be used to write data derived from processing vote
-// extensions to application state during ProcessProposal.
-//
-// NOTE:
-// - Do NOT use or write to state using this Context unless you intend for
-// that state to be committed.
-// - Do NOT use or write to state using this Context on the first block.
-func (app *BaseApp) GetFinalizeBlockStateCtx() sdk.Context {
-	return app.finalizeBlockState.ctx
-}
-
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
 func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {

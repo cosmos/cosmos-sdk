@@ -1,13 +1,9 @@
-# ADR ADR-061: Liquid Staking
+# ADR: Liquid Staking
 
 ## Changelog
 
 * 2022-09-10: Initial Draft (@zmanian)
-* 2023-07-10:  (@sampocs, @rileyedmunds)
-
-## Status
-
-ACCEPTED
+* 2023-07-10:  (@zmanian, @sampocs, @rileyedmunds, @mpoke)
 
 ## Abstract
 

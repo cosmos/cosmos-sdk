@@ -10,12 +10,16 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -746,4 +750,95 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"valid transaction of withdraw tokenize share record reward",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewWithdrawAllTokenizeShareRecordRewardCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+// This test requires multiple validators, if I add this test to `IntegrationTestSuite` by increasing
+// `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
+func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	pubkey := info.GetPubKey()
+
+	newAddr := sdk.AccAddress(pubkey.Address())
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	// delegate 500 tokens to validator1
+	args := []string{
+		val.ValAddress.String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewDelegateCmd(), args)
+	s.Require().NoError(err)
+
+	// withdraw rewards
+	args = []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewWithdrawAllRewardsCmd(), args)
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 }

@@ -7,7 +7,7 @@
 
 ## Abstract
 
-Add a semi-fungible liquid staking primitive to the default Cosmos SDK staking module. This upgrades proof of stake to enable safe designs with lower overall monetary issuance and integration with numerous liquid staking protocols like Stride, Persistence, Quicksilver, Lido etc.
+Add a semi-fungible liquid staking primitive to the default Cosmos SDK staking module. While implemented as changes to existing modules, these additional features are hereinafter referred to as the liquid staking module (LSM). This upgrades proof of stake to enable safe designs with lower overall monetary issuance and integration with numerous liquid staking protocols like Stride, Persistence, Quicksilver, Lido etc.
 
 ## Context
 
@@ -70,7 +70,7 @@ Without self-bonding tokens, a validator can’t receive delegations from liquid
 
 ### Instantly liquid staking tokens that are already staked
 
-Next, let’s discuss how the LSM makes the adoption of liquid staking more efficient, and can help the blockchain that installs it build strong relationships with liquid staking providers. The LSM enables users to instantly liquid stake their staked tokens, without having to wait the twenty-one day unbonding period. This is important, because a very large portion of the token supply on most Cosmos blockchains is currently staked. Liquid staking tokens that are already staked incur a switching cost in the form of three weeks’ forfeited staking rewards. The LSM eliminates this switching cost.
+Next, let’s discuss how the LSM makes the adoption of liquid staking more efficient, and can help the blockchain that installs it build strong relationships with liquid staking providers. The LSM enables users to instantly liquid stake their staked tokens, without having to wait the twenty-one day unbonding period. This is important, because a very large portion of the token supply on most Cosmos blockchains is currently staked. Liquid staking tokens that are already staked incur a switching cost in the form of forfeited staking rewards over the chain's unbonding period. The LSM eliminates this switching cost.
 
 
 A user would be able to visit any liquid staking provider that has integrated with the LSM and click a button to convert his staked tokens to liquid staked tokens. It would be as easy as liquid staking unstaked tokens.

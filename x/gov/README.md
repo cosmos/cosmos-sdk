@@ -494,11 +494,13 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
 ### Legacy Proposal
 
+:::warning
+Legacy proposals are deprecated. Use the new proposal flow by granting the governance module the right to execute the message.
+:::
+
 A legacy proposal is the old implementation of governance proposal.
 Contrary to proposal that can contain any messages, a legacy proposal allows to submit a set of pre-defined proposals.
-These proposal are defined by their types.
-
-While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
+These proposals are defined by their types and handled by handlers that are registered in the gov v1beta1 router.
 
 More information on how to submit proposals in the [client section](#client).
 

@@ -12,11 +12,11 @@ require (
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
-	cosmossdk.io/x/evidence v0.0.0-20230710135718-3bfd00f47bde
-	cosmossdk.io/x/feegrant v0.0.0-20230710134821-641c6a79f97c
-	cosmossdk.io/x/nft v0.0.0-20230710134821-641c6a79f97c // indirect
+	cosmossdk.io/x/evidence v0.0.0-20230711132404-6f85267b41ff
+	cosmossdk.io/x/feegrant v0.0.0-20230711132404-6f85267b41ff
+	cosmossdk.io/x/nft v0.0.0-20230711132404-6f85267b41ff // indirect
 	cosmossdk.io/x/tx v0.8.0
-	cosmossdk.io/x/upgrade v0.0.0-20230710134821-641c6a79f97c
+	cosmossdk.io/x/upgrade v0.0.0-20230711132404-6f85267b41ff
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3

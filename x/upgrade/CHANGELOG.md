@@ -30,6 +30,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#14880](https://github.com/cosmos/cosmos-sdk/pull/14880) Switch from using gov v1beta1 to gov v1 in upgrade CLIs.
 * [#14764](https://github.com/cosmos/cosmos-sdk/pull/14764) The `x/upgrade` module is extracted to have a separate go.mod file which allows it be a standalone module.
 
+### Improvements
+
+* [#16903](https://github.com/cosmos/cosmos-sdk/pull/16903) Use AutoCLI for upgrade querying commands.
+
 ### API Breaking Changes
 
 * [#16845](https://github.com/cosmos/cosmos-sdk/pull/16845) Remove gov v1beta1 handler. Use gov v1 proposals directly, or replicate the handler in your app.

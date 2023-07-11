@@ -175,8 +175,13 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
+<<<<<<< HEAD
 github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230710133933-d4f661321afb h1:8QuN6QiOvE03D8DYnlVIfgyy/fTjQHoEDMsDPtSeXVk=
 github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230710133933-d4f661321afb/go.mod h1:ipTpaQLbn9S35e+b6gWm6OB9Lwr1mYy/47cX+owKnE4=
+=======
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230710133622-f3e4697195ff h1:jqNK08KgB3ExmUWsG8VNo+3QSODQnFefEiLNTKbcx2A=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230710133622-f3e4697195ff/go.mod h1:dmZ0kV7SplzqHiYR9aV/iIpIGVoUF8r0NfiigmXxKeM=
+>>>>>>> 320eea11c (feat(upgrade): autocli query support (#16903))
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

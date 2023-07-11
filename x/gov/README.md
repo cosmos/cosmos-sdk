@@ -500,7 +500,7 @@ Legacy proposals are deprecated. Use the new proposal flow by granting the gover
 
 A legacy proposal is the old implementation of governance proposal.
 Contrary to proposal that can contain any messages, a legacy proposal allows to submit a set of pre-defined proposals.
-These proposal are defined by their types and handled by handlers that are registered in the gov v1beta1 router.
+These proposals are defined by their types and handled by handlers that are registered in the gov v1beta1 router.
 
 More information on how to submit proposals in the [client section](#client).
 

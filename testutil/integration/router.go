@@ -140,13 +140,6 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		}()
 	}
 
-	if cfg.AutomaticProcessProposal {
-		height := app.LastBlockHeight() + 1
-		if _, err := app.ProcessProposal(&cmtabcitypes.RequestProcessProposal{Height: height}); err != nil {
-			return nil, fmt.Errorf("failed to run process proposal: %w", err)
-		}
-	}
-
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
 		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height}); err != nil {

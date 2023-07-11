@@ -69,7 +69,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		var expectedChangeSet []*storetypes.StoreKVPair
 
 		// create final block context state
-		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: int64(blockN) + 1, Txs: txs})
+		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
 		require.NoError(t, err)
 
 		for i := 0; i < txPerHeight; i++ {
@@ -134,8 +134,6 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 
 	for blockN := 0; blockN < nBlocks; blockN++ {
 
-		_, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: int64(blockN) + 1})
-		require.NoError(t, err)
 		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
 		require.NoError(t, err)
 		ctx := getFinalizeBlockStateCtx(suite.baseApp)

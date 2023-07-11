@@ -102,6 +102,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#16700](https://github.com/cosmos/cosmos-sdk/pull/16700) Fix consensus failure in returning no response to malformed transactions.
 * (baseapp) [#16596](https://github.com/cosmos/cosmos-sdk/pull/16596) Return error during ExtendVote and VerifyVoteExtension if the request height is earlier than `VoteExtensionsEnableHeight`.
 * (x/slashing) [#16784](https://github.com/cosmos/cosmos-sdk/pull/16784) Emit event with the correct reason in SlashWithInfractionReason.
+* (types/query) [#16905](https://github.com/cosmos/cosmos-sdk/pull/16905) – Collections Pagination now applies proper count when filtering results.
 
 ### API Breaking Changes
 

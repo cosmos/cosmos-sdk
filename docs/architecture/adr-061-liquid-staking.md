@@ -302,7 +302,10 @@ func RedeemTokens() {
 
 func Slash() {
     ...
-    // Decrement total liquid staked (since total liquid stake is denominated in tokens, not shares)
+    // Decrement's the total liquid staked tokens 
+    // The total should be adjusted by slash amount * liquid percentage
+    // Since a slash only modifies a validator's tokens and not their shares,
+    // the validator's LiquidShares do not have to be changed during a slash
 }
 ```
 

@@ -49,8 +49,8 @@ cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca h1:msenprh2BLLRwNT7zN56TbB
 cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca/go.mod h1:PkIAKXZvaxrTRc++z53XMRvFk8AcGGWYHcMIPzVYX9c=
 cosmossdk.io/math v1.0.1 h1:Qx3ifyOPaMLNH/89WeZFH268yCvU4xEcnPLu3sJqPPg=
 cosmossdk.io/math v1.0.1/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
-cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c h1:A+FMPW9GtfcPBDQNtFeDFN27h1SAP6OVjnGgPLlYXmI=
-cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c/go.mod h1:RbYGvXCbz8uNBCXrwS9Z8SyydeWi+W5x5MZ33muyzMw=
+cosmossdk.io/store v1.0.0-alpha.1 h1:/151XxAgm0tiKuYrtJzMG61lf6enpPuP+D/hIN8cRjQ=
+cosmossdk.io/store v1.0.0-alpha.1/go.mod h1:ejgU9GhRGMNBduVnDwC3RyhOmu4uKlNQlTiJgPmbDkI=
 cosmossdk.io/x/tx v0.8.0 h1:gLiGRL/Fy7fs6dd0IX8jOf0PrVr56/SG6XVMGQjyvJU=
 cosmossdk.io/x/tx v0.8.0/go.mod h1:T9uEumGNgKU61gJYRv1t3uzQwLnASpJGmSE229HM3xA=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -87,8 +87,6 @@ github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
-github.com/armon/go-metrics v0.4.1 h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJA=
-github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=

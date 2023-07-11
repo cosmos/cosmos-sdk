@@ -204,14 +204,14 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	}
 
 	tokens := msg.Amount.Amount
-	shares, err := validator.SharesFromTokens(tokens)
-	if err != nil {
-		return nil, err
-	}
 
 	// if this delegation is from a liquid staking provider (identified if the delegator
 	// is an ICA account), it cannot exceed the global or validator bond cap
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
+		shares, err := validator.SharesFromTokens(tokens)
+		if err != nil {
+			return nil, err
+		}
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}

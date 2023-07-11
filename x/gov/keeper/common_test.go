@@ -64,6 +64,7 @@ func setupGovKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
+	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -108,6 +109,8 @@ func setupGovKeeper(t *testing.T) (
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
 	err := govKeeper.Params.Set(ctx, v1.DefaultParams())
+	require.NoError(t, err)
+	err = govKeeper.Constitution.Set(ctx, "constitution")
 	require.NoError(t, err)
 
 	// Register all handlers for the MegServiceRouter.

@@ -16,20 +16,23 @@ import (
 	"cosmossdk.io/orm/types/kv"
 )
 
-func initBalanceTable(t testing.TB) testpb.BalanceTable {
+func initBalanceTable(tb testing.TB) testpb.BalanceTable {
+	tb.Helper()
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.Balance{}).ProtoReflect().Type(),
 	})
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 
 	balanceTable, err := testpb.NewBalanceTable(table)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 
 	return balanceTable
 }
 
 func BenchmarkMemory(b *testing.B) {
+	b.Helper()
 	bench(b, func(tb testing.TB) ormtable.Backend {
+		tb.Helper()
 		return ormtest.NewMemoryBackend()
 	})
 }
@@ -39,6 +42,7 @@ func BenchmarkLevelDB(b *testing.B) {
 }
 
 func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
+	b.Helper()
 	b.Run("insert", func(b *testing.B) {
 		b.StopTimer()
 		ctx := ormtable.WrapContextDefault(newBackend(b))
@@ -68,7 +72,8 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 	})
 }
 
-func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchInsert(b *testing.B, ctx context.Context) {
+	b.Helper()
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
@@ -79,7 +84,8 @@ func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore 
 	}
 }
 
-func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchUpdate(b *testing.B, ctx context.Context) {
+	b.Helper()
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
@@ -90,7 +96,8 @@ func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore 
 	}
 }
 
-func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchGet(b *testing.B, ctx context.Context) {
+	b.Helper()
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
@@ -99,7 +106,8 @@ func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for
 	}
 }
 
-func benchDelete(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
+func benchDelete(b *testing.B, ctx context.Context) {
+	b.Helper()
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{
@@ -242,6 +250,7 @@ func BenchmarkManualInsertLevelDB(b *testing.B) {
 }
 
 func benchManual(b *testing.B, newStore func() (dbm.DB, error)) {
+	b.Helper()
 	b.Run("insert", func(b *testing.B) {
 		b.StopTimer()
 		store, err := newStore()
@@ -276,6 +285,7 @@ func benchManual(b *testing.B, newStore func() (dbm.DB, error)) {
 }
 
 func benchManualInsert(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, insertBalance(store, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -286,6 +296,7 @@ func benchManualInsert(b *testing.B, store kv.Store) {
 }
 
 func benchManualUpdate(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, updateBalance(store, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -296,6 +307,7 @@ func benchManualUpdate(b *testing.B, store kv.Store) {
 }
 
 func benchManualDelete(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, deleteBalance(store, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -305,6 +317,7 @@ func benchManualDelete(b *testing.B, store kv.Store) {
 }
 
 func benchManualGet(b *testing.B, store kv.Store) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		balance, err := getBalance(store, fmt.Sprintf("acct%d", i), "bar")
 		assert.NilError(b, err)

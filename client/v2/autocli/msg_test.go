@@ -98,16 +98,18 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 }
 
 func TestMsgOptions(t *testing.T) {
-	conn := testExecCommon(t,
-		buildModuleMsgCommand,
-		"send", "5", "6", "1foo",
+	fixture := initFixture(t)
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand, "send",
+		"5", "6", "1foo",
 		"--uint32", "7",
 		"--u64", "8",
 		"--output", "json",
 	)
-	response := conn.out.String()
+	assert.NilError(t, err)
+
+	response := out.String()
 	var output testpb.MsgRequest
-	err := protojson.Unmarshal([]byte(response), &output)
+	err = protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(7))
 	assert.Equal(t, output.GetPositional1(), int32(5))
@@ -115,50 +117,61 @@ func TestMsgOptions(t *testing.T) {
 }
 
 func TestMsgOutputFormat(t *testing.T) {
-	conn := testExecCommon(t, buildModuleMsgCommand,
+	fixture := initFixture(t)
+
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
 		"send", "5", "6", "1foo",
 		"--output", "json",
 	)
-	assert.Assert(t, strings.Contains(conn.out.String(), "{"))
-	conn = testExecCommon(t, buildModuleMsgCommand,
+	assert.NilError(t, err)
+	assert.Assert(t, strings.Contains(out.String(), "{"))
+
+	out, err = runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
 		"send", "5", "6", "1foo",
 		"--output", "text",
 	)
-
-	assert.Assert(t, strings.Contains(conn.out.String(), "positional1: 5"))
+	assert.NilError(t, err)
+	assert.Assert(t, strings.Contains(out.String(), "positional1: 5"))
 }
 
 func TestMsgOptionsError(t *testing.T) {
-	conn := testExecCommon(t, buildModuleMsgCommand,
+	fixture := initFixture(t)
+
+	_, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
 		"send", "5",
 		"--uint32", "7",
 		"--u64", "8",
 	)
+	assert.ErrorContains(t, err, "requires at least 2 arg(s)")
 
-	assert.Assert(t, strings.Contains(conn.errorOut.String(), "requires at least 3 arg"))
-
-	conn = testExecCommon(t, buildModuleMsgCommand,
+	_, err = runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
 		"send", "5", "6", `{"denom":"foo","amount":"1"}`,
 		"--uint32", "7",
 		"--u64", "abc",
 	)
-	assert.Assert(t, strings.Contains(conn.errorOut.String(), "invalid argument "))
+	assert.ErrorContains(t, err, "invalid argument ")
 }
 
 func TestDeprecatedMsg(t *testing.T) {
-	conn := testExecCommon(t, buildModuleMsgCommand, "send",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"--deprecated-field", "foo")
-	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
+	fixture := initFixture(t)
 
-	conn = testExecCommon(t, buildModuleMsgCommand, "send",
-		"1", "abc", `{"denom":"foo","amount":"1"}`,
-		"-d", "foo")
-	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
+		"send", "1", "abc", "--deprecated-field", "foo",
+	)
+	assert.NilError(t, err)
+	assert.Assert(t, strings.Contains(out.String(), "--deprecated-field has been deprecated"))
+
+	out, err = runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
+		"send", "1", "abc", "5stake", "-d", "foo",
+	)
+	assert.NilError(t, err)
+	assert.Assert(t, strings.Contains(out.String(), "--shorthand-deprecated-field has been deprecated"))
 }
 
 func TestEverythingMsg(t *testing.T) {
-	conn := testExecCommon(t, buildModuleMsgCommand,
+	fixture := initFixture(t)
+
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand,
 		"send",
 		"1",
 		"abc",
@@ -200,9 +213,11 @@ func TestEverythingMsg(t *testing.T) {
 		"--uints", "1,2,3",
 		"--uints", "4",
 	)
-	response := conn.out.String()
+	assert.NilError(t, err)
+
+	response := out.String()
 	var output testpb.MsgRequest
-	err := protojson.Unmarshal([]byte(response), &output)
+	err = protojson.Unmarshal([]byte(response), &output)
 	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(27))
 	assert.Equal(t, output.GetU64(), uint64(3267246890))
@@ -213,14 +228,19 @@ func TestEverythingMsg(t *testing.T) {
 }
 
 func TestHelpMsg(t *testing.T) {
-	conn := testExecCommon(t, buildModuleMsgCommand, "-h")
-	golden.Assert(t, conn.out.String(), "help-toplevel-msg.golden")
+	fixture := initFixture(t)
 
-	conn = testExecCommon(t, buildModuleMsgCommand, "send", "-h")
-	golden.Assert(t, conn.out.String(), "help-echo-msg.golden")
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand, "-h")
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "help-toplevel-msg.golden")
 
-	conn = testExecCommon(t, buildModuleMsgCommand, "deprecatedmsg", "send", "-h")
-	golden.Assert(t, conn.out.String(), "help-deprecated-msg.golden")
+	out, err = runCmd(fixture.conn, fixture.b, buildModuleMsgCommand, "send", "-h")
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "help-echo-msg.golden")
+
+	out, err = runCmd(fixture.conn, fixture.b, buildModuleMsgCommand, "deprecatedmsg", "send", "-h")
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "help-deprecated-msg.golden")
 }
 
 func TestBuildMsgCommand(t *testing.T) {
@@ -246,7 +266,10 @@ func TestBuildMsgCommand(t *testing.T) {
 }
 
 func TestErrorBuildMsgCommand(t *testing.T) {
-	b := &Builder{}
+	fixture := initFixture(t)
+	b := fixture.b
+	b.AddQueryConnFlags = nil
+	b.AddTxConnFlags = nil
 
 	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
@@ -268,6 +291,8 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 				Tx: commandDescriptor,
 			},
 		},
+		AddressCodec:          b.AddressCodec,
+		ValidatorAddressCodec: b.ValidatorAddressCodec,
 	}
 
 	_, err := b.BuildMsgCommand(appOptions, nil, enhanceMsg)
@@ -280,7 +305,11 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 }
 
 func TestNotFoundErrorsMsg(t *testing.T) {
-	b := &Builder{}
+	fixture := initFixture(t)
+	b := fixture.b
+	b.AddQueryConnFlags = nil
+	b.AddTxConnFlags = nil
+
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 

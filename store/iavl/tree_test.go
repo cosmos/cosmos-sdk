@@ -19,6 +19,10 @@ func TestImmutableTreePanics(t *testing.T) {
 	require.Panics(t, func() { _, _, _ = it.SaveVersion() })
 	require.Panics(t, func() { _ = it.DeleteVersionsTo(int64(1)) })
 
+	val, err := it.GetVersioned(nil, 1)
+	require.Error(t, err)
+	require.Nil(t, val)
+
 	imm, err := it.GetImmutable(1)
 	require.Error(t, err)
 	require.Nil(t, imm)

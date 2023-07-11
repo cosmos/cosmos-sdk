@@ -258,7 +258,8 @@ func TestModuleDB(t *testing.T) {
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
-func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) { // nolint:revive // test function
+func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"

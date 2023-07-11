@@ -19,6 +19,16 @@ func (a addressStringType) DefaultValue() string {
 	return ""
 }
 
+type validatorAddressStringType struct{}
+
+func (a validatorAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.ValidatorAddressCodec}
+}
+
+func (a validatorAddressStringType) DefaultValue() string {
+	return ""
+}
+
 type addressValue struct {
 	value        string
 	addressCodec address.Codec

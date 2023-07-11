@@ -546,8 +546,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -603,7 +603,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{ // weight sum <1
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -696,8 +696,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return res.ProposalId
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionAbstain, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:    proposer,
 			metadata: "",
@@ -1125,11 +1125,11 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1184,7 +1184,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.VoteOption(0x13),
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1199,7 +1199,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1652,7 +1652,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins
-		minInitialDepositRatio sdk.Dec
+		minInitialDepositRatio sdkmath.LegacyDec
 		initialDeposit         sdk.Coins
 		accountBalance         sdk.Coins
 

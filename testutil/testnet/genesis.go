@@ -104,9 +104,9 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 			Moniker: "TODO",
 		},
 		stakingtypes.CommissionRates{
-			Rate:          sdk.MustNewDecFromStr("0.1"),
-			MaxRate:       sdk.MustNewDecFromStr("0.2"),
-			MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+			Rate:          math.LegacyMustNewDecFromStr("0.1"),
+			MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
+			MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
 		},
 		math.OneInt(),
 	)

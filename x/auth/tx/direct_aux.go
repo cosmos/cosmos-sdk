@@ -51,10 +51,9 @@ func (signModeDirectAuxHandler) GetSignBytes(
 	if addr == "" {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
+	feePayer := protoTx.FeePayer()
 
-	payer := protoTx.FeePayer()
-
-	feepayer := sdk.AccAddress(payer).String()
+	feepayer := sdk.AccAddress(feePayer).String()
 
 	// Fee payer cannot use SIGN_MODE_DIRECT_AUX, because SIGN_MODE_DIRECT_AUX
 	// does not sign over fees, which would create malleability issues.

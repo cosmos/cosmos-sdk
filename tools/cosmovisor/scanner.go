@@ -25,8 +25,9 @@ type fileWatcher struct {
 	cancel      chan bool
 	ticker      *time.Ticker
 
-	needsUpdate bool
-	initialized bool
+	needsUpdate   bool
+	initialized   bool
+	disableRecase bool
 }
 
 func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error) {
@@ -51,15 +52,16 @@ func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error)
 	}
 
 	return &fileWatcher{
-		currentBin:  bin,
-		filename:    filenameAbs,
-		interval:    cfg.PollInterval,
-		currentInfo: upgradetypes.Plan{},
-		lastModTime: time.Time{},
-		cancel:      make(chan bool),
-		ticker:      time.NewTicker(cfg.PollInterval),
-		needsUpdate: false,
-		initialized: false,
+		currentBin:    bin,
+		filename:      filenameAbs,
+		interval:      cfg.PollInterval,
+		currentInfo:   upgradetypes.Plan{},
+		lastModTime:   time.Time{},
+		cancel:        make(chan bool),
+		ticker:        time.NewTicker(cfg.PollInterval),
+		needsUpdate:   false,
+		initialized:   false,
+		disableRecase: cfg.DisableRecase,
 	}, nil
 }
 
@@ -112,7 +114,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		return false
 	}
 
-	info, err := parseUpgradeInfoFile(fw.filename)
+	info, err := parseUpgradeInfoFile(fw.filename, fw.disableRecase)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse upgrade info file: %w", err))
 	}
@@ -180,7 +182,7 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 	return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
 }
 
-func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
+func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return upgradetypes.Plan{}, err
@@ -201,7 +203,9 @@ func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 	}
 
 	// normalize name to prevent operator error in upgrade name case sensitivity errors.
-	upgradePlan.Name = strings.ToLower(upgradePlan.Name)
+	if disableRecase == false {
+		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
+	}
 
 	return upgradePlan, err
 }

@@ -24,6 +24,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
 	addUpgrade.Flags().Int64(cosmovisor.FlagUpgradeHeight, 0, "define a height at which to upgrade the binary automatically (without governance proposal)")
+	addUpgrade.Flags().Bool(cosmovisor.FlagDisableRecase, false, "do not lower case plan name")
 
 	return addUpgrade
 }
@@ -37,9 +38,13 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	logger := cfg.Logger(os.Stdout)
 
-	upgradeName := strings.ToLower(args[0])
-	if len(upgradeName) == 0 {
-		return fmt.Errorf("upgrade name cannot be empty")
+	upgradeName := args[0]
+	disableRecase, err := cmd.Flags().GetBool(cosmovisor.FlagDisableRecase)
+	if err != nil {
+		return fmt.Errorf("failed to get disable-recase flag: %w", err)
+	}
+	if disableRecase == false {
+		upgradeName = strings.ToLower(args[0])
 	}
 
 	executablePath := args[1]
@@ -93,7 +98,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", upgradetypes.UpgradeInfoFilename, upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("%s/%s created, %s upgrade binary will switch at height %d", cfg.UpgradeInfoFilePath(), upgradetypes.UpgradeInfoFilename, upgradeName, upgradeHeight))
 	}
 
 	return nil

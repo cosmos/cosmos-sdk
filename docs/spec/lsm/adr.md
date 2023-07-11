@@ -1,9 +1,13 @@
-# ADR: Liquid Staking
+# ADR ADR-061: Liquid Staking
 
 ## Changelog
 
 * 2022-09-10: Initial Draft (@zmanian)
 * 2023-07-10:  (@zmanian, @sampocs, @rileyedmunds, @mpoke)
+
+## Status
+
+ACCEPTED
 
 ## Abstract
 
@@ -33,9 +37,9 @@ We implement the semi-fungible liquid staking system and validator bond factor s
 
 The LSM is designed to safely and efficiently facilitate the adoption of liquid staking.
 
-The LSM mitigates liquid staking risks by limiting the total amount of tokens that can be liquid staked to 25% of all staked tokens. 
+The LSM mitigates liquid staking risks by limiting the total amount of tokens that can be liquid staked to X% of all staked tokens (in the case of the Cosmos Hub, 25% as decided by Governance).
 
-As additional risk-mitigation features, the LSM introduces a requirement that validators self-bond tokens to be eligible for delegations from liquid staking providers, and that the portion of their liquid staked shares must not exceed 50% of their total shares.
+As additional risk-mitigation features, the LSM introduces a requirement that validators self-bond tokens to be eligible for delegations from liquid staking providers, and that the portion of their liquid staked shares must not exceed X% of their total shares (50% on the Cosmos Hub).
 
 A new governance parameter is introduced that defines the ratio of validator bonded tokens to issued tokenized shares. This is called the validator bond factor. A larger validator bond factor allows more tokenized shares to be issued for a smaller amount of validator bond. If governance is comfortable with how the liquid staking market is evolving, it makes sense to increase this value.
 
@@ -45,6 +49,7 @@ When shares are tokenized, the underlying shares are transferred to a module acc
 
 There is no longer a mechanism to override the validators vote for TokenizedShares.
 
+Delegations from 32-length addresses and LSM tokenized shares are tracked against the global liquid staking, validator liquid staking cap, and validator bond caps. This requires changing the standard staking transactions to track these variables and ensure safety limits are enforced. The reason for checking the account type is because ICAs and tokenize share record module accounts have 32-length addresses, so in practice this limits liquid staking. To be clear, any ICA or module account staking is counted against this cap - not just ICA delegations from liquid staking providers.
 
 ### Limiting liquid staking
 
@@ -53,9 +58,11 @@ The LSM would limit the percentage of liquid staked tokens by all liquid staking
 
 This is a key safety feature, as it would prevent liquid staking providers from collectively controlling more than ⅓ of the total staked token supply, which is the threshold at which a group of bad actors could halt block production.
 
-Additionally, a separate cap is enforced on each validator's portion of liquid staked shares. Once 50% of shares are liquid, the validator is unable to accept additional liquid stakes.
+Additionally, a separate cap is enforced on each validator's portion of liquid staked shares. Once X% of shares (on the Cosmoshub, 50% based on the parameter value chosen by governance) are liquid, the validator is unable to accept additional liquid stakes.
 
-Technically speaking, this cap on liquid staked tokens is enforced by limiting the total number of tokens that can be staked via interchain accounts plus the number of tokens that can be tokenized using LSM. Once this joint cap is reached, the LSM prevents interchain accounts from staking any more tokens and prevents tokenization of delegations using LSM.
+Technically speaking, this cap on liquid staked tokens is enforced by limiting the total number of tokens that can be staked via interchain accounts plus the number of tokens that can be tokenized using LSM. Once this joint cap is reached, the LSM prevents interchain accounts from staking any more tokens and prevents tokenization of delegations using LSM. 
+
+Note that the limit of the percentage of liquid staked tokens will not fully hold if the total stake is dropping. As an example, a 25% cap leaves room for over 33% of the non-LS ATOM to unbond before the share of voting power held by liquid staking providers would reach 33%. For example, say there are 100 ATOM total staked, 25 of which are liquid staked; 25 of the 75 remaining ATOM need to unbond for the liquid staked voting power to rise to 33%.
 
 
 ### Validator bond
@@ -70,7 +77,7 @@ Without self-bonding tokens, a validator can’t receive delegations from liquid
 
 ### Instantly liquid staking tokens that are already staked
 
-Next, let’s discuss how the LSM makes the adoption of liquid staking more efficient, and can help the blockchain that installs it build strong relationships with liquid staking providers. The LSM enables users to instantly liquid stake their staked tokens, without having to wait the twenty-one day unbonding period. This is important, because a very large portion of the token supply on most Cosmos blockchains is currently staked. Liquid staking tokens that are already staked incur a switching cost in the form of forfeited staking rewards over the chain's unbonding period. The LSM eliminates this switching cost.
+Next, let’s discuss how the LSM makes the adoption of liquid staking more efficient, and can help the blockchain that installs it build strong relationships with liquid staking providers. The LSM enables users to instantly liquid stake their staked tokens, without having to wait the unbonding period. This is important, because a very large portion of the token supply on most Cosmos blockchains is currently staked. Liquid staking tokens that are already staked incur a switching cost in the form of forfeited staking rewards over the chain's unbonding period. The LSM eliminates this switching cost.
 
 
 A user would be able to visit any liquid staking provider that has integrated with the LSM and click a button to convert his staked tokens to liquid staked tokens. It would be as easy as liquid staking unstaked tokens.
@@ -225,7 +232,14 @@ In order to identify whether a liquid stake transaction will exceed either the g
 
 ```go
 // Check if an account is a owned by a liquid staking provider
-// This is determined by checking if the account is a 32-length module account
+// Checking for a 32-length address will capture
+// ICA accounts, as well as tokenized delegations which are owned by module accounts under the hood
+// which will identify the following scenarios:
+//   - An account has tokenized their shares, and thus the delegation is
+//     owned by the tokenize share record module account
+//   - A liquid staking provider is delegating through an ICA account
+//
+// Both ICA accounts and tokenize share record module accounts have 32-length addresses
 func (k Keeper) DelegatorIsLiquidStaker(address sdk.AccAddress) bool 
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens

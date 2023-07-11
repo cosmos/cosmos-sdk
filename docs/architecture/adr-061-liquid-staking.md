@@ -113,9 +113,6 @@ To convert Validator Bond back into a standard delegation, simply unbond the sha
 
 ## Technical Spec:
 
- Please see this document for a technical spec for the LSM:
- https://docs.google.com/document/d/1WYPUHmQii4o-q2225D_XyqE6-1bvM7Q128Y9amqRwqY/edit#heading=h.zcpx47mn67kl
-
 ### Software parameters
 
 New governance parameters are introduced that define the cap on the percentage of delegated shares than can be liquid, namely the `GlobalLiquidStakingCap` and `ValidatorLiquidStakingCap`. The `ValidatorBondFactor` governance parameter defines the number of tokens that can be liquid staked, relative to a validator's validator bond.
@@ -398,3 +395,7 @@ func QueueTokenizeSharesAuthorization(address sdk.AccAddress) time.Time
 // (i.e. have waited the full unbonding period)
 func RemoveExpiredTokenizeShareLocks(blockTime time.Time) (unlockedAddresses []string) 
 ```
+
+## References
+
+Please see this document for a technical spec for the LSM: https://docs.google.com/document/d/1WYPUHmQii4o-q2225D_XyqE6-1bvM7Q128Y9amqRwqY/edit#heading=h.zcpx47mn67kl

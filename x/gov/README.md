@@ -23,7 +23,7 @@ they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
 deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period, the deposit is burned.
 
-This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
+This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
 Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents

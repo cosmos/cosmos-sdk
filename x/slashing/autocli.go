@@ -1,10 +1,11 @@
 package slashing
 
 import (
-	"strings"
+	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	slashingv1beta "cosmossdk.io/api/cosmos/slashing/v1beta1"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
@@ -16,19 +17,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Params",
 					Use:       "params",
 					Short:     "Query the current slashing parameters",
-					Long: strings.TrimSpace(`Query genesis parameters for the slashing module:
-
-$ <appd> query slashing params
-`),
 				},
 				{
 					RpcMethod: "SigningInfo",
 					Use:       "signing-info [validator-conspub]",
 					Short:     "Query a validator's signing information",
-					Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
-
-$ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
-`),
+					Long:      "Query a validator's signing information, the validator consensus public key can be got with '<appd> comet show-validator'",
+					Example:   fmt.Sprintf(`%s query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "cons_address"},
 					},
@@ -37,10 +32,6 @@ $ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","
 					RpcMethod: "SigningInfos",
 					Use:       "signing-infos",
 					Short:     "Query signing information of all validators",
-					Long: strings.TrimSpace(`signing infos of validators:
-
-$ <appd> query slashing signing-infos
-`),
 				},
 			},
 		},

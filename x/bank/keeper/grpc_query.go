@@ -60,9 +60,6 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	balances := sdk.NewCoins()
-
 	balances, pageRes, err := query.CollectionPaginateTransform(
 		ctx,
 		k.Balances,

@@ -39,7 +39,7 @@ for the key-value pairs from the stores to be decoded (_i.e_ unmarshalled)
 to their corresponding types. In particular, it matches the key to a concrete type
 and then unmarshals the value from the `KVPair` to the type provided.
 
-You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
+You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
 
 ### Randomized genesis
 
@@ -50,13 +50,13 @@ Once the module genesis parameter are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON to use it on the simulations.
 
-You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/simulation/genesis.go).
+You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/genesis.go).
 
 ### Randomized parameter changes
 
 The simulator is able to test parameter changes at random. The simulator package from each module must contain a `RandomizedParams` func that will simulate parameter changes of the module throughout the simulations lifespan.
 
-You can see how an example of what is needed to fully test parameter changes [here](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/simulation/params.go)
+You can see how an example of what is needed to fully test parameter changes [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/params.go)
 
 ### Random weighted operations
 
@@ -70,7 +70,7 @@ Operations on the simulation are simulated using the full [transaction cycle](..
 Shown below is how weights are set:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/simulation/operations.go#L19-L86
+https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/operations.go#L19-L86
 ```
 
 As you can see, the weights are predefined in this case. Options exist to override this behavior with different weights. One option is to use `*rand.Rand` to define a random weight for the operation, or you can inject your own predefined weights.
@@ -78,7 +78,7 @@ As you can see, the weights are predefined in this case. Options exist to overri
 Here is how one can override the above package `simappparams`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/Makefile#L293-L299
+https://github.com/cosmos/cosmos-sdk/blob/v/Makefile#L293-L299
 ```
 
 For the last test a tool called [runsim](https://github.com/cosmos/tools/tree/master/cmd/runsim) is used, this is used to parallelize go test instances, provide info to Github and slack integrations to provide information to your team on how the simulations are running.  
@@ -94,7 +94,7 @@ them to be used on the parameters.
 Now that all the required functions are defined, we need to integrate them into the module pattern within the `module.go`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/distribution/module.go#L180-L203
+https://github.com/cosmos/cosmos-sdk/blob/v/x/distribution/module.go#L180-L203
 ```
 
 ## App Simulator manager

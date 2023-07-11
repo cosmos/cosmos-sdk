@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	validEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddresses[0]), e)
+	validEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddress), e)
 	s.Require().NoError(err)
 
 	e2 := &types.Equivocation{
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	invalidEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddresses[0]), e2)
+	invalidEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddress), e2)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 		{
 			name: "missing evidence",
 			req: &types.MsgSubmitEvidence{
-				Submitter: sdk.AccAddress(valAddresses[0]).String(),
+				Submitter: sdk.AccAddress(valAddress).String(),
 			},
 			expErr:    true,
 			expErrMsg: "missing evidence: invalid evidence",

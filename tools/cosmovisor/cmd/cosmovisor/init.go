@@ -16,9 +16,10 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init <path to executable>",
-	Short: "Initialize a cosmovisor daemon home directory.",
-	Args:  cobra.ExactArgs(1),
+	Use:          "init <path to executable>",
+	Short:        "Initialize a cosmovisor daemon home directory.",
+	Args:         cobra.ExactArgs(1),
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return InitializeCosmovisor(nil, args)
 	},

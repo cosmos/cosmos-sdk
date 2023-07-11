@@ -43,6 +43,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 }
 
 func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, ctx context.Context) {
+	t.Helper()
 	store, err := testpb.NewExampleAutoIncrementTableTable(table)
 	assert.NilError(t, err)
 

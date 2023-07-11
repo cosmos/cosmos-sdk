@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/comet"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,9 +27,9 @@ type (
 		IsTombstoned(context.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
 		Tombstone(context.Context, sdk.ConsAddress) error
-		Slash(context.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64) error
-		SlashWithInfractionReason(context.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64, stakingtypes.Infraction) error
-		SlashFractionDoubleSign(context.Context) (sdkmath.LegacyDec, error)
+		Slash(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64) error
+		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, stakingtypes.Infraction) error
+		SlashFractionDoubleSign(context.Context) (math.LegacyDec, error)
 		Jail(context.Context, sdk.ConsAddress) error
 		JailUntil(context.Context, sdk.ConsAddress, time.Time) error
 	}

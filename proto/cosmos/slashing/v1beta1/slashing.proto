@@ -43,7 +43,7 @@ message Params {
 
   int64 signed_blocks_window  = 1;
   bytes min_signed_per_window = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
@@ -54,13 +54,13 @@ message Params {
     (gogoproto.stdduration) = true
   ];
   bytes slash_fraction_double_sign = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
   bytes slash_fraction_downtime = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true

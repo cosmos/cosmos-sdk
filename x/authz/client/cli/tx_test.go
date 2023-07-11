@@ -179,7 +179,7 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 		s.clientCtx,
 		val[0].Address,
 		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200))),
+		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200))),
 		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

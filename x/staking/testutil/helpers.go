@@ -30,6 +30,7 @@ type Helper struct {
 
 // NewHelper creates a new instance of Helper.
 func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
+	t.Helper()
 	return &Helper{t, keeper.NewMsgServerImpl(k), k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
 }
 

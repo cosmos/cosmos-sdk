@@ -81,6 +81,34 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			},
 			true,
 		},
+		{
+			"success with abci",
+			types.QueryParamsRequest{},
+			func() {
+				input := &types.MsgUpdateParams{
+					Authority: s.consensusParamsKeeper.GetAuthority(),
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Abci: &cmtproto.ABCIParams{
+						VoteExtensionsEnableHeight: 1234,
+					},
+				}
+				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+			},
+			types.QueryParamsResponse{
+				Params: &cmtproto.ConsensusParams{
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Version:   defaultConsensusParams.Version,
+					Abci: &cmtproto.ABCIParams{
+						VoteExtensionsEnableHeight: 1234,
+					},
+				},
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -130,7 +158,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Evidence:  defaultConsensusParams.Evidence,
 			},
 			expErr:    true,
-			expErrMsg: "block.MaxBytes must be greater than 0. Got -10",
+			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
 		},
 		{
 			name: "invalid authority",
@@ -155,6 +183,14 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
+
+				res, err := s.consensusParamsKeeper.Params(s.ctx, &types.QueryParamsRequest{})
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				s.Require().Equal(tc.input.Block, res.Params.Block)
+				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
+				s.Require().Equal(tc.input.Validator, res.Params.Validator)
 			}
 		})
 	}

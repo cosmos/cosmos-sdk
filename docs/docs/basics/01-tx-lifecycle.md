@@ -157,37 +157,40 @@ must be in this proposer's mempool.
 ## State Changes
 
 The next step of consensus is to execute the transactions to fully validate them. All full-nodes
-that receive a block proposal from the correct proposer execute the transactions by calling the ABCI functions
-[`BeginBlock`](./00-app-anatomy.md#beginblocker-and-endblocker), `DeliverTx` for each transaction,
-and [`EndBlock`](./00-app-anatomy.md#beginblocker-and-endblocker). While each full-node runs everything
-locally, this process yields a single, unambiguous result, since the messages' state transitions are deterministic and transactions are
-explicitly ordered in the block proposal.
+that receive a block proposal from the correct proposer execute the transactions by calling the ABCI function `FinalizeBlock`. 
+As mentioned throughout the documentation `BeginBlock`, `ExecuteTx` and `EndBlock` are called within FinalizeBlock. 
+Although every full-node operates individually and locally, the outcome is always consistent and unequivocal. This is because the state changes brought about by the messages are predictable, and the transactions are specifically sequenced in the proposed block.
 
 ```text
 		-----------------------
 		|Receive Block Proposal|
 		-----------------------
+							|
+				v
+		-------------------------
+		| FinalizeBlock	        |
 		          |
 			  v
-		-----------------------
-		| BeginBlock	      |
-		-----------------------
+				-------------------
+				| BeginBlock	    | 
+				-------------------
 		          |
 			  v
-		-----------------------
-		| DeliverTx(tx0)      |
-		| DeliverTx(tx1)      |
-		| DeliverTx(tx2)      |
-		| DeliverTx(tx3)      |
-		|	.	      |
-		|	.	      |
-		|	.	      |
-		-----------------------
+			--------------------
+			| ExecuteTx(tx0)   |
+			| ExecuteTx(tx1)   |
+			| ExecuteTx(tx2)   |
+			| ExecuteTx(tx3)   |
+			|	.	      |
+			|	.	      |
+			|	.	      |
+			-------------------
 		          |
 			  v
-		-----------------------
-		| EndBlock	      |
-		-----------------------
+			--------------------
+			| EndBlock	      |
+			--------------------
+		-------------------------
 		          |
 			  v
 		-----------------------
@@ -200,16 +203,16 @@ explicitly ordered in the block proposal.
 		-----------------------
 ```
 
-### DeliverTx
+### Transaction Execution
 
-The `DeliverTx` ABCI function defined in [`BaseApp`](../core/00-baseapp.md) does the bulk of the
+The `FinalizeBlock` ABCI function defined in [`BaseApp`](../core/00-baseapp.md) does the bulk of the
 state transitions: it is run for each transaction in the block in sequential order as committed
-to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the
+to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the
 [`runTx`](../core/00-baseapp.md#runtx) function in deliver mode instead of check mode.
-Instead of using their `checkState`, full-nodes use `deliverState`:
+Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
-* **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
+* **Decoding:** Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 * **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 
@@ -217,19 +220,19 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   `AnteHandler` does not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes yield nondeterministic results.
 
-* **`MsgServiceRouter`:** After `CheckTx` exits, `DeliverTx` continues to run
+* **`MsgServiceRouter`:** After `CheckTx` exits, `FinalizeBlock` continues to run
   [`runMsgs`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/03-msg-services.md).
   For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/01-module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/03-msg-services.md#handler-type) within the module.
   
-* **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `deliverTxState`.
+* **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `finalizeBlockState`.
 
 * **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
 
 * **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the
-  `abci.ResponseDeliverTx`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
+  `abci.ExecTxResult`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
   wrong, a deferred function at the end appropriately errors or panics.
 
 If there are any failed state changes resulting from a `Tx` being invalid or `GasMeter` running out,

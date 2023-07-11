@@ -120,7 +120,7 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
 	name, named := getMessageAminoName(msg.Descriptor().Options())
 	if named {
-		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+		_, err := fmt.Fprintf(writer, `{"type":"%s","value":`, name)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) erro
 	}
 
 	if named {
-		_, err = writer.Write([]byte("}"))
+		_, err = io.WriteString(writer, "}")
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
 
 	case protoreflect.List:
 		if !val.IsValid() {
-			_, err := writer.Write([]byte("null"))
+			_, err := io.WriteString(writer, "null")
 			return err
 		}
 		return enc.marshalList(val, writer)
@@ -194,7 +194,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		return err
 	}
 
-	_, err := writer.Write([]byte("{"))
+	_, err := io.WriteString(writer, "{")
 	if err != nil {
 		return err
 	}
@@ -249,15 +249,14 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		if !first {
-			_, err = writer.Write([]byte(","))
+			_, err = io.WriteString(writer, ",")
 			if err != nil {
 				return err
 			}
 		}
 
 		if isOneOf && !writeNil {
-			_, err = writer.Write([]byte(fmt.Sprintf(`"%s":{"type":"%s","value":{`,
-				oneofFieldName, oneofTypeName)))
+			_, err = fmt.Fprintf(writer, `"%s":{"type":"%s","value":{`, oneofFieldName, oneofTypeName)
 			if err != nil {
 				return err
 			}
@@ -268,7 +267,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 			return err
 		}
 
-		_, err = writer.Write([]byte(":"))
+		_, err = io.WriteString(writer, ":")
 		if err != nil {
 			return err
 		}
@@ -280,7 +279,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 				return err
 			}
 		} else if writeNil {
-			_, err = writer.Write([]byte("null"))
+			_, err = io.WriteString(writer, "null")
 			if err != nil {
 				return err
 			}
@@ -292,7 +291,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		if isOneOf && !writeNil {
-			_, err = writer.Write([]byte("}}"))
+			_, err = io.WriteString(writer, "}}")
 			if err != nil {
 				return err
 			}
@@ -301,7 +300,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		first = false
 	}
 
-	_, err = writer.Write([]byte("}"))
+	_, err = io.WriteString(writer, "}")
 	return err
 }
 
@@ -317,7 +316,7 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	n := list.Len()
 
-	_, err := writer.Write([]byte("["))
+	_, err := io.WriteString(writer, "[")
 	if err != nil {
 		return err
 	}
@@ -325,7 +324,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	first := true
 	for i := 0; i < n; i++ {
 		if !first {
-			_, err := writer.Write([]byte(","))
+			_, err := io.WriteString(writer, ",")
 			if err != nil {
 				return err
 			}
@@ -338,7 +337,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 		}
 	}
 
-	_, err = writer.Write([]byte("]"))
+	_, err = io.WriteString(writer, "]")
 	return err
 }
 

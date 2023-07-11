@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -197,7 +199,7 @@ func (s *E2ETestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
-			v1.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+			v1.NewTallyResult(math.NewInt(0), math.NewInt(0), math.NewInt(0), math.NewInt(0)),
 		},
 		{
 			"json output",
@@ -206,7 +208,7 @@ func (s *E2ETestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
-			v1.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+			v1.NewTallyResult(s.cfg.BondedTokens, math.NewInt(0), math.NewInt(0), math.NewInt(0)),
 		},
 	}
 
@@ -522,10 +524,10 @@ func (s *E2ETestSuite) TestCmdQueryVote() {
 			},
 			false,
 			v1.WeightedVoteOptions{
-				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: sdk.NewDecWithPrec(60, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: sdk.NewDecWithPrec(30, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: math.LegacyNewDecWithPrec(60, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: math.LegacyNewDecWithPrec(30, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
 			},
 		},
 	}

@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

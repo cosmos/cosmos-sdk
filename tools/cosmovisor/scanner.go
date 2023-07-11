@@ -203,7 +203,7 @@ func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Pla
 	}
 
 	// normalize name to prevent operator error in upgrade name case sensitivity errors.
-	if disableRecase == false {
+	if !disableRecase {
 		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
 	}
 

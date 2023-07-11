@@ -6,5 +6,4 @@ const (
 	FlagCosmovisorOnly    = "cosmovisor-only"
 	FlagForce             = "force"
 	FlagUpgradeHeight     = "upgrade-height"
-	FlagDisableRecase     = "disable-recase"
 )

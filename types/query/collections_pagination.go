@@ -47,7 +47,8 @@ func CollectionPaginate[K, V any, C Collection[K, V]](
 
 // CollectionFilteredPaginate works in the same way as CollectionPaginate but allows to filter
 // the results using the predicateFunc.
-// NOTE: results should not be collected using the predicateFunc
+// NOTE: results should not be collected by the predicateFunc as they might iterate
+// over results which are not in the pagination result collection range.
 func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context,
 	coll C,
@@ -67,7 +68,8 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	)
 }
 
-// Collection
+// CollectionPaginateTransform works like CollectionsPaginate but allows to transform the result
+// to a different type.
 func CollectionPaginateTransform[K, V any, C Collection[K, V], T any](
 	ctx context.Context,
 	coll C,
@@ -75,7 +77,7 @@ func CollectionPaginateTransform[K, V any, C Collection[K, V], T any](
 	transformFunc func(key K, value V) (T, error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]T, *PageResponse, error) {
-	return CollectionFilteredPaginateTransform[K, V, C, T](
+	return CollectionFilteredPaginateTransform(
 		ctx,
 		coll,
 		pageReq,

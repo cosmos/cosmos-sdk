@@ -78,28 +78,28 @@ type Config struct {
 	LegacyAmino       *codec.LegacyAmino // TODO: Remove!
 	InterfaceRegistry codectypes.InterfaceRegistry
 
-	TxConfig             client.TxConfig
-	AccountRetriever     client.AccountRetriever
-	AppConstructor       AppConstructor             // the ABCI application constructor
-	GenesisState         map[string]json.RawMessage // custom genesis state to provide
-	TargetHeightDuration time.Duration              // the consensus commitment timeout
-	ChainID              string                     // the network chain-id
-	NumValidators        int                        // the total number of validators to create and bond
-	Mnemonics            []string                   // custom user-provided validator operator mnemonics
-	BondDenom            string                     // the staking bond denomination
-	MinGasPrices         string                     // the minimum gas prices each validator will accept
-	AccountTokens        math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens        math.Int                   // the amount of tokens each validator has available to stake
-	BondedTokens         math.Int                   // the amount of tokens each validator stakes
-	PruningStrategy      string                     // the pruning strategy each validator will have
-	EnableTMLogging      bool                       // enable Tendermint logging to STDOUT
-	CleanupDir           bool                       // remove base temporary directory during cleanup
-	SigningAlgo          string                     // signing algorithm for keys
-	KeyringOptions       []keyring.Option           // keyring configuration options
-	RPCAddress           string                     // RPC listen address (including port)
-	APIAddress           string                     // REST API listen address (including port)
-	GRPCAddress          string                     // GRPC server listen address (including port)
-	PrintMnemonic        bool                       // print the mnemonic of first validator as log output for testing
+	TxConfig         client.TxConfig
+	AccountRetriever client.AccountRetriever
+	AppConstructor   AppConstructor             // the ABCI application constructor
+	GenesisState     map[string]json.RawMessage // custom genesis state to provide
+	TimeoutCommit    time.Duration              // the consensus commitment timeout
+	ChainID          string                     // the network chain-id
+	NumValidators    int                        // the total number of validators to create and bond
+	Mnemonics        []string                   // custom user-provided validator operator mnemonics
+	BondDenom        string                     // the staking bond denomination
+	MinGasPrices     string                     // the minimum gas prices each validator will accept
+	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                   // the amount of tokens each validator stakes
+	PruningStrategy  string                     // the pruning strategy each validator will have
+	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
+	CleanupDir       bool                       // remove base temporary directory during cleanup
+	SigningAlgo      string                     // signing algorithm for keys
+	KeyringOptions   []keyring.Option           // keyring configuration options
+	RPCAddress       string                     // RPC listen address (including port)
+	APIAddress       string                     // REST API listen address (including port)
+	GRPCAddress      string                     // GRPC server listen address (including port)
+	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -108,26 +108,26 @@ func DefaultConfig() Config {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	return Config{
-		Codec:                encCfg.Codec,
-		TxConfig:             encCfg.TxConfig,
-		LegacyAmino:          encCfg.Amino,
-		InterfaceRegistry:    encCfg.InterfaceRegistry,
-		AccountRetriever:     authtypes.AccountRetriever{},
-		AppConstructor:       NewAppConstructor(encCfg),
-		GenesisState:         simapp.ModuleBasics.DefaultGenesis(encCfg.Codec),
-		TargetHeightDuration: 2 * time.Second,
-		ChainID:              "chain-" + tmrand.Str(6),
-		NumValidators:        4,
-		BondDenom:            sdk.DefaultBondDenom,
-		MinGasPrices:         fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:        sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
-		StakingTokens:        sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
-		BondedTokens:         sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
-		PruningStrategy:      pruningtypes.PruningOptionNothing,
-		CleanupDir:           true,
-		SigningAlgo:          string(hd.Secp256k1Type),
-		KeyringOptions:       []keyring.Option{},
-		PrintMnemonic:        false,
+		Codec:             encCfg.Codec,
+		TxConfig:          encCfg.TxConfig,
+		LegacyAmino:       encCfg.Amino,
+		InterfaceRegistry: encCfg.InterfaceRegistry,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		AppConstructor:    NewAppConstructor(encCfg),
+		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Codec),
+		TimeoutCommit:     2 * time.Second,
+		ChainID:           "chain-" + tmrand.Str(6),
+		NumValidators:     4,
+		BondDenom:         sdk.DefaultBondDenom,
+		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:   pruningtypes.PruningOptionNothing,
+		CleanupDir:        true,
+		SigningAlgo:       string(hd.Secp256k1Type),
+		KeyringOptions:    []keyring.Option{},
+		PrintMnemonic:     false,
 	}
 }
 
@@ -248,7 +248,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
-		tmCfg.Consensus.TargetHeightDuration = cfg.TargetHeightDuration
+		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to Tendermint in-process constraints.
@@ -546,7 +546,7 @@ func (n *Network) LatestHeight() (int64, error) {
 // committed after a given block. If that height is not reached within a timeout,
 // an error is returned. Regardless, the latest height queried is returned.
 func (n *Network) WaitForHeight(h int64) (int64, error) {
-	timeout := 10 * n.Config.TargetHeightDuration
+	timeout := 10 * n.Config.TimeoutCommit
 	if timeout < 15*time.Second {
 		timeout = 15 * time.Second
 	}

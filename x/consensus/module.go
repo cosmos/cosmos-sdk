@@ -6,7 +6,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
@@ -65,16 +64,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the root tx command
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-// GetQueryCmd returns no root query command
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.

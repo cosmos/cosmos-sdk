@@ -199,16 +199,6 @@ func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, me
 	return m, nil
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	addrs, err := m.getProposerAccAddresses()
-	if err != nil {
-		panic(err)
-	}
-
-	return addrs
-}
-
 // getProposerAccAddresses returns the proposers as `[]sdk.AccAddress`.
 func (m *MsgSubmitProposal) getProposerAccAddresses() ([]sdk.AccAddress, error) {
 	addrs := make([]sdk.AccAddress, len(m.Proposers))

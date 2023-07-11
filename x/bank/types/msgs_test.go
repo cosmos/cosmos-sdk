@@ -132,15 +132,6 @@ func TestNewMsgSetSendEnabled(t *testing.T) {
 		assert.Equal(t, "billcoin", msg.UseDefaultFor[0], "msg.UseDefault[0]")
 	}
 }
-
-func TestMsgSendGetSigners(t *testing.T) {
-	from := sdk.AccAddress([]byte("input111111111111111"))
-	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, from.Equals(res[0]))
-}
-
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil)
 	expected := `{"type":"cosmos-sdk/MsgSetSendEnabled","value":{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}}`

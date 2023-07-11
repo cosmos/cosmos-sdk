@@ -23,7 +23,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "signing-info [validator-conspub]",
 					Short:     "Query a validator's signing information",
 					Long:      "Query a validator's signing information, the validator consensus public key can be got with '<appd> comet show-validator'",
-					Example:   fmt.Sprintf(`%s query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="'`, version.AppName),
+					Example:   fmt.Sprintf(`%s query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "cons_address"},
 					},

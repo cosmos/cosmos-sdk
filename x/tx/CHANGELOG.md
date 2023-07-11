@@ -31,6 +31,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.9.1
+
+### Improvements
+
+* [#]() Remove extra whitespace when marshalling module accounts.
+
 ## v0.9.0
 
 ### Bug Fixes

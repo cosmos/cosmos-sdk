@@ -106,4 +106,6 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
 	AfterUnbondingInitiated(ctx sdk.Context, id uint64) error
+
+	BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error // Must be called when tokenize share record is deleted
 }

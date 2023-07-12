@@ -5,13 +5,13 @@ go 1.20
 require (
 	cosmossdk.io/api v0.5.0
 	cosmossdk.io/client/v2 v2.0.0-20230613135102-afe571f5b616
-	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
+	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0
-	google.golang.org/grpc v1.56.1
+	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -21,13 +21,12 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/log v1.1.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
-	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c // indirect
+	cosmossdk.io/store v1.0.0-alpha.1 // indirect
 	cosmossdk.io/x/tx v0.8.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
-	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -35,7 +34,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230701135918-609ae80aea41 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230711190327-88bbab59ff4f // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 // indirect
 	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
@@ -56,7 +55,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
-	github.com/emicklei/dot v1.4.2 // indirect
+	github.com/emicklei/dot v1.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.22.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
@@ -73,6 +72,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-metrics v0.5.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
@@ -116,19 +116,19 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
-	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.9.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/genproto v0.0.0-20230525234025-438c736192d0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230525234020-1aefcd67740a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
+	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.4.0 // indirect
+	gotest.tools/v3 v3.5.0 // indirect
 	pgregory.net/rapid v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

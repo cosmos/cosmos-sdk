@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/collections v0.3.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/errors v1.0.0-beta.7.0.20230524212735-6cabb6aa5741
+	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v1.0.0-alpha.1
@@ -54,9 +54,9 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/go-amino v0.16.0
 	golang.org/x/crypto v0.11.0
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	golang.org/x/sync v0.3.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20230526203410-71b5a4ffd15e
+	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529
 	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
@@ -75,7 +75,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230701135918-609ae80aea41 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230711190327-88bbab59ff4f // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
-	github.com/emicklei/dot v1.4.2 // indirect
+	github.com/emicklei/dot v1.5.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -152,8 +152,8 @@ require (
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/genproto v0.0.0-20230629202037-9506855d4529 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
+	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

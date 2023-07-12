@@ -67,7 +67,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	accounts = append(accounts, &genAccsPerms)
 
 	url := "test_url"
-	s.keeper.DisableList.Set(s.ctx, url)
 
 	genesisState := &types.GenesisState{
 		AccountPermissions: accounts,

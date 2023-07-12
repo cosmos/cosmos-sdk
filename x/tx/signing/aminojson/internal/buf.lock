@@ -9,8 +9,13 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: cosmos-sdk
+<<<<<<< HEAD
     commit: 4067d92aa6344f549e84824ab7f22d4f
     digest: shake256:c51a91872768d984a555d4a91554dfa4b91d5ccbd90acae78f2a3d09cd773045927cb12e594800e1e353b1105b77c5f291f2d2622f834489abb82a574cfc2700
+=======
+    commit: 1356e87e6d1d4076b8bfb735737a0b63
+    digest: shake256:574a0e72da9b55e30257557503bd4203513e5ca06dd8bc19fb8bf375fc8525a6bab4d9995e1554db7e9c649bc3778578e0cb96182176206f0653f2a17c073c46
+>>>>>>> 74c351e2f (feat(api): add consensus bech32 prefix in app config (#16945))
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto

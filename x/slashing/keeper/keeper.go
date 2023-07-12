@@ -125,7 +125,10 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.sk.Jail(sdkCtx, consAddr)
+	err := k.sk.Jail(sdkCtx, consAddr)
+	if err != nil {
+		return err
+	}
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,

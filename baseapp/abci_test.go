@@ -67,6 +67,7 @@ func TestABCI_First_block_Height(t *testing.T) {
 		InitialHeight:   1,
 	})
 	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -187,9 +188,9 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
-
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
@@ -212,7 +213,6 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
-
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
@@ -393,6 +393,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
+
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
 
@@ -598,6 +599,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 
 		_, err = suite.baseApp.Commit()
 		require.NoError(t, err)
+
 	}
 }
 
@@ -648,7 +650,9 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addr.String()})
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addr.String()})
 
-	builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
+	require.NoError(t, err)
+
 	builder.SetMemo(tx.GetMemo())
 	setTxSignature(t, builder, 0)
 
@@ -752,12 +756,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
-
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	require.NoError(t, err)
-
 	// malformed transaction bytes
 	{
 		bz := []byte("example vote extension")
@@ -820,7 +822,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
@@ -833,10 +836,11 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		txBuilder = suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(
+		err = txBuilder.SetMsgs(
 			&baseapptestutil.MsgCounter{Signer: addr.String()},
 			&baseapptestutil.MsgCounter2{Signer: addr.String()},
 		)
+		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 
@@ -852,11 +856,11 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		err = txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		require.NoError(t, err)
 		tx := txBuilder.GetTx()
 
 		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
-		require.Error(t, err)
 		space, code, _ := errorsmod.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
@@ -1021,7 +1025,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset block gas
-		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
 		require.NoError(t, err)
 
 		// execute the transaction multiple times
@@ -1271,7 +1275,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-		_, err = tc.bapp.InitChain(&abci.RequestInitChain{
+		_, err := tc.bapp.InitChain(&abci.RequestInitChain{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
@@ -1476,11 +1480,11 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
-
+	require.NoError(t, err)
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 100000,
 		Height:     1, // this value can't be 0
@@ -1575,12 +1579,12 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 100
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{MaxGas: 100},
 		},
 	})
-
+	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
 	for i := int64(0); i < 100; i++ {
@@ -1588,7 +1592,8 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
-		builder.SetMsgs(msgs...)
+		err = builder.SetMsgs(msgs...)
+		require.NoError(t, err)
 		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
@@ -1886,13 +1891,13 @@ func TestABCI_HaltChain(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
-			suite.baseApp.InitChain(&abci.RequestInitChain{
+			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 				InitialHeight:   tc.blockHeight,
 			})
-
+			require.NoError(t, err)
 			app := suite.baseApp
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: tc.blockHeight,
 				Time:   time.Unix(tc.blockTime, 0),
 			})

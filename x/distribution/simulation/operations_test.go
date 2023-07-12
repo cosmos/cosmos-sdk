@@ -77,7 +77,11 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+<<<<<<< HEAD
 
+=======
+	suite.Require().NoError(err)
+>>>>>>> fd7e549a3 (chore: enable `errcheck` linter (#16406))
 	// execute operation
 	op := simulation.SimulateMsgSetWithdrawAddress(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
@@ -178,7 +182,11 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+<<<<<<< HEAD
 
+=======
+	suite.Require().NoError(err)
+>>>>>>> fd7e549a3 (chore: enable `errcheck` linter (#16406))
 	// execute operation
 	op := simulation.SimulateMsgWithdrawValidatorCommission(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")

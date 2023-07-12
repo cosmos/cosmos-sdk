@@ -10,7 +10,11 @@ run:
 linters:
   disable-all: true
   enable:
+<<<<<<< HEAD
     - depguard
+=======
+    - errcheck
+>>>>>>> fd7e549a3 (chore: enable `errcheck` linter (#16406))
     - dogsled
     - exportloopref
     - goconst

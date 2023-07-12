@@ -87,9 +87,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 
 	grant.Authorization = any
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(skey, k.cdc.MustMarshal(&grant))
-
-	return nil
+	return store.Set(skey, k.cdc.MustMarshal(&grant))
 }
 
 // DispatchActions attempts to execute the provided messages via authorization

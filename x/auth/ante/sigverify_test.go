@@ -226,7 +226,9 @@ func TestSigVerification(t *testing.T) {
 						},
 						Sequence: tc.accSeqs[0],
 					}
-					suite.txBuilder.SetSignatures(txSigs...)
+					err := suite.txBuilder.SetSignatures(txSigs...)
+					require.NoError(t, err)
+
 					tx = suite.txBuilder.GetTx()
 				}
 

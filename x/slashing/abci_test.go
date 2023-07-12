@@ -51,7 +51,8 @@ func TestBeginBlocker(t *testing.T) {
 	// bond the validator
 	power := int64(100)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
-	stakingKeeper.EndBlocker(ctx)
+	_, err = stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 	require.Equal(

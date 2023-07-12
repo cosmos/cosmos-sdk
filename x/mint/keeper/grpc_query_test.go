@@ -58,7 +58,6 @@ func (suite *MintTestSuite) SetupTest() {
 	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, types.DefaultInitialMinter()))
-
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServerImpl(suite.mintKeeper))
 

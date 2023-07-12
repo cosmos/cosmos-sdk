@@ -25,7 +25,5 @@ func Migrate(ctx sdk.Context, storeService storetypes.KVStoreService, legacySubs
 	}
 
 	bz := cdc.MustMarshal(&currParams)
-	store.Set(ParamsKey, bz)
-
-	return nil
+	return store.Set(ParamsKey, bz)
 }

@@ -113,19 +113,21 @@ func initFixture(tb testing.TB) *fixture {
 	slashingtypes.RegisterQueryServer(integrationApp.QueryHelper(), slashingkeeper.NewQuerier(slashingKeeper))
 
 	// set default staking params
-	stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
-
+	err := stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(tb, err)
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
+	err = slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
+	assert.NilError(tb, err)
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3), time.Unix(2, 0), false, int64(10))
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
 
-	slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
-	slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
-
+	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
+	assert.NilError(tb, err)
+	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
+	assert.NilError(tb, err)
 	return &fixture{
 		app:            integrationApp,
 		ctx:            sdkCtx,
@@ -144,8 +146,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	p, err := f.stakingKeeper.GetParams(f.ctx)
 	assert.NilError(t, err)
 	p.MaxValidators = 5
-	f.stakingKeeper.SetParams(f.ctx, p)
-
+	assert.NilError(t, f.stakingKeeper.SetParams(f.ctx, p))
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
@@ -155,7 +156,8 @@ func TestUnJailNotBonded(t *testing.T) {
 		tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	}
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
@@ -168,7 +170,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
@@ -177,7 +180,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	assert.Equal(t, p.BondDenom, tstaking.Denom)
 	tstaking.Undelegate(sdk.AccAddress(addr), addr, f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1), true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	// verify that validator is jailed
@@ -194,12 +198,14 @@ func TestUnJailNotBonded(t *testing.T) {
 	)
 	assert.ErrorContains(t, err, "cannot be unjailed")
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 	// bond to meet minimum self-delegation
 	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
 
 	// verify we can immediately unjail
@@ -344,7 +350,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	params, err := f.stakingKeeper.GetParams(f.ctx)
 	require.NoError(t, err)
 	params.MaxValidators = 1
-	f.stakingKeeper.SetParams(f.ctx, params)
+	err = f.stakingKeeper.SetParams(f.ctx, params)
+	assert.NilError(t, err)
 	power := int64(100)
 
 	pks := simtestutil.CreateTestPubKeys(3)
@@ -438,8 +445,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	assert.NilError(t, err)
 
 	// validator rejoins and starts signing again
-	f.stakingKeeper.Unjail(f.ctx, consAddr)
-
+	err = f.stakingKeeper.Unjail(f.ctx, consAddr)
+	assert.NilError(t, err)
 	err = f.slashingKeeper.HandleValidatorSignature(f.ctx, val.Address(), newPower, comet.BlockIDFlagCommit)
 	assert.NilError(t, err)
 

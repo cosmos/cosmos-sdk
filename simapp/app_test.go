@@ -119,8 +119,10 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(&abci.RequestInitChain{})
-	app.Commit()
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name         string

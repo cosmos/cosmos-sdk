@@ -33,6 +33,7 @@ const (
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
+	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
 )
 
 const (
@@ -58,6 +59,7 @@ type Config struct {
 	ColorLogs                bool
 	TimeFormatLogs           string
 	CustomPreupgrade         string
+	DisableRecase            bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -176,6 +178,9 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, err)
 	}
 	if cfg.TimeFormatLogs, err = TimeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.DisableRecase, err = BooleanOption(EnvDisableRecase, false); err != nil {
 		errs = append(errs, err)
 	}
 

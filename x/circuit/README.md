@@ -68,7 +68,7 @@ Trip, is called by an authorized account to disable message execution for a spec
 
 ### Reset
 
-Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages are enabled.
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that

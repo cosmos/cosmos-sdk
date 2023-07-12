@@ -100,9 +100,10 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				AddressCodec: addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
-				TypeResolver: &dynamicTypeResolver{chainInfo},
-				FileResolver: chainInfo.ProtoFiles,
+				AddressCodec:          addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
+				ValidatorAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svaloper", chainConfig.Bech32Prefix)),
+				TypeResolver:          &dynamicTypeResolver{chainInfo},
+				FileResolver:          chainInfo.ProtoFiles,
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()

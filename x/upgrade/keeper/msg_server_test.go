@@ -26,7 +26,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",
@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"invalid plan",
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: "authority",
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: s.addrs[0].String(),
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"upgrade canceled successfully",

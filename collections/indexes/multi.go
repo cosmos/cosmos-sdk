@@ -8,6 +8,21 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
+type multiOptions struct {
+	uncheckedValue bool
+}
+
+// WithMultiUncheckedValue is an option that can be passed to NewMulti to
+// ignore index values different from '[]byte{}' and continue with the operation.
+// This should be used only to behave nicely in case you have used values different
+// from '[]byte{}' in your storage before migrating to collections. Refer to
+// WithKeySetUncheckedValue for more information.
+func WithMultiUncheckedValue() func(*multiOptions) {
+	return func(o *multiOptions) {
+		o.uncheckedValue = true
+	}
+}
+
 // Multi defines the most common index. It can be used to create a reference between
 // a field of value and its primary key. Multiple primary keys can be mapped to the same
 // reference key as the index does not enforce uniqueness constraints.
@@ -27,7 +42,19 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	refCodec codec.KeyCodec[ReferenceKey],
 	pkCodec codec.KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
+	options ...func(*multiOptions),
 ) *Multi[ReferenceKey, PrimaryKey, Value] {
+	o := new(multiOptions)
+	for _, opt := range options {
+		opt(o)
+	}
+	if o.uncheckedValue {
+		return &Multi[ReferenceKey, PrimaryKey, Value]{
+			getRefKey: getRefKeyFunc,
+			refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec), collections.WithKeySetUncheckedValue()),
+		}
+	}
+
 	return &Multi[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
 		refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec)),

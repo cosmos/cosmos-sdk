@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/binary"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -48,10 +50,10 @@ const (
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: cryptotypes.PubKey
 
 var (
-	ParamsKey                           = []byte{0x00} // Prefix for params key
-	ValidatorSigningInfoKeyPrefix       = []byte{0x01} // Prefix for signing info
-	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bitmap
-	AddrPubkeyRelationKeyPrefix         = []byte{0x03} // Prefix for address-pubkey relation
+	ParamsKey                           = collections.NewPrefix(0) // Prefix for params key
+	ValidatorSigningInfoKeyPrefix       = []byte{0x01}             // Prefix for signing info
+	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02}             // Prefix for missed block bitmap
+	AddrPubkeyRelationKeyPrefix         = []byte{0x03}             // Prefix for address-pubkey relation
 )
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)

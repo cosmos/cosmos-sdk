@@ -13,6 +13,7 @@ import (
 )
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
+	b.Helper()
 	db := dbm.NewMemDB()
 	initialStore := cachekv.NewStore(dbadapter.Store{DB: db})
 

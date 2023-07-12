@@ -72,7 +72,7 @@ func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) er
 	switch list := v.Interface().(type) {
 	case protoreflect.List:
 		if list.Len() == 0 {
-			_, err := w.Write([]byte("[]"))
+			_, err := io.WriteString(w, "[]")
 			return err
 		}
 		return enc.marshalList(list, w)
@@ -129,11 +129,8 @@ func moduleAccountEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) err
 		pretty.Sequence = 0
 	}
 
-	bz, err := json.Marshal(pretty)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(bz)
+	enc := json.NewEncoder(w)
+	err := enc.Encode(pretty)
 	return err
 }
 
@@ -146,13 +143,13 @@ func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer)
 	if !ok {
 		return errors.New("thresholdStringEncoder: msg not a multisig.LegacyAminoPubKey")
 	}
-	_, err := w.Write([]byte(fmt.Sprintf(`{"threshold":"%d","pubkeys":`, pk.Threshold)))
+	_, err := fmt.Fprintf(w, `{"threshold":"%d","pubkeys":`, pk.Threshold)
 	if err != nil {
 		return err
 	}
 
 	if len(pk.PublicKeys) == 0 {
-		_, err = w.Write([]byte(`[]}`))
+		_, err = io.WriteString(w, `[]}`)
 		return err
 	}
 
@@ -164,6 +161,6 @@ func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer)
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(`}`))
+	_, err = io.WriteString(w, `}`)
 	return err
 }

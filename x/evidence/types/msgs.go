@@ -30,12 +30,6 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
 
-// GetSigners returns the single expected signer for a MsgSubmitEvidence.
-func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
-	submitter, _ := sdk.AccAddressFromBech32(m.Submitter)
-	return []sdk.AccAddress{submitter}
-}
-
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
 	if m.Evidence == nil {
 		return nil

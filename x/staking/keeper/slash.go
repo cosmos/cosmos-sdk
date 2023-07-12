@@ -31,7 +31,7 @@ import (
 // CONTRACT:
 //
 //	Infraction was committed at the current height or at a past height,
-//	not at a height in the future
+//	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
 	logger := k.Logger(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

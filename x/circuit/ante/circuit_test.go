@@ -78,11 +78,13 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		// CircuitBreakerDecorator AnteHandler should always return success
 		decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
 
-		f.txBuilder.SetMsgs(tc.msg)
+		err := f.txBuilder.SetMsgs(tc.msg)
+		require.NoError(t, err)
+
 		tx := f.txBuilder.GetTx()
 
 		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
-		_, err := decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		_, err = decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return ctx, nil
 		})
 

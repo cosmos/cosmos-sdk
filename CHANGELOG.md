@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (cli) [#16887](https://github.com/cosmos/cosmos-sdk/pull/16887) Add two new CLI commands: `tx simulate` for simulating a transaction; `query block-results` for querying CometBFT RPC for block results.
+
 ### Improvements
 
 * (x/bank) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) Align CLI queries with gRPC queries thanks to AutoCLI.

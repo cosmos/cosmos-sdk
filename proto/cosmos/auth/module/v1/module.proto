@@ -21,6 +21,9 @@ message Module {
 
   // bech32_prefix_validator is the bech32 validator prefix for the app.
   string bech32_prefix_validator = 4;
+
+  // bech32_prefix_consensus is the bech32 consensus node prefix for the app.
+  string bech32_prefix_consensus = 5;
 }
 
 // ModuleAccountPermission represents permissions for a module account.

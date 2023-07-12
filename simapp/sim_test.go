@@ -169,11 +169,6 @@ func TestAppImportExport(t *testing.T) {
 
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
-<<<<<<< HEAD
-	newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
-	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
-
-=======
 	_, err = newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
 
 	if err != nil {
@@ -187,7 +182,6 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 	err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 	require.NoError(t, err)
->>>>>>> eb0260aa3 (fix: Sims failing and not skipping with empty valset (#16947))
 	fmt.Printf("comparing stores...\n")
 
 	// skip certain prefixes

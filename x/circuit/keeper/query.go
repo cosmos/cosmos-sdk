@@ -27,12 +27,12 @@ func NewQueryServer(keeper Keeper) types.QueryServer {
 func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(c)
 
-	addr, err := qs.keeper.addressCodec.StringToBytes(req.Address)
+	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	perms, err := qs.keeper.Permissions.Get(sdkCtx, addr)
+	perms, err := qs.keeper.Permissions.Get(sdkCtx, add)
 	if err != nil {
 		return nil, err
 	}

@@ -2965,7 +2965,7 @@ func (x *MsgAuthorizeCircuitBreaker) GetPermissions() *Permissions {
 	return nil
 }
 
-// MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
+// MsgAuthorizeCircuitBreakerResponse defines the Msg/AuthorizeCircuitBreaker response type.
 type MsgAuthorizeCircuitBreakerResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3051,7 +3051,7 @@ func (x *MsgTripCircuitBreaker) GetMsgTypeUrls() []string {
 	return nil
 }
 
-// MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
+// MsgTripCircuitBreakerResponse defines the Msg/TripCircuitBreaker response type.
 type MsgTripCircuitBreakerResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -39,12 +39,6 @@ func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sd
 // GetInitialDeposit returns the initial deposit of MsgSubmitProposal.
 func (m *MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return m.InitialDeposit }
 
-// GetProposer returns the proposer address of MsgSubmitProposal.
-func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return proposer
-}
-
 // GetContent returns the content of MsgSubmitProposal.
 func (m *MsgSubmitProposal) GetContent() Content {
 	content, ok := m.Content.GetCachedValue().(Content)

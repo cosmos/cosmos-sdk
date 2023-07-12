@@ -19,12 +19,6 @@ func NewMsgAuthorizeCircuitBreaker(granter, grantee string, permission *Permissi
 	}
 }
 
-// Route Implements Msg.
-func (m MsgAuthorizeCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type Implements Msg.
-func (m MsgAuthorizeCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }
-
 // NewMsgTripCircuitBreaker creates a new MsgTripCircuitBreaker instance.
 func NewMsgTripCircuitBreaker(authority string, urls []string) *MsgTripCircuitBreaker {
 	return &MsgTripCircuitBreaker{
@@ -33,12 +27,6 @@ func NewMsgTripCircuitBreaker(authority string, urls []string) *MsgTripCircuitBr
 	}
 }
 
-// Route Implements Msg.
-func (m MsgTripCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type Implements Msg.
-func (m MsgTripCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }
-
 // NewMsgResetCircuitBreaker creates a new MsgResetCircuitBreaker instance.
 func NewMsgResetCircuitBreaker(authority string, urls []string) *MsgResetCircuitBreaker {
 	return &MsgResetCircuitBreaker{
@@ -46,9 +34,3 @@ func NewMsgResetCircuitBreaker(authority string, urls []string) *MsgResetCircuit
 		MsgTypeUrls: urls,
 	}
 }
-
-// Route Implements Msg.
-func (m MsgResetCircuitBreaker) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type Implements Msg.
-func (m MsgResetCircuitBreaker) Type() string { return sdk.MsgTypeURL(&m) }

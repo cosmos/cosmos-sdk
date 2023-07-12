@@ -125,7 +125,12 @@ func TestCometStarter_PortContention(t *testing.T) {
 
 			// Ensure nodes are stopped completely,
 			// so that we don't get t.Cleanup errors around directories not being empty.
-			defer nodes.StopAndWait()
+			defer func() {
+				err := nodes.StopAndWait()
+				if err != nil {
+					panic(err)
+				}
+			}()
 			require.NoError(t, err)
 
 			// Ensure that the height advances.

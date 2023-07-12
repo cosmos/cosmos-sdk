@@ -335,7 +335,8 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 		it, err := k.autoUInt64TableModelByMetadataIndex.Get(store, exp)
 		require.NoError(t, err)
 		var all []testdata.TableModel
-		ReadAll(it, &all)
+		_, err = ReadAll(it, &all)
+		require.NoError(t, err)
 		require.Len(t, all, 1)
 		assert.Equal(t, loaded, all[0])
 	}

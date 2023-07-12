@@ -102,7 +102,10 @@ func NewIntegrationApp(
 		}
 	}
 
-	bApp.Commit()
+	_, err := bApp.Commit()
+	if err != nil {
+		panic(err)
+	}
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -129,7 +132,12 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer func() {
+			_, err := app.Commit()
+			if err != nil {
+				panic(err)
+			}
+		}()
 	}
 
 	if cfg.AutomaticFinalizeBlock {

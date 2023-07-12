@@ -3,8 +3,6 @@ package group
 import (
 	"github.com/cosmos/gogoproto/proto"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -202,20 +200,6 @@ func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, me
 		return nil, err
 	}
 	return m, nil
-}
-
-// getProposerAccAddresses returns the proposers as `[]sdk.AccAddress`.
-func (m *MsgSubmitProposal) getProposerAccAddresses() ([]sdk.AccAddress, error) {
-	addrs := make([]sdk.AccAddress, len(m.Proposers))
-	for i, proposer := range m.Proposers {
-		addr, err := sdk.AccAddressFromBech32(proposer)
-		if err != nil {
-			return nil, errorsmod.Wrap(err, "proposers")
-		}
-		addrs[i] = addr
-	}
-
-	return addrs, nil
 }
 
 // SetMsgs packs msgs into Any's

@@ -44,6 +44,11 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
+// GetGroupID gets the group id of the MsgUpdateGroupAdmin.
+func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
+	return m.GroupId
+}
+
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
 func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{

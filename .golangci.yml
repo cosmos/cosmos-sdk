@@ -10,6 +10,7 @@ run:
 linters:
   disable-all: true
   enable:
+    - errcheck
     - dogsled
     - exportloopref
     - goconst

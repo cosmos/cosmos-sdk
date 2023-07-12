@@ -184,6 +184,12 @@ func RandomRequestFinalizeBlock(
 
 	// TODO: Determine capacity before allocation
 	evidence := make([]abci.Misbehavior, 0)
+	// If the evidenceFraction value is to close to 1.0, 
+	// the following loop will most likely never end 
+	if (params.EvidenceFraction() > 0.9) {
+		// Reduce the evidenceFraction to a more sane value
+		params.evidenceFraction = 0.9
+	}	
 
 	for r.Float64() < params.EvidenceFraction() {
 		vals := voteInfos

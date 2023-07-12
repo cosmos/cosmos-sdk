@@ -27,6 +27,12 @@ import (
 
 var errFoo = errors.New("dummy")
 
+func (MockCoreAppModule) GetQueryCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "foo",
+	}
+}
+
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -52,8 +58,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
@@ -82,8 +86,8 @@ func TestBasicManager(t *testing.T) {
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
-
 	mm.AddQueryCommands(mockCmd)
+	require.Equal(t, 1, len(mockCmd.Commands()))
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))

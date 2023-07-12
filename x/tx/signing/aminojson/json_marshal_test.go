@@ -117,12 +117,13 @@ func TestAminoJSON(t *testing.T) {
 	require.Equal(t, string(sortedBz), string(encodedDefaultBz))
 }
 
-func naiveSortedJSON(t testing.TB, jsonToSort []byte) []byte {
+func naiveSortedJSON(tb testing.TB, jsonToSort []byte) []byte {
+	tb.Helper()
 	var c interface{}
 	err := json.Unmarshal(jsonToSort, &c)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	sortedBz, err := json.Marshal(c)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	return sortedBz
 }
 

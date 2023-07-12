@@ -86,6 +86,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryConstitution() {
+	suite.reset()
+	queryClient := suite.queryClient
+
+	expRes := &v1.QueryConstitutionResponse{Constitution: "constitution"}
+
+	constitution, err := queryClient.Constitution(gocontext.Background(), &v1.QueryConstitutionRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(expRes, constitution)
+}
+
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
@@ -443,7 +454,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},

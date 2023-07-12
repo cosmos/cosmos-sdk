@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	exportGenesis := suite.bankKeeper.ExportGenesis(ctx)
 
-	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // SA1019: types.DefaultParams().SendEnabled is deprecated: Use DefaultSendEnabled instead.  (staticcheck)
+	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
 	suite.Require().Equal(expTotalSupply, exportGenesis.Supply)
 	suite.Require().Subset(exportGenesis.Balances, expectedBalances)

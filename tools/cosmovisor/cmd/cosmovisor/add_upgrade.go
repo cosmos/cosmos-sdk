@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {
@@ -19,7 +22,8 @@ func NewAddUpgradeCmd() *cobra.Command {
 		RunE:         AddUpgrade,
 	}
 
-	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary")
+	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
+	addUpgrade.Flags().Int64(cosmovisor.FlagUpgradeHeight, 0, "define a height at which to upgrade the binary automatically (without governance proposal)")
 
 	return addUpgrade
 }
@@ -33,7 +37,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	logger := cfg.Logger(os.Stdout)
 
-	upgradeName := args[0]
+	upgradeName := strings.ToLower(args[0])
 	if len(upgradeName) == 0 {
 		return fmt.Errorf("upgrade name cannot be empty")
 	}
@@ -59,22 +63,55 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read binary: %w", err)
 	}
 
-	if _, err := os.Stat(cfg.UpgradeBin(upgradeName)); err == nil {
-		if force, _ := cmd.Flags().GetBool(cosmovisor.FlagForce); !force {
-			return fmt.Errorf("upgrade binary already exists at %s", cfg.UpgradeBin(upgradeName))
-		}
-
-		logger.Info(fmt.Sprintf("Overwriting %s for %s upgrade", executablePath, upgradeName))
-	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("failed to check if upgrade binary exists: %w", err)
+	force, err := cmd.Flags().GetBool(cosmovisor.FlagForce)
+	if err != nil {
+		return fmt.Errorf("failed to get force flag: %w", err)
 	}
 
-	if err := os.WriteFile(cfg.UpgradeBin(upgradeName), executableData, 0o600); err != nil {
-		return fmt.Errorf("failed to write binary to location: %w", err)
+	if err := saveOrAbort(cfg.UpgradeBin(upgradeName), executableData, force); err != nil {
+		return err
 	}
 
 	logger.Info(fmt.Sprintf("Using %s for %s upgrade", executablePath, upgradeName))
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
+
+	if upgradeHeight, err := cmd.Flags().GetInt64(cosmovisor.FlagUpgradeHeight); err != nil {
+		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
+	} else if upgradeHeight > 0 {
+		plan := upgradetypes.Plan{Name: upgradeName, Height: upgradeHeight}
+		if err := plan.ValidateBasic(); err != nil {
+			panic(fmt.Errorf("something is wrong with cosmovisor: %w", err))
+		}
+
+		// create upgrade-info.json file
+		planData, err := json.Marshal(plan)
+		if err != nil {
+			return fmt.Errorf("failed to marshal upgrade plan: %w", err)
+		}
+
+		if err := saveOrAbort(cfg.UpgradeInfoFilePath(), planData, force); err != nil {
+			return err
+		}
+
+		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", upgradetypes.UpgradeInfoFilename, upgradeName, upgradeHeight))
+	}
+
+	return nil
+}
+
+// saveOrAbort saves data to path or aborts if file exists and force is false
+func saveOrAbort(path string, data []byte, force bool) error {
+	if _, err := os.Stat(path); err == nil {
+		if !force {
+			return fmt.Errorf("file already exists at %s", path)
+		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to check if file exists: %w", err)
+	}
+
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		return fmt.Errorf("failed to write binary to location: %w", err)
+	}
 
 	return nil
 }

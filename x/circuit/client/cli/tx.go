@@ -44,7 +44,7 @@ func AuthorizeCircuitBreakerCmd() *cobra.Command {
 		"ALL_MSGS" =      2,
 		"SUPER_ADMIN" =   3,`,
 		Example: fmt.Sprintf(`%s circuit authorize [address] 0 "cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
-		Args:    cobra.RangeArgs(3, 4),
+		Args:    cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -62,7 +62,7 @@ func AuthorizeCircuitBreakerCmd() *cobra.Command {
 			}
 
 			var typeUrls []string
-			if len(args) == 4 {
+			if len(args) == 3 {
 				typeUrls = strings.Split(args[2], ",")
 			}
 

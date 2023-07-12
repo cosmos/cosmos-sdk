@@ -82,8 +82,12 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		}
 
 		for _, del := range allDelegations {
+			delAddr, err := k.authKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())
+			if err != nil {
+				panic(err)
+			}
 			valAddr := del.GetValidatorAddr().String()
-			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], sdk.AccAddress(delAddr))
 		}
 
 		// iterate over all validators

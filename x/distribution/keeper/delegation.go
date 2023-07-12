@@ -82,8 +82,14 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 
 // calculate the total rewards accrued by a delegation
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
+	addrCodec := k.authKeeper.AddressCodec()
+	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
 	// fetch starting info for delegation
-	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), sdk.AccAddress(delAddr)))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return sdk.DecCoins{}, err
 	}
@@ -178,8 +184,13 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 }
 
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+	addrCodec := k.authKeeper.AddressCodec()
+	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
+	if err != nil {
+		return nil, err
+	}
 	// check existence of delegator starting info
-	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(del.GetValidatorAddr(), sdk.AccAddress(delAddr)))
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +222,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		logger := k.Logger(ctx)
 		logger.Info(
 			"rounding error withdrawing rewards from validator",
-			"delegator", del.GetDelegatorAddr().String(),
+			"delegator", del.GetDelegatorAddr(),
 			"validator", val.GetOperator().String(),
 			"got", rewards.String(),
 			"expected", rewardsRaw.String(),
@@ -223,7 +234,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 
 	// add coins to user account
 	if !finalRewards.IsZero() {
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +264,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// decrement reference count of starting period
-	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(del.GetValidatorAddr(), sdk.AccAddress(delAddr)))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
@@ -265,7 +276,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// remove delegator starting info
-	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(del.GetValidatorAddr(), del.GetDelegatorAddr()))
+	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(del.GetValidatorAddr(), sdk.AccAddress(delAddr)))
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +298,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr().String()),
+			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
 		),
 	)
 

@@ -17,7 +17,7 @@ type QueryServer struct {
 	keeper Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the circuit MsgServer interface
+// NewQueryServer returns an implementation of the circuit QueryServer interface
 // for the provided Keeper.
 func NewQueryServer(keeper Keeper) types.QueryServer {
 	return &QueryServer{keeper: keeper}

@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Improvements
 
+* [#16919](https://github.com/cosmos/cosmos-sdk/pull/16919) Add COSMOVISOR_DISABLE_RECASE to cosmovisor to disable automatic case change for plan name
 * [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to use `x/upgrade` validation logic.
 * [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to depend only on the `x/upgrade` module.
 * [#15362](https://github.com/cosmos/cosmos-sdk/pull/15362) Allow disabling Cosmovisor logs

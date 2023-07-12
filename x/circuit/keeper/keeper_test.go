@@ -102,7 +102,8 @@ func TestIteratePermissions(t *testing.T) {
 		[]byte("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i])
+		err := f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i])
+		require.NoError(t, err)
 	}
 
 	// Define a variable to store the returned permissions

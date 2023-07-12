@@ -23,24 +23,34 @@ message Plan {
   // assumed that the software is out-of-date when the upgrade Time or Height is
   // reached and the software will exit.
   string name = 1;
+  
+  // Unequivocally set the proper version tag and commit hash to avoid upgrade confusion.
+  // The additional information will allow for checks that are queriable on chain to ensure
+  // that the admin of the node did correctly update to the proper version/hash.
+  // This will also allow others to set a task which will be able to automatically download
+  // the update from github with no question if it is the correct one or not.
+  // This will provide also provide history to the exact upgrade.
+  string github_release_tag = 2;
+
+  string github_release_commit_hash = 3;
 
   // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2
+  google.protobuf.Timestamp time = 4
       [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
-  int64 height = 3;
+  int64 height = 5;
 
   // Any application specific upgrade info to be included on-chain
   // such as a git commit that validators could automatically upgrade to
-  string info = 4;
+  string info = 6;
 
   // Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
   // moved to the IBC module in the sub module 02-client.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Any upgraded_client_state = 5 [deprecated = true];
+  google.protobuf.Any upgraded_client_state = 7 [deprecated = true];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

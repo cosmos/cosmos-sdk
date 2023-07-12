@@ -216,7 +216,10 @@ func (st *Store) Has(key []byte) (exists bool) {
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer st.metrics.MeasureSince("store", "iavl", "delete")
-	st.tree.Remove(key)
+	_, _, err := st.tree.Remove(key)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DeleteVersionsTo deletes versions upto the given version from the MutableTree. An error

@@ -13,9 +13,8 @@ import (
 func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
-
-	keeper.Params.Set(ctx, testutil.TestParams())
-
+	err := keeper.Params.Set(ctx, testutil.TestParams())
+	s.Require().NoError(err)
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
 
@@ -24,8 +23,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
-	keeper.SetValidatorSigningInfo(ctx, consAddr1, info1)
-	keeper.SetValidatorSigningInfo(ctx, consAddr2, info2)
+	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr1, info1))
+	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, info2))
 	genesisState := keeper.ExportGenesis(ctx)
 
 	require.Equal(genesisState.Params, testutil.TestParams())
@@ -33,7 +32,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	require.Equal(genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 
 	// Tombstone validators after genesis shouldn't effect genesis state
-	err := keeper.Tombstone(ctx, consAddr1)
+	err = keeper.Tombstone(ctx, consAddr1)
 	require.NoError(err)
 	err = keeper.Tombstone(ctx, consAddr2)
 	require.NoError(err)

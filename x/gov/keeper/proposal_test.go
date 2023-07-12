@@ -32,7 +32,8 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
-		suite.govKeeper.SetProposal(suite.ctx, proposal)
+		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
+		suite.Require().NoError(err)
 
 		gotProposal, err := suite.govKeeper.Proposals.Get(suite.ctx, proposalID)
 		suite.Require().Nil(err)
@@ -59,9 +60,12 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
-		suite.govKeeper.SetProposal(suite.ctx, proposal)
+		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
+		suite.Require().NoError(err)
+
 		suite.Require().NotPanics(func() {
-			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+			err := suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+			suite.Require().NoError(err)
 		}, "")
 	}
 }
@@ -82,7 +86,8 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 		suite.Require().Nil(proposal.VotingStartTime)
 
-		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		err = suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		suite.Require().NoError(err)
 
 		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
@@ -238,8 +243,8 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.Require().Nil(err)
 
 				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
-				suite.govKeeper.SetProposal(suite.ctx, proposal2)
-
+				err = suite.govKeeper.SetProposal(suite.ctx, proposal2)
+				suite.Require().NoError(err)
 				return proposal2ID, suite.addrs[1].String()
 			},
 			expectedErr: true,

@@ -7260,6 +7260,11 @@ QueryAllTokenizeShareRecordsRequest is request type for the
 Query/QueryAllTokenizeShareRecords RPC method.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
 
 
 

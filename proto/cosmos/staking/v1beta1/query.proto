@@ -430,7 +430,10 @@ message QueryTokenizeShareRecordsOwnedResponse {
 
 // QueryAllTokenizeShareRecordsRequest is request type for the
 // Query/QueryAllTokenizeShareRecords RPC method.
-message QueryAllTokenizeShareRecordsRequest {}
+message QueryAllTokenizeShareRecordsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryAllTokenizeShareRecordsResponse is response type for the
 // Query/QueryAllTokenizeShareRecords RPC method.

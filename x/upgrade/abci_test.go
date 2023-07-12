@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
@@ -31,8 +30,6 @@ import (
 )
 
 type TestSuite struct {
-	suite.Suite
-
 	module  appmodule.HasBeginBlocker
 	keeper  *keeper.Keeper
 	ctx     sdk.Context
@@ -115,7 +112,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",

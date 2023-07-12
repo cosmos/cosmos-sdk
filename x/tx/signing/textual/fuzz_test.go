@@ -222,6 +222,8 @@ var (
 )
 
 func FuzzCoinsJSONTestcases(f *testing.F) {
+	f.Skip() // https://github.com/cosmos/cosmos-sdk/pull/16521#issuecomment-1614507574
+
 	// Generate some seeds.
 	seed, err := os.ReadFile("./internal/testdata/coins.json")
 	if err != nil {

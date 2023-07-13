@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.0.0-alpha.1
-	cosmossdk.io/x/evidence v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/evidence v0.0.0-20230713220914-c0369a888135
 	cosmossdk.io/x/feegrant v0.0.0-20230713160716-d4e95eec9f29
 	cosmossdk.io/x/nft v0.0.0-20230713160716-d4e95eec9f29 // indirect
 	cosmossdk.io/x/tx v0.9.1
@@ -39,7 +39,7 @@ require (
 	cloud.google.com/go/iam v1.1.0 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230713160716-d4e95eec9f29 // indirect
-	cosmossdk.io/x/circuit v0.0.0-20230713160716-d4e95eec9f29 // indirect
+	cosmossdk.io/x/circuit v0.0.0-20230713220914-c0369a888135 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

@@ -59,7 +59,7 @@ func NewKeeper(
 	}
 
 	if validatorAddressCodec == nil || consensusAddressCodec == nil {
-		panic("validaor and/or consensus address codec are nil")
+		panic("validator and/or consensus address codec are nil")
 	}
 
 	return &Keeper{

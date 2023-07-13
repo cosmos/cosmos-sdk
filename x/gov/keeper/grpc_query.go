@@ -179,11 +179,6 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 	case v1.ParamTallying:
 		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 		response.TallyParams = &tallyParams
-
-	default:
-		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid parameter type", req.ParamsType)
-
 	}
 	response.Params = &params
 

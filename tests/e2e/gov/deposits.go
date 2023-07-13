@@ -88,7 +88,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	// query deposit
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
-	s.Require().Equal(depositAmount, sdk.Coins(deposit.Amount).String())
+	s.Require().Equal(depositAmount, sdk.Coins(deposit.Deposit.Amount).String())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")
@@ -109,7 +109,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	// query deposit
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
-	s.Require().Equal(depositAmount.String(), sdk.Coins(deposit.Amount).String())
+	s.Require().Equal(depositAmount.String(), sdk.Coins(deposit.Deposit.Amount).String())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")
@@ -142,7 +142,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().NoError(err)
 
 	// waiting for deposit and voting period to end
-	time.Sleep(22 * time.Second)
+	time.Sleep(25 * time.Second)
 
 	// query proposal
 	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, proposalID))
@@ -150,50 +150,42 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().Contains(string(resp), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 
 	// query deposits
-	deposits := s.queryDeposits(val, proposalID, true, "proposal 3 doesn't exist")
-	s.Require().Nil(deposits)
+	deposits := s.queryDeposits(val, proposalID, false, "")
+	s.Require().Len(deposits.Deposits, 0)
 }
 
 func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
-	var depositsRes *v1.QueryDepositsResponse
-	err := s.network.RetryForBlocks(func() error {
-		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, proposalID))
-		if err == nil {
-			err = val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, &depositsRes)
-			return err
-		}
-		return err
-	}, 3)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, proposalID))
+	s.Require().NoError(err)
 
 	if exceptErr {
-		s.Require().Error(err)
-		s.Require().Contains(err.Error(), message)
+		s.Require().Contains(string(resp), message)
 		return nil
 	}
 
+	var depositsRes v1.QueryDepositsResponse
+	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &depositsRes)
 	s.Require().NoError(err)
-	return depositsRes
+
+	return &depositsRes
 }
 
-func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.Deposit {
-	var depositRes *v1.Deposit
-	err := s.network.RetryForBlocks(func() error {
-		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, proposalID, val.Address.String()))
-		if err == nil {
-			err = val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, &depositRes)
-			return err
-		}
+func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositResponse {
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-		return err
-	}, 3)
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, proposalID, val.Address.String()))
+	s.Require().NoError(err)
 
 	if exceptErr {
-		s.Require().Error(err)
-		s.Require().Contains(err.Error(), message)
+		s.Require().Contains(string(resp), message)
 		return nil
 	}
 
+	var depositRes v1.QueryDepositResponse
+	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &depositRes)
 	s.Require().NoError(err)
 
-	return depositRes
+	return &depositRes
 }

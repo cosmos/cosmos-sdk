@@ -1931,6 +1931,7 @@ func (x *DecCoin) GetAmount() string {
 }
 
 // IntProto defines a Protobuf wrapper around an Int object.
+// Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
 type IntProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1967,6 +1968,7 @@ func (x *IntProto) GetInt() string {
 }
 
 // DecProto defines a Protobuf wrapper around a Dec object.
+// Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
 type DecProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

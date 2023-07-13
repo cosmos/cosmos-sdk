@@ -3,8 +3,13 @@ module cosmossdk.io/simapp
 go 1.20
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.5.0
 	cosmossdk.io/client/v2 v2.0.0-20230706173432-bc5eb31751de
+=======
+	cosmossdk.io/api v0.6.0
+	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
+>>>>>>> e0be2b80f (feat(staking)!: add consensus and validator address codec in staking (#16959))
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca

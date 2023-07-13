@@ -3,8 +3,13 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.20
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.5.0
 	cosmossdk.io/collections v0.3.0 // indirect
+=======
+	cosmossdk.io/api v0.6.0
+	cosmossdk.io/collections v0.3.0
+>>>>>>> e0be2b80f (feat(staking)!: add consensus and validator address codec in staking (#16959))
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0

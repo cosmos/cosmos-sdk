@@ -55,7 +55,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-	accountKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
@@ -64,7 +63,13 @@ func (s *KeeperTestSuite) SetupTest() {
 		storeService,
 		accountKeeper,
 		bankKeeper,
+<<<<<<< HEAD
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+=======
+		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
+		address.NewBech32Codec("cosmosvaloper"),
+		address.NewBech32Codec("cosmosvalcons"),
+>>>>>>> e0be2b80f (feat(staking)!: add consensus and validator address codec in staking (#16959))
 	)
 	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))
 

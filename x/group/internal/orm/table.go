@@ -117,7 +117,11 @@ func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) err
 	var oldValue proto.Message
 	if a.Has(store, rowID) {
 		oldValue = reflect.New(a.model).Interface().(proto.Message)
-		a.GetOne(store, rowID, oldValue)
+		err := a.GetOne(store, rowID, oldValue)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)

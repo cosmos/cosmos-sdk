@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv1.0.0-alpha.1) - 2023-07-11
+
 ### Features
 
 * [#15568](https://github.com/cosmos/cosmos-sdk/pull/15568) Migrate the `iavl` to the new key format.

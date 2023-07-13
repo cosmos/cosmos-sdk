@@ -95,13 +95,18 @@ func Example_basicUsage() {
 			dir,             // Where to put files on disk.
 		).Logger(logger.With("root_module", fmt.Sprintf("comet_%d", idx)))
 	})
-	// StopAndWait must be deferred before the error check,
-	// as the nodes value may contain some successfully started instances.
-	defer nodes.StopAndWait()
 	if err != nil {
 		panic(err)
 	}
 
+	// StopAndWait must be deferred before the error check,"os"
+	// as the nodes value may contain some successfully started instances.
+	defer func() {
+		err := nodes.StopAndWait()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check
 	// a couple simple properties of one node.

@@ -114,7 +114,6 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
-
 	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
 	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
@@ -161,15 +160,17 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
-	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err = suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.Require().NoError(err)
+
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
-
+	err = suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	suite.Require().NoError(err)
 	// put validator0 in jail
-	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
 
 	// setup self delegation
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
@@ -177,7 +178,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
-	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
@@ -218,7 +219,9 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	stakingKeeper.SetValidator(ctx, validator)
-
+	err = stakingKeeper.SetValidator(ctx, validator)
+	if err != nil {
+		return stakingtypes.Validator{}, err
+	}
 	return validator, nil
 }

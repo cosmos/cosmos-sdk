@@ -74,7 +74,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
-		authcodec.NewBech32Codec("cosmosvaloper"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)
@@ -295,7 +294,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
-			authcodec.NewBech32Codec("cosmosvaloper"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)
@@ -343,7 +341,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			types.ProtoBaseAccount,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
-			authcodec.NewBech32Codec("cosmosvaloper"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)

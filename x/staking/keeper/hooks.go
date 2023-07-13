@@ -86,10 +86,10 @@ func (k Keeper) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
 	return nil
 }
 
-// This is called before a TokenizeShareRecord is removed
-func (k Keeper) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
-	if k.hooks != nil {
-		return k.hooks.BeforeTokenizeShareRecordRemoved(ctx, recordID)
-	}
-	return nil
-}
+// // This is called before a TokenizeShareRecord is removed
+// func (k Keeper) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
+// 	if k.hooks != nil {
+// 		return k.hooks.BeforeTokenizeShareRecordRemoved(ctx, recordID)
+// 	}
+// 	return nil
+// }

@@ -84,7 +84,6 @@ func initFixture(tb testing.TB) *fixture {
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -101,7 +100,7 @@ func initFixture(tb testing.TB) *fixture {
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),

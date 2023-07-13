@@ -121,6 +121,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 
 		if l.cfg.ShutdownGrace > 0 {
 			// Interrupt signal
+			l.logger.Info("sent interrupt to app, waiting for exit")
 			_ = cmd.Process.Signal(os.Interrupt)
 
 			// Wait app exit
@@ -134,7 +135,9 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 			select {
 			case <-psChan:
 				// Normal Exit
+				l.logger.Info("app exited normally")
 			case <-time.After(l.cfg.ShutdownGrace):
+				l.logger.Info("DAEMON_SHUTDOWN_GRACE exceeded, killing app")
 				// Kill after grace period
 				_ = cmd.Process.Kill()
 			}

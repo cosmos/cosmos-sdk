@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v0.1.0-alpha.1.0.20230606190835-3e18f4088b2c
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cometbft/cometbft v0.38.0-rc2
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230710133622-f3e4697195ff
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713134107-40c51c41ef7b
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

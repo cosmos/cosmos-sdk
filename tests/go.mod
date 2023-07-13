@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230711132404-6f85267b41ff
 	cosmossdk.io/x/feegrant v0.0.0-20230711132404-6f85267b41ff
 	cosmossdk.io/x/nft v0.0.0-20230711132404-6f85267b41ff // indirect
-	cosmossdk.io/x/tx v0.8.0
+	cosmossdk.io/x/tx v0.9.1
 	cosmossdk.io/x/upgrade v0.0.0-20230711132404-6f85267b41ff
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-db v1.0.0
@@ -117,7 +117,7 @@ require (
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
-	github.com/iancoleman/strcase v0.2.0 // indirect
+	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

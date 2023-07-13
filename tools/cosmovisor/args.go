@@ -441,6 +441,7 @@ func (cfg Config) DetailString() string {
 		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvShutdownGrace, cfg.ShutdownGrace.String()},
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
@@ -449,6 +450,7 @@ func (cfg Config) DetailString() string {
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
+		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

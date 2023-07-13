@@ -7279,6 +7279,7 @@ Query/QueryAllTokenizeShareRecords RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `records` | [TokenizeShareRecord](#cosmos.staking.v1beta1.TokenizeShareRecord) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 

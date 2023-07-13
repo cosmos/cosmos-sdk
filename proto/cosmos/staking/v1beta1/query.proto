@@ -439,6 +439,8 @@ message QueryAllTokenizeShareRecordsRequest {
 // Query/QueryAllTokenizeShareRecords RPC method.
 message QueryAllTokenizeShareRecordsResponse {
   repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryLastTokenizeShareRecordIdRequest is request type for the

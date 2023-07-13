@@ -112,7 +112,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [#16324](https://github.com/cosmos/cosmos-sdk/pull/16324) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey`, and methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context` and return an `error`. Notable changes:
     * `Validator` method now returns `types.ErrNoValidatorFound` instead of `nil` when not found.
-* (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codecs to auth new keeper constructor.
+* (x/auth) [#16621](https://github.com/cosmos/cosmos-sdk/pull/16621) Pass address codec to auth new keeper constructor.
 * (x/auth/vesting) [#16741](https://github.com/cosmos/cosmos-sdk/pull/16741) Vesting account constructor now return an error with the result of their validate function.
 
 ## [v0.50.0-alpha.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0) - 2023-06-07

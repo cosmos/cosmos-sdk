@@ -836,7 +836,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			func() {
 				req = &v1.QueryParamsRequest{}
 			},
-			false,
+			true,
 		},
 		{
 			"deposit params request",

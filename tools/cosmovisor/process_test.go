@@ -154,7 +154,7 @@ func (s *processTestSuite) TestPlanShutdownGrace() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "dontdie")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: time.Duration(2 * time.Second)}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output

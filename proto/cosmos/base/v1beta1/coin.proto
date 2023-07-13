@@ -33,16 +33,9 @@ message DecCoin {
   option (gogoproto.equal) = true;
 
   string denom  = 1;
-  string amount = 2
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-}
-
-// IntProto defines a Protobuf wrapper around an Int object.
-message IntProto {
-  string int = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
-}
-
-// DecProto defines a Protobuf wrapper around a Dec object.
-message DecProto {
-  string dec = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string amount = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
 }

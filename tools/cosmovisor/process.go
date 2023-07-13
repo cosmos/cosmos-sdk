@@ -119,22 +119,27 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")
 
-		// Interrupt signal
-		cmd.Process.Signal(os.Interrupt)
+		if l.cfg.ShutdownGrace > 0 {
+			// Interrupt signal
+			_ = cmd.Process.Signal(os.Interrupt)
 
-		// Wait app exit
-		psChan := make(chan *os.ProcessState)
-		go func() {
-			pstate, _ := cmd.Process.Wait()
-			psChan <- pstate
-		}()
+			// Wait app exit
+			psChan := make(chan *os.ProcessState)
+			go func() {
+				pstate, _ := cmd.Process.Wait()
+				psChan <- pstate
+			}()
 
-		// Timeout and kill
-		select {
-		case <-psChan:
-			// Normal Exit
-		case <-time.After(12 * time.Second):
-			// Kill after 2 block times
+			// Timeout and kill
+			select {
+			case <-psChan:
+				// Normal Exit
+			case <-time.After(l.cfg.ShutdownGrace):
+				// Kill after grace period
+				_ = cmd.Process.Kill()
+			}
+		} else {
+			// Default: Immediate app kill
 			_ = cmd.Process.Kill()
 		}
 	case err := <-cmdDone:

@@ -60,7 +60,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	balances, pageRes, err := query.CollectionPaginateTransform(
+	balances, pageRes, err := query.CollectionPaginate(
 		ctx,
 		k.Balances,
 		req.Pagination,
@@ -97,7 +97,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 
 	zeroAmt := math.ZeroInt()
 
-	balances, pageRes, err := query.CollectionPaginateTransform(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
+	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
 		return sdk.NewCoin(key.K2(), zeroAmt), nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
@@ -279,7 +279,7 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	denomOwners, pageRes, err := query.CollectionPaginateTransform(
+	denomOwners, pageRes, err := query.CollectionPaginate(
 		goCtx,
 		k.Balances.Indexes.Denom,
 		req.Pagination,
@@ -312,16 +312,17 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 			}
 		}
 	} else {
-		results, pageResp, err := query.CollectionPaginate[string, bool](ctx, k.BaseViewKeeper.SendEnabled, req.Pagination)
+		results, pageResp, err := query.CollectionPaginate(
+			ctx,
+			k.BaseViewKeeper.SendEnabled,
+			req.Pagination, func(key string, value bool) (*types.SendEnabled, error) {
+				return types.NewSendEnabled(key, value), nil
+			},
+		)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-		for _, r := range results {
-			resp.SendEnabled = append(resp.SendEnabled, &types.SendEnabled{
-				Denom:   r.Key,
-				Enabled: r.Value,
-			})
-		}
+		resp.SendEnabled = results
 		resp.Pagination = pageResp
 	}
 

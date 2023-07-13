@@ -132,7 +132,15 @@ func TestCollectionPagination(t *testing.T) {
 	for name, tc := range tcs {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			gotResults, gotResponse, err := CollectionFilteredPaginate(ctx, m, tc.req, tc.filter)
+			gotResults, gotResponse, err := CollectionFilteredPaginate(
+				ctx,
+				m,
+				tc.req,
+				tc.filter,
+				func(key, value uint64) (collections.KeyValue[uint64, uint64], error) {
+					return collections.KeyValue[uint64, uint64]{Key: key, Value: value}, nil
+				},
+			)
 			if tc.wantErr != nil {
 				require.ErrorIs(t, err, tc.wantErr)
 				return

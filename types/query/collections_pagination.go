@@ -35,49 +35,16 @@ type Collection[K, V any] interface {
 	KeyCodec() collcodec.KeyCodec[K]
 }
 
-// CollectionPaginate follows the same behavior as Paginate but works on a Collection.
-// Returns a list of the key-value pairs and a PageResponse.
-func CollectionPaginate[K, V any, C Collection[K, V]](
-	ctx context.Context,
-	coll C,
-	pageReq *PageRequest,
-) ([]collections.KeyValue[K, V], *PageResponse, error) {
-	return CollectionFilteredPaginate[K, V](ctx, coll, pageReq, nil)
-}
-
-// CollectionFilteredPaginate works in the same way as CollectionPaginate but allows to filter
-// the results using the predicateFunc.
-// NOTE: results should not be collected by the predicateFunc as they might iterate
-// over results which are not in the pagination result collection range.
-func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
-	ctx context.Context,
-	coll C,
-	pageReq *PageRequest,
-	predicateFunc func(key K, value V) (include bool, err error),
-	opts ...func(opt *CollectionsPaginateOptions[K]),
-) ([]collections.KeyValue[K, V], *PageResponse, error) {
-	return CollectionFilteredPaginateTransform(
-		ctx,
-		coll,
-		pageReq,
-		predicateFunc,
-		func(key K, value V) (collections.KeyValue[K, V], error) {
-			return collections.KeyValue[K, V]{Key: key, Value: value}, nil
-		},
-		opts...,
-	)
-}
-
-// CollectionPaginateTransform works like CollectionsPaginate but allows to transform the result
-// to a different type.
-func CollectionPaginateTransform[K, V any, C Collection[K, V], T any](
+// CollectionPaginate follows the same logic as Paginate but for collection types.
+// transformFunc is used to transform the result to a different type.
+func CollectionPaginate[K, V any, C Collection[K, V], T any](
 	ctx context.Context,
 	coll C,
 	pageReq *PageRequest,
 	transformFunc func(key K, value V) (T, error),
 	opts ...func(opt *CollectionsPaginateOptions[K]),
 ) ([]T, *PageResponse, error) {
-	return CollectionFilteredPaginateTransform(
+	return CollectionFilteredPaginate(
 		ctx,
 		coll,
 		pageReq,
@@ -87,13 +54,14 @@ func CollectionPaginateTransform[K, V any, C Collection[K, V], T any](
 	)
 }
 
-// CollectionFilteredPaginateTransform works in the same way as FilteredPaginate but for collection types.
+// CollectionFilteredPaginate works in the same way as CollectionPaginate but allows to filter
+// results using a predicateFunc.
 // A nil predicateFunc means no filtering is applied and results are collected as is.
 // TransformFunc is applied only to results which are in range of the pagination and allow
 // to convert the result to a different type.
 // NOTE: do not collect results using the values/keys passed to predicateFunc as they are not
 // guaranteed to be in the pagination range requested.
-func CollectionFilteredPaginateTransform[K, V any, C Collection[K, V], T any](
+func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 	ctx context.Context,
 	coll C,
 	pageReq *PageRequest,

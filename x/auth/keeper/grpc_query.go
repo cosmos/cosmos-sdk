@@ -47,7 +47,7 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	accounts, pageRes, err := query.CollectionPaginateTransform(
+	accounts, pageRes, err := query.CollectionPaginate(
 		ctx,
 		s.k.Accounts,
 		req.Pagination,

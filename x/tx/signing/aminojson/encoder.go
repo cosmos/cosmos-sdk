@@ -129,8 +129,12 @@ func moduleAccountEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) err
 		pretty.Sequence = 0
 	}
 
-	enc := json.NewEncoder(w)
-	err := enc.Encode(pretty)
+	// we do not want to use the json encoder here because it adds a newline
+	bz, err := json.Marshal(pretty)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(bz)
 	return err
 }
 

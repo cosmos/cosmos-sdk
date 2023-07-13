@@ -48,7 +48,7 @@ their structure and functionality.
 
 ### Rethinking Account Representation and Business Logic
 
-Instead of representing accounts as simple `google.Protobuf.Any` structures stored in state with no business logi
+Instead of representing accounts as simple `google.Protobuf.Any` structures stored in state with no business logic
 attached, this proposal suggests a more sophisticated account representation that is closer to module entities.
 In fact, accounts should be able to receive messages and process them in the same way modules do, and be capable of storing
 state in a isolated (prefixed) portion of state belonging only to them, in the same way as modules do.

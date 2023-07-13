@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -23,12 +24,14 @@ var _ types.DelegationSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
-	authKeeper   types.AccountKeeper
-	bankKeeper   types.BankKeeper
-	hooks        types.StakingHooks
-	authority    string
+	storeService          storetypes.KVStoreService
+	cdc                   codec.BinaryCodec
+	authKeeper            types.AccountKeeper
+	bankKeeper            types.BankKeeper
+	hooks                 types.StakingHooks
+	authority             string
+	validatorAddressCodec addresscodec.Codec
+	consensusAddressCodec addresscodec.Codec
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -38,6 +41,8 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
+	validatorAddressCodec addresscodec.Codec,
+	consensusAddressCodec addresscodec.Codec,
 ) *Keeper {
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
@@ -53,13 +58,19 @@ func NewKeeper(
 		panic("authority is not a valid acc address")
 	}
 
+	if validatorAddressCodec == nil || consensusAddressCodec == nil {
+		panic("validator and/or consensus address codec are nil")
+	}
+
 	return &Keeper{
-		storeService: storeService,
-		cdc:          cdc,
-		authKeeper:   ak,
-		bankKeeper:   bk,
-		hooks:        nil,
-		authority:    authority,
+		storeService:          storeService,
+		cdc:                   cdc,
+		authKeeper:            ak,
+		bankKeeper:            bk,
+		hooks:                 nil,
+		authority:             authority,
+		validatorAddressCodec: validatorAddressCodec,
+		consensusAddressCodec: consensusAddressCodec,
 	}
 }
 
@@ -122,6 +133,16 @@ func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
 // GetAuthority returns the x/staking module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// ValidatorAddressCodec returns the app validator address codec.
+func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
+	return k.validatorAddressCodec
+}
+
+// ConsensusAddressCodec returns the app consensus address codec.
+func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
+	return k.consensusAddressCodec
 }
 
 // SetValidatorUpdates sets the ABCI validator power updates for the current block.

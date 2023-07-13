@@ -45,8 +45,8 @@ cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0 h1:nxF07lmlBbB8NKQhtJ+sJm6ef5uV1XkvPXG2bUntb04=
 cosmossdk.io/errors v1.0.0/go.mod h1:+hJZLuhdDE0pYN8HkOrVNwrIOYvUGnn6+4fjnJs/oV0=
-cosmossdk.io/log v1.1.0 h1:v0ogPHYeTzPcBTcPR1A3j1hkei4pZama8kz8LKlCMv0=
-cosmossdk.io/log v1.1.0/go.mod h1:6zjroETlcDs+mm62gd8Ig7mZ+N+fVOZS91V17H+M4N4=
+cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca h1:msenprh2BLLRwNT7zN56TbBHOGk/7ARQckXHxXyvjoQ=
+cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca/go.mod h1:PkIAKXZvaxrTRc++z53XMRvFk8AcGGWYHcMIPzVYX9c=
 cosmossdk.io/math v1.0.1 h1:Qx3ifyOPaMLNH/89WeZFH268yCvU4xEcnPLu3sJqPPg=
 cosmossdk.io/math v1.0.1/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 cosmossdk.io/store v1.0.0-alpha.1 h1:/151XxAgm0tiKuYrtJzMG61lf6enpPuP+D/hIN8cRjQ=
@@ -174,8 +174,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
-github.com/cosmos/cosmos-sdk v0.50.0-alpha.1 h1:7ERS+ZW1tTly/DLfUwjMB6h80wtlNGBcFjI2Eb9eZIU=
-github.com/cosmos/cosmos-sdk v0.50.0-alpha.1/go.mod h1:xee+suLR+WgtzSQBr0jjXQsvb1FIteMfnEzbr2Lk+4w=
+github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230713153355-bc7221f5c5f4 h1:7W1dwR+b81odxtPX3LrRHjsBun+9EbMzrSi7rFeEdNY=
+github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230713153355-bc7221f5c5f4/go.mod h1:6RlLvQl5prjf/lX8lugfXT/YYSQS8fB5Xj/5mdKjCYA=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

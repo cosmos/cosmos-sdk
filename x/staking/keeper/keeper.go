@@ -101,19 +101,18 @@ func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
 		return math.ZeroInt(), nil
 	}
 
-	ip := sdk.IntProto{}
-	err = k.cdc.Unmarshal(bz, &ip)
-	if err != nil {
+	var power math.Int
+	if err = power.Unmarshal(bz); err != nil {
 		return math.ZeroInt(), err
 	}
 
-	return ip.Int, nil
+	return power, nil
 }
 
 // SetLastTotalPower sets the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
 	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&sdk.IntProto{Int: power})
+	bz, err := power.Marshal()
 	if err != nil {
 		return err
 	}

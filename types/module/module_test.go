@@ -27,6 +27,12 @@ import (
 
 var errFoo = errors.New("dummy")
 
+func (MockCoreAppModule) GetQueryCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "foo",
+	}
+}
+
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -52,8 +58,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
@@ -82,8 +86,8 @@ func TestBasicManager(t *testing.T) {
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
-
 	mm.AddQueryCommands(mockCmd)
+	require.Equal(t, 1, len(mockCmd.Commands()))
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
@@ -215,7 +219,12 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
+	require.NotPanics(t, func() {
+		err := mm.RegisterServices(cfg)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -571,7 +580,10 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"someKey"`))
+	_, err = someFieldWriter.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return someFieldWriter.Close()
 }
 
@@ -598,7 +610,10 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"someKey"`))
+	_, err = wrt.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return wrt.Close()
 }
 

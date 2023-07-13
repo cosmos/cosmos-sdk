@@ -556,7 +556,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
@@ -569,6 +571,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
+			Hash:    req.Hash,
 		})
 
 	// add a deferred recover handler in case extendVote panics
@@ -607,7 +610,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
-	if cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight <= 0 {
+
+	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
 	}
 
@@ -667,6 +672,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
 	}
 
 	// Initialize the FinalizeBlock state. If this is the first block, it should
@@ -685,6 +691,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 				Height:  req.Height,
 				Time:    req.Time,
 				Hash:    req.Hash,
+				AppHash: app.LastCommitID().Hash,
 			})
 	}
 
@@ -701,6 +708,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
+			AppHash: app.LastCommitID().Hash,
 		}).WithCometInfo(cometInfo{
 		Misbehavior:     req.Misbehavior,
 		ValidatorsHash:  req.NextValidatorsHash,

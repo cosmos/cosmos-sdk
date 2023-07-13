@@ -193,8 +193,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
-	return nil
+	return k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 }
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.

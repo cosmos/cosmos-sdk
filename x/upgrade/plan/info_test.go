@@ -47,11 +47,13 @@ func (s *InfoTestSuite) TestParseInfo() {
 	}
 	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return val
 		}
 	}
 	makeInfoStrFuncURL := func(file string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return makeFileURL(t, file)
 		}
 	}

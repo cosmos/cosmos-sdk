@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -45,14 +46,14 @@ func NewIntegrationApp(
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
-	modules ...module.AppModule,
+	modules map[string]appmodule.AppModule,
 ) *App {
 	db := dbm.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	for _, module := range modules {
-		module.RegisterInterfaces(interfaceRegistry)
-	}
+	moduleManager := module.NewManagerFromMap(modules)
+	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
+	basicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
@@ -68,7 +69,6 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
-	moduleManager := module.NewManager(modules...)
 	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
 		return moduleManager.BeginBlock(sdkCtx)
 	})
@@ -102,7 +102,10 @@ func NewIntegrationApp(
 		}
 	}
 
-	bApp.Commit()
+	_, err := bApp.Commit()
+	if err != nil {
+		panic(err)
+	}
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -129,7 +132,12 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer func() {
+			_, err := app.Commit()
+			if err != nil {
+				panic(err)
+			}
+		}()
 	}
 
 	if cfg.AutomaticFinalizeBlock {

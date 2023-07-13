@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -35,6 +33,7 @@ const (
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
+	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
 )
 
 const (
@@ -43,9 +42,6 @@ const (
 	upgradesDir = "upgrades"
 	currentLink = "current"
 )
-
-// must be the same as x/upgrade/types.UpgradeInfoFilename
-const defaultFilename = "upgrade-info.json"
 
 // Config is the information passed in to control the daemon
 type Config struct {
@@ -63,6 +59,7 @@ type Config struct {
 	ColorLogs                bool
 	TimeFormatLogs           string
 	CustomPreupgrade         string
+	DisableRecase            bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -96,7 +93,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", defaultFilename)
+	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -183,6 +180,9 @@ func GetConfigFromEnv() (*Config, error) {
 	if cfg.TimeFormatLogs, err = TimeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
 		errs = append(errs, err)
 	}
+	if cfg.DisableRecase, err = BooleanOption(EnvDisableRecase, false); err != nil {
+		errs = append(errs, err)
+	}
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
@@ -224,7 +224,7 @@ func (cfg *Config) Logger(dst io.Writer) log.Logger {
 	var logger log.Logger
 
 	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
+		logger = log.NewNopLogger()
 	} else {
 		logger = log.NewLogger(dst,
 			log.ColorOption(cfg.ColorLogs),

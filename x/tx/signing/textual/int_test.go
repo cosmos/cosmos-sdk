@@ -63,7 +63,7 @@ func TestIntJSONTestcases(t *testing.T) {
 				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
 			}
 
-			// Parse test case strings as sdk.Ints
+			// Parse test case strings as math.Ints
 			_, ok := math.NewIntFromString(tc[0])
 			if ok {
 				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKINT"))
@@ -78,6 +78,7 @@ func TestIntJSONTestcases(t *testing.T) {
 // checkNumberTest checks that the output of a number value renderer
 // matches the expected string. Only use it to test numbers.
 func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {
+	t.Helper()
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)

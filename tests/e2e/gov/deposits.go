@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -79,11 +81,11 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	clientCtx := val.ClientCtx
 
 	// submit proposal without initial deposit
-	id := s.submitProposal(val, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)), "TestQueryDepositsWithoutInitialDeposit")
+	id := s.submitProposal(val, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(0)), "TestQueryDepositsWithoutInitialDeposit")
 	proposalID := strconv.FormatUint(id, 10)
 
 	// deposit amount
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(math.NewInt(50))).String()
 	_, err := govclitestutil.MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -124,7 +126,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 
 func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50)))
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(math.NewInt(50)))
 
 	// submit proposal with an initial deposit
 	id := s.submitProposal(val, depositAmount, "TestQueryProposalAfterVotingPeriod")

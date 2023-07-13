@@ -48,13 +48,13 @@ In general, the getter function does the following:
 * **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
 * **Returns the command:** Finally, the transaction command is returned.
 
-Each module must implement `NewTxCmd()`, which aggregates all of the transaction commands of the module. Here is an example from the `x/bank` module:
+Each module can implement `NewTxCmd()`, which aggregates all of the transaction commands of the module. Here is an example from the `x/bank` module:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/client/cli/tx.go#L20-L35
 ```
 
-Each module must also implement the `GetTxCmd()` method for `AppModuleBasic` that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
+Each module then can also implement a `GetTxCmd()` method that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L86
@@ -62,8 +62,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L
 
 ### Query Commands
 
-<!-- UPDATE THIS TO AUTOCLI -->
-<!-- 
+:::warning
+This section is being rewritten. Refer to [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli) while this section is being updated.
+:::
+
+<!-- UPDATE THIS TO AUTOCLI
 [Queries](./02-messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
 
 ```go reference
@@ -131,8 +134,8 @@ Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags requ
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L95-L106
-```
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L95-L106```
+-->
 
 ## gRPC
 
@@ -160,4 +163,4 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1be
 
 gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml).
 
-The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered. -->
+The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.

@@ -183,6 +183,7 @@ func TestDBIterator(t *testing.T) {
 }
 
 func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg string) {
+	t.Helper()
 	i := 0
 	for itr.Valid() {
 		key := itr.Key()

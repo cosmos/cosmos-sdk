@@ -12,8 +12,8 @@ import (
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
-		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: govv1.Msg_ServiceDesc.ServiceName,
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: govv1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -89,14 +89,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 			// map v1beta1 as a sub-command
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"v1beta1": {Service: govv1beta1.Msg_ServiceDesc.ServiceName},
+				"v1beta1": {Service: govv1beta1.Query_ServiceDesc.ServiceName},
 			},
 		},
-		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: govv1.Query_ServiceDesc.ServiceName,
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service: govv1.Msg_ServiceDesc.ServiceName,
 			// map v1beta1 as a sub-command
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"v1beta1": {Service: govv1beta1.Query_ServiceDesc.ServiceName},
+				"v1beta1": {Service: govv1beta1.Msg_ServiceDesc.ServiceName},
 			},
 		},
 	}

@@ -4,20 +4,20 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.6.0
-	cosmossdk.io/client/v2 v2.0.0-20230713112710-5bc825d3bc1a
+	cosmossdk.io/client/v2 v2.0.0-20230713160716-d4e95eec9f29
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v1.0.0-alpha.1
-	cosmossdk.io/tools/confix v0.0.0-20230630152705-9f4a4e416f85
-	cosmossdk.io/tools/rosetta v0.2.1-0.20230614114324-f368ed5c62bc
-	cosmossdk.io/x/circuit v0.0.0-20230710134821-641c6a79f97c
-	cosmossdk.io/x/evidence v0.0.0-20230711132404-6f85267b41ff
-	cosmossdk.io/x/feegrant v0.0.0-20230711132404-6f85267b41ff
-	cosmossdk.io/x/nft v0.0.0-20230711132404-6f85267b41ff
-	cosmossdk.io/x/tx v0.8.0
-	cosmossdk.io/x/upgrade v0.0.0-20230711132404-6f85267b41ff
+	cosmossdk.io/tools/confix v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/tools/rosetta v0.2.1-0.20230713160716-d4e95eec9f29
+	cosmossdk.io/x/circuit v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/evidence v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/feegrant v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/nft v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/tx v0.9.1
+	cosmossdk.io/x/upgrade v0.0.0-20230713160716-d4e95eec9f29
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
@@ -122,7 +122,7 @@ require (
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
-	github.com/iancoleman/strcase v0.2.0 // indirect
+	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

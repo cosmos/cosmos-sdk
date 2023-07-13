@@ -102,6 +102,11 @@ message Proposal {
   //
   // Since: cosmos-sdk 0.50
   bool expedited = 14;
+
+  // failed_reason defines the reason why the proposal failed
+  //
+  // Since: cosmos-sdk 0.50
+  string failed_reason = 15;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

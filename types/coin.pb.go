@@ -123,6 +123,7 @@ func (m *DecCoin) GetDenom() string {
 }
 
 // IntProto defines a Protobuf wrapper around an Int object.
+// Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
 type IntProto struct {
 	Int cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int,proto3,customtype=cosmossdk.io/math.Int" json:"int"`
 }
@@ -160,6 +161,7 @@ func (m *IntProto) XXX_DiscardUnknown() {
 var xxx_messageInfo_IntProto proto.InternalMessageInfo
 
 // DecProto defines a Protobuf wrapper around a Dec object.
+// Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
 type DecProto struct {
 	Dec cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=dec,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"dec"`
 }

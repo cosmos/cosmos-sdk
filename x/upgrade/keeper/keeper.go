@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
@@ -30,10 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
-
-// Deprecated: UpgradeInfoFileName file to store upgrade information
-// use x/upgrade/types.UpgradeInfoFilename instead.
-const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
 	homePath           string                          // root directory of app config

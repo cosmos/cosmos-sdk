@@ -338,18 +338,18 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
@@ -399,18 +399,18 @@ func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
@@ -451,16 +451,16 @@ func (suite *KeeperTestSuite) TestSupply_MintCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, "", initCoins) }, "no module account") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, "", initCoins) }, "no module account")
 
 	suite.mockMintCoins(burnerAcc)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission")
 
 	suite.mockMintCoins(minterAcc)
 	require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: math.NewInt(-10)}}), "insufficient coins")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) })
 
 	suite.mockMintCoins(minterAcc)
 	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
@@ -504,13 +504,13 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission")
 
 	suite.mockBurnCoins(burnerAcc)
 	require.Error(keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation), "insufficient coins")
@@ -1862,10 +1862,10 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 			require.NoError(migrator.Migrate3to4(ctx))
 
 			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 			require.Equal(def, newParams.DefaultSendEnabled)
 
-			for _, se := range params.SendEnabled { //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+			for _, se := range params.SendEnabled {
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				require.Equal(se.Enabled, actual, se.Denom)
 			}
@@ -1878,7 +1878,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	require := suite.Require()
 
 	params := banktypes.NewParams(true)
-	params.SendEnabled = []*banktypes.SendEnabled{ //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+	params.SendEnabled = []*banktypes.SendEnabled{
 		{Denom: "paramscointrue", Enabled: true},
 		{Denom: "paramscoinfalse", Enabled: false},
 	}
@@ -1887,7 +1887,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	suite.Run("stored params are as expected", func() {
 		actual := bankKeeper.GetParams(ctx)
 		require.True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // we're testing the old way here
 	})
 
 	suite.Run("send enabled params converted to store", func() {

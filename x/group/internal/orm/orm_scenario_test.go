@@ -335,7 +335,8 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 		it, err := k.autoUInt64TableModelByMetadataIndex.Get(store, exp)
 		require.NoError(t, err)
 		var all []testdata.TableModel
-		ReadAll(it, &all)
+		_, err = ReadAll(it, &all)
+		require.NoError(t, err)
 		require.Len(t, all, 1)
 		assert.Equal(t, loaded, all[0])
 	}
@@ -396,6 +397,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 }
 
 func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
+	t.Helper()
 	it, err := index.Get(store, searchKey)
 	require.NoError(t, err)
 
@@ -407,6 +409,7 @@ func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata
 }
 
 func first(t *testing.T, it Iterator) ([]byte, testdata.TableModel) {
+	t.Helper()
 	var loaded testdata.TableModel
 	key, err := First(it, &loaded)
 	require.NoError(t, err)

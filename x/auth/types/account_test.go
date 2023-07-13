@@ -97,7 +97,8 @@ func TestModuleAccountString(t *testing.T) {
 	moduleAcc := types.NewEmptyModuleAccount(name, types.Minter, types.Burner, types.Staking)
 	want := `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
-	moduleAcc.SetSequence(10)
+	err := moduleAcc.SetSequence(10)
+	require.NoError(t, err)
 	want = `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" sequence:10 > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
 }

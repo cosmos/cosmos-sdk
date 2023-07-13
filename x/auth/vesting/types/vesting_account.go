@@ -213,7 +213,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
-		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
+		vestedAmt := math.LegacyNewDecFromInt(ovc.Amount).Mul(s).RoundInt()
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 

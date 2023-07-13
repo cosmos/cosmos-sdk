@@ -70,11 +70,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)
 }
 
-// GetQueryCmd returns the module's root query command. Currently, this is a no-op.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // AppModule extends the AppModuleBasic implementation by implementing the
 // AppModule interface.
 type AppModule struct {

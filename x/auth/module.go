@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
@@ -21,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -77,16 +75,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the root tx command for the auth module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-// GetQueryCmd returns the root query command for the auth module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the auth module.
@@ -204,9 +192,6 @@ func init() {
 	)
 }
 
-// AddressCodecFactory is a type alias for a function that returns an address.Codec
-type AddressCodecFactory func() address.Codec
-
 type AddressCodecInputs struct {
 	depinject.In
 
@@ -220,6 +205,11 @@ func ProvideAddressCodec(in AddressCodecInputs) address.Codec {
 	if in.AddressCodecFactory != nil {
 		return in.AddressCodecFactory()
 	}
+
+	if in.Config.Bech32Prefix == "" {
+		panic("bech32 prefix cannot be empty")
+	}
+
 	return authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 }
 

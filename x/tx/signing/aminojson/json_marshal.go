@@ -26,7 +26,7 @@ type EncoderOptions struct {
 	// DonotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
 	FileResolver signing.ProtoFileResolver
 }

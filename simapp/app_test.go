@@ -41,6 +41,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -118,8 +119,10 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(&abci.RequestInitChain{})
-	app.Commit()
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name         string
@@ -314,15 +317,24 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 
 func TestAddressCodecFactory(t *testing.T) {
 	var addrCodec address.Codec
+	var valAddressCodec stakingtypes.ValidatorAddressCodec
+	var consAddressCodec stakingtypes.ConsensusAddressCodec
+
 	err := depinject.Inject(
 		depinject.Configs(
 			network.MinimumAppConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&addrCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok := addrCodec.(customAddressCodec)
+	require.False(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
+	require.False(t, ok)
+	require.NotNil(t, consAddressCodec)
+	_, ok = consAddressCodec.(customAddressCodec)
 	require.False(t, ok)
 
 	// Set the address codec to the custom one
@@ -332,11 +344,19 @@ func TestAddressCodecFactory(t *testing.T) {
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },
+				func() stakingtypes.ValidatorAddressCodec { return customAddressCodec{} },
+				func() stakingtypes.ConsensusAddressCodec { return customAddressCodec{} },
 			),
 		),
-		&addrCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok = addrCodec.(customAddressCodec)
+	require.True(t, ok)
+	require.NotNil(t, valAddressCodec)
+	_, ok = valAddressCodec.(customAddressCodec)
+	require.True(t, ok)
+	require.NotNil(t, consAddressCodec)
+	_, ok = consAddressCodec.(customAddressCodec)
 	require.True(t, ok)
 }

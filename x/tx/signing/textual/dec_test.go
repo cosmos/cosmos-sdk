@@ -38,6 +38,7 @@ func TestDecJSONTestcases(t *testing.T) {
 }
 
 func checkDecTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {
+	t.Helper()
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)

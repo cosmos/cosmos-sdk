@@ -8,6 +8,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/math"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -15,6 +17,7 @@ import (
 )
 
 func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Validator) {
+	t.Helper()
 	addrs, _, validators := createValidators(&testing.T{}, f, []int64{9, 8, 7})
 	header := cmtproto.Header{
 		ChainID: "HelloChain",
@@ -517,7 +520,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
 	assert.NilError(t, err1)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 
 	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, valAddr)
@@ -620,11 +623,11 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
 	assert.NilError(t, err1)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2)
 	assert.NilError(t, err1)
-	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 
 	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc, valAddr1)
@@ -807,7 +810,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
 	rdAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 1)
-	_, err = f.stakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
+	_, err = f.stakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), math.LegacyNewDecFromInt(rdAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
@@ -920,7 +923,7 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 
 	// undelegate
 	undelAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), math.LegacyNewDecFromInt(undelAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 

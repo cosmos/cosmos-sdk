@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -65,9 +66,9 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
@@ -75,11 +76,11 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	// delegate 500 tokens to validator1
 	args := []string{
 		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(500)).String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	cmd := stakingcli.NewDelegateCmd()
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -89,11 +90,11 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	// delegate 500 tokens to validator2
 	args = []string{
 		val1.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(500)).String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
@@ -106,7 +107,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 			fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		}
 		cmd = cli.NewWithdrawAllRewardsCmd()
 		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -129,7 +130,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	cmd = cli.NewWithdrawAllRewardsCmd()
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)

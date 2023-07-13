@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.20
 
 require (
-	cosmossdk.io/api v0.5.0
+	cosmossdk.io/api v0.6.0
 	cosmossdk.io/collections v0.3.0 // indirect
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.0 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230706173432-bc5eb31751de // indirect
+	cosmossdk.io/client/v2 v2.0.0-20230713112710-5bc825d3bc1a // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230710134821-641c6a79f97c // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

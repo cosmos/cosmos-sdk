@@ -918,7 +918,7 @@ $ %s query staking all-tokenize-share-records
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "delegations")
+	flags.AddPaginationFlagsToCmd(cmd, "tokenize share records")
 
 	return cmd
 }
@@ -949,6 +949,9 @@ $ %s query staking last-tokenize-share-record-id
 			if err != nil {
 				return err
 			}
+
+			// log a dummy print statement to check we're propagating to dockernet
+			fmt.Println("lalala")
 
 			return clientCtx.PrintProto(res)
 		},

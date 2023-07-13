@@ -63,13 +63,9 @@ func (s *KeeperTestSuite) SetupTest() {
 		storeService,
 		accountKeeper,
 		bankKeeper,
-<<<<<<< HEAD
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-=======
-		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
->>>>>>> e0be2b80f (feat(staking)!: add consensus and validator address codec in staking (#16959))
 	)
 	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))
 

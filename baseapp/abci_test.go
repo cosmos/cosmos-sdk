@@ -2095,7 +2095,8 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
 	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
 
-	suite.baseApp.Commit()
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 
 	// check if avgPrice was committed
 	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))

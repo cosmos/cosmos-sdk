@@ -209,10 +209,10 @@ cosmossdk.io/tools/confix v0.0.0-20230713160716-d4e95eec9f29 h1:uIWFA16Db7llUhWZ
 cosmossdk.io/tools/confix v0.0.0-20230713160716-d4e95eec9f29/go.mod h1:b/bU9v699JldsEnnsDFGAAem+L1dHA+EWOI4l3Ik1cg=
 cosmossdk.io/tools/rosetta v0.2.1-0.20230713160716-d4e95eec9f29 h1:7c/8Q6icB72IUkOO47ua2o7/6+GxdmTUmaVbgoP5gOA=
 cosmossdk.io/tools/rosetta v0.2.1-0.20230713160716-d4e95eec9f29/go.mod h1:jdr/6CIOCmyPd27m3/GyN9I1lDuSmZx+zpsieG3Hdbc=
-cosmossdk.io/x/circuit v0.0.0-20230713160716-d4e95eec9f29 h1:DQqRU/fT8TM8HykDLRCBEsbOgjRe6wPI5SrbWmGvsNE=
-cosmossdk.io/x/circuit v0.0.0-20230713160716-d4e95eec9f29/go.mod h1:oo7//3TLAxU3sHyCxUeiUmUw0a6VFoXiJs7TR0Te0+4=
-cosmossdk.io/x/evidence v0.0.0-20230713160716-d4e95eec9f29 h1:xzwV67rZifJRCCUSzKlN5s3xPGoj/mlRQW5NLOJ9uCQ=
-cosmossdk.io/x/evidence v0.0.0-20230713160716-d4e95eec9f29/go.mod h1:SUYYupIrpF2id6W+1VMcDpAfmeglZ3cTIfc0/PLtAHo=
+cosmossdk.io/x/circuit v0.0.0-20230713220914-c0369a888135 h1:Qfywx4oCgJx3TzMiU5MM0R5zQO5dR2m29r6Y3EOAaf0=
+cosmossdk.io/x/circuit v0.0.0-20230713220914-c0369a888135/go.mod h1:jxt8hWrbvtpNAxC1bIh5gojBIqvX2w83wJVquVwsOKM=
+cosmossdk.io/x/evidence v0.0.0-20230713220914-c0369a888135 h1:SWjE56GlSCe5RSMUuC+peWhnkZa4Lbev0fJip3WflbA=
+cosmossdk.io/x/evidence v0.0.0-20230713220914-c0369a888135/go.mod h1:WiGXY9/0GKp0FFKPmNr0OtMxE5MOoRkDeE6HWZE41Pw=
 cosmossdk.io/x/feegrant v0.0.0-20230713160716-d4e95eec9f29 h1:oqmjaQAAYjNo9Sj77IsCuTuuKNN4Q+Py3zwclSDsroU=
 cosmossdk.io/x/feegrant v0.0.0-20230713160716-d4e95eec9f29/go.mod h1:izdG3ENxO7Z6kSRbZorbRJHarV2efZM63+Xyk27KksU=
 cosmossdk.io/x/nft v0.0.0-20230713160716-d4e95eec9f29 h1:Orne21OeV4lMN7zdbKQs4/vQAiTpR1IOeX1tFcezXuw=

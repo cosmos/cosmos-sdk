@@ -12,8 +12,8 @@ require (
 	cosmossdk.io/store v1.0.0-alpha.1
 	cosmossdk.io/tools/confix v0.0.0-20230713160716-d4e95eec9f29
 	cosmossdk.io/tools/rosetta v0.2.1-0.20230713160716-d4e95eec9f29
-	cosmossdk.io/x/circuit v0.0.0-20230713160716-d4e95eec9f29
-	cosmossdk.io/x/evidence v0.0.0-20230713160716-d4e95eec9f29
+	cosmossdk.io/x/circuit v0.0.0-20230713220914-c0369a888135
+	cosmossdk.io/x/evidence v0.0.0-20230713220914-c0369a888135
 	cosmossdk.io/x/feegrant v0.0.0-20230713160716-d4e95eec9f29
 	cosmossdk.io/x/nft v0.0.0-20230713160716-d4e95eec9f29
 	cosmossdk.io/x/tx v0.9.1

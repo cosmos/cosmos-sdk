@@ -376,6 +376,10 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 
 	response := &v1beta1.QueryParamsResponse{}
 
+	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
+	}
+
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
 		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)

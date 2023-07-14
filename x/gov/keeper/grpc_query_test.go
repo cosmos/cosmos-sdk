@@ -984,11 +984,11 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 		expPass  bool
 	}{
 		{
-			"empty request (valid and returns all params)",
+			"empty request",
 			func() {
 				req = &v1beta1.QueryParamsRequest{}
 			},
-			true,
+			false,
 		},
 		{
 			"deposit params request",

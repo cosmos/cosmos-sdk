@@ -709,7 +709,14 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), msg.Amount.Amount)
+	// Re-calculate the shares in case there was rounding precision during the undelegation
+	newShares, err := validator.SharesFromTokens(returnAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	// The share tokens returned maps 1:1 with shares
+	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), newShares.TruncateInt())
 
 	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
 	if err != nil {
@@ -790,14 +797,18 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, types.ErrNoValidatorFound
 	}
 
-	// calculate the ratio between shares and redeem amount
-	// moduleAccountTotalDelegation * redeemAmount / totalIssue
 	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		return nil, types.ErrNoUnbondingDelegation
 	}
-	shareDenomSupply := k.bankKeeper.GetSupply(ctx, shareToken.Denom)
-	shares := delegation.Shares.Mul(sdk.NewDecFromInt(shareToken.Amount)).QuoInt(shareDenomSupply.Amount)
+
+	// Similar to undelegations, if the account is attempting to tokenize the full delegation,
+	// but there's a precision error due to the decimal to int conversion, round up to the
+	// full decimal amount before modifying the delegation
+	shares := shareToken.Amount.ToDec()
+	if shareToken.Amount.Equal(delegation.Shares.TruncateInt()) {
+		shares = delegation.Shares
+	}
 	tokens := validator.TokensFromShares(shares).TruncateInt()
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked

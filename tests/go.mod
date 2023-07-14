@@ -216,3 +216,6 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )
+
+// TODO to be removed after API tag
+replace cosmossdk.io/api => ../api

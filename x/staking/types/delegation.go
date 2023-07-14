@@ -49,12 +49,8 @@ func (d Delegation) GetDelegatorAddr() string {
 	return d.DelegatorAddress
 }
 
-func (d Delegation) GetValidatorAddr() sdk.ValAddress {
-	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return addr
+func (d Delegation) GetValidatorAddr() string {
+	return d.ValidatorAddress
 }
 func (d Delegation) GetShares() math.LegacyDec { return d.Shares }
 

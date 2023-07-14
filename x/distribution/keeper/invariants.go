@@ -86,7 +86,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 			if err != nil {
 				panic(err)
 			}
-			valAddr := del.GetValidatorAddr().String()
+			valAddr := del.GetValidatorAddr()
 			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], delAddr)
 		}
 

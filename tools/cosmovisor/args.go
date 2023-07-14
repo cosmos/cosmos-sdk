@@ -25,6 +25,7 @@ const (
 	EnvDownloadMustHaveChecksum = "DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM"
 	EnvRestartUpgrade           = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvRestartDelay             = "DAEMON_RESTART_DELAY"
+	EnvShutdownGrace            = "DAEMON_SHUTDOWN_GRACE"
 	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
 	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
@@ -51,6 +52,7 @@ type Config struct {
 	DownloadMustHaveChecksum bool
 	RestartAfterUpgrade      bool
 	RestartDelay             time.Duration
+	ShutdownGrace            time.Duration
 	PollInterval             time.Duration
 	UnsafeSkipBackup         bool
 	DataBackupPath           string
@@ -204,6 +206,17 @@ func GetConfigFromEnv() (*Config, error) {
 			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvRestartDelay, err))
 		} else {
 			cfg.RestartDelay = val
+		}
+	}
+
+	cfg.ShutdownGrace = 0 // default value but makes it explicit
+	shutdownGrace := os.Getenv(EnvShutdownGrace)
+	if shutdownGrace != "" {
+		val, err := parseEnvDuration(shutdownGrace)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvShutdownGrace, err))
+		} else {
+			cfg.ShutdownGrace = val
 		}
 	}
 
@@ -428,6 +441,7 @@ func (cfg Config) DetailString() string {
 		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvShutdownGrace, cfg.ShutdownGrace.String()},
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
@@ -436,6 +450,7 @@ func (cfg Config) DetailString() string {
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
+		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

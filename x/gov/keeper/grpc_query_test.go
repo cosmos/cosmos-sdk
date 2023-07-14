@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			true,
 		},
 		{
-			"request 2nd page with limit 4",
+			"request 2nd page with limit 3",
 			func() {
 				req = &v1.QueryProposalsRequest{
 					Pagination: &query.PageRequest{Offset: 3, Limit: 3},
@@ -303,6 +303,70 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 
 				expRes = &v1.QueryProposalsResponse{
 					Proposals: testProposals[1:2],
+				}
+			},
+			true,
+		},
+		{
+			"request with filter of status voting period",
+			func() {
+				req = &v1.QueryProposalsRequest{
+					ProposalStatus: v1.StatusVotingPeriod,
+				}
+
+				var proposals []*v1.Proposal
+				for i := 0; i < len(testProposals); i++ {
+					if testProposals[i].GetStatus() == v1.StatusVotingPeriod {
+						proposals = append(proposals, testProposals[i])
+					}
+				}
+
+				expRes = &v1.QueryProposalsResponse{
+					Proposals: proposals,
+				}
+			},
+			true,
+		},
+		{
+			"request with filter of status deposit period",
+			func() {
+				req = &v1.QueryProposalsRequest{
+					ProposalStatus: v1.StatusDepositPeriod,
+				}
+
+				var proposals []*v1.Proposal
+				for i := 0; i < len(testProposals); i++ {
+					if testProposals[i].GetStatus() == v1.StatusDepositPeriod {
+						proposals = append(proposals, testProposals[i])
+					}
+				}
+
+				expRes = &v1.QueryProposalsResponse{
+					Proposals: proposals,
+				}
+			},
+			true,
+		},
+		{
+			"request with filter of status deposit period with limit 2",
+			func() {
+				req = &v1.QueryProposalsRequest{
+					ProposalStatus: v1.StatusDepositPeriod,
+					Pagination: &query.PageRequest{
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+
+				var proposals []*v1.Proposal
+				for i := 0; i < len(testProposals) && len(proposals) < 2; i++ {
+					if testProposals[i].GetStatus() == v1.StatusDepositPeriod {
+						proposals = append(proposals, testProposals[i])
+					}
+				}
+
+				expRes = &v1.QueryProposalsResponse{
+					Proposals: proposals,
 				}
 			},
 			true,

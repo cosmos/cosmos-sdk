@@ -27,6 +27,7 @@ type Builder struct {
 	// AddressCodec is the address codec used for the address flag
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
 }
 
 func (b *Builder) init() {
@@ -41,6 +42,7 @@ func (b *Builder) init() {
 		b.scalarFlagTypes = map[string]Type{}
 		b.scalarFlagTypes["cosmos.AddressString"] = addressStringType{}
 		b.scalarFlagTypes["cosmos.ValidatorAddressString"] = validatorAddressStringType{}
+		b.scalarFlagTypes["cosmos.ConsensusAddressString"] = consensusAddressStringType{}
 	}
 }
 

@@ -81,6 +81,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "tally [proposal-id]",
 					Short:     "Query the tally of a proposal vote",
 					Example:   fmt.Sprintf("%s query gov tally 1", version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "proposal_id"},
+					},
 				},
 				{
 					RpcMethod: "Constitution",

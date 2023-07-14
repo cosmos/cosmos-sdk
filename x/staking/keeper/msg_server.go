@@ -646,11 +646,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrOnlyBondDenomAllowdForTokenize
 	}
 
-	delegationAmount := sdk.NewDecFromInt(validator.Tokens).Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
-	if sdk.NewDecFromInt(msg.Amount.Amount).GT(delegationAmount) {
-		return nil, types.ErrNotEnoughDelegationShares
-	}
-
 	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
 	if acc != nil {
 		acc, ok := acc.(vesting.VestingAccount)
@@ -696,6 +691,24 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		Validator:     msg.ValidatorAddress,
 	}
 
+	// note: this returnAmount can be slightly off from the original delegation amount if there
+	// is a decimal to int precision error
+	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
+
+	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
+	err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{returnCoin})
+	if err != nil {
+		return nil, err
+	}
+
 	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), msg.Amount.Amount)
 
 	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
@@ -708,28 +721,13 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
-	if err != nil {
-		return nil, err
-	}
-
-	if validator.IsBonded() {
-		k.bondedTokensToNotBonded(ctx, returnAmount)
-	}
-
-	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
-	err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{msg.Amount})
-	if err != nil {
-		return nil, err
-	}
-
 	// create reward ownership record
 	err = k.AddTokenizeShareRecord(ctx, record)
 	if err != nil {
 		return nil, err
 	}
 	// send coins to module account
-	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
+	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{returnCoin})
 	if err != nil {
 		return nil, err
 	}
@@ -741,7 +739,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// delegate from module account
-	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, types.Unbonded, validator, true)
+	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), returnAmount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -771,12 +769,13 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, err
 	}
 
-	balance := k.bankKeeper.GetBalance(ctx, delegatorAddress, msg.Amount.Denom)
-	if balance.Amount.LT(msg.Amount.Amount) {
+	shareToken := msg.Amount
+	balance := k.bankKeeper.GetBalance(ctx, delegatorAddress, shareToken.Denom)
+	if balance.Amount.LT(shareToken.Amount) {
 		return nil, types.ErrNotEnoughBalance
 	}
 
-	record, err := k.GetTokenizeShareRecordByDenom(ctx, msg.Amount.Denom)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, shareToken.Denom)
 	if err != nil {
 		return nil, err
 	}
@@ -797,8 +796,8 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	if !found {
 		return nil, types.ErrNoUnbondingDelegation
 	}
-	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
-	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
+	shareDenomSupply := k.bankKeeper.GetSupply(ctx, shareToken.Denom)
+	shares := delegation.Shares.Mul(sdk.NewDecFromInt(shareToken.Amount)).QuoInt(shareDenomSupply.Amount)
 	tokens := validator.TokensFromShares(shares).TruncateInt()
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
@@ -837,11 +836,11 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	}
 
 	// send share tokens to NotBondedPool and burn
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{shareToken})
 	if err != nil {
 		return nil, err
 	}
-	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{shareToken})
 	if err != nil {
 		return nil, err
 	}
@@ -871,7 +870,7 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 			types.EventTypeRedeemShares,
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
-			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyAmount, shareToken.String()),
 		),
 	)
 

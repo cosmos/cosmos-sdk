@@ -84,6 +84,10 @@ A user would be able to visit any liquid staking provider that has integrated wi
 
 Technically speaking, this is accomplished by using something called an “LSM share.” Using the liquid staking module, a user can tokenize their staked tokens and turn it into LSM shares. LSM shares can be redeemed for underlying staked tokens and are transferable. After staked tokens are tokenized they can be immediately transferred to a liquid staking provider in exchange for liquid staking tokens - without having to wait for the unbonding period.
 
+## LSM share token
+When tokenizing a delegation, the returned token has a denom of the format `{validatorAddress}/{recordId}`, where `recordId` is a monotonically increasing number that increments every tokenization. As a result, two successive tokenizations to the same validator will yield different denom's.
+Additionally, the share tokens returned will map 1:1 with the number of shares of the underlying delegation (e.g. if the delegation of X shares is tokenized, X share tokens be returned). This reduces ambiguity with respect to the value of the token if a slash occurs after tokenization.
+
 ## Toggling the ability to tokenize shares
 
 Currently LSM facilitates the immediate conversion of staked assets into liquid staked tokens (referred to as "tokenization"). Despite the many benefits that come with this capability, it does inadvertently negate a protective measure available via traditional staking, where a user can stake their tokens to render them illiquid in the event that their wallet is compromised (the attacker would first need to unbond, then transfer out the tokens).

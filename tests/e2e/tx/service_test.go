@@ -186,6 +186,16 @@ func TestEventRegex(t *testing.T) {
 			event: "tx.signature='foobar/baz123=='",
 			match: true,
 		},
+		{
+			name:  "valid: with >= operator",
+			event: "tx.height>=10'",
+			match: true,
+		},
+		{
+			name:  "valid: with <= operator",
+			event: "tx.height<=10'",
+			match: true,
+		},
 	}
 
 	for _, tc := range testCases {

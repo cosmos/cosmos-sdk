@@ -5,6 +5,7 @@ Usage:
 Flags:
       --a-bool                                                               
       --a-coin cosmos.base.v1beta1.Coin                                      
+      --a-consensus-address bech32 account address key name                  
       --a-message testpb.AMessage (json)                                     
       --a-validator-address bech32 account address key name                  
       --an-address bech32 account address key name                           

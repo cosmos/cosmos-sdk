@@ -37,8 +37,13 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.6.0 h1:AEpx/sRZaQEusARZqAxbg20zRXnS6e1F+uoal39trOM=
 cosmossdk.io/api v0.6.0/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
+<<<<<<< HEAD
 cosmossdk.io/client/v2 v2.0.0-20230613135102-afe571f5b616 h1:/rT+NrbfwF4/Fe0pgSdAejUOmgItfP40w+Vg2Zub92o=
 cosmossdk.io/client/v2 v2.0.0-20230613135102-afe571f5b616/go.mod h1:55KO/mJnklKWaDVQn5Q126IsbenPosRBUFRDpr5TQr8=
+=======
+cosmossdk.io/client/v2 v2.0.0-20230714071335-e11c41b3795e h1:jQn8E/Gi9K2aD/buRb0n3RN70uBUy4Oh+v8leYRxW7c=
+cosmossdk.io/client/v2 v2.0.0-20230714071335-e11c41b3795e/go.mod h1:fo/w5JPD1rYBi+ZmQ1BCM7XFhi6yPPDxMK94dNTQKdc=
+>>>>>>> 90b390795 (feat(client/v2): support consensus address decoding (#16927))
 cosmossdk.io/collections v0.3.0 h1:v0eEqLBxebAV+t+Ahwf9tSJOu95HVLINwROXx2TTZ08=
 cosmossdk.io/collections v0.3.0/go.mod h1:CHE1+niUElL9ikCpevRZcp0yqQ4TU0TrEEGirN0mvIg=
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=
@@ -47,8 +52,8 @@ cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0 h1:nxF07lmlBbB8NKQhtJ+sJm6ef5uV1XkvPXG2bUntb04=
 cosmossdk.io/errors v1.0.0/go.mod h1:+hJZLuhdDE0pYN8HkOrVNwrIOYvUGnn6+4fjnJs/oV0=
-cosmossdk.io/log v1.1.0 h1:v0ogPHYeTzPcBTcPR1A3j1hkei4pZama8kz8LKlCMv0=
-cosmossdk.io/log v1.1.0/go.mod h1:6zjroETlcDs+mm62gd8Ig7mZ+N+fVOZS91V17H+M4N4=
+cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca h1:msenprh2BLLRwNT7zN56TbBHOGk/7ARQckXHxXyvjoQ=
+cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca/go.mod h1:PkIAKXZvaxrTRc++z53XMRvFk8AcGGWYHcMIPzVYX9c=
 cosmossdk.io/math v1.0.1 h1:Qx3ifyOPaMLNH/89WeZFH268yCvU4xEcnPLu3sJqPPg=
 cosmossdk.io/math v1.0.1/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 cosmossdk.io/store v1.0.0-alpha.1 h1:/151XxAgm0tiKuYrtJzMG61lf6enpPuP+D/hIN8cRjQ=
@@ -77,13 +82,24 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
+<<<<<<< HEAD
 github.com/armon/go-metrics v0.4.1 h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJA=
+=======
+github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
+github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
+github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
+github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
+github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
+github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
+>>>>>>> 90b390795 (feat(client/v2): support consensus address decoding (#16927))
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 h1:41iFGWnSlI2gVpmOtVTJZNodLdLQLn/KsJqFvXwnd/s=
 github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
+github.com/bits-and-blooms/bitset v1.8.0 h1:FD+XqgOZDUxxZ8hzoBFuV9+cGWY9CslN6d5MS5JVb4c=
 github.com/btcsuite/btcd/btcec/v2 v2.3.2 h1:5n0X6hX0Zk+6omWcihdYvdAlGf2DfasC0GMf7DClJ3U=
 github.com/btcsuite/btcd/btcec/v2 v2.3.2/go.mod h1:zYzJ8etWJQIv1Ogk7OzpWjowwOdXY1W/17j2MW85J04=
 github.com/btcsuite/btcd/btcutil v1.1.3 h1:xfbtw8lwpp0G6NwSHb+UE67ryTFHJAiNuipusjXSohQ=
@@ -137,8 +153,13 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
+<<<<<<< HEAD
 github.com/cosmos/cosmos-sdk v0.50.0-alpha.0 h1:FebMgUdZtIkPziTvxKI1mLnjiaJ+9e/aU4IvLutG0Dg=
 github.com/cosmos/cosmos-sdk v0.50.0-alpha.0/go.mod h1:H194vsGW6Qo0RVp5inetgU31+s2rk7RKgeztTnxChgM=
+=======
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230714071335-e11c41b3795e h1:vpNBbvRZ6GVq8UukQNNlacg2NjazYQv6P42eEnTjAzM=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230714071335-e11c41b3795e/go.mod h1:LME6v5XztqVK7/1uTQj/G6ZJdosJEz24rKaPYk+WbqI=
+>>>>>>> 90b390795 (feat(client/v2): support consensus address decoding (#16927))
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

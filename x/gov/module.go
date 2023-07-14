@@ -109,11 +109,6 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 	return proposalCLIHandlers
 }
 
-// GetQueryCmd returns the root query command for the gov module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
-}
-
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	v1.RegisterInterfaces(registry)

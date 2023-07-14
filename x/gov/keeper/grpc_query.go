@@ -179,11 +179,10 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 	case v1.ParamTallying:
 		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 		response.TallyParams = &tallyParams
-
 	default:
-		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid parameter type", req.ParamsType)
-
+		if len(req.ParamsType) > 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "unknown params type: %s", req.ParamsType)
+		}
 	}
 	response.Params = &params
 
@@ -376,6 +375,10 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
+
+	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
+	}
 
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)

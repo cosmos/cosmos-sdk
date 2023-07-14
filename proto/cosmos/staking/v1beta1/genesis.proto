@@ -16,6 +16,7 @@ message GenesisState {
   // last_total_power tracks the total amounts of bonded tokens recorded during
   // the previous end block.
   bytes last_total_power = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true

@@ -76,8 +76,7 @@ func WithDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOp
 
 func GeneratorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
 	opts := field.Options()
-	switch {
-	case proto.HasExtension(opts, cosmos_proto.E_Scalar):
+	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
 		switch scalar {
 		case "cosmos.Int":

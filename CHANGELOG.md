@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#16898](https://github.com/cosmos/cosmos-sdk/pull/16898) Add `preFinalizeBlockHook` to allow vote extensions persistence.
 * (cli) [#16887](https://github.com/cosmos/cosmos-sdk/pull/16887) Add two new CLI commands: `tx simulate` for simulating a transaction; `query block-results` for querying CometBFT RPC for block results.
+* (x/gov) [#16976](https://github.com/cosmos/cosmos-sdk/pull/16976) Add `failed_reason` field to `Proposal` under `x/gov` to indicate the reason for a failed proposal. Referenced from [#238](https://github.com/bnb-chain/greenfield-cosmos-sdk/pull/238) under `bnb-chain/greenfield-cosmos-sdk`.
 
 ### Improvements
 
@@ -54,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
+* (types/query) [#16905](https://github.com/cosmos/cosmos-sdk/pull/16905) – Collections Pagination now applies proper count when filtering results.
 
 ### API Breaking Changes
 
@@ -81,6 +83,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## CLI Breaking Changes
 
+* (all) Query pagination flags have been renamed with the migration to AutoCLI:
+    * `--limit` -> `--page-limit`
+    * `--offset` -> `--page-offset`
+    * `--count-total` -> `--page-count-total`
+    * `--reverse` -> `--page-reverse`
+* (x/gov) [#16987](https://github.com/cosmos/cosmos-sdk/pull/16987) In `<appd> query gov proposals` the proposal status flag have renamed from `--status` to `--proposal-status`. Additonally, that flags now uses the ENUM values: `PROPOSAL_STATUS_DEPOSIT_PERIOD`, `PROPOSAL_STATUS_VOTING_PERIOD`, `PROPOSAL_STATUS_PASSED`, `PROPOSAL_STATUS_REJECTED`, `PROPOSAL_STATUS_FAILED`.
 * (x/bank) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) With the migration to AutoCLI some bank commands have been split in two: 
     * Use `denoms-metadata` for querying all denom metadata and `denom-metadata` for querying a specific denom metadata.
     * Use `total-supply` (or `total`) for querying the total supply and `total-supply-of` for querying the supply of a specific denom. 

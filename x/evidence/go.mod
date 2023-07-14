@@ -3,7 +3,7 @@ module cosmossdk.io/x/evidence
 go 1.20
 
 require (
-	cosmossdk.io/api v0.5.0
+	cosmossdk.io/api v0.6.0
 	cosmossdk.io/collections v0.3.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/store v1.0.0-alpha.1
 	github.com/cometbft/cometbft v0.38.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230710133622-f3e4697195ff
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713190037-6a0ab4fd167f
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	cosmossdk.io/x/tx v0.8.0 // indirect
+	cosmossdk.io/x/tx v0.9.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

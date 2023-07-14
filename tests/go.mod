@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.20
 
 require (
-	cosmossdk.io/api v0.6.0
+	cosmossdk.io/api v0.6.1
 	cosmossdk.io/collections v0.3.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
@@ -216,6 +216,3 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )
-
-// TODO to be removed after API tag
-replace cosmossdk.io/api => ../api

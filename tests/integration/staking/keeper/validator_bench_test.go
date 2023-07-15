@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -131,7 +132,12 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
-		if delegation.GetValidatorAddr().Equals(existingValAddr) {
+		valAddr, err := k.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			panic(err)
+		}
+
+		if bytes.EqualFold(valAddr, existingValAddr) {
 			if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
 				panic(err)
 			}

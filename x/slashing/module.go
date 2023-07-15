@@ -88,11 +88,6 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetQueryCmd returns no root query command for the slashing module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
 	AppModuleBasic

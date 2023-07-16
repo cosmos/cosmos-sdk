@@ -878,7 +878,17 @@ func (k Keeper) Delegate(
 		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else if errors.Is(err, types.ErrNoDelegation) {
 		// not found
-		delegation = types.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
+		delAddrStr, err := k.authKeeper.AddressCodec().BytesToString(delAddr)
+		if err != nil {
+			return math.LegacyDec{}, err
+		}
+
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
+		if err != nil {
+			return math.LegacyDec{}, err
+		}
+
+		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
 		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
 	} else {
 		return math.LegacyZeroDec(), err

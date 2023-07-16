@@ -580,7 +580,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 		return types.DelegationResponse{}, err
 	}
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
+	_, err = k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
@@ -591,8 +591,8 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 	}
 
 	return types.NewDelegationResp(
-		delegatorAddress,
-		valAddr,
+		del.DelegatorAddress,
+		del.GetValidatorAddr(),
 		del.Shares,
 		sdk.NewCoin(bondDenom, val.TokensFromShares(del.Shares).TruncateInt()),
 	), nil

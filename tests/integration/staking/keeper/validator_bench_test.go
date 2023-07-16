@@ -67,7 +67,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 			if err != nil {
 				panic(err)
 			}
-			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
 				panic(err)
@@ -108,7 +108,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 			if err != nil {
 				panic(err)
 			}
-			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
 				panic(err)
 			}

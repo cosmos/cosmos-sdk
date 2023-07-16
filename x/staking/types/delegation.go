@@ -15,10 +15,10 @@ import (
 var _ DelegationI = Delegation{}
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares math.LegacyDec) Delegation {
+func NewDelegation(delegatorAddr string, validatorAddr string, shares math.LegacyDec) Delegation {
 	return Delegation{
-		DelegatorAddress: delegatorAddr.String(),
-		ValidatorAddress: validatorAddr.String(),
+		DelegatorAddress: delegatorAddr,
+		ValidatorAddress: validatorAddr,
 		Shares:           shares,
 	}
 }
@@ -267,7 +267,7 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares math.LegacyDec, balance sdk.Coin,
+	delegatorAddr, validatorAddr string, shares math.LegacyDec, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
 		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),

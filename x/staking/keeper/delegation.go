@@ -1032,6 +1032,9 @@ func (k Keeper) Unbond(
 
 		// call the after delegation modification hook
 		err = k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr)
+		if err != nil {
+			return amount, err
+		}
 	}
 
 	if err != nil {

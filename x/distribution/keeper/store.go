@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	gogotypes "github.com/cosmos/gogoproto/types"
+	"encoding/json"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -21,6 +22,29 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress
 func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
+}
+func (k Keeper) SetWinningGrants(ctx sdk.Context, winningGrants types.WinningGrants) {
+	k.Logger(ctx).Info("Setting winning grants", "winning_grants", winningGrants)
+	store := ctx.KVStore(k.storeKey)
+	//b := k.(&winningGrants)
+	// marshal the winning grants to JSON
+	b, _ := json.Marshal(winningGrants)
+	k.Logger(ctx).Info("Setting winning grants", "winning_grants", b)
+	//store.Set(types.GetWinningGrantsHeightKey(), b)
+	store.Set(types.WinningGrantsKey, b)
+}
+
+func (k Keeper) GetWinningGrants(ctx sdk.Context) (winningGrants types.WinningGrants) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.WinningGrantsKey)
+	if b == nil {
+		return nil
+	}
+	err := json.Unmarshal(b, &winningGrants)
+	if err != nil {
+		return nil
+	}
+	return winningGrants
 }
 
 // delete a delegator withdraw addr
@@ -59,6 +83,26 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&feePool)
 	store.Set(types.FeePoolKey, b)
+}
+
+func (k Keeper) GetPreviousProposerReward(ctx sdk.Context) sdk.Dec {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.ProposerRewardKey)
+	if bz == nil {
+		panic("previous proposer reward not set")
+	}
+
+	addrValue := gogotypes.StringValue{}
+	k.cdc.MustUnmarshal(bz, &addrValue)
+	value := sdk.MustNewDecFromStr(addrValue.GetValue())
+	return value
+}
+
+// set the proposer public key for this block
+func (k Keeper) SetPreviousProposerReward(ctx sdk.Context, reward sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.StringValue{Value: reward.String()})
+	store.Set(types.ProposerRewardKey, bz)
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
@@ -331,8 +375,7 @@ func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 
 // iterate over slash events between heights, inclusive
 func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
-	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
-) {
+	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(
 		types.GetValidatorSlashEventKeyPrefix(val, startingHeight),
@@ -382,4 +425,47 @@ func (k Keeper) DeleteAllValidatorSlashEvents(ctx sdk.Context) {
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
+}
+
+//
+//
+//// GetPreviousProposerConsAddr returns the proposer consensus address for the
+//// current block.
+//func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) sdk.ConsAddress {
+//	store := ctx.KVStore(k.storeKey)
+//	bz := store.Get(types.ProposerKey)
+//	if bz == nil {
+//		panic("previous proposer not set")
+//	}
+//
+//	addrValue := gogotypes.BytesValue{}
+//	k.cdc.MustUnmarshal(bz, &addrValue)
+//	return addrValue.GetValue()
+//}
+//
+//// set the proposer public key for this block
+//func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
+//	store := ctx.KVStore(k.storeKey)
+//	bz := k.cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
+//	store.Set(types.ProposerKey, bz)
+//}
+
+// GetGovernanceContractAddress returns the governance contract address
+func (k Keeper) GetGovernanceContractAddress(ctx sdk.Context) (address string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GovernanceContractAddress)
+	if bz == nil {
+		ctx.Logger().Info("GetGovernanceContractAddress is nil")
+		return ""
+	}
+	addrValue := gogotypes.StringValue{}
+	k.cdc.MustUnmarshal(bz, &addrValue)
+	return addrValue.GetValue()
+}
+
+// SetGovernanceContractAddress sets the governance contract address
+func (k Keeper) SetGovernanceContractAddress(ctx sdk.Context, address string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.StringValue{Value: address})
+	store.Set(types.GovernanceContractAddress, bz)
 }

@@ -5,37 +5,52 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewParams returns Params instance with the given values.
-func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
+func NewParams(
+	mintDenom string,
+	inflationRateChange,
+	inflationMax,
+	inflationMin,
+	goalBonded sdk.Dec,
+	blocksPerYear uint64,
+	maxMintableAmount uint64,
+	mintedAmountPerBlock sdk.Dec,
+	yearlyReduction sdk.Dec,
+) Params {
+
 	return Params{
-		MintDenom:           mintDenom,
-		InflationRateChange: inflationRateChange,
-		InflationMax:        inflationMax,
-		InflationMin:        inflationMin,
-		GoalBonded:          goalBonded,
-		BlocksPerYear:       blocksPerYear,
+		MintDenom:            mintDenom,
+		InflationRateChange:  inflationRateChange,
+		InflationMax:         inflationMax,
+		InflationMin:         inflationMin,
+		GoalBonded:           goalBonded,
+		BlocksPerYear:        blocksPerYear,
+		MaxMintableAmount:    maxMintableAmount,
+		MintedAmountPerBlock: mintedAmountPerBlock,
+		YearlyReduction:      yearlyReduction,
 	}
 }
 
-// DefaultParams returns default x/mint module parameters.
+// default minting module parameters
 func DefaultParams() Params {
 	return Params{
-		MintDenom:           sdk.DefaultBondDenom,
-		InflationRateChange: sdk.NewDecWithPrec(13, 2),
-		InflationMax:        sdk.NewDecWithPrec(20, 2),
-		InflationMin:        sdk.NewDecWithPrec(7, 2),
-		GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MintDenom:            sdk.DefaultBondDenom,
+		InflationRateChange:  sdk.NewDecWithPrec(13, 2),
+		InflationMax:         sdk.NewDecWithPrec(20, 2),
+		InflationMin:         sdk.NewDecWithPrec(7, 2),
+		GoalBonded:           sdk.NewDecWithPrec(67, 2),
+		BlocksPerYear:        uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MaxMintableAmount:    uint64(1000000000000000),
+		MintedAmountPerBlock: sdk.NewDecWithPrec(18*1e6, 0),
+		YearlyReduction:      sdk.NewDecWithPrec(1262079466, 10),
 	}
 }
 
-// Validate does the sanity check on the params.
+// validate params
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
@@ -55,6 +70,15 @@ func (p Params) Validate() error {
 	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
 		return err
 	}
+	if err := validateMaxMintableAmount(p.MaxMintableAmount); err != nil {
+		return err
+	}
+	if err := validateYearlyReduction(p.YearlyReduction); err != nil {
+		return err
+	}
+	if err := validateMintedAmountPerBlock(p.MintedAmountPerBlock); err != nil {
+		return err
+	}
 	if p.InflationMax.LT(p.InflationMin) {
 		return fmt.Errorf(
 			"max inflation (%s) must be greater than or equal to min inflation (%s)",
@@ -63,6 +87,7 @@ func (p Params) Validate() error {
 	}
 
 	return nil
+
 }
 
 // String implements the Stringer interface.
@@ -93,13 +118,10 @@ func validateInflationRateChange(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNil() {
-		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
-	}
 	if v.IsNegative() {
 		return fmt.Errorf("inflation rate change cannot be negative: %s", v)
 	}
-	if v.GT(math.LegacyOneDec()) {
+	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("inflation rate change too large: %s", v)
 	}
 
@@ -112,13 +134,10 @@ func validateInflationMax(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNil() {
-		return fmt.Errorf("max inflation cannot be nil: %s", v)
-	}
 	if v.IsNegative() {
 		return fmt.Errorf("max inflation cannot be negative: %s", v)
 	}
-	if v.GT(math.LegacyOneDec()) {
+	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("max inflation too large: %s", v)
 	}
 
@@ -131,13 +150,10 @@ func validateInflationMin(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNil() {
-		return fmt.Errorf("min inflation cannot be nil: %s", v)
-	}
 	if v.IsNegative() {
 		return fmt.Errorf("min inflation cannot be negative: %s", v)
 	}
-	if v.GT(math.LegacyOneDec()) {
+	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min inflation too large: %s", v)
 	}
 
@@ -150,13 +166,10 @@ func validateGoalBonded(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNil() {
-		return fmt.Errorf("goal bonded cannot be nil: %s", v)
+	if v.IsNegative() {
+		return fmt.Errorf("goal bonded cannot be negative: %s", v)
 	}
-	if v.IsNegative() || v.IsZero() {
-		return fmt.Errorf("goal bonded must be positive: %s", v)
-	}
-	if v.GT(math.LegacyOneDec()) {
+	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)
 	}
 
@@ -171,6 +184,48 @@ func validateBlocksPerYear(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("blocks per year must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMintedAmountPerBlock(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("minted amount per block cannot be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateYearlyReduction(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("goal bonded cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("yearly reduction too large (limited to 100%): %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxMintableAmount(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max mintable amount must be positive: %d", v)
 	}
 
 	return nil

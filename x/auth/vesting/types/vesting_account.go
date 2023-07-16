@@ -610,3 +610,104 @@ func marshalYaml(i interface{}) (interface{}, error) {
 	}
 	return string(bz), nil
 }
+
+//-----------------------------------------------------------------------------
+// Forever Locked Vesting Account
+
+var (
+	_ vestexported.VestingAccount = (*ForeverVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*ForeverVestingAccount)(nil)
+)
+
+// ForeverVestingAccount implements the VestingAccount interface. It vests coins accross all blocks up to max supply.
+// A percentage of coins relative to the total supply is unlocked every block so that at any point on the curve.
+// Total vested amount never exceed the percentage specified.
+// NewForeverVestingAccount creates a new ForeverVestingAccount.
+func NewForeverVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, vestingSupplyPercentage string, alreadyVested sdk.Coins) *ForeverVestingAccount {
+	baseVestingAcc := &BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		OriginalVesting: originalVesting,
+		EndTime:         0,
+	}
+
+	return &ForeverVestingAccount{
+		BaseVestingAccount:      baseVestingAcc,
+		VestingSupplyPercentage: vestingSupplyPercentage,
+		AlreadyVested:           alreadyVested,
+	}
+}
+
+// GetVestedCoins returns the total amount of vested coins for a ForeverVestingAccount.
+func (fva ForeverVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+	//vestingCoins := totalSupply.GetDenomByIndex(0).MulDec(fva.VestingPercentage)
+	//return sdk.Coins(vestingCoins.TruncateDecimal())
+	//totalSupply, _ := sdk.ParseCoinsNormalized("420000000ujmes")
+
+	// String is a decimal value (such as 0.05), I
+	//percentage, _ := sdk.NewDecFromStr(fva.VestingSupplyPercentage)
+	// Take 10 percent of the total supply and add it to the vested coins
+	//vestedAmount := sdk.Dec(totalSupply.AmountOf("ujmes")).Mul(percentage)
+	//fmt.Print("GetVestedCoins. Vested amount: ", vestedAmount)
+
+	//vestedCoins, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("%.2fujmes", vestedAmount))
+	//fmt.Print("GetVestedCoins. Vested coins: ", vestedCoins)
+	return fva.AlreadyVested
+
+}
+
+// GetVestingCoins returns the total number of vesting coins for a ForeverVestingAccount.
+func (fva ForeverVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+	return fva.OriginalVesting.Sub(fva.GetVestedCoins(blockTime))
+}
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (fva ForeverVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	////totalSupply := getUpdatedTotalSupply()
+	//// FIXME: totalSupply should be provided by the caller or fetched from another source
+	////totalCurrentSupply, _ := sdk.ParseCoinsNormalized("420000000ujmes")
+	//
+	////fmt.Println("TotalSupply had: ", totalCurrentSupply)
+	//fmt.Print("LockedCoins had : ")
+	//
+	////var vestedCoins sdk.Coins
+	//
+	////
+	////return totalCurrentSuppl
+	////return fva.BaseVestingAccount.LockedCoinsFromVesting(fva.getVestingCoinsWithTotalSupply(blockTime, totalSupply))
+	return fva.BaseVestingAccount.LockedCoinsFromVesting(fva.GetVestingCoins(blockTime))
+}
+
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
+func (fva *ForeverVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	fva.BaseVestingAccount.TrackDelegation(balance, fva.OriginalVesting, amount)
+}
+
+// GetStartTime returns zero since a ForeverVestingAccount has no start time.
+func (fva ForeverVestingAccount) GetStartTime() int64 {
+	return 0
+}
+
+// GetEndTime returns a vesting account's end time, we return 0 to denote that
+// a forever locked vesting account has no end time.
+func (fva ForeverVestingAccount) GetEndTime() int64 {
+	return 0
+}
+
+// Validate checks for errors on the account fields
+func (fva ForeverVestingAccount) Validate() error {
+	percentage, _ := sdk.NewDecFromStr(fva.VestingSupplyPercentage)
+
+	if percentage.LTE(sdk.ZeroDec()) || percentage.GT(sdk.OneDec()) {
+		return errors.New("vesting percentage should be between 0 and 1")
+	}
+
+	return fva.BaseVestingAccount.Validate()
+}
+
+func (fva ForeverVestingAccount) String() string {
+	out, _ := fva.MarshalYAML()
+	return out.(string)
+}

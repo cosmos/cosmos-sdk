@@ -17,6 +17,9 @@ const (
 
 	// RouterKey is the message route for distribution
 	RouterKey = ModuleName
+
+	// QuerierRoute is the querier route for distribution
+	QuerierRoute = ModuleName
 )
 
 // Keys for distribution store
@@ -40,7 +43,9 @@ const (
 //
 // - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
 //
-// - 0x09: Params
+// - 0x09
+// - 0x10<accAddrLen (1 Byte)><accAddr_Bytes>: sdk.AccAddress
+
 var (
 	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
@@ -53,7 +58,10 @@ var (
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
 
-	ParamsKey = []byte{0x09} // key for distribution module params
+	GovernanceContractAddress = []byte{0x10} // key for governance contract address
+	WinningGrantsKey          = []byte{0x11} // key for winning grants
+	ProposerRewardKey         = []byte{0x12} // key for proposer reward
+
 )
 
 // GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
@@ -161,6 +169,10 @@ func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
 // GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
 func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
 	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
+}
+
+func GetWinningGrantsHeightKey() []byte {
+	return WinningGrantsKey
 }
 
 // GetDelegatorStartingInfoKey creates the key for a delegator's starting info.

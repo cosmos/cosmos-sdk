@@ -5,9 +5,9 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"math/rand"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -15,35 +15,38 @@ import (
 
 // Simulation parameter constants
 const (
-	Inflation           = "inflation"
-	InflationRateChange = "inflation_rate_change"
-	InflationMax        = "inflation_max"
-	InflationMin        = "inflation_min"
-	GoalBonded          = "goal_bonded"
+	Inflation            = "inflation"
+	InflationRateChange  = "inflation_rate_change"
+	InflationMax         = "inflation_max"
+	InflationMin         = "inflation_min"
+	GoalBonded           = "goal_bonded"
+	MaxCoinAmount        = "max_coin_amount"
+	MintedAmountPerBlock = "minted_amount_per_block"
+	YearlyReduction      = "yearly_reduction"
 )
 
 // GenInflation randomized Inflation
-func GenInflation(r *rand.Rand) math.LegacyDec {
+func GenInflation(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
 }
 
 // GenInflationRateChange randomized InflationRateChange
-func GenInflationRateChange(r *rand.Rand) math.LegacyDec {
+func GenInflationRateChange(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
 }
 
 // GenInflationMax randomized InflationMax
-func GenInflationMax(r *rand.Rand) math.LegacyDec {
+func GenInflationMax(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(20, 2)
 }
 
 // GenInflationMin randomized InflationMin
-func GenInflationMin(r *rand.Rand) math.LegacyDec {
+func GenInflationMin(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(7, 2)
 }
 
 // GenGoalBonded randomized GoalBonded
-func GenGoalBonded(r *rand.Rand) math.LegacyDec {
+func GenGoalBonded(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(67, 2)
 }
 
@@ -83,9 +86,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	mintDenom := sdk.DefaultBondDenom
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)
-	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear)
+	maxMintableAmount := uint64(1000000000)
+	mintedAmountPerBlock := sdk.NewDec(20 * 1e6)
+	yearlyReduction := sdk.NewDecWithPrec(125, 3)
 
-	mintGenesis := types.NewGenesisState(types.InitialMinter(inflation), params)
+	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear, maxMintableAmount, mintedAmountPerBlock, yearlyReduction)
+
+	mintGenesis := types.NewGenesisState(types.InitialMinter(tmproto.Header{}, inflation), params)
 
 	bz, err := json.MarshalIndent(&mintGenesis, "", " ")
 	if err != nil {

@@ -54,6 +54,20 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  // block reward per block
+  string minted_amount_per_block = 6 [
+    (gogoproto.moretags)   = "yaml:\"minted_amount_per_block\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
   // expected blocks per year
-  uint64 blocks_per_year = 6;
+  uint64 blocks_per_year = 7 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  // expected blocks per year
+  uint64 max_mintable_amount = 8 [(gogoproto.moretags) = "yaml:\"max_mintable_amount\""];
+  // Yearly reduction to apply to minted amount
+  string yearly_reduction = 9 [
+    (gogoproto.moretags)   = "yaml:\"yearly_reduction\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

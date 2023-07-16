@@ -12,9 +12,9 @@ import (
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  sdk.ZeroDec(),            // deprecated
-		BonusProposerReward: sdk.ZeroDec(),            // deprecated
+		CommunityTax:        sdk.NewDec(0),            // 0% from 50% previous default
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(3, 2), // 3%
 		WithdrawAddrEnabled: true,
 	}
 }

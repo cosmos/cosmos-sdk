@@ -238,6 +238,10 @@ func (coins DecCoins) Add(coinsB ...DecCoin) DecCoins {
 	return coins.safeAdd(coinsB)
 }
 
+func (coins DecCoins) AddCoins(coinsB DecCoins) DecCoins {
+	return coins.safeAdd(coinsB)
+}
+
 // safeAdd will perform addition of two DecCoins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their

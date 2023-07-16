@@ -40,6 +40,15 @@ Each `Msg` service method must have exactly one argument, which must implement t
 
 `sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with the `GetSigners()` method. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
+`sdk.Msg` is a alias of `proto.Message`. To attach a `ValidateBasic()` and/or `GetSigners()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic` and/or 
+
+<!-- TODO add docs on how to use custom getsigners after talking with matt -->
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L89
+```
+
+
 The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
 * `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./03-msg-services.md) documentation.

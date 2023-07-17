@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -132,7 +131,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, nil)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -376,7 +375,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, math.ZeroInt(),
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -576,7 +575,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		amount,
 		description,
 		commissionRates,
-		math.ZeroInt(),
 	)
 	if err != nil {
 		return txBldr, msg, err

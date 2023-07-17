@@ -51,7 +51,7 @@ func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotype
 // CreateValidatorMsg returns a message used to create validator in this service.
 func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount math.Int) *stakingtypes.MsgCreateValidator {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	return msg
 }
@@ -62,7 +62,7 @@ func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission)
 	require.NoError(sh.t, err)
 	res, err := sh.msgSrvr.CreateValidator(sdk.WrapSDKContext(sh.Ctx), msg)
 	if ok {
@@ -128,7 +128,7 @@ func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coi
 		DelegatorAddress: delegator.String(),
 		Amount:           amount,
 	}
-	res, err := sh.msgSrvr.RedeemTokens(sdk.WrapSDKContext(sh.Ctx), msg)
+	res, err := sh.msgSrvr.RedeemTokensForShares(sdk.WrapSDKContext(sh.Ctx), msg)
 	if ok {
 		require.NoError(sh.t, err)
 		require.NotNil(sh.t, res)

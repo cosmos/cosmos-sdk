@@ -122,14 +122,12 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // min_self_delegation is the validator's self declared minimum self delegation.
-  //
-  // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
+    deprecated             = true,
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
-
   // strictly positive if this validator's unbonding has been stopped by external modules
   //
   // Since: cosmos-sdk 0.47
@@ -140,18 +138,18 @@ message Validator {
   // Since: cosmos-sdk 0.47
   repeated uint64 unbonding_ids = 13;
 
-  // total_validator_bond_shares is the number of shares self bonded from the validator.
+  // validator_bond_shares is the number of shares self bonded from the validator.
   //
   // Since: cosmos-sdk 0.47-lsm
-  string total_validator_bond_shares = 14 [
+  string validator_bond_shares = 14 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // total_liquid_shares is the total number of shares either tokenized or owned by a liquid staking provider.
+  // liquid_shares is the number of shares either tokenized or owned by a liquid staking provider.
   //
   // Since: cosmos-sdk 0.47-lsm
-  string total_liquid_shares = 15 [
+  string liquid_shares = 15 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -468,7 +466,7 @@ message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// TokenizeShareRecord represents a tokenized delegation
+// TokenizeShareRecord represents a tokenized delegation.
 //
 // Since: cosmos-sdk 0.47-lsm
 message TokenizeShareRecord {
@@ -482,9 +480,24 @@ message TokenizeShareRecord {
 }
 
 // PendingTokenizeShareAuthorizations stores a list of addresses that have their
-// tokenize share enablement in progress
+// tokenize share enablement in progress.
 //
 // Since: cosmos-sdk 0.47-lsm
 message PendingTokenizeShareAuthorizations {
   repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// TokenizeShareLockStatus represents status of an account's tokenize share lock.
+//
+// Since: cosmos-sdk 0.47-lsm
+enum TokenizeShareLockStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+  // An empty value is not allowed.
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ShareLockStatusNil"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1 [(gogoproto.enumvalue_customname) = "ShareLockStatusLocked"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2 [(gogoproto.enumvalue_customname) = "ShareLockStatusUnlocked"];
+  // Status when lock is queued for unlocking.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3 [(gogoproto.enumvalue_customname) = "ShareLockStatusLockExpiring"];
 }

@@ -263,7 +263,8 @@ message QueryCommunityPoolResponse {
   ];
 }
 
-// QueryTokenizeShareRecordRewardRequest
+// QueryTokenizeShareRecordRewardRequest is the request type for the Query/TokenizeShareRecordReward RPC
+// method.
 //
 // Since: cosmos-sdk 0.47-lsm
 message QueryTokenizeShareRecordRewardRequest {
@@ -273,7 +274,8 @@ message QueryTokenizeShareRecordRewardRequest {
   string owner_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// QueryTokenizeShareRecordRewardResponse
+// QueryTokenizeShareRecordRewardResponse is the response type for the Query/TokenizeShareRecordReward
+// RPC method.
 //
 // Since: cosmos-sdk 0.47-lsm
 message QueryTokenizeShareRecordRewardResponse {

@@ -189,7 +189,7 @@ message MsgCommunityPoolSpend {
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpendResponse {}
 
-// MsgWithdrawTokenizeShareRecordReward
+// MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a specific record.
 //
 // Since: cosmos-sdk 0.47-lsm
 message MsgWithdrawTokenizeShareRecordReward {
@@ -200,12 +200,13 @@ message MsgWithdrawTokenizeShareRecordReward {
   uint64 record_id     = 2;
 }
 
-// MsgWithdrawTokenizeShareRecordRewardResponse
+// MsgWithdrawTokenizeShareRecordReward defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 message MsgWithdrawTokenizeShareRecordRewardResponse {}
 
-// MsgWithdrawAllTokenizeShareRecordReward
+// MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or all
+// records owned by the designated owner
 //
 // Since: cosmos-sdk 0.47-lsm
 message MsgWithdrawAllTokenizeShareRecordReward {
@@ -215,7 +216,7 @@ message MsgWithdrawAllTokenizeShareRecordReward {
   string owner_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgWithdrawAllTokenizeShareRecordRewardResponse
+// MsgWithdrawAllTokenizeShareRecordRewardResponse defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 message MsgWithdrawAllTokenizeShareRecordRewardResponse {}

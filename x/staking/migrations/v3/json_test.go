@@ -53,7 +53,9 @@ func TestMigrateJSON(t *testing.T) {
 		"validator_liquid_staking_cap": "1.000000000000000000"
 	},
 	"redelegations": [],
+	"tokenize_share_locks": [],
 	"tokenize_share_records": [],
+	"total_liquid_staked_tokens": "0",
 	"unbonding_delegations": [],
 	"validators": []
 }`

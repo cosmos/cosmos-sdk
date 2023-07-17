@@ -84,6 +84,10 @@ A user would be able to visit any liquid staking provider that has integrated wi
 
 Technically speaking, this is accomplished by using something called an “LSM share.” Using the liquid staking module, a user can tokenize their staked tokens and turn it into LSM shares. LSM shares can be redeemed for underlying staked tokens and are transferable. After staked tokens are tokenized they can be immediately transferred to a liquid staking provider in exchange for liquid staking tokens - without having to wait for the unbonding period.
 
+## LSM share token
+
+When tokenizing a delegation, the returned token has a denom of the format `{validatorAddress}/{recordId}`, where `recordId` is a monotonically increasing number that increments every tokenization. As a result, two successive tokenizations to the same validator will yield different denom's. Additionally, the share tokens returned will map 1:1 with the number of shares of the underlying delegation (e.g. if the delegation of X shares is tokenized, X share tokens be returned). This reduces ambiguity with respect to the value of the token if a slash occurs after tokenization.
+
 ## Toggling the ability to tokenize shares
 
 Currently LSM facilitates the immediate conversion of staked assets into liquid staked tokens (referred to as "tokenization"). Despite the many benefits that come with this capability, it does inadvertently negate a protective measure available via traditional staking, where a user can stake their tokens to render them illiquid in the event that their wallet is compromised (the attacker would first need to unbond, then transfer out the tokens).
@@ -148,19 +152,19 @@ message Params {
 ### Data structures
 
 #### Validator
-The `TotalValidatorBondShares` and `TotalLiquidShares` attributes were added to the `Validator` struct.
+The `ValidatorBondShares` and `LiquidShares` attributes were added to the `Validator` struct.
 
 ```proto
 message Validator {
   // ...existing attributes...
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 11 [
+  string validator_bond_shares = 11 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // Total number of shares either tokenized or owned by a liquid staking provider 
-  string total_liquid_shares = 12 [
+  // Number of shares either tokenized or owned by a liquid staking provider 
+  string liquid_shares = 12 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -247,15 +251,15 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 // if the caps are enabled
 func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error
 
-// SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator
+// SafelyIncreaseValidatorLiquidShares increments the liquid shares on a validator
 // if the caps are enabled and the validator bond cap is not surpassed by this delegation
-func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
 
-// DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
+// DecreaseValidatorLiquidShares decrements the liquid shares on a validator
 // if the caps are enabled
-func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
 
-// SafelyDecreaseValidatorBond decrements the total validator's self bond
+// SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
@@ -356,7 +360,7 @@ func TokenizeShares() {
 When upgrading to enable the liquid staking module, the total global liquid stake and total liquid validator shares must be determined. This can be done in the upgrade handler by looping through delegation records and including the delegation in the total if the delegator has a 32-length address. This is implemented by the following function:
 ```go
 func RefreshTotalLiquidStaked() {
-  // Resets all validator TotalLiquidShares to 0
+  // Resets all validator LiquidShares to 0
   // Loops delegation records
   //    For each delegation, determines if the delegation was from a 32-length address
   //    If so, increments the global liquid staking cap and validator liquid shares

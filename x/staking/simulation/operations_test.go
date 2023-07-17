@@ -137,10 +137,12 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
 		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
-
+		{simulation.DefaultWeightMsgValidatorBond, types.ModuleName, types.TypeMsgValidatorBond},
 		{simulation.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
 		{simulation.DefaultWeightMsgRedeemTokensForShares, types.ModuleName, types.TypeMsgRedeemTokensForShares},
 		{simulation.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
+		{simulation.DefaultWeightMsgDisableTokenizeShares, types.ModuleName, types.TypeMsgDisableTokenizeShares},
+		{simulation.DefaultWeightMsgEnableTokenizeShares, types.ModuleName, types.TypeMsgEnableTokenizeShares},
 	}
 
 	for i, w := range weightesOps {

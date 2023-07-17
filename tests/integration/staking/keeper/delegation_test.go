@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/simapp"
+	"cosmossdk.io/math"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -19,7 +18,7 @@ import (
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
+	addrDels := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 1, sdk.NewInt(10000))
 	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -158,7 +157,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})
@@ -173,7 +172,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }
 
 func TestValidatorBondRedelegate(t *testing.T) {
@@ -251,7 +250,7 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensForShares{
 		DelegatorAddress: addrDels[1].String(),
 		Amount:           tokenizeShareResp.Amount,
 	})
@@ -267,5 +266,5 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }

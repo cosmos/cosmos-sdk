@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 // Helper function to create a base account from an account name
@@ -27,15 +27,18 @@ func createBaseAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) 
 
 // Helper function to create 32-length account
 // Used to mock an liquid staking provider's ICA account
-func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
-	accountAddress := address.Module(accountName, []byte(accountName))
-	account := authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(accountAddress),
-		accountName,
-	)
+func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
+	icahost := "icahost"
+	connectionID := "connection-0"
+	portID := icahost
+
+	moduleAddress := authtypes.NewModuleAddress(icahost)
+	icaAddress := sdk.AccAddress(address.Derive(moduleAddress, []byte(connectionID+portID)))
+
+	account := authtypes.NewBaseAccountWithAddress(icaAddress)
 	app.AccountKeeper.SetAccount(ctx, account)
 
-	return accountAddress
+	return icaAddress
 }
 
 // Helper function to create a module account address from a tokenized share
@@ -60,8 +63,8 @@ func TestTotalLiquidStakedTokens(t *testing.T) {
 	require.Equal(t, total, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx), "initial")
 }
 
-// Tests Validator's TotalLiquidShares field
-func TestValidatorTotalLiquidShares(t *testing.T) {
+// Tests Increase/Decrease TotalValidatorLiquidShares
+func TestValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	// Create a validator address
@@ -72,29 +75,23 @@ func TestValidatorTotalLiquidShares(t *testing.T) {
 	// Set an initial total
 	initial := sdk.NewDec(100)
 	validator := types.Validator{
-		OperatorAddress:   valAddress.String(),
-		TotalLiquidShares: initial,
+		OperatorAddress: valAddress.String(),
+		LiquidShares:    initial,
 	}
-
 	app.StakingKeeper.SetValidator(ctx, validator)
-
-	// Confirm it was set
-	updatedValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
-	require.True(t, found, "must be found")
-	require.Equal(t, initial, updatedValidator.TotalLiquidShares, "initial")
 }
 
-// Tests AccountIsLiquidStakingProvider
-func TestAccountIsLiquidStakingProvider(t *testing.T) {
+// Tests DelegatorIsLiquidStaker
+func TestDelegatorIsLiquidStaker(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	// Create base and ICA accounts
 	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
-	icaAccountAddress := createICAAccount(app, ctx, "ica-account")
+	icaAccountAddress := createICAAccount(app, ctx)
 
-	// Only the ICA account should be considered a liquid staking provider
-	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(baseAccountAddress), "base account")
-	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(icaAccountAddress), "ICA account")
+	// Only the ICA module account should be considered a liquid staking provider
+	require.False(t, app.StakingKeeper.DelegatorIsLiquidStaker(baseAccountAddress), "base account")
+	require.True(t, app.StakingKeeper.DelegatorIsLiquidStaker(icaAccountAddress), "ICA module account")
 }
 
 // Helper function to clear the Bonded pool balances before a unit test
@@ -278,7 +275,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			// Update the global liquid staking cap
 			params := app.StakingKeeper.GetParams(ctx)
 			params.GlobalLiquidStakingCap = tc.globalLiquidCap
-			require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+			app.StakingKeeper.SetParams(ctx, params)
 
 			// Update the total liquid tokens
 			app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, tc.totalLiquidStake)
@@ -312,7 +309,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	// Set the global cap such that a small delegation would exceed the cap
 	params := app.StakingKeeper.GetParams(ctx)
 	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.0001")
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Attempt to increase the total liquid stake again, it should error since
 	// the cap was exceeded
@@ -322,7 +319,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 
 	// Now relax the cap so that the increase succeeds
 	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.99")
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Confirm the total increased
 	err = app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount, true)
@@ -414,7 +411,7 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 		},
 		{
 			// Validator Shares: 100, Factor: 2, Current Shares: 90 => 200 Max Shares, Capacity: 110
-			// New Shares: 110 - at cap
+			// New Shares: 110 - below cap
 			name:                "factor 2 - at cap",
 			validatorShares:     sdk.NewDec(100),
 			validatorBondFactor: sdk.NewDec(2),
@@ -466,7 +463,7 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 			// Factor of -1 (disabled): Should always return false
 			name:                "factor disabled",
 			validatorShares:     sdk.NewDec(1),
-			validatorBondFactor: types.ValidatorBondDisabled,
+			validatorBondFactor: sdk.NewDec(-1),
 			currentLiquidShares: sdk.NewDec(1),
 			newShares:           sdk.NewDec(1_000_000),
 			expectedExceeds:     false,
@@ -478,12 +475,12 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 			// Update the validator bond factor
 			params := app.StakingKeeper.GetParams(ctx)
 			params.ValidatorBondFactor = tc.validatorBondFactor
-			require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+			app.StakingKeeper.SetParams(ctx, params)
 
 			// Create a validator with designated self-bond shares
 			validator := types.Validator{
-				TotalLiquidShares:        tc.currentLiquidShares,
-				TotalValidatorBondShares: tc.validatorShares,
+				LiquidShares:        tc.currentLiquidShares,
+				ValidatorBondShares: tc.validatorShares,
 			}
 
 			// Check whether the cap is exceeded
@@ -592,17 +589,16 @@ func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Update the validator liquid staking cap
 			params := app.StakingKeeper.GetParams(ctx)
 			params.ValidatorLiquidStakingCap = tc.validatorLiquidCap
-			require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+			app.StakingKeeper.SetParams(ctx, params)
 
 			// Create a validator with designated self-bond shares
 			validator := types.Validator{
-				TotalLiquidShares: tc.validatorLiquidShares,
-				DelegatorShares:   tc.validatorTotalShares,
+				LiquidShares:    tc.validatorLiquidShares,
+				DelegatorShares: tc.validatorTotalShares,
 			}
 
 			// Check whether the cap is exceeded
@@ -612,8 +608,8 @@ func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
 	}
 }
 
-// Tests SafelyIncreaseValidatorTotalLiquidShares
-func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
+// Tests SafelyIncreaseValidatorLiquidShares
+func TestSafelyIncreaseValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	// Generate a test validator address
@@ -625,7 +621,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	checkValidatorLiquidShares := func(expected sdk.Dec, description string) {
 		actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 		require.True(t, found)
-		require.Equal(t, expected.TruncateInt64(), actualValidator.TotalLiquidShares.TruncateInt64(), description)
+		require.Equal(t, expected.TruncateInt64(), actualValidator.LiquidShares.TruncateInt64(), description)
 	}
 
 	// Start with the following:
@@ -654,10 +650,10 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 
 	// Create a validator with designated self-bond shares
 	initialValidator := types.Validator{
-		OperatorAddress:          valAddress.String(),
-		TotalLiquidShares:        initialLiquidShares,
-		TotalValidatorBondShares: validatorBondShares,
-		DelegatorShares:          validatorTotalShares,
+		OperatorAddress:     valAddress.String(),
+		LiquidShares:        initialLiquidShares,
+		ValidatorBondShares: validatorBondShares,
+		DelegatorShares:     validatorTotalShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
@@ -667,46 +663,46 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	params.ValidatorBondFactor = initialBondFactor
 	params.ValidatorLiquidStakingCap = initialLiquidStakingCap
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Attempt to increase the validator liquid shares, it should throw an
 	// error that the validator bond cap was exceeded
 	validator := initialValidator
-	err := app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, firstIncreaseAmount)
+	err := app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, firstIncreaseAmount)
 	require.ErrorIs(t, err, types.ErrInsufficientValidatorBondShares)
 	checkValidatorLiquidShares(initialLiquidShares, "shares after low bond factor")
 
 	// Change validator bond factor to a more conservative number, so that the increase succeeds
 	params.ValidatorBondFactor = finalBondFactor
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Try the increase again and check that it succeeded
 	validator = initialValidator
 	expectedLiquidSharesAfterFirstStake := initialLiquidShares.Add(firstIncreaseAmount)
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, firstIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, firstIncreaseAmount)
 	require.NoError(t, err)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares with cap loose bond cap")
 
 	// Attempt another increase, it should fail from the liquid staking cap
 	validator = initialValidator
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, secondIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, secondIncreaseAmount)
 	require.ErrorIs(t, err, types.ErrValidatorLiquidStakingCapExceeded)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares after liquid staking cap hit")
 
 	// Raise the liquid staking cap so the new increment succeeds
 	params.ValidatorLiquidStakingCap = finalLiquidStakingCap
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Finally confirm that the increase succeeded this time
 	validator = initialValidator
 	expectedLiquidSharesAfterSecondStake := initialLiquidShares.Add(secondIncreaseAmount)
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, secondIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, secondIncreaseAmount)
 	require.NoError(t, err, "no error expected after increasing liquid staking cap")
 	checkValidatorLiquidShares(expectedLiquidSharesAfterSecondStake, "shares after loose liquid stake cap")
 }
 
-// Tests DecreaseValidatorTotalLiquidShares
-func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
+// Tests DecreaseValidatorLiquidShares
+func TestDecreaseValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	initialLiquidShares := sdk.NewDec(100)
@@ -718,22 +714,83 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	valAddress := sdk.ValAddress(pubKey.Address())
 
 	initialValidator := types.Validator{
-		OperatorAddress:   valAddress.String(),
-		TotalLiquidShares: initialLiquidShares,
+		OperatorAddress: valAddress.String(),
+		LiquidShares:    initialLiquidShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
 	// Decrease the validator liquid shares, and confirm the new share amount has been updated
-	err := app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, &initialValidator, decreaseAmount)
-	require.NoError(t, err, "no error expected when decreasing validator total liquid shares")
+	err := app.StakingKeeper.DecreaseValidatorLiquidShares(ctx, &initialValidator, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing validator liquid shares")
 
 	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "total liquid shares")
+	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.LiquidShares, "liquid shares")
 
 	// Attempt to decrease by a larger amount than it has, it should fail
-	err = app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, &actualValidator, initialLiquidShares)
+	err = app.StakingKeeper.DecreaseValidatorLiquidShares(ctx, &actualValidator, initialLiquidShares)
 	require.ErrorIs(t, err, types.ErrValidatorLiquidSharesUnderflow)
+}
+
+// Tests SafelyDecreaseValidatorBond
+func TestSafelyDecreaseValidatorBond(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	// Initial Bond Factor: 100, Initial Validator Bond: 10
+	// => Max Liquid Shares 1000 (Initial Liquid Shares: 200)
+	initialBondFactor := sdk.NewDec(100)
+	initialValidatorBondShares := sdk.NewDec(10)
+	initialLiquidShares := sdk.NewDec(200)
+
+	// Create a validator with designated self-bond shares
+	privKey := secp256k1.GenPrivKey()
+	pubKey := privKey.PubKey()
+	valAddress := sdk.ValAddress(pubKey.Address())
+
+	initialValidator := types.Validator{
+		OperatorAddress:     valAddress.String(),
+		ValidatorBondShares: initialValidatorBondShares,
+		LiquidShares:        initialLiquidShares,
+	}
+	app.StakingKeeper.SetValidator(ctx, initialValidator)
+
+	// Set the bond factor
+	params := app.StakingKeeper.GetParams(ctx)
+	params.ValidatorBondFactor = initialBondFactor
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// Decrease the validator bond from 10 to 5 (minus 5)
+	// This will adjust the cap (factor * shares)
+	// from (100 * 10 = 1000) to (100 * 5 = 500)
+	// Since this is still above the initial liquid shares of 200, this will succeed
+	decreaseAmount, expectedBondShares := sdk.NewDec(5), sdk.NewDec(5)
+	err := app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, &initialValidator, decreaseAmount)
+	require.NoError(t, err)
+
+	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
+	require.True(t, found)
+	require.Equal(t, expectedBondShares, actualValidator.ValidatorBondShares, "validator bond shares shares")
+
+	// Now attempt to decrease the validator bond again from 5 to 1 (minus 4)
+	// This time, the cap will be reduced to (factor * shares) = (100 * 1) = 100
+	// However, the liquid shares are currently 200, so this should fail
+	decreaseAmount, expectedBondShares = sdk.NewDec(4), sdk.NewDec(1)
+	validator := actualValidator
+	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, &validator, decreaseAmount)
+	require.ErrorIs(t, err, types.ErrInsufficientValidatorBondShares)
+
+	// Finally, disable the cap and attempt to decrease again
+	// This time it should succeed
+	params.ValidatorBondFactor = types.ValidatorBondCapDisabled
+	app.StakingKeeper.SetParams(ctx, params)
+
+	validator = actualValidator
+	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, &validator, decreaseAmount)
+	require.NoError(t, err)
+
+	actualValidator, found = app.StakingKeeper.GetValidator(ctx, valAddress)
+	require.True(t, found)
+	require.Equal(t, expectedBondShares, actualValidator.ValidatorBondShares, "validator bond shares shares")
 }
 
 // Tests Add/Remove/Get/SetTokenizeSharesLock
@@ -784,6 +841,51 @@ func TestTokenizeSharesLock(t *testing.T) {
 
 	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressB)
 	require.Equal(t, unlocked, status.String(), "addressB unlocked at end")
+}
+
+// Tests GetAllTokenizeSharesLocks
+func TestGetAllTokenizeSharesLocks(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 4, sdk.NewInt(1))
+
+	// Set 2 locked accounts, and two accounts with a lock expiring
+	app.StakingKeeper.AddTokenizeSharesLock(ctx, addresses[0])
+	app.StakingKeeper.AddTokenizeSharesLock(ctx, addresses[1])
+
+	unlockTime1 := time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC)
+	unlockTime2 := time.Date(2023, 1, 2, 1, 0, 0, 0, time.UTC)
+	app.StakingKeeper.SetTokenizeSharesUnlockTime(ctx, addresses[2], unlockTime1)
+	app.StakingKeeper.SetTokenizeSharesUnlockTime(ctx, addresses[3], unlockTime2)
+
+	// Defined expected locks after GetAll
+	expectedLocks := map[string]types.TokenizeShareLock{
+		addresses[0].String(): {
+			Status: types.ShareLockStatusLocked.String(),
+		},
+		addresses[1].String(): {
+			Status: types.ShareLockStatusLocked.String(),
+		},
+		addresses[2].String(): {
+			Status:         types.ShareLockStatusLockExpiring.String(),
+			CompletionTime: unlockTime1,
+		},
+		addresses[3].String(): {
+			Status:         types.ShareLockStatusLockExpiring.String(),
+			CompletionTime: unlockTime2,
+		},
+	}
+
+	// Check output from GetAll
+	actualLocks := app.StakingKeeper.GetAllTokenizeShareLocks(ctx)
+	require.Len(t, actualLocks, len(expectedLocks), "number of locks")
+
+	for i, actual := range actualLocks {
+		expected, ok := expectedLocks[actual.Address]
+		require.True(t, ok, "address %s not expected", actual.Address)
+		require.Equal(t, expected.Status, actual.Status, "tokenize share lock #%d status", i)
+		require.Equal(t, expected.CompletionTime, actual.CompletionTime, "tokenize share lock #%d completion time", i)
+	}
 }
 
 // Test Get/SetPendingTokenizeShareAuthorizations
@@ -843,7 +945,7 @@ func TestTokenizeShareAuthorizationQueue(t *testing.T) {
 	unbondingPeriod := time.Hour * 24
 	params := app.StakingKeeper.GetParams(ctx)
 	params.UnbondingTime = unbondingPeriod
-	require.NoError(t, app.StakingKeeper.SetParams(ctx, params))
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// Add each address to the queue and then increment the block time
 	// such that the times line up as follows
@@ -919,24 +1021,24 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	validators := []types.Validator{
 		{
 			// Exchange rate of 1
-			OperatorAddress:   "valA",
-			Tokens:            sdk.NewInt(100),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(100), // should be overwritten
+			OperatorAddress: "valA",
+			Tokens:          sdk.NewInt(100),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(100), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.9
-			OperatorAddress:   "valB",
-			Tokens:            sdk.NewInt(90),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(200), // should be overwritten
+			OperatorAddress: "valB",
+			Tokens:          sdk.NewInt(90),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(200), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.75
-			OperatorAddress:   "valC",
-			Tokens:            sdk.NewInt(75),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(300), // should be overwritten
+			OperatorAddress: "valC",
+			Tokens:          sdk.NewInt(75),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(300), // should be overwritten
 		},
 	}
 
@@ -1045,8 +1147,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	}
 
 	// Create validators based on the above (must use an actual validator address)
-	addresses := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper,
-		ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	addresses := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
 	validatorAddresses := map[string]sdk.ValAddress{
 		"valA": sdk.ValAddress(addresses[0]),
 		"valB": sdk.ValAddress(addresses[1]),
@@ -1062,7 +1163,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		var delegatorAddress sdk.AccAddress
 		switch {
 		case delegationCase.isLSTP:
-			delegatorAddress = createICAAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
+			delegatorAddress = createICAAccount(app, ctx)
 		case delegationCase.isTokenized:
 			delegatorAddress = createTokenizeShareModuleAccount(1)
 		default:
@@ -1090,7 +1191,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		actualValidator, found := app.StakingKeeper.GetValidator(ctx, address)
 		require.True(t, found, "validator %s should have been found after refresh", moniker)
 
-		actualLiquidShares := actualValidator.TotalLiquidShares
+		actualLiquidShares := actualValidator.LiquidShares
 		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),
 			"liquid staked shares for validator %s", moniker)
 	}

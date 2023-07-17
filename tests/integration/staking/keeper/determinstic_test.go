@@ -695,7 +695,7 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 			MaxEntries:                rapid.Uint32Min(1).Draw(t, "max-entries"),
 			HistoricalEntries:         rapid.Uint32Min(1).Draw(t, "historical-entries"),
 			MinCommissionRate:         sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
-			ValidatorBondFactor:       stakingtypes.ValidatorBondDisabled,
+			ValidatorBondFactor:       stakingtypes.ValidatorBondCapDisabled,
 			GlobalLiquidStakingCap:    sdk.NewDecWithPrec(1, 0),
 			ValidatorLiquidStakingCap: sdk.NewDecWithPrec(1, 0),
 		}
@@ -713,7 +713,7 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 		MaxEntries:                5,
 		HistoricalEntries:         5,
 		MinCommissionRate:         sdk.NewDecWithPrec(5, 2),
-		ValidatorBondFactor:       stakingtypes.ValidatorBondDisabled,
+		ValidatorBondFactor:       stakingtypes.ValidatorBondCapDisabled,
 		GlobalLiquidStakingCap:    sdk.NewDecWithPrec(1, 0),
 		ValidatorLiquidStakingCap: sdk.NewDecWithPrec(1, 0),
 	}

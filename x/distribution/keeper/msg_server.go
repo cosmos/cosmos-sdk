@@ -104,11 +104,11 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	depositer, err := sdk.AccAddressFromBech32(msg.Depositor)
+	depositor, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
 		return nil, err
 	}
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositer); err != nil {
+	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
 		return nil, err
 	}
 

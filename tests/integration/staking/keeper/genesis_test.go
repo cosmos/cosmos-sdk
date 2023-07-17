@@ -3,14 +3,17 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
-	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -121,14 +124,14 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	require.NoError(t, err)
 
 	validator := types.Validator{
-		OperatorAddress:          sdk.ValAddress("12345678901234567890").String(),
-		ConsensusPubkey:          consPub,
-		Jailed:                   false,
-		Tokens:                   sdk.NewInt(10),
-		DelegatorShares:          sdk.NewDecFromInt(sdk.NewInt(10)),
-		Description:              types.NewDescription("bloop", "", "", "", ""),
-		TotalValidatorBondShares: sdk.NewDecFromInt(sdk.NewInt(0)),
-		TotalLiquidShares:        sdk.NewDecFromInt(sdk.NewInt(0)),
+		OperatorAddress:     sdk.ValAddress("12345678901234567890").String(),
+		ConsensusPubkey:     consPub,
+		Jailed:              false,
+		Tokens:              sdk.NewInt(10),
+		DelegatorShares:     sdk.NewDecFromInt(sdk.NewInt(10)),
+		Description:         types.NewDescription("bloop", "", "", "", ""),
+		ValidatorBondShares: sdk.NewDecFromInt(sdk.NewInt(0)),
+		LiquidShares:        sdk.NewDecFromInt(sdk.NewInt(0)),
 	}
 
 	params := types.Params{
@@ -136,7 +139,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		MaxValidators:             1,
 		MaxEntries:                10,
 		BondDenom:                 "stake",
-		ValidatorBondFactor:       types.ValidatorBondDisabled,
+		ValidatorBondFactor:       types.ValidatorBondCapDisabled,
 		GlobalLiquidStakingCap:    sdk.NewDecFromInt(sdk.NewInt(1)),
 		ValidatorLiquidStakingCap: sdk.NewDecFromInt(sdk.NewInt(1)),
 	}
@@ -222,4 +225,103 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	// remove genesis validator
 	vals = vals[:100]
 	require.Equal(t, abcivals, vals)
+}
+
+func TestInitExportLiquidStakingGenesis(t *testing.T) {
+	app, ctx, addrs := bootstrapGenesisTest(t, 10)
+
+	// This test contains boilerplate from valid genesis generation
+
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
+
+	params := app.StakingKeeper.GetParams(ctx)
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, validators, 1)
+	var delegations []types.Delegation
+
+	pk0, err := codectypes.NewAnyWithValue(PKs[0])
+	require.NoError(t, err)
+
+	pk1, err := codectypes.NewAnyWithValue(PKs[1])
+	require.NoError(t, err)
+
+	// initialize the validators
+	bondedVal1 := types.Validator{
+		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
+		ConsensusPubkey: pk0,
+		Status:          types.Bonded,
+		Tokens:          valTokens,
+		DelegatorShares: sdk.NewDecFromInt(valTokens),
+		Description:     types.NewDescription("hoop", "", "", "", ""),
+	}
+	bondedVal2 := types.Validator{
+		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
+		ConsensusPubkey: pk1,
+		Status:          types.Bonded,
+		Tokens:          valTokens,
+		DelegatorShares: sdk.NewDecFromInt(valTokens),
+		Description:     types.NewDescription("bloop", "", "", "", ""),
+	}
+
+	// append new bonded validators to the list
+	validators = append(validators, bondedVal1, bondedVal2)
+
+	// mint coins in the bonded pool representing the validators coins
+	i2 := len(validators) - 1 // -1 to exclude genesis validator
+	require.NoError(t,
+		testutil.FundModuleAccount(
+			app.BankKeeper,
+			ctx,
+			types.BondedPoolName,
+			sdk.NewCoins(
+				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(i2))),
+			),
+		),
+	)
+
+	genesisDelegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations = append(delegations, genesisDelegations...)
+
+	genesisState := types.NewGenesisState(params, validators, delegations)
+
+	// LSM related test below - append stuff to genesis state and import/export it
+
+	inGenesisState := *genesisState
+
+	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.OneInt())
+	address1, address2 := addresses[0], addresses[1]
+
+	inGenesisState.TotalLiquidStakedTokens = sdk.NewInt(1_000_000)
+	inGenesisState.LastTokenizeShareRecordId = 2
+	inGenesisState.TokenizeShareRecords = []types.TokenizeShareRecord{
+		{Id: 1, Owner: address1.String(), ModuleAccount: "module1", Validator: "val1"},
+		{Id: 2, Owner: address2.String(), ModuleAccount: "module2", Validator: "val2"},
+	}
+	inGenesisState.TokenizeShareLocks = []types.TokenizeShareLock{
+		{
+			Address: address1.String(),
+			Status:  types.ShareLockStatusLocked.String(),
+		},
+		{
+			Address:        address2.String(),
+			Status:         types.ShareLockStatusLockExpiring.String(),
+			CompletionTime: time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC),
+		},
+	}
+
+	// Call init and then export genesis - confirming the same state is returned
+	app.StakingKeeper.InitGenesis(ctx, &inGenesisState)
+	outGenesisState := *app.StakingKeeper.ExportGenesis(ctx)
+
+	require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
+		"tokenize share records")
+
+	require.Equal(t, inGenesisState.LastTokenizeShareRecordId, outGenesisState.LastTokenizeShareRecordId,
+		"last tokenize share record ID")
+
+	require.Equal(t, inGenesisState.TotalLiquidStakedTokens.Int64(), outGenesisState.TotalLiquidStakedTokens.Int64(),
+		"total liquid staked")
+
+	require.ElementsMatch(t, inGenesisState.TokenizeShareLocks, outGenesisState.TokenizeShareLocks,
+		"tokenize share locks")
 }

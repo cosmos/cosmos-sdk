@@ -24,13 +24,13 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/staking/MsgUpdateParams")
 
-	legacy.RegisterAminoMsg(cdc, &MsgValidatorBond{}, "lsm/MsgValidatorBond")
-	legacy.RegisterAminoMsg(cdc, &MsgUnbondValidator{}, "lsm/MsgUnbondValidator")
-	legacy.RegisterAminoMsg(cdc, &MsgTokenizeShares{}, "lsm/MsgTokenizeShares")
-	legacy.RegisterAminoMsg(cdc, &MsgRedeemTokensForShares{}, "lsm/MsgRedeemTokensForShares")
-	legacy.RegisterAminoMsg(cdc, &MsgTransferTokenizeShareRecord{}, "lsm/MsgTransferTokenizeShareRecord")
-	legacy.RegisterAminoMsg(cdc, &MsgDisableTokenizeShares{}, "lsm/MsgDisableTokenizeShares")
-	legacy.RegisterAminoMsg(cdc, &MsgEnableTokenizeShares{}, "lsm/MsgEnableTokenizeShares")
+	legacy.RegisterAminoMsg(cdc, &MsgValidatorBond{}, "cosmos-sdk/MsgValidatorBond")
+	legacy.RegisterAminoMsg(cdc, &MsgUnbondValidator{}, "cosmos-sdk/MsgUnbondValidator")
+	legacy.RegisterAminoMsg(cdc, &MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares")
+	legacy.RegisterAminoMsg(cdc, &MsgRedeemTokensForShares{}, "cosmos-sdk/MsgRedeemTokensForShares")
+	legacy.RegisterAminoMsg(cdc, &MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeRecord")
+	legacy.RegisterAminoMsg(cdc, &MsgDisableTokenizeShares{}, "cosmos-sdk/MsgDisableTokenizeShares")
+	legacy.RegisterAminoMsg(cdc, &MsgEnableTokenizeShares{}, "cosmos-sdk/MsgEnableTokenizeShares")
 
 	cdc.RegisterInterface((*isStakeAuthorization_Validators)(nil), nil)
 	cdc.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList", nil)
@@ -49,7 +49,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgBeginRedelegate{},
 		&MsgCancelUnbondingDelegation{},
 		&MsgUpdateParams{},
-
 		&MsgValidatorBond{},
 		&MsgUnbondValidator{},
 		&MsgTokenizeShares{},

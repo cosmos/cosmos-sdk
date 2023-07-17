@@ -187,8 +187,8 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-cosmossdk.io/api v0.6.0 h1:AEpx/sRZaQEusARZqAxbg20zRXnS6e1F+uoal39trOM=
-cosmossdk.io/api v0.6.0/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
+cosmossdk.io/api v0.6.1 h1:F+tr/ntynNk2WvUcUtc556DsUnqNOvtOwPBQWdhZQlg=
+cosmossdk.io/api v0.6.1/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
 cosmossdk.io/collections v0.3.0 h1:v0eEqLBxebAV+t+Ahwf9tSJOu95HVLINwROXx2TTZ08=
 cosmossdk.io/collections v0.3.0/go.mod h1:CHE1+niUElL9ikCpevRZcp0yqQ4TU0TrEEGirN0mvIg=
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=
@@ -308,8 +308,8 @@ github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZ
 github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 h1:DJK8W/iB+s/qkTtmXSrHA49lp5O3OsR7E6z4byOLy34=
 github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/cometbft/cometbft v0.38.0-rc2 h1:qyEDCJ9P5uPl1qccc074PxNgcOO0UghvoIk39AM5K64=
-github.com/cometbft/cometbft v0.38.0-rc2/go.mod h1:5Jz0Z8YsHSf0ZaAqGvi/ifioSdVFPtEGrm8Y9T/993k=
+github.com/cometbft/cometbft v0.38.0-rc3 h1:Ly3eVPWoFu0y68PmZwLljucPdEBtfigZtqm+OV1W6dE=
+github.com/cometbft/cometbft v0.38.0-rc3/go.mod h1:5Jz0Z8YsHSf0ZaAqGvi/ifioSdVFPtEGrm8Y9T/993k=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
 github.com/cometbft/cometbft-db v0.7.0/go.mod h1:yiKJIm2WKrt6x8Cyxtq9YTEcIMPcEe4XPxhgX59Fzf0=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=

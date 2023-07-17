@@ -40,6 +40,7 @@ type AppOptions struct {
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
 	ValidatorAddressCodec stakingtypes.ValidatorAddressCodec
+	ConsensusAddressCodec stakingtypes.ConsensusAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -64,6 +65,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			FileResolver:          proto.HybridResolver,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

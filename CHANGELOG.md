@@ -48,13 +48,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (all modules) [#15901](https://github.com/cosmos/cosmos-sdk/issues/15901) All core Cosmos SDK modules query have migrated to [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli), ensuring parity between gRPC and CLI queries.
 * (types) [#16890](https://github.com/cosmos/cosmos-sdk/pull/16890) Remove `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` from `module.AppModuleBasic` interface.
-* (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default).
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
 * (x/authz) [#16869](https://github.com/cosmos/cosmos-sdk/pull/16869) Error message has been improvised in `Exec` command when grant not found.
 
 ### Bug Fixes
 
-* (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
 * (types/query) [#16905](https://github.com/cosmos/cosmos-sdk/pull/16905) – Collections Pagination now applies proper count when filtering results.
 
@@ -109,13 +107,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/consensus) [#16713](https://github.com/cosmos/cosmos-sdk/pull/16713) Add missing ABCI param in MsgUpdateParams.
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
-* (x/auth) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
 * (baseapp) [#16613](https://github.com/cosmos/cosmos-sdk/pull/16613) Ensure each message in a transaction has a registered handler, otherwise `CheckTx` will fail.
 * [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
 * (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) Panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount.
 * (baseapp) [#16700](https://github.com/cosmos/cosmos-sdk/pull/16700) Fix consensus failure in returning no response to malformed transactions.
 * (baseapp) [#16596](https://github.com/cosmos/cosmos-sdk/pull/16596) Return error during ExtendVote and VerifyVoteExtension if the request height is earlier than `VoteExtensionsEnableHeight`.
-* (x/slashing) [#16784](https://github.com/cosmos/cosmos-sdk/pull/16784) Emit event with the correct reason in SlashWithInfractionReason.
 
 ### API Breaking Changes
 
@@ -373,6 +369,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
+
+## [v0.47.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.4) - 2023-07-17
+
+### Features
+
+* (sims) [#16656](https://github.com/cosmos/cosmos-sdk/pull/16656) Add custom max gas for block for sim config with unlimited as default.
+
+### Improvements
+
+* (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default). `pruning.PruningCmd` rest unchanged for API compability, use `pruning.Cmd` instead.
+* (testutil) [#16704](https://github.com/cosmos/cosmos-sdk/pull/16704) Make app config configurator for testing configurable with external modules.
+* (deps) [#16565](https://github.com/cosmos/cosmos-sdk/pull/16565) Bump CometBFT to [v0.37.2](https://github.com/cometbft/cometbft/blob/v0.37.2/CHANGELOG.md).
+
+### Bug Fixes
+
+* (x/auth) [#16994](https://github.com/cosmos/cosmos-sdk/pull/16994) Fix regression where querying transactions events with `<=` or `>=` would not work.
+* (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
+* (x/auth) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
+* [#16588](https://github.com/cosmos/cosmos-sdk/pull/16588) Propogate snapshotter failures to the caller, (it would create an empty snapshot silently before).
+* (x/slashing) [#16784](https://github.com/cosmos/cosmos-sdk/pull/16784) Emit event with the correct reason in `SlashWithInfractionReason`.
 
 ## [v0.47.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.3) - 2023-06-08
 

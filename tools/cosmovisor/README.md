@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Cosmovisor
 
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
 * [Design](#design)
 * [Contributing](#contributing)
@@ -74,7 +74,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 * `run` - Run the configured binary using the rest of the provided arguments.
 * `version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
 * `config` - Display the current `cosmovisor` configuration, that means displaying the environment variables value that `cosmovisor` is using.
-* `add-upgrade` - Add an upgrade manually to `cosmovisor`.
+* `add-upgrade` - Add an upgrade manually to `cosmovisor`. This command allow you to easily add the binary corresponding to an upgrade in cosmovisor.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
@@ -177,6 +177,18 @@ When the upgrade mechanism is triggered, `cosmovisor` will:
 
 1. if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled, start by auto-downloading a new binary into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute);
 2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
+
+### Adding Upgrade Binary
+
+`cosmovisor` has an `add-upgrade` command that allows to easily link a binary to an upgrade. It creates a new folder in `cosmovisor/upgrades/<name>` and copies the provided executable file to `cosmovisor/upgrades/<name>/bin/<DAEMON_NAME>`.
+
+Using the `--upgrade-height` flag allows to specify at which height the binary should be switched, without going via a gorvernance proposal.
+This enables support for an emergency coordinated upgrades where the binary must be switched at a specific height, but there is no time to go through a governance proposal.
+
+:::warning
+`--upgrade-height` creates an `upgrade-info.json` file. This means if a chain upgrade via governance proposal is executed before the specified height with `--upgrade-height`, the governance proposal will overwrite the `upgrade-info.json` plan created by `add-upgrade --upgrade-height <height>`.
+Take this into consideration when using `--upgrade-height`.
+:::
 
 ### Auto-Download
 
@@ -316,11 +328,10 @@ Set the optional environment variable to trigger an automatic app restart:
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
-Create the folder for the genesis binary and copy the `simd` binary:
+Initialize cosmovisor with the current binary:
 
 ```shell
-mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
+cosmovisor init ./build/simd
 ```
 
 Now you can run cosmovisor with simapp v0.44:
@@ -341,11 +352,10 @@ Build the new version `simd` binary:
 make build
 ```
 
-Create the folder for the upgrade binary and copy the `simd` binary:
+Add the new `simd` binary and the upgrade name: 
 
 ```shell
-mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
+cosmovisor add-upgrade test1 ./build/simd
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):

@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.6.0 // indirect
+	cosmossdk.io/api v0.6.1 // indirect
 	cosmossdk.io/collections v0.3.0 // indirect
 	cosmossdk.io/core v0.9.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
@@ -38,7 +38,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230710174534-a9a079d4fb6b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 // indirect
-	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
+	github.com/cometbft/cometbft v0.38.0-rc3 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect

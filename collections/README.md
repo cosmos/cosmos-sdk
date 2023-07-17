@@ -1120,7 +1120,7 @@ func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, 
 
 ## Triple key
 
-The `collections.Triple` is a special type of key that allows to index a collection using three different keys.
+The `collections.Triple` is a special type of key composed of three keys, it's identical to `collections.Pair`.
 
 Let's see an example.
 

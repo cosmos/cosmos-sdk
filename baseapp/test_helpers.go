@@ -51,8 +51,8 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 }
 
 // Context with current {check, deliver}State of the app used by tests.
-func (app *BaseApp) NewContext(outOfConsensus bool, header cmtproto.Header) sdk.Context {
-	if outOfConsensus {
+func (app *BaseApp) NewContext(inConsensus bool, header cmtproto.Header) sdk.Context {
+	if !inConsensus {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}

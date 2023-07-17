@@ -253,6 +253,7 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 // WithInConsensus enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithInConsensus(inConsensus bool) Context {
 	c.inConsensus = inConsensus
+
 	return c
 }
 

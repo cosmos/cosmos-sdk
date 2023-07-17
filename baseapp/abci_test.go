@@ -1082,7 +1082,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 
 	wasPrepareCheckStateCalled := false
 	app.SetPrepareCheckStater(func(ctx sdk.Context) {
-		require.Equal(t, true, ctx.InConsensus())
+		require.Equal(t, true, !ctx.InConsensus())
 		wasPrepareCheckStateCalled = true
 	})
 
@@ -1103,7 +1103,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 
 	wasPrecommiterCalled := false
 	app.SetPrecommiter(func(ctx sdk.Context) {
-		require.Equal(t, false, ctx.InConsensus())
+		require.Equal(t, false, !ctx.InConsensus())
 		require.Equal(t, false, ctx.IsReCheckTx())
 		wasPrecommiterCalled = true
 	})

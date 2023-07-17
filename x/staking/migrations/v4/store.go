@@ -3,6 +3,7 @@ package v4
 import (
 	"sort"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -65,8 +66,8 @@ func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.Bina
 
 		for _, h := range creationHeights {
 			ubdEntry := types.UnbondingDelegationEntry{
-				Balance:        sdk.ZeroInt(),
-				InitialBalance: sdk.ZeroInt(),
+				Balance:        sdkmath.ZeroInt(),
+				InitialBalance: sdkmath.ZeroInt(),
 			}
 			for _, entry := range entriesAtSameCreationHeight[h] {
 				ubdEntry.Balance = ubdEntry.Balance.Add(entry.Balance)

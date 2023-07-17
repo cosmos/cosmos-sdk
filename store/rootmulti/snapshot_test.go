@@ -33,7 +33,10 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 		multiStore.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		keys = append(keys, key)
 	}
-	multiStore.LoadLatestVersion()
+	err := multiStore.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
 
 	for _, key := range keys {
 		store := multiStore.GetCommitKVStore(key).(*iavl.Store)
@@ -50,7 +53,10 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	multiStore.Commit()
-	multiStore.LoadLatestVersion()
+	err = multiStore.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
 
 	return multiStore
 }
@@ -61,8 +67,9 @@ func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.LoadLatestVersion()
-
+	if err := store.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
 	return store
 }
 
@@ -93,6 +100,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 }
 
 func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
+	t.Helper()
 	assert.Equal(t, expect.LastCommitID(), actual.LastCommitID())
 	expectIter := expect.Iterator(nil, nil)
 	expectMap := map[string][]byte{}
@@ -226,6 +234,7 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 }
 
 func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Helper()
 	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
 
 	b.ReportAllocs()
@@ -261,6 +270,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 }
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Helper()
 	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
 
 	b.ReportAllocs()

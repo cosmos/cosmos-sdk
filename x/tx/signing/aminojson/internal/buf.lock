@@ -9,8 +9,8 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: cosmos-sdk
-    commit: d5661b4f6ef64bb1b5beb6cb7bd705b7
-    digest: shake256:d187718b119b5d544691f146bd7365eaed6b3c31a94bac1c73f7dfd0298744f00c971f1aff2ba1bdb7b9da3cad5f0b44d0826408786f78c8eebb4cf6b3719c08
+    commit: 1356e87e6d1d4076b8bfb735737a0b63
+    digest: shake256:574a0e72da9b55e30257557503bd4203513e5ca06dd8bc19fb8bf375fc8525a6bab4d9995e1554db7e9c649bc3778578e0cb96182176206f0653f2a17c073c46
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto

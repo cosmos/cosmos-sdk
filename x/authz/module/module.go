@@ -90,11 +90,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	}
 }
 
-// GetQueryCmd returns the cli query commands for the authz module
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
-}
-
 // GetTxCmd returns the transaction commands for the authz module
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)

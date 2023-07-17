@@ -1,10 +1,10 @@
 package autocli
 
 import (
-	"errors"
-
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -37,7 +38,9 @@ type AppOptions struct {
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
 	// AddressCodec is the address codec to use for the app.
-	AddressCodec address.Codec
+	AddressCodec          address.Codec
+	ValidatorAddressCodec stakingtypes.ValidatorAddressCodec
+	ConsensusAddressCodec stakingtypes.ConsensusAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -58,7 +61,11 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: appOptions.AddressCodec,
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          proto.HybridResolver,
+			AddressCodec:          appOptions.AddressCodec,
+			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -71,8 +78,8 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if builder.AddressCodec == nil {
-		return errors.New("address codec is required in builder")
+	if err := builder.Validate(); err != nil {
+		return err
 	}
 
 	// extract any custom commands from modules

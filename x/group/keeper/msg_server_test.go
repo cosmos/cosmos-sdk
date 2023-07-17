@@ -3332,9 +3332,11 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					Admin:              s.addrs[0].String(),
 					GroupPolicyAddress: groupPolicyAddr,
 				}
-				newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
-
-				_, err := k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
+				err := newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
+				if err != nil {
+					return err
+				}
+				_, err = k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
 				return err
 			},
 			expErrMsg: "PROPOSAL_STATUS_ABORTED",

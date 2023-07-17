@@ -128,17 +128,28 @@ func NewSimApp(
 				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
 				//
 				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
-
+				//
 				// For providing a custom a base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
-
+				//
 				// For providing a different address codec, add it below.
 				// By default the auth module uses a Bech32 address codec,
 				// with the prefix defined in the auth module configuration.
 				//
 				// func() address.Codec { return <- custom address codec type -> }
+
+				//
+				// STAKING
+				//
+				// For provinding a different validator and consensus address codec, add it below.
+				// By default the staking module uses the bech32 prefix provided in the auth config,
+				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
+				// When providing a custom address codec in auth, a custom codec must be provided here as well.
+				//
+				// func() stakingtypes.ValidatorAddressCodec { return <- custom validator address codec type -> }
+				// func() stakingtypes.ConsensusAddressCodec { return <- custom consensus address codec type -> }
 
 				//
 				// MINT

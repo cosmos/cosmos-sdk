@@ -31,6 +31,18 @@ func TestQueryAccount(t *testing.T) {
 	require.Equal(t, res.Permission.LimitTypeUrls, []string{
 		"test",
 	})
+
+	// test invalid address
+	res, err = qs.Account(f.ctx, &types.QueryAccountRequest{Address: "invalid"})
+	require.Error(t, err)
+	require.ErrorContains(t, err, "invalid bech32 string")
+	require.Nil(t, res)
+
+	// test account not found
+	res, err = qs.Account(f.ctx, &types.QueryAccountRequest{Address: addresses[1]})
+	require.Error(t, err)
+	require.ErrorContains(t, err, "not found")
+	require.Nil(t, res)
 }
 
 func TestQueryAccounts(t *testing.T) {
@@ -40,19 +52,26 @@ func TestQueryAccounts(t *testing.T) {
 	add, err := f.ac.StringToBytes(addresses[0])
 	require.NoError(t, err)
 
-	err = f.keeper.Permissions.Set(f.ctx, add, f.mockPerms)
-	require.NoError(t, err)
-
 	// create a new query server
 	qs := keeper.NewQueryServer(f.keeper)
 
-	// test the Accounts method
+	// test the Accounts method with no accounts
 	res1, err := qs.Accounts(f.ctx, &types.QueryAccountsRequest{
 		Pagination: &query.PageRequest{Limit: 10},
 	})
 	require.NoError(t, err)
+	require.Len(t, res1.Accounts, 0)
 
-	for _, a := range res1.Accounts {
+	err = f.keeper.Permissions.Set(f.ctx, add, f.mockPerms)
+	require.NoError(t, err)
+
+	// test the Accounts method
+	res2, err := qs.Accounts(f.ctx, &types.QueryAccountsRequest{
+		Pagination: &query.PageRequest{Limit: 10},
+	})
+	require.NoError(t, err)
+
+	for _, a := range res2.Accounts {
 		require.Equal(t, addresses[0], a.Address)
 		require.Equal(t, f.mockPerms, *a.Permissions)
 	}
@@ -64,13 +83,18 @@ func TestQueryDisabledList(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	require.NoError(t, f.keeper.DisableList.Set(f.ctx, f.mockMsgURL))
-
 	// create a new query server
 	qs := keeper.NewQueryServer(f.keeper)
 
 	// test the DisabledList method
 	disabledList, err := qs.DisabledList(f.ctx, &types.QueryDisabledListRequest{})
+	require.NoError(t, err)
+	require.Len(t, disabledList.DisabledList, 0)
+
+	require.NoError(t, f.keeper.DisableList.Set(f.ctx, f.mockMsgURL))
+
+	// test the DisabledList method
+	disabledList, err = qs.DisabledList(f.ctx, &types.QueryDisabledListRequest{})
 	require.NoError(t, err)
 	require.Equal(t, []string{f.mockMsgURL}, disabledList.DisabledList)
 }

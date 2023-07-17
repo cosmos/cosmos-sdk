@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -50,7 +50,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 
 	var err error
@@ -72,11 +72,11 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.ClientCtx,
 		val.Address,
 		account,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
 		address.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -119,9 +119,13 @@ func (s *E2ETestSuite) SetupSuite() {
 		}
 
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
-		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-		s.Require().NoError(err, out.String())
 		s.Require().NoError(s.network.WaitForNextBlock())
+		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+		s.Require().NoError(err)
+
+		var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+		s.Require().Len(groupPoliciesResp.GroupPolicies, i+1)
 	}
 	// create group policy with percentage decision policy
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
@@ -139,13 +143,13 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+	s.Require().NoError(err)
 
-	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 6)
-	s.groupPolicies = res.GroupPolicies
+	var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+	s.Require().Equal(len(groupPoliciesResp.GroupPolicies), 6)
+	s.groupPolicies = groupPoliciesResp.GroupPolicies
 
 	// create a proposal
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
@@ -179,18 +183,18 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/proposal/1", val.APIAddress))
+	s.Require().NoError(err)
 
 	var proposalRes group.QueryProposalResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposalRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &proposalRes))
 	s.proposal = proposalRes.Proposal
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/1/%s", val.APIAddress, val.Address.String()))
+	s.Require().NoError(err)
 
 	var voteRes group.QueryVoteByProposalVoterResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &voteRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &voteRes))
 	s.vote = voteRes.Vote
 
 	s.voter = &group.Member{
@@ -205,21 +209,6 @@ func (s *E2ETestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Events), 0)
-	s.Require().NotNil(txResp.Events[0])
-	events := txResp.Events
-	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
-
-	for _, e := range events {
-		if e.Type == createProposalEvent.Type {
-			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
-		}
-	}
-
-	return ""
-}
-
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns
 // the path to the JSON file.
 func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata, title, summary string) string {
@@ -229,7 +218,7 @@ func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom,
 	msg := banktypes.MsgSend{
 		FromAddress: sendFrom,
 		ToAddress:   sendTo,
-		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(20))),
 	}
 	msgJSON, err := s.cfg.Codec.MarshalInterfaceJSON(&msg)
 	s.Require().NoError(err)
@@ -271,17 +260,17 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", val.APIAddress, groupID))
+	s.Require().NoError(err)
 
 	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
 	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(tokens))),
 		address.NewBech32Codec("cosmos"),
 		s.commonFlags...,
 	)

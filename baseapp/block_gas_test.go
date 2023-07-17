@@ -117,12 +117,13 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			bapp.InitChain(&abci.RequestInitChain{
+			_, err = bapp.InitChain(&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 
+			require.NoError(t, err)
 			ctx := bapp.NewContext(false)
 
 			// tx fee

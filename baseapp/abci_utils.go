@@ -50,7 +50,7 @@ type (
 
 // ValidateVoteExtensions defines a helper function for verifying vote extension
 // signatures that may be passed or manually injected into a block proposal from
-// a proposer in ProcessProposal. It returns an error if any signature is invalid
+// a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
 func ValidateVoteExtensions(
@@ -61,7 +61,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight > 0
+	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
@@ -72,7 +72,7 @@ func ValidateVoteExtensions(
 		return buf.Bytes(), nil
 	}
 
-	var sumVP math.Int
+	sumVP := math.NewInt(0)
 	for _, vote := range extCommit.Votes {
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {

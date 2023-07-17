@@ -55,12 +55,6 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// GetSigners returns the expected signers for a MsgSubmitProposal.
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return []sdk.AccAddress{proposer}
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
@@ -71,32 +65,14 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// GetSigners returns the expected signers for a MsgDeposit.
-func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
-}
-
 // NewMsgVote creates a message to cast a vote on an active proposal
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
 
-// GetSigners returns the expected signers for a MsgVote.
-func (msg MsgVote) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
-}
-
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
-}
-
-// GetSigners returns the expected signers for a MsgVoteWeighted.
-func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
 }
 
 // NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.
@@ -105,12 +81,6 @@ func NewMsgExecLegacyContent(content *codectypes.Any, authority string) *MsgExec
 		Content:   content,
 		Authority: authority,
 	}
-}
-
-// GetSigners returns the expected signers for a MsgExecLegacyContent.
-func (c MsgExecLegacyContent) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(c.Authority)
-	return []sdk.AccAddress{authority}
 }
 
 // ValidateBasic implements the sdk.Msg interface.
@@ -129,22 +99,10 @@ func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 	return unpacker.UnpackAny(c.Content, &content)
 }
 
-// GetSigners returns the expected signers for a MsgUpdateParams.
-func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
-}
-
 // NewMsgCancelProposal creates a new MsgCancelProposal instance.
 func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal {
 	return &MsgCancelProposal{
 		ProposalId: proposalID,
 		Proposer:   proposer,
 	}
-}
-
-// GetSigners implements Msg
-func (msg MsgCancelProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(msg.Proposer)
-	return []sdk.AccAddress{proposer}
 }

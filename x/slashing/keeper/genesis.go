@@ -9,24 +9,33 @@ import (
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
 func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
-	stakingKeeper.IterateValidators(ctx,
+	err := stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator stakingtypes.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)
 			}
 
-			keeper.AddPubkey(ctx, consPk)
+			err = keeper.AddPubkey(ctx, consPk)
+			if err != nil {
+				panic(err)
+			}
 			return false
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	for _, info := range data.SigningInfos {
 		address, err := sdk.ConsAddressFromBech32(info.Address)
 		if err != nil {
 			panic(err)
 		}
-		keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		err = keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, array := range data.MissedBlocks {
@@ -42,7 +51,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 		}
 	}
 
-	if err := keeper.SetParams(ctx, data.Params); err != nil {
+	if err := keeper.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 }
@@ -51,13 +60,13 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 // to a genesis file, which can be imported again
 // with InitGenesis
 func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
-	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	err = keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
@@ -76,6 +85,8 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 
 		return false
 	})
-
+	if err != nil {
+		panic(err)
+	}
 	return types.NewGenesisState(params, signingInfos, missedBlocks)
 }

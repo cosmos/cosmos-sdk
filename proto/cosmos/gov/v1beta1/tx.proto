@@ -11,7 +11,7 @@ import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
 
-// Msg defines the bank Msg service.
+// Msg defines the gov Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 

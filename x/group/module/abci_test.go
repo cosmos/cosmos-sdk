@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -65,7 +66,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	s.ctx = ctx
 
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, math.NewInt(30000000))
 
 	s.addressCodec = codecaddress.NewBech32Codec("cosmos")
 }
@@ -338,7 +339,8 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 
 			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
@@ -540,7 +542,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			spec := spec
 			pID := spec.preRun(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})

@@ -29,6 +29,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+* [#17024](https://github.com/cosmos/cosmos-sdk/pull/17024) - Introduces `Triple`, a composite key with three keys.
+
 ## [v0.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.3.0)
 
 ### Features

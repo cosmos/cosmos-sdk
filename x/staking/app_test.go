@@ -1,6 +1,7 @@
 package staking_test
 
 import (
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -45,6 +46,8 @@ func TestStakingMsgs(t *testing.T) {
 		{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}},
 		{GenesisAccount: acc2, Coins: sdk.Coins{genCoin}},
 	}
+
+	fmt.Println(acc1, acc2)
 
 	var (
 		bankKeeper    bankKeeper.Keeper

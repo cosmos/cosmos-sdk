@@ -15,7 +15,7 @@ import (
 var _ DelegationI = Delegation{}
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr string, validatorAddr string, shares math.LegacyDec) Delegation {
+func NewDelegation(delegatorAddr, validatorAddr string, shares math.LegacyDec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr,
 		ValidatorAddress: validatorAddr,

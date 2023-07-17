@@ -894,15 +894,6 @@ func (k Keeper) Delegate(
 		return math.LegacyZeroDec(), err
 	}
 
-	if err != nil {
-		return math.LegacyZeroDec(), err
-	}
-
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
-	if err != nil {
-		return math.LegacyZeroDec(), err
-	}
-
 	// if subtractAccount is true then we are
 	// performing a delegation and not a redelegation, thus the source tokens are
 	// all non bonded
@@ -928,7 +919,7 @@ func (k Keeper) Delegate(
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmt))
-		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, sendName, coins); err != nil {
+		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delAddr, sendName, coins); err != nil {
 			return math.LegacyDec{}, err
 		}
 	} else {
@@ -972,7 +963,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Call the after-modification hook
-	if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, valAddr); err != nil {
 		return newShares, err
 	}
 

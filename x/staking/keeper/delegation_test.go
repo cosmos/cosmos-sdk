@@ -462,7 +462,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	require.True(validator.IsBonded())
 
-	selfDelegation := stakingtypes.NewDelegation(addrVals[0].String(), addrVals[0].String(), issuedShares)
+	selfDelegation := stakingtypes.NewDelegation(addrDels[0].String(), addrVals[0].String(), issuedShares)
 	require.NoError(keeper.SetDelegation(ctx, selfDelegation))
 
 	// create a second delegation to this validator

@@ -90,10 +90,9 @@ By default, sends the [amount] to each address of the list.
 Using the '--split' flag, the [amount] is split equally between the addresses.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address] and 
 separate addresses with space.
-When using '--dry-run' a key name cannot be used, only a bech32 address.
-Example: ./simd tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake
-`,
-		Args: cobra.MinimumNArgs(4),
+When using '--dry-run' a key name cannot be used, only a bech32 address.`,
+		Example: "./simd tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake",
+		Args:    cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
 			if err != nil {

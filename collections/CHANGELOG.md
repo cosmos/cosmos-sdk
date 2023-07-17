@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* []() Make collections implement the `appmodule.HasGenesis` interface.
+* [#17021](https://github.com/cosmos/cosmos-sdk/pull/17021) Make collections implement the `appmodule.HasGenesis` interface.
 
 ## [v0.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.3.0)
 

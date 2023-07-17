@@ -3,6 +3,7 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -67,14 +68,24 @@ func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 // amount from the account's available balance. If the user doesn't have enough
 // funds for paying fees, it returns empty coins.
 func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Coins, error) {
-	if spendableCoins.Empty() {
+	spendable := sdk.NewCoins()
+	// remove liquid staking denoms from spendable coins since fees cannot be paid in those denoms
+	valoperPrefix := fmt.Sprintf("%s%s%s", sdk.Bech32MainPrefix, sdk.PrefixValidator, sdk.PrefixOperator)
+	for _, coin := range spendableCoins {
+		if strings.Contains(coin.Denom, valoperPrefix) {
+			continue
+		}
+		spendable = append(spendable, coin)
+	}
+
+	if spendable.Empty() {
 		return nil, nil
 	}
 
-	perm := r.Perm(len(spendableCoins))
+	perm := r.Perm(len(spendable))
 	var randCoin sdk.Coin
 	for _, index := range perm {
-		randCoin = spendableCoins[index]
+		randCoin = spendable[index]
 		if !randCoin.Amount.IsZero() {
 			break
 		}

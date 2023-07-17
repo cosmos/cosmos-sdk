@@ -70,9 +70,8 @@ func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	spendable := sdk.NewCoins()
 	// remove liquid staking denoms from spendable coins since fees cannot be paid in those denoms
-	valoperPrefix := fmt.Sprintf("%s%s%s", sdk.Bech32MainPrefix, sdk.PrefixValidator, sdk.PrefixOperator)
 	for _, coin := range spendableCoins {
-		if strings.Contains(coin.Denom, valoperPrefix) {
+		if strings.Contains(coin.Denom, sdk.Bech32PrefixValAddr) {
 			continue
 		}
 		spendable = append(spendable, coin)

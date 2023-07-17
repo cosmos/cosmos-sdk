@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -208,21 +207,6 @@ func (s *E2ETestSuite) SetupSuite() {
 func (s *E2ETestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
-}
-
-func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Events), 0)
-	s.Require().NotNil(txResp.Events[0])
-	events := txResp.Events
-	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
-
-	for _, e := range events {
-		if e.Type == createProposalEvent.Type {
-			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
-		}
-	}
-
-	return ""
 }
 
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns

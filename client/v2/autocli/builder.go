@@ -32,6 +32,10 @@ func (b *Builder) Validate() error {
 		return errors.New("validator address codec is required in builder")
 	}
 
+	if b.ConsensusAddressCodec == nil {
+		return errors.New("consensus address codec is required in builder")
+	}
+
 	if b.TypeResolver == nil {
 		return errors.New("type resolver is required in builder")
 	}

@@ -124,6 +124,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			messages, err := proposal.GetMsgs()
 			if err != nil {
 				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed proposal (%v) failed to execute; msgs: %s", proposal, err)
 
@@ -157,6 +158,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				ctx.EventManager().EmitEvents(events)
 			} else {
 				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
@@ -182,6 +184,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			logMsg = "expedited proposal converted to regular"
 		default:
 			proposal.Status = v1.StatusRejected
+			proposal.FailedReason = "proposal did not get enough votes to pass"
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}

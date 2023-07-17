@@ -396,7 +396,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.13.3
+protoVer=0.13.4
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

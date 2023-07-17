@@ -1,5 +1,5 @@
-cosmossdk.io/api v0.5.0 h1:C0gzb5N3qYE0VEUlXleuilv7Z/7/MHhdOKkgn2Ugfnc=
-cosmossdk.io/api v0.5.0/go.mod h1:5Jc00Q4tSTcrZXvvE3J/ybvZK6DopLcp3ThK3X703QE=
+cosmossdk.io/api v0.6.1 h1:F+tr/ntynNk2WvUcUtc556DsUnqNOvtOwPBQWdhZQlg=
+cosmossdk.io/api v0.6.1/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=
 cosmossdk.io/core v0.9.0/go.mod h1:NFgl5r41Q36+RixTvyrfsS6qQ65agCbZ1FTpnN7/G1Y=
 cosmossdk.io/errors v1.0.0 h1:nxF07lmlBbB8NKQhtJ+sJm6ef5uV1XkvPXG2bUntb04=

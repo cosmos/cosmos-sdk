@@ -13,7 +13,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := types.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(s.genesisAccountBalance))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(s.genesisAccountBalance))),
 	}
 
 	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -83,18 +83,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: sims.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	},
 	)
+	s.NoError(err)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
 	})
+	s.NoError(err)
 
 	// end of app init
 
@@ -129,7 +131,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	)
 	s.Require().NoError(err)
 	bal := res.GetBalance()
-	s.Equal(sdk.NewCoin(denom, sdkmath.NewInt(s.genesisAccountBalance)), *bal)
+	s.Equal(sdk.NewCoin(denom, math.NewInt(s.genesisAccountBalance)), *bal)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -51,12 +51,12 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
 	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)
 
-	suite.baseApp.InitChain(
+	_, err := suite.baseApp.InitChain(
 		&abci.RequestInitChain{
 			ConsensusParams: &tmproto.ConsensusParams{},
 		},
 	)
-
+	require.NoError(t, err)
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
@@ -103,8 +103,8 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 			// require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
 		}
 
-		suite.baseApp.Commit()
-
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
 		require.Equal(t, expectedChangeSet, mockListener1.ChangeSet, "should contain the same changeSet")
 		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
 	}
@@ -119,9 +119,10 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
 	suite := NewBaseAppSuite(t, streamingManagerOpt, addListenerOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &tmproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	ctx := getFinalizeBlockStateCtx(suite.baseApp)
 	sm := ctx.StreamingManager()
@@ -133,14 +134,15 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 
 	for blockN := 0; blockN < nBlocks; blockN++ {
 
-		suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
-
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
+		require.NoError(t, err)
 		ctx := getFinalizeBlockStateCtx(suite.baseApp)
 		sm := ctx.StreamingManager()
 		require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
 		require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
 		require.Equal(t, true, sm.StopNodeOnErr, "should contain StopNodeOnErr = true")
 
-		suite.baseApp.Commit()
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
 	}
 }

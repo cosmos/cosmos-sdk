@@ -254,6 +254,7 @@ type precedenceCommon struct {
 }
 
 func newPrecedenceCommon(t *testing.T) precedenceCommon {
+	t.Helper()
 	retval := precedenceCommon{}
 
 	// Determine the env. var. name based off the executable name
@@ -295,6 +296,7 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 }
 
 func (v precedenceCommon) setAll(t *testing.T, setFlag, setEnvVar, setConfigFile *string) {
+	t.Helper()
 	if setFlag != nil {
 		if err := v.cmd.Flags().Set(v.flagName, *setFlag); err != nil {
 			t.Fatalf("Failed setting flag %q", v.flagName)

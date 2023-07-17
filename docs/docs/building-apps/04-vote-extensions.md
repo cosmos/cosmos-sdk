@@ -65,3 +65,57 @@ is just a slice of byte slices.
 `FinalizeBlock` will ignore any byte slice that doesn't implement an `sdk.Tx` so
 any injected vote extensions will safely be ignored in `FinalizeBlock`. For more
 details on propagation, see the [ABCI++ 2.0 ADR](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-064-abci-2.0.md#vote-extension-propagation--verification).
+
+### Recovery of injected Vote Extensions
+
+As stated before, vote extensions can be injected in a block proposal (along with
+other transactions in the `Txs` field). The Cosmos SDK provides a pre-FinalizeBlock
+hook to allow applications to recover vote extensions, perform any necessary
+computation on them, and then store the results in the cached store. These results
+will be available to the application during the subsequent `FinalizeBlock` call.
+
+An example of how a pre-FinalizeBlock hook could look like is shown below:
+
+```go
+app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+    allVEs := []VE{} // store all parsed vote extensions here
+    for _, tx := range req.Txs {
+        // define a custom function that tries to parse the tx as a vote extension
+        ve, ok := parseVoteExtension(tx)
+        if !ok {
+            continue
+        }
+
+        allVEs = append(allVEs, ve)
+    }
+
+    // perform any necessary computation on the vote extensions and store the result
+    // in the cached store
+    result := compute(allVEs)
+    err := storeVEResult(ctx, result)
+    if err != nil {
+        return err
+    }
+
+    return nil
+})
+
+```
+
+Then in an app's module the application can retrieve the result of the computation
+of vote extensions from the cached store:
+
+```go
+func (k Keeper) BeginBlocker(ctx context.Context) error {
+    // retrieve the result of the computation of vote extensions from the cached store
+    result, err := k.GetVEResult(ctx)
+    if err != nil {
+        return err
+    }
+
+    // use the result of the computation of vote extensions
+    k.setSomething(result)
+
+    return nil
+}
+```

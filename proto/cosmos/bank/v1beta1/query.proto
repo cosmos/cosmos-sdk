@@ -267,6 +267,7 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
+  // params provides the parameters of the bank module.
   Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 

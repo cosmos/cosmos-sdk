@@ -71,8 +71,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	//nolint:staticcheck // used for legacy testing
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState)
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // we're testing the old way here
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }

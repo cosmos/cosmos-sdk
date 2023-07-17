@@ -5,6 +5,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/math"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -34,7 +36,8 @@ func getTestProposal() []sdk.Msg {
 }
 
 func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, sdk.NewInt(30000000))
+	t.Helper()
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, math.NewInt(30000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
 
@@ -45,21 +48,21 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
 	assert.NilError(t, err)
 
-	f.stakingKeeper.SetValidator(f.ctx, val1)
-	f.stakingKeeper.SetValidator(f.ctx, val2)
-	f.stakingKeeper.SetValidator(f.ctx, val3)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val1)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val2)
-	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val3)
-	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val1)
-	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val2)
-	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3)
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val2))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val3))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val2))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val3))
+	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val1))
+	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val2))
+	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3))
 
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[2], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 
-	f.stakingKeeper.EndBlocker(f.ctx)
-
+	_, err = f.stakingKeeper.EndBlocker(f.ctx)
+	assert.NilError(t, err)
 	return addrs, valAddrs
 }

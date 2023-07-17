@@ -83,7 +83,10 @@ func SlashValidator(
 			effectiveFraction = math.LegacyOneDec()
 		}
 		// call the before-slashed hook
-		distrKeeper.Hooks().BeforeValidatorSlashed(ctx, validator.GetOperator(), effectiveFraction)
+		err := distrKeeper.Hooks().BeforeValidatorSlashed(ctx, validator.GetOperator(), effectiveFraction)
+		if err != nil {
+			panic(err)
+		}
 	}
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.

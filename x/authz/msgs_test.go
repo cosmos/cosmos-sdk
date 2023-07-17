@@ -40,7 +40,9 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 	require.Equal(a, &g)
 
 	g = authz.GenericAuthorization{Msg: "some_type2"}
-	m.SetAuthorization(&g)
+	err = m.SetAuthorization(&g)
+	require.NoError(err)
+
 	a, err = m.GetAuthorization()
 	require.NoError(err)
 	require.Equal(a, &g)
@@ -71,7 +73,7 @@ func TestAminoJSON(t *testing.T) {
 	require.NoError(t, err)
 	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq")
 	require.NoError(t, err)
-	stakingAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{valAddr}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &sdk.Coin{Denom: "stake", Amount: sdk.NewInt(1000)})
+	stakingAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{valAddr}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &sdk.Coin{Denom: "stake", Amount: sdkmath.NewInt(1000)})
 	require.NoError(t, err)
 	delegateGrant, err := authz.NewGrant(blockTime, stakingAuth, nil)
 	require.NoError(t, err)

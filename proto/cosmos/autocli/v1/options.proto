@@ -31,7 +31,7 @@ message ServiceCommandDescriptor {
   // sub-command.
   map<string, ServiceCommandDescriptor> sub_commands = 3;
 
-  // enhance_custom_commands specifies wether to skip the service when generating commands, if a custom command already exists,
+  // enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already exists,
   // or enhance the existing command. If set to true, the custom command will be enhanced with the services from gRPC.
   // otherwise when a custom command exists, no commands will be generated for the service.
   bool enhance_custom_command = 4;

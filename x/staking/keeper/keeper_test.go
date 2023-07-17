@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	require := s.Require()
 
 	expTotalPower := math.NewInt(10 ^ 9)
-	require.NoError(keeper.SetLastTotalPower(ctx, expTotalPower))
-	resTotalPower, err := keeper.GetLastTotalPower(ctx)
+	require.NoError(keeper.LastTotalPower.Set(ctx, expTotalPower))
+	resTotalPower, err := keeper.LastTotalPower.Get(ctx)
 	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))
 }

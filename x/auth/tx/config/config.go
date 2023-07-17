@@ -1,19 +1,30 @@
 package tx
 
 import (
+	"context"
 	"fmt"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/registry"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -21,23 +32,21 @@ import (
 func init() {
 	appmodule.Register(&txconfigv1.Config{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideProtoRegistry),
 	)
 }
 
 type ModuleInputs struct {
 	depinject.In
-
 	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
-
-	AccountKeeper ante.AccountKeeper `optional:"true"`
+	ProtoFileResolver   txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper authtypes.BankKeeper `optional:"true"`
-	// TxBankKeeper is the expected bank keeper to be passed to Textual
-	TxBankKeeper   BankKeeper
-	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
-
-	CustomSignModeHandlers func() []signing.SignModeHandler `optional:"true"`
+	BankKeeper             authtypes.BankKeeper               `optional:"true"`
+	MetadataBankKeeper     BankKeeper                         `optional:"true"`
+	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
+	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
+	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -47,16 +56,40 @@ type ModuleOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
+func ProvideProtoRegistry() txsigning.ProtoFileResolver {
+	return registry.MergedProtoRegistry()
+}
+
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	textual, err := NewTextualWithBankKeeper(in.TxBankKeeper)
+	var customSignModeHandlers []txsigning.SignModeHandler
+	if in.CustomSignModeHandlers != nil {
+		customSignModeHandlers = in.CustomSignModeHandlers()
+	}
+	sdkConfig := sdk.GetConfig()
+
+	txConfigOptions := tx.ConfigOptions{
+		EnabledSignModes: tx.DefaultSignModes,
+		SigningOptions: &txsigning.Options{
+			FileResolver: in.ProtoFileResolver,
+			// From static config? But this is already in auth config.
+			// - Provide codecs there as types?
+			// - Provide static prefix there exported from config?
+			// - Just do as below?
+			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
+			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+		},
+		CustomSignModes: customSignModeHandlers,
+	}
+
+	// enable SIGN_MODE_TEXTUAL only if bank keeper is available
+	if in.MetadataBankKeeper != nil {
+		txConfigOptions.EnabledSignModes = append(txConfigOptions.EnabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
+	}
+
+	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
 	if err != nil {
 		panic(err)
-	}
-	var txConfig client.TxConfig
-	if in.CustomSignModeHandlers == nil {
-		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
-	} else {
-		txConfig = tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual, in.CustomSignModeHandlers()...)
 	}
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -120,4 +153,60 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 	}
 
 	return anteHandler, nil
+}
+
+// NewBankKeeperCoinMetadataQueryFn creates a new Textual struct using the given
+// BankKeeper to retrieve coin metadata.
+//
+// Note: Once we switch to ADR-033, and keepers become ADR-033 clients to each
+// other, this function could probably be deprecated in favor of
+// `NewTextualWithGRPCConn`.
+func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn {
+	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+		res, err := bk.DenomMetadataV2(ctx, &bankv1beta1.QueryDenomMetadataRequest{Denom: denom})
+		if err != nil {
+			return nil, metadataExists(err)
+		}
+
+		return res.Metadata, nil
+	}
+}
+
+// NewGRPCCoinMetadataQueryFn returns a new Textual instance where the metadata
+// queries are done via gRPC using the provided GRPC client connection. In the
+// SDK, you can pass a client.Context as the GRPC connection.
+//
+// Example:
+//
+//	clientCtx := client.GetClientContextFromCmd(cmd)
+//	txt := tx.NewTextualWithGRPCConn(clientCtxx)
+func NewGRPCCoinMetadataQueryFn(grpcConn grpc.ClientConnInterface) textual.CoinMetadataQueryFn {
+	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+		bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)
+		res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
+			Denom: denom,
+		})
+		if err != nil {
+			return nil, metadataExists(err)
+		}
+
+		return res.Metadata, nil
+	}
+}
+
+// metadataExists parses the error, and only propagates the error if it's
+// different than a "not found" error.
+func metadataExists(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return err
+	}
+
+	// This means we didn't find any metadata for this denom. Returning
+	// empty metadata.
+	if status.Code() == codes.NotFound {
+		return nil
+	}
+
+	return err
 }

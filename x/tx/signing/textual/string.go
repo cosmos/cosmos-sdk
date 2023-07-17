@@ -21,7 +21,7 @@ func (sr stringValueRenderer) Format(_ context.Context, v protoreflect.Value) ([
 
 func (sr stringValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 	return protoreflect.ValueOfString(screens[0].Content), nil
 }

@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/helpers"
-
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 const (
@@ -19,6 +19,7 @@ const (
 	flagVestingEnd   = "vesting-end-time"
 	flagVestingAmt   = "vesting-amount"
 	flagAppendMode   = "append"
+	flagModuleName   = "module-name"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -71,8 +72,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingStart, _ := cmd.Flags().GetInt64(flagVestingStart)
 			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
+			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			return auth.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd)
+			return genutil.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 
@@ -82,6 +84,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
 	cmd.Flags().Bool(flagAppendMode, false, "append the coins to an account already in the genesis.json file")
+	cmd.Flags().String(flagModuleName, "", "module account name")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

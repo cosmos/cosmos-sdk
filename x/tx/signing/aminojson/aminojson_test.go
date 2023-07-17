@@ -106,7 +106,7 @@ func TestAminoJsonSignMode(t *testing.T) {
 func TestNewSignModeHandler(t *testing.T) {
 	handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
 	require.NotNil(t, handler)
-	aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	handler = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 		FileResolver: protoregistry.GlobalFiles,
 		TypeResolver: protoregistry.GlobalTypes,

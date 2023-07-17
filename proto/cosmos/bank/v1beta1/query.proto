@@ -146,7 +146,7 @@ message QueryAllBalancesRequest {
 
   // resolve_denom is the flag to resolve the denom into a human-readable form from the metadata.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   bool resolve_denom = 3;
 }
 
@@ -267,6 +267,7 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
+  // params provides the parameters of the bank module.
   Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 

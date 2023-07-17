@@ -6,14 +6,22 @@ import (
 	"testing"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
-	stackingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestHistoricalKeysMigration(t *testing.T) {
@@ -56,7 +64,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	}
 
 	// migrate store to new key format
-	require.NoErrorf(t, v5.MigrateStore(ctx, storeKey), "v5.MigrateStore failed, seed: %d", seed)
+	require.NoErrorf(t, v5.MigrateStore(ctx, store, cdc), "v5.MigrateStore failed, seed: %d", seed)
 
 	// check results
 	for _, tc := range testCases {
@@ -66,6 +74,58 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	}
 }
 
-func createHistoricalInfo(height int64, chainID string) *stackingtypes.HistoricalInfo {
-	return &stackingtypes.HistoricalInfo{Header: cmtproto.Header{ChainID: chainID, Height: height}}
+func createHistoricalInfo(height int64, chainID string) *stakingtypes.HistoricalInfo {
+	return &stakingtypes.HistoricalInfo{Header: cmtproto.Header{ChainID: chainID, Height: height}}
+}
+
+func TestDelegationsByValidatorMigrations(t *testing.T) {
+	cdc := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}).Codec
+	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
+	ctx := testutil.DefaultContext(storeKey, tKey)
+	store := ctx.KVStore(storeKey)
+
+	accAddrs := sims.CreateIncrementalAccounts(11)
+	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs[0:1])
+	var addedDels []stakingtypes.Delegation
+
+	for i := 1; i < 11; i++ {
+		del1 := stakingtypes.NewDelegation(accAddrs[i], valAddrs[0], sdkmath.LegacyNewDec(100))
+		store.Set(stakingtypes.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
+		addedDels = append(addedDels, del1)
+	}
+
+	// before migration the state of delegations by val index should be empty
+	dels := getValDelegations(ctx, cdc, storeKey, valAddrs[0])
+	assert.Len(t, dels, 0)
+
+	err := v5.MigrateStore(ctx, store, cdc)
+	assert.NoError(t, err)
+
+	// after migration the state of delegations by val index should not be empty
+	dels = getValDelegations(ctx, cdc, storeKey, valAddrs[0])
+	assert.Len(t, dels, len(addedDels))
+	assert.Equal(t, addedDels, dels)
+}
+
+func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.StoreKey, valAddr sdk.ValAddress) []stakingtypes.Delegation {
+	var delegations []stakingtypes.Delegation
+
+	store := ctx.KVStore(storeKey)
+	iterator := storetypes.KVStorePrefixIterator(store, stakingtypes.GetDelegationsByValPrefixKey(valAddr))
+	for ; iterator.Valid(); iterator.Next() {
+		var delegation stakingtypes.Delegation
+		valAddr, delAddr, err := stakingtypes.ParseDelegationsByValKey(iterator.Key())
+		if err != nil {
+			panic(err)
+		}
+
+		bz := store.Get(stakingtypes.GetDelegationKey(delAddr, valAddr))
+
+		cdc.MustUnmarshal(bz, &delegation)
+
+		delegations = append(delegations, delegation)
+	}
+
+	return delegations
 }

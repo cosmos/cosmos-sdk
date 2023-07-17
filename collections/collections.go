@@ -1,7 +1,9 @@
 package collections
 
 import (
+	"context"
 	"errors"
+	io "io"
 	"math"
 
 	"cosmossdk.io/collections/codec"
@@ -72,16 +74,20 @@ var (
 	BytesValue = codec.KeyToValueCodec(BytesKey)
 )
 
-// collection is the interface that all collections support. It will eventually
+// Collection is the interface that all collections implement. It will eventually
 // include methods for importing/exporting genesis data and schema
 // reflection for clients.
-type collection interface {
-	// getName is the unique name of the collection within a schema. It must
+// NOTE: Unstable.
+type Collection interface {
+	// GetName is the unique name of the collection within a schema. It must
 	// match format specified by NameRegex.
-	getName() string
+	GetName() string
 
-	// getPrefix is the unique prefix of the collection within a schema.
-	getPrefix() []byte
+	// GetPrefix is the unique prefix of the collection within a schema.
+	GetPrefix() []byte
+
+	// ValueCodec returns the codec used to encode/decode values of the collection.
+	ValueCodec() codec.UntypedValueCodec
 
 	genesisHandler
 }
@@ -122,3 +128,32 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 	}
 	return prefix
 }
+
+var _ Collection = (*collectionImpl[string, string])(nil)
+
+// collectionImpl wraps a Map and implements Collection. This properly splits
+// the generic and untyped Collection interface from the typed Map, which every
+// collection builds on.
+type collectionImpl[K, V any] struct {
+	m Map[K, V]
+}
+
+func (c collectionImpl[K, V]) ValueCodec() codec.UntypedValueCodec {
+	return codec.NewUntypedValueCodec(c.m.vc)
+}
+
+func (c collectionImpl[K, V]) GetName() string { return c.m.name }
+
+func (c collectionImpl[K, V]) GetPrefix() []byte { return NewPrefix(c.m.prefix) }
+
+func (c collectionImpl[K, V]) validateGenesis(r io.Reader) error { return c.m.validateGenesis(r) }
+
+func (c collectionImpl[K, V]) importGenesis(ctx context.Context, r io.Reader) error {
+	return c.m.importGenesis(ctx, r)
+}
+
+func (c collectionImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) error {
+	return c.m.exportGenesis(ctx, w)
+}
+
+func (c collectionImpl[K, V]) defaultGenesis(w io.Writer) error { return c.m.defaultGenesis(w) }

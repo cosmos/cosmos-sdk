@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -42,9 +42,9 @@ func TestRandomizedGenState(t *testing.T) {
 	var slashingGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &slashingGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.600000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.022222222222222222")
-	dec3, _ := sdk.NewDecFromStr("0.008928571428571429")
+	dec1, _ := sdkmath.LegacyNewDecFromStr("0.600000000000000000")
+	dec2, _ := sdkmath.LegacyNewDecFromStr("0.022222222222222222")
+	dec3, _ := sdkmath.LegacyNewDecFromStr("0.008928571428571429")
 
 	require.Equal(t, dec1, slashingGenesis.Params.MinSignedPerWindow)
 	require.Equal(t, dec2, slashingGenesis.Params.SlashFractionDoubleSign)

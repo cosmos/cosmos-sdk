@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -79,6 +78,8 @@ type Keeper struct {
 	router baseapp.MessageRouter
 
 	config group.Config
+
+	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
@@ -87,6 +88,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		key:       storeKey,
 		router:    router,
 		accKeeper: accKeeper,
+		cdc:       cdc,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
@@ -94,11 +96,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val interface{}) ([]interface{}, error) {
-		addr, err := sdk.AccAddressFromBech32(val.(*group.GroupInfo).Admin)
+		addr, err := accKeeper.AddressCodec().StringToBytes(val.(*group.GroupInfo).Admin)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr.Bytes()}, nil
+		return []interface{}{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -119,11 +121,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val interface{}) ([]interface{}, error) {
 		memberAddr := val.(*group.GroupMember).Member.Address
-		addr, err := sdk.AccAddressFromBech32(memberAddr)
+		addr, err := accKeeper.AddressCodec().StringToBytes(memberAddr)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr.Bytes()}, nil
+		return []interface{}{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -144,11 +146,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
 		admin := value.(*group.GroupPolicyInfo).Admin
-		addr, err := sdk.AccAddressFromBech32(admin)
+		addr, err := accKeeper.AddressCodec().StringToBytes(admin)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr.Bytes()}, nil
+		return []interface{}{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -162,11 +164,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
 		account := value.(*group.Proposal).GroupPolicyAddress
-		addr, err := sdk.AccAddressFromBech32(account)
+		addr, err := accKeeper.AddressCodec().StringToBytes(account)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr.Bytes()}, nil
+		return []interface{}{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -192,11 +194,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		addr, err := sdk.AccAddressFromBech32(value.(*group.Vote).Voter)
+		addr, err := accKeeper.AddressCodec().StringToBytes(value.(*group.Vote).Voter)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr.Bytes()}, nil
+		return []interface{}{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -375,6 +377,15 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
+		// Emit event for proposal finalized with its result
+		if err := ctx.EventManager().EmitTypedEvent(
+			&group.EventProposalPruned{
+				ProposalId:  proposal.Id,
+				Status:      proposal.Status,
+				TallyResult: &proposal.FinalTallyResult,
+			}); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -406,6 +417,14 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
+				return err
+			}
+			// Emit event for proposal finalized with its result
+			if err := ctx.EventManager().EmitTypedEvent(
+				&group.EventProposalPruned{
+					ProposalId: proposal.Id,
+					Status:     proposal.Status,
+				}); err != nil {
 				return err
 			}
 		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {

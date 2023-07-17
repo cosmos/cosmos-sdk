@@ -7,12 +7,33 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
+
+	for ; iterator.Valid(); iterator.Next() {
+		key := iterator.Key()
+		del, val, err := ParseDelegationKey(key)
+		if err != nil {
+			return err
+		}
+
+		store.Set(types.GetDelegationsByValKey(val, del), []byte{})
+	}
+
+	return nil
+}
+
 // MigrateStore performs in-place store migrations from v4 to v5.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
-	store := ctx.KVStore(storeKey)
+func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+	if err := migrateDelegationsByValidatorIndex(ctx, store, cdc); err != nil {
+		return err
+	}
 	return migrateHistoricalInfoKeys(store, ctx.Logger())
 }
 
@@ -32,7 +53,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 
 		intHeight, err := strconv.ParseInt(string(strHeight), 10, 64)
 		if err != nil {
-			return fmt.Errorf("can't parse height from key %q to int64: %v", strHeight, err)
+			return fmt.Errorf("can't parse height from key %q to int64: %w", strHeight, err)
 		}
 
 		newStoreKey := GetHistoricalInfoKey(intHeight)

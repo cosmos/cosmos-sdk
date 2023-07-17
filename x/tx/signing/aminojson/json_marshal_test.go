@@ -1,6 +1,8 @@
 package aminojson_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -9,12 +11,14 @@ import (
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/x/tx/signing/aminojson"
-
+	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
 	"cosmossdk.io/x/tx/signing/aminojson/internal/testpb"
 )
 
@@ -29,7 +33,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
 	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
-	aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	cases := map[string]struct {
 		msg       proto.Message
@@ -91,18 +95,43 @@ func TestAminoJSON(t *testing.T) {
 		Si64:     -59268425823934,
 		Sf64:     -659101379604211154,
 	}
-	bz, err := aminojson.NewAminoJSON().Marshal(msg)
+
+	unsortedBz, err := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true}).Marshal(msg)
 	assert.NilError(t, err)
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
-	require.Equal(t, string(legacyBz), string(bz))
+	require.Equal(t, string(legacyBz), string(unsortedBz))
+
+	// Now ensure that the default encoder behavior sorts fields and that they match
+	// as we'd have them from encoding/json.Marshal.
+	// Please see https://github.com/cosmos/cosmos-sdk/issues/2350
+	encodedDefaultBz, err := aminojson.NewEncoder(aminojson.EncoderOptions{}).Marshal(msg)
+	assert.NilError(t, err)
+
+	// Ensure that it is NOT equal to the legacy JSON but that it is equal to the sorted JSON.
+	require.NotEqual(t, string(legacyBz), string(encodedDefaultBz))
+
+	// Now ensure that the legacy's sortedJSON is as the aminojson.Encoder would produce.
+	// This proves that we can eliminate the use of sdk.*SortJSON(encoderBz)
+	sortedBz := naiveSortedJSON(t, unsortedBz)
+	require.Equal(t, string(sortedBz), string(encodedDefaultBz))
+}
+
+func naiveSortedJSON(tb testing.TB, jsonToSort []byte) []byte {
+	tb.Helper()
+	var c interface{}
+	err := json.Unmarshal(jsonToSort, &c)
+	assert.NilError(tb, err)
+	sortedBz, err := json.Marshal(c)
+	assert.NilError(tb, err)
+	return sortedBz
 }
 
 func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.NewAminoJSON().Marshal(msg)
+		bz, err := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true}).Marshal(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})
@@ -130,4 +159,21 @@ func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	assert.NilError(t, err)
 	err = cdc.UnmarshalJSON(marshaledBytes, message2)
 	assert.NilError(t, err, "%s vs %s", string(marshaledBytes), string(goProtoJSON))
+}
+
+func TestDynamicPb(t *testing.T) {
+	msg := &aminojsonpb.AminoSignFee{}
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	desc, err := protoregistry.GlobalFiles.FindDescriptorByName(proto.MessageName(msg))
+	require.NoError(t, err)
+	dynamicMsgType := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	dynamicMsg := dynamicMsgType.New().Interface()
+
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	dynamicBz, err := encoder.Marshal(dynamicMsg)
+	require.NoError(t, err)
+	fmt.Printf("dynamicBz: %s\n", string(dynamicBz))
+	require.Equal(t, string(bz), string(dynamicBz))
 }

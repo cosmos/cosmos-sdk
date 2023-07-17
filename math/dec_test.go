@@ -453,12 +453,16 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    math.LegacyDec
 		expected math.LegacyDec
 	}{
-		{math.LegacyOneDec(), math.LegacyOneDec()},                                                     // 1.0 => 1.0
-		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},                            // 0.25 => 0.5
-		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},                             // 0.09 => 0.3
-		{math.LegacyNewDecFromInt(math.NewInt(9)), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
-		{math.LegacyNewDecFromInt(math.NewInt(-9)), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
-		{math.LegacyNewDecFromInt(math.NewInt(2)), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{math.LegacyOneDec(), math.LegacyOneDec()},                                 // 1.0 => 1.0
+		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},        // 0.25 => 0.5
+		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},         // 0.09 => 0.3
+		{math.LegacyNewDec(9), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
+		{math.LegacyNewDec(-9), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
+		{math.LegacyNewDec(2), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{ // 2^127 - 1 => 13043817825332782212.3495718062525083688 which rounds to 13043817825332782212.3495718062525083689
+			math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec()),
+			math.LegacyMustNewDecFromStr("13043817825332782212.349571806252508369"),
+		},
 	}
 
 	for i, tc := range testCases {
@@ -643,6 +647,20 @@ func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		sink = b1.QuoTruncateMut(b2)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
+
+func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
+	b1 := math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec())
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sink, _ = b1.ApproxSqrt()
 	}
 
 	if sink == nil {

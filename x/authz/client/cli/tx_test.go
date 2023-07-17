@@ -1,17 +1,19 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
+
+	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
+	"cosmossdk.io/core/address"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -48,6 +50,8 @@ type CLITestSuite struct {
 	clientCtx client.Context
 	grantee   []sdk.AccAddress
 	addrs     []sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -66,7 +70,8 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
+	s.ac = addresscodec.NewBech32Codec("cosmos")
+
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -74,7 +79,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	s.grantee = make([]sdk.AccAddress, 6)
@@ -152,7 +157,6 @@ func (s *CLITestSuite) SetupSuite() {
 		},
 	)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 }
 
@@ -170,11 +174,16 @@ func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	// Send some funds to the new account.
+	_, err := s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
+	s.Require().NoError(err)
+
 	out, err := clitestutil.MsgSendExec(
 		s.clientCtx,
 		val[0].Address,
 		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200))),
+		s.ac,
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	)
@@ -221,6 +230,19 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			},
 			true,
 			"invalid separator index",
+		},
+		{
+			"Invalid spend limit",
+			[]string{
+				grantee.String(),
+				"send",
+				fmt.Sprintf("--%s=0stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			},
+			true,
+			"spend-limit should be greater than zero",
 		},
 		{
 			"Invalid expiration time",
@@ -299,7 +321,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			"invalid denom",
 		},
 		{
-			"invalid bond denon for tx redelegate authorization",
+			"invalid bond denom for tx redelegate authorization",
 			[]string{
 				grantee.String(),
 				"redelegate",
@@ -329,6 +351,15 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			},
 			true,
 			"invalid decimal coin expression",
+		},
+		{
+			"invalid authorization type",
+			[]string{
+				grantee.String(),
+				"invalid authz type",
+			},
+			true,
+			"invalid authorization type",
 		},
 		{
 			"Valid tx send authorization",
@@ -740,6 +771,7 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 		val[0].Address,
 		grantee,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
@@ -837,6 +869,7 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		val[0].Address,
 		allowedAddr,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
@@ -851,6 +884,7 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		val[0].Address,
 		notAllowedAddr,
 		tokens,
+		s.ac,
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),

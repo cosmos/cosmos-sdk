@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"errors"
-
 	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,9 +12,6 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGranter).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
-
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowanceRequest
@@ -61,6 +57,16 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			func(*feegrant.QueryAllowanceResponse) {},
 		},
 		{
+			"non existed grant",
+			&feegrant.QueryAllowanceRequest{
+				Granter: invalidGranter,
+				Grantee: invalidGrantee,
+			},
+			true,
+			func() {},
+			func(*feegrant.QueryAllowanceResponse) {},
+		},
+		{
 			"valid query: expect single grant",
 			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
@@ -92,7 +98,6 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowances() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesRequest
@@ -159,7 +164,6 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
-	suite.accountKeeper.EXPECT().StringToBytes(invalidGrantee).Return(nil, errors.New("decoding bech32 failed")).AnyTimes()
 	testCases := []struct {
 		name      string
 		req       *feegrant.QueryAllowancesByGranterRequest

@@ -16,13 +16,20 @@ var _ types.MsgServer = &Keeper{}
 // VerifyInvariant implements MsgServer.VerifyInvariant method.
 // It defines a method to verify a particular invariant.
 func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if msg.Sender == "" {
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("empty address string is not allowed")
+	}
+	sender, err := k.addressCodec.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
+	params, err := k.ConstantFee.Get(goCtx)
+	if err != nil {
+		return nil, err
+	}
+	constantFee := sdk.NewCoins(params)
 
 	if err := k.SendCoinsFromAccountToFeeCollector(ctx, sender, constantFee); err != nil {
 		return nil, err
@@ -82,8 +89,7 @@ func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "negative constant fee")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if err := k.SetConstantFee(sdkCtx, msg.ConstantFee); err != nil {
+	if err := k.ConstantFee.Set(ctx, msg.ConstantFee); err != nil {
 		return nil, err
 	}
 

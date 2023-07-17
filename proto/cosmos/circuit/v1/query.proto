@@ -4,15 +4,12 @@ package cosmos.circuit.v1;
 option go_package = "cosmossdk.io/x/circuit/types";
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos/msg/v1/msg.proto";
 import "cosmos/circuit/v1/types.proto";
 import "google/api/annotations.proto";
 import "cosmos/query/v1/query.proto";
 
-// Msg defines the crisis Msg service.
+// Query defines the circuit gRPC querier service.
 service Query {
-  option (cosmos.msg.v1.service) = true;
-
   // Account returns account permissions.
   rpc Account(QueryAccountRequest) returns (AccountResponse) {
     option (cosmos.query.v1.module_query_safe) = true;

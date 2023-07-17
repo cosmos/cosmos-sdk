@@ -8,6 +8,11 @@ import (
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/golang/mock/gomock"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
+
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -15,24 +20,15 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/depinject"
-
-	"github.com/golang/mock/gomock"
-
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
-
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
-
-	_ "github.com/cosmos/cosmos-sdk/orm" // required for ORM module registration
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	_ "cosmossdk.io/orm" // required for ORM module registration
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormdb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormmocks"
+	"cosmossdk.io/orm/testing/ormtest"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -262,7 +258,8 @@ func TestModuleDB(t *testing.T) {
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
-func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) { // nolint:revive // test function
+func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"

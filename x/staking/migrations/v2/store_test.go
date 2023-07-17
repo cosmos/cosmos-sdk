@@ -124,7 +124,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v2.MigrateStore(ctx, stakingKey)
+	err := v2.MigrateStore(ctx, store)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

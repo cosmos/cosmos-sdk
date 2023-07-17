@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -39,22 +38,22 @@ func NewMap[K, V any](
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
-	schemaBuilder.addCollection(m)
+	schemaBuilder.addCollection(collectionImpl[K, V]{m})
 	return m
 }
 
-func (m Map[K, V]) getName() string {
+func (m Map[K, V]) GetName() string {
 	return m.name
 }
 
-func (m Map[K, V]) getPrefix() []byte {
+func (m Map[K, V]) GetPrefix() []byte {
 	return m.prefix
 }
 
 // Set maps the provided value to the provided key in the store.
 // Errors with ErrEncoding if key or value encoding fails.
 func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return err
 	}
@@ -65,15 +64,14 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 	}
 
 	kvStore := m.sa(ctx)
-	kvStore.Set(bytesKey, valueBytes)
-	return nil
+	return kvStore.Set(bytesKey, valueBytes)
 }
 
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
 func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return v, err
 	}
@@ -97,7 +95,7 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 // Has reports whether the key is present in storage or not.
 // Errors with ErrEncoding if key encoding fails.
 func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return false, err
 	}
@@ -109,7 +107,7 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 // Errors with ErrEncoding if key encoding fails.
 // If the key does not exist then this is a no-op.
 func (m Map[K, V]) Remove(ctx context.Context, key K) error {
-	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
+	bytesKey, err := EncodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return err
 	}
@@ -127,7 +125,7 @@ func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V
 // walk function with the decoded key and value. If the callback function
 // returns true then the walking is stopped.
 // A nil ranger equals to walking over the entire key and value set.
-func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(K, V) bool) error {
+func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K, value V) (stop bool, err error)) error {
 	iter, err := m.Iterate(ctx, ranger)
 	if err != nil {
 		return err
@@ -139,10 +137,67 @@ func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(K, 
 		if err != nil {
 			return err
 		}
-		if walkFunc(kv.Key, kv.Value) {
+		stop, err := walkFunc(kv.Key, kv.Value)
+		if err != nil {
+			return err
+		}
+		if stop {
 			return nil
 		}
 	}
+	return nil
+}
+
+// Clear clears the collection contained within the provided key range.
+// A nil ranger equals to clearing the whole collection. In case the collection
+// is empty no error will be returned.
+// NOTE: this API needs to be used with care, considering that as of today
+// cosmos-sdk stores the deletion records to be committed in a memory cache,
+// clearing a lot of data might make the node go OOM.
+func (m Map[K, V]) Clear(ctx context.Context, ranger Ranger[K]) error {
+	startBytes, endBytes, _, err := parseRangeInstruction(m.prefix, m.kc, ranger)
+	if err != nil {
+		return err
+	}
+	return deleteDomain(m.sa(ctx), startBytes, endBytes)
+}
+
+const clearBatchSize = 10000
+
+// deleteDomain deletes the domain of an iterator, the key difference
+// is that it uses batches to clear the store meaning that it will read
+// the keys within the domain close the iterator and then delete them.
+func deleteDomain(s store.KVStore, start, end []byte) error {
+	for {
+		iter, err := s.Iterator(start, end)
+		if err != nil {
+			return err
+		}
+
+		keys := make([][]byte, 0, clearBatchSize)
+		for ; iter.Valid() && len(keys) < clearBatchSize; iter.Next() {
+			keys = append(keys, iter.Key())
+		}
+
+		// we close the iterator here instead of deferring
+		err = iter.Close()
+		if err != nil {
+			return err
+		}
+
+		for _, key := range keys {
+			err = s.Delete(key)
+			if err != nil {
+				return err
+			}
+		}
+
+		// If we've retrieved less than the batchSize, we're done.
+		if len(keys) < clearBatchSize {
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -195,7 +250,9 @@ func (m Map[K, V]) KeyCodec() codec.KeyCodec[K] { return m.kc }
 // ValueCodec returns the Map's ValueCodec.
 func (m Map[K, V]) ValueCodec() codec.ValueCodec[V] { return m.vc }
 
-func encodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
+// EncodeKeyWithPrefix returns how the collection would store the key in storage given
+// prefix, key codec and the concrete key.
+func EncodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]byte, error) {
 	prefixLen := len(prefix)
 	// preallocate buffer
 	keyBytes := make([]byte, prefixLen+kc.Size(key))

@@ -87,7 +87,7 @@ func (s NonTerminalStringCodec) Encode(value protoreflect.Value, w io.Writer) er
 			return fmt.Errorf("illegal null terminator found in index string: %s", str)
 		}
 	}
-	_, err := w.Write([]byte(str))
+	_, err := w.Write(bz)
 	if err != nil {
 		return err
 	}

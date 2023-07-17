@@ -3,8 +3,9 @@ package runtime
 import (
 	"context"
 
-	"cosmossdk.io/core/event"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

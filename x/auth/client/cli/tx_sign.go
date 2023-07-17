@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -59,7 +58,10 @@ account key. It implies --signature-only.
 
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
+	err := cmd.MarkFlagRequired(flags.FlagFrom)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -138,7 +140,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
 			// set the new appened msgs into builder
-			txBuilder.SetMsgs(msgs...)
+			err = txBuilder.SetMsgs(msgs...)
+			if err != nil {
+				return err
+			}
 
 			// set the memo,fees,feeGranter,feePayer from cmd flags
 			txBuilder.SetMemo(txFactory.Memo())
@@ -285,7 +290,10 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
+	err := cmd.MarkFlagRequired(flags.FlagFrom)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -294,8 +302,14 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
 	if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
-		cmd.MarkFlagRequired(flags.FlagAccountNumber)
-		cmd.MarkFlagRequired(flags.FlagSequence)
+		err := cmd.MarkFlagRequired(flags.FlagAccountNumber)
+		if err != nil {
+			panic(err)
+		}
+		err = cmd.MarkFlagRequired(flags.FlagSequence)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

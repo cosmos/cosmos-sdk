@@ -6,7 +6,7 @@ import (
 )
 
 // DefaultSequenceStart defines the default starting number of a sequence.
-const DefaultSequenceStart uint64 = 1
+const DefaultSequenceStart uint64 = 0
 
 // Sequence builds on top of an Item, and represents a monotonically increasing number.
 type Sequence Item[uint64]

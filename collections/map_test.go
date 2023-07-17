@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -36,6 +37,40 @@ func TestMap(t *testing.T) {
 	require.False(t, has)
 }
 
+func TestMap_Clear(t *testing.T) {
+	makeTest := func() (context.Context, Map[uint64, uint64]) {
+		sk, ctx := deps()
+		m := NewMap(NewSchemaBuilder(sk), NewPrefix(0), "test", Uint64Key, Uint64Value)
+		for i := uint64(0); i < clearBatchSize*2; i++ {
+			require.NoError(t, m.Set(ctx, i, i))
+		}
+		return ctx, m
+	}
+
+	t.Run("nil ranger", func(t *testing.T) {
+		ctx, m := makeTest()
+		err := m.Clear(ctx, nil)
+		require.NoError(t, err)
+		_, err = m.Iterate(ctx, nil)
+		require.ErrorIs(t, err, ErrInvalidIterator)
+	})
+
+	t.Run("custom ranger", func(t *testing.T) {
+		ctx, m := makeTest()
+		// delete from 0 to 100
+		err := m.Clear(ctx, new(Range[uint64]).StartInclusive(0).EndInclusive(100))
+		require.NoError(t, err)
+
+		iter, err := m.Iterate(ctx, nil)
+		require.NoError(t, err)
+		keys, err := iter.Keys()
+		require.NoError(t, err)
+		require.Len(t, keys, clearBatchSize*2-101)
+		require.Equal(t, keys[0], uint64(101))
+		require.Equal(t, keys[len(keys)-1], uint64(clearBatchSize*2-1))
+	})
+}
+
 func TestMap_IterateRaw(t *testing.T) {
 	sk, ctx := deps()
 	// safety check to ensure prefix boundaries are not crossed
@@ -50,7 +85,7 @@ func TestMap_IterateRaw(t *testing.T) {
 	require.NoError(t, m.Set(ctx, 2, 2))
 
 	// test non nil end in ascending order
-	twoBigEndian, err := encodeKeyWithPrefix(nil, Uint64Key, 2)
+	twoBigEndian, err := EncodeKeyWithPrefix(nil, Uint64Key, 2)
 	require.NoError(t, err)
 	iter, err := m.IterateRaw(ctx, nil, twoBigEndian, OrderAscending)
 	require.NoError(t, err)
@@ -76,7 +111,7 @@ func Test_encodeKey(t *testing.T) {
 	number := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	expectedKey := append([]byte(prefix), number...)
 
-	gotKey, err := encodeKeyWithPrefix(NewPrefix(prefix).Bytes(), Uint64Key, 0)
+	gotKey, err := EncodeKeyWithPrefix(NewPrefix(prefix).Bytes(), Uint64Key, 0)
 	require.NoError(t, err)
 	require.Equal(t, expectedKey, gotKey)
 }

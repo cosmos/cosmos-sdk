@@ -8,28 +8,14 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+func (b *Builder) BuildMsgCommand(appOptions AppOptions, customCmds map[string]*cobra.Command, buildModuleCommand enhanceCommandFunc) (*cobra.Command, error) {
 	msgCmd := topLevelCmd("tx", "Transaction subcommands")
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txCmdDesc := modOpts.Tx
-		if txCmdDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
-			err := b.AddMsgServiceCommands(subCmd, txCmdDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-	if err := b.enhanceCommandCommon(msgCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(msgCmd, appOptions, customCmds, enhanceMsg); err != nil {
 		return nil, err
 	}
 
@@ -55,12 +41,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		return nil
 	}
 
-	resolver := b.FileResolver
-	if b.FileResolver == nil {
-		resolver = protoregistry.GlobalFiles
-	}
-
-	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
+	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
 		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
@@ -78,8 +59,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 	}
 
-	methodsLength := methods.Len()
-	for i := 0; i < methodsLength; i++ {
+	for i := 0; i < methods.Len(); i++ {
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
 		if !ok {
@@ -89,10 +69,12 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		if methodOpts.Skip {
 			continue
 		}
+
 		methodCmd, err := b.BuildMsgMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
+
 		if methodCmd != nil {
 			cmd.AddCommand(methodCmd)
 		}
@@ -101,6 +83,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	return nil
 }
 
+// BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
@@ -116,11 +99,12 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		err = b.outOrStdoutFormat(cmd, bz)
-		return err
+		return b.outOrStdoutFormat(cmd, bz)
 	})
+
 	if b.AddTxConnFlags != nil {
 		b.AddTxConnFlags(cmd)
 	}
+
 	return cmd, err
 }

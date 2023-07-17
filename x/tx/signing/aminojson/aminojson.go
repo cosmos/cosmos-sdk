@@ -2,10 +2,8 @@ package aminojson
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -16,15 +14,15 @@ import (
 
 // SignModeHandler implements the SIGN_MODE_LEGACY_AMINO_JSON signing mode.
 type SignModeHandler struct {
-	fileResolver protodesc.Resolver
+	fileResolver signing.ProtoFileResolver
 	typeResolver protoregistry.MessageTypeResolver
 	encoder      Encoder
 }
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	FileResolver protodesc.Resolver
-	TypeResolver protoregistry.MessageTypeResolver
+	FileResolver signing.ProtoFileResolver
+	TypeResolver signing.TypeResolver
 	Encoder      *Encoder
 }
 
@@ -42,7 +40,10 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.typeResolver = options.TypeResolver
 	}
 	if options.Encoder == nil {
-		h.encoder = NewAminoJSON()
+		h.encoder = NewEncoder(EncoderOptions{
+			FileResolver: options.FileResolver,
+			TypeResolver: options.TypeResolver,
+		})
 	} else {
 		h.encoder = *options.Encoder
 	}
@@ -106,27 +107,10 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		Memo:          body.Memo,
 		Msgs:          txData.Body.Messages,
 		Fee:           fee,
+		Tip:           tip,
 	}
 
-	bz, err := h.encoder.Marshal(signDoc)
-	if err != nil {
-		return nil, err
-	}
-	return sortJSON(bz)
-}
-
-// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
-func sortJSON(toSortJSON []byte) ([]byte, error) {
-	var c interface{}
-	err := json.Unmarshal(toSortJSON, &c)
-	if err != nil {
-		return nil, err
-	}
-	js, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return js, nil
+	return h.encoder.Marshal(signDoc)
 }
 
 var _ signing.SignModeHandler = (*SignModeHandler)(nil)

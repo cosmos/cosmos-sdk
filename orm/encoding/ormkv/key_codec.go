@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormfield"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type KeyCodec struct {
@@ -248,20 +247,19 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		y := end[i]
 
 		cmp = fieldCdc.Compare(x, y)
-		switch {
-		case cmp > 0:
+		if cmp > 0 {
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),
 			)
-		case !fieldCdc.IsOrdered() && cmp != 0:
+		} else if !fieldCdc.IsOrdered() && cmp != 0 {
 			descriptor := cdc.fieldDescriptors[i]
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"field %s of kind %s doesn't support ordered range iteration",
 				descriptor.FullName(),
 				descriptor.Kind(),
 			)
-		case cmp < 0:
+		} else if cmp < 0 {
 			break
 		}
 	}

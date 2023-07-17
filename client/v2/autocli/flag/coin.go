@@ -3,9 +3,10 @@ package flag
 import (
 	"context"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/coins"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type coinType struct{}

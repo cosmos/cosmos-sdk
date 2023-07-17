@@ -10,6 +10,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -33,6 +35,7 @@ func TestGenesisTestSuite(t *testing.T) {
 
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 
@@ -43,19 +46,19 @@ func (s *GenesisTestSuite) SetupTest() {
 
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	s.keeper = *keeper.NewKeeper(s.cdc, key, 5, supplyKeeper, "", "")
+	s.keeper = *keeper.NewKeeper(s.cdc, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
 	// default params
 	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
-	err := s.keeper.SetConstantFee(s.sdkCtx, constantFee)
+	err := s.keeper.ConstantFee.Set(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
 	genesis := s.keeper.ExportGenesis(s.sdkCtx)
 
 	// set constant fee to zero
 	constantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(0))
-	err = s.keeper.SetConstantFee(s.sdkCtx, constantFee)
+	err = s.keeper.ConstantFee.Set(s.sdkCtx, constantFee)
 	s.Require().NoError(err)
 
 	s.keeper.InitGenesis(s.sdkCtx, genesis)
@@ -68,6 +71,7 @@ func (s *GenesisTestSuite) TestInitGenesis() {
 	genesisState.ConstantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	s.keeper.InitGenesis(s.sdkCtx, genesisState)
 
-	constantFee := s.keeper.GetConstantFee(s.sdkCtx)
+	constantFee, err := s.keeper.ConstantFee.Get(s.sdkCtx)
+	s.Require().NoError(err)
 	s.Require().Equal(genesisState.ConstantFee, constantFee)
 }

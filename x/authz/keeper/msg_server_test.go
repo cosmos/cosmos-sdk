@@ -3,15 +3,16 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/golang/mock/gomock"
 )
 
 func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
@@ -26,7 +27,7 @@ func (suite *TestSuite) TestGrant() {
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.BlockTime()
 
-	suite.accountKeeper.EXPECT().StringToBytes(sdk.AccAddress("valid").String()).Return(sdk.AccAddress("valid"), nil).AnyTimes()
+	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	oneHour := curBlockTime.Add(time.Hour)
 	oneYear := curBlockTime.AddDate(1, 0, 0)
@@ -330,7 +331,7 @@ func (suite *TestSuite) TestExec() {
 			errMsg: "empty address string is not allowed",
 		},
 		{
-			name: "no existing grant",
+			name: "non existing grant",
 			malleate: func() authz.MsgExec {
 				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
 			},

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
@@ -15,36 +17,36 @@ func (s *KeeperTestSuite) TestRevocation() {
 	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])
 
 	// initial state
-	keeper.SetValidator(ctx, validator)
-	keeper.SetValidatorByConsAddr(ctx, validator)
-	val, found := keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	require.NoError(keeper.SetValidator(ctx, validator))
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
+	val, err := keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.False(val.IsJailed())
 
 	// test jail
-	keeper.Jail(ctx, consAddr)
-	val, found = keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	require.NoError(keeper.Jail(ctx, consAddr))
+	val, err = keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.True(val.IsJailed())
 
 	// test unjail
-	keeper.Unjail(ctx, consAddr)
-	val, found = keeper.GetValidator(ctx, valAddr)
-	require.True(found)
+	require.NoError(keeper.Unjail(ctx, consAddr))
+	val, err = keeper.GetValidator(ctx, valAddr)
+	require.NoError(err)
 	require.False(val.IsJailed())
 }
 
-// tests Slash at a future height (must panic)
+// tests Slash at a future height (must error)
 func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	validator := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
-	keeper.SetValidator(ctx, validator)
-	err := keeper.SetValidatorByConsAddr(ctx, validator)
-	require.NoError(err)
+	require.NoError(keeper.SetValidator(ctx, validator))
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
 
-	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
+	fraction := sdkmath.LegacyNewDecWithPrec(5, 1)
+	_, err := keeper.Slash(ctx, consAddr, 1, 10, fraction)
+	require.Error(err)
 }

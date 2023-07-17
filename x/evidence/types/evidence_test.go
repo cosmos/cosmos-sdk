@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/evidence/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -72,19 +73,65 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := abci.Misbehavior{
-		Type: abci.MisbehaviorType_DUPLICATE_VOTE,
-		Validator: abci.Validator{
-			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			Power:   100,
-		},
-		Height:           1,
-		Time:             time.Now(),
-		TotalVotingPower: 100,
-	}
+	tmEvidence := NewCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
+		validator{address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, power: 100})
+
 	evidence := types.FromABCIEvidence(tmEvidence)
 	consAddr := evidence.GetConsensusAddress()
 	// Check the address is the same after conversion
-	require.Equal(t, tmEvidence.Validator.Address, consAddr.Bytes())
+	require.Equal(t, tmEvidence.Validator().Address(), consAddr.Bytes())
 	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+}
+
+type Misbehavior struct {
+	height           int64
+	time             time.Time
+	totalVotingPower int64
+	validator        validator
+	misBehaviorType  comet.MisbehaviorType
+}
+
+func NewCometMisbehavior(height, tvp int64, t time.Time, tpe comet.MisbehaviorType, val validator) comet.Evidence {
+	return Misbehavior{
+		height:           height,
+		time:             t,
+		totalVotingPower: tvp,
+		misBehaviorType:  tpe,
+		validator:        val,
+	}
+}
+
+func (m Misbehavior) Type() comet.MisbehaviorType {
+	return m.misBehaviorType
+}
+
+func (m Misbehavior) Height() int64 {
+	return m.height
+}
+
+func (m Misbehavior) Validator() comet.Validator {
+	return m.validator
+}
+
+func (m Misbehavior) Time() time.Time {
+	return m.time
+}
+
+func (m Misbehavior) TotalVotingPower() int64 {
+	return m.totalVotingPower
+}
+
+type validator struct {
+	address []byte
+	power   int64
+}
+
+var _ comet.Validator = (*validator)(nil)
+
+func (v validator) Address() []byte {
+	return v.address
+}
+
+func (v validator) Power() int64 {
+	return v.power
 }

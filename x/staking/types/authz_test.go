@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +26,7 @@ var (
 func TestAuthzAuthorizations(t *testing.T) {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	ctx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
 
 	// verify ValidateBasic returns error for the AUTHORIZATION_TYPE_UNSPECIFIED authorization type
 	delAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED, &coin100)
@@ -289,7 +289,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.HeaderInfo().Height, coin100),
 			false,
 			true,
 			nil,
@@ -300,7 +300,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.HeaderInfo().Height, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -317,7 +317,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val3, ctx.BlockHeight(), coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val3, ctx.HeaderInfo().Height, coin50),
 			true,
 			false,
 			nil,
@@ -328,7 +328,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			nil,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val2, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val2, ctx.HeaderInfo().Height, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -345,7 +345,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.HeaderInfo().Height, coin100),
 			true,
 			false,
 			nil,

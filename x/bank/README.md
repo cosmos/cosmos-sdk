@@ -195,28 +195,28 @@ type Keeper interface {
     SendKeeper
     WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
-    InitGenesis(sdk.Context, *types.GenesisState)
-    ExportGenesis(sdk.Context) *types.GenesisState
+    InitGenesis(context.Context, *types.GenesisState)
+    ExportGenesis(context.Context) *types.GenesisState
 
-    GetSupply(ctx sdk.Context, denom string) sdk.Coin
-    HasSupply(ctx sdk.Context, denom string) bool
-    GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
-    IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
-    GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
-    HasDenomMetaData(ctx sdk.Context, denom string) bool
-    SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
-    IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
+    GetSupply(ctx context.Context, denom string) sdk.Coin
+    HasSupply(ctx context.Context, denom string) bool
+    GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
+    IterateTotalSupply(ctx context.Context, cb func(sdk.Coin) bool)
+    GetDenomMetaData(ctx context.Context, denom string) (types.Metadata, bool)
+    HasDenomMetaData(ctx context.Context, denom string) bool
+    SetDenomMetaData(ctx context.Context, denomMetaData types.Metadata)
+    IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool)
 
-    SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-    SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
-    SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-    DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-    UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-    MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-    BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+    SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+    SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+    SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+    DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+    UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+    MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+    BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 
-    DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
-    UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
+    DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
+    UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
     // GetAuthority gets the address capable of executing governance proposal messages. Usually the gov module account.
     GetAuthority() string
@@ -236,21 +236,21 @@ accounts. The send keeper does not alter the total supply (mint or burn coins).
 type SendKeeper interface {
     ViewKeeper
 
-    InputOutputCoins(ctx sdk.Context, inputs types.Input, outputs []types.Output) error
-    SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+    InputOutputCoins(ctx context.Context, inputs types.Input, outputs []types.Output) error
+    SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-    GetParams(ctx sdk.Context) types.Params
-    SetParams(ctx sdk.Context, params types.Params) error
+    GetParams(ctx context.Context) types.Params
+    SetParams(ctx context.Context, params types.Params) error
 
-    IsSendEnabledDenom(ctx sdk.Context, denom string) bool
-    SetSendEnabled(ctx sdk.Context, denom string, value bool)
-    SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
-    DeleteSendEnabled(ctx sdk.Context, denom string)
-    IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
-    GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
+    IsSendEnabledDenom(ctx context.Context, denom string) bool
+    SetSendEnabled(ctx context.Context, denom string, value bool)
+    SetAllSendEnabled(ctx context.Context, sendEnableds []*types.SendEnabled)
+    DeleteSendEnabled(ctx context.Context, denom string)
+    IterateSendEnabledEntries(ctx context.Context, cb func(denom string, sendEnabled bool) (stop bool))
+    GetAllSendEnabledEntries(ctx context.Context) []types.SendEnabled
 
-    IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-    IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+    IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bool
+    IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 
     BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -264,18 +264,18 @@ The view keeper provides read-only access to account balances. The view keeper d
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
 type ViewKeeper interface {
-    ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
-    HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+    ValidateBalance(ctx context.Context, addr sdk.AccAddress) error
+    HasBalance(ctx context.Context, addr sdk.AccAddress, amt sdk.Coin) bool
 
-    GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-    GetAccountsBalances(ctx sdk.Context) []types.Balance
-    GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-    LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-    SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-    SpendableCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+    GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+    GetAccountsBalances(ctx context.Context) []types.Balance
+    GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+    LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+    SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+    SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
-    IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
-    IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
+    IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
+    IterateAllBalances(ctx context.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 ```
 

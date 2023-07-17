@@ -2,14 +2,15 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // Deprecated: Use WeightedProposalMsg instead.
@@ -69,11 +70,11 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
-	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
-	Comment string          `json:"comment" yaml:"comment"` // additional comment
-	OK      bool            `json:"ok" yaml:"ok"`           // success
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
+	Route   string `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string `json:"comment" yaml:"comment"` // additional comment
+	OK      bool   `json:"ok" yaml:"ok"`           // success
+	Msg     []byte `json:"msg" yaml:"msg"`         // protobuf encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
@@ -88,18 +89,18 @@ func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []by
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
 	msgType := sdk.MsgTypeURL(msg)
 	moduleName := sdk.GetModuleNameFromTypeURL(msgType)
 	if moduleName == "" {
 		moduleName = msgType
 	}
-
-	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-		return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
+	protoBz, err := proto.Marshal(msg)
+	if err != nil {
+		panic(fmt.Errorf("failed to marshal proto message: %w", err))
 	}
 
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, protoBz)
 }
 
 // NoOpMsg - create a no-operation message
@@ -156,7 +157,7 @@ type AppParams map[string]json.RawMessage
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value or default value (eg: in the
 // case of operation weights where Rand is not used).
-func (sp AppParams) GetOrGenerate(_ codec.JSONCodec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+func (sp AppParams) GetOrGenerate(key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		err := json.Unmarshal(v, ptr)
 		if err != nil {
@@ -174,11 +175,6 @@ type SelectOpFn func(r *rand.Rand) Operation
 
 // AppStateFn returns the app state json bytes and the genesis accounts
 type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
-	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
-)
-
-// AppStateFnWithExtendedCb returns the app state json bytes and the genesis accounts
-type AppStateFnWithExtendedCb func(r *rand.Rand, accs []Account, config Config) (
 	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
 )
 

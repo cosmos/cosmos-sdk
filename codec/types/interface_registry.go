@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/x/tx/signing"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -65,6 +66,8 @@ type InterfaceRegistry interface {
 	// the entire FileDescriptorSet.
 	RangeFiles(f func(protoreflect.FileDescriptor) bool)
 
+	SigningContext() *signing.Context
+
 	// mustEmbedInterfaceRegistry requires that all implementations of InterfaceRegistry embed an official implementation
 	// from this package. This allows new methods to be added to the InterfaceRegistry interface without breaking
 	// backwards compatibility.
@@ -96,33 +99,60 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	*protoregistry.Files
+	signing.ProtoFileResolver
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
 	implInterfaces map[reflect.Type]reflect.Type
 	typeURLMap     map[string]reflect.Type
+	signingCtx     *signing.Context
 }
 
 type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	protoFiles, err := proto.MergedRegistry()
+	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          failingAddressCodec{},
+			ValidatorAddressCodec: failingAddressCodec{},
+		},
+	})
 	if err != nil {
 		panic(err)
 	}
-	return NewInterfaceRegistryWithProtoFiles(protoFiles)
+	return registry
 }
 
-// NewInterfaceRegistryWithProtoFiles returns a new InterfaceRegistry with the specified *protoregistry.Files instance.
-func NewInterfaceRegistryWithProtoFiles(files *protoregistry.Files) InterfaceRegistry {
-	return &interfaceRegistry{
-		interfaceNames: map[string]reflect.Type{},
-		interfaceImpls: map[reflect.Type]interfaceMap{},
-		implInterfaces: map[reflect.Type]reflect.Type{},
-		typeURLMap:     map[string]reflect.Type{},
-		Files:          files,
+// InterfaceRegistryOptions are options for creating a new InterfaceRegistry.
+type InterfaceRegistryOptions struct {
+	// ProtoFiles is the set of files to use for the registry. It is required.
+	ProtoFiles signing.ProtoFileResolver
+
+	// SigningOptions are the signing options to use for the registry.
+	SigningOptions signing.Options
+}
+
+// NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
+func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (InterfaceRegistry, error) {
+	if options.ProtoFiles == nil {
+		return nil, fmt.Errorf("proto files must be provided")
 	}
+
+	options.SigningOptions.FileResolver = options.ProtoFiles
+	signingCtx, err := signing.NewContext(options.SigningOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return &interfaceRegistry{
+		interfaceNames:    map[string]reflect.Type{},
+		interfaceImpls:    map[reflect.Type]interfaceMap{},
+		implInterfaces:    map[reflect.Type]reflect.Type{},
+		typeURLMap:        map[string]reflect.Type{},
+		ProtoFileResolver: options.ProtoFiles,
+		signingCtx:        signingCtx,
+	}, nil
 }
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
@@ -314,6 +344,10 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 	return msg, nil
 }
 
+func (registry *interfaceRegistry) SigningContext() *signing.Context {
+	return registry.signingCtx
+}
+
 func (registry *interfaceRegistry) mustEmbedInterfaceRegistry() {}
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces
@@ -323,4 +357,14 @@ func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil
+}
+
+type failingAddressCodec struct{}
+
+func (f failingAddressCodec) StringToBytes(string) ([]byte, error) {
+	return nil, fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
+}
+
+func (f failingAddressCodec) BytesToString([]byte) (string, error) {
+	return "", fmt.Errorf("InterfaceRegistry requires a proper address codec implementation to do address conversion")
 }

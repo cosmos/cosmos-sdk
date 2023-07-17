@@ -26,15 +26,15 @@ type (
 		// GetMsgAnySigners returns the signers of the given message encoded in a protobuf Any
 		// as well as the decoded google.golang.org/protobuf/proto.Message that was used to
 		// extract the signers so that this can be used in other contexts.
-		GetMsgAnySigners(msg *types.Any) ([]string, protov2.Message, error)
+		GetMsgAnySigners(msg *types.Any) ([][]byte, protov2.Message, error)
 
 		// GetMsgV2Signers returns the signers of the given message.
-		GetMsgV2Signers(msg protov2.Message) ([]string, error)
+		GetMsgV2Signers(msg protov2.Message) ([][]byte, error)
 
 		// GetMsgV1Signers returns the signers of the given message plus the
 		// decoded google.golang.org/protobuf/proto.Message that was used to extract the
 		// signers so that this can be used in other contexts.
-		GetMsgV1Signers(msg proto.Message) ([]string, protov2.Message, error)
+		GetMsgV1Signers(msg proto.Message) ([][]byte, protov2.Message, error)
 
 		// mustEmbedCodec requires that all implementations of Codec embed an official implementation from the codec
 		// package. This allows new methods to be added to the Codec interface without breaking backwards compatibility.

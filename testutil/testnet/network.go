@@ -44,9 +44,9 @@ func NewNetwork(nVals int, createCometStarter func(int) *CometStarter) (Nodes, e
 				return
 			}
 
-			// Notify that the new node's switch is available,
-			// so this node can be peered with the other nodes.
-			switchCh <- n.PEXReactor().Switch
+			// Notify that the new node's switch is available, so this node can be
+			// peered with the other nodes.
+			switchCh <- n.Switch()
 
 			// And assign the node into its correct index in the ordered slice.
 			nodes[i] = n

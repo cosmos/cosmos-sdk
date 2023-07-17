@@ -19,18 +19,18 @@ import (
 
 var _ feegrant.QueryServer = Keeper{}
 
-// Allowance returns fee granted to the grantee by the granter.
+// Allowance returns granted allowance to the grantee by the granter.
 func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.authKeeper.StringToBytes(req.Granter)
+	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	granteeAddr, err := q.authKeeper.StringToBytes(req.Grantee)
+	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granteeAddr, err := q.authKeeper.StringToBytes(req.Grantee)
+	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.authKeeper.StringToBytes(req.Granter)
+	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}

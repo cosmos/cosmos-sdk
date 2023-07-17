@@ -3,19 +3,29 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type Querier struct {
+	BaseKeeper
+}
+
 var _ types.QueryServer = BaseKeeper{}
+
+func NewQuerier(keeper *BaseKeeper) Querier {
+	return Querier{BaseKeeper: *keeper}
+}
 
 // Balance implements the Query/Balance gRPC method
 func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
@@ -28,7 +38,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	address, err := sdk.AccAddressFromBech32(req.Address)
+	address, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -44,25 +54,26 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	balances := sdk.NewCoins()
-
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (include bool, err error) {
-		denom := key.K2()
-		if req.ResolveDenom {
-			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
-				denom = metadata.Display
+	balances, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.Balances,
+		req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
+			if req.ResolveDenom {
+				if metadata, ok := k.GetDenomMetaData(sdkCtx, key.K2()); ok {
+					return sdk.NewCoin(metadata.Display, value), nil
+				}
 			}
-		}
-		balances = append(balances, sdk.NewCoin(denom, value))
-		return false, nil // we don't include results because we're appending them here.
-	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
+			return sdk.NewCoin(key.K2(), value), nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -77,19 +88,17 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	balances := sdk.NewCoins()
 	zeroAmt := math.ZeroInt()
 
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (include bool, err error) {
-		balances = append(balances, sdk.NewCoin(key.K2(), zeroAmt))
-		return false, nil // not including results as they're appended here
+	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
+		return sdk.NewCoin(key.K2(), zeroAmt), nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
@@ -112,7 +121,7 @@ func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -172,9 +181,8 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomMetadataPrefix)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
+	store := prefix.NewStore(kvStore, types.DenomMetadataPrefix)
 
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
@@ -216,6 +224,49 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	}, nil
 }
 
+// DenomMetadataV2 is identical to DenomMetadata but receives protoreflect types instead of gogo types.  It exists to
+// resolve a cyclic dependency existent between x/auth and x/bank, so that x/auth may call this keeper without
+// depending on x/bank.
+func (k BaseKeeper) DenomMetadataV2(c context.Context, req *v1beta1.QueryDenomMetadataRequest) (*v1beta1.QueryDenomMetadataResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+	}
+
+	denomUnits := make([]*v1beta1.DenomUnit, len(metadata.DenomUnits))
+	for i, unit := range metadata.DenomUnits {
+		denomUnits[i] = &v1beta1.DenomUnit{
+			Denom:    unit.Denom,
+			Exponent: unit.Exponent,
+			Aliases:  unit.Aliases,
+		}
+	}
+	metadataV2 := &v1beta1.Metadata{
+		Description: metadata.Description,
+		DenomUnits:  denomUnits,
+		Base:        metadata.Base,
+		Display:     metadata.Display,
+		Name:        metadata.Name,
+		Symbol:      metadata.Symbol,
+		Uri:         metadata.URI,
+		UriHash:     metadata.URIHash,
+	}
+
+	return &v1beta1.QueryDenomMetadataResponse{
+		Metadata: metadataV2,
+	}, nil
+}
+
 func (k BaseKeeper) DenomOwners(
 	goCtx context.Context,
 	req *types.QueryDenomOwnersRequest,
@@ -228,19 +279,16 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	var denomOwners []*types.DenomOwner
-
-	_, pageRes, err := query.CollectionFilteredPaginate(goCtx, k.Balances.Indexes.Denom, req.Pagination,
-		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (include bool, err error) {
+	denomOwners, pageRes, err := query.CollectionPaginate(
+		goCtx,
+		k.Balances.Indexes.Denom,
+		req.Pagination,
+		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (*types.DenomOwner, error) {
 			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
 			if err != nil {
-				return false, err
+				return nil, err
 			}
-			denomOwners = append(denomOwners, &types.DenomOwner{
-				Address: key.K2().String(),
-				Balance: sdk.NewCoin(req.Denom, amt),
-			})
-			return false, nil
+			return &types.DenomOwner{Address: key.K2().String(), Balance: sdk.NewCoin(req.Denom, amt)}, nil
 		},
 		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)
@@ -264,16 +312,17 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 			}
 		}
 	} else {
-		results, pageResp, err := query.CollectionPaginate[string, bool](ctx, k.BaseViewKeeper.SendEnabled, req.Pagination)
+		results, pageResp, err := query.CollectionPaginate(
+			ctx,
+			k.BaseViewKeeper.SendEnabled,
+			req.Pagination, func(key string, value bool) (*types.SendEnabled, error) {
+				return types.NewSendEnabled(key, value), nil
+			},
+		)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-		for _, r := range results {
-			resp.SendEnabled = append(resp.SendEnabled, &types.SendEnabled{
-				Denom:   r.Key,
-				Enabled: r.Value,
-			})
-		}
+		resp.SendEnabled = results
 		resp.Pagination = pageResp
 	}
 

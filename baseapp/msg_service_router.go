@@ -26,6 +26,7 @@ type MessageRouter interface {
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	circuitBreaker    CircuitBreaker
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -35,6 +36,10 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}
+}
+
+func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	msr.circuitBreaker = cb
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
@@ -125,6 +130,18 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			if m, ok := msg.(sdk.HasValidateBasic); ok {
 				if err := m.ValidateBasic(); err != nil {
 					return nil, err
+				}
+			}
+
+			if msr.circuitBreaker != nil {
+				msgURL := sdk.MsgTypeURL(msg)
+				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				if err != nil {
+					return nil, err
+				}
+
+				if !isAllowed {
+					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
 				}
 			}
 

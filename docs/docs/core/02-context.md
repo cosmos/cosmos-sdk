@@ -22,13 +22,13 @@ The `context` is a data structure intended to be passed from function to functio
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./04-store.md#base-layer-kvstores) in the [`multistore`](./04-store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/context.go#L17-L44
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L67
 ```
 
 * **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./04-store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./04-store.md#base-layer-kvstores) using their unique `StoreKey`.
 * **Header:** The [header](https://docs.cometbft.com/v0.37/spec/core/data_structures#header) is a Blockchain type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
-* **Header Hash:** The current block header hash, obtained during `abci.RequestBeginBlock`.
+* **Header Hash:** The current block header hash, obtained during `abci.FinalizeBlock`.
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
 * **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. CometBFT) throughout its [lifecycle](../basics/01-tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./05-encoding.md) such as [Amino](./05-encoding.md).
 * **Logger:** A `logger` from the CometBFT libraries. Learn more about logs [here](https://docs.cometbft.com/v0.37/core/configuration). Modules call this method to create their own unique module-specific logger.
@@ -38,10 +38,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/context.go#L17-L44
 * **Min Gas Price:** The minimum [gas](../basics/04-gas-fees.md) price a node is willing to take in order to include a transaction in its block. This price is a local value configured by each node individually, and should therefore **not be used in any functions used in sequences leading to state-transitions**.
 * **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.cometbft.com/master/spec/abci/apps.html#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./08-events.md). Modules may define module specific
-  `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to CometBFT for indexing. For example:
+  `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `FinalizeBlock` and are returned to CometBFT for indexing.
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
 * **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
+<!-- TODO update with added values -->
 
 ## Go Context Package
 

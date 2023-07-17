@@ -1,19 +1,29 @@
 package log
 
-import "github.com/rs/zerolog"
+import (
+	"time"
 
-// defaultConfig has all the options disabled.
+	"github.com/rs/zerolog"
+)
+
+// defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
 	Level:      zerolog.NoLevel,
 	Filter:     nil,
 	OutputJSON: false,
+	Color:      true,
+	StackTrace: false,
+	TimeFormat: time.Kitchen,
 }
 
-// LoggerConfig defines configuration for the logger.
+// Config defines configuration for the logger.
 type Config struct {
 	Level      zerolog.Level
 	Filter     FilterFunc
 	OutputJSON bool
+	Color      bool
+	StackTrace bool
+	TimeFormat string
 }
 
 type Option func(*Config)
@@ -38,5 +48,42 @@ func LevelOption(level zerolog.Level) Option {
 func OutputJSONOption() Option {
 	return func(cfg *Config) {
 		cfg.OutputJSON = true
+	}
+}
+
+// ColorOption add option to enable/disable coloring
+// of the logs when console writer is in use
+func ColorOption(val bool) Option {
+	return func(cfg *Config) {
+		cfg.Color = val
+	}
+}
+
+// TimeFormatOption configures timestamp format of the logger
+// timestamps disabled if empty.
+// it is responsibility of the caller to provider correct values
+// Supported formats:
+//   - time.Layout
+//   - time.ANSIC
+//   - time.UnixDate
+//   - time.RubyDate
+//   - time.RFC822
+//   - time.RFC822Z
+//   - time.RFC850
+//   - time.RFC1123
+//   - time.RFC1123Z
+//   - time.RFC3339
+//   - time.RFC3339Nano
+//   - time.Kitchen
+func TimeFormatOption(format string) Option {
+	return func(cfg *Config) {
+		cfg.TimeFormat = format
+	}
+}
+
+// TraceOption add option to enable/disable print of stacktrace on error log
+func TraceOption(val bool) Option {
+	return func(cfg *Config) {
+		cfg.StackTrace = val
 	}
 }

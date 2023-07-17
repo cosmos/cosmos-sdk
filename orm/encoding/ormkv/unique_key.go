@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // UniqueKeyCodec is the codec for unique indexes.
@@ -160,9 +160,8 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		if !fieldOrder.inKey {
 			// goes in values because it is not present in the index key otherwise
 			values = append(values, value)
-		}
-		// does not go in values, but we need to verify that the value in index values matches the primary key value
-		if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
+		} else if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
+			// does not go in values, but we need to verify that the value in index values matches the primary key value
 			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
 		}
 	}

@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -31,37 +33,34 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simulation.WeightedOperations {
+func WeightedOperations(
+	appParams simtypes.AppParams,
+	cdc codec.JSONCodec,
+	txConfig client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k keeper.Keeper,
+	sk types.StakingKeeper,
+) simulation.WeightedOperations {
 	var weightMsgSetWithdrawAddress int
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil, func(_ *rand.Rand) {
+		weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
+	})
 
 	var weightMsgWithdrawDelegationReward int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
+	})
 
 	var weightMsgWithdrawValidatorCommission int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
+	})
 
 	var weightMsgFundCommunityPool int
-	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
-		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
-		},
-	)
-
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	txConfig := tx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), tx.DefaultSignModes)
+	appParams.GetOrGenerate(OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil, func(_ *rand.Rand) {
+		weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -88,7 +87,12 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		if !k.GetWithdrawAddrEnabled(ctx) {
+		isWithdrawAddrEnabled, err := k.GetWithdrawAddrEnabled(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "error getting params"), nil, err
+		}
+
+		if !isWithdrawAddrEnabled {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "withdrawal is not enabled"), nil, nil
 		}
 
@@ -124,14 +128,20 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		delegations, err := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting delegations"), nil, err
+		}
 		if len(delegations) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "number of delegators equal 0"), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
-		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
+		validator, err := sk.Validator(ctx, delegation.GetValidatorAddr())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting validator"), nil, err
+		}
 		if validator == nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
@@ -166,12 +176,21 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{})
 
-		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
+		allVals, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting all validators"), nil, err
+		}
+
+		validator, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
+		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, validator.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
+		}
+
 		if commission.Commission.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator commission is zero"), nil, nil
 		}

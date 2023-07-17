@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -213,6 +214,13 @@ func TestManager_Restore(t *testing.T) {
 	assert.Equal(t, expectItems, target.items)
 	assert.Equal(t, 10, len(extSnapshotter.state))
 
+	// The snapshot is saved in local snapshot store
+	snapshots, err := store.List()
+	require.NoError(t, err)
+	snapshot := snapshots[0]
+	require.Equal(t, uint64(3), snapshot.Height)
+	require.Equal(t, types.CurrentFormat, snapshot.Format)
+
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
@@ -235,4 +243,14 @@ func TestManager_Restore(t *testing.T) {
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.NoError(t, err)
+}
+
+func TestManager_TakeError(t *testing.T) {
+	snapshotter := &mockErrorSnapshotter{}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.Error(t, err)
 }

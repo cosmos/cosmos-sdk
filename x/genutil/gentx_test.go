@@ -2,23 +2,23 @@ package genutil_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-
-	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -143,17 +143,13 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 			tc.malleate()
 			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, txJSONEncoder, make(map[string]json.RawMessage), genTxs)
 
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(appGenesisState[types.ModuleName])
+			suite.Require().NoError(err)
+			suite.Require().NotNil(appGenesisState[types.ModuleName])
 
-				var genesisState types.GenesisState
-				err := cdc.UnmarshalJSON(appGenesisState[types.ModuleName], &genesisState)
-				suite.Require().NoError(err)
-				suite.Require().NotNil(genesisState.GenTxs)
-			} else {
-				suite.Require().Error(err)
-			}
+			var genesisState types.GenesisState
+			err = cdc.UnmarshalJSON(appGenesisState[types.ModuleName], &genesisState)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(genesisState.GenTxs)
 		})
 	}
 }
@@ -246,7 +242,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
+		deliverTxFn genesis.TxHandler
 		expPass     bool
 	}{
 		{
@@ -260,14 +256,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = tx
 			},
-			func(_ abci.RequestDeliverTx) abci.ResponseDeliverTx {
-				return abci.ResponseDeliverTx{
-					Code:      sdkerrors.ErrNoSignatures.ABCICode(),
-					GasWanted: int64(10000000),
-					GasUsed:   int64(41913),
-					Log:       "no signatures supplied",
-				}
-			},
+			GenesisState1{},
 			false,
 		},
 		{
@@ -293,15 +282,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = genTx
 			},
-			func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-				return abci.ResponseDeliverTx{
-					Code:      sdkerrors.ErrUnauthorized.ABCICode(),
-					GasWanted: int64(10000000),
-					GasUsed:   int64(41353),
-					Log:       "signature verification failed; please verify account number (4) and chain-id (): unauthorized",
-					Codespace: "sdk",
-				}
-			},
+			GenesisState2{},
 			true,
 		},
 	}
@@ -313,11 +294,13 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			tc.malleate()
 
 			if tc.expPass {
+				suite.stakingKeeper.EXPECT().ApplyAndReturnValidatorSetUpdates(gomock.Any()).Return(nil, nil).AnyTimes()
 				suite.Require().NotPanics(func() {
-					genutil.DeliverGenTxs(
+					_, err := genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,
 						suite.encodingConfig.TxConfig,
 					)
+					suite.Require().NoError(err)
 				})
 			} else {
 				_, err := genutil.DeliverGenTxs(
@@ -333,4 +316,16 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 
 func TestGenTxTestSuite(t *testing.T) {
 	suite.Run(t, new(GenTxTestSuite))
+}
+
+type GenesisState1 struct{}
+
+func (GenesisState1) ExecuteGenesisTx(_ []byte) error {
+	return errors.New("no signatures supplied")
+}
+
+type GenesisState2 struct{}
+
+func (GenesisState2) ExecuteGenesisTx(tx []byte) error {
+	return nil
 }

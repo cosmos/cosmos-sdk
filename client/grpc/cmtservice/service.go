@@ -24,7 +24,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(abci.RequestQuery) abci.ResponseQuery
+	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
 		clientCtx         client.Context
@@ -218,7 +218,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*G
 	return &resp, nil
 }
 
-func (s queryServer) ABCIQuery(_ context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
+func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
 	if s.queryFn == nil {
 		return nil, status.Error(codes.Internal, "ABCI Query handler undefined")
 	}
@@ -241,7 +241,10 @@ func (s queryServer) ABCIQuery(_ context.Context, req *ABCIQueryRequest) (*ABCIQ
 		}
 	}
 
-	res := s.queryFn(req.ToABCIRequestQuery())
+	res, err := s.queryFn(ctx, req.ToABCIRequestQuery())
+	if err != nil {
+		return nil, err
+	}
 	return FromABCIResponseQuery(res), nil
 }
 

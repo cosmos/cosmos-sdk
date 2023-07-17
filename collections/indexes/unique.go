@@ -90,7 +90,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, r
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[ReferenceKey],
-	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) bool,
+	walkFunc func(indexingKey ReferenceKey, indexedKey PrimaryKey) (stop bool, err error),
 ) error {
 	return i.refKeys.Walk(ctx, ranger, walkFunc)
 }

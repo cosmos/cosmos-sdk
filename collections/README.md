@@ -1063,3 +1063,84 @@ func (k Keeper) getNextAccountNumber() uint64 {
 	return 0
 }
 ```
+
+## Collections with interfaces as values
+
+Although cosmos-sdk is shifting away from the usage of interface registry, there are still some places where it is used.
+In order to support old code, we have to support collections with interface values.
+
+The generic `codec.CollValue` is not able to handle interface values, so we need to use a special type `codec.CollValueInterface`.
+`codec.CollValueInterface` takes a `codec.BinaryCodec` as an argument, and uses it to marshal and unmarshal values as interfaces.
+The `codec.CollValueInterface` lives in the `codec` package, whose import path is `github.com/cosmos/cosmos-sdk/codec`.
+
+### Instantiating Collections with interface values
+
+In order to instantiate a collection with interface values, we need to use `codec.CollValueInterface` instead of `codec.CollValue`.
+
+```go
+package example
+
+import (
+    "cosmossdk.io/collections"
+    storetypes "cosmossdk.io/store/types"
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+    Schema   collections.Schema
+    Accounts *collections.Map[sdk.AccAddress, sdk.AccountI]
+}
+
+func NewKeeper(cdc codec.BinaryCodec, storeKey *storetypes.KVStoreKey) Keeper {
+    sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+    return Keeper{
+        Accounts: collections.NewMap(
+            sb, AccountsPrefix, "accounts",
+            sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc),
+        ),
+    }
+}
+
+func (k Keeper) SaveBaseAccount(ctx sdk.Context, account authtypes.BaseAccount) error {
+    return k.Accounts.Set(ctx, account.GetAddress(), account)
+}
+
+func (k Keeper) SaveModuleAccount(ctx sdk.Context, account authtypes.ModuleAccount) error {
+    return k.Accounts.Set(ctx, account.GetAddress(), account)
+}
+
+func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, error) {
+    return k.Accounts.Get(ctx, addr)
+}
+```
+
+## Advanced Usages
+
+### Alternative Value Codec
+
+The `codec.AltValueCodec` allows a collection to decode values using a different codec than the one used to encode them.
+Basically it enables to decode two different byte representations of the same concrete value.
+It can be used to lazily migrate values from one bytes representation to another, as long as the new representation is
+not able to decode the old one.
+
+A concrete example can be found in `x/bank` where the balance was initially stored as `Coin` and then migrated to `Int`.
+
+```go
+
+var BankBalanceValueCodec = codec.NewAltValueCodec(sdk.IntValue, func(b []byte) (sdk.Int, error) {
+    coin := sdk.Coin{}
+    err := coin.Unmarshal(b)
+    if err != nil {
+        return sdk.Int{}, err
+    }
+    return coin.Amount, nil
+})
+```
+
+The above example shows how to create an `AltValueCodec` that can decode both `sdk.Int` and `sdk.Coin` values. The provided 
+decoder function will be used as a fallback in case the default decoder fails. When the value will be encoded back into state
+it will use the default encoder. This allows to lazily migrate values to a new bytes representation.

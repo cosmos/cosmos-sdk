@@ -1,13 +1,17 @@
 package tx_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -23,7 +27,7 @@ var (
 
 	msg     = testdata.NewTestMsg(tipperAddr, aux2Addr)
 	memo    = "test-memo"
-	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", sdk.NewIntFromUint64(123)))}
+	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", math.NewIntFromUint64(123)))}
 	chainID = "test-chain"
 	gas     = testdata.NewTestGasLimit()
 	fee     = testdata.NewTestFeeAmount()
@@ -55,8 +59,10 @@ func TestBuilderWithAux(t *testing.T) {
 	aux2Builder.SetTimeoutHeight(3)
 	aux2Builder.SetMemo(memo)
 	aux2Builder.SetChainID(chainID)
-	aux2Builder.SetMsgs(msg)
-	aux2Builder.SetPubKey(aux2Pk)
+	err = aux2Builder.SetMsgs(msg)
+	require.NoError(t, err)
+	err = aux2Builder.SetPubKey(aux2Pk)
+	require.NoError(t, err)
 	aux2Builder.SetTip(tip)
 	extOptAny, err := codectypes.NewAnyWithValue(extOpt)
 	require.NoError(t, err)
@@ -126,26 +132,29 @@ func TestBuilderWithAux(t *testing.T) {
 	tipperSigV2 := sigs[0]
 	aux2SigV2 := sigs[1]
 	// Set all signer infos.
-	w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
+	err = w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
-	signBz, err = txConfig.SignModeHandler().GetSignBytes(
-		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{
-			Address:       feepayerAddr.String(),
-			ChainID:       chainID,
-			AccountNumber: 11,
-			Sequence:      15,
-			PubKey:        feepayerPk,
-		},
-		w.GetTx(),
-	)
+	require.NoError(t, err)
+
+	signerData := authsigning.SignerData{
+		Address:       feepayerAddr.String(),
+		ChainID:       chainID,
+		AccountNumber: 11,
+		Sequence:      15,
+		PubKey:        feepayerPk,
+	}
+
+	signBz, err = authsigning.GetSignBytesAdapter(
+		context.Background(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		signerData, w.GetTx())
+
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)
 	// Set all signatures.
-	w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
+	err = w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
@@ -153,13 +162,14 @@ func TestBuilderWithAux(t *testing.T) {
 		},
 		Sequence: 22,
 	})
+	require.NoError(t, err)
 
 	// Make sure tx is correct.
 	txBz, err := txConfig.TxEncoder()(w.GetTx())
 	require.NoError(t, err)
 	tx, err := txConfig.TxDecoder()(txBz)
 	require.NoError(t, err)
-	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), feepayerAddr)
+	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), []byte(feepayerAddr))
 	require.Equal(t, tx.(sdk.FeeTx).GetFee(), fee)
 	require.Equal(t, tx.(sdk.FeeTx).GetGas(), gas)
 	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())
@@ -187,6 +197,7 @@ func TestBuilderWithAux(t *testing.T) {
 }
 
 func makeTipperTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
+	t.Helper()
 	tipperBuilder := clienttx.NewAuxTxBuilder()
 	tipperBuilder.SetAddress(tipperAddr.String())
 	tipperBuilder.SetAccountNumber(1)
@@ -194,8 +205,10 @@ func makeTipperTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
 	tipperBuilder.SetTimeoutHeight(3)
 	tipperBuilder.SetMemo(memo)
 	tipperBuilder.SetChainID(chainID)
-	tipperBuilder.SetMsgs(msg)
-	tipperBuilder.SetPubKey(tipperPk)
+	err := tipperBuilder.SetMsgs(msg)
+	require.NoError(t, err)
+	err = tipperBuilder.SetPubKey(tipperPk)
+	require.NoError(t, err)
 	tipperBuilder.SetTip(tip)
 	extOptAny, err := codectypes.NewAnyWithValue(extOpt)
 	require.NoError(t, err)

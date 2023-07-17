@@ -5,8 +5,9 @@ import (
 	"os"
 	"path"
 
-	"cosmossdk.io/errors"
 	"github.com/pelletier/go-toml/v2"
+
+	"cosmossdk.io/errors"
 )
 
 type Config struct {
@@ -15,6 +16,7 @@ type Config struct {
 
 type ChainConfig struct {
 	GRPCEndpoints []GRPCEndpoint `toml:"trusted-grpc-endpoints"`
+	Bech32Prefix  string         `toml:"bech32-prefix"`
 }
 
 type GRPCEndpoint struct {

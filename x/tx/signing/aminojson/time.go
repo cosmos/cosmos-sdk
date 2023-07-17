@@ -46,7 +46,7 @@ func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
 
 // MaxDurationSeconds the maximum number of seconds (when expressed as nanoseconds) which can fit in an int64.
 // gogoproto encodes google.protobuf.Duration as a time.Duration, which is 64-bit signed integer.
-const MaxDurationSeconds = int64(math.MaxInt64/int(1e9)) - 1
+const MaxDurationSeconds = int64(math.MaxInt64)/1e9 - 1
 
 func marshalDuration(message protoreflect.Message, writer io.Writer) error {
 	fields := message.Descriptor().Fields()
@@ -69,6 +69,6 @@ func marshalDuration(message protoreflect.Message, writer io.Writer) error {
 
 	nanos := message.Get(nanosField).Int()
 	totalNanos := nanos + (seconds * 1e9)
-	_, err := writer.Write([]byte(fmt.Sprintf(`"%d"`, totalNanos)))
+	_, err := fmt.Fprintf(writer, `"%d"`, totalNanos)
 	return err
 }

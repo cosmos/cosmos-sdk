@@ -8,6 +8,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -31,7 +32,8 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, (*time.Duration)(nil), params.ExpeditedVotingPeriod)
 
 	// Run migrations.
-	err := v5.MigrateStore(ctx, govKey, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err := v5.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	// Check params

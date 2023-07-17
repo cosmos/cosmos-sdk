@@ -1,22 +1,24 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -70,7 +72,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -79,7 +80,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	if testing.Short() {
 		s.T().Skip("skipping test in unit-tests mode.")
@@ -453,7 +454,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 		respType     proto.Message
 	}{
 		{
-			"invalid grantee",
+			"invalid granter",
 			append(
 				[]string{
 					"wrong_granter",
@@ -640,7 +641,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	pub, err := k.GetPubKey()
 	s.Require().NoError(err)
 	grantee := sdk.AccAddress(pub.Address())
-
 	clientCtx := s.clientCtx
 
 	commonFlags := []string{
@@ -649,15 +649,12 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 	}
 	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
-
 	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
+		expectErrMsg string
 	}{
 		{
 			"invalid granter address",
@@ -671,7 +668,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0,
+			"key not found",
 		},
 		{
 			"invalid grantee address",
@@ -685,7 +682,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0,
+			"decoding bech32 failed",
 		},
 		{
 			"valid filter fee grant",
@@ -699,7 +696,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			"",
 		},
 	}
 
@@ -709,22 +706,21 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expectErr {
+			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				msg := &sdk.TxResponse{}
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
 			}
 		})
 	}
 
 	// exec filtered fee allowance
 	cases := []struct {
-		name         string
-		malleate     func() error
-		respType     proto.Message
-		expectedCode uint32
+		name     string
+		malleate func() error
 	}{
 		{
 			"valid proposal tx",
@@ -735,8 +731,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{},
-			0,
 		},
 		{
 			"valid weighted_vote tx",
@@ -746,8 +740,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{},
-			2,
 		},
 		{
 			"should fail with unauthorized msgs",
@@ -768,8 +760,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 
 				return err
 			},
-			&sdk.TxResponse{},
-			7,
 		},
 	}
 

@@ -3,9 +3,10 @@ package services
 import (
 	"context"
 
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 )
 
 // ReflectionService implements the cosmos.reflection.v1 service.
@@ -15,7 +16,7 @@ type ReflectionService struct {
 }
 
 func NewReflectionService() (*ReflectionService, error) {
-	fds, err := proto.MergedFileDescriptors()
+	fds, err := proto.MergedGlobalFileDescriptors()
 	if err != nil {
 		return nil, err
 	}

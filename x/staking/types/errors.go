@@ -3,11 +3,6 @@ package types
 import "cosmossdk.io/errors"
 
 // x/staking module sentinel errors
-//
-// TODO: Many of these errors are redundant. They should be removed and replaced
-// by sdkerrors.ErrInvalidRequest.
-//
-// REF: https://github.com/cosmos/cosmos-sdk/issues/5450
 var (
 	ErrEmptyValidatorAddr              = errors.Register(ModuleName, 2, "empty validator address")
 	ErrNoValidatorFound                = errors.Register(ModuleName, 3, "validator does not exist")
@@ -50,4 +45,7 @@ var (
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
 	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")
 	ErrUnbondingOnHoldRefCountNegative = errors.Register(ModuleName, 42, "cannot un-hold unbonding operation that is not on hold")
+	ErrInvalidSigner                   = errors.Register(ModuleName, 43, "expected authority account as only signer for proposal message")
+	ErrBadRedelegationSrc              = errors.Register(ModuleName, 44, "redelegation source validator not found")
+	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
 )

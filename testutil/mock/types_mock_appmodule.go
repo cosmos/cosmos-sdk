@@ -18,7 +18,6 @@ import (
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	cobra "github.com/spf13/cobra"
 )
 
 // MockAppModuleWithAllExtensions is a mock of AppModuleWithAllExtensions interface.
@@ -42,18 +41,6 @@ func NewMockAppModuleWithAllExtensions(ctrl *gomock.Controller) *MockAppModuleWi
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAppModuleWithAllExtensions) EXPECT() *MockAppModuleWithAllExtensionsMockRecorder {
 	return m.recorder
-}
-
-// BeginBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) BeginBlock(arg0 types1.Context, arg1 types.RequestBeginBlock) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "BeginBlock", arg0, arg1)
-}
-
-// BeginBlock indicates an expected call of BeginBlock.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) BeginBlock(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).BeginBlock), arg0, arg1)
 }
 
 // ConsensusVersion mocks base method.
@@ -85,17 +72,18 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) DefaultGenesis(arg0 interf
 }
 
 // EndBlock mocks base method.
-func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 types1.Context, arg1 types.RequestEndBlock) []types.ValidatorUpdate {
+func (m *MockAppModuleWithAllExtensions) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EndBlock", arg0, arg1)
+	ret := m.ctrl.Call(m, "EndBlock", arg0)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // EndBlock indicates an expected call of EndBlock.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) EndBlock(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAppModuleWithAllExtensionsMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).EndBlock), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).EndBlock), arg0)
 }
 
 // ExportGenesis mocks base method.
@@ -110,34 +98,6 @@ func (m *MockAppModuleWithAllExtensions) ExportGenesis(arg0 types1.Context, arg1
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).ExportGenesis), arg0, arg1)
-}
-
-// GetQueryCmd mocks base method.
-func (m *MockAppModuleWithAllExtensions) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockAppModuleWithAllExtensions) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).GetTxCmd))
 }
 
 // InitGenesis mocks base method.
@@ -357,6 +317,34 @@ func (m *MockCoreAppModule) IsOnePerModuleType() {
 func (mr *MockCoreAppModuleMockRecorder) IsOnePerModuleType() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockCoreAppModule)(nil).IsOnePerModuleType))
+}
+
+// Precommit mocks base method.
+func (m *MockCoreAppModule) Precommit(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Precommit", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Precommit indicates an expected call of Precommit.
+func (mr *MockCoreAppModuleMockRecorder) Precommit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Precommit", reflect.TypeOf((*MockCoreAppModule)(nil).Precommit), arg0)
+}
+
+// PrepareCheckState mocks base method.
+func (m *MockCoreAppModule) PrepareCheckState(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareCheckState", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PrepareCheckState indicates an expected call of PrepareCheckState.
+func (mr *MockCoreAppModuleMockRecorder) PrepareCheckState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCheckState", reflect.TypeOf((*MockCoreAppModule)(nil).PrepareCheckState), arg0)
 }
 
 // ValidateGenesis mocks base method.

@@ -104,7 +104,7 @@ message GetTxsEventRequest {
   // query defines the transaction event query that is proxied to Tendermint's
   // TxSearch RPC method. The query must be valid.
   //
-  // Since Cosmos SDK 0.48
+  // Since cosmos-sdk 0.50
   string query = 6;
 }
 

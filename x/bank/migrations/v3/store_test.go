@@ -3,12 +3,13 @@ package v3_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -21,8 +22,9 @@ import (
 func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	addr := sdk.AccAddress([]byte("addr________________"))
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
@@ -39,7 +41,7 @@ func TestMigrateStore(t *testing.T) {
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, v3.CreateAccountBalancesPrefix(addr))
@@ -59,8 +61,9 @@ func TestMigrateStore(t *testing.T) {
 func TestMigrateDenomMetaData(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	metaData := []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
@@ -98,7 +101,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	denomMetadataStore = prefix.NewStore(store, v2.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)
@@ -123,6 +126,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 }
 
 func assertMetaDataEqual(t *testing.T, expected, actual types.Metadata) {
+	t.Helper()
 	require.Equal(t, expected.GetBase(), actual.GetBase())
 	require.Equal(t, expected.GetDisplay(), actual.GetDisplay())
 	require.Equal(t, expected.GetDescription(), actual.GetDescription())

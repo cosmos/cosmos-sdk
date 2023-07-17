@@ -9,10 +9,14 @@ import (
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
@@ -22,6 +26,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -42,8 +47,9 @@ func TestDecode(t *testing.T) {
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
-	fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	fee := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	gas := uint64(200)
 	memo := "memo"
 	accSeq := uint64(2)
@@ -72,7 +78,8 @@ func TestDecode(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tt := range rapidgen.SignableTypes {
-		name := string(tt.Pulsar.ProtoReflect().Descriptor().FullName())
+		desc := tt.Pulsar.ProtoReflect().Descriptor()
+		name := string(desc.FullName())
 		t.Run(name, func(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			rapid.Check(t, func(t *rapid.T) {
@@ -100,10 +107,9 @@ func TestDecode(t *testing.T) {
 					Sequence: accSeq,
 				}
 
-				gogoMsg, ok := gogo.(sdk.Msg)
-				require.True(t, ok)
+				require.True(t, proto.HasExtension(desc.Options(), msgv1.E_Signer))
 
-				err = txBuilder.SetMsgs(gogoMsg)
+				err = txBuilder.SetMsgs(tt.Gogo)
 				require.NoError(t, err)
 				txBuilder.SetFeeAmount(fee)
 				txBuilder.SetGasLimit(gas)
@@ -114,7 +120,12 @@ func TestDecode(t *testing.T) {
 				tx := txBuilder.GetTx()
 				txBytes, err := encCfg.TxConfig.TxEncoder()(tx)
 				require.NoError(t, err)
-				decodeCtx, err := decode.NewDecoder(decode.Options{})
+				signContext, err := txsigning.NewContext(txsigning.Options{
+					AddressCodec:          dummyAddressCodec{},
+					ValidatorAddressCodec: dummyAddressCodec{},
+				})
+				require.NoError(t, err)
+				decodeCtx, err := decode.NewDecoder(decode.Options{SigningContext: signContext})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)
 				require.NoError(t, err)
@@ -122,7 +133,7 @@ func TestDecode(t *testing.T) {
 
 				require.Equal(t, authInfoBytes, decodedTx.TxRaw.AuthInfoBytes)
 
-				anyGogoMsg, err := codectypes.NewAnyWithValue(gogoMsg)
+				anyGogoMsg, err := codectypes.NewAnyWithValue(tt.Gogo)
 				require.NoError(t, err)
 
 				txBody := &txtypes.TxBody{
@@ -138,4 +149,16 @@ func TestDecode(t *testing.T) {
 			})
 		})
 	}
+
+	legacytx.RegressionTestingAminoCodec = nil
+}
+
+type dummyAddressCodec struct{}
+
+func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return []byte(text), nil
+}
+
+func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
+	return string(bz), nil
 }

@@ -8,11 +8,12 @@ import (
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -21,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -75,7 +77,11 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 func TestArmorUnarmorPubKey(t *testing.T) {
 	// Select the encryption and storage for your cryptostore
 	var cdc codec.Codec
-	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
+
+	err := depinject.Inject(depinject.Configs(
+		configurator.NewAppConfig(),
+		depinject.Supply(log.NewNopLogger()),
+	), &cdc)
 	require.NoError(t, err)
 
 	cstore := keyring.NewInMemory(cdc)
@@ -193,4 +199,56 @@ func TestArmor(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	assert.Equal(t, blockType, blockType2)
 	assert.Equal(t, data, data2)
+}
+
+func TestBcryptLegacyEncryption(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+	saltBytes := cmtcrypto.CRandBytes(16)
+	passphrase := "passphrase"
+	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
+
+	// Bcrypt + Aead
+	headerBcrypt := map[string]string{
+		"kdf":  "bcrypt",
+		"salt": fmt.Sprintf("%X", saltBytes),
+	}
+	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy key generation
+	keyBcrypt = cmtcrypto.Sha256(keyBcrypt)
+
+	// bcrypt + xsalsa20symmetric
+	encBytesBcryptXsalsa20symetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)
+
+	type testCase struct {
+		description string
+		armor       string
+	}
+
+	for _, scenario := range []testCase{
+		{
+			description: "Argon2 + Aead",
+			armor:       crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
+		},
+		{
+			description: "Bcrypt + xsalsa20symmetric",
+			armor:       crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric),
+		},
+	} {
+		t.Run(scenario.description, func(t *testing.T) {
+			_, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "wrongpassphrase")
+			require.Error(t, err)
+			decryptedPrivKey, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "passphrase")
+			require.NoError(t, err)
+			require.True(t, privKey.Equals(decryptedPrivKey))
+		})
+	}
+
+	// Test wrong kdf header
+	headerWithoutKdf := map[string]string{
+		"kdf":  "wrongKdf",
+		"salt": fmt.Sprintf("%X", saltBytes),
+	}
+
+	_, _, err := crypto.UnarmorDecryptPrivKey(crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWithoutKdf, encBytesBcryptXsalsa20symetric), "passphrase")
+	require.Error(t, err)
+	require.Equal(t, "unrecognized KDF type: wrongKdf", err.Error())
 }

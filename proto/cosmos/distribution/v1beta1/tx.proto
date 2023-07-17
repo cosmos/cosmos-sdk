@@ -48,7 +48,7 @@ service Msg {
   // DepositValidatorRewardsPool defines a method to provide additional rewards
   // to delegators to a specific validator.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   rpc DepositValidatorRewardsPool(MsgDepositValidatorRewardsPool) returns (MsgDepositValidatorRewardsPoolResponse);
 }
 
@@ -79,7 +79,7 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
@@ -103,7 +103,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the
@@ -190,7 +190,7 @@ message MsgCommunityPoolSpendResponse {}
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPool {
   option (amino.name) = "cosmos-sdk/distr/MsgDepositValRewards";
   option (cosmos.msg.v1.signer) = "depositor";
@@ -199,7 +199,7 @@ message MsgDepositValidatorRewardsPool {
   option (gogoproto.goproto_getters) = false;
 
   string depositor         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.encoding)         = "legacy_coins",
@@ -211,5 +211,5 @@ message MsgDepositValidatorRewardsPool {
 // MsgDepositValidatorRewardsPoolResponse defines the response to executing a
 // MsgDepositValidatorRewardsPool message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPoolResponse {}

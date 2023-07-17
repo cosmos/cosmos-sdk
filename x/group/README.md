@@ -49,6 +49,7 @@ This module allows the creation and management of on-chain multisig accounts and
     * [EventVote](#eventvote)
     * [EventExec](#eventexec)
     * [EventLeaveGroup](#eventleavegroup)
+    * [EventProposalPruned](#eventproposalpruned)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -577,6 +578,15 @@ The group module emits the following events:
 | message                         | action        | /cosmos.group.v1.Msg/LeaveGroup |
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
+
+### EventProposalPruned
+
+| Type                                | Attribute Key | Attribute Value                 |
+|-------------------------------------|---------------|---------------------------------|
+| message                             | action        | /cosmos.group.v1.Msg/LeaveGroup |
+| cosmos.group.v1.EventProposalPruned | proposal_id   | {proposalId}                    |
+| cosmos.group.v1.EventProposalPruned | status        | {ProposalStatus}                |
+| cosmos.group.v1.EventProposalPruned | tally_result  | {TallyResult}                   |
 
 
 ## Client
@@ -2099,7 +2109,7 @@ Example Output:
 
 ## Metadata
 
-The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
+The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure across chains.
 
 ### Proposal
 

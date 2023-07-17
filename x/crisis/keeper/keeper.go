@@ -1,12 +1,14 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
+	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +19,7 @@ import (
 type Keeper struct {
 	routes         []types.InvarRoute
 	invCheckPeriod uint
-	storeKey       storetypes.StoreKey
+	storeService   storetypes.KVStoreService
 	cdc            codec.BinaryCodec
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -27,22 +29,37 @@ type Keeper struct {
 	supplyKeeper types.SupplyKeeper
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
+
+	addressCodec address.Codec
+
+	Schema      collections.Schema
+	ConstantFee collections.Item[sdk.Coin]
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string,
+	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
+	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
-	return &Keeper{
-		storeKey:         storeKey,
+	sb := collections.NewSchemaBuilder(storeService)
+	k := &Keeper{
+		storeService:     storeService,
 		cdc:              cdc,
 		routes:           make([]types.InvarRoute, 0),
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
+		addressCodec:     ac,
+
+		ConstantFee: collections.NewItem(sb, types.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/crisis module's authority.
@@ -51,8 +68,9 @@ func (k *Keeper) GetAuthority() string {
 }
 
 // Logger returns a module-specific logger.
-func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+func (k *Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // RegisterRoute register the routes for each of the invariants
@@ -104,6 +122,6 @@ func (k *Keeper) AssertInvariants(ctx sdk.Context) {
 func (k *Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
-func (k *Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *Keeper) SendCoinsFromAccountToFeeCollector(ctx context.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }

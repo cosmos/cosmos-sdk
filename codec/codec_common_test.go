@@ -87,7 +87,12 @@ func testMarshalingTestCase(require *require.Assertions, tc testCase, m mustMars
 	}
 }
 
-func testMarshaling(t *testing.T, cdc codec.Codec) {
+func testMarshaling(t *testing.T, cdc interface {
+	codec.BinaryCodec
+	codec.JSONCodec
+},
+) {
+	t.Helper()
 	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 

@@ -3,12 +3,13 @@ package v2_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +22,9 @@ import (
 func TestSupplyMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	v1bank.RegisterInterfaces(encCfg.InterfaceRegistry)
 
@@ -37,7 +39,7 @@ func TestSupplyMigration(t *testing.T) {
 	store.Set(v1bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
-	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
+	err = v2bank.MigrateStore(ctx, storeService, encCfg.Codec)
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
@@ -71,8 +73,9 @@ func TestSupplyMigration(t *testing.T) {
 func TestBalanceKeysMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -91,7 +94,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	store.Set(oldKeyFooBar, fooBarBz)
 	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
-	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
+	err = v2bank.MigrateStore(ctx, storeService, encCfg.Codec)
 	require.NoError(t, err)
 
 	newKey := v2bank.CreatePrefixedAccountStoreKey(addr, []byte(fooCoin.Denom))

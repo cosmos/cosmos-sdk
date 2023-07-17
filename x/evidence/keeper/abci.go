@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,19 +14,31 @@ import (
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
-func (k Keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
+func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	for _, tmEvidence := range req.ByzantineValidators {
-		switch tmEvidence.Type {
+	bi := k.cometInfo.GetCometBlockInfo(ctx)
+	if bi == nil {
+		// If we don't have block info, we don't have any evidence to process.  Block info may be nil during
+		// genesis calls or in tests.
+		return nil
+	}
+
+	evidences := bi.GetEvidence()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	for i := 0; i < evidences.Len(); i++ {
+		switch evidences.Get(i).Type() {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
-		case abci.MisbehaviorType_DUPLICATE_VOTE, abci.MisbehaviorType_LIGHT_CLIENT_ATTACK:
-			evidence := types.FromABCIEvidence(tmEvidence)
-			k.handleEquivocationEvidence(ctx, evidence)
-
+		case comet.LightClientAttack, comet.DuplicateVote:
+			evidence := types.FromABCIEvidence(evidences.Get(i))
+			err := k.handleEquivocationEvidence(ctx, evidence)
+			if err != nil {
+				return err
+			}
 		default:
-			k.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %s", tmEvidence.Type))
+			k.Logger(sdkCtx).Error(fmt.Sprintf("ignored unknown evidence type: %x", evidences.Get(i).Type()))
 		}
 	}
+	return nil
 }

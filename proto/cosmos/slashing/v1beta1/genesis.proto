@@ -25,7 +25,7 @@ message GenesisState {
 // SigningInfo stores validator signing info of corresponding address.
 message SigningInfo {
   // address is the validator address.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
   // validator_signing_info represents the signing info of this validator.
   ValidatorSigningInfo validator_signing_info = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
@@ -34,7 +34,7 @@ message SigningInfo {
 // address.
 message ValidatorMissedBlocks {
   // address is the validator address.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
   // missed_blocks is an array of missed blocks by the validator.
   repeated MissedBlock missed_blocks = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	groupv1 "cosmossdk.io/api/cosmos/group/v1"
-	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/internal/testpb"
 )
 
@@ -143,6 +143,42 @@ func TestGetSigners(t *testing.T) {
 			require.Equal(t, test.want, signers)
 		})
 	}
+}
+
+func TestDefineCustomGetSigners(t *testing.T) {
+	customMsg := &testpb.Ballot{}
+	signers := [][]byte{[]byte("foo")}
+	options := Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	}
+	context, err := NewContext(options)
+	require.NoError(t, err)
+
+	_, err = context.GetSigners(customMsg)
+	// without a custom signer we should get an error
+	require.ErrorContains(t, err, "use DefineCustomGetSigners to specify")
+
+	// create a new context with a custom signer
+	options.DefineCustomGetSigners(proto.MessageName(customMsg), func(msg proto.Message) ([][]byte, error) {
+		return signers, nil
+	})
+	context, err = NewContext(options)
+	require.NoError(t, err)
+	gotSigners, err := context.GetSigners(customMsg)
+	// now that a custom signer has been defined, we should get no error and the expected result
+	require.NoError(t, err)
+	require.Equal(t, signers, gotSigners)
+
+	// test that registering a custom signer for a message that already has proto annotation defined signer
+	// fails validation
+	simpleSigner := &testpb.SimpleSigner{Signer: hex.EncodeToString([]byte("foo"))}
+	options.DefineCustomGetSigners(proto.MessageName(simpleSigner), func(msg proto.Message) ([][]byte, error) {
+		return [][]byte{[]byte("qux")}, nil
+	})
+	context, err = NewContext(options)
+	require.NoError(t, err)
+	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

@@ -3,17 +3,17 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
 )
 
 const (
@@ -30,14 +30,15 @@ var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
+	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
 	k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
 			weightMsgSend = WeightSend
 		},
@@ -46,14 +47,15 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
-			SimulateMsgSend(codec.NewProtoCodec(registry), ak, bk, k),
+			SimulateMsgSend(codec.NewProtoCodec(registry), txCfg, ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgSend generates a MsgSend with random values.
 func SimulateMsgSend(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
+	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
 	k keeper.Keeper,
@@ -92,7 +94,6 @@ func SimulateMsgSend(
 			Receiver: receiver.Address.String(),
 		}
 
-		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txCfg,
@@ -112,7 +113,7 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 

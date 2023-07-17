@@ -1,12 +1,14 @@
 package codec
 
 import (
+	"fmt"
+	"reflect"
+
+	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-
-	"github.com/cosmos/gogoproto/proto"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
@@ -78,4 +80,48 @@ func (c collValue[T, PT]) Stringify(value T) string {
 
 func (c collValue[T, PT]) ValueType() string {
 	return "gogoproto/" + proto.MessageName(PT(new(T)))
+}
+
+// CollInterfaceValue instantiates a new collections.ValueCodec for a generic
+// interface value. The codec must be able to marshal and unmarshal the
+// interface.
+func CollInterfaceValue[T proto.Message](codec BinaryCodec) collcodec.ValueCodec[T] {
+	var x T // assertion
+	if reflect.TypeOf(&x).Elem().Kind() != reflect.Interface {
+		panic("CollInterfaceValue can only be used with interface types")
+	}
+	return collInterfaceValue[T]{codec.(Codec)}
+}
+
+type collInterfaceValue[T proto.Message] struct {
+	codec Codec
+}
+
+func (c collInterfaceValue[T]) Encode(value T) ([]byte, error) {
+	return c.codec.MarshalInterface(value)
+}
+
+func (c collInterfaceValue[T]) Decode(b []byte) (T, error) {
+	var value T
+	err := c.codec.UnmarshalInterface(b, &value)
+	return value, err
+}
+
+func (c collInterfaceValue[T]) EncodeJSON(value T) ([]byte, error) {
+	return c.codec.MarshalInterfaceJSON(value)
+}
+
+func (c collInterfaceValue[T]) DecodeJSON(b []byte) (T, error) {
+	var value T
+	err := c.codec.UnmarshalInterfaceJSON(b, &value)
+	return value, err
+}
+
+func (c collInterfaceValue[T]) Stringify(value T) string {
+	return value.String()
+}
+
+func (c collInterfaceValue[T]) ValueType() string {
+	var t T
+	return fmt.Sprintf("%T", t)
 }

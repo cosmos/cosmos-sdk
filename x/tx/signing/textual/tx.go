@@ -16,7 +16,6 @@ import (
 	msg "cosmossdk.io/api/cosmos/msg/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
@@ -138,8 +137,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	for i := range screens {
 		if screens[i].Indent == 0 {
 			// Do expert fields.
-			_, ok := expert[screens[i].Title]
-			if ok {
+			if _, ok := expert[screens[i].Title]; ok {
 				expertify(screens, i, screens[i].Title)
 			}
 

@@ -20,8 +20,6 @@ func NewEnumValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
 	return enumValueRenderer{ed: ed}
 }
 
-var _ ValueRenderer = (*enumValueRenderer)(nil)
-
 func (er enumValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Get the full name of the enum variant.
 	evd := er.ed.Values().ByNumber(v.Enum())

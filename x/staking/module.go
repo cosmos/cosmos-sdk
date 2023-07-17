@@ -6,20 +6,16 @@ import (
 	"fmt"
 	"sort"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +23,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -38,7 +37,9 @@ const (
 )
 
 var (
-	_ module.EndBlockAppModule   = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
+	_ module.HasABCIEndblock     = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -92,11 +93,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 // GetTxCmd returns the root tx command for the staking module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
-}
-
-// GetQueryCmd returns no root query command for the staking module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ak)
 }
 
 // AppModule implements an application module for the staking module.
@@ -190,36 +186,75 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	BeginBlocker(c, am.keeper)
-	return nil
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, am.keeper)
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return am.keeper.EndBlocker(ctx)
 }
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Invoke(InvokeSetStakingHooks),
 	)
+}
+
+type AddressCodecInputs struct {
+	depinject.In
+
+	AccountKeeper                types.AccountKeeper
+	Config                       *modulev1.Module
+	AuthConfig                   *authmodulev1.Module
+	ValidatorAddressCodecFactory func() types.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() types.ConsensusAddressCodec `optional:"true"`
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(in AddressCodecInputs) (types.ValidatorAddressCodec, types.ConsensusAddressCodec) {
+	if in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
+		return in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
+	}
+
+	if in.ValidatorAddressCodecFactory != nil || in.ConsensusAddressCodecFactory != nil {
+		panic("either both or none of validator and consensus address codecs must be provided")
+	}
+
+	if in.AuthConfig.Bech32Prefix != "" {
+		if in.Config.Bech32PrefixValidator == "" {
+			in.Config.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.AuthConfig.Bech32Prefix)
+		}
+
+		if in.Config.Bech32PrefixConsensus == "" {
+			in.Config.Bech32PrefixConsensus = fmt.Sprintf("%svalcons", in.AuthConfig.Bech32Prefix)
+		}
+	}
+
+	if in.Config.Bech32PrefixValidator == "" || in.Config.Bech32PrefixConsensus == "" {
+		panic("bech32 prefixes for validator and/or consensus addresses must be provided (cannot fallback to auth bech32 prefixes)")
+	}
+
+	return authcodec.NewBech32Codec(in.Config.Bech32PrefixValidator), authcodec.NewBech32Codec(in.Config.Bech32PrefixConsensus)
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	Cdc           codec.Codec
-	Key           *store.KVStoreKey
+	Config                *modulev1.Module
+	ValidatorAddressCodec types.ValidatorAddressCodec
+	ConsensusAddressCodec types.ConsensusAddressCodec
+	AccountKeeper         types.AccountKeeper
+	BankKeeper            types.BankKeeper
+	Cdc                   codec.Codec
+	StoreService          store.KVStoreService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 // Dependency Injection Outputs
@@ -232,17 +267,19 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 		authority.String(),
+		in.ValidatorAddressCodec,
+		in.ConsensusAddressCodec,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	return ModuleOutputs{StakingKeeper: k, Module: m}
@@ -307,6 +344,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the staking module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

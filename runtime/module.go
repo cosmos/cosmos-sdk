@@ -4,25 +4,29 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/store"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -57,21 +61,24 @@ func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
 			ProvideApp,
+			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideDeliverTx,
+			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+			ProvideHeaderInfoService,
+			ProvideCometInfoService,
+			ProvideBasicManager,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideApp() (
-	codectypes.InterfaceRegistry,
+func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -82,21 +89,16 @@ func ProvideApp() (
 	protoregistry.MessageTypeResolver,
 	error,
 ) {
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
+	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
 
 	// At startup, check that all proto annotations are correct.
-	err = msgservice.ValidateProtoAnnotations(protoFiles)
-	if err != nil {
+	if err := msgservice.ValidateProtoAnnotations(protoFiles); err != nil {
 		// Once we switch to using protoreflect-based antehandlers, we might
 		// want to panic here instead of logging a warning.
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	interfaceRegistry := codectypes.NewInterfaceRegistryWithProtoFiles(protoFiles)
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -114,35 +116,73 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
 	depinject.In
 
-	AppConfig         *appv1alpha1.Config
-	Config            *runtimev1alpha1.Module
-	AppBuilder        *AppBuilder
-	Modules           map[string]appmodule.AppModule
-	BaseAppOptions    []BaseAppOption
-	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.LegacyAmino
+	AppConfig          *appv1alpha1.Config
+	Config             *runtimev1alpha1.Module
+	AppBuilder         *AppBuilder
+	Modules            map[string]appmodule.AppModule
+	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	BaseAppOptions     []BaseAppOption
+	InterfaceRegistry  codectypes.InterfaceRegistry
+	LegacyAmino        *codec.LegacyAmino
+	Logger             log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
+	app.logger = inputs.Logger
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
 	for name, mod := range inputs.Modules {
-		if basicMod, ok := mod.(module.AppModuleBasic); ok {
-			app.basicManager[name] = basicMod
-			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			basicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
+			app.basicManager[name] = customBasicMod
+			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
+			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+			continue
 		}
+
+		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
+		app.basicManager[name] = coreAppModuleBasic
+		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
+		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
+}
+
+func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+	signingOptions := signing.Options{
+		// using the global prefixes is a temporary solution until we refactor this
+		// to get the address.Codec's from the container
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+	}
+	for _, signer := range customGetSigners {
+		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
+	}
+
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOptions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = interfaceRegistry.SigningContext().Validate()
+	if err != nil {
+		return nil, err
+	}
+	return interfaceRegistry, nil
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
@@ -185,10 +225,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		return appBuilder.app.BaseApp.DeliverTx(tx)
-	}
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
 }
 
 func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
@@ -208,4 +246,16 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
+}
+
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
+}
+
+func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+	return headerInfoService{}
+}
+
+func ProvideBasicManager(app *AppBuilder) module.BasicManager {
+	return app.app.basicManager
 }

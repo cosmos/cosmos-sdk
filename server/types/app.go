@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -34,7 +35,7 @@ type (
 	// The interface defines the necessary contracts to be implemented in order
 	// to fully bootstrap and start an application.
 	Application interface {
-		abci.Application
+		ABCI
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
@@ -50,10 +51,17 @@ type (
 		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context)
+		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
+
+		// Return the snapshot manager
+		SnapshotManager() *snapshots.Manager
+
+		// Close is called in start cmd to gracefully cleanup resources.
+		// Must be safe to be called multiple times.
+		Close() error
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

@@ -167,7 +167,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 // LoadChunk loads a chunk from disk, or returns nil if it does not exist. The caller must call
 // Close() on it when done.
 func (s *Store) LoadChunk(height uint64, format, chunk uint32) (io.ReadCloser, error) {
-	path := s.pathChunk(height, format, chunk)
+	path := s.PathChunk(height, format, chunk)
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -177,7 +177,7 @@ func (s *Store) LoadChunk(height uint64, format, chunk uint32) (io.ReadCloser, e
 
 // loadChunkFile loads a chunk from disk, and errors if it does not exist.
 func (s *Store) loadChunkFile(height uint64, format, chunk uint32) (io.ReadCloser, error) {
-	path := s.pathChunk(height, format, chunk)
+	path := s.PathChunk(height, format, chunk)
 	return os.Open(path)
 }
 
@@ -291,7 +291,7 @@ func (s *Store) Save(
 func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
 	defer chunkBody.Close()
 
-	path := s.pathChunk(snapshot.Height, snapshot.Format, index)
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
@@ -315,6 +315,12 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	return nil
 }
 
+// saveChunkContent save the chunk to disk
+func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
+	return os.WriteFile(path, chunk, 0o600)
+}
+
 // saveSnapshot saves snapshot metadata to the database.
 func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	value, err := proto.Marshal(snapshot)
@@ -335,8 +341,8 @@ func (s *Store) pathSnapshot(height uint64, format uint32) string {
 	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }
 
-// pathChunk generates a snapshot chunk path.
-func (s *Store) pathChunk(height uint64, format, chunk uint32) string {
+// PathChunk generates a snapshot chunk path.
+func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 

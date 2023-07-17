@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -37,7 +39,7 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 	}
 
 	results := make([]sdk.Result, len(msgs))
-	if err := ensureMsgAuthZ(msgs, groupPolicyAcc); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAcc, s.cdc); err != nil {
 		return nil, err
 	}
 	for i, msg := range msgs {
@@ -61,15 +63,19 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 
 // ensureMsgAuthZ checks that if a message requires signers that all of them
 // are equal to the given account address of group policy.
-func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress) error {
+func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Codec) error {
 	for i := range msgs {
-		// In practice, GetSigners() should return a non-empty array without
-		// duplicates, so the code below is equivalent to:
-		// `msgs[i].GetSigners()[0] == groupPolicyAcc`
-		// but we prefer to loop through all GetSigners just to be sure.
-		for _, acct := range msgs[i].GetSigners() {
-			if !groupPolicyAcc.Equals(acct) {
-				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct.String())
+		// In practice, GetMsgV1Signers should return a non-empty array without duplicates.
+		signers, _, err := cdc.GetMsgV1Signers(msgs[i])
+		if err != nil {
+			return err
+		}
+
+		// The code below should be equivalent to: `signers[0] == groupPolicyAcc`
+		// But here, we loop through all the signers just to be sure.
+		for _, acct := range signers {
+			if !bytes.Equal(groupPolicyAcc, acct) {
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)
 			}
 		}
 	}

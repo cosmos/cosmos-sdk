@@ -3,9 +3,8 @@ package ormtable
 import (
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
-
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	"cosmossdk.io/orm/internal/listinternal"
 )
 
 func paginate(it Iterator, options *listinternal.Options) Iterator {

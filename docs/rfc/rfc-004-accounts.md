@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 17/03/2023: DRAFT
-- 09/05/2023: DRAFT 2
+* 17/03/2023: DRAFT
+* 09/05/2023: DRAFT 2
 
 ## Context
 
@@ -133,11 +133,12 @@ example of account whose credentials can be recovered. In fact, even if the `Int
 respect to `proto.Message`), the concrete implementation is fully typed.
 
 During any of the execution methods of `InternalAccount`, `schema` excluded, the account is given a `Context` which provides:
-- A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed,
+
+* A namespaced `KVStore` for the account, which isolates the account state from others (NOTE: no `store keys` needed,
   the account address serves as `store key`).
-- Information regarding itself (its address)
-- Information regarding the sender.
-- ...
+* Information regarding itself (its address)
+* Information regarding the sender.
+* ...
 
 #### Init
 
@@ -157,9 +158,10 @@ process the state transition based on the message provided and the sender of the
 
 Query defines a read-only entrypoint that provides a stable interface that links an account with its state. The reason for
 which `Query` is still being preferred as an addition to raw state reflection is to:
-- Provide a stable interface for querying (state can be optimised and change more frequently than a query)
-- Provide a way to define an account `Interface` with respect to its `Read/Write` paths.
-- Provide a way to query information that cannot be processed from raw state reflection, ex: compute information from lazy
+
+* Provide a stable interface for querying (state can be optimised and change more frequently than a query)
+* Provide a way to define an account `Interface` with respect to its `Read/Write` paths.
+* Provide a way to query information that cannot be processed from raw state reflection, ex: compute information from lazy
   state that has not been yet concretely processed (eg: balances with respect to lazy inputs/outputs)
 
 #### Schema
@@ -285,10 +287,12 @@ that needs to be linked, in this case a handshake protocol on linking would need
 
 We need to provide a way to create an account with a predictable address, this might serve a lot of purposes, like accounts
 wanting to generate an address that:
-- nobody else can claim besides the account used to generate the new account
-- is predictable
+
+* nobody else can claim besides the account used to generate the new account
+* is predictable
 
 For example:
+
 ```protobuf
 
 message MsgDeployPredictable {
@@ -320,4 +324,3 @@ various account functionalities without compromising compatibility or resorting 
 The MultiAccount type serves as a standardized solution for combining different account functionalities within the
 cosmos-sdk ecosystem. By adopting this approach, developers can streamline the development process and users can benefit
 from a modular and extensible account system.
-

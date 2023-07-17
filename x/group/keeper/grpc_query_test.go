@@ -26,9 +26,6 @@ import (
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
-<<<<<<< HEAD
-func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAddress, group.QueryClient) {
-=======
 type fixture struct {
 	ctx          types.Context
 	keeper       groupkeeper.Keeper
@@ -39,7 +36,6 @@ type fixture struct {
 
 func initKeeper(t *testing.T) *fixture {
 	t.Helper()
->>>>>>> 7eb85db2c (feat(group): autocli query support (#17006))
 	var (
 		groupKeeper       groupkeeper.Keeper
 		interfaceRegistry codectypes.InterfaceRegistry

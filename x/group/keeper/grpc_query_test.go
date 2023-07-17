@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -24,8 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
-
-// TODO add all missing tests
 
 func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAddress, group.QueryClient) {
 	t.Helper()
@@ -56,32 +55,65 @@ func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAdd
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
-
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)
 	queryClient := group.NewQueryClient(queryHelper)
 
+	msgGroupAndPolicy := &group.MsgCreateGroupWithPolicy{
+		Admin: addrs[0].String(),
+		Members: []group.MemberRequest{
+			{Address: addrs[1].String(), Weight: "1"},
+			{Address: addrs[3].String(), Weight: "2"},
+		},
+	}
+	msgGroupAndPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("2", time.Second, 20))
+
+	_, err := groupKeeper.CreateGroupWithPolicy(ctx, msgGroupAndPolicy)
+	require.NoError(t, err)
+
 	return ctx, groupKeeper, addrs, queryClient
+}
+
+func TestQueryGroupInfo(t *testing.T) {
+	ctx, _, _, queryClient := initKeeper(t)
+
+	testCases := []struct {
+		name      string
+		groupID   uint64
+		expErrMsg string
+	}{
+		{
+			name:      "unknown id",
+			groupID:   20,
+			expErrMsg: "group: not found",
+		},
+		{
+			name:      "valid id",
+			groupID:   1,
+			expErrMsg: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := queryClient.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: tc.groupID})
+			if tc.expErrMsg != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestQueryGroupsByMember(t *testing.T) {
 	ctx, groupKeeper, addrs, queryClient := initKeeper(t)
 
-	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
-		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
-	}
-
-	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
-		Admin:   addrs[0].String(),
-		Members: members,
-	})
-	require.NoError(t, err)
-
-	members = []group.MemberRequest{
 		{Address: addrs[3].String(), Weight: "1"}, {Address: addrs[4].String(), Weight: "2"},
 	}
-	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[1].String(),
 		Members: members,
 	})
@@ -112,22 +144,10 @@ func TestQueryGroupsByMember(t *testing.T) {
 func TestQueryGroups(t *testing.T) {
 	ctx, groupKeeper, addrs, queryClient := initKeeper(t)
 
-	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
-		{Address: addrs[1].String(), Weight: "1"},
-		{Address: addrs[3].String(), Weight: "2"},
-	}
-
-	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
-		Admin:   addrs[0].String(),
-		Members: members,
-	})
-	require.NoError(t, err)
-
-	members = []group.MemberRequest{
 		{Address: addrs[3].String(), Weight: "1"},
 	}
-	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[2].String(),
 		Members: members,
 	})

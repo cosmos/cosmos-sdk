@@ -51,7 +51,7 @@ const (
 
 var (
 	ParamsKey                           = collections.NewPrefix(0) // Prefix for params key
-	ValidatorSigningInfoKeyPrefix       = []byte{0x01}             // Prefix for signing info
+	ValidatorSigningInfoKeyPrefix       = collections.NewPrefix(1) // Prefix for signing info
 	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02}             // Prefix for missed block bitmap
 	AddrPubkeyRelationKeyPrefix         = []byte{0x03}             // Prefix for address-pubkey relation
 )

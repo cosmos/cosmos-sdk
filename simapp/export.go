@@ -234,7 +234,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		ctx,
 		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 			info.StartHeight = 0
-			err := app.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			err := app.SlashingKeeper.ValidatorSigningInfo.Set(ctx, addr, info)
 			if err != nil {
 				panic(err)
 			}

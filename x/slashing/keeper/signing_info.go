@@ -13,41 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
-// ConsAddress. If not found it returns ErrNoSigningInfoFound, but other errors
-// may be returned if there is an error reading from the store.
-func (k Keeper) GetValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress) (types.ValidatorSigningInfo, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	var info types.ValidatorSigningInfo
-	bz, err := store.Get(types.ValidatorSigningInfoKey(address))
-	if err != nil {
-		return info, err
-	}
-
-	if bz == nil {
-		return info, types.ErrNoSigningInfoFound
-	}
-
-	err = k.cdc.Unmarshal(bz, &info)
-	return info, err
-}
-
 // HasValidatorSigningInfo returns if a given validator has signing information
 // persisted.
 func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAddress) bool {
-	_, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	_, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	return err == nil
-}
-
-// SetValidatorSigningInfo sets the validator signing info to a consensus address key
-func (k Keeper) SetValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&info)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.ValidatorSigningInfoKey(address), bz)
 }
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
@@ -78,19 +48,19 @@ func (k Keeper) IterateValidatorSigningInfos(ctx context.Context,
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return errors.Wrap(err, "cannot jail validator that does not have any signing information")
 	}
 
 	signInfo.JailedUntil = jailTime
-	return k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // Tombstone attempts to tombstone a validator. It will panic if signing info for
 // the given validator does not exist.
 func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return types.ErrNoSigningInfoFound.Wrap("cannot tombstone validator that does not have any signing information")
 	}
@@ -100,12 +70,12 @@ func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	}
 
 	signInfo.Tombstoned = true
-	return k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // IsTombstoned returns if a given validator by consensus address is tombstoned.
 func (k Keeper) IsTombstoned(ctx context.Context, consAddr sdk.ConsAddress) bool {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return false
 	}

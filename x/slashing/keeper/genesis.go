@@ -32,7 +32,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 		if err != nil {
 			panic(err)
 		}
-		err = keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		err = keeper.ValidatorSigningInfo.Set(ctx, address, info.ValidatorSigningInfo)
 		if err != nil {
 			panic(err)
 		}

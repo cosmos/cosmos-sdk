@@ -23,8 +23,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
-	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr1, info1))
-	s.Require().NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, info2))
+	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr1, info1))
+	s.Require().NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr2, info2))
 	genesisState := keeper.ExportGenesis(ctx)
 
 	require.Equal(genesisState.Params, testutil.TestParams())
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ok := keeper.IsTombstoned(ctx, consAddr1)
 	require.True(ok)
 
-	newInfo1, _ := keeper.GetValidatorSigningInfo(ctx, consAddr1)
+	newInfo1, _ := keeper.ValidatorSigningInfo.Get(ctx, consAddr1)
 	require.NotEqual(info1, newInfo1)
 
 	// Initialize genesis with genesis state before tombstone
@@ -51,8 +51,8 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ok = keeper.IsTombstoned(ctx, consAddr1)
 	require.False(ok)
 
-	newInfo1, _ = keeper.GetValidatorSigningInfo(ctx, consAddr1)
-	newInfo2, _ := keeper.GetValidatorSigningInfo(ctx, consAddr2)
+	newInfo1, _ = keeper.ValidatorSigningInfo.Get(ctx, consAddr1)
+	newInfo2, _ := keeper.ValidatorSigningInfo.Get(ctx, consAddr2)
 	require.Equal(info1, newInfo1)
 	require.Equal(info2, newInfo2)
 }

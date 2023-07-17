@@ -87,7 +87,7 @@ func SimulateMsgUnjail(
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, err
 		}
-		info, err := k.GetValidatorSigningInfo(ctx, consAddr)
+		info, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}

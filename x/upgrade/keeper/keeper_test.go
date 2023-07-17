@@ -115,11 +115,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+				err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
 					Name:   "alt-good",
 					Info:   "new text here",
 					Height: 543210000,
 				})
+				s.Require().NoError(err)
 			},
 			expPass: true,
 		},
@@ -152,11 +153,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+				err := s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,
 				})
+				s.Require().NoError(err)
 			},
 			expPass: false,
 		},
@@ -202,7 +204,8 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			name:   "success",
 			height: 10,
 			setup: func() {
-				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				err := s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				s.Require().NoError(err)
 			},
 			exists: true,
 		},
@@ -269,7 +272,8 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	s.Require().EqualError(err, "ApplyUpgrade should never be called without first checking HasHandler")
 
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(err)
 	upgradedProtocolVersion := s.baseApp.AppVersion()
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
@@ -279,7 +283,8 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	err := s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	s.Require().NoError(err)
 	vmBefore, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().NoError(err)
 
@@ -294,7 +299,8 @@ func (s *KeeperTestSuite) TestMigrations() {
 		Height: 123450000,
 	}
 
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(err)
 	vm, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 	s.Require().NoError(err)
@@ -314,11 +320,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	err = keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test0",
 		Height: 10,
 	})
-
+	require.NoError(err)
 	s.T().Log("verify valid upgrade name and height")
 	name, height, err = keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test0", name)
@@ -330,11 +336,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	})
 
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
-	keeper.ApplyUpgrade(newCtx, types.Plan{
+	err = keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test1",
 		Height: 15,
 	})
-
+	require.NoError(err)
 	s.T().Log("verify valid upgrade name and height with multiple upgrades")
 	name, height, err = keeper.GetLastCompletedUpgrade(newCtx)
 	require.Equal("test1", name)
@@ -353,11 +359,11 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	err := keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test-v0.9",
 		Height: 10,
 	})
-
+	require.NoError(err)
 	name, height, err := keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test-v0.9", name)
 	require.Equal(int64(10), height)

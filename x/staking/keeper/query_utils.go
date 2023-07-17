@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
+// GetDelegatorValidators returns all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(
 	ctx context.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) (types.Validators, error) {
@@ -39,7 +39,7 @@ func (k Keeper) GetDelegatorValidators(
 	return validators[:i], nil // trim
 }
 
-// return a validator that a delegator is bonded to
+// GetDelegatorValidator returns a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
@@ -51,7 +51,7 @@ func (k Keeper) GetDelegatorValidator(
 	return k.GetValidator(ctx, delegation.GetValidatorAddr())
 }
 
-// return all delegations for a delegator
+// GetAllDelegatorDelegations returns all delegations of a delegator
 func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
@@ -76,7 +76,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 	return delegations, nil
 }
 
-// return all unbonding-delegations for a delegator
+// GetAllUnbondingDelegations returns all unbonding-delegations of a delegator
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
@@ -101,7 +101,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 	return unbondingDelegations, nil
 }
 
-// return all redelegations for a delegator
+// GetAllRedelegations returns all redelegations of a delegator
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {

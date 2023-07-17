@@ -17,6 +17,7 @@ import (
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T) (client.Context, func()) {
+	t.Helper()
 	home := t.TempDir()
 	chainID := "test-chain"
 	clientCtx := client.Context{}.

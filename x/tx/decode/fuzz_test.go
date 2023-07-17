@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
-	"github.com/google/gofuzz"
+	fuzz "github.com/google/gofuzz"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -21,7 +21,7 @@ var (
 	accSeq = uint64(2)
 
 	signerInfo = []*txv1beta1.SignerInfo{
-		&txv1beta1.SignerInfo{
+		{
 			PublicKey: pkAny,
 			ModeInfo: &txv1beta1.ModeInfo{
 				Sum: &txv1beta1.ModeInfo_Single_{
@@ -40,6 +40,7 @@ var (
 )
 
 func generateAndAddSeedsFromTx(f *testing.F) {
+	f.Helper()
 	// 1. Add some seeds.
 	tx := &txv1beta1.Tx{
 		Body: &txv1beta1.TxBody{
@@ -124,6 +125,7 @@ func FuzzDecode(f *testing.F) {
 }
 
 func mustMarshal(f *testing.F, m proto.Message) []byte {
+	f.Helper()
 	blob, err := proto.Marshal(m)
 	if err != nil {
 		f.Fatal(err)

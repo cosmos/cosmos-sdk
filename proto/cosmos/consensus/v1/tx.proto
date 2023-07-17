@@ -36,6 +36,9 @@ message MsgUpdateParams {
   tendermint.types.BlockParams     block     = 2;
   tendermint.types.EvidenceParams  evidence  = 3;
   tendermint.types.ValidatorParams validator = 4;
+
+  // Since: cosmos-sdk 0.50
+  tendermint.types.ABCIParams abci = 5;
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

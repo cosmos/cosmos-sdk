@@ -30,6 +30,6 @@ func FuzzCryptoHDDerivePrivateKeyForPath(f *testing.F) {
 		}
 		seed := mnemonicToSeed(string(mnemonic))
 		master, ch := hd.ComputeMastersFromSeed(seed)
-		hd.DerivePrivateKeyForPath(master, ch, string(path))
+		_, _ = hd.DerivePrivateKeyForPath(master, ch, string(path))
 	})
 }

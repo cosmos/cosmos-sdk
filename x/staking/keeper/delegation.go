@@ -880,12 +880,12 @@ func (k Keeper) Delegate(
 		// not found
 		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
 		if err1 != nil {
-			return math.LegacyDec{}, err
+			return math.LegacyDec{}, err1
 		}
 
 		valAddrStr, err1 := k.validatorAddressCodec.BytesToString(validator.GetOperator())
 		if err1 != nil {
-			return math.LegacyDec{}, err
+			return math.LegacyDec{}, err1
 		}
 
 		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
@@ -948,7 +948,6 @@ func (k Keeper) Delegate(
 		default:
 			panic("unknown token source bond status")
 		}
-		fmt.Println(4)
 	}
 
 	_, newShares, err = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
@@ -962,13 +961,8 @@ func (k Keeper) Delegate(
 		return newShares, err
 	}
 
-	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-	if err != nil {
-		return math.LegacyDec{}, err
-	}
-
 	// Call the after-modification hook
-	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, valAddr); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, validator.GetOperator()); err != nil {
 		return newShares, err
 	}
 

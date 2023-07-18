@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -258,7 +257,6 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 
 	validator, err := k.GetValidator(ctx, valAddr)
 	if err != nil {
-		fmt.Println("here 1")
 		return nil, err
 	}
 
@@ -276,7 +274,6 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 	// NOTE: source funds are always unbonded
 	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
 	if err != nil {
-		fmt.Println("here 2")
 		return nil, err
 	}
 

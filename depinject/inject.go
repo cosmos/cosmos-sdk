@@ -20,7 +20,7 @@ func Inject(containerConfig Config, outputs ...interface{}) error {
 		containerConfig,
 		fallbackSupply(),
 	)
-	return inject(loc, Debug(), containerConfig, outputs...)
+	return inject(loc, AutoDebug(), containerConfig, outputs...)
 }
 
 // InjectDebug is a version of Inject which takes an optional DebugOption for

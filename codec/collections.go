@@ -84,7 +84,7 @@ func (c collValue[T, PT]) Stringify(value T) string {
 }
 
 func (c collValue[T, PT]) ValueType() string {
-	return "github.com/gogo/protobuf/" + c.messageName
+	return "github.com/cosmos/gogoproto/" + c.messageName
 }
 
 type protoMessageV2[T any] interface {

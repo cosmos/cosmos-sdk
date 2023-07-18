@@ -26,7 +26,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )

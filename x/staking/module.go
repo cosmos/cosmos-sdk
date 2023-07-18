@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
@@ -201,14 +200,6 @@ func init() {
 		appmodule.Provide(ProvideModule),
 		appmodule.Invoke(InvokeSetStakingHooks),
 	)
-}
-
-type AddressCodecInputs struct {
-	depinject.In
-
-	AccountKeeper types.AccountKeeper
-	Config        *modulev1.Module
-	AuthConfig    *authmodulev1.Module
 }
 
 type ModuleInputs struct {

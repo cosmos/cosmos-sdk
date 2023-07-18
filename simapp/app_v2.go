@@ -148,8 +148,8 @@ func NewSimApp(
 				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
 				// When providing a custom address codec in auth, a custom codec must be provided here as well.
 				//
-				// func() stakingtypes.ValidatorAddressCodec { return <- custom validator address codec type -> }
-				// func() stakingtypes.ConsensusAddressCodec { return <- custom consensus address codec type -> }
+				// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
+				// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
 
 				//
 				// MINT

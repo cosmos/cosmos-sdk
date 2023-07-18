@@ -12,6 +12,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -25,10 +26,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -75,6 +75,7 @@ func init() {
 			ProvideHeaderInfoService,
 			ProvideCometInfoService,
 			ProvideBasicManager,
+			ProvideAddressCodec,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -158,18 +159,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	}
 }
 
-func ProvideInterfaceRegistry(authConfig *authmodulev1.Module, stakingConfig *stakingmodulev1.Module, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
-	if authConfig == nil { // fallback to global config if auth module us not used
-		authConfig = &authmodulev1.Module{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()}
-	}
-
-	if stakingConfig == nil { // fallback to global config if staking module is not used
-		stakingConfig = &stakingmodulev1.Module{Bech32PrefixValidator: sdk.GetConfig().GetBech32ValidatorAddrPrefix()}
-	}
-
+func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
-		AddressCodec:          address.NewBech32Codec(authConfig.Bech32Prefix),
-		ValidatorAddressCodec: address.NewBech32Codec(stakingConfig.Bech32PrefixValidator),
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
 	}
 	for _, signer := range customGetSigners {
 		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
@@ -264,4 +257,47 @@ func ProvideHeaderInfoService(app *AppBuilder) header.Service {
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {
 	return app.app.basicManager
+}
+
+type (
+	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
+	ValidatorAddressCodec address.Codec
+
+	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
+	ConsensusAddressCodec address.Codec
+)
+
+type AddressCodecInputs struct {
+	depinject.In
+
+	AuthConfig    *authmodulev1.Module
+	StakingConfig *stakingmodulev1.Module
+
+	AddressCodecFactory          func() address.Codec         `optional:"true"`
+	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
+		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
+	}
+
+	if in.AuthConfig.Bech32Prefix == "" {
+		panic("auth bech32 prefix cannot be empty if no custom address codec is provided")
+	}
+
+	if in.StakingConfig.Bech32PrefixValidator == "" {
+		in.StakingConfig.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.AuthConfig.Bech32Prefix)
+	}
+
+	if in.StakingConfig.Bech32PrefixConsensus == "" {
+		in.StakingConfig.Bech32PrefixConsensus = fmt.Sprintf("%svalcons", in.AuthConfig.Bech32Prefix)
+	}
+
+	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
+		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
+		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
 }

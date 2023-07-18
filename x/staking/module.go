@@ -20,10 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -199,7 +199,6 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Invoke(InvokeSetStakingHooks),
 	)
 }
@@ -207,47 +206,17 @@ func init() {
 type AddressCodecInputs struct {
 	depinject.In
 
-	AccountKeeper                types.AccountKeeper
-	Config                       *modulev1.Module
-	AuthConfig                   *authmodulev1.Module
-	ValidatorAddressCodecFactory func() types.ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() types.ConsensusAddressCodec `optional:"true"`
-}
-
-// ProvideAddressCodec provides an address.Codec to the container for any
-// modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (types.ValidatorAddressCodec, types.ConsensusAddressCodec) {
-	if in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
-		return in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
-	}
-
-	if in.ValidatorAddressCodecFactory != nil || in.ConsensusAddressCodecFactory != nil {
-		panic("either both or none of validator and consensus address codecs must be provided")
-	}
-
-	if in.AuthConfig.Bech32Prefix != "" {
-		if in.Config.Bech32PrefixValidator == "" {
-			in.Config.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.AuthConfig.Bech32Prefix)
-		}
-
-		if in.Config.Bech32PrefixConsensus == "" {
-			in.Config.Bech32PrefixConsensus = fmt.Sprintf("%svalcons", in.AuthConfig.Bech32Prefix)
-		}
-	}
-
-	if in.Config.Bech32PrefixValidator == "" || in.Config.Bech32PrefixConsensus == "" {
-		panic("bech32 prefixes for validator and/or consensus addresses must be provided (cannot fallback to auth bech32 prefixes)")
-	}
-
-	return authcodec.NewBech32Codec(in.Config.Bech32PrefixValidator), authcodec.NewBech32Codec(in.Config.Bech32PrefixConsensus)
+	AccountKeeper types.AccountKeeper
+	Config        *modulev1.Module
+	AuthConfig    *authmodulev1.Module
 }
 
 type ModuleInputs struct {
 	depinject.In
 
 	Config                *modulev1.Module
-	ValidatorAddressCodec types.ValidatorAddressCodec
-	ConsensusAddressCodec types.ConsensusAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
 	Cdc                   codec.Codec

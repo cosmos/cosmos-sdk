@@ -25,6 +25,9 @@ func TestCollectionsCorrectness(t *testing.T) {
 	})
 
 	t.Run("CollValueV2", func(t *testing.T) {
+		// NOTE: we cannot use colltest.TestValueCodec because protov2 has different
+		// compare semantics than protov1. We need to use protocmp.Transform() alongside
+		// cmp to ensure equality.
 		encoder := codec.CollValueV2[wrapperspb.UInt64Value]()
 		value := &wrapperspb.UInt64Value{Value: 500}
 		encodedValue, err := encoder.Encode(value)

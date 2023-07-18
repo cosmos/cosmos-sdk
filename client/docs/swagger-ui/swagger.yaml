@@ -9157,6 +9157,102 @@ paths:
           type: boolean
       tags:
         - Service
+  /cosmos/base/node/v1beta1/config:
+    get:
+      summary: Config queries for the operator configuration.
+      operationId: Config
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              minimum_gas_price:
+                type: string
+              pruning_keep_recent:
+                type: string
+                title: pruning settings
+              pruning_interval:
+                type: string
+            description: >-
+              ConfigResponse defines the response structure for the Config gRPC
+              query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
+  /cosmos/base/node/v1beta1/status:
+    get:
+      summary: Status queries for the node status.
+      operationId: Status
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              earliest_store_height:
+                type: string
+                format: uint64
+              height:
+                type: string
+                format: uint64
+              timestamp:
+                type: string
+                format: date-time
+              app_hash:
+                type: string
+                format: byte
+              validator_hash:
+                type: string
+                format: byte
+            description: >-
+              StateResponse defines the response structure for the status of a
+              node.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
@@ -46604,6 +46700,36 @@ definitions:
       application's
 
       state transition machine.
+  cosmos.base.node.v1beta1.ConfigResponse:
+    type: object
+    properties:
+      minimum_gas_price:
+        type: string
+      pruning_keep_recent:
+        type: string
+        title: pruning settings
+      pruning_interval:
+        type: string
+    description: ConfigResponse defines the response structure for the Config gRPC query.
+  cosmos.base.node.v1beta1.StatusResponse:
+    type: object
+    properties:
+      earliest_store_height:
+        type: string
+        format: uint64
+      height:
+        type: string
+        format: uint64
+      timestamp:
+        type: string
+        format: date-time
+      app_hash:
+        type: string
+        format: byte
+      validator_hash:
+        type: string
+        format: byte
+    description: StateResponse defines the response structure for the status of a node.
   cosmos.base.v1beta1.DecCoin:
     type: object
     properties:

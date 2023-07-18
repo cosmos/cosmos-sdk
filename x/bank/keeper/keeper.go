@@ -161,6 +161,10 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 	}
 
+	if _, err := k.sendRestriction.apply(ctx, delegatorAddr, moduleAccAddr, amt); err != nil {
+		return err
+	}
+
 	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}

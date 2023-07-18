@@ -531,14 +531,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			inputCoins:  sdk.NewCoins(newFooCoin(10)),
 			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(10))}},
 			outputAddrs: []sdk.AccAddress{toAddr1},
-			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newFooCoin(10)),
-				},
-			},
+			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(10))}},
 			expBals: expBals{
 				from: sdk.NewCoins(newFooCoin(985), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
@@ -551,14 +544,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			inputCoins:  sdk.NewCoins(newFooCoin(26)),
 			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(26))}},
 			outputAddrs: []sdk.AccAddress{toAddr2},
-			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newFooCoin(26)),
-				},
-			},
+			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(26))}},
 			expBals: expBals{
 				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
@@ -571,17 +557,10 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			inputCoins:  sdk.NewCoins(newBarCoin(88)),
 			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newBarCoin(88))}},
 			outputAddrs: []sdk.AccAddress{},
-			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newBarCoin(88)),
-				},
-			},
-			expErr: "restriction test error",
+			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(88))}},
+			expErr:      "restriction test error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(959), newBarCoin(412)),
+				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
 				to2:  sdk.NewCoins(newFooCoin(26)),
 			},
@@ -596,21 +575,11 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			outputAddrs: []sdk.AccAddress{toAddr1, toAddr2},
 			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newFooCoin(11)),
-				},
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr2,
-					amt:      sdk.NewCoins(newBarCoin(12)),
-				},
+				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
+				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(12))},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(400)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
 				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
@@ -625,23 +594,13 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			outputAddrs: []sdk.AccAddress{toAddr1},
 			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newFooCoin(12)),
-				},
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr2,
-					amt:      sdk.NewCoins(newFooCoin(32)),
-				},
+				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(12))},
+				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newFooCoin(32))},
 			},
 			expErr: "second restriction error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(400)),
-				to1:  sdk.NewCoins(newFooCoin(38)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
+				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
 		},
@@ -655,22 +614,12 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			outputAddrs: []sdk.AccAddress{toAddr1, toAddr2},
 			expArgs: []*restrictionArgs{
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr1,
-					amt:      sdk.NewCoins(newBarCoin(10)),
-				},
-				{
-					ctx:      suite.ctx,
-					fromAddr: fromAddr,
-					toAddr:   toAddr2,
-					amt:      sdk.NewCoins(newBarCoin(25)),
-				},
+				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(10))},
+				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(25))},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(365)),
-				to1:  sdk.NewCoins(newFooCoin(38), newBarCoin(25)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(453)),
+				to1:  sdk.NewCoins(newFooCoin(26), newBarCoin(25)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
 			},
 		},
@@ -685,7 +634,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			actualRestrictionArgs = nil
 			baseKeeper.SetSendRestriction(tc.fn)
 
-			ctx := suite.ctx
+			ctx, writeCache := suite.ctx.CacheContext()
 			input := types.Input{
 				Address: fromAddr.String(),
 				Coins:   tc.inputCoins,
@@ -696,6 +645,9 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 				err = baseKeeper.InputOutputCoins(ctx, input, tc.outputs)
 			}
 			suite.Require().NotPanics(testFunc, "InputOutputCoins")
+			if err == nil {
+				writeCache()
+			}
 			if len(tc.expErr) > 0 {
 				suite.Assert().EqualError(err, tc.expErr, "InputOutputCoins error")
 			} else {
@@ -703,7 +655,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			}
 			if len(tc.expArgs) > 0 {
 				for i, expArgs := range tc.expArgs {
-					suite.Assert().Equal(expArgs.ctx, actualRestrictionArgs[i].ctx, "[%d] ctx provided to restriction", i)
+					suite.Assert().Equal(ctx, actualRestrictionArgs[i].ctx, "[%d] ctx provided to restriction", i)
 					suite.Assert().Equal(expArgs.fromAddr, actualRestrictionArgs[i].fromAddr, "[%d] fromAddr provided to restriction", i)
 					suite.Assert().Equal(expArgs.toAddr, actualRestrictionArgs[i].toAddr, "[%d] toAddr provided to restriction", i)
 					suite.Assert().Equal(expArgs.amt.String(), actualRestrictionArgs[i].amt.String(), "[%d] amt provided to restriction", i)
@@ -711,11 +663,11 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			} else {
 				suite.Assert().Nil(actualRestrictionArgs, "args provided to a restriction")
 			}
-			fromBal := baseKeeper.GetAllBalances(ctx, fromAddr)
+			fromBal := baseKeeper.GetAllBalances(suite.ctx, fromAddr)
 			suite.Assert().Equal(tc.expBals.from.String(), fromBal.String(), "fromAddr balance")
-			to1Bal := baseKeeper.GetAllBalances(ctx, toAddr1)
+			to1Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr1)
 			suite.Assert().Equal(tc.expBals.to1.String(), to1Bal.String(), "toAddr1 balance")
-			to2Bal := baseKeeper.GetAllBalances(ctx, toAddr2)
+			to2Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr2)
 			suite.Assert().Equal(tc.expBals.to2.String(), to2Bal.String(), "toAddr2 balance")
 		})
 	}
@@ -805,9 +757,9 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithRestrictions() {
 		to2  sdk.Coins
 	}
 
-	addr1 := sdk.AccAddress("addr1_iocoinsr______")
-	addr2 := sdk.AccAddress("addr2_iocoinsr______")
-	addr3 := sdk.AccAddress("addr3_iocoinsr______")
+	addr1 := sdk.AccAddress("addr1_sendcoinsr____")
+	addr2 := sdk.AccAddress("addr2_sendcoinsr____")
+	addr3 := sdk.AccAddress("addr3_sendcoinsr____")
 
 	app, setupCtx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
@@ -852,12 +804,7 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithRestrictions() {
 			toAddr:    toAddr1,
 			finalAddr: toAddr1,
 			amt:       sdk.NewCoins(newFooCoin(10)),
-			expArgs: &restrictionArgs{
-				ctx:      suite.ctx,
-				fromAddr: fromAddr,
-				toAddr:   toAddr1,
-				amt:      sdk.NewCoins(newFooCoin(10)),
-			},
+			expArgs:   &restrictionArgs{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(10))},
 			expBals: expBals{
 				from: sdk.NewCoins(newFooCoin(985), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
@@ -870,12 +817,7 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithRestrictions() {
 			toAddr:    toAddr1,
 			finalAddr: toAddr2,
 			amt:       sdk.NewCoins(newBarCoin(27)),
-			expArgs: &restrictionArgs{
-				ctx:      suite.ctx,
-				fromAddr: fromAddr,
-				toAddr:   toAddr1,
-				amt:      sdk.NewCoins(newBarCoin(27)),
-			},
+			expArgs:   &restrictionArgs{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(27))},
 			expBals: expBals{
 				from: sdk.NewCoins(newFooCoin(985), newBarCoin(473)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
@@ -888,13 +830,8 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithRestrictions() {
 			toAddr:    toAddr1,
 			finalAddr: toAddr1,
 			amt:       sdk.NewCoins(newFooCoin(100), newBarCoin(200)),
-			expArgs: &restrictionArgs{
-				ctx:      suite.ctx,
-				fromAddr: fromAddr,
-				toAddr:   toAddr1,
-				amt:      sdk.NewCoins(newFooCoin(100), newBarCoin(200)),
-			},
-			expErr: "test restriction error",
+			expArgs:   &restrictionArgs{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(100), newBarCoin(200))},
+			expErr:    "test restriction error",
 			expBals: expBals{
 				from: sdk.NewCoins(newFooCoin(985), newBarCoin(473)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
@@ -911,31 +848,34 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithRestrictions() {
 			defer baseKeeper.SetSendRestriction(existingSendRestrictionFn)
 			actualRestrictionArgs = nil
 			baseKeeper.SetSendRestriction(tc.fn)
-			ctx := suite.ctx
+			ctx, writeCache := suite.ctx.CacheContext()
 
 			var err error
 			testFunc := func() {
 				err = baseKeeper.SendCoins(ctx, fromAddr, tc.toAddr, tc.amt)
 			}
 			suite.Require().NotPanics(testFunc, "SendCoins")
+			if err == nil {
+				writeCache()
+			}
 			if len(tc.expErr) > 0 {
 				suite.Assert().EqualError(err, tc.expErr, "SendCoins error")
 			} else {
 				suite.Assert().NoError(err, "SendCoins error")
 			}
 			if tc.expArgs != nil {
-				suite.Assert().Equal(tc.expArgs.ctx, actualRestrictionArgs.ctx, "ctx provided to restriction")
+				suite.Assert().Equal(ctx, actualRestrictionArgs.ctx, "ctx provided to restriction")
 				suite.Assert().Equal(tc.expArgs.fromAddr, actualRestrictionArgs.fromAddr, "fromAddr provided to restriction")
 				suite.Assert().Equal(tc.expArgs.toAddr, actualRestrictionArgs.toAddr, "toAddr provided to restriction")
 				suite.Assert().Equal(tc.expArgs.amt.String(), actualRestrictionArgs.amt.String(), "amt provided to restriction")
 			} else {
 				suite.Assert().Nil(actualRestrictionArgs, "args provided to a restriction")
 			}
-			fromBal := baseKeeper.GetAllBalances(ctx, fromAddr)
+			fromBal := baseKeeper.GetAllBalances(suite.ctx, fromAddr)
 			suite.Assert().Equal(tc.expBals.from.String(), fromBal.String(), "fromAddr balance")
-			to1Bal := baseKeeper.GetAllBalances(ctx, toAddr1)
+			to1Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr1)
 			suite.Assert().Equal(tc.expBals.to1.String(), to1Bal.String(), "toAddr1 balance")
-			to2Bal := baseKeeper.GetAllBalances(ctx, toAddr2)
+			to2Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr2)
 			suite.Assert().Equal(tc.expBals.to2.String(), to2Bal.String(), "toAddr2 balance")
 		})
 	}
@@ -1096,56 +1036,142 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		{Address: addr4.String(), Coins: newCoins2},
 	}
 
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	abciEventsStrings := func(events []abci.Event) []string {
+		rv := []string(nil)
+		for i, event := range events {
+			if len(event.Type) == 0 {
+				rv = append(rv, fmt.Sprintf("[%d]{ignored}", i))
+			}
+			for j, attr := range event.Attributes {
+				rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q", i, event.Type, j, string(attr.Key), string(attr.Value)))
+			}
+		}
+		return rv
+	}
 
-	events := ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(0, len(events))
+	abciEvent := func(typeName string, attrs ...abci.EventAttribute) abci.Event {
+		return abci.Event{
+			Type:       typeName,
+			Attributes: attrs,
+		}
+	}
+	abciAttr := func(key, value string) abci.EventAttribute {
+		return abci.EventAttribute{
+			Key:   []byte(key),
+			Value: []byte(value),
+		}
+	}
+
+	coinReceived := types.EventTypeCoinReceived
+	transfer := types.EventTypeTransfer
+	receiver := types.AttributeKeyReceiver
+	recipient := types.AttributeKeyRecipient
+	amount := sdk.AttributeKeyAmount
+
+	expFailEvents := []abci.Event{}
+
+	emF := sdk.NewEventManager()
+	ctx = ctx.WithEventManager(emF)
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	events := emF.ABCIEvents()
+	if !suite.Assert().Equal(expFailEvents, events, "events after InputOutputCoins failure") {
+		suite.T().Logf("Expected Events:\n%s", strings.Join(abciEventsStrings(expFailEvents), "\n"))
+		suite.T().Logf("Actual Events:\n%s", strings.Join(abciEventsStrings(events), "\n"))
+	}
 
 	// Set addr's coins
 	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, coins))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	coinSpent := types.EventTypeCoinSpent
+	spender := types.AttributeKeySpender
+	message := sdk.EventTypeMessage
+	sender := types.AttributeKeySender
+
+	expPassEvents := []abci.Event{
+		abciEvent(coinSpent, abciAttr(spender, addr.String()), abciAttr(amount, coins.String())),
+		abciEvent(message, abciAttr(sender, addr.String())),
+		abciEvent(coinReceived, abciAttr(receiver, addr3.String()), abciAttr(amount, newCoins.String())),
+		abciEvent(transfer, abciAttr(recipient, addr3.String()), abciAttr(amount, newCoins.String())),
+		abciEvent(coinReceived, abciAttr(receiver, addr4.String()), abciAttr(amount, newCoins2.String())),
+		abciEvent(transfer, abciAttr(recipient, addr4.String()), abciAttr(amount, newCoins2.String())),
+	}
+
+	emS := sdk.NewEventManager()
+	ctx = ctx.WithEventManager(emS)
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	events = emS.ABCIEvents()
+	if !suite.Assert().Equal(expPassEvents, events, "events after InputOutputCoins success") {
+		suite.T().Logf("Expected Events:\n%s", strings.Join(abciEventsStrings(expPassEvents), "\n"))
+		suite.T().Logf("Actual Events:\n%s", strings.Join(abciEventsStrings(events), "\n"))
+	}
+}
 
-	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Len(events, 6)
+func (suite *IntegrationTestSuite) TestGetLockedCoinsFnWrapper() {
+	// Not using the coin/coins constructors since we want to be able to create bad ones.
+	c := func(amt int64, denom string) sdk.Coin {
+		return sdk.Coin{Amount: sdk.NewInt(amt), Denom: denom}
+	}
+	cz := func(coins ...sdk.Coin) sdk.Coins {
+		return coins
+	}
 
-	event2 := sdk.Event{
-		Type:       sdk.EventTypeMessage,
-		Attributes: []abci.EventAttribute{},
+	tests := []struct {
+		name string
+		rv   sdk.Coins
+		exp  sdk.Coins
+	}{
+		{
+			name: "one positive coin",
+			rv:   cz(c(1, "okcoin")),
+			exp:  cz(c(1, "okcoin")),
+		},
+		{
+			name: "one zero coin",
+			rv:   cz(c(0, "zerocoin")),
+			exp:  sdk.Coins{},
+		},
+		{
+			name: "one negative coin",
+			rv:   cz(c(-1, "negcoin")),
+			exp:  sdk.Coins{},
+		},
+		{
+			name: "one positive one zero and one negative",
+			rv:   cz(c(1, "okcoin"), c(0, "zerocoin"), c(-1, "negcoin")),
+			exp:  cz(c(1, "okcoin")),
+		},
+		{
+			name: "two of same denom both positive",
+			rv:   cz(c(1, "twocoin"), c(4, "twocoin")),
+			exp:  cz(c(5, "twocoin")),
+		},
+		{
+			name: "two of same denom but one is negative",
+			rv:   cz(c(1, "badcoin"), c(-1, "badcoin")),
+			exp:  cz(c(1, "badcoin")),
+		},
+		{
+			name: "a bit of everything",
+			rv:   cz(c(-1, "weird"), c(1, "weird"), c(0, "weird"), c(8, "okay"), c(4, "weird"), c(0, "zero")),
+			exp:  cz(c(8, "okay"), c(5, "weird")),
+		},
 	}
-	event2.Attributes = append(
-		event2.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
-	)
-	event3 := sdk.Event{
-		Type:       types.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			testAddr := sdk.AccAddress("testAddr____________")
+			var addr sdk.AccAddress
+			getter := func(_ sdk.Context, getterAddr sdk.AccAddress) sdk.Coins {
+				addr = getterAddr
+				return tc.rv
+			}
+			wrapped := keeper.GetLockedCoinsFnWrapper(getter)
+			coins := wrapped(sdk.Context{}, testAddr)
+			suite.Assert().Equal(tc.exp.String(), coins.String(), "wrapped result")
+			suite.Assert().Equal(testAddr, addr, "address provided to wrapped getter")
+		})
 	}
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
-	)
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
-	event4 := sdk.Event{
-		Type:       types.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event4.Attributes = append(
-		event4.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
-	)
-	event4.Attributes = append(
-		event4.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
-	)
-	suite.Assert().Equal(abci.Event(event2), events[1])
-	suite.Assert().Equal(abci.Event(event3), events[3])
-	suite.Assert().Equal(abci.Event(event4), events[5])
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {
@@ -1177,6 +1203,138 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
 	suite.Require().Equal(origCoins.Sub(delCoins...), app.BankKeeper.SpendableCoins(ctx, addr1))
+}
+
+func (suite *IntegrationTestSuite) TestSpendableCoinsWithInjection() {
+	app, ctx := suite.app, suite.ctx
+	now := time.Unix(1713586800, 0).UTC()
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
+	endTime := now.Add(12 * time.Hour)
+	bk := app.BankKeeper.(*keeper.BaseKeeper)
+	origGetter := bk.GetLockedCoinsGetter()
+	defer bk.SetLockedCoinsGetter(origGetter)
+
+	baseStake := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	baseOther := sdk.NewCoins(sdk.NewInt64Coin("other", 50))
+	baseCoins := baseStake.Add(baseOther...)
+	vestingCoins := sdk.NewCoins(sdk.NewInt64Coin("vest", 88))
+	expVestingBalances := baseCoins.Add(vestingCoins...)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addrV := sdk.AccAddress("addrV_______________")
+
+	bacc := authtypes.NewBaseAccountWithAddress(addrV)
+	vacc := vesting.NewDelayedVestingAccount(bacc, vestingCoins, endTime.Unix())
+	app.AccountKeeper.SetAccount(ctx, vacc)
+
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, baseCoins), "FundAccount(addr1)")
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr2, baseCoins), "FundAccount(addr2)")
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addrV, expVestingBalances), "FundAccount(addrV)")
+
+	ctx = ctx.WithBlockTime(now.Add(1 * time.Hour))
+
+	bal1 := app.BankKeeper.GetAllBalances(ctx, addr1)
+	bal2 := app.BankKeeper.GetAllBalances(ctx, addr2)
+	balV := app.BankKeeper.GetAllBalances(ctx, addrV)
+	suite.Require().Equal(baseCoins.String(), bal1.String(), "GetAllBalances(addr1)")
+	suite.Require().Equal(baseCoins.String(), bal2.String(), "GetAllBalances(addr2)")
+	suite.Require().Equal(expVestingBalances.String(), balV.String(), "GetAllBalances(addrV)")
+
+	tests := []struct {
+		name     string
+		setup    func()
+		expAddr1 sdk.Coins
+		expAddr2 sdk.Coins
+		expAddrV sdk.Coins
+	}{
+		{
+			name:     "no locked coins getter",
+			expAddr1: baseCoins,
+			expAddr2: baseCoins,
+			expAddrV: expVestingBalances,
+		},
+		{
+			name:     "with only unvested coins getter",
+			setup:    func() { app.BankKeeper.AppendLockedCoinsGetter(app.BankKeeper.UnvestedCoins) },
+			expAddr1: baseCoins,
+			expAddr2: baseCoins,
+			expAddrV: baseCoins,
+		},
+		{
+			name: "with extra locked coins getters too",
+			setup: func() {
+				app.BankKeeper.AppendLockedCoinsGetter(app.BankKeeper.UnvestedCoins)
+				app.BankKeeper.AppendLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					if addr1.Equals(addr) {
+						return sdk.NewCoins(sdk.NewInt64Coin("stake", 15), sdk.NewInt64Coin("other", 32))
+					}
+					return sdk.NewCoins()
+				})
+				app.BankKeeper.AppendLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					if addr1.Equals(addr) {
+						return sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("other", 18))
+					}
+					return sdk.NewCoins()
+				})
+			},
+			expAddr1: sdk.NewCoins(sdk.NewInt64Coin("stake", 75)),
+			expAddr2: baseCoins,
+			expAddrV: baseCoins,
+		},
+		{
+			name: "only appended getter that returns a negative amount",
+			setup: func() {
+				app.BankKeeper.AppendLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					return sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-1)}}
+				})
+			},
+			expAddr1: baseCoins,
+			expAddr2: baseCoins,
+			expAddrV: expVestingBalances,
+		},
+		{
+			name: "only prepended getter that returns a negative amount",
+			setup: func() {
+				app.BankKeeper.PrependLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					return sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-1)}}
+				})
+			},
+			expAddr1: baseCoins,
+			expAddr2: baseCoins,
+			expAddrV: expVestingBalances,
+		},
+		{
+			name: "getters return more than account has for a denom",
+			setup: func() {
+				app.BankKeeper.AppendLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					return sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+				})
+				app.BankKeeper.AppendLockedCoinsGetter(func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+					return baseStake
+				})
+			},
+			expAddr1: baseOther,
+			expAddr2: baseOther,
+			expAddrV: baseOther.Add(vestingCoins...),
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			app.BankKeeper.ClearLockedCoinsGetter()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			spend1 := app.BankKeeper.SpendableCoins(ctx, addr1)
+			suite.Assert().Equal(tc.expAddr1.String(), spend1.String(), "SpendableCoins(addr1)")
+			spend2 := app.BankKeeper.SpendableCoins(ctx, addr2)
+			suite.Assert().Equal(tc.expAddr2.String(), spend2.String(), "SpendableCoins(addr2)")
+			spendV := app.BankKeeper.SpendableCoins(ctx, addrV)
+			suite.Assert().Equal(tc.expAddrV.String(), spendV.String(), "SpendableCoins(addrV)")
+		})
+	}
 }
 
 func (suite *IntegrationTestSuite) TestVestingAccountSend() {
@@ -1354,6 +1512,33 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	vestingAcc, ok := acc.(types.VestingAccount)
 	suite.Require().True(ok)
 	suite.Require().Equal(delCoins, vestingAcc.GetDelegatedVesting())
+}
+
+func (suite *IntegrationTestSuite) TestDelegateCoinsWithRestriction() {
+	app, ctx := suite.app, suite.ctx
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	addrModule := sdk.AccAddress("moduleAcc___________")
+
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	macc := app.AccountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, macc)
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+
+	// Now that the accounts are set up and funded, add a send restriction that just blocks everything.
+	expErr := "this is a test restriction: restriction of no"
+	restrictionOfNo := func(_ sdk.Context, _, _ sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
+		return nil, errors.New(expErr)
+	}
+	app.BankKeeper.AppendSendRestriction(restrictionOfNo)
+
+	err := app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
+	suite.Require().EqualError(err, expErr, "DelegateCoins")
 }
 
 func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {

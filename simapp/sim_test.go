@@ -254,15 +254,15 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		PrintStats(db)
 	}
 
-	if stopEarly {
-		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
-		return
-	}
-
 	fmt.Printf("exporting genesis...\n")
 
 	exported, err := app.ExportAppStateAndValidators(true, []string{})
 	require.NoError(t, err)
+
+	if stopEarly || len(exported.Validators) == 0 {
+		fmt.Println("can't import a zero-validator genesis, exiting test...")
+		return
+	}
 
 	fmt.Printf("importing genesis...\n")
 

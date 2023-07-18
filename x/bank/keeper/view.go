@@ -19,6 +19,10 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
 type ViewKeeper interface {
+	AppendLockedCoinsGetter(getter types.GetLockedCoinsFn)
+	PrependLockedCoinsGetter(getter types.GetLockedCoinsFn)
+	ClearLockedCoinsGetter()
+
 	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
 	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
 
@@ -26,6 +30,7 @@ type ViewKeeper interface {
 	GetAccountsBalances(ctx sdk.Context) []types.Balance
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	UnvestedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
 	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
@@ -37,15 +42,37 @@ type BaseViewKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
+
+	lockedCoinsGetter *lockedCoinsGetter
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
+	rv := BaseViewKeeper{
+		cdc:               cdc,
+		storeKey:          storeKey,
+		ak:                ak,
+		lockedCoinsGetter: newLockedCoinsGetter(),
 	}
+	rv.AppendLockedCoinsGetter(rv.UnvestedCoins)
+	return rv
+}
+
+// AppendLockedCoinsGetter adds the provided GetLockedCoinsFn to run after previously provided getters.
+// The provided getter is wrapped in another that prevents it from returning zero and negative coin amounts.
+func (k BaseViewKeeper) AppendLockedCoinsGetter(getter types.GetLockedCoinsFn) {
+	k.lockedCoinsGetter.append(getLockedCoinsFnWrapper(getter))
+}
+
+// PrependLockedCoinsGetter adds the provided GetLockedCoinsFn to run before previously provided getters.
+// The provided getter is wrapped in another that prevents it from returning zero and negative coin amounts.
+func (k BaseViewKeeper) PrependLockedCoinsGetter(getter types.GetLockedCoinsFn) {
+	k.lockedCoinsGetter.prepend(getLockedCoinsFnWrapper(getter))
+}
+
+// ClearLockedCoinsGetter removes the locked coins getter (if there is one).
+func (k BaseViewKeeper) ClearLockedCoinsGetter() {
+	k.lockedCoinsGetter.clear()
 }
 
 // Logger returns a module-specific logger.
@@ -160,11 +187,17 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 	}
 }
 
-// LockedCoins returns all the coins that are not spendable (i.e. locked) for an
-// account by address. For standard accounts, the result will always be no coins.
-// For vesting accounts, LockedCoins is delegated to the concrete vesting account
-// type.
+// LockedCoins returns all the coins that are not spendable (i.e. locked) for an account by address.
 func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	return k.lockedCoinsGetter.getLockedCoins(ctx, addr)
+}
+
+// UnvestedCoins returns all the coins that are locked due to a vesting schedule.
+// It is appended as a GetLockedCoinsFn during NewBaseViewKeeper.
+//
+// You probably want to call LockedCoins instead. This function is primarily made public
+// so that, externally, it can be re-injected after a call to ClearLockedCoinsGetter.
+func (k BaseViewKeeper) UnvestedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
@@ -172,7 +205,6 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 			return vacc.LockedCoins(ctx.BlockTime())
 		}
 	}
-
 	return sdk.NewCoins()
 }
 
@@ -180,23 +212,21 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
 func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	spendable, _ := k.spendableCoins(ctx, addr)
-	return spendable
-}
-
-// spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
-// It exists for gas efficiency, in order to avoid to have to get balance multiple times.
-func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
-	total = k.GetAllBalances(ctx, addr)
+	total := k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := total.SafeSub(locked...)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-		return
+	unlocked, hasNeg := total.SafeSub(locked...)
+	if !hasNeg {
+		return unlocked
 	}
 
-	return
+	spendable := sdk.Coins{}
+	for _, coin := range unlocked {
+		if coin.IsPositive() {
+			spendable = append(spendable, coin)
+		}
+	}
+	return spendable
 }
 
 // ValidateBalance validates all balances for a given account address returning
@@ -258,4 +288,57 @@ func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk
 	}
 
 	return sdk.NewCoin(denom, amount), nil
+}
+
+// lockedCoinsGetter is a struct that houses a GetLockedCoinsFn.
+// It exists so that the GetLockedCoinsFn can be updated in the ViewKeeper without needing to have a pointer receiver.
+type lockedCoinsGetter struct {
+	fn types.GetLockedCoinsFn
+}
+
+// newLockedCoinsGetter creates a new lockedCoinsGetter with nil getter.
+func newLockedCoinsGetter() *lockedCoinsGetter {
+	return &lockedCoinsGetter{
+		fn: nil,
+	}
+}
+
+// append adds the provided function to this, to be run after the existing function.
+func (r *lockedCoinsGetter) append(fn types.GetLockedCoinsFn) {
+	r.fn = r.fn.Then(fn)
+}
+
+// prepend adds the provided function to this, to be run before the existing function.
+func (r *lockedCoinsGetter) prepend(restriction types.GetLockedCoinsFn) {
+	r.fn = restriction.Then(r.fn)
+}
+
+// clear removes the GetLockedCoinsFn (sets it to nil).
+func (r *lockedCoinsGetter) clear() {
+	r.fn = nil
+}
+
+var _ types.GetLockedCoinsFn = lockedCoinsGetter{}.getLockedCoins
+
+// getLockedCoins runs the GetLockedCoinsFn if there is one. If not, it's a no-op.
+func (r lockedCoinsGetter) getLockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	if r.fn == nil {
+		return sdk.NewCoins()
+	}
+	return r.fn(ctx, addr)
+}
+
+// getLockedCoinsFnWrapper returns a new GetLockedCoinsFn that calls the provided getter but ensures
+// only positive coin entries are returned. Coin entries with zero or negative amounts are ignored.
+func getLockedCoinsFnWrapper(getter types.GetLockedCoinsFn) types.GetLockedCoinsFn {
+	return func(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+		locked := getter(ctx, addr)
+		rv := sdk.Coins{}
+		for _, coin := range locked {
+			if coin.IsPositive() {
+				rv = rv.Add(coin)
+			}
+		}
+		return rv
+	}
 }

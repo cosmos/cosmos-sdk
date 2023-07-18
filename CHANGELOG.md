@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Features
+
+* [#577](https://github.com/provenance-io/cosmos-sdk/pull/577) Add an injectable `GetLockedCoinsFn` to the bank module.
 
 ---
 

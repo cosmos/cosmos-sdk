@@ -107,9 +107,13 @@ func (s *SendRestrictionTestSuite) TestBankSendCoinsUsesSendRestrictionFn() {
 	s.ReqOKAddPermSanct("sanctionedAddr", sanctionedAddr)
 
 	s.Run("SendCoins from sanctioned addr returns error", func() {
+		ctx, writeCache := s.SdkCtx.CacheContext()
 		expErr := "cannot send from " + sanctionedAddr.String() + ": account is sanctioned"
-		err := s.App.BankKeeper.SendCoins(s.SdkCtx, sanctionedAddr, otherAddr, cz(5_000_000_000))
+		err := s.App.BankKeeper.SendCoins(ctx, sanctionedAddr, otherAddr, cz(5_000_000_000))
 		s.Assert().EqualError(err, expErr, "SendCoins from sanctioned address error")
+		if err == nil {
+			writeCache()
+		}
 	})
 
 	s.Run("SendCoins to sanctioned addr does not return an error", func() {

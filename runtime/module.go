@@ -94,7 +94,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 
 	// At startup, check that all proto annotations are correct.
 	if err := msgservice.ValidateProtoAnnotations(protoFiles); err != nil {
-		// Once we switch to using protoreflect-based antehandlers, we might
+		// Once we switch to using protoreflect-based ante handlers, we might
 		// want to panic here instead of logging a warning.
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
@@ -178,10 +178,12 @@ func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSigner) (codec
 	if err != nil {
 		return nil, err
 	}
+
 	err = interfaceRegistry.SigningContext().Validate()
 	if err != nil {
 		return nil, err
 	}
+
 	return interfaceRegistry, nil
 }
 

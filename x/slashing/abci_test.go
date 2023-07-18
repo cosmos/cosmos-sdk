@@ -76,7 +76,7 @@ func TestBeginBlocker(t *testing.T) {
 	err = slashing.BeginBlocker(ctx, slashingKeeper)
 	require.NoError(t, err)
 
-	info, err := slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
+	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
 	require.NoError(t, err)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)

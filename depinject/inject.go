@@ -18,7 +18,7 @@ func Inject(containerConfig Config, outputs ...interface{}) error {
 	loc := LocationFromCaller(1)
 	containerConfig = Configs(
 		containerConfig,
-		fallbackCfgs,
+		fallbackSupply(),
 	)
 	return inject(loc, Debug(), containerConfig, outputs...)
 }

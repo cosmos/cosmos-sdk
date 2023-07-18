@@ -795,10 +795,10 @@ func TestFuncTypes(t *testing.T) {
 func TestDefaultBindings(t *testing.T) {
 	smallDuck := smallMallard{}
 	// this can be used in an init() function
-	depinject.AddDefaultConfig(
-		depinject.FallbackSupply(NewLogger(true)),
-		depinject.FallbackSupply(smallDuck),
-		depinject.FallbackSupply(func() Duck { return smallDuck }),
+	depinject.AddFallbackSupply(
+		NewLogger(true),
+		smallDuck,
+		func() Duck { return smallDuck },
 	)
 
 	var logger Logger

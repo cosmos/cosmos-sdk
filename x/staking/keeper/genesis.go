@@ -34,7 +34,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		panic(err)
 	}
 
-	if err := k.SetLastTotalPower(ctx, data.LastTotalPower); err != nil {
+	if err := k.LastTotalPower.Set(ctx, data.LastTotalPower); err != nil {
 		panic(err)
 	}
 
@@ -243,7 +243,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	totalPower, err := k.GetLastTotalPower(ctx)
+	totalPower, err := k.LastTotalPower.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

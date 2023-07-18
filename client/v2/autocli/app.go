@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -39,7 +39,8 @@ type AppOptions struct {
 
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec stakingtypes.ValidatorAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -64,6 +65,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			FileResolver:          proto.HybridResolver,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
@@ -25,13 +23,12 @@ func run(args []string, options ...RunOption) error {
 		return err
 	}
 
-	logger := cfg.Logger(os.Stdout)
-
 	runCfg := DefaultRunConfig
 	for _, opt := range options {
 		opt(&runCfg)
 	}
 
+	logger := cfg.Logger(runCfg.StdOut)
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	if err != nil {
 		return err

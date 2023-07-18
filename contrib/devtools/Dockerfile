@@ -11,7 +11,8 @@ RUN apk add --no-cache \
   git \
   make \
   clang-extra-tools \
-  g++
+  g++ \
+  jq
 
 RUN npm install -g swagger-combine
 

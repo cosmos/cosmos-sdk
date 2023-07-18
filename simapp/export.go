@@ -2,11 +2,13 @@ package simapp
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -230,18 +232,15 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	/* Handle slashing state. */
 
 	// reset start height on signing infos
-	err = app.SlashingKeeper.IterateValidatorSigningInfos(
-		ctx,
-		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
-			info.StartHeight = 0
-			err := app.SlashingKeeper.ValidatorSigningInfo.Set(ctx, addr, info)
-			if err != nil {
-				panic(err)
-			}
-			return false
-		},
-	)
-	if err != nil {
+	err = app.SlashingKeeper.ValidatorSigningInfo.Walk(ctx, nil, func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
+		info.StartHeight = 0
+		err = app.SlashingKeeper.ValidatorSigningInfo.Set(ctx, addr, info)
+		if err != nil {
+			panic(err)
+		}
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 }

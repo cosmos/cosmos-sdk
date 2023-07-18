@@ -20,31 +20,6 @@ func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAd
 	return err == nil
 }
 
-// IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
-func (k Keeper) IterateValidatorSigningInfos(ctx context.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
-) error {
-	store := k.storeService.OpenKVStore(ctx)
-	iter, err := store.Iterator(types.ValidatorSigningInfoKeyPrefix, storetypes.PrefixEndBytes(types.ValidatorSigningInfoKeyPrefix))
-	if err != nil {
-		return err
-	}
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		address := types.ValidatorSigningInfoAddress(iter.Key())
-		var info types.ValidatorSigningInfo
-		err = k.cdc.Unmarshal(iter.Value(), &info)
-		if err != nil {
-			return err
-		}
-
-		if handler(address, info) {
-			break
-		}
-	}
-	return nil
-}
-
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {

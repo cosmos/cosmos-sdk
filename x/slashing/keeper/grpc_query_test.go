@@ -69,9 +69,9 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr2, signingInfo))
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	err := keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err := keeper.ValidatorSigningInfo.Walk(ctx, nil, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
 		signingInfos = append(signingInfos, info)
-		return false
+		return false, nil
 	})
 	require.NoError(err)
 	// verify all values are returned without pagination

@@ -33,9 +33,9 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	err = keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
 		signingInfos = append(signingInfos, info)
-		return false
+		return false, nil
 	})
 	require.NoError(err)
 	require.Equal(signingInfos[0].Address, signingInfo.Address)

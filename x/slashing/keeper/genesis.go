@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"errors"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -66,7 +70,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
-	err = keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
 		bechAddr := address.String()
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
@@ -83,9 +87,9 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 			MissedBlocks: localMissedBlocks,
 		})
 
-		return false
+		return false, nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 	return types.NewGenesisState(params, signingInfos, missedBlocks)

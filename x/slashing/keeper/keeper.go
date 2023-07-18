@@ -28,7 +28,7 @@ type Keeper struct {
 	authority            string
 	Schema               collections.Schema
 	Params               collections.Item[types.Params]
-	ValidatorSigningInfo collections.Map[[]byte, types.ValidatorSigningInfo]
+	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
 }
 
 // NewKeeper creates a slashing keeper
@@ -45,7 +45,7 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			sb,
 			types.ValidatorSigningInfoKeyPrefix,
 			"validator_signing_info",
-			collections.BytesKey,
+			sdk.ConsAddressKey,
 			codec.CollValue[types.ValidatorSigningInfo](cdc),
 		),
 	}

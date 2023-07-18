@@ -153,19 +153,36 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 
 	if !found && typ.Kind() == reflect.Interface {
 		matches := map[reflect.Type]reflect.Type{}
+		defaultMatches := map[reflect.Type]reflect.Type{}
 		var resolverType reflect.Type
 		for _, r := range c.resolvers {
 			if r.getType().Kind() != reflect.Interface && r.getType().Implements(typ) {
 				resolverType = r.getType()
-				matches[resolverType] = resolverType
+				if defRes, ok := r.(fallbackResolver); ok && defRes.isFallback() {
+					defaultMatches[resolverType] = resolverType
+				} else {
+					matches[resolverType] = resolverType
+				}
 			}
 		}
 
 		if len(matches) == 1 {
+			// get the only element in the map
+			for _, v := range matches {
+				resolverType = v
+			}
 			res, _ = c.resolverByType(resolverType)
 			c.logf("Implicitly registering resolver %v for interface type %v", resolverType, typ)
 			c.addResolver(typ, res)
-		} else if len(matches) > 1 {
+		} else if len(matches) == 0 && len(defaultMatches) == 1 {
+			// get the only element in the map
+			for _, v := range defaultMatches {
+				resolverType = v
+			}
+			res, _ = c.resolverByType(resolverType)
+			c.logf("Implicitly registering resolver %v for interface type %v (using the fallback value)", resolverType, typ)
+			c.addResolver(typ, res)
+		} else if len(matches) > 1 || len(defaultMatches) > 1 {
 			return nil, newErrMultipleImplicitInterfaceBindings(typ, matches)
 		}
 	}
@@ -339,7 +356,7 @@ func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (inter
 	return node, nil
 }
 
-func (c *container) supply(value reflect.Value, location Location) error {
+func (c *container) supply(value reflect.Value, location Location, isFallback bool) error {
 	typ := value.Type()
 	locGrapNode := c.locationGraphNode(location, nil)
 	markGraphNodeAsUsed(locGrapNode)
@@ -355,6 +372,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 		value:     value,
 		loc:       location,
 		graphNode: typeGraphNode,
+		fallback:  isFallback,
 	})
 
 	return nil

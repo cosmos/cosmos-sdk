@@ -791,3 +791,54 @@ func TestFuncTypes(t *testing.T) {
 	require.True(t, ok)
 	require.NoError(t, err)
 }
+
+func TestDefaultBindings(t *testing.T) {
+	smallDuck := smallMallard{}
+	// this can be used in an init() function
+	depinject.AddDefaultConfig(
+		depinject.FallbackSupply(NewLogger(true)),
+		depinject.FallbackSupply(smallDuck),
+		depinject.FallbackSupply(func() Duck { return smallDuck }),
+	)
+
+	var logger Logger
+	err := depinject.Inject(
+		depinject.Configs(
+			depinject.Supply(smallDuck),
+		),
+		&logger)
+	require.NoError(t, err)
+
+	_, ok := logger.(NoOpLogger)
+	require.True(t, ok)
+
+	err = depinject.Inject(
+		depinject.Configs(
+			depinject.Supply(NewLogger(false)),
+			depinject.Supply(smallDuck),
+		),
+		&logger)
+	require.NoError(t, err)
+
+	_, ok = logger.(LoggerImpl)
+	require.True(t, ok)
+}
+
+type Logger interface {
+	Log(string)
+}
+
+type LoggerImpl struct{}
+
+func (LoggerImpl) Log(string) {}
+
+type NoOpLogger struct{}
+
+func (NoOpLogger) Log(string) {}
+
+func NewLogger(isNoOp bool) Logger {
+	if isNoOp {
+		return NoOpLogger{}
+	}
+	return LoggerImpl{}
+}

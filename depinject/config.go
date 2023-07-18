@@ -9,7 +9,34 @@ import (
 // Config is a functional configuration of a container.
 type Config interface {
 	apply(*container) error
+	isFallback() bool
 }
+
+// defaultConfigs stores any default/fallback configs
+type fallbackConfig struct {
+	Config
+}
+
+func (fallbackConfig) isFallback() bool {
+	return true
+}
+
+var fallbackCfgs fallbackConfig
+
+func AddDefaultConfig(configs ...Config) {
+	if fallbackCfgs.Config == nil {
+		fallbackCfgs = fallbackConfig{Configs(configs...)}
+		return
+	}
+
+	fallbackCfgs = fallbackConfig{Configs(fallbackCfgs, Configs(configs...))}
+}
+
+// var fallbackCfg Config
+
+// func AddFallbackSupply() {
+
+// }
 
 // Provide defines a container configuration which registers the provided dependency
 // injection providers. Each provider will be called at most once with the
@@ -149,7 +176,23 @@ func Supply(values ...interface{}) Config {
 	loc := LocationFromCaller(1)
 	return containerConfig(func(ctr *container) error {
 		for _, v := range values {
-			err := ctr.supply(reflect.ValueOf(v), loc)
+			err := ctr.supply(reflect.ValueOf(v), loc, false)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+		return nil
+	})
+}
+
+// FallbackSupply works like Supply except that anything supplied with it will
+// only be used when no other value of the same type is available, meaning that
+// it can be overridden by another Supply.
+func FallbackSupply(values ...interface{}) Config {
+	loc := LocationFromCaller(1)
+	return containerConfig(func(ctr *container) error {
+		for _, v := range values {
+			err := ctr.supply(reflect.ValueOf(v), loc, true)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -172,6 +215,12 @@ func Configs(opts ...Config) Config {
 		for _, opt := range opts {
 			err := opt.apply(ctr)
 			if err != nil {
+				// ignore errors coming from default configs
+				if opt.isFallback() {
+					ctr.logf("Ignoring error from fallback config: %s", err)
+					continue
+				}
+
 				return errors.WithStack(err)
 			}
 		}
@@ -183,6 +232,10 @@ type containerConfig func(*container) error
 
 func (c containerConfig) apply(ctr *container) error {
 	return c(ctr)
+}
+
+func (c containerConfig) isFallback() bool {
+	return false
 }
 
 var _ Config = (*containerConfig)(nil)

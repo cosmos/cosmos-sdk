@@ -13,3 +13,8 @@ type resolver interface {
 	typeGraphNode() *graphviz.Node
 	getType() reflect.Type
 }
+
+type fallbackResolver interface {
+	resolver
+	isFallback() bool
+}

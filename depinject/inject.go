@@ -16,7 +16,11 @@ package depinject
 // Use InjectDebug to configure debug behavior.
 func Inject(containerConfig Config, outputs ...interface{}) error {
 	loc := LocationFromCaller(1)
-	return inject(loc, AutoDebug(), containerConfig, outputs...)
+	containerConfig = Configs(
+		containerConfig,
+		fallbackCfgs,
+	)
+	return inject(loc, Debug(), containerConfig, outputs...)
 }
 
 // InjectDebug is a version of Inject which takes an optional DebugOption for

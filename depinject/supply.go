@@ -11,6 +11,7 @@ type supplyResolver struct {
 	value     reflect.Value
 	loc       Location
 	graphNode *graphviz.Node
+	fallback  bool
 }
 
 func (s supplyResolver) getType() reflect.Type {
@@ -32,4 +33,8 @@ func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (re
 
 func (s supplyResolver) typeGraphNode() *graphviz.Node {
 	return s.graphNode
+}
+
+func (s supplyResolver) isFallback() bool {
+	return s.fallback
 }

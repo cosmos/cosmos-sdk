@@ -285,12 +285,8 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}
 
-	if in.AuthConfig == nil {
-		panic("auth and staking config cannot both be nil if no custom address codec is provided")
-	}
-
-	if in.AuthConfig.Bech32Prefix == "" {
-		panic("auth bech32 prefix cannot be empty if no custom address codec is provided")
+	if in.AuthConfig == nil || in.AuthConfig.Bech32Prefix == "" {
+		panic("auth config bech32 prefix cannot be empty if no custom address codec is provided")
 	}
 
 	if in.StakingConfig == nil {

@@ -8066,6 +8066,7 @@ MsgCreateValidator defines a SDK message for creating a new validator.
 | ----- | ---- | ----- | ----------- |
 | `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
 | `commission` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.** Deprecated: This field has been deprecated with LSM in favor of the validator bond |
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |

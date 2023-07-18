@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 type IntegrationTestSuite struct {
@@ -41,6 +42,9 @@ func (s *IntegrationTestSuite) TestStatusCommand() {
 
 	// Make sure the output has the validator moniker.
 	s.Require().Contains(out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
+
+	// Make sure the output has the binary name.
+	s.Require().Contains(out.String(), fmt.Sprintf("\"binary_version\":\"%s\"", version.NewInfo().Version))
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

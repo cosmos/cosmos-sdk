@@ -69,19 +69,3 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 
 	return legacy.Cdc.MarshalJSON(res)
 }
-
-// get the current blockchain height
-func GetChainHeight(clientCtx client.Context) (int64, error) {
-	node, err := clientCtx.GetNode()
-	if err != nil {
-		return -1, err
-	}
-
-	status, err := node.Status(context.Background())
-	if err != nil {
-		return -1, err
-	}
-
-	height := status.SyncInfo.LatestBlockHeight
-	return height, nil
-}

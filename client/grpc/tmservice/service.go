@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
@@ -80,7 +79,7 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
 func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	chainHeight, err := client.GetChainHeight(s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +129,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, err
 	}
 
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	chainHeight, err := client.GetChainHeight(s.clientCtx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to parse chain height")
 	}
@@ -152,7 +151,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 }
 
 func validatorsOutput(ctx context.Context, cctx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
-	vs, err := rpc.GetValidators(ctx, cctx, height, &page, &limit)
+	vs, err := client.GetValidators(ctx, cctx, height, &page, &limit)
 	if err != nil {
 		return nil, err
 	}

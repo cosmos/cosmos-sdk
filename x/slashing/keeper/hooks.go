@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"

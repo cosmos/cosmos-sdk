@@ -9,11 +9,16 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/simulation"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,13 +26,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
-	"cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/simulation"
 )
 
 var (
@@ -84,12 +82,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	if err := nft.RegisterQueryHandlerClient(context.Background(), mux, nft.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetQueryCmd returns a no-op command for the nft module.
-// Queries for NFT are registered by autocli.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
 }
 
 // GetTxCmd returns the transaction commands for the nft module

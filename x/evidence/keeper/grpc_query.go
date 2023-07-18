@@ -5,11 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,18 +68,12 @@ func (k Querier) AllEvidence(ctx context.Context, req *types.QueryAllEvidenceReq
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	var evidence []*codectypes.Any
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, k.k.Evidences, req.Pagination, func(_ []byte, value exported.Evidence) (include bool, err error) {
-		evidenceAny, err := codectypes.NewAnyWithValue(value)
-		if err != nil {
-			return false, err
-		}
-		evidence = append(evidence, evidenceAny)
-		return false, nil // we don't include results because we're appending them
+	evidences, pageRes, err := query.CollectionPaginate(ctx, k.k.Evidences, req.Pagination, func(_ []byte, value exported.Evidence) (*codectypes.Any, error) {
+		return codectypes.NewAnyWithValue(value)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryAllEvidenceResponse{Evidence: evidence, Pagination: pageRes}, nil
+	return &types.QueryAllEvidenceResponse{Evidence: evidences, Pagination: pageRes}, nil
 }

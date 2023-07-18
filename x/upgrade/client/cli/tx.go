@@ -5,17 +5,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	addresscodec "cosmossdk.io/core/address"
+	"cosmossdk.io/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/spf13/cobra"
-
-	"cosmossdk.io/x/upgrade/plan"
-	"cosmossdk.io/x/upgrade/types"
 )
 
 const (
@@ -109,7 +110,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					Plan:      p,
 				},
 			}); err != nil {
-				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+				return fmt.Errorf("failed to create submit upgrade proposal message: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
@@ -126,7 +127,10 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	err := cmd.MarkFlagRequired(cli.FlagTitle)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -163,7 +167,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					Authority: authority,
 				},
 			}); err != nil {
-				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+				return fmt.Errorf("failed to create cancel upgrade proposal message: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
@@ -175,7 +179,10 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	err := cmd.MarkFlagRequired(cli.FlagTitle)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }

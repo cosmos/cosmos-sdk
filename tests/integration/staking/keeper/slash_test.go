@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -18,6 +19,7 @@ import (
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
 func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
+	t.Helper()
 	t.Parallel()
 	f := initFixture(t)
 
@@ -55,26 +57,26 @@ func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, 
 func TestSlashUnbondingDelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
 
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10), 0)
+		time.Unix(5, 0), math.NewInt(10), 0)
 
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
 	// unbonding started prior to the infraction height, stakw didn't contribute
 	slashAmount, err := f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 1, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 	slashAmount, err = f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 0, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
@@ -83,27 +85,27 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 	slashAmount, err = f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 0, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(5)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(5)))
 	ubd, found := f.stakingKeeper.GetUnbondingDelegation(f.sdkCtx, addrDels[0], addrVals[0])
 	assert.Assert(t, found)
 	assert.Assert(t, len(ubd.Entries) == 1)
 
 	// initial balance unchanged
-	assert.DeepEqual(t, sdk.NewInt(10), ubd.Entries[0].InitialBalance)
+	assert.DeepEqual(t, math.NewInt(10), ubd.Entries[0].InitialBalance)
 
 	// balance decreased
-	assert.DeepEqual(t, sdk.NewInt(5), ubd.Entries[0].Balance)
+	assert.DeepEqual(t, math.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := f.bankKeeper.GetAllBalances(f.sdkCtx, notBondedPool.GetAddress())
 	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances...)
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
-	assert.Assert(t, diffTokens.AmountOf(bondDenom).Equal(sdk.NewInt(5)))
+	assert.Assert(t, diffTokens.AmountOf(bondDenom).Equal(math.NewInt(5)))
 }
 
 // tests slashRedelegation
 func TestSlashRedelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
@@ -119,7 +121,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt(10), math.LegacyNewDec(10), 0)
+		time.Unix(5, 0), math.NewInt(10), math.LegacyNewDec(10), 0)
 
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
@@ -132,7 +134,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.Assert(t, found)
 	slashAmount, err := f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 1, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
@@ -141,7 +143,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.Assert(t, found)
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(0)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	balances := f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
 
@@ -152,7 +154,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.Assert(t, found)
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, slashAmount.Equal(sdk.NewInt(5)))
+	assert.Assert(t, slashAmount.Equal(math.NewInt(5)))
 	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
@@ -161,7 +163,7 @@ func TestSlashRedelegation(t *testing.T) {
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
 	// initialbalance unchanged
-	assert.DeepEqual(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
+	assert.DeepEqual(t, math.NewInt(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
 	del, found = f.stakingKeeper.GetDelegation(f.sdkCtx, addrDels[0], addrVals[1])
@@ -178,7 +180,7 @@ func TestSlashRedelegation(t *testing.T) {
 func TestSlashAtNegativeHeight(t *testing.T) {
 	f, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 
 	bondedPool := f.stakingKeeper.GetBondedPool(f.sdkCtx)
 	oldBondedPoolBalances := f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
@@ -213,7 +215,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	f, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
@@ -249,7 +251,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
@@ -306,7 +308,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.Assert(t, len(ubd.Entries) == 1)
 
 	// balance decreased again
-	assert.DeepEqual(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	assert.DeepEqual(t, math.NewInt(0), ubd.Entries[0].Balance)
 
 	// bonded tokens burned again
 	newBondedPoolBalances = f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
@@ -333,7 +335,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.Assert(t, len(ubd.Entries) == 1)
 
 	// balance unchanged
-	assert.DeepEqual(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	assert.DeepEqual(t, math.NewInt(0), ubd.Entries[0].Balance)
 
 	// bonded tokens burned again
 	newBondedPoolBalances = f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
@@ -360,7 +362,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.Assert(t, len(ubd.Entries) == 1)
 
 	// balance unchanged
-	assert.DeepEqual(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	assert.DeepEqual(t, math.NewInt(0), ubd.Entries[0].Balance)
 
 	// just 1 bonded token burned again since that's all the validator now has
 	newBondedPoolBalances = f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
@@ -381,17 +383,17 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 func TestSlashWithRedelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
 
 	// set a redelegation
 	rdTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens), 0)
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, math.LegacyNewDecFromInt(rdTokens), 0)
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDecFromInt(rdTokens))
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, del))
 
 	// update bonded tokens
@@ -414,7 +416,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	_, err = f.stakingKeeper.Slash(f.sdkCtx, consAddr, 10, 10, fraction)
 	assert.NilError(t, err)
 
-	burnAmount := sdk.NewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(fraction).TruncateInt()
+	burnAmount := math.LegacyNewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(fraction).TruncateInt()
 
 	bondedPool = f.stakingKeeper.GetBondedPool(f.sdkCtx)
 	notBondedPool = f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
@@ -482,7 +484,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	_, err = f.stakingKeeper.Slash(f.sdkCtx, consAddr, 10, 10, math.LegacyOneDec())
 	assert.NilError(t, err)
 
-	burnAmount = sdk.NewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(math.LegacyOneDec()).TruncateInt()
+	burnAmount = math.LegacyNewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(math.LegacyOneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(math.LegacyOneDec().MulInt(rdTokens).TruncateInt())
 
 	// read updated pool
@@ -538,18 +540,18 @@ func TestSlashWithRedelegation(t *testing.T) {
 // tests Slash at a previous height with both an unbonding delegation and a redelegation
 func TestSlashBoth(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
 
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rdATokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, sdk.NewDecFromInt(rdATokens), 0)
+	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, math.LegacyNewDecFromInt(rdATokens), 0)
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rdA))
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDecFromInt(rdATokens))
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delA))
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
@@ -583,7 +585,7 @@ func TestSlashBoth(t *testing.T) {
 	assert.NilError(t, err)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
-	burnedBondAmount := sdk.NewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(fraction).TruncateInt()
+	burnedBondAmount := math.LegacyNewDecFromInt(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 10)).Mul(fraction).TruncateInt()
 	burnedBondAmount = burnedBondAmount.Sub(burnedNotBondedAmount)
 
 	// read updated pool
@@ -610,7 +612,7 @@ func TestSlashBoth(t *testing.T) {
 func TestSlashAmount(t *testing.T) {
 	f, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(5, 1)
 	burnedCoins, err := f.stakingKeeper.Slash(f.sdkCtx, consAddr, f.sdkCtx.BlockHeight(), 10, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, burnedCoins.GT(math.ZeroInt()))
@@ -619,5 +621,5 @@ func TestSlashAmount(t *testing.T) {
 	_, addrVals := generateAddresses(f, 100)
 	noBurned, err := f.stakingKeeper.Slash(f.sdkCtx, sdk.ConsAddress(addrVals[0]), f.sdkCtx.BlockHeight(), 10, fraction)
 	assert.NilError(t, err)
-	assert.Assert(t, sdk.NewInt(0).Equal(noBurned))
+	assert.Assert(t, math.NewInt(0).Equal(noBurned))
 }

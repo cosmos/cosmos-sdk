@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/collections"
-
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -136,7 +136,9 @@ func TestDeposits(t *testing.T) {
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
-			govKeeper.RefundAndDeleteDeposits(ctx, proposalID)
+			err = govKeeper.RefundAndDeleteDeposits(ctx, proposalID)
+			require.NoError(t, err)
+
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.ErrorIs(t, err, collections.ErrNotFound)
 			require.Equal(t, addr0Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -148,7 +150,9 @@ func TestDeposits(t *testing.T) {
 			proposalID = proposal.Id
 			_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 			require.NoError(t, err)
-			govKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+			err = govKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+			require.NoError(t, err)
+
 			deposits, _ = govKeeper.GetDeposits(ctx, proposalID)
 			require.Len(t, deposits, 0)
 			require.Equal(t, addr0Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -255,9 +259,10 @@ func TestValidateInitialDeposit(t *testing.T) {
 			}
 			params.MinInitialDepositRatio = sdkmath.LegacyNewDec(tc.minInitialDepositPercent).Quo(sdkmath.LegacyNewDec(100)).String()
 
-			govKeeper.Params.Set(ctx, params)
+			err := govKeeper.Params.Set(ctx, params)
+			require.NoError(t, err)
 
-			err := govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
+			err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
 
 			if tc.expectError {
 				require.Error(t, err)

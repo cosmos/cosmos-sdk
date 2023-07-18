@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
 func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions) (*MessageBinder, error) {
@@ -74,7 +75,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	if hasVarargs {
-		handler.CobraArgs = cobra.MinimumNArgs(n)
+		handler.CobraArgs = cobra.MinimumNArgs(n - 1)
 		handler.hasVarargs = true
 	} else if hasOptional {
 		handler.CobraArgs = cobra.RangeArgs(n-1, n)

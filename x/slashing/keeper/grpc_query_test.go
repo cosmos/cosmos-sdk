@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 		int64(0),
 	)
 
-	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo))
 	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.NoError(err)
 
@@ -64,17 +64,16 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 		int64(0),
 	)
 
-	keeper.SetValidatorSigningInfo(ctx, consAddr1, signingInfo)
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr1, signingInfo))
 	signingInfo.Address = string(consAddr2)
-	keeper.SetValidatorSigningInfo(ctx, consAddr2, signingInfo)
-
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, signingInfo))
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err := keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		signingInfos = append(signingInfos, info)
 		return false
 	})
-
+	require.NoError(err)
 	// verify all values are returned without pagination
 	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
 		&slashingtypes.QuerySigningInfosRequest{Pagination: nil})

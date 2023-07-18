@@ -5,12 +5,11 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -21,6 +20,7 @@ var header = cmtproto.Header{
 }
 
 func createValidators(t *testing.T) []types.Validator {
+	t.Helper()
 	return []types.Validator{
 		newValidator(t, valAddr1, pk1),
 		newValidator(t, valAddr2, pk2),

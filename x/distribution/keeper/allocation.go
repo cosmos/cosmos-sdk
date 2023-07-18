@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"

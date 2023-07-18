@@ -3,8 +3,9 @@ package runtime
 import (
 	"context"
 
-	"cosmossdk.io/core/event"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -32,12 +33,12 @@ func NewEventManager(ctx context.Context) event.Manager {
 }
 
 // Emit emits an typed event that is defined in the protobuf file.
-// In the future these events will be added to consensus
+// In the future these events will be added to consensus.
 func (e Events) Emit(ctx context.Context, event protoiface.MessageV1) error {
 	return e.EventManagerI.EmitTypedEvent(event)
 }
 
-// EmitKV emits a key value pair event
+// EmitKV emits a key value pair event.
 func (e Events) EmitKV(ctx context.Context, eventType string, attrs ...event.Attribute) error {
 	attributes := make([]sdk.Attribute, 0, len(attrs))
 
@@ -45,15 +46,12 @@ func (e Events) EmitKV(ctx context.Context, eventType string, attrs ...event.Att
 		attributes = append(attributes, sdk.NewAttribute(attr.Key, attr.Value))
 	}
 
-	events := sdk.Events{
-		sdk.NewEvent(eventType, attributes...),
-	}
-	e.EventManagerI.EmitEvents(events)
+	e.EventManagerI.EmitEvents(sdk.Events{sdk.NewEvent(eventType, attributes...)})
 	return nil
 }
 
 // Emit emits an typed event that is defined in the protobuf file.
-// In the future these events will be added to consensus
+// In the future these events will be added to consensus.
 func (e Events) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
 	return e.EventManagerI.EmitTypedEvent(event)
 }

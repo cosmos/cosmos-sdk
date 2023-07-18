@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"sigs.k8s.io/yaml"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/util"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions, exec func(cmd *cobra.Command, input protoreflect.Message) error) (*cobra.Command, error) {
@@ -35,14 +36,15 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 
 	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
+		SilenceUsage: true,
+		Use:          use,
+		Long:         long,
+		Short:        options.Short,
+		Example:      options.Example,
+		Aliases:      options.Alias,
+		SuggestFor:   options.SuggestFor,
+		Deprecated:   options.Deprecated,
+		Version:      options.Version,
 	}
 
 	cmd.SetContext(context.Background())

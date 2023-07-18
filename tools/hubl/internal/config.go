@@ -5,8 +5,9 @@ import (
 	"os"
 	"path"
 
-	"cosmossdk.io/errors"
 	"github.com/pelletier/go-toml/v2"
+
+	"cosmossdk.io/errors"
 )
 
 type Config struct {

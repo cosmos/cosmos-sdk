@@ -10,12 +10,10 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
-	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -82,11 +80,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 // GetTxCmd returns the root tx command for the distribution module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd(ab.ac)
-}
-
-// GetQueryCmd returns the root query command for the distribution module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
 }
 
 // RegisterInterfaces implements InterfaceModule

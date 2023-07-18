@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/math"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,7 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -104,9 +104,9 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 			Moniker: "TODO",
 		},
 		stakingtypes.CommissionRates{
-			Rate:          sdk.MustNewDecFromStr("0.1"),
-			MaxRate:       sdk.MustNewDecFromStr("0.2"),
-			MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+			Rate:          math.LegacyMustNewDecFromStr("0.1"),
+			MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
+			MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
 		},
 		math.OneInt(),
 	)

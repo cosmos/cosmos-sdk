@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 
-	"cosmossdk.io/tools/rosetta/lib/errors"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
+	"cosmossdk.io/tools/rosetta/lib/errors"
 )
 
 // Mempool fetches the transactions contained in the mempool

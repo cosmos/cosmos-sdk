@@ -3,13 +3,14 @@ package tx
 import (
 	"testing"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"
@@ -48,7 +49,7 @@ func TestDecode(t *testing.T) {
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
-	fee := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	fee := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	gas := uint64(200)
 	memo := "memo"
 	accSeq := uint64(2)

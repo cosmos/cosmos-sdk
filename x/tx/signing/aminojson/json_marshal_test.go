@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
@@ -15,12 +14,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/x/tx/signing/aminojson"
-
+	"cosmossdk.io/x/tx/signing/aminojson/internal/aminojsonpb"
 	"cosmossdk.io/x/tx/signing/aminojson/internal/testpb"
 )
 
@@ -119,12 +117,13 @@ func TestAminoJSON(t *testing.T) {
 	require.Equal(t, string(sortedBz), string(encodedDefaultBz))
 }
 
-func naiveSortedJSON(t testing.TB, jsonToSort []byte) []byte {
+func naiveSortedJSON(tb testing.TB, jsonToSort []byte) []byte {
+	tb.Helper()
 	var c interface{}
 	err := json.Unmarshal(jsonToSort, &c)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	sortedBz, err := json.Marshal(c)
-	assert.NilError(t, err)
+	assert.NilError(tb, err)
 	return sortedBz
 }
 

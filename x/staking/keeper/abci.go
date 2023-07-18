@@ -17,7 +17,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	return k.TrackHistoricalInfo(ctx)
 }
 
-// Called every block, update validator set
+// EndBlocker called at every block, update validator set
 func (k *Keeper) EndBlocker(ctx context.Context) ([]abci.ValidatorUpdate, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	return k.BlockValidatorUpdates(ctx)

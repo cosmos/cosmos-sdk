@@ -3,14 +3,14 @@ package codec_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections/colltest"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestCollectionsCorrectness(t *testing.T) {

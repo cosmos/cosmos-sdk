@@ -6,13 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -48,15 +47,14 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var accounts []*codectypes.Any
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, s.k.Accounts, req.Pagination, func(_ sdk.AccAddress, value sdk.AccountI) (include bool, err error) {
-		accountAny, err := codectypes.NewAnyWithValue(value)
-		if err != nil {
-			return false, err
-		}
-		accounts = append(accounts, accountAny)
-		return false, nil // we don't include it since we're already appending the account
-	})
+	accounts, pageRes, err := query.CollectionPaginate(
+		ctx,
+		s.k.Accounts,
+		req.Pagination,
+		func(_ sdk.AccAddress, value sdk.AccountI) (*codectypes.Any, error) {
+			return codectypes.NewAnyWithValue(value)
+		},
+	)
 
 	return &types.QueryAccountsResponse{Accounts: accounts, Pagination: pageRes}, err
 }
@@ -161,6 +159,10 @@ func (s queryServer) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRe
 	bech32Prefix, err := s.k.getBech32Prefix()
 	if err != nil {
 		return nil, err
+	}
+
+	if bech32Prefix == "" {
+		return &types.Bech32PrefixResponse{Bech32Prefix: "bech32 is not used on this chain"}, nil
 	}
 
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil

@@ -7,17 +7,14 @@ import (
 	"testing"
 	"time"
 
-	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"github.com/cosmos/cosmos-proto/rapidproto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-proto/rapidproto"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
@@ -27,7 +24,9 @@ import (
 	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
+	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
+	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -193,6 +192,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 }
 
 func newAny(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
 	bz, err := proto.Marshal(msg)
 	require.NoError(t, err)
 	typeName := fmt.Sprintf("/%s", msg.ProtoReflect().Descriptor().FullName())
@@ -218,7 +218,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
 	dec10bz, _ := math.LegacyNewDec(10).Marshal()
-	int123bz, _ := types.NewInt(123).Marshal()
+	int123bz, _ := math.NewInt(123).Marshal()
 
 	cases := map[string]struct {
 		gogo               gogoproto.Message
@@ -397,7 +397,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &vestingapi.BaseVestingAccount{BaseAccount: &authapi.BaseAccount{PubKey: pubkeyAnyPulsar}},
 		},
 		"math/int_as_string": {
-			gogo:   &gogo_testpb.IntAsString{IntAsString: types.NewInt(123)},
+			gogo:   &gogo_testpb.IntAsString{IntAsString: math.NewInt(123)},
 			pulsar: &pulsar_testpb.IntAsString{IntAsString: "123"},
 		},
 		"math/int_as_string/empty": {
@@ -405,7 +405,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &pulsar_testpb.IntAsString{},
 		},
 		"math/int_as_bytes": {
-			gogo:   &gogo_testpb.IntAsBytes{IntAsBytes: types.NewInt(123)},
+			gogo:   &gogo_testpb.IntAsBytes{IntAsBytes: math.NewInt(123)},
 			pulsar: &pulsar_testpb.IntAsBytes{IntAsBytes: int123bz},
 		},
 		"math/int_as_bytes/empty": {

@@ -3,8 +3,9 @@ package tx
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
 	protov2 "google.golang.org/protobuf/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coinbase/rosetta-sdk-go/types"
+
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/tools/rosetta/lib/errors"
-	"github.com/coinbase/rosetta-sdk-go/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

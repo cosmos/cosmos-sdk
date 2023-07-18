@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/comet"
 	"github.com/cockroachdb/errors"
+
+	"cosmossdk.io/core/comet"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -143,8 +144,10 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 				),
 			)
-			k.sk.Jail(sdkCtx, consAddr)
-
+			err = k.sk.Jail(sdkCtx, consAddr)
+			if err != nil {
+				return err
+			}
 			downtimeJailDur, err := k.DowntimeJailDuration(ctx)
 			if err != nil {
 				return err

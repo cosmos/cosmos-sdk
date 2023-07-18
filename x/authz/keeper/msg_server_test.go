@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -11,8 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/golang/mock/gomock"
 )
 
 func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
@@ -331,7 +331,7 @@ func (suite *TestSuite) TestExec() {
 			errMsg: "empty address string is not allowed",
 		},
 		{
-			name: "no existing grant",
+			name: "non existing grant",
 			malleate: func() authz.MsgExec {
 				return authz.NewMsgExec(grantee, []sdk.Msg{msg})
 			},

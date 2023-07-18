@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -130,6 +130,26 @@ func TestProposalQueues(t *testing.T) {
 	has, err = govKeeper.ActiveProposalsQueue.Has(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
 	require.NoError(t, err)
 	require.True(t, has)
+}
+
+func TestSetHooks(t *testing.T) {
+	govKeeper, _, _, _, _, _, _ := setupGovKeeper(t)
+	require.Empty(t, govKeeper.Hooks())
+
+	govHooksReceiver := MockGovHooksReceiver{}
+	govKeeper.SetHooks(types.NewMultiGovHooks(&govHooksReceiver))
+	require.NotNil(t, govKeeper.Hooks())
+	require.Panics(t, func() {
+		govKeeper.SetHooks(&govHooksReceiver)
+	})
+}
+
+func TestGetGovGovernanceAndModuleAccountAddress(t *testing.T) {
+	govKeeper, authKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+	mAcc := authKeeper.GetModuleAccount(ctx, "gov")
+	require.Equal(t, mAcc, govKeeper.GetGovernanceAccount(ctx))
+	mAddr := authKeeper.GetModuleAddress("gov")
+	require.Equal(t, mAddr, govKeeper.ModuleAccountAddress())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

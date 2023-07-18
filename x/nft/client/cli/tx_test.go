@@ -10,6 +10,13 @@ import (
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	nftmodule "cosmossdk.io/x/nft/module"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -20,12 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
-	nftmodule "cosmossdk.io/x/nft/module"
-	nfttestutil "cosmossdk.io/x/nft/testutil"
 )
 
 const (
@@ -134,7 +135,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	testCases := []struct {
@@ -226,13 +227,13 @@ func (s *CLITestSuite) initAccount() {
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	s.owner, err = keyinfo.GetAddress()
 	s.Require().NoError(err)
 
-	amount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200)))
+	amount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(200)))
 	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, s.ac, args...)
 	s.Require().NoError(err)
 }

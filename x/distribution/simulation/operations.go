@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
 	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/pkg/errors"
 )
 
 // Simulation operation weights constants

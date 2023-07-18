@@ -43,7 +43,7 @@ message TestNullableFields {
 message IntAsString {
   string int_as_string = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (amino.dont_omitempty) = true,
     (gogoproto.nullable)   = false
   ];
@@ -52,7 +52,7 @@ message IntAsString {
 message IntAsBytes {
   bytes int_as_bytes = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (amino.dont_omitempty) = true,
     (gogoproto.nullable)   = false
   ];

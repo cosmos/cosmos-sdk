@@ -65,15 +65,14 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 // are equal to the given account address of group policy.
 func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Codec) error {
 	for i := range msgs {
-		// In practice, GetSigners() should return a non-empty array without
-		// duplicates, so the code below is equivalent to:
-		// `msgs[i].GetSigners()[0] == groupPolicyAcc`
-		// but we prefer to loop through all GetSigners just to be sure.
+		// In practice, GetMsgV1Signers should return a non-empty array without duplicates.
 		signers, _, err := cdc.GetMsgV1Signers(msgs[i])
 		if err != nil {
 			return err
 		}
 
+		// The code below should be equivalent to: `signers[0] == groupPolicyAcc`
+		// But here, we loop through all the signers just to be sure.
 		for _, acct := range signers {
 			if !bytes.Equal(groupPolicyAcc, acct) {
 				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)

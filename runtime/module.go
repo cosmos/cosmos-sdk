@@ -4,27 +4,26 @@ import (
 	"fmt"
 	"os"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -95,7 +94,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 
 	// At startup, check that all proto annotations are correct.
 	if err := msgservice.ValidateProtoAnnotations(protoFiles); err != nil {
-		// Once we switch to using protoreflect-based antehandlers, we might
+		// Once we switch to using protoreflect-based ante handlers, we might
 		// want to panic here instead of logging a warning.
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
@@ -179,10 +178,12 @@ func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSigner) (codec
 	if err != nil {
 		return nil, err
 	}
+
 	err = interfaceRegistry.SigningContext().Validate()
 	if err != nil {
 		return nil, err
 	}
+
 	return interfaceRegistry, nil
 }
 

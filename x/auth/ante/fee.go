@@ -86,11 +86,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
-	if feeGranter != "" {
-		feeGranterAddr, err := sdk.AccAddressFromBech32(feeGranter)
-		if err != nil {
-			return err
-		}
+	if feeGranter != nil {
+		feeGranterAddr := sdk.AccAddress(feeGranter)
 
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")

@@ -9,13 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/tools/cosmovisor"
 )
 
@@ -84,7 +82,7 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 // setEnv sets environment variables to the values provided.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) {
+func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:thelper // false psotive
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
@@ -245,8 +243,7 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	output := zerolog.ConsoleWriter{Out: bufferedStdOut, TimeFormat: time.RFC3339Nano}
-	logger := log.NewCustomLogger(zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger())
+	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, "cosmovisor")
 	return &bufferedStdOut, logger
 }
 

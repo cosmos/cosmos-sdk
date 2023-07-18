@@ -22,7 +22,7 @@
   </a>
 </div>
 <div align="center">
-  <a href="https://discord.gg/AzefAFd">
+  <a href="https://discord.gg/cosmosnetwork">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>
   <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
@@ -49,7 +49,7 @@ For more information, see the [Cosmos SDK Documentation](https://docs.cosmos.net
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
-If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.gg/cosmosnetwork).
 
 ## Tools and Frameworks
 

@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -46,10 +46,10 @@ func (k Keeper) GetPreviousProposerConsAddr(ctx context.Context) (sdk.ConsAddres
 }
 
 // set the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.ConsAddress) {
+func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.ConsAddress) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
-	store.Set(types.ProposerKey, bz)
+	return store.Set(types.ProposerKey, bz)
 }
 
 // historical reference count (used for testcases)

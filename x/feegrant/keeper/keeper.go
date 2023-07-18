@@ -11,7 +11,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +34,7 @@ type Keeper struct {
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
-// NewKeeper creates a fee grant Keeper
+// NewKeeper creates a feegrant Keeper
 func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feegrant.AccountKeeper) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
@@ -151,13 +150,24 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 
 // revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAddress) error {
-	_, err := k.getGrant(ctx, granter, grantee)
+	grant, err := k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
 
 	if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
 		return err
+	}
+
+	exp, err := grant.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	if exp != nil {
+		if err := store.Delete(feegrant.FeeAllowancePrefixQueue(exp, feegrant.FeeAllowanceKey(grantee, granter)[1:])); err != nil {
+			return err
+		}
 	}
 
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
@@ -224,23 +234,19 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 
 	remove, err := grant.Accept(ctx, fee, msgs)
-
 	if remove {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
-		k.revokeAllowance(ctx, granter, grantee)
+		_ = k.revokeAllowance(ctx, granter, grantee)
 		if err != nil {
 			return err
 		}
-
 		emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 		return nil
 	}
-
 	if err != nil {
 		return err
 	}
-
 	emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 	// if fee allowance is accepted, store the updated state of the allowance

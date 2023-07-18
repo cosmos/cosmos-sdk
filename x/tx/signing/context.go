@@ -10,10 +10,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"cosmossdk.io/core/address"
-
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/address"
 )
+
+type TypeResolver interface {
+	protoregistry.MessageTypeResolver
+	protoregistry.ExtensionTypeResolver
+}
 
 // Context is a context for retrieving the list of signers from a
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
@@ -35,7 +39,7 @@ type Options struct {
 	FileResolver ProtoFileResolver
 
 	// TypeResolver is the protobuf type resolver to use for resolving message types.
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver TypeResolver
 
 	// AddressCodec is the codec for converting addresses between strings and bytes.
 	AddressCodec address.Codec

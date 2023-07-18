@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -23,8 +22,7 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	)
 
 	// set the validator signing information
-	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
-
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo))
 	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
 	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.NoError(err)
@@ -35,11 +33,11 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err = keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		signingInfos = append(signingInfos, info)
 		return false
 	})
-
+	require.NoError(err)
 	require.Equal(signingInfos[0].Address, signingInfo.Address)
 
 	// test Tombstone
@@ -49,7 +47,7 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 
 	// test JailUntil
 	jailTime := time.Now().Add(time.Hour).UTC()
-	keeper.JailUntil(ctx, consAddr, jailTime)
+	require.NoError(keeper.JailUntil(ctx, consAddr, jailTime))
 	sInfo, _ := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.Equal(sInfo.JailedUntil, jailTime)
 }
@@ -61,7 +59,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 	for _, window := range []int64{100, 32_000} {
 		params := testutil.TestParams()
 		params.SignedBlocksWindow = window
-		require.NoError(keeper.SetParams(ctx, params))
+		require.NoError(keeper.Params.Set(ctx, params))
 
 		// validator misses all blocks in the window
 		var valIdxOffset int64

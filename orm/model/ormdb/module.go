@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"math"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
-
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/orm/encoding/encodeutil"
 	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/model/ormtable"

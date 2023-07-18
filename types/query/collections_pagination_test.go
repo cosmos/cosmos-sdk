@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 )
 
 func TestCollectionPagination(t *testing.T) {
@@ -99,7 +100,7 @@ func TestCollectionPagination(t *testing.T) {
 				Limit: 3,
 			},
 			expResp: &PageResponse{
-				NextKey: encodeKey(3),
+				NextKey: encodeKey(5),
 			},
 			filter: func(key, value uint64) (bool, error) {
 				return key%2 == 0, nil
@@ -107,6 +108,7 @@ func TestCollectionPagination(t *testing.T) {
 			expResults: []collections.KeyValue[uint64, uint64]{
 				{Key: 0, Value: 0},
 				{Key: 2, Value: 2},
+				{Key: 4, Value: 4},
 			},
 		},
 		"filtered with key": {
@@ -130,7 +132,15 @@ func TestCollectionPagination(t *testing.T) {
 	for name, tc := range tcs {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			gotResults, gotResponse, err := CollectionFilteredPaginate(ctx, m, tc.req, tc.filter)
+			gotResults, gotResponse, err := CollectionFilteredPaginate(
+				ctx,
+				m,
+				tc.req,
+				tc.filter,
+				func(key, value uint64) (collections.KeyValue[uint64, uint64], error) {
+					return collections.KeyValue[uint64, uint64]{Key: key, Value: value}, nil
+				},
+			)
 			if tc.wantErr != nil {
 				require.ErrorIs(t, err, tc.wantErr)
 				return

@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/bits-and-blooms/bitset"
+
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/bits-and-blooms/bitset"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -192,8 +193,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
-	return nil
+	return k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 }
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.

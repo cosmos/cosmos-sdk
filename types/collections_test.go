@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections/colltest"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/collections/colltest"
 )
 
 func TestCollectionsCorrectness(t *testing.T) {

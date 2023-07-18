@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -90,7 +91,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		// the deposit at this point since the proposal is converted to regular.
 		// As a result, the deposits are either deleted or refunded in all cases
 		// EXCEPT when an expedited proposal fails.
-		if !(proposal.Expedited && !passes) {
+		if passes || !proposal.Expedited {
 			if burnDeposits {
 				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {
@@ -123,6 +124,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			messages, err := proposal.GetMsgs()
 			if err != nil {
 				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed proposal (%v) failed to execute; msgs: %s", proposal, err)
 
@@ -156,6 +158,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				ctx.EventManager().EmitEvents(events)
 			} else {
 				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
@@ -181,6 +184,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			logMsg = "expedited proposal converted to regular"
 		default:
 			proposal.Status = v1.StatusRejected
+			proposal.FailedReason = "proposal did not get enough votes to pass"
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}

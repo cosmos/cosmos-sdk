@@ -24,10 +24,12 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	var bankKeeper bankkeeper.Keeper
-	var stakingKeeper *stakingkeeper.Keeper
-	var slashingKeeper slashingkeeper.Keeper
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
+		slashingKeeper    slashingkeeper.Keeper
+	)
 
 	app, err := simtestutil.Setup(
 		depinject.Configs(

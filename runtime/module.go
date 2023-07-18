@@ -10,6 +10,8 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -156,16 +158,18 @@ func SetupAppBuilder(inputs AppInputs) {
 	}
 }
 
-func ProvideInterfaceRegistry(customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(authConfig *authmodulev1.Module, stakingConfig *stakingmodulev1.Module, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+	if authConfig == nil { // fallback to global config if auth module us not used
+		authConfig = &authmodulev1.Module{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()}
+	}
+
+	if stakingConfig == nil { // fallback to global config if staking module is not used
+		stakingConfig = &stakingmodulev1.Module{Bech32PrefixValidator: sdk.GetConfig().GetBech32ValidatorAddrPrefix()}
+	}
+
 	signingOptions := signing.Options{
-		// using the global prefixes is a temporary solution until we refactor this
-		// to get the address.Codec's from the container
-		AddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		},
-		ValidatorAddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-		},
+		AddressCodec:          address.NewBech32Codec(authConfig.Bech32Prefix),
+		ValidatorAddressCodec: address.NewBech32Codec(stakingConfig.Bech32PrefixValidator),
 	}
 	for _, signer := range customGetSigners {
 		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)

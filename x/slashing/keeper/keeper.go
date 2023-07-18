@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -34,12 +35,12 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService: storeService,
-		cdc:          cdc,
-		legacyAmino:  legacyAmino,
-		sk:           sk,
-		authority:    authority,
-		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		storeService:       storeService,
+		cdc:                cdc,
+		legacyAmino:        legacyAmino,
+		sk:                 sk,
+		authority:          authority,
+		Params:             collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -68,14 +69,14 @@ func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error 
 		return err
 	}
 	store := k.storeService.OpenKVStore(ctx)
-	key := types.AddrPubkeyRelationKey(pubkey.Address())
+	key := append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(pubkey.Address())...)
 	return store.Set(key, bz)
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.AddrPubkeyRelationKey(a))
+	bz, err := store.Get(append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(a)...))
 	if err != nil {
 		return nil, err
 	}
@@ -140,5 +141,5 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.AddrPubkeyRelationKey(addr))
+	return store.Delete(append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(addr)...))
 }

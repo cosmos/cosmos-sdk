@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -46,7 +47,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"AddrPubkeyRelationKey",
 			v1.AddrPubkeyRelationKey(consAddr),
-			types.AddrPubkeyRelationKey(consAddr),
+			append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(consAddr)...),
 		},
 	}
 

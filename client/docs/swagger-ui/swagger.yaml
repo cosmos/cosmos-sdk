@@ -3930,6 +3930,7 @@ paths:
             type: object
             properties:
               params:
+                description: params provides the parameters of the bank module.
                 type: object
                 properties:
                   send_enabled:
@@ -3960,7 +3961,6 @@ paths:
                       compatibility of genesis files.
                   default_send_enabled:
                     type: boolean
-                description: Params defines the parameters for the bank module.
             description: >-
               QueryParamsResponse defines the response type for querying x/bank
               parameters.
@@ -9157,6 +9157,102 @@ paths:
           type: boolean
       tags:
         - Service
+  /cosmos/base/node/v1beta1/config:
+    get:
+      summary: Config queries for the operator configuration.
+      operationId: Config
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              minimum_gas_price:
+                type: string
+              pruning_keep_recent:
+                type: string
+                title: pruning settings
+              pruning_interval:
+                type: string
+            description: >-
+              ConfigResponse defines the response structure for the Config gRPC
+              query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
+  /cosmos/base/node/v1beta1/status:
+    get:
+      summary: Status queries for the node status.
+      operationId: Status
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              earliest_store_height:
+                type: string
+                format: uint64
+              height:
+                type: string
+                format: uint64
+              timestamp:
+                type: string
+                format: date-time
+              app_hash:
+                type: string
+                format: byte
+              validator_hash:
+                type: string
+                format: byte
+            description: >-
+              StateResponse defines the response structure for the status of a
+              node.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
@@ -12465,8 +12561,8 @@ paths:
   /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
-        depositAddr.
+        Deposit queries single deposit information based on proposalID,
+        depositor address.
       operationId: Deposit
       responses:
         '200':
@@ -14519,6 +14615,10 @@ paths:
                       type: boolean
                       description: 'Since: cosmos-sdk 0.50'
                       title: expedited defines if the proposal is expedited
+                    failed_reason:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.50'
+                      title: failed_reason defines the reason why the proposal failed
                   description: >-
                     Proposal defines the core field members of a governance
                     proposal.
@@ -15139,6 +15239,10 @@ paths:
                     type: boolean
                     description: 'Since: cosmos-sdk 0.50'
                     title: expedited defines if the proposal is expedited
+                  failed_reason:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.50'
+                    title: failed_reason defines the reason why the proposal failed
                 description: >-
                   Proposal defines the core field members of a governance
                   proposal.
@@ -15681,7 +15785,7 @@ paths:
   /cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
+        Deposit queries single deposit information based on proposalID,
         depositAddr.
       operationId: GovV1Deposit
       responses:
@@ -16223,8 +16327,7 @@ paths:
                     metadata:
                       type: string
                       title: >-
-                        metadata is any arbitrary metadata to attached to the
-                        vote.
+                        metadata is any arbitrary metadata attached to the vote.
 
                         the recommended format of the metadata is to be found
                         here:
@@ -16565,8 +16668,7 @@ paths:
                   metadata:
                     type: string
                     title: >-
-                      metadata is any arbitrary metadata to attached to the
-                      vote.
+                      metadata is any arbitrary metadata attached to the vote.
 
                       the recommended format of the metadata is to be found
                       here: https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -28847,7 +28949,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
     get:
-      summary: Allowance returns fee granted to the grantee by the granter.
+      summary: Allowance returns granted allwance to the grantee by the granter.
       operationId: Allowance
       responses:
         '200':
@@ -29158,7 +29260,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowances/{grantee}:
     get:
-      summary: Allowances returns all the grants for address.
+      summary: Allowances returns all the grants for the given grantee address.
       operationId: Allowances
       responses:
         '200':
@@ -33070,6 +33172,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                     version:
                       type: string
@@ -33586,6 +33689,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                     version:
                       type: string
@@ -34103,6 +34207,7 @@ paths:
 
                       the recommended format of the metadata is to be found
                       here:
+
                       https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                   version:
                     type: string
@@ -35551,6 +35656,7 @@ paths:
 
                       the recommended format of the metadata is to be found
                       here:
+
                       https://docs.cosmos.network/v0.47/modules/group#proposal-4
                   proposers:
                     type: array
@@ -36324,6 +36430,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#proposal-4
                     proposers:
                       type: array
@@ -39913,6 +40020,7 @@ definitions:
     type: object
     properties:
       params:
+        description: params provides the parameters of the bank module.
         type: object
         properties:
           send_enabled:
@@ -39943,7 +40051,6 @@ definitions:
               compatibility of genesis files.
           default_send_enabled:
             type: boolean
-        description: Params defines the parameters for the bank module.
     description: >-
       QueryParamsResponse defines the response type for querying x/bank
       parameters.
@@ -46593,6 +46700,36 @@ definitions:
       application's
 
       state transition machine.
+  cosmos.base.node.v1beta1.ConfigResponse:
+    type: object
+    properties:
+      minimum_gas_price:
+        type: string
+      pruning_keep_recent:
+        type: string
+        title: pruning settings
+      pruning_interval:
+        type: string
+    description: ConfigResponse defines the response structure for the Config gRPC query.
+  cosmos.base.node.v1beta1.StatusResponse:
+    type: object
+    properties:
+      earliest_store_height:
+        type: string
+        format: uint64
+      height:
+        type: string
+        format: uint64
+      timestamp:
+        type: string
+        format: date-time
+      app_hash:
+        type: string
+        format: byte
+      validator_hash:
+        type: string
+        format: byte
+    description: StateResponse defines the response structure for the status of a node.
   cosmos.base.v1beta1.DecCoin:
     type: object
     properties:
@@ -49096,6 +49233,10 @@ definitions:
         type: boolean
         description: 'Since: cosmos-sdk 0.50'
         title: expedited defines if the proposal is expedited
+      failed_reason:
+        type: string
+        description: 'Since: cosmos-sdk 0.50'
+        title: failed_reason defines the reason why the proposal failed
     description: Proposal defines the core field members of a governance proposal.
   cosmos.gov.v1.ProposalStatus:
     type: string
@@ -49694,6 +49835,10 @@ definitions:
             type: boolean
             description: 'Since: cosmos-sdk 0.50'
             title: expedited defines if the proposal is expedited
+          failed_reason:
+            type: string
+            description: 'Since: cosmos-sdk 0.50'
+            title: failed_reason defines the reason why the proposal failed
         description: Proposal defines the core field members of a governance proposal.
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
@@ -49984,6 +50129,10 @@ definitions:
               type: boolean
               description: 'Since: cosmos-sdk 0.50'
               title: expedited defines if the proposal is expedited
+            failed_reason:
+              type: string
+              description: 'Since: cosmos-sdk 0.50'
+              title: failed_reason defines the reason why the proposal failed
           description: Proposal defines the core field members of a governance proposal.
         description: proposals defines all the requested governance proposals.
       pagination:
@@ -50070,7 +50219,7 @@ definitions:
           metadata:
             type: string
             title: >-
-              metadata is any arbitrary metadata to attached to the vote.
+              metadata is any arbitrary metadata attached to the vote.
 
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -50118,7 +50267,7 @@ definitions:
             metadata:
               type: string
               title: >-
-                metadata is any arbitrary metadata to attached to the vote.
+                metadata is any arbitrary metadata attached to the vote.
 
                 the recommended format of the metadata is to be found here:
                 https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -50216,7 +50365,7 @@ definitions:
       metadata:
         type: string
         title: >-
-          metadata is any arbitrary metadata to attached to the vote.
+          metadata is any arbitrary metadata attached to the vote.
 
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -61916,9 +62065,8 @@ definitions:
         description: admin is the account address of the group admin.
       metadata:
         type: string
-        title: >-
+        title: |-
           metadata is any arbitrary metadata attached to the group policy.
-
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
       version:
@@ -62131,9 +62279,8 @@ definitions:
         description: group_policy_address is the account address of group policy.
       metadata:
         type: string
-        title: >-
+        title: |-
           metadata is any arbitrary metadata attached to the proposal.
-
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/group#proposal-4
       proposers:
@@ -62577,6 +62724,7 @@ definitions:
                 metadata is any arbitrary metadata attached to the group policy.
 
                 the recommended format of the metadata is to be found here:
+
                 https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
             version:
               type: string
@@ -62816,6 +62964,7 @@ definitions:
                 metadata is any arbitrary metadata attached to the group policy.
 
                 the recommended format of the metadata is to be found here:
+
                 https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
             version:
               type: string
@@ -63051,9 +63200,8 @@ definitions:
             description: admin is the account address of the group admin.
           metadata:
             type: string
-            title: >-
+            title: |-
               metadata is any arbitrary metadata attached to the group policy.
-
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
           version:
@@ -63466,9 +63614,8 @@ definitions:
             description: group_policy_address is the account address of group policy.
           metadata:
             type: string
-            title: >-
+            title: |-
               metadata is any arbitrary metadata attached to the proposal.
-
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/group#proposal-4
           proposers:
@@ -63774,9 +63921,8 @@ definitions:
               description: group_policy_address is the account address of group policy.
             metadata:
               type: string
-              title: >-
+              title: |-
                 metadata is any arbitrary metadata attached to the proposal.
-
                 the recommended format of the metadata is to be found here:
                 https://docs.cosmos.network/v0.47/modules/group#proposal-4
             proposers:

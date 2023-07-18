@@ -51,7 +51,7 @@ autocli.EnhanceRootCommand(rootCmd, autoCliOpts)
 
 // Run the root command
 if err := rootCmd.Execute(); err != nil {
-    fmt.Println(err)
+    return err
 }
 ```
 
@@ -98,7 +98,7 @@ By default, `autocli` generates a command for each method in your gRPC service. 
 This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go` file.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/gov/autocli.go#L9-L27
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/x/gov/autocli.go#L13C1-L107
 ```
 
 The `AutoCLIOptions()` method in the autocli package allows you to specify the services and sub-commands to be mapped for your app. In the example code, an instance of the `autocliv1.ModuleOptions` struct is defined in the `appmodule.AppModule` implementation located in the `x/gov/autocli.go` file. This configuration groups related commands together and specifies subcommands for each service.
@@ -112,7 +112,7 @@ To add positional arguments to a command, you can use the `autocliv1.PositionalA
 Here's an example of how to define a positional argument for the `Account` method of the `auth` service:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/auth/autocli.go#L8-L32
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/x/gov/autocli.go#L80-L86
 ```
 
 Here are some example commands that use the positional arguments we defined above:

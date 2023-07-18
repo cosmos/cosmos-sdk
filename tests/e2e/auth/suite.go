@@ -992,7 +992,6 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = s.network.RetryForBlocks(func() error {
 		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
-		s.Require().NoError(err)
 		if err != nil {
 			return err
 		}

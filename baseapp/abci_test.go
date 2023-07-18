@@ -3,9 +3,11 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"testing"
@@ -1907,4 +1909,196 @@ func TestABCI_HaltChain(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := log.NewTestLogger(t)
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
+	wasHookCalled := false
+	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		wasHookCalled = true
+		return nil
+	})
+	app.Seal()
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	require.Equal(t, true, wasHookCalled)
+
+	// Now try erroring
+	app = baseapp.NewBaseApp(name, logger, db, nil)
+	_, err = app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
+	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		return errors.New("some error")
+	})
+	app.Seal()
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.Error(t, err)
+}
+
+// TestBaseApp_VoteExtensions tests vote extensions using a price as an example.
+func TestBaseApp_VoteExtensions(t *testing.T) {
+	baseappOpts := func(app *baseapp.BaseApp) {
+		app.SetExtendVoteHandler(func(sdk.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+			// here we would have a process to get the price from an external source
+			price := 10000000 + rand.Int63n(1000000)
+			ve := make([]byte, 8)
+			binary.BigEndian.PutUint64(ve, uint64(price))
+			return &abci.ResponseExtendVote{VoteExtension: ve}, nil
+		})
+
+		app.SetVerifyVoteExtensionHandler(func(_ sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+			vePrice := binary.BigEndian.Uint64(req.VoteExtension)
+			// here we would do some price validation, must not be 0 and not too high
+			if vePrice > 11000000 || vePrice == 0 {
+				// usually application should always return ACCEPT unless they really want to discard the entire vote
+				return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			}
+
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		})
+
+		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			txs := [][]byte{}
+
+			// add all VE as txs (in a real scenario we would need to check signatures too)
+			for _, v := range req.LocalLastCommit.Votes {
+				if len(v.VoteExtension) == 8 {
+					// pretend this is a way to check if the VE is valid
+					if binary.BigEndian.Uint64(v.VoteExtension) < 11000000 && binary.BigEndian.Uint64(v.VoteExtension) > 0 {
+						txs = append(txs, v.VoteExtension)
+					}
+				}
+			}
+
+			return &abci.ResponsePrepareProposal{Txs: txs}, nil
+		})
+
+		app.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+			// here we check if the proposal is valid, mainly if the vote extensions appended to the txs are valid
+			for _, v := range req.Txs {
+				// pretend this is a way to check if the tx is actually a VE
+				if len(v) == 8 {
+					// pretend this is a way to check if the VE is valid
+					if binary.BigEndian.Uint64(v) > 11000000 || binary.BigEndian.Uint64(v) == 0 {
+						return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+					}
+				}
+			}
+
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		})
+
+		app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+			count := uint64(0)
+			pricesSum := uint64(0)
+			for _, v := range req.Txs {
+				// pretend this is a way to check if the tx is actually a VE
+				if len(v) == 8 {
+					count++
+					pricesSum += binary.BigEndian.Uint64(v)
+				}
+			}
+
+			if count > 0 {
+				// we process the average price and store it in the context to make it available for FinalizeBlock
+				avgPrice := pricesSum / count
+				buf := make([]byte, 8)
+				binary.BigEndian.PutUint64(buf, avgPrice)
+				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
+			}
+
+			return nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, baseappOpts)
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Abci: &cmtproto.ABCIParams{
+				VoteExtensionsEnableHeight: 1,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	allVEs := [][]byte{}
+	// simulate getting 10 vote extensions from 10 validators
+	for i := 0; i < 10; i++ {
+		ve, err := suite.baseApp.ExtendVote(context.TODO(), &abci.RequestExtendVote{Height: 1})
+		require.NoError(t, err)
+		allVEs = append(allVEs, ve.VoteExtension)
+	}
+
+	// add a couple of invalid vote extensions (in what regards to the check we are doing in VerifyVoteExtension/ProcessProposal)
+	// add a 0 price
+	ve := make([]byte, 8)
+	binary.BigEndian.PutUint64(ve, uint64(0))
+	allVEs = append(allVEs, ve)
+
+	// add a price too high
+	ve = make([]byte, 8)
+	binary.BigEndian.PutUint64(ve, uint64(13000000))
+	allVEs = append(allVEs, ve)
+
+	// verify all votes, only 10 should be accepted
+	successful := 0
+	for _, v := range allVEs {
+		res, err := suite.baseApp.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{
+			Height:        1,
+			VoteExtension: v,
+		})
+		require.NoError(t, err)
+		if res.Status == abci.ResponseVerifyVoteExtension_ACCEPT {
+			successful++
+		}
+	}
+	require.Equal(t, 10, successful)
+
+	prepPropReq := &abci.RequestPrepareProposal{
+		Height: 1,
+		LocalLastCommit: abci.ExtendedCommitInfo{
+			Round: 0,
+			Votes: []abci.ExtendedVoteInfo{},
+		},
+	}
+
+	// add all VEs to the local last commit
+	for _, ve := range allVEs {
+		prepPropReq.LocalLastCommit.Votes = append(prepPropReq.LocalLastCommit.Votes, abci.ExtendedVoteInfo{VoteExtension: ve})
+	}
+
+	resp, err := suite.baseApp.PrepareProposal(prepPropReq)
+	require.NoError(t, err)
+	require.Len(t, resp.Txs, 10)
+
+	procPropRes, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 1, Txs: resp.Txs})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: resp.Txs})
+	require.NoError(t, err)
+
+	// Check if the average price was available in FinalizeBlock's context
+	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	require.NotNil(t, avgPrice)
+	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
+	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
+
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+
+	// check if avgPrice was committed
+	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
+	require.Equal(t, avgPrice, committedAvgPrice)
 }

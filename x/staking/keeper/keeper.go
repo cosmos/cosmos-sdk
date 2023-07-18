@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/collections"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -32,6 +33,9 @@ type Keeper struct {
 	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
+
+	Schema         collections.Schema
+	LastTotalPower collections.Item[math.Int]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -44,6 +48,7 @@ func NewKeeper(
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 ) *Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -62,7 +67,7 @@ func NewKeeper(
 		panic("validator and/or consensus address codec are nil")
 	}
 
-	return &Keeper{
+	k := &Keeper{
 		storeService:          storeService,
 		cdc:                   cdc,
 		authKeeper:            ak,
@@ -71,7 +76,15 @@ func NewKeeper(
 		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
+		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.
@@ -98,36 +111,6 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	}
 
 	k.hooks = sh
-}
-
-// GetLastTotalPower loads the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.LastTotalPowerKey)
-	if err != nil {
-		return math.ZeroInt(), err
-	}
-
-	if bz == nil {
-		return math.ZeroInt(), nil
-	}
-
-	var power math.Int
-	if err = power.Unmarshal(bz); err != nil {
-		return math.ZeroInt(), err
-	}
-
-	return power, nil
-}
-
-// SetLastTotalPower sets the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := power.Marshal()
-	if err != nil {
-		return err
-	}
-	return store.Set(types.LastTotalPowerKey, bz)
 }
 
 // GetAuthority returns the x/staking module's authority.

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Cosmovisor
 
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
 * [Design](#design)
 * [Contributing](#contributing)
@@ -52,10 +52,10 @@ To install the latest version of `cosmovisor`, run the following command:
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version:
+To install a specific version, you can specify the version:
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.5.0
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.
@@ -74,7 +74,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 * `run` - Run the configured binary using the rest of the provided arguments.
 * `version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
 * `config` - Display the current `cosmovisor` configuration, that means displaying the environment variables value that `cosmovisor` is using.
-* `add-upgrade` - Add an upgrade manually to `cosmovisor`.
+* `add-upgrade` - Add an upgrade manually to `cosmovisor`. This command allow you to easily add the binary corresponding to an upgrade in cosmovisor.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
@@ -90,6 +90,7 @@ Use of `cosmovisor` without one of the action arguments is deprecated. For backw
 * `DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM` (*optional*, default = `false`), if `true` cosmovisor will require that a checksum is provided in the upgrade plan for the binary to be downloaded. If `false`, cosmovisor will not require a checksum to be provided, but still check the checksum if one is provided.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_RESTART_DELAY` (*optional*, default none), allow a node operator to define a delay between the node halt (for upgrade) and backup by the specified time. The value must be a duration (e.g. `1s`).
+* `DAEMON_SHUTDOWN_GRACE` (*optional*, default none), if set, send interrupt to binary and wait the specified time to allow for cleanup/cache flush to disk before sending the kill signal. The value must be a duration (e.g. `1s`).
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
 * `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
@@ -176,6 +177,18 @@ When the upgrade mechanism is triggered, `cosmovisor` will:
 
 1. if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled, start by auto-downloading a new binary into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute);
 2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
+
+### Adding Upgrade Binary
+
+`cosmovisor` has an `add-upgrade` command that allows to easily link a binary to an upgrade. It creates a new folder in `cosmovisor/upgrades/<name>` and copies the provided executable file to `cosmovisor/upgrades/<name>/bin/<DAEMON_NAME>`.
+
+Using the `--upgrade-height` flag allows to specify at which height the binary should be switched, without going via a gorvernance proposal.
+This enables support for an emergency coordinated upgrades where the binary must be switched at a specific height, but there is no time to go through a governance proposal.
+
+:::warning
+`--upgrade-height` creates an `upgrade-info.json` file. This means if a chain upgrade via governance proposal is executed before the specified height with `--upgrade-height`, the governance proposal will overwrite the `upgrade-info.json` plan created by `add-upgrade --upgrade-height <height>`.
+Take this into consideration when using `--upgrade-height`.
+:::
 
 ### Auto-Download
 
@@ -315,11 +328,10 @@ Set the optional environment variable to trigger an automatic app restart:
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
-Create the folder for the genesis binary and copy the `simd` binary:
+Initialize cosmovisor with the current binary:
 
 ```shell
-mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
+cosmovisor init ./build/simd
 ```
 
 Now you can run cosmovisor with simapp v0.44:
@@ -340,11 +352,10 @@ Build the new version `simd` binary:
 make build
 ```
 
-Create the folder for the upgrade binary and copy the `simd` binary:
+Add the new `simd` binary and the upgrade name: 
 
 ```shell
-mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
+cosmovisor add-upgrade test1 ./build/simd
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
@@ -360,7 +371,7 @@ Open a new terminal window and submit an upgrade proposal along with a deposit a
 **v0.46, v0.47**:
 
 ```shell
-./build/simd tx gov submit-legacy-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
+./build/simd tx gov submit-legacy-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --no-validate --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

@@ -49,6 +49,7 @@ func initFixture(t *testing.T) *fixture {
 			FileResolver:          protoregistry.GlobalFiles,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
+			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

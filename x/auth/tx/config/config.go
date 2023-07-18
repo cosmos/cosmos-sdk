@@ -10,6 +10,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/registry"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -39,9 +39,12 @@ func init() {
 
 type ModuleInputs struct {
 	depinject.In
-	Config              *txconfigv1.Config
-	ProtoCodecMarshaler codec.ProtoCodecMarshaler
-	ProtoFileResolver   txsigning.ProtoFileResolver
+
+	Config                *txconfigv1.Config
+	AddressCodec          address.Codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ProtoCodecMarshaler   codec.ProtoCodecMarshaler
+	ProtoFileResolver     txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
 	MetadataBankKeeper     BankKeeper                         `optional:"true"`
@@ -66,18 +69,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.CustomSignModeHandlers != nil {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
-	sdkConfig := sdk.GetConfig()
 
 	txConfigOptions := tx.ConfigOptions{
 		EnabledSignModes: tx.DefaultSignModes,
 		SigningOptions: &txsigning.Options{
-			FileResolver: in.ProtoFileResolver,
-			// From static config? But this is already in auth config.
-			// - Provide codecs there as types?
-			// - Provide static prefix there exported from config?
-			// - Just do as below?
-			AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
-			ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+			FileResolver:          in.ProtoFileResolver,
+			AddressCodec:          in.AddressCodec,
+			ValidatorAddressCodec: in.ValidatorAddressCodec,
 		},
 		CustomSignModes: customSignModeHandlers,
 	}

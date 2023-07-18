@@ -1037,10 +1037,6 @@ func (k Keeper) Unbond(
 		}
 	}
 
-	if err != nil {
-		return amount, err
-	}
-
 	// remove the shares and coins from the validator
 	// NOTE that the amount is later (in keeper.Delegation) moved between staking module pools
 	validator, amount, err = k.RemoveValidatorTokensAndShares(ctx, validator, shares)

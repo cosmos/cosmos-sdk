@@ -52,10 +52,10 @@ To install the latest version of `cosmovisor`, run the following command:
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version:
+To install a specific version, you can specify the version:
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.5.0
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -120,9 +119,13 @@ func (s *E2ETestSuite) SetupSuite() {
 		}
 
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
-		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-		s.Require().NoError(err, out.String())
 		s.Require().NoError(s.network.WaitForNextBlock())
+		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+		s.Require().NoError(err)
+
+		var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+		s.Require().Len(groupPoliciesResp.GroupPolicies, i+1)
 	}
 	// create group policy with percentage decision policy
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
@@ -140,13 +143,13 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+	s.Require().NoError(err)
 
-	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 6)
-	s.groupPolicies = res.GroupPolicies
+	var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+	s.Require().Equal(len(groupPoliciesResp.GroupPolicies), 6)
+	s.groupPolicies = groupPoliciesResp.GroupPolicies
 
 	// create a proposal
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
@@ -180,18 +183,18 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/proposal/1", val.APIAddress))
+	s.Require().NoError(err)
 
 	var proposalRes group.QueryProposalResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposalRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &proposalRes))
 	s.proposal = proposalRes.Proposal
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/1/%s", val.APIAddress, val.Address.String()))
+	s.Require().NoError(err)
 
 	var voteRes group.QueryVoteByProposalVoterResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &voteRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &voteRes))
 	s.vote = voteRes.Vote
 
 	s.voter = &group.Member{
@@ -204,21 +207,6 @@ func (s *E2ETestSuite) SetupSuite() {
 func (s *E2ETestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
-}
-
-func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
-	s.Require().Greater(len(txResp.Events), 0)
-	s.Require().NotNil(txResp.Events[0])
-	events := txResp.Events
-	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
-
-	for _, e := range events {
-		if e.Type == createProposalEvent.Type {
-			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
-		}
-	}
-
-	return ""
 }
 
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns
@@ -272,11 +260,11 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
-	s.Require().NoError(err, out.String())
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", val.APIAddress, groupID))
+	s.Require().NoError(err)
 
 	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)

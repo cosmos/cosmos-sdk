@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/api/amino"
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -77,22 +76,18 @@ func WithDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOp
 
 func GeneratorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
 	opts := field.Options()
-	switch {
-	case proto.HasExtension(opts, cosmos_proto.E_Scalar):
+	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
 		switch scalar {
 		case "cosmos.Int":
 			i32 := rapid.Int32().Draw(t, name)
 			return protoreflect.ValueOfString(fmt.Sprintf("%d", i32)), true
 		case "cosmos.Dec":
-			return protoreflect.ValueOfString(""), true
-		}
-	case field.Kind() == protoreflect.BytesKind:
-		if proto.HasExtension(opts, amino.E_Encoding) {
-			encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
-			if encoding == "cosmos_dec_bytes" {
+			if field.Kind() == protoreflect.BytesKind {
 				return protoreflect.ValueOfBytes([]byte{}), true
 			}
+
+			return protoreflect.ValueOfString(""), true
 		}
 	}
 

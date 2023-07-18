@@ -3,11 +3,11 @@ module cosmossdk.io/tools/hubl
 go 1.20
 
 require (
-	cosmossdk.io/api v0.5.0
-	cosmossdk.io/client/v2 v2.0.0-20230705083123-9dcf8707780a
+	cosmossdk.io/api v0.6.1
+	cosmossdk.io/client/v2 v2.0.0-20230714071335-e11c41b3795e
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.50.0-alpha.0.0.20230630103340-0bbfc654a32e
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230714071335-e11c41b3795e
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0
@@ -19,15 +19,14 @@ require (
 	cosmossdk.io/collections v0.3.0 // indirect
 	cosmossdk.io/core v0.9.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
-	cosmossdk.io/log v1.1.0 // indirect
+	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/store v1.0.0-alpha.1 // indirect
-	cosmossdk.io/x/tx v0.8.0 // indirect
+	cosmossdk.io/x/tx v0.9.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
-	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -39,7 +38,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230710174534-a9a079d4fb6b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 // indirect
-	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
+	github.com/cometbft/cometbft v0.38.0-rc3 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect

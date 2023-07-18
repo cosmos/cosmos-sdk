@@ -43,9 +43,9 @@ message Params {
 
   int64 signed_blocks_window  = 1;
   bytes min_signed_per_window = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
-    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
   google.protobuf.Duration downtime_jail_duration = 3 [
@@ -54,15 +54,15 @@ message Params {
     (gogoproto.stdduration) = true
   ];
   bytes slash_fraction_double_sign = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
-    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
   bytes slash_fraction_downtime = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
-    (amino.encoding)       = "cosmos_dec_bytes",
     (amino.dont_omitempty) = true
   ];
 }

@@ -40,10 +40,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (baseapp) [#16898](https://github.com/cosmos/cosmos-sdk/pull/16898) Add `preFinalizeBlockHook` to allow vote extensions persistence.
 * (cli) [#16887](https://github.com/cosmos/cosmos-sdk/pull/16887) Add two new CLI commands: `tx simulate` for simulating a transaction; `query block-results` for querying CometBFT RPC for block results.
+* (x/gov) [#16976](https://github.com/cosmos/cosmos-sdk/pull/16976) Add `failed_reason` field to `Proposal` under `x/gov` to indicate the reason for a failed proposal. Referenced from [#238](https://github.com/bnb-chain/greenfield-cosmos-sdk/pull/238) under `bnb-chain/greenfield-cosmos-sdk`.
 
 ### Improvements
 
+* (all modules) [#15901](https://github.com/cosmos/cosmos-sdk/issues/15901) All core Cosmos SDK modules query have migrated to [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli), ensuring parity between gRPC and CLI queries.
 * (types) [#16890](https://github.com/cosmos/cosmos-sdk/pull/16890) Remove `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` from `module.AppModuleBasic` interface.
 * (cli) [#16856](https://github.com/cosmos/cosmos-sdk/pull/16856) Improve `simd prune` UX by using the app default home directory and set pruning method as first variable argument (defaults to default).
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated fmt.Errorf errors + using errors.New where appropriate.
@@ -53,9 +56,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
+* (types/query) [#16905](https://github.com/cosmos/cosmos-sdk/pull/16905) – Collections Pagination now applies proper count when filtering results.
 
 ### API Breaking Changes
 
+* (x/staking) [#17026](https://github.com/cosmos/cosmos-sdk/pull/17026) Use collections for `LastTotalPower`:
+    * remove `Keeper`: `SetLastTotalPower`, `GetLastTotalPower`
 * (staking) [#16959](https://github.com/cosmos/cosmos-sdk/pull/16959) Add validator and consensus address codec as staking keeper arguments.
 * (types) [#16272](https://github.com/cosmos/cosmos-sdk/pull/16272) From now the `FeeGranter` in the `FeeTx` interface takes the byte type instead of string. 
 * (testutil) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) The *cli testutil* `QueryBalancesExec` has been removed. Use the gRPC or REST query instead.
@@ -80,6 +86,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## CLI Breaking Changes
 
+* (all) Query pagination flags have been renamed with the migration to AutoCLI:
+    * `--limit` -> `--page-limit`
+    * `--offset` -> `--page-offset`
+    * `--count-total` -> `--page-count-total`
+    * `--reverse` -> `--page-reverse`
+* (x/gov) [#16987](https://github.com/cosmos/cosmos-sdk/pull/16987) In `<appd> query gov proposals` the proposal status flag have renamed from `--status` to `--proposal-status`. Additonally, that flags now uses the ENUM values: `PROPOSAL_STATUS_DEPOSIT_PERIOD`, `PROPOSAL_STATUS_VOTING_PERIOD`, `PROPOSAL_STATUS_PASSED`, `PROPOSAL_STATUS_REJECTED`, `PROPOSAL_STATUS_FAILED`.
 * (x/bank) [#16899](https://github.com/cosmos/cosmos-sdk/pull/16899) With the migration to AutoCLI some bank commands have been split in two: 
     * Use `denoms-metadata` for querying all denom metadata and `denom-metadata` for querying a specific denom metadata.
     * Use `total-supply` (or `total`) for querying the total supply and `total-supply-of` for querying the supply of a specific denom. 
@@ -93,7 +105,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (all) [#16497](https://github.com/cosmos/cosmos-sdk/pull/16497) Removed all exported vestiges of `sdk.MustSortJSON` and `sdk.SortJSON`.
-* (x/distribution) [#16218](https://github.com/cosmos/cosmos-sdk/pull/16218) Add Autocli config to distribution module.
 * (cli) [#16206](https://github.com/cosmos/cosmos-sdk/pull/16206) Make ABCI handshake profileable.
 
 ### Bug Fixes

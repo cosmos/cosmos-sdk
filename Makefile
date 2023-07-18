@@ -398,11 +398,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-<<<<<<< HEAD
-protoVer=0.13.2
-=======
 protoVer=0.13.5
->>>>>>> 1d74652f6 (chore(client): add missing modules from swagger (#17051))
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

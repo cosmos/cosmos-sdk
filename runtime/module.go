@@ -270,8 +270,8 @@ type (
 type AddressCodecInputs struct {
 	depinject.In
 
-	AuthConfig    *authmodulev1.Module
-	StakingConfig *stakingmodulev1.Module
+	AuthConfig    *authmodulev1.Module    `optional:"true"`
+	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
 	AddressCodecFactory          func() address.Codec         `optional:"true"`
 	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
@@ -285,8 +285,16 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}
 
+	if in.AuthConfig == nil {
+		panic("auth and staking config cannot both be nil if no custom address codec is provided")
+	}
+
 	if in.AuthConfig.Bech32Prefix == "" {
 		panic("auth bech32 prefix cannot be empty if no custom address codec is provided")
+	}
+
+	if in.StakingConfig == nil {
+		in.StakingConfig = &stakingmodulev1.Module{}
 	}
 
 	if in.StakingConfig.Bech32PrefixValidator == "" {

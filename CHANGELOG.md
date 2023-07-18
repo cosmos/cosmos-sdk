@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#16827](https://github.com/cosmos/cosmos-sdk/pull/16827) Properly use `--trace` flag (before it was setting the trace level instead of displaying the stacktraces).
 * (x/bank) [#16841](https://github.com/cosmos/cosmos-sdk/pull/16841) correctly process legacy `DenomAddressIndex` values.
 * (types/query) [#16905](https://github.com/cosmos/cosmos-sdk/pull/16905) – Collections Pagination now applies proper count when filtering results.
+* (migrations) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583) Add `WithConsensusParamsGetter` to allow other modules to access updated context with consensus parameters within the same block that executes migration.
 
 ### API Breaking Changes
 
@@ -110,7 +111,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/consensus) [#16713](https://github.com/cosmos/cosmos-sdk/pull/16713) Add missing ABCI param in MsgUpdateParams.
 * [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
 * (x/auth) [#16554](https://github.com/cosmos/cosmos-sdk/pull/16554) `ModuleAccount.Validate` now reports a nil `.BaseAccount` instead of panicking.
-* (migrations) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583) Add `WithConsensusParamsGetter` to allow other modules to access updated context with consensus parameters within the same block that executes migration.
 * (baseapp) [#16613](https://github.com/cosmos/cosmos-sdk/pull/16613) Ensure each message in a transaction has a registered handler, otherwise `CheckTx` will fail.
 * [#16639](https://github.com/cosmos/cosmos-sdk/pull/16639) Make sure we don't execute blocks beyond the halt height.
 * (x/auth/vesting) [#16733](https://github.com/cosmos/cosmos-sdk/pull/16733) Panic on overflowing and negative EndTimes when creating a PeriodicVestingAccount.

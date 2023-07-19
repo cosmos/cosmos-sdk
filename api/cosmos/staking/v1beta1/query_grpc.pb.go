@@ -100,35 +100,35 @@ type QueryClient interface {
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Query for individual tokenize share record information by share by id
+	// Query for individual tokenize share record information by share by id.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordById(ctx context.Context, in *QueryTokenizeShareRecordByIdRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByIdResponse, error)
-	// Query for individual tokenize share record information by share denom
+	// Query for individual tokenize share record information by share denom.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordByDenom(ctx context.Context, in *QueryTokenizeShareRecordByDenomRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByDenomResponse, error)
-	// Query tokenize share records by address
+	// Query tokenize share records by address.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordsOwned(ctx context.Context, in *QueryTokenizeShareRecordsOwnedRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordsOwnedResponse, error)
-	// Query for all tokenize share records
+	// Query for all tokenize share records.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	AllTokenizeShareRecords(ctx context.Context, in *QueryAllTokenizeShareRecordsRequest, opts ...grpc.CallOption) (*QueryAllTokenizeShareRecordsResponse, error)
-	// Query for last tokenize share record id
+	// Query for last tokenize share record id.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	LastTokenizeShareRecordId(ctx context.Context, in *QueryLastTokenizeShareRecordIdRequest, opts ...grpc.CallOption) (*QueryLastTokenizeShareRecordIdResponse, error)
-	// Query for total tokenized staked assets
+	// Query for total tokenized staked assets.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error)
-	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider).
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalLiquidStaked(ctx context.Context, in *QueryTotalLiquidStaked, opts ...grpc.CallOption) (*QueryTotalLiquidStakedResponse, error)
-	// Query tokenize share locks
+	// Query tokenize share locks.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareLockInfo(ctx context.Context, in *QueryTokenizeShareLockInfo, opts ...grpc.CallOption) (*QueryTokenizeShareLockInfoResponse, error)
@@ -397,35 +397,35 @@ type QueryServer interface {
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Query for individual tokenize share record information by share by id
+	// Query for individual tokenize share record information by share by id.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordById(context.Context, *QueryTokenizeShareRecordByIdRequest) (*QueryTokenizeShareRecordByIdResponse, error)
-	// Query for individual tokenize share record information by share denom
+	// Query for individual tokenize share record information by share denom.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordByDenom(context.Context, *QueryTokenizeShareRecordByDenomRequest) (*QueryTokenizeShareRecordByDenomResponse, error)
-	// Query tokenize share records by address
+	// Query tokenize share records by address.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareRecordsOwned(context.Context, *QueryTokenizeShareRecordsOwnedRequest) (*QueryTokenizeShareRecordsOwnedResponse, error)
-	// Query for all tokenize share records
+	// Query for all tokenize share records.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	AllTokenizeShareRecords(context.Context, *QueryAllTokenizeShareRecordsRequest) (*QueryAllTokenizeShareRecordsResponse, error)
-	// Query for last tokenize share record id
+	// Query for last tokenize share record id.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	LastTokenizeShareRecordId(context.Context, *QueryLastTokenizeShareRecordIdRequest) (*QueryLastTokenizeShareRecordIdResponse, error)
-	// Query for total tokenized staked assets
+	// Query for total tokenized staked assets.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error)
-	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+	// Query for total liquid staked (including tokenized shares or owned by an liquid staking provider).
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TotalLiquidStaked(context.Context, *QueryTotalLiquidStaked) (*QueryTotalLiquidStakedResponse, error)
-	// Query tokenize share locks
+	// Query tokenize share locks.
 	//
 	// Since: cosmos-sdk 0.47-lsm
 	TokenizeShareLockInfo(context.Context, *QueryTokenizeShareLockInfo) (*QueryTokenizeShareLockInfoResponse, error)

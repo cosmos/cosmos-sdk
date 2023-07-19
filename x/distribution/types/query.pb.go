@@ -952,7 +952,8 @@ func (m *QueryCommunityPoolResponse) GetPool() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
-// QueryTokenizeShareRecordRewardRequest
+// QueryTokenizeShareRecordRewardRequest is the request type for the Query/TokenizeShareRecordReward RPC
+// method.
 //
 // Since: cosmos-sdk 0.47-lsm
 type QueryTokenizeShareRecordRewardRequest struct {
@@ -992,7 +993,8 @@ func (m *QueryTokenizeShareRecordRewardRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTokenizeShareRecordRewardRequest proto.InternalMessageInfo
 
-// QueryTokenizeShareRecordRewardResponse
+// QueryTokenizeShareRecordRewardResponse is the response type for the Query/TokenizeShareRecordReward
+// RPC method.
 //
 // Since: cosmos-sdk 0.47-lsm
 type QueryTokenizeShareRecordRewardResponse struct {

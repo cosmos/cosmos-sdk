@@ -129,9 +129,9 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // Total number of shares either tokenized or owned by a liquid staking provider
-  string total_liquid_shares = 15 [
-    (gogoproto.moretags)   = "yaml:\"total_liquid_shares\"",
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 15 [
+    (gogoproto.moretags)   = "yaml:\"liquid_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

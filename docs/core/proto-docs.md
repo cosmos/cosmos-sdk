@@ -7099,7 +7099,7 @@ multiplied by exchange rate.
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
 | `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
 | `total_validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
-| `total_liquid_shares` | [string](#string) |  | Total number of shares either tokenized or owned by a liquid staking provider |
+| `liquid_shares` | [string](#string) |  | Number of shares either tokenized or owned by a liquid staking provider |
 
 
 

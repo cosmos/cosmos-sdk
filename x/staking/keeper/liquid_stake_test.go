@@ -61,8 +61,8 @@ func TestTotalLiquidStakedTokens(t *testing.T) {
 	require.Equal(t, total, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx), "initial")
 }
 
-// Tests Increase/Decrease TotalValidatorTotalLiquidShares
-func TestValidatorTotalLiquidShares(t *testing.T) {
+// Tests Increase/Decrease TotalValidatorLiquidShares
+func TestValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	// Create a validator address
@@ -73,8 +73,8 @@ func TestValidatorTotalLiquidShares(t *testing.T) {
 	// Set an initial total
 	initial := sdk.NewDec(100)
 	validator := types.Validator{
-		OperatorAddress:   valAddress.String(),
-		TotalLiquidShares: initial,
+		OperatorAddress: valAddress.String(),
+		LiquidShares:    initial,
 	}
 	app.StakingKeeper.SetValidator(ctx, validator)
 }
@@ -477,7 +477,7 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 
 			// Create a validator with designated self-bond shares
 			validator := types.Validator{
-				TotalLiquidShares:        tc.currentLiquidShares,
+				LiquidShares:             tc.currentLiquidShares,
 				TotalValidatorBondShares: tc.validatorShares,
 			}
 
@@ -595,8 +595,8 @@ func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
 
 			// Create a validator with designated self-bond shares
 			validator := types.Validator{
-				TotalLiquidShares: tc.validatorLiquidShares,
-				DelegatorShares:   tc.validatorTotalShares,
+				LiquidShares:    tc.validatorLiquidShares,
+				DelegatorShares: tc.validatorTotalShares,
 			}
 
 			// Check whether the cap is exceeded
@@ -606,8 +606,8 @@ func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
 	}
 }
 
-// Tests SafelyIncreaseValidatorTotalLiquidShares
-func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
+// Tests SafelyIncreaseValidatorLiquidShares
+func TestSafelyIncreaseValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	// Generate a test validator address
@@ -619,7 +619,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	checkValidatorLiquidShares := func(expected sdk.Dec, description string) {
 		actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 		require.True(t, found)
-		require.Equal(t, expected.TruncateInt64(), actualValidator.TotalLiquidShares.TruncateInt64(), description)
+		require.Equal(t, expected.TruncateInt64(), actualValidator.LiquidShares.TruncateInt64(), description)
 	}
 
 	// Start with the following:
@@ -649,7 +649,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	// Create a validator with designated self-bond shares
 	initialValidator := types.Validator{
 		OperatorAddress:          valAddress.String(),
-		TotalLiquidShares:        initialLiquidShares,
+		LiquidShares:             initialLiquidShares,
 		TotalValidatorBondShares: validatorBondShares,
 		DelegatorShares:          validatorTotalShares,
 	}
@@ -666,7 +666,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	// Attempt to increase the validator liquid shares, it should throw an
 	// error that the validator bond cap was exceeded
 	validator := initialValidator
-	err := app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, firstIncreaseAmount)
+	err := app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, firstIncreaseAmount)
 	require.ErrorIs(t, err, types.ErrInsufficientValidatorBondShares)
 	checkValidatorLiquidShares(initialLiquidShares, "shares after low bond factor")
 
@@ -677,13 +677,13 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	// Try the increase again and check that it succeeded
 	validator = initialValidator
 	expectedLiquidSharesAfterFirstStake := initialLiquidShares.Add(firstIncreaseAmount)
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, firstIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, firstIncreaseAmount)
 	require.NoError(t, err)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares with cap loose bond cap")
 
 	// Attempt another increase, it should fail from the liquid staking cap
 	validator = initialValidator
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, secondIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, secondIncreaseAmount)
 	require.ErrorIs(t, err, types.ErrValidatorLiquidStakingCapExceeded)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares after liquid staking cap hit")
 
@@ -694,13 +694,13 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 	// Finally confirm that the increase succeeded this time
 	validator = initialValidator
 	expectedLiquidSharesAfterSecondStake := initialLiquidShares.Add(secondIncreaseAmount)
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, secondIncreaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, &validator, secondIncreaseAmount)
 	require.NoError(t, err, "no error expected after increasing liquid staking cap")
 	checkValidatorLiquidShares(expectedLiquidSharesAfterSecondStake, "shares after loose liquid stake cap")
 }
 
-// Tests DecreaseValidatorTotalLiquidShares
-func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
+// Tests DecreaseValidatorLiquidShares
+func TestDecreaseValidatorLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	initialLiquidShares := sdk.NewDec(100)
@@ -712,21 +712,21 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	valAddress := sdk.ValAddress(pubKey.Address())
 
 	initialValidator := types.Validator{
-		OperatorAddress:   valAddress.String(),
-		TotalLiquidShares: initialLiquidShares,
+		OperatorAddress: valAddress.String(),
+		LiquidShares:    initialLiquidShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
 	// Decrease the validator liquid shares, and confirm the new share amount has been updated
-	err := app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, &initialValidator, decreaseAmount)
-	require.NoError(t, err, "no error expected when decreasing validator total liquid shares")
+	err := app.StakingKeeper.DecreaseValidatorLiquidShares(ctx, &initialValidator, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing validator liquid shares")
 
 	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "total liquid shares")
+	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.LiquidShares, "liquid shares")
 
 	// Attempt to decrease by a larger amount than it has, it should fail
-	err = app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, &actualValidator, initialLiquidShares)
+	err = app.StakingKeeper.DecreaseValidatorLiquidShares(ctx, &actualValidator, initialLiquidShares)
 	require.ErrorIs(t, err, types.ErrValidatorLiquidSharesUnderflow)
 }
 
@@ -748,7 +748,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 	initialValidator := types.Validator{
 		OperatorAddress:          valAddress.String(),
 		TotalValidatorBondShares: initialValidatorBondShares,
-		TotalLiquidShares:        initialLiquidShares,
+		LiquidShares:             initialLiquidShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
@@ -771,7 +771,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 
 	// Now attempt to decrease the validator bond again from 5 to 1 (minus 4)
 	// This time, the cap will be reduced to (factor * shares) = (100 * 1) = 100
-	// However, the total liquid shares are currently 200, so this should fail
+	// However, the liquid shares are currently 200, so this should fail
 	decreaseAmount, expectedBondShares = sdk.NewDec(4), sdk.NewDec(1)
 	validator := actualValidator
 	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, &validator, decreaseAmount)
@@ -1019,30 +1019,30 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	validators := []types.Validator{
 		{
 			// Exchange rate of 1
-			OperatorAddress:   "valA",
-			Tokens:            sdk.NewInt(100),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(100), // should be overwritten
+			OperatorAddress: "valA",
+			Tokens:          sdk.NewInt(100),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(100), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.9
-			OperatorAddress:   "valB",
-			Tokens:            sdk.NewInt(90),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(200), // should be overwritten
+			OperatorAddress: "valB",
+			Tokens:          sdk.NewInt(90),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(200), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.75
-			OperatorAddress:   "valC",
-			Tokens:            sdk.NewInt(75),
-			DelegatorShares:   sdk.NewDec(100),
-			TotalLiquidShares: sdk.NewDec(300), // should be overwritten
+			OperatorAddress: "valC",
+			Tokens:          sdk.NewInt(75),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(300), // should be overwritten
 		},
 	}
 
 	// Add various delegations across the above validator's
 	// Total Liquid Staked: 1,849 + 922 = 2,771
-	// Total Liquid Shares:
+	// Liquid Shares:
 	//   ValA: 400 + 325 = 725
 	//   ValB: 860 + 580 = 1,440
 	//   ValC: 900 + 100 = 1,000
@@ -1189,7 +1189,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		actualValidator, found := app.StakingKeeper.GetValidator(ctx, address)
 		require.True(t, found, "validator %s should have been found after refresh", moniker)
 
-		actualLiquidShares := actualValidator.TotalLiquidShares
+		actualLiquidShares := actualValidator.LiquidShares
 		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),
 			"liquid staked shares for validator %s", moniker)
 	}

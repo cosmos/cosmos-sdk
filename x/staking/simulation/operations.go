@@ -429,7 +429,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			}
 
 			maxValTotalShare := validator.TotalValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
-			if validator.TotalLiquidShares.GT(maxValTotalShare) {
+			if validator.LiquidShares.GT(maxValTotalShare) {
 				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "unbonding validator bond exceeds cap"), nil, nil
 			}
 		}
@@ -605,7 +605,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		// if delegation is a validator bond, make sure the decrease wont cause the validator bond cap to be exceeded
 		if delegation.ValidatorBond {
 			maxValTotalShare := srcVal.TotalValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
-			if srcVal.TotalLiquidShares.GT(maxValTotalShare) {
+			if srcVal.LiquidShares.GT(maxValTotalShare) {
 				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "source validator bond exceeds cap"), nil, nil
 			}
 		}
@@ -796,7 +796,7 @@ func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k ke
 
 		// check that tokenization would not exceed validator liquid staking cap
 		validatorTotalShares := validator.DelegatorShares.Add(shares)
-		validatorLiquidShares := validator.TotalLiquidShares.Add(shares)
+		validatorLiquidShares := validator.LiquidShares.Add(shares)
 		validatorLiquidSharesPercent := validatorLiquidShares.Quo(validatorTotalShares)
 		if validatorLiquidSharesPercent.GT(params.ValidatorLiquidStakingCap) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "validator liquid staking cap exceeded"), nil, nil
@@ -804,7 +804,7 @@ func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k ke
 
 		// check that tokenization would not exceed validator bond cap
 		maxValidatorLiquidShares := validator.TotalValidatorBondShares.Mul(params.ValidatorBondFactor)
-		if validator.TotalLiquidShares.Add(shares).GT(maxValidatorLiquidShares) {
+		if validator.LiquidShares.Add(shares).GT(maxValidatorLiquidShares) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "validator bond cap exceeded"), nil, nil
 		}
 

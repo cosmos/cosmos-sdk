@@ -128,11 +128,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
-	initialLiquidTokens := validator.TokensFromShares(validator.TotalLiquidShares).TruncateInt()
+	initialLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
 	// Proportionally deduct any liquid tokens from the global total
-	updatedLiquidTokens := validator.TokensFromShares(validator.TotalLiquidShares).TruncateInt()
+	updatedLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
 	slashedLiquidTokens := initialLiquidTokens.Sub(updatedLiquidTokens)
 	if err := k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens); err != nil {
 		panic(err)

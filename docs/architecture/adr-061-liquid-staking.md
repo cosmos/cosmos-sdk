@@ -148,7 +148,7 @@ message Params {
 ### Data structures
 
 #### Validator
-The `TotalValidatorBondShares` and `TotalLiquidShares` attributes were added to the `Validator` struct.
+The `TotalValidatorBondShares` and `LiquidShares` attributes were added to the `Validator` struct.
 
 ```proto
 message Validator {
@@ -159,8 +159,8 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // Total number of shares either tokenized or owned by a liquid staking provider 
-  string total_liquid_shares = 12 [
+  // Number of shares either tokenized or owned by a liquid staking provider 
+  string liquid_shares = 12 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -247,13 +247,13 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 // if the caps are enabled
 func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error
 
-// SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator
+// SafelyIncreaseValidatorLiquidShares increments the liquid shares on a validator
 // if the caps are enabled and the validator bond cap is not surpassed by this delegation
-func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
 
-// DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
+// DecreaseValidatorLiquidShares decrements the liquid shares on a validator
 // if the caps are enabled
-func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
 
 // SafelyDecreaseValidatorBond decrements the total validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
@@ -356,7 +356,7 @@ func TokenizeShares() {
 When upgrading to enable the liquid staking module, the total global liquid stake and total liquid validator shares must be determined. This can be done in the upgrade handler by looping through delegation records and including the delegation in the total if the delegator has a 32-length address. This is implemented by the following function:
 ```go
 func RefreshTotalLiquidStaked() {
-  // Resets all validator TotalLiquidShares to 0
+  // Resets all validator LiquidShares to 0
   // Loops delegation records
   //    For each delegation, determines if the delegation was from a 32-length address
   //    If so, increments the global liquid staking cap and validator liquid shares

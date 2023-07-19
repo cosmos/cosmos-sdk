@@ -80,10 +80,27 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 
 // calculate the total rewards accrued by a delegation
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
+	addrCodec := k.authKeeper.AddressCodec()
+	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.GetValidatorAddr())
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
 	// fetch starting info for delegation
+<<<<<<< HEAD
 	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 	if err != nil {
 		return
+=======
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delAddr)))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return sdk.DecCoins{}, err
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -107,7 +124,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// for them for the stake sanity check below.
 	endingHeight := uint64(sdkCtx.BlockHeight())
 	if endingHeight > startingHeight {
-		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
+		k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
@@ -176,8 +193,23 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 }
 
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+	addrCodec := k.authKeeper.AddressCodec()
+	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.GetValidatorAddr())
+	if err != nil {
+		return nil, err
+	}
+
 	// check existence of delegator starting info
+<<<<<<< HEAD
 	hasInfo, err := k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+=======
+	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delAddr)))
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +229,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		return nil, err
 	}
 
-	outstanding, err := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
+	outstanding, err := k.GetValidatorOutstandingRewardsCoins(ctx, sdk.ValAddress(valAddr))
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +241,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		logger := k.Logger(ctx)
 		logger.Info(
 			"rounding error withdrawing rewards from validator",
-			"delegator", del.GetDelegatorAddr().String(),
+			"delegator", del.GetDelegatorAddr(),
 			"validator", val.GetOperator().String(),
 			"got", rewards.String(),
 			"expected", rewardsRaw.String(),
@@ -221,7 +253,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 
 	// add coins to user account
 	if !finalRewards.IsZero() {
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +266,11 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 
 	// update the outstanding rewards and the community pool only if the
 	// transaction was successful
+<<<<<<< HEAD
 	err = k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+=======
+	err = k.ValidatorOutstandingRewards.Set(ctx, sdk.ValAddress(valAddr), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 	if err != nil {
 		return nil, err
 	}
@@ -251,19 +287,28 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	// decrement reference count of starting period
+<<<<<<< HEAD
 	startingInfo, err := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 	if err != nil {
+=======
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delAddr)))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 		return nil, err
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod
-	err = k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
+	err = k.decrementReferenceCount(ctx, sdk.ValAddress(valAddr), startingPeriod)
 	if err != nil {
 		return nil, err
 	}
 
 	// remove delegator starting info
+<<<<<<< HEAD
 	err = k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+=======
+	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delAddr)))
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +330,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr().String()),
+			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
 		),
 	)
 

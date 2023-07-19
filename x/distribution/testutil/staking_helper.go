@@ -111,7 +111,7 @@ func Delegate(
 		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator.GetOperator())
 	} else {
 		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, validator.GetOperator())
-		del := stakingtypes.NewDelegation(delegator, validator.GetOperator(), math.LegacyZeroDec())
+		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator().String(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

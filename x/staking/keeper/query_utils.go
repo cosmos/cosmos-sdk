@@ -27,7 +27,12 @@ func (k Keeper) GetDelegatorValidators(
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, err := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return nil, err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +53,12 @@ func (k Keeper) GetDelegatorValidator(
 		return validator, err
 	}
 
-	return k.GetValidator(ctx, delegation.GetValidatorAddr())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return validator, err
+	}
+
+	return k.GetValidator(ctx, valAddr)
 }
 
 // GetAllDelegatorDelegations returns all delegations of a delegator

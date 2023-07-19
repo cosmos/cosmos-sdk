@@ -69,15 +69,19 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		var remaining sdk.DecCoins
 
-		valDelegationAddrs := make(map[string][]sdk.AccAddress)
+		valDelegationAddrs := make(map[string][][]byte)
 		allDelegations, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
 		if err != nil {
 			panic(err)
 		}
 
 		for _, del := range allDelegations {
-			valAddr := del.GetValidatorAddr().String()
-			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
+			delAddr, err := k.authKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())
+			if err != nil {
+				panic(err)
+			}
+			valAddr := del.GetValidatorAddr()
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], delAddr)
 		}
 
 		// iterate over all validators

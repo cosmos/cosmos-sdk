@@ -109,9 +109,15 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
+<<<<<<< HEAD
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
 	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+=======
+	delegation := stakingtypes.NewDelegation(delegator.Address.String(), validator0.GetOperator().String(), issuedShares)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(validator0.GetOperator(), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 

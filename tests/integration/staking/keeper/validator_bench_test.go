@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -59,8 +60,19 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
 			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
+<<<<<<< HEAD
 			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
+=======
+			if err != nil {
+				panic(err)
+			}
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
+
+			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
+				panic(err)
+			}
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 		}
 	}
 
@@ -92,8 +104,18 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
 			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
+<<<<<<< HEAD
 			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
 			f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel)
+=======
+			if err != nil {
+				panic(err)
+			}
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
+			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
+				panic(err)
+			}
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 		}
 	}
 
@@ -114,8 +136,20 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
+<<<<<<< HEAD
 		if delegation.GetValidatorAddr().Equals(existingValAddr) {
 			k.RemoveDelegation(f.sdkCtx, delegation)
+=======
+		valAddr, err := k.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			panic(err)
+		}
+
+		if bytes.EqualFold(valAddr, existingValAddr) {
+			if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
+				panic(err)
+			}
+>>>>>>> c23505b03 (refactor(staking): use validator & address codecs in staking  (#16958))
 			delegation.ValidatorAddress = newValAddr.String()
 			k.SetDelegation(f.sdkCtx, delegation)
 		}

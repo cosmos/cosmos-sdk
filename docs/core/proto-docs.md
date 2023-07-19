@@ -8151,6 +8151,7 @@ MsgEditValidator defines a SDK message for editing an existing validator.
 | `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.**  |
 
 
 

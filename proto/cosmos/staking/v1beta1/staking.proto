@@ -124,8 +124,8 @@ message Validator {
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 14 [
-    (gogoproto.moretags)   = "yaml:\"total_validator_bond_shares\"",
+  string validator_bond_shares = 14 [
+    (gogoproto.moretags)   = "yaml:\"validator_bond_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

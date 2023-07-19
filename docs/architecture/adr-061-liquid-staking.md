@@ -148,13 +148,13 @@ message Params {
 ### Data structures
 
 #### Validator
-The `TotalValidatorBondShares` and `LiquidShares` attributes were added to the `Validator` struct.
+The `ValidatorBondShares` and `LiquidShares` attributes were added to the `Validator` struct.
 
 ```proto
 message Validator {
   // ...existing attributes...
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 11 [
+  string validator_bond_shares = 11 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -255,7 +255,7 @@ func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator t
 // if the caps are enabled
 func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
 
-// SafelyDecreaseValidatorBond decrements the total validator's self bond
+// SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 

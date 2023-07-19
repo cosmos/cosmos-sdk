@@ -89,7 +89,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Va
 	if validatorBondFactor.Equal(types.ValidatorBondCapDisabled) {
 		return false
 	}
-	maxValLiquidShares := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
+	maxValLiquidShares := validator.ValidatorBondShares.Mul(validatorBondFactor)
 	return validator.LiquidShares.Add(shares).GT(maxValLiquidShares)
 }
 
@@ -137,7 +137,7 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 // The percentage of validator liquid shares must be less than the ValidatorLiquidStakingCap,
 // and the total liquid staked shares cannot exceed the validator bond cap
 // 1) (TotalLiquidStakedTokens / TotalStakedTokens) <= ValidatorLiquidStakingCap
-// 2) LiquidShares <= (TotalValidatorBondShares * ValidatorBondFactor)
+// 2) LiquidShares <= (ValidatorBondShares * ValidatorBondFactor)
 func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator *types.Validator, shares sdk.Dec) error {
 	// Confirm the validator bond factor and validator liquid staking cap will not be exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, *validator, shares) {
@@ -164,21 +164,21 @@ func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator *types.
 	return nil
 }
 
-// SafelyDecreaseValidatorBond decrements the total validator's self bond
+// SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator *types.Validator, shares sdk.Dec) error {
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
 	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)
-	maxValTotalShare := validator.TotalValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
+	maxValTotalShare := validator.ValidatorBondShares.Sub(shares).Mul(validatorBondFactor)
 
 	if validatorBondEnabled && validator.LiquidShares.GT(maxValTotalShare) {
 		return types.ErrInsufficientValidatorBondShares
 	}
 
-	// Decrement the validator's total self bond
-	validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Sub(shares)
+	// Decrement the validator's self bond
+	validator.ValidatorBondShares = validator.ValidatorBondShares.Sub(shares)
 	k.SetValidator(ctx, *validator)
 
 	return nil

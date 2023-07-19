@@ -47,19 +47,19 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:          operator.String(),
-		ConsensusPubkey:          pkAny,
-		Jailed:                   false,
-		Status:                   Unbonded,
-		Tokens:                   sdk.ZeroInt(),
-		DelegatorShares:          sdk.ZeroDec(),
-		Description:              description,
-		UnbondingHeight:          int64(0),
-		UnbondingTime:            time.Unix(0, 0).UTC(),
-		Commission:               NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		UnbondingOnHoldRefCount:  0,
-		TotalValidatorBondShares: sdk.ZeroDec(),
-		LiquidShares:             sdk.ZeroDec(),
+		OperatorAddress:         operator.String(),
+		ConsensusPubkey:         pkAny,
+		Jailed:                  false,
+		Status:                  Unbonded,
+		Tokens:                  sdk.ZeroInt(),
+		DelegatorShares:         sdk.ZeroDec(),
+		Description:             description,
+		UnbondingHeight:         int64(0),
+		UnbondingTime:           time.Unix(0, 0).UTC(),
+		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		UnbondingOnHoldRefCount: 0,
+		ValidatorBondShares:     sdk.ZeroDec(),
+		LiquidShares:            sdk.ZeroDec(),
 	}, nil
 }
 

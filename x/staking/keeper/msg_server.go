@@ -1003,7 +1003,7 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 	if !delegation.ValidatorBond {
 		delegation.ValidatorBond = true
 		k.SetDelegation(ctx, delegation)
-		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Add(delegation.Shares)
+		validator.ValidatorBondShares = validator.ValidatorBondShares.Add(delegation.Shares)
 		k.SetValidator(ctx, validator)
 
 		ctx.EventManager().EmitEvent(

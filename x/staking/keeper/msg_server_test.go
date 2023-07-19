@@ -754,14 +754,14 @@ func TestValidatorBond(t *testing.T) {
 				require.True(t, found, "delegation should have been found after validator bond")
 				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 
-				// check total validator bond shares
+				// check validator bond shares
 				validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
 				require.True(t, found, "validator should have been found after validator bond")
 
 				if tc.alreadyValidatorBond {
-					require.True(t, validator.TotalValidatorBondShares.IsZero(), "validator total shares should still be zero")
+					require.True(t, validator.ValidatorBondShares.IsZero(), "validator bond shares should still be zero")
 				} else {
-					require.Equal(t, delegation.Shares.String(), validator.TotalValidatorBondShares.String(),
+					require.Equal(t, delegation.Shares.String(), validator.ValidatorBondShares.String(),
 						"validator total shares should have increased")
 				}
 			}

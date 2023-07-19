@@ -477,8 +477,8 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 
 			// Create a validator with designated self-bond shares
 			validator := types.Validator{
-				LiquidShares:             tc.currentLiquidShares,
-				TotalValidatorBondShares: tc.validatorShares,
+				LiquidShares:        tc.currentLiquidShares,
+				ValidatorBondShares: tc.validatorShares,
 			}
 
 			// Check whether the cap is exceeded
@@ -648,10 +648,10 @@ func TestSafelyIncreaseValidatorLiquidShares(t *testing.T) {
 
 	// Create a validator with designated self-bond shares
 	initialValidator := types.Validator{
-		OperatorAddress:          valAddress.String(),
-		LiquidShares:             initialLiquidShares,
-		TotalValidatorBondShares: validatorBondShares,
-		DelegatorShares:          validatorTotalShares,
+		OperatorAddress:     valAddress.String(),
+		LiquidShares:        initialLiquidShares,
+		ValidatorBondShares: validatorBondShares,
+		DelegatorShares:     validatorTotalShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
@@ -746,9 +746,9 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 	valAddress := sdk.ValAddress(pubKey.Address())
 
 	initialValidator := types.Validator{
-		OperatorAddress:          valAddress.String(),
-		TotalValidatorBondShares: initialValidatorBondShares,
-		LiquidShares:             initialLiquidShares,
+		OperatorAddress:     valAddress.String(),
+		ValidatorBondShares: initialValidatorBondShares,
+		LiquidShares:        initialLiquidShares,
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
@@ -767,7 +767,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 
 	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, expectedBondShares, actualValidator.TotalValidatorBondShares, "validator bond shares shares")
+	require.Equal(t, expectedBondShares, actualValidator.ValidatorBondShares, "validator bond shares shares")
 
 	// Now attempt to decrease the validator bond again from 5 to 1 (minus 4)
 	// This time, the cap will be reduced to (factor * shares) = (100 * 1) = 100
@@ -788,7 +788,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 
 	actualValidator, found = app.StakingKeeper.GetValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, expectedBondShares, actualValidator.TotalValidatorBondShares, "validator bond shares shares")
+	require.Equal(t, expectedBondShares, actualValidator.ValidatorBondShares, "validator bond shares shares")
 }
 
 // Tests Add/Remove/Get/SetTokenizeSharesLock

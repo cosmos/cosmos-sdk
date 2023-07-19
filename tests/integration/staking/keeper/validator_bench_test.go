@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -66,7 +67,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 			if err != nil {
 				panic(err)
 			}
-			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
 				panic(err)
@@ -107,7 +108,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 			if err != nil {
 				panic(err)
 			}
-			NewDel := types.NewDelegation(delegator, val, math.LegacyNewDec(int64(i)))
+			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
 				panic(err)
 			}
@@ -131,7 +132,12 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
-		if delegation.GetValidatorAddr().Equals(existingValAddr) {
+		valAddr, err := k.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			panic(err)
+		}
+
+		if bytes.EqualFold(valAddr, existingValAddr) {
 			if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
 				panic(err)
 			}

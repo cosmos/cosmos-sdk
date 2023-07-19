@@ -277,7 +277,11 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 	err = k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
-			valAddr := del.GetValidatorAddr()
+			valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.GetValidatorAddr())
+			if err != nil {
+				panic(err)
+			}
+
 			val, err := k.stakingKeeper.Validator(ctx, valAddr)
 			if err != nil {
 				panic(err)
@@ -293,7 +297,7 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 				panic(err)
 			}
 
-			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
+			delRewards = append(delRewards, types.NewDelegationDelegatorReward(del.GetValidatorAddr(), delReward))
 			total = total.Add(delReward...)
 			return false
 		},
@@ -324,7 +328,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 	err = k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
-			validators = append(validators, del.GetValidatorAddr().String())
+			validators = append(validators, del.GetValidatorAddr())
 			return false
 		},
 	)

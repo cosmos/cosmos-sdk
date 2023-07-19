@@ -139,3 +139,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	)
 	return nil
 }
+
+func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
+	return k.AddrPubkeyRelation.Remove(ctx, types.AddrPubkeyRelationKey(addr))
+}

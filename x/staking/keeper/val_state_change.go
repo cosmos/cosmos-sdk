@@ -256,8 +256,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		}
 	}
 
+	var valUpdates types.ValidatorUpdates
+	valUpdates.Updates = updates
+
 	// set the list of validator updates
-	if err = k.SetValidatorUpdates(ctx, updates); err != nil {
+	if err = k.ValidatorUpdates.Set(ctx, valUpdates); err != nil {
 		return nil, err
 	}
 

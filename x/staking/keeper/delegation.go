@@ -1025,16 +1025,17 @@ func (k Keeper) Unbond(
 			return amount, err
 		}
 
-		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		valAddr, err1 := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
-			return amount, err
+			return amount, err1
 		}
 
 		// call the after delegation modification hook
 		err = k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr)
-		if err != nil {
-			return amount, err
-		}
+	}
+
+	if err != nil {
+		return amount, err
 	}
 
 	// remove the shares and coins from the validator

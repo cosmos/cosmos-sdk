@@ -74,3 +74,8 @@ func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 
 	return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
 }
+
+// AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
+func AddrPubkeyRelationKey(addr []byte) []byte {
+	return append(AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(addr)...)
+}

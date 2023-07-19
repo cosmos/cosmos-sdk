@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -30,6 +29,7 @@ type Keeper struct {
 	Schema               collections.Schema
 	Params               collections.Item[types.Params]
 	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
+	AddrPubkeyRelation   collections.Map[[]byte, cryptotypes.PubKey]
 }
 
 // NewKeeper creates a slashing keeper
@@ -48,6 +48,13 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			"validator_signing_info",
 			sdk.ConsAddressKey,
 			codec.CollValue[types.ValidatorSigningInfo](cdc),
+		),
+		AddrPubkeyRelation: collections.NewMap(
+			sb,
+			types.AddrPubkeyRelationKeyPrefix,
+			"addr_pubkey_relation",
+			collections.BytesKey,
+			codec.CollInterfaceValue[cryptotypes.PubKey](cdc),
 		),
 	}
 
@@ -68,31 +75,6 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-// AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
-	bz, err := k.cdc.MarshalInterface(pubkey)
-	if err != nil {
-		return err
-	}
-	store := k.storeService.OpenKVStore(ctx)
-	key := append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(pubkey.Address())...)
-	return store.Set(key, bz)
-}
-
-// GetPubkey returns the pubkey from the adddress-pubkey relation
-func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(a)...))
-	if err != nil {
-		return nil, err
-	}
-	if bz == nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
-	}
-	var pk cryptotypes.PubKey
-	return pk, k.cdc.UnmarshalInterface(bz, &pk)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -145,9 +127,4 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		),
 	)
 	return nil
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(addr)...))
 }

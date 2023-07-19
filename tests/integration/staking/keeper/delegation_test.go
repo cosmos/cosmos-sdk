@@ -51,7 +51,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	assert.Assert(math.IntEq(t, startTokens, validator.BondedTokens()))
 	assert.Assert(t, validator.IsBonded())
 
-	delegation := types.NewDelegation(addrDel, addrVal, issuedShares)
+	delegation := types.NewDelegation(addrDel.String(), addrVal.String(), issuedShares)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(ctx, delegation))
 
 	maxEntries, err := f.stakingKeeper.MaxEntries(ctx)

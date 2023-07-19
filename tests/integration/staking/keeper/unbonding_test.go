@@ -68,7 +68,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	assert.Assert(t, validator1.IsBonded())
 
 	// Create a delegator
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
+	delegation := types.NewDelegation(addrDels[0].String(), addrVals[0].String(), issuedShares1)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 
 	// Create a validator to redelegate to

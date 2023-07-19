@@ -338,6 +338,20 @@ func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validator", reflect.TypeOf((*MockStakingKeeper)(nil).Validator), arg0, arg1)
 }
 
+// ValidatorAddressCodec mocks base method.
+func (m *MockStakingKeeper) ValidatorAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ValidatorAddressCodec indicates an expected call of ValidatorAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorAddressCodec))
+}
+
 // ValidatorByConsAddr mocks base method.
 func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()

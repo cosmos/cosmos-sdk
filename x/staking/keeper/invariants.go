@@ -199,7 +199,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		}
 
 		for _, delegation := range delegations {
-			delegationValidatorAddr := delegation.GetValidatorAddr().String()
+			delegationValidatorAddr := delegation.GetValidatorAddr()
 			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]
 			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
 		}

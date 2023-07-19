@@ -148,7 +148,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		require.NoError(keeper.HistoricalInfo.Set(ctx, int64(9+i), hi)) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		require.NoError(keeper.HistoricalInfo.Set(ctx, int64(9+i), hi))
 	}
 
 	infos, err := keeper.GetAllHistoricalInfo(ctx)

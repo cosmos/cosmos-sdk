@@ -31,13 +31,13 @@ func (s *KeeperTestSuite) TestAfterValidatorCreatedOrRemoved() {
 	err = keeper.Hooks().AfterValidatorCreated(ctx, valAddr)
 	require.NoError(err)
 
-	ePubKey, err := keeper.AddrPubkeyRelation.Get(ctx, addr.Bytes())
+	ePubKey, err := keeper.GetPubkey(ctx, addr.Bytes())
 	require.NoError(err)
 	require.Equal(ePubKey, pubKey)
 
 	err = keeper.Hooks().AfterValidatorRemoved(ctx, sdk.ConsAddress(addr), nil)
 	require.NoError(err)
 
-	_, err = keeper.AddrPubkeyRelation.Get(ctx, addr.Bytes())
+	_, err = keeper.GetPubkey(ctx, addr.Bytes())
 	require.Error(err)
 }

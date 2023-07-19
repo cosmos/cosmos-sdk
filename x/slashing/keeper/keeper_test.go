@@ -72,9 +72,9 @@ func (s *KeeperTestSuite) TestPubkey() {
 	require := s.Require()
 
 	_, pubKey, addr := testdata.KeyTestPubAddr()
-	require.NoError(keeper.AddrPubkeyRelation.Set(ctx, addr.Bytes(), pubKey))
+	require.NoError(keeper.AddPubkey(ctx, pubKey))
 
-	expectedPubKey, err := keeper.AddrPubkeyRelation.Get(ctx, addr.Bytes())
+	expectedPubKey, err := keeper.GetPubkey(ctx, addr.Bytes())
 	require.NoError(err)
 	require.Equal(pubKey, expectedPubKey)
 }

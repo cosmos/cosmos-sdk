@@ -62,7 +62,7 @@ func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress
 		return err
 	}
 
-	return h.k.AddrPubkeyRelation.Set(sdkCtx, sdk.AccAddress(valAddr).Bytes(), consPk)
+	return h.k.AddPubkey(sdkCtx, consPk)
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {

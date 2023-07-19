@@ -77,6 +77,17 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// AddPubkey sets a address-pubkey relation
+func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
+	key := types.AddrPubkeyRelationKey(pubkey.Address())
+	return k.AddrPubkeyRelation.Set(ctx, key, pubkey)
+}
+
+// GetPubkey returns the pubkey from the adddress-pubkey relation
+func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
+	return k.AddrPubkeyRelation.Get(ctx, types.AddrPubkeyRelationKey(a))
+}
+
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes. It specifies no intraction reason.
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) error {

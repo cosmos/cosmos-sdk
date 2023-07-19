@@ -90,7 +90,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	var addedDels []stakingtypes.Delegation
 
 	for i := 1; i < 11; i++ {
-		del1 := stakingtypes.NewDelegation(accAddrs[i], valAddrs[0], sdkmath.LegacyNewDec(100))
+		del1 := stakingtypes.NewDelegation(accAddrs[i].String(), valAddrs[0].String(), sdkmath.LegacyNewDec(100))
 		store.Set(stakingtypes.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
 		addedDels = append(addedDels, del1)
 	}

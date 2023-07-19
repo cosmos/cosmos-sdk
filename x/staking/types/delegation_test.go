@@ -16,7 +16,7 @@ import (
 )
 
 func TestDelegationEqual(t *testing.T) {
-	d1 := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, math.LegacyNewDec(100))
+	d1 := types.NewDelegation(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(100))
 	d2 := d1
 
 	ok := d1.String() == d2.String()
@@ -30,7 +30,7 @@ func TestDelegationEqual(t *testing.T) {
 }
 
 func TestDelegationString(t *testing.T) {
-	d := types.NewDelegation(sdk.AccAddress(valAddr1), valAddr2, math.LegacyNewDec(100))
+	d := types.NewDelegation(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(100))
 	require.NotEmpty(t, d.String())
 }
 
@@ -80,9 +80,9 @@ func TestRedelegationString(t *testing.T) {
 
 func TestDelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, math.LegacyNewDec(5),
+	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(5),
 		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))
-	dr2 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr3, math.LegacyNewDec(5),
+	dr2 := types.NewDelegationResp(sdk.AccAddress(valAddr1).String(), valAddr3.String(), math.LegacyNewDec(5),
 		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))
 	drs := types.DelegationResponses{dr1, dr2}
 

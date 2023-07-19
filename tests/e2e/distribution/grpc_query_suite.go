@@ -312,7 +312,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 			&types.QueryDelegationTotalRewardsResponse{},
 			&types.QueryDelegationTotalRewardsResponse{
 				Rewards: []types.DelegationDelegatorReward{
-					types.NewDelegationDelegatorReward(val.ValAddress, rewards),
+					types.NewDelegationDelegatorReward(val.ValAddress.String(), rewards),
 				},
 				Total: rewards,
 			},

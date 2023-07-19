@@ -1,4 +1,4 @@
-# Cosmos SDK v0.50.0-alpha.1 Release Notes
+# Cosmos SDK v0.50.0-beta.0 Release Notes
 
 There are no release notes for pre-releases.
 

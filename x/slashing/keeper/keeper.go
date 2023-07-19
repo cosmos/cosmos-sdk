@@ -35,12 +35,12 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:       storeService,
-		cdc:                cdc,
-		legacyAmino:        legacyAmino,
-		sk:                 sk,
-		authority:          authority,
-		Params:             collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		storeService: storeService,
+		cdc:          cdc,
+		legacyAmino:  legacyAmino,
+		sk:           sk,
+		authority:    authority,
+		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

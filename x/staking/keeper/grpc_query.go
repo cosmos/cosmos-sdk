@@ -148,12 +148,12 @@ func (k Querier) getValidatorDelegationsLegacy(ctx context.Context, req *types.Q
 
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
-		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+		_, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 		if err != nil {
 			return nil, err
 		}
 
-		if !delegation.GetValidatorAddr().Equals(valAddr) {
+		if !strings.EqualFold(delegation.GetValidatorAddr(), req.ValidatorAddr) {
 			return nil, nil
 		}
 
@@ -452,7 +452,12 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return err
 		}
 
-		validator, err := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return err
 		}
@@ -565,12 +570,17 @@ func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.Query
 // util
 
 func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	val, err := k.GetValidator(ctx, del.GetValidatorAddr())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
+	val, err := k.GetValidator(ctx, valAddr)
+	if err != nil {
+		return types.DelegationResponse{}, err
+	}
+
+	_, err = k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
@@ -581,7 +591,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 	}
 
 	return types.NewDelegationResp(
-		delegatorAddress,
+		del.DelegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
 		sdk.NewCoin(bondDenom, val.TokensFromShares(del.Shares).TruncateInt()),

@@ -60,9 +60,6 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
 			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
-			if err != nil {
-				panic(err)
-			}
 			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {

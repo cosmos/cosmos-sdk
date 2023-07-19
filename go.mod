@@ -3,7 +3,7 @@ go 1.19
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.3.1
+	cosmossdk.io/api v0.7.0
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0
@@ -20,7 +20,7 @@ require (
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0

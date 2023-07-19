@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/x/tx v0.9.1
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.38.0-rc3
-	github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230713153355-bc7221f5c5f4
+	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0

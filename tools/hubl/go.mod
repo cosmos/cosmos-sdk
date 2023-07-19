@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230714081549-1da193f2bfeb
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.50.0-alpha.1.0.20230713222737-d2b61d0bf557
+	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0

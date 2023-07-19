@@ -36,6 +36,7 @@ type Keeper struct {
 
 	Schema         collections.Schema
 	LastTotalPower collections.Item[math.Int]
+	HistoricalInfo collections.Map[int64, types.HistoricalInfo]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -77,6 +78,7 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
+		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Int64Key, codec.CollValue[types.HistoricalInfo](cdc)),
 	}
 
 	schema, err := sb.Build()

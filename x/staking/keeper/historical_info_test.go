@@ -3,6 +3,7 @@ package keeper_test
 import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -33,17 +34,17 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 	}
 
 	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
-	require.NoError(keeper.SetHistoricalInfo(ctx, 2, &hi))
+	require.NoError(keeper.HistoricalInfo.Set(ctx, 2, hi))
 
-	recv, err := keeper.GetHistoricalInfo(ctx, 2)
-	require.NoError(err, "HistoricalInfo not found after set")
+	recv, err := keeper.HistoricalInfo.Get(ctx, 2)
+	require.NoError(err, "HistoricalInfo found after set")
 	require.Equal(hi, recv, "HistoricalInfo not equal")
 	require.True(IsValSetSorted(recv.Valset, keeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
 
-	require.NoError(keeper.DeleteHistoricalInfo(ctx, 2))
+	require.NoError(keeper.HistoricalInfo.Remove(ctx, 2))
 
-	recv, err = keeper.GetHistoricalInfo(ctx, 2)
-	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "HistoricalInfo found after delete")
+	recv, err = keeper.HistoricalInfo.Get(ctx, 2)
+	require.ErrorIs(err, collections.ErrNotFound, "HistoricalInfo not found after delete")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
 }
 
@@ -74,12 +75,12 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	}
 	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
 	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
-	require.NoError(keeper.SetHistoricalInfo(ctx, 4, &hi4))
-	require.NoError(keeper.SetHistoricalInfo(ctx, 5, &hi5))
-	recv, err := keeper.GetHistoricalInfo(ctx, 4)
+	require.NoError(keeper.HistoricalInfo.Set(ctx, 4, hi4))
+	require.NoError(keeper.HistoricalInfo.Set(ctx, 5, hi5))
+	recv, err := keeper.HistoricalInfo.Get(ctx, 4)
 	require.NoError(err)
 	require.Equal(hi4, recv)
-	recv, err = keeper.GetHistoricalInfo(ctx, 5)
+	recv, err = keeper.HistoricalInfo.Get(ctx, 5)
 	require.NoError(err)
 	require.Equal(hi5, recv)
 
@@ -112,16 +113,16 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		Header: header,
 		Valset: vals,
 	}
-	recv, err = keeper.GetHistoricalInfo(ctx, 10)
+	recv, err = keeper.HistoricalInfo.Get(ctx, 10)
 	require.NoError(err, "GetHistoricalInfo failed after BeginBlock")
 	require.Equal(expected, recv, "GetHistoricalInfo returned unexpected result")
 
 	// Check HistoricalInfo at height 5, 4 is pruned
-	recv, err = keeper.GetHistoricalInfo(ctx, 4)
-	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune earlier height")
+	recv, err = keeper.HistoricalInfo.Get(ctx, 4)
+	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune earlier height")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
-	recv, err = keeper.GetHistoricalInfo(ctx, 5)
-	require.ErrorIs(err, stakingtypes.ErrNoHistoricalInfo, "GetHistoricalInfo did not prune first prune height")
+	recv, err = keeper.HistoricalInfo.Get(ctx, 5)
+	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune first prune height")
 	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
 
@@ -147,7 +148,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		require.NoError(keeper.SetHistoricalInfo(ctx, int64(9+i), &hi)) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		require.NoError(keeper.HistoricalInfo.Set(ctx, int64(9+i), hi)) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 	}
 
 	infos, err := keeper.GetAllHistoricalInfo(ctx)

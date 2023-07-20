@@ -54,21 +54,6 @@ issues:
     - text: "SA1019: codec.NewAminoCodec is deprecated" # TODO remove once migration path is set out
       linters:
         - staticcheck
-<<<<<<< HEAD
-=======
-    - text: "SA1019: legacybech32.MustMarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: legacybech32.MarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: legacybech32.UnmarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
->>>>>>> 3bbc3700b (ci: speed up lint job (#17071))
     - text: "leading space"
       linters:
         - nolintlint
@@ -138,10 +123,6 @@ linters-settings:
     require-specific: false
   gosimple:
     checks: ["all"]
-<<<<<<< HEAD
-
-=======
->>>>>>> 3bbc3700b (ci: speed up lint job (#17071))
   gocritic:
     disabled-checks:
       - regexpMust

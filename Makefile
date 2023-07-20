@@ -379,12 +379,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-<<<<<<< HEAD
-golangci_lint_cmd=golangci-lint
 golangci_version=v1.51.2
-=======
-golangci_version=v1.53.3
->>>>>>> 3bbc3700b (ci: speed up lint job (#17071))
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

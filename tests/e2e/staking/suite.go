@@ -133,7 +133,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
-	s.network.RetryForBlocks(func() error {
+	_ = s.network.RetryForBlocks(func() error {
 		latestHeight, err := s.network.LatestHeight()
 		require.NoError(err)
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)

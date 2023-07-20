@@ -22,7 +22,7 @@ type SignModeHandler struct {
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
 	FileResolver signing.ProtoFileResolver
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver signing.TypeResolver
 	Encoder      *Encoder
 }
 

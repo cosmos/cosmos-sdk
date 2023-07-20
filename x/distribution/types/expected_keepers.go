@@ -34,6 +34,7 @@ type BankKeeper interface {
 
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
+	ValidatorAddressCodec() address.Codec
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error

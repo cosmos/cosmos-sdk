@@ -20,6 +20,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	errorsmod "cosmossdk.io/errors"
@@ -30,6 +31,7 @@ import (
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -85,9 +87,15 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 }
 
 func makeMinimalConfig() depinject.Config {
-	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+	var (
+		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
+		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
+		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
+	)
+
 	return depinject.Configs(
-		depinject.Supply(mempoolOpt),
+		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
 		appconfig.Compose(&appv1alpha1.Config{
 			Modules: []*appv1alpha1.ModuleConfig{
 				{
@@ -339,7 +347,8 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	}
 
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(msgs...)
+	err := builder.SetMsgs(msgs...)
+	require.NoError(t, err)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
 	setTxSignature(t, builder, uint64(counter))
 
@@ -362,8 +371,8 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
 	t.Helper()
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(tx.GetMsgs()...)
-
+	err := builder.SetMsgs(tx.GetMsgs()...)
+	require.NoError(t, err)
 	memo := tx.GetMemo()
 	vals, err := url.ParseQuery(memo)
 	require.NoError(t, err)
@@ -376,7 +385,8 @@ func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte 
 	return builder.GetTx()
 }
 
-func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
+func setFailOnHandler(t *testing.T, cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
+	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 
@@ -388,6 +398,7 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 		}
 	}
 
-	builder.SetMsgs(msgs...)
+	err := builder.SetMsgs(msgs...)
+	require.NoError(t, err)
 	return builder.GetTx()
 }

@@ -24,10 +24,12 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	var bankKeeper bankkeeper.Keeper
-	var stakingKeeper *stakingkeeper.Keeper
-	var slashingKeeper slashingkeeper.Keeper
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
+		slashingKeeper    slashingkeeper.Keeper
+	)
 
 	app, err := simtestutil.Setup(
 		depinject.Configs(
@@ -51,7 +53,8 @@ func TestBeginBlocker(t *testing.T) {
 	// bond the validator
 	power := int64(100)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
-	stakingKeeper.EndBlocker(ctx)
+	_, err = stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 	require.Equal(
@@ -75,7 +78,7 @@ func TestBeginBlocker(t *testing.T) {
 	err = slashing.BeginBlocker(ctx, slashingKeeper)
 	require.NoError(t, err)
 
-	info, err := slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
+	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
 	require.NoError(t, err)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)

@@ -16,6 +16,7 @@ type CometRPC interface {
 	Status(context.Context) (*coretypes.ResultStatus, error)
 	Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error)
 	BlockByHash(ctx context.Context, hash []byte) (*coretypes.ResultBlock, error)
+	BlockResults(ctx context.Context, height *int64) (*coretypes.ResultBlockResults, error)
 	BlockchainInfo(ctx context.Context, minHeight, maxHeight int64) (*coretypes.ResultBlockchainInfo, error)
 	Commit(ctx context.Context, height *int64) (*coretypes.ResultCommit, error)
 	Tx(ctx context.Context, hash []byte, prove bool) (*coretypes.ResultTx, error)

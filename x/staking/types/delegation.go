@@ -15,10 +15,10 @@ import (
 var _ DelegationI = Delegation{}
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares math.LegacyDec) Delegation {
+func NewDelegation(delegatorAddr, validatorAddr string, shares math.LegacyDec) Delegation {
 	return Delegation{
-		DelegatorAddress: delegatorAddr.String(),
-		ValidatorAddress: validatorAddr.String(),
+		DelegatorAddress: delegatorAddr,
+		ValidatorAddress: validatorAddr,
 		Shares:           shares,
 	}
 }
@@ -45,18 +45,12 @@ func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delega
 	return delegation, err
 }
 
-func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
-	delAddr := sdk.MustAccAddressFromBech32(d.DelegatorAddress)
-
-	return delAddr
+func (d Delegation) GetDelegatorAddr() string {
+	return d.DelegatorAddress
 }
 
-func (d Delegation) GetValidatorAddr() sdk.ValAddress {
-	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return addr
+func (d Delegation) GetValidatorAddr() string {
+	return d.ValidatorAddress
 }
 func (d Delegation) GetShares() math.LegacyDec { return d.Shares }
 
@@ -273,7 +267,7 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares math.LegacyDec, balance sdk.Coin,
+	delegatorAddr, validatorAddr string, shares math.LegacyDec, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
 		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),

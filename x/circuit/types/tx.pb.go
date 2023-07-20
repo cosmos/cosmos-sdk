@@ -95,7 +95,7 @@ func (m *MsgAuthorizeCircuitBreaker) GetPermissions() *Permissions {
 	return nil
 }
 
-// MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
+// MsgAuthorizeCircuitBreakerResponse defines the Msg/AuthorizeCircuitBreaker response type.
 type MsgAuthorizeCircuitBreakerResponse struct {
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 }
@@ -199,7 +199,7 @@ func (m *MsgTripCircuitBreaker) GetMsgTypeUrls() []string {
 	return nil
 }
 
-// MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
+// MsgTripCircuitBreakerResponse defines the Msg/TripCircuitBreaker response type.
 type MsgTripCircuitBreakerResponse struct {
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 }

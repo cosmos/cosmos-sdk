@@ -54,7 +54,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-	accountKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
@@ -64,6 +63,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(stakingtypes.GovModuleName).String(),
+		address.NewBech32Codec("cosmosvaloper"),
+		address.NewBech32Codec("cosmosvalcons"),
 	)
 	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))
 
@@ -102,8 +103,8 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	require := s.Require()
 
 	expTotalPower := math.NewInt(10 ^ 9)
-	require.NoError(keeper.SetLastTotalPower(ctx, expTotalPower))
-	resTotalPower, err := keeper.GetLastTotalPower(ctx)
+	require.NoError(keeper.LastTotalPower.Set(ctx, expTotalPower))
+	resTotalPower, err := keeper.LastTotalPower.Get(ctx)
 	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))
 }

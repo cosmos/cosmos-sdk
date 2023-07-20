@@ -28,5 +28,5 @@ else
     exit 0
   fi
 
-  dirname $GIT_DIFF | uniq | xargs -I{} bash -c 'cd {} && golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"'
+  dirname $GIT_DIFF | uniq | xargs -I{} cd {} && golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
 fi

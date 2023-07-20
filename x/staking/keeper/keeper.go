@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/collections"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
@@ -34,8 +32,9 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema         collections.Schema
-	LastTotalPower collections.Item[math.Int]
+	Schema           collections.Schema
+	LastTotalPower   collections.Item[math.Int]
+	ValidatorUpdates collections.Item[types.ValidatorUpdates]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -77,6 +76,7 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
+		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -126,31 +126,4 @@ func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
 // ConsensusAddressCodec returns the app consensus address codec.
 func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
 	return k.consensusAddressCodec
-}
-
-// SetValidatorUpdates sets the ABCI validator power updates for the current block.
-func (k Keeper) SetValidatorUpdates(ctx context.Context, valUpdates []abci.ValidatorUpdate) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&types.ValidatorUpdates{Updates: valUpdates})
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ValidatorUpdatesKey, bz)
-}
-
-// GetValidatorUpdates returns the ABCI validator power updates within the current block.
-func (k Keeper) GetValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ValidatorUpdatesKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var valUpdates types.ValidatorUpdates
-	err = k.cdc.Unmarshal(bz, &valUpdates)
-	if err != nil {
-		return nil, err
-	}
-
-	return valUpdates.Updates, nil
 }

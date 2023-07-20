@@ -20,13 +20,16 @@ if [[ -z "${LINT_DIFF:-}" ]]; then
     xargs -0 -I{} bash -c 'lint_module "$@"' _ {} "$@"
 else
   if [[ -z $GIT_DIFF ]]; then
-    GIT_DIFF="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
+    GIT_DIFF=$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$) || true
   fi
-  
+
   if [[ -z "$GIT_DIFF" ]]; then
     echo "no files to lint"
     exit 0
   fi
 
-  dirname $GIT_DIFF | uniq | xargs -I{} cd {} && golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
+  for f in $(dirname $GIT_DIFF | uniq); do
+    echo "linting $f [$(date -Iseconds -u)]"
+    cd $f && golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
+  done
 fi

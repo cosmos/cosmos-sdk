@@ -15,18 +15,14 @@ lint_module() {
 export -f lint_module
 
 lint_files() {
-  local go_files="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
-  if [[ -z "$go_files" && $GIT_DIFF ]]; then
-    echo "went here"
-    echo $GIT_DIFF
-    go_files="$(echo $GIT_DIFF | grep \.go$ | grep -v \.pb\.go$)"
-    echo "has went here"
-  elif [[ -z "$go_files" ]]; then
+  if [[ -z $GIT_DIFF ]]; then
+    GIT_DIFF="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
+  elif [[ -z "$GIT_DIFF" ]]; then
     echo "no files to lint"
     exit 0
   fi
 
-  for f in $go_files; do
+  for f in $GIT_DIFF; do
     local dir_name="$(dirname $f)"
     echo "linting ${dir_name} [$(date -Iseconds -u)]"
     golangci-lint run "${dir_name}" -c "${REPO_ROOT}/.golangci.yml" "$@"

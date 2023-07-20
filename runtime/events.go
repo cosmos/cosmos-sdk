@@ -13,7 +13,7 @@ import (
 var _ event.Service = (*EventService)(nil)
 
 type EventService struct {
-	Events
+	Events 
 }
 
 func (es EventService) EventManager(ctx context.Context) event.Manager {

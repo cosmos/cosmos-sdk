@@ -43,4 +43,7 @@ jobs:
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
-          LINT_DIFF=1 GIT_DIFF=env.GIT_DIFF make lint
+          make lint
+        env:
+          GIT_DIFF: ${{ env.GIT_DIFF }}
+          LINT_DIFF: 1

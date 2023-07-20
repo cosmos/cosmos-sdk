@@ -167,7 +167,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	err = suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	err = suite.slashingKeeper.ValidatorSigningInfo.Set(ctx, val0ConsAddress, info)
 	suite.Require().NoError(err)
 	// put validator0 in jail
 	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
@@ -177,7 +177,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)
-	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
+	selfDelegation := stakingtypes.NewDelegation(suite.accounts[0].Address.String(), validator0.GetOperator().String(), issuedShares)
 	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(validator0.GetOperator(), sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,8 +31,8 @@ const (
 var (
 	// Keys for store prefixes
 	// Last* values are constant during a block.
-	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
-	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
+	LastValidatorPowerKey = []byte{0x11}              // prefix for each key to a validator index, for bonded validators
+	LastTotalPowerKey     = collections.NewPrefix(18) // prefix for the total power
 
 	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
@@ -52,8 +53,8 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
-	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
+	HistoricalInfoKey   = []byte{0x50}              // prefix for the historical info
+	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 

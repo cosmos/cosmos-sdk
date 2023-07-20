@@ -34,7 +34,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		panic(err)
 	}
 
-	if err := k.SetLastTotalPower(ctx, data.LastTotalPower); err != nil {
+	if err := k.LastTotalPower.Set(ctx, data.LastTotalPower); err != nil {
 		panic(err)
 	}
 
@@ -84,9 +84,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			panic(fmt.Errorf("invalid delegator address: %s", err))
 		}
 
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			panic(err)
+		}
+
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, valAddr); err != nil {
 				panic(err)
 			}
 		}
@@ -97,7 +102,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr); err != nil {
 				panic(err)
 			}
 		}
@@ -238,7 +243,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	totalPower, err := k.GetLastTotalPower(ctx)
+	totalPower, err := k.LastTotalPower.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

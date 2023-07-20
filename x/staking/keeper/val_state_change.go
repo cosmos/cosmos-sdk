@@ -251,13 +251,14 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 	// set total power on lookup index if there are any updates
 	if len(updates) > 0 {
-		if err = k.SetLastTotalPower(ctx, totalPower); err != nil {
+		if err = k.LastTotalPower.Set(ctx, totalPower); err != nil {
 			return nil, err
 		}
 	}
 
+	valUpdates := types.ValidatorUpdates{Updates: updates}
 	// set the list of validator updates
-	if err = k.SetValidatorUpdates(ctx, updates); err != nil {
+	if err = k.ValidatorUpdates.Set(ctx, valUpdates); err != nil {
 		return nil, err
 	}
 

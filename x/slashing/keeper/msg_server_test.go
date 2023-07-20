@@ -211,9 +211,9 @@ func (s *KeeperTestSuite) TestUnjail() {
 				info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addr), int64(4), int64(3),
 					time.Unix(2, 0), false, int64(10))
 
-				s.Require().NoError(s.slashingKeeper.SetValidatorSigningInfo(s.ctx, sdk.ConsAddress(addr), info))
+				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr, valAddr, sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
@@ -240,9 +240,9 @@ func (s *KeeperTestSuite) TestUnjail() {
 				info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addr), int64(4), int64(3),
 					time.Unix(2, 0), true, int64(10))
 
-				s.Require().NoError(s.slashingKeeper.SetValidatorSigningInfo(s.ctx, sdk.ConsAddress(addr), info))
+				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr, valAddr, sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
@@ -269,9 +269,9 @@ func (s *KeeperTestSuite) TestUnjail() {
 				info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addr), int64(4), int64(3),
 					s.ctx.BlockTime().AddDate(0, 0, 1), false, int64(10))
 
-				s.Require().NoError(s.slashingKeeper.SetValidatorSigningInfo(s.ctx, sdk.ConsAddress(addr), info))
+				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr, valAddr, sdkmath.LegacyNewDec(10000))
+				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(10000))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
@@ -298,9 +298,9 @@ func (s *KeeperTestSuite) TestUnjail() {
 				info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addr), int64(4), int64(3),
 					time.Unix(2, 0), false, int64(10))
 
-				s.Require().NoError(s.slashingKeeper.SetValidatorSigningInfo(s.ctx, sdk.ConsAddress(addr), info))
+				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr, valAddr, sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 				s.stakingKeeper.EXPECT().Unjail(s.ctx, sdk.ConsAddress(addr)).Return(nil)

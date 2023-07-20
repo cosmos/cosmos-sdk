@@ -196,7 +196,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	// setup delegation
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
-	delegation := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), issuedShares)
+	delegation := stakingtypes.NewDelegation(delAddr.String(), validator.GetOperator().String(), issuedShares)
 	require.NoError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 	require.NoError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20)))
 	// setup validator rewards

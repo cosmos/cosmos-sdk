@@ -28,6 +28,8 @@ else
     exit 0
   fi
 
+  pwd
+  ls
   for f in $(dirname $GIT_DIFF | uniq); do
     cd $f &&
     echo "linting $f [$(date -Iseconds -u)]" &&

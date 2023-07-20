@@ -17,13 +17,13 @@ export -f lint_module
 lint_files() {
   local go_files="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
   if [[ -z "$go_files" && $GIT_DIFF ]]; then
+    echo "went here"
     go_files="$(echo $GIT_DIFF | grep \.go$ | grep -v \.pb\.go$)"
+    echo $go_files
   elif [[ -z "$go_files" ]]; then
     echo "no files to lint"
     exit 0
   fi
-
-  echo $go_files
 
   for f in $go_files; do
     local dir_name="$(dirname $f)"

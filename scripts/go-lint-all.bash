@@ -33,7 +33,7 @@ export -f lint_files
 
 # if LINT_DIFF env is set, only lint the files in the current commit otherwise lint all files
 if [[ -z "${LINT_DIFF:-}" ]]; then
-  find "${REPO_ROOT}" -type f -name go.mod -print0 | xargs -P 8 -0 -I{} bash -c 'lint_module "$@"' _ {} "$@"
+  find "${REPO_ROOT}" -type f -name go.mod -print0 | xargs -P 0 -0 -I{} bash -c 'lint_module "$@"' _ {} "$@"
 else
   lint_files "$@"
 fi

@@ -73,11 +73,6 @@ issues:
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
-output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-
 linters-settings:
   gci:
     custom-order: true

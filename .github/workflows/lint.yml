@@ -22,12 +22,28 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
+            Makefile
+            **/Makefile
+            .golangci.yml
+      - name: run linting (long)
+        if: env.GIT_DIFF
+        id: lint_long
+        run: |
+          make lint
+      - uses: technote-space/get-diff-action@v6.1.2
+        if: steps.lint_long.outcome == 'skipped'
+        id: git_diff_all
+        with:
+          PATTERNS: |
             **/*.go
             go.mod
             go.sum
             **/go.mod
             **/go.sum
-      - name: run linting
-        if: env.GIT_DIFF
+      - name: run linting (short)
+        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
           make lint
+        env:
+          GIT_DIFF: ${{ env.GIT_DIFF }}
+          LINT_DIFF: 1

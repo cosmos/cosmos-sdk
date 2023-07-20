@@ -31,7 +31,6 @@ I have...
 * [ ] included comments for [documenting Go code](https://blog.golang.org/godoc)
 * [ ] updated the relevant documentation or specification
 * [ ] reviewed "Files changed" and left comments if necessary
-* [ ] run `make lint` and `make test`
 * [ ] confirmed all CI checks have passed
 
 ### Reviewers Checklist

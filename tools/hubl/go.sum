@@ -145,8 +145,8 @@ github.com/cockroachdb/errors v1.10.0 h1:lfxS8zZz1+OjtV4MtNWgboi/W5tyLEB6VQZBXN+
 github.com/cockroachdb/errors v1.10.0/go.mod h1:lknhIsEVQ9Ss/qKDBQS/UqFSvPQjOwNq2qyKAxtHRqE=
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b h1:r6VH0faHjZeQy818SGhaone5OnYfxFR/+AzdY3sf5aE=
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b/go.mod h1:Vz9DsVWQQhf3vs21MhPMZpMGSht7O/2vFW2xusFUVOs=
-github.com/cockroachdb/pebble v0.0.0-20230710174534-a9a079d4fb6b h1:oUWixRyL2R8+j9iLqTXJkFXC6dBjxQeLO5DVJnylHMg=
-github.com/cockroachdb/pebble v0.0.0-20230710174534-a9a079d4fb6b/go.mod h1:FN5O47SBEz5+kO9fG8UTR64g2WS1u5ZFCgTvxGjoSks=
+github.com/cockroachdb/pebble v0.0.0-20230711190327-88bbab59ff4f h1:V7Cg5eC+VAHz4rusEB1/kSEQ1mbhHJfV0RICDcTBFLw=
+github.com/cockroachdb/pebble v0.0.0-20230711190327-88bbab59ff4f/go.mod h1:FN5O47SBEz5+kO9fG8UTR64g2WS1u5ZFCgTvxGjoSks=
 github.com/cockroachdb/redact v1.1.5 h1:u1PMllDkdFfPWaNGMyLD1+so+aq3uUItthCFqzwPJ30=
 github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 h1:DJK8W/iB+s/qkTtmXSrHA49lp5O3OsR7E6z4byOLy34=
@@ -168,8 +168,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230714071335-e11c41b3795e h1:vpNBbvRZ6GVq8UukQNNlacg2NjazYQv6P42eEnTjAzM=
-github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230714071335-e11c41b3795e/go.mod h1:LME6v5XztqVK7/1uTQj/G6ZJdosJEz24rKaPYk+WbqI=
+github.com/cosmos/cosmos-sdk v0.50.0-beta.0 h1:cPblupyMlA4qvnvuuQEjYQPq1uqSXBgQmsiGREQ5hd0=
+github.com/cosmos/cosmos-sdk v0.50.0-beta.0/go.mod h1:MF/wnXyreoL0g8YdRZhUD4apPdgebMc29LgMJB+dh6M=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

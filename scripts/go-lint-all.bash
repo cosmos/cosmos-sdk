@@ -28,8 +28,7 @@ else
     exit 0
   fi
 
-  echo $(dirname $($GIT_DIFF | tr -d "'") | uniq)
-  for f in $(dirname $($GIT_DIFF | tr -d "'") | uniq); do
+  for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
     cd $f &&
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" &&

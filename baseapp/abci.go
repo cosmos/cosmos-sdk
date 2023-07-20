@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 	"time"
@@ -493,6 +492,12 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// processed the first block, as we want to avoid overwriting the finalizeState
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
+		// abort any running OE
+		if app.oeEnabled && app.oeInfo != nil && app.oeInfo.Running() {
+			app.oeInfo.Abort()
+			_, _ = app.oeInfo.WaitResult() // ignore the result
+		}
+
 		app.setState(execModeFinalize, header)
 	}
 
@@ -534,18 +539,10 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	}
 
 	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
-	// This is to simplify the logic and avoid having to deal with the InitChain state.
+	// During the first block we'll be carrying state from InitChain, so it would be impossible for us to easily revert.
 	if app.oeEnabled && req.Height > app.initialHeight {
-		if app.oeInfo == nil {
-			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
-			app.oeInfo.Execute()
-		} else if app.oeInfo.AbortIfNeeded(req.Hash) {
-			// TODO: this will block until the OE is aborted, which can take a bit. Maybe do it async?
-			// IMO it's not worth it, we could defer it but that's going to open up a whole can of worms.
-			// if aborted, restart with the new proposal
-			app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
-			app.oeInfo.Execute()
-		}
+		app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
+		app.oeInfo.Execute()
 	}
 
 	return resp, nil
@@ -733,10 +730,8 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.oeInfo != nil {
-		if app.oeInfo.ShouldAbort() {
-			return nil, nil
-		}
+	if app.oeInfo != nil && app.oeInfo.ShouldAbort() {
+		return nil, nil
 	}
 
 	events = append(events, beginBlock.Events...)
@@ -749,10 +744,8 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
 		// check before every tx if we should abort
-		if app.oeInfo != nil {
-			if app.oeInfo.ShouldAbort() {
-				return nil, nil
-			}
+		if app.oeInfo != nil && app.oeInfo.ShouldAbort() {
+			return nil, nil
 		}
 
 		var response *abci.ExecTxResult
@@ -792,7 +785,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		AppHash:               app.workingHash(),
+		// AppHash:               app.workingHash(),
 	}, nil
 }
 
@@ -807,20 +800,27 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	defer func() {
-		app.oeInfo = nil
-	}()
-
 	if app.oeInfo != nil && app.oeEnabled {
 		// check if the hash we got is the same as the one we are executing
-		if !app.oeInfo.AbortIfNeeded(req.Hash) {
-			// no need to abort OE, wait for the result
-			return app.oeInfo.WaitResult()
+		aborted := app.oeInfo.AbortIfNeeded(req.Hash)
+		// Wait for the OE to finish, regardless of whether it was aborted or not
+		res, err := app.oeInfo.WaitResult()
+
+		// only return if we are not aborting
+		if !aborted {
+			res.AppHash = app.workingHash()
+			return res, err
 		}
+
+		// if it was aborted, we need to reset the state and continue
+		app.finalizeBlockState = nil
 	}
 
-	log.Println("NOT running OE ❌")
-	return app.internalFinalizeBlock(req)
+	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	app.oeInfo = nil
+	res, err := app.internalFinalizeBlock(req)
+	res.AppHash = app.workingHash()
+	return res, err
 }
 
 // checkHalt checkes if height or time exceeds halt-height or halt-time respectively.

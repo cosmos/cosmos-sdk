@@ -604,7 +604,7 @@ func setupTestTokenizeAndRedeemConversion(
 	validator := teststaking.NewValidator(t, validatorAddress, pubKeys[0])
 	validator.DelegatorShares = sdk.NewDec(1_000_000)
 	validator.Tokens = sdk.NewInt(1_000_000)
-	validator.TotalLiquidShares = sdk.NewDec(0)
+	validator.LiquidShares = sdk.NewDec(0)
 	validator.Status = types.Bonded
 
 	app.StakingKeeper.SetValidator(ctx, validator)

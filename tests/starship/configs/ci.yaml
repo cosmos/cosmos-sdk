@@ -1,0 +1,29 @@
+chains:
+  - name: simapp
+    type: simapp
+    image: ghcr.io/cosmology-tech/starship/simapp:v0.47.3
+    numValidators: 2
+    ports:
+      rest: 1317
+      rpc: 26657
+      faucet: 8001
+    resources:
+      cpu: "0.2"
+      memory: "200M"
+    faucet:
+      # use v0.31.0-alpha.2 cosmjs-faucet for compatibility with simapp v0.47.3
+      image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0-alpha.2
+      # provide more resources to faucet since the number of validators is higher
+      # only a single faucet is spun up with the genesis node, so resources wont multiply
+      # with the number of validators
+      resources:
+        cpu: "0.5"
+        memory: "1Gi"
+
+registry:
+  enabled: true
+  ports:
+    rest: 8081
+  resources:
+    cpu: "0.1"
+    memory: "100M"

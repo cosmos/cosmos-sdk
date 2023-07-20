@@ -23,6 +23,8 @@ lint_files() {
     exit 0
   fi
 
+  echo $go_files
+
   for f in $go_files; do
     local dir_name="$(dirname $f)"
     echo "linting ${dir_name} [$(date -Iseconds -u)]"

@@ -211,16 +211,7 @@ func (w *wrapper) FeePayer() []byte {
 }
 
 func (w *wrapper) FeeGranter() []byte {
-	feeGranter := w.tx.AuthInfo.Fee.Granter
-	if feeGranter != "" {
-		feeGranter, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
-		if err != nil {
-			panic(err)
-		}
-
-		return feeGranter
-	}
-	return nil
+	return w.tx.FeeGranter(w.cdc)
 }
 
 func (w *wrapper) GetTip() *tx.Tip {

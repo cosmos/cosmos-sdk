@@ -17,7 +17,9 @@ export -f lint_module
 lint_files() {
   if [[ -z $GIT_DIFF ]]; then
     GIT_DIFF="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
-  elif [[ -z "$GIT_DIFF" ]]; then
+  fi
+  
+  if [[ -z "$GIT_DIFF" ]]; then
     echo "no files to lint"
     exit 0
   fi

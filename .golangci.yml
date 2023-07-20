@@ -1,11 +1,14 @@
 run:
   tests: true
-  timeout: 10m
+  timeout: 15m
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
   skip-files:
     - server/grpc/gogoreflection/fix_registration.go
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.gw\\.\\.go$"
+    - ".*\\.pulsar\\.go$"
 
 linters:
   disable-all: true
@@ -54,7 +57,6 @@ issues:
     - text: "leading space"
       linters:
         - nolintlint
-
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
@@ -121,7 +123,6 @@ linters-settings:
     require-specific: false
   gosimple:
     checks: ["all"]
-
   gocritic:
     disabled-checks:
       - regexpMust

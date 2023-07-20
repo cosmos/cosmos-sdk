@@ -18,8 +18,9 @@ lint_files() {
   local go_files="$(git diff --name-only --diff-filter=d | grep \.go$ | grep -v \.pb\.go$)"
   if [[ -z "$go_files" && $GIT_DIFF ]]; then
     echo "went here"
+    echo $GIT_DIFF
     go_files="$(echo $GIT_DIFF | grep \.go$ | grep -v \.pb\.go$)"
-    echo $go_files
+    echo "has went here"
   elif [[ -z "$go_files" ]]; then
     echo "no files to lint"
     exit 0

@@ -213,7 +213,12 @@ func (w *wrapper) FeePayer() []byte {
 func (w *wrapper) FeeGranter() []byte {
 	feeGranter := w.tx.AuthInfo.Fee.Granter
 	if feeGranter != "" {
-		return sdk.MustAccAddressFromBech32(feeGranter)
+		feeGranter, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
+		if err != nil {
+			panic(err)
+		}
+
+		return feeGranter
 	}
 	return nil
 }

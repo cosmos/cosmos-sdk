@@ -799,7 +799,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }
 
 func TestValidatorBondRedelegate(t *testing.T) {
@@ -891,5 +891,5 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }

@@ -448,7 +448,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			// if the delegator was not a provider, check that the total liquid staked and validator liquid shares increased
 			totalLiquidTokensAfterTokenization := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
-			validatorLiquidSharesAfterTokenization := newValidator.TotalLiquidShares
+			validatorLiquidSharesAfterTokenization := newValidator.LiquidShares
 			if !tc.delegatorIsLSTP {
 				require.Equal(t, tc.tokenizeShareAmount.String(), totalLiquidTokensAfterTokenization.String(), "total liquid tokens after tokenization")
 				require.Equal(t, tc.tokenizeShareAmount.String(), validatorLiquidSharesAfterTokenization.TruncateInt().String(), "validator liquid shares after tokenization")
@@ -527,9 +527,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
 			// if the delegator was not a liuqid staking provider, check that the total liquid staked
-			// and total liquid shares decreased
+			// and liquid shares decreased
 			totalLiquidTokensAfterRedemption := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
-			validatorLiquidSharesAfterRedemption := newValidator.TotalLiquidShares
+			validatorLiquidSharesAfterRedemption := newValidator.LiquidShares
 			expectedLiquidTokens := totalLiquidTokensAfterTokenization.Sub(redeemedTokens).Sub(slashedTokens)
 			expectedLiquidShares := validatorLiquidSharesAfterTokenization.Sub(sdk.NewDecFromInt(redeemedShares))
 			if !tc.delegatorIsLSTP {
@@ -978,14 +978,14 @@ func TestValidatorBond(t *testing.T) {
 				require.True(t, found, "delegation should have been found after validator bond")
 				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 
-				// check total validator bond shares
+				// check validator bond shares
 				validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
 				require.True(t, found, "validator should have been found after validator bond")
 
 				if tc.alreadyValidatorBond {
-					require.True(t, validator.TotalValidatorBondShares.IsZero(), "validator total shares should still be zero")
+					require.True(t, validator.ValidatorBondShares.IsZero(), "validator bond shares should still be zero")
 				} else {
-					require.Equal(t, delegation.Shares.String(), validator.TotalValidatorBondShares.String(),
+					require.Equal(t, delegation.Shares.String(), validator.ValidatorBondShares.String(),
 						"validator total shares should have increased")
 				}
 			}
@@ -1173,7 +1173,7 @@ func TestICADelegateUndelegate(t *testing.T) {
 
 	validator.DelegatorShares = sdk.NewDec(1_000_000)
 	validator.Tokens = sdk.NewInt(1_000_000)
-	validator.TotalLiquidShares = sdk.NewDec(0)
+	validator.LiquidShares = sdk.NewDec(0)
 	app.StakingKeeper.SetValidator(ctx, validator)
 
 	delegateMsg := types.MsgDelegate{
@@ -1203,7 +1203,7 @@ func TestICADelegateUndelegate(t *testing.T) {
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
 	require.True(t, found, "validator should have been found")
-	require.Equal(t, delegateAmount.ToDec(), validator.TotalLiquidShares, "validator total liquid shares after delegation")
+	require.Equal(t, delegateAmount.ToDec(), validator.LiquidShares, "validator liquid shares after delegation")
 
 	// Try to undelegate
 	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &undelegateMsg)
@@ -1219,5 +1219,5 @@ func TestICADelegateUndelegate(t *testing.T) {
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
 	require.True(t, found, "validator should have been found")
-	require.Equal(t, sdk.ZeroDec(), validator.TotalLiquidShares, "validator total liquid shares after undelegation")
+	require.Equal(t, sdk.ZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
 }

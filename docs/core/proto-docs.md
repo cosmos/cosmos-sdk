@@ -7098,8 +7098,8 @@ multiplied by exchange rate.
 | `min_self_delegation` | [string](#string) |  | **Deprecated.** Deprecated: This field has been deprecated with LSM in favor of the validator bond |
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
 | `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
-| `total_validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
-| `total_liquid_shares` | [string](#string) |  | Total number of shares either tokenized or owned by a liquid staking provider |
+| `validator_bond_shares` | [string](#string) |  | Number of shares self bonded from the validator |
+| `liquid_shares` | [string](#string) |  | Number of shares either tokenized or owned by a liquid staking provider |
 
 
 
@@ -7279,6 +7279,7 @@ Query/QueryAllTokenizeShareRecords RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `records` | [TokenizeShareRecord](#cosmos.staking.v1beta1.TokenizeShareRecord) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -8065,6 +8066,7 @@ MsgCreateValidator defines a SDK message for creating a new validator.
 | ----- | ---- | ----- | ----------- |
 | `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
 | `commission` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.** Deprecated: This field has been deprecated with LSM in favor of the validator bond |
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
@@ -8149,6 +8151,7 @@ MsgEditValidator defines a SDK message for editing an existing validator.
 | `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
+| `min_self_delegation` | [string](#string) |  | **Deprecated.**  |
 
 
 

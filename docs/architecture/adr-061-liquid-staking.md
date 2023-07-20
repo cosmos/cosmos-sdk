@@ -1,4 +1,4 @@
-# ADR ADR-061: Liquid Staking
+# ADR 061: Liquid Staking Module
 
 ## Changelog
 
@@ -25,11 +25,11 @@ The Osmosis team has adopted the idea of Superfluid and Interfluid staking where
 
 It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to [rehypothecate](https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation) delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
 
-These changes to the staking module have been in development for more than a year and have seen substantial industry adoption by protocols who plan to build staking UX. The internal economics at Informal team has also done a review of the impacts of these changes and this review led to the development of the validator bond system. This system provides governance with a tuneable parameter for modulating the risks of principal agent problem called the validator bond factor. 
+These changes to the staking module have been in development for more than a year and have seen substantial industry adoption by protocols who plan to build staking UX. The internal economics team at Informal has also done a review of the impact of these changes and this review led to the development of the validator bond system. This system provides governance with a tuneable parameter for modulating the risks of principal agent problem called the validator bond factor. 
 
 Liquid proof of stake systems exacerbate the risk that a single entity - the liquid staking provider - amasses more than ⅓ the total staked supply on a given chain, giving it the power to halt that chain’s block production or censor transactions and proposals.
 
-Liquid proof of stake may also exacerbates the principal agent risk that exists at the heart of the delegated proof of stake system. The core of the problem is that validators do not actually own the stake that is delegated to them. This leaves the open to perverse incentives to attack the consensus system. Cosmos introduced the idea of min self bond in the staking. This creates a minimum amount of stake the must be bonded by the validators operator key. This feature has very little effect on the behavior of delegates.
+Liquid proof of stake may also exacerbates the principal agent risk that exists at the heart of the delegated proof of stake system. The core of the problem is that validators do not actually own the stake that is delegated to them. This leaves them open to perverse incentives to attack the consensus system. Cosmos introduced the idea of min self bond in the staking. This creates a minimum amount of stake the must be bonded by the validators operator key. This feature has very little effect on the behavior of delegates.
 
 ## Decision
 
@@ -41,7 +41,7 @@ The LSM mitigates liquid staking risks by limiting the total amount of tokens th
 
 As additional risk-mitigation features, the LSM introduces a requirement that validators self-bond tokens to be eligible for delegations from liquid staking providers, and that the portion of their liquid staked shares must not exceed X% of their total shares (50% on the Cosmos Hub).
 
-A new governance parameter is introduced that defines the ratio of validator bonded tokens to issued tokenized shares. This is called the validator bond factor. A larger validator bond factor allows more tokenized shares to be issued for a smaller amount of validator bond. If governance is comfortable with how the liquid staking market is evolving, it makes sense to increase this value.
+A new governance parameter is introduced that defines the ratio of validator bonded tokens to issued tokenized shares. This is called the _validator bond factor_. A larger validator bond factor allows more tokenized shares to be issued for a smaller amount of validator bond. If governance is comfortable with how the liquid staking market is evolving, it makes sense to increase this value.
 
 Min self delegation is removed from the staking system with the expectation that it will be replaced by the validator bond system. The validator bond system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Validator bonding will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the validator bond factor.
 
@@ -84,11 +84,12 @@ A user would be able to visit any liquid staking provider that has integrated wi
 
 Technically speaking, this is accomplished by using something called an “LSM share.” Using the liquid staking module, a user can tokenize their staked tokens and turn it into LSM shares. LSM shares can be redeemed for underlying staked tokens and are transferable. After staked tokens are tokenized they can be immediately transferred to a liquid staking provider in exchange for liquid staking tokens - without having to wait for the unbonding period.
 
-## LSM share token
+### LSM share token
+
 When tokenizing a delegation, the returned token has a denom of the format `{validatorAddress}/{recordId}`, where `recordId` is a monotonically increasing number that increments every tokenization. As a result, two successive tokenizations to the same validator will yield different denom's.
 Additionally, the share tokens returned will map 1:1 with the number of shares of the underlying delegation (e.g. if the delegation of X shares is tokenized, X share tokens be returned). This reduces ambiguity with respect to the value of the token if a slash occurs after tokenization.
 
-## Toggling the ability to tokenize shares
+### Toggling the ability to tokenize shares
 
 Currently LSM facilitates the immediate conversion of staked assets into liquid staked tokens (referred to as "tokenization"). Despite the many benefits that come with this capability, it does inadvertently negate a protective measure available via traditional staking, where a user can stake their tokens to render them illiquid in the event that their wallet is compromised (the attacker would first need to unbond, then transfer out the tokens).
 
@@ -152,19 +153,19 @@ message Params {
 ### Data structures
 
 #### Validator
-The `TotalValidatorBondShares` and `TotalLiquidShares` attributes were added to the `Validator` struct.
+The `ValidatorBondShares` and `LiquidShares` attributes were added to the `Validator` struct.
 
 ```proto
 message Validator {
   // ...existing attributes...
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 11 [
+  string validator_bond_shares = 11 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // Total number of shares either tokenized or owned by a liquid staking provider 
-  string total_liquid_shares = 12 [
+  // Number of shares either tokenized or owned by a liquid staking provider 
+  string liquid_shares = 12 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -222,7 +223,7 @@ A user may tokenize some or all of their delegation.
 
 They will receive shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
 
-MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as an acceptable tradeoff vs. the complex book keeping required to track vested tokens.
+MsgTokenizeShares fails if the account is a VestingAccount and the user does not have enough free delegation to complete the tokenization. 
 
 The total amount of outstanding tokenized shares for the validator is checked against the sum of validator bond delegations multiplied by the validator bond factor. If the tokenized shares exceeds this limit, execution fails.
 
@@ -251,15 +252,15 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 // if the caps are enabled
 func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error
 
-// SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator
+// SafelyIncreaseValidatorLiquidShares increments the liquid shares on a validator
 // if the caps are enabled and the validator bond cap is not surpassed by this delegation
-func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
 
-// DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
+// DecreaseValidatorLiquidShares decrements the liquid shares on a validator
 // if the caps are enabled
-func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error
 
-// SafelyDecreaseValidatorBond decrements the total validator's self bond
+// SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error 
@@ -360,7 +361,7 @@ func TokenizeShares() {
 When upgrading to enable the liquid staking module, the total global liquid stake and total liquid validator shares must be determined. This can be done in the upgrade handler by looping through delegation records and including the delegation in the total if the delegator has a 32-length address. This is implemented by the following function:
 ```go
 func RefreshTotalLiquidStaked() {
-  // Resets all validator TotalLiquidShares to 0
+  // Resets all validator LiquidShares to 0
   // Loops delegation records
   //    For each delegation, determines if the delegation was from a 32-length address
   //    If so, increments the global liquid staking cap and validator liquid shares

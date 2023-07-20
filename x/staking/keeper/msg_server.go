@@ -215,7 +215,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, shares); err != nil {
+		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &validator, shares); err != nil {
 			return nil, err
 		}
 	}
@@ -310,10 +310,10 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	// cannot exceed that validator's self-bond cap
 	// The liquid shares from the source validator should get moved to the destination validator
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
-		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, &dstValidator, dstShares); err != nil {
+		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &dstValidator, dstShares); err != nil {
 			return nil, err
 		}
-		k.DecreaseValidatorTotalLiquidShares(ctx, &srcValidator, srcShares)
+		k.DecreaseValidatorLiquidShares(ctx, &srcValidator, srcShares)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -409,7 +409,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
 		}
-		if err := k.DecreaseValidatorTotalLiquidShares(ctx, &validator, shares); err != nil {
+		if err := k.DecreaseValidatorLiquidShares(ctx, &validator, shares); err != nil {
 			return nil, err
 		}
 	}
@@ -519,7 +519,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, shares); err != nil {
+		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &validator, shares); err != nil {
 			return nil, err
 		}
 	}
@@ -676,7 +676,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, &validator, shares); err != nil {
+		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &validator, shares); err != nil {
 			return nil, err
 		}
 	}
@@ -818,7 +818,7 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
 		}
-		if err := k.DecreaseValidatorTotalLiquidShares(ctx, &validator, shares); err != nil {
+		if err := k.DecreaseValidatorLiquidShares(ctx, &validator, shares); err != nil {
 			return nil, err
 		}
 	}
@@ -1013,7 +1013,7 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 	if !delegation.ValidatorBond {
 		delegation.ValidatorBond = true
 		k.SetDelegation(ctx, delegation)
-		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Add(delegation.Shares)
+		validator.ValidatorBondShares = validator.ValidatorBondShares.Add(delegation.Shares)
 		k.SetValidator(ctx, validator)
 
 		ctx.EventManager().EmitEvent(

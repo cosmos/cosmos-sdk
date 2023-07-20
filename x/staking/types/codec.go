@@ -18,9 +18,12 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
 	cdc.RegisterConcrete(&MsgUndelegate{}, "cosmos-sdk/MsgUndelegate", nil)
 	cdc.RegisterConcrete(&MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
+	cdc.RegisterConcrete(&MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation", nil)
+	cdc.RegisterConcrete(&MsgValidatorBond{}, "cosmos-sdk/MsgValidatorBond", nil)
+	cdc.RegisterConcrete(&MsgUnbondValidator{}, "cosmos-sdk/MsgUnbondValidator", nil)
 	cdc.RegisterConcrete(&MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares", nil)
 	cdc.RegisterConcrete(&MsgRedeemTokensForShares{}, "cosmos-sdk/MsgRedeemTokensForShares", nil)
-	cdc.RegisterConcrete(&MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeShareRecord", nil)
+	cdc.RegisterConcrete(&MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeRecord", nil)
 	cdc.RegisterConcrete(&MsgDisableTokenizeShares{}, "cosmos-sdk/MsgDisableTokenizeShares", nil)
 	cdc.RegisterConcrete(&MsgEnableTokenizeShares{}, "cosmos-sdk/MsgEnableTokenizeShares", nil)
 }
@@ -34,6 +37,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgUndelegate{},
 		&MsgBeginRedelegate{},
 		&MsgCancelUnbondingDelegation{},
+		&MsgValidatorBond{},
+		&MsgUnbondValidator{},
 		&MsgTokenizeShares{},
 		&MsgRedeemTokensForShares{},
 		&MsgTransferTokenizeShareRecord{},

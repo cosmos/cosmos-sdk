@@ -25,7 +25,7 @@ lint_files() {
   fi
 
   for f in $GIT_DIFF; do
-    local dir_name="$(dirname $f)"
+    local dir_name="$(dirname "$REPO_ROOT/$f")"
     echo "linting ${dir_name} [$(date -Iseconds -u)]"
     golangci-lint run "${dir_name}" -c "${REPO_ROOT}/.golangci.yml" "$@"
   done

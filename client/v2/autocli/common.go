@@ -100,8 +100,8 @@ func (b *Builder) enhanceCommandCommon(
 
 		// if we have an existing command skip adding one here
 		if subCmd := findSubCommand(cmd, moduleName); subCmd != nil {
-			if hasModuleOptions && modOpts.Query != nil && modOpts.Query.EnhanceCustomCommand {
-				if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts.Query); err != nil {
+			if hasModuleOptions {
+				if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts); err != nil {
 					return err
 				}
 			}
@@ -111,8 +111,8 @@ func (b *Builder) enhanceCommandCommon(
 
 		// if we have a custom command use that instead of generating one
 		if custom, ok := customCmds[moduleName]; ok {
-			if hasModuleOptions && modOpts.Tx != nil && modOpts.Tx.EnhanceCustomCommand {
-				if err := enhanceCustomCmd(b, custom, cmdType, modOpts.Tx); err != nil {
+			if hasModuleOptions {
+				if err := enhanceCustomCmd(b, custom, cmdType, modOpts); err != nil {
 					return err
 				}
 			}
@@ -170,15 +170,19 @@ func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts
 }
 
 // enhanceCustomCmd enhances the provided custom query or msg command autocli commands for a module.
-func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, commandDescriptor *autocliv1.ServiceCommandDescriptor) error {
+func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, modOpts *autocliv1.ModuleOptions) error {
 	switch cmdType {
 	case queryCmdType:
-		if err := builder.AddQueryServiceCommands(cmd, commandDescriptor); err != nil {
-			return err
+		if modOpts.Query != nil && modOpts.Query.EnhanceCustomCommand {
+			if err := builder.AddQueryServiceCommands(cmd, modOpts.Query); err != nil {
+				return err
+			}
 		}
 	case msgCmdType:
-		if err := builder.AddMsgServiceCommands(cmd, commandDescriptor); err != nil {
-			return err
+		if modOpts.Tx != nil && modOpts.Tx.EnhanceCustomCommand {
+			if err := builder.AddMsgServiceCommands(cmd, modOpts.Tx); err != nil {
+				return err
+			}
 		}
 	}
 

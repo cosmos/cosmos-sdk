@@ -139,6 +139,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	updatedLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
 	slashedLiquidTokens := initialLiquidTokens.Sub(updatedLiquidTokens)
 	if err := k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens); err != nil {
+		// This only error's if the total liquid staked tokens underflows
+		// which would indicate there's a corrupted state where the validator has
+		// liquid tokens that are not accounted for in the global total
 		panic(err)
 	}
 

@@ -319,7 +319,9 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &dstValidator, dstShares); err != nil {
 			return nil, err
 		}
-		k.DecreaseValidatorLiquidShares(ctx, &srcValidator, srcShares)
+		if err := k.DecreaseValidatorLiquidShares(ctx, &srcValidator, srcShares); err != nil {
+			return nil, err
+		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -960,7 +962,6 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 	}
 
 	// Create a new tokenization lock for the user
-	// Otherwise, create a new tokenization lock for the user
 	// Note: if there is a lock expiration in progress, this will override the expiration
 	k.AddTokenizeSharesLock(ctx, delegator)
 
@@ -991,7 +992,7 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 }
 
 // Designates a delegation as a validator bond
-// This enables the validator to recieve more liquid staking delegations
+// This enables the validator to receive more liquid staking delegations
 func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

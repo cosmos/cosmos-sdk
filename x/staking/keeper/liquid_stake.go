@@ -347,9 +347,8 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 // The totals are determined by looping each delegation record and summing the stake
 // if the delegator has a 32-length address. Checking for a 32-length address will capture
 // ICA accounts, as well as tokenized delegations which are owned by module accounts
-// under the hood
-// This function must be called in the upgrade handler which onboards LSM, as
-// well as any time the liquid staking cap is re-enabled
+// under the hood.
+// This function must be called in the upgrade handler which onboards LSM.
 func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 	// First reset each validator's liquid shares to 0
 	for _, validator := range k.GetAllValidators(ctx) {
@@ -364,21 +363,21 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		if err != nil {
-			return err
-		}
-
-		validator, found := k.GetValidator(ctx, validatorAddress)
-		if !found {
-			return types.ErrNoValidatorFound
-		}
 
 		// If the delegator is either an ICA account or a tokenize share module account,
 		// the delegation should be considered to be associated with liquid staking
 		// Consequently, the global number of liquid staked tokens, and the total
 		// liquid shares on the validator should be incremented
 		if k.DelegatorIsLiquidStaker(delegatorAddress) {
+			validatorAddress, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			if err != nil {
+				return err
+			}
+			validator, found := k.GetValidator(ctx, validatorAddress)
+			if !found {
+				return types.ErrNoValidatorFound
+			}
+
 			liquidShares := delegation.Shares
 			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
 

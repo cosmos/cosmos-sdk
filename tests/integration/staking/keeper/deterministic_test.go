@@ -671,7 +671,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 			f.ctx,
-			height,
+			stakingtypes.GetHistoricalInfoKeyWithoutPrefix(height),
 			historicalInfo,
 		))
 
@@ -695,7 +695,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 		f.ctx,
-		height,
+		stakingtypes.GetHistoricalInfoKeyWithoutPrefix(height),
 		historicalInfo,
 	))
 

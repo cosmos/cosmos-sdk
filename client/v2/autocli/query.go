@@ -82,6 +82,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 		if findSubCommand(cmd, methodCmd.Name()) != nil {
 			// do not overwrite existing commands
+			// @julienrbrt: should we display a warning?
 			continue
 		}
 

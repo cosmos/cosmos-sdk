@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,12 +44,8 @@ func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInf
 		return false, nil
 	})
 
-	if err == collections.ErrInvalidIterator {
-		return []types.HistoricalInfo{}, nil
-	}
-
-	if err != nil {
-		return []types.HistoricalInfo{}, err
+	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+		return nil, err
 	}
 
 	return infos, nil

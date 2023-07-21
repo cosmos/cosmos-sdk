@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,12 +37,32 @@ func (k Keeper) IterateHistoricalInfo(ctx context.Context, cb func(types.Histori
 // GetAllHistoricalInfo returns all stored HistoricalInfo objects.
 func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInfo, error) {
 	var infos []types.HistoricalInfo
-	err := k.HistoricalInfo.Walk(ctx, nil, func(key int64, info types.HistoricalInfo) (stop bool, err error) {
+	err := k.HistoricalInfo.Walk(ctx, nil, func(key []byte, info types.HistoricalInfo) (stop bool, err error) {
 		infos = append(infos, info)
 		return false, nil
 	})
+	if err != nil {
+		return []types.HistoricalInfo{}, err
+	}
 
-	return infos, err
+	return infos, nil
+}
+
+// GetHistoricalInfo gets the historical info at a given height
+func (k Keeper) GetHistoricalInfo(ctx context.Context, height int64) (types.HistoricalInfo, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	key := types.GetHistoricalInfoKey(height)
+
+	value, err := store.Get(key)
+	if err != nil {
+		return types.HistoricalInfo{}, err
+	}
+
+	if value == nil {
+		return types.HistoricalInfo{}, types.ErrNoHistoricalInfo
+	}
+
+	return types.UnmarshalHistoricalInfo(k.cdc, value)
 }
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
@@ -64,14 +83,14 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
 	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
-		_, err := k.HistoricalInfo.Get(ctx, i)
+		_, err := k.GetHistoricalInfo(ctx, i)
 		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
+			if errors.Is(err, types.ErrNoHistoricalInfo) {
 				break
 			}
 			return err
 		}
-		if err = k.HistoricalInfo.Remove(ctx, i); err != nil {
+		if err = k.HistoricalInfo.Remove(ctx, types.GetHistoricalInfoKeyWithoutPrefix(i)); err != nil {
 			return err
 		}
 	}
@@ -88,7 +107,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	}
 
 	historicalEntry := types.NewHistoricalInfo(sdkCtx.BlockHeader(), lastVals, k.PowerReduction(ctx))
-
+	err = k.HistoricalInfo.Set(ctx, types.GetHistoricalInfoKeyWithoutPrefix(sdkCtx.BlockHeight()), historicalEntry)
 	// Set latest HistoricalInfo at current height
-	return k.HistoricalInfo.Set(ctx, sdkCtx.BlockHeight(), historicalEntry)
+	return err
 }

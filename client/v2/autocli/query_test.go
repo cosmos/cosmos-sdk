@@ -576,7 +576,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	}, enhanceQuery)
+	})
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "query"})
 	assert.NilError(t, cmd.Execute())

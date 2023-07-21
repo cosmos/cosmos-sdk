@@ -13,9 +13,9 @@ import (
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildMsgCommand(appOptions AppOptions, customCmds map[string]*cobra.Command, buildModuleCommand enhanceCommandFunc) (*cobra.Command, error) {
+func (b *Builder) BuildMsgCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	msgCmd := topLevelCmd("tx", "Transaction subcommands")
-	if err := b.enhanceCommandCommon(msgCmd, appOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customCmds); err != nil {
 		return nil, err
 	}
 

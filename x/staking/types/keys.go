@@ -53,8 +53,8 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = collections.NewPrefix(0x50) // prefix for the historical info
-	ValidatorUpdatesKey = collections.NewPrefix(97)   // prefix for the end block validator updates key
+	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
+	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
@@ -419,16 +419,9 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 	return append(GetREDsToValDstIndexKey(valDstAddr), address.MustLengthPrefix(delAddr)...)
 }
 
-// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
+// GetHistoricalInfoKeyWithoutPrefix returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKeyWithoutPrefix(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(height))
 	return heightBytes
-}
-
-// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
-func GetHistoricalInfoKey(height int64) []byte {
-	heightBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(heightBytes, uint64(height))
-	return append(HistoricalInfoKey, heightBytes...)
 }

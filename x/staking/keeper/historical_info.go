@@ -51,23 +51,6 @@ func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInf
 	return infos, nil
 }
 
-// GetHistoricalInfo gets the historical info at a given height
-func (k Keeper) GetHistoricalInfo(ctx context.Context, height int64) (types.HistoricalInfo, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	key := types.GetHistoricalInfoKey(height)
-
-	value, err := store.Get(key)
-	if err != nil {
-		return types.HistoricalInfo{}, err
-	}
-
-	if value == nil {
-		return types.HistoricalInfo{}, types.ErrNoHistoricalInfo
-	}
-
-	return types.UnmarshalHistoricalInfo(k.cdc, value)
-}
-
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
 // heights that are below pruning height
 func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
@@ -86,9 +69,9 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
 	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
-		_, err := k.GetHistoricalInfo(ctx, i)
+		_, err := k.HistoricalInfo.Get(ctx, types.GetHistoricalInfoKeyWithoutPrefix(i))
 		if err != nil {
-			if errors.Is(err, types.ErrNoHistoricalInfo) {
+			if errors.Is(err, collections.ErrNotFound) {
 				break
 			}
 			return err

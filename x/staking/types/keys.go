@@ -54,7 +54,7 @@ var (
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(0x50) // prefix for the historical info
-	ValidatorUpdatesKey = []byte{0x61}                // prefix for the end block validator updates key
+	ValidatorUpdatesKey = collections.NewPrefix(97)   // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 

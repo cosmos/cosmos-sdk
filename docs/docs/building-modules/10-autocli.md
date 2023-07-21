@@ -141,7 +141,8 @@ autocliv1.RpcCommandOptions{
 
 AutoCLI can be used alongside other commands within a module. For example, the `gov` module uses AutoCLI to generate commands for the `query` subcommand, but also defines custom commands for the `proposer` subcommands.
 
-In order to enable this behavior, set in `autocliv1.ModuleOptions` the `CombineCommands` field to `true`.
+In order to enable this behavior, set in `AutoCLIOptions()` the `EnhanceCustomCommand` field to `true`, for the command type (queries and/or transactions) you want to enhance.
+
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/julien/custom-commands/x/gov/autocli.go#L98
@@ -151,7 +152,7 @@ If not set to true, `AutoCLI` will not generate commands for the module if there
 
 ## Conclusion
 
-`autocli` is a powerful tool for adding CLI interfaces to your Cosmos SDK-based applications without boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
+`autocli` let you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
 
 To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
 

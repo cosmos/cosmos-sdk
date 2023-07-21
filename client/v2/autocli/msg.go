@@ -75,6 +75,11 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			return err
 		}
 
+		if findSubCommand(cmd, methodCmd.Name()) != nil {
+			// do not overwrite existing commands
+			continue
+		}
+
 		if methodCmd != nil {
 			cmd.AddCommand(methodCmd)
 		}

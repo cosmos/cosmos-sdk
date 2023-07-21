@@ -80,6 +80,11 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			return err
 		}
 
+		if findSubCommand(cmd, methodCmd.Name()) != nil {
+			// do not overwrite existing commands
+			continue
+		}
+
 		cmd.AddCommand(methodCmd)
 	}
 

@@ -808,7 +808,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 
 		// only return if we are not aborting
 		if !aborted {
-			res.AppHash = app.workingHash()
+			if res != nil {
+				res.AppHash = app.workingHash()
+			}
 			return res, err
 		}
 
@@ -819,7 +821,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	app.oeInfo = nil
 	res, err := app.internalFinalizeBlock(req)
-	res.AppHash = app.workingHash()
+	if res != nil {
+		res.AppHash = app.workingHash()
+	}
 	return res, err
 }
 

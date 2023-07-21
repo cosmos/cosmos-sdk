@@ -21,12 +21,16 @@ The `autocli` package is a [Go library](https://pkg.go.dev/cosmossdk.io/client/v
 
 ## Getting Started
 
-Here are the steps to use the `autocli` package:
+Here are the steps to use AutoCLI:
 
-1. Define your app's modules that implement the `appmodule.AppModule` interface.
-2. Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
-3. Use the `autocli.AppOptions` struct to specifies the modules you defined. If you are using the `depinject` package to manage your app's dependencies, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
-4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command and can also be found in the `client/v2/autocli/app.go` file. Additionally, this method adds the `autocli` functionality to your app's root command. This method is additive only, meaning that it does not create commands if they are already registered for a module. Instead, it adds any missing commands to the root command.
+1. Ensure your app's modules implements the `appmodule.AppModule` interface.
+2. (optional) Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
+3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
+4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
+
+:::tip
+AutoCLI is additive only, meaning _enhancing_ the root command will only add subcommands that are not already registered. This means that you can use AutoCLI alongside other custom commands within your app.
+:::
 
 Here's an example of how to use `autocli`:
 
@@ -41,13 +45,14 @@ autoCliOpts := autocli.AppOptions{
     Modules: testModules,
 }
 
-// Get the root command
+// Create the root command
 rootCmd := &cobra.Command{
     Use: "app",
 }
 
-// Enhance the root command with autocli
-autocli.EnhanceRootCommand(rootCmd, autoCliOpts)
+if err := appOptions.EnhanceRootCommand(rootCmd); err != nil {
+    return err
+}
 
 // Run the root command
 if err := rootCmd.Execute(); err != nil {
@@ -55,23 +60,9 @@ if err := rootCmd.Execute(); err != nil {
 }
 ```
 
-## Flags
-
-`autocli` generates flags for each field in a protobuf message. By default, the names of the flags are generated based on the names of the fields in the message. You can customise the flag names using the `namingOptions` parameter of the `Builder.AddMessageFlags()` method.
-
-To define flags for a message, you can use the `Builder.AddMessageFlags()` method. This method takes the `cobra.Command` instance and the message type as input, and generates flags for each field in the message.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/1ac260cb1c6f05666f47e67f8b2cfd6229a55c3b/client/v2/autocli/common.go#L44-L49
-```
-
-The `binder` variable returned by the `AddMessageFlags()` method is used to bind the command-line arguments to the fields in the message.
-
-You can also customise the behavior of the flags using the `namingOptions` parameter of the `Builder.AddMessageFlags()` method. This parameter allows you to specify a custom prefix for the flags, and to specify whether to generate flags for repeated fields and whether to generate flags for fields with default values.
-
 ## Commands and Queries
 
-The `autocli` package generates CLI commands and flags for each method defined in your gRPC service. By default, it generates commands for each RPC method that does not return a stream of messages. The commands are named based on the name of the service method.
+`autocli` generates CLI commands and flags for each method defined in your gRPC service. By default, it generates commands for each gRPC services. The commands are named based on the name of the service method.
 
 For example, given the following protobuf definition for a service:
 
@@ -81,77 +72,87 @@ service MyService {
 }
 ```
 
-`autocli` will generate a command named `my-method` for the `MyMethod` method. The command will have flags for each field in the `MyRequest` message.
+For instance, `autocli` would generate a command named `my-method` for the `MyMethod` method. The command will have flags for each field in the `MyRequest` message.
 
-If you want to customise the behavior of a command, you can define a custom command by implementing the `autocli.Command` interface. You can then register the command with the `autocli.Builder` instance for your application.
+It is possible to customize the generation of commands and queries by defining options for each service.
 
-Similarly, you can define a custom query by implementing the `autocli.Query` interface. You can then register the query with the `autocli.Builder` instance for your application.
+## Customize generated commands
 
-To add a custom command or query, you can use the `Builder.AddCustomCommand` or `Builder.AddCustomQuery` methods, respectively. These methods take a `cobra.Command` or `cobra.Command` instance, respectively, which can be used to define the behavior of the command or query.
+The `AutoCLIOptions()` method on your module allows to specify custom commands, sub-commands or flags for each service, as it was a `cobra.Command` instance, within the `RpcCommandOptions` struct.
 
-## Advanced Usage
+```go
+*autocliv1.RpcCommandOptions{
+  RpcMethod: "Params", // The name of the gRPC service
+  Use:       "params", // Command usage that is displayed in the help
+  Short:     "Query the parameters of the governance process", // Short description of the command
+  Long:      "Query the parameters of the governance process. Specify specific param types (voting|tallying|deposit) to filter results.", // Long description of the command
+  PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+    {ProtoField: "params_type", Optional: true}, // Transform a flag into a positional argument
+  },
+}
+```
 
 ### Specifying Subcommands
 
-By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, you can use the `autocliv1.ServiceCommandDescriptor` struct.
+By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, use the `autocliv1.ServiceCommandDescriptor` struct.
 
-This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go` file.
+This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/x/gov/autocli.go#L13C1-L107
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/gov/autocli.go#L94-L97
 ```
-
-The `AutoCLIOptions()` method in the autocli package allows you to specify the services and sub-commands to be mapped for your app. In the example code, an instance of the `autocliv1.ModuleOptions` struct is defined in the `appmodule.AppModule` implementation located in the `x/gov/autocli.go` file. This configuration groups related commands together and specifies subcommands for each service.
 
 ### Positional Arguments
 
-Positional arguments are arguments that are passed to a command without being specified as a flag. They are typically used for providing additional context to a command, such as a filename or search query.
+By default `autocli` generates a flag for each field in your protobuf message. However, you can choose to use positional arguments instead of flags for certain fields.
 
-To add positional arguments to a command, you can use the `autocliv1.PositionalArgDescriptor` struct, as seen in the example below. You need to specify the `ProtoField` parameter, which is the name of the protobuf field that should be used as the positional argument. In addition, if the parameter is a variable-length argument, you can specify the `Varargs` parameter as `true`. This can only be applied to the last positional parameter, and the `ProtoField` must be a repeated field.
+To add positional arguments to a command, use the `autocliv1.PositionalArgDescriptor` struct, as seen in the example below. Specify the `ProtoField` parameter, which is the name of the protobuf field that should be used as the positional argument. In addition, if the parameter is a variable-length argument, you can specify the `Varargs` parameter as `true`. This can only be applied to the last positional parameter, and the `ProtoField` must be a repeated field.
 
 Here's an example of how to define a positional argument for the `Account` method of the `auth` service:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/x/gov/autocli.go#L80-L86
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/auth/autocli.go#L25-L30
 ```
 
-Here are some example commands that use the positional arguments we defined above:
-
-To query an account by address:
+Then the command can be used as follows, instead of having to specify the `--address` flag:
 
 ```bash
 <appd> query auth account cosmos1abcd...xyz
 ```
 
-To query an account address by account number:
-
-```bash
-<appd> query auth address-by-acc-num 1
-```
-
-In both of these commands, the `auth` service is being queried with the `query` subcommand, followed by the specific method being called (`account` or `address-by-acc-num`). The positional argument is included at the end of the command (`cosmos1abcd...xyz` or `1`) to specify the address or account number, respectively.
-
 ### Customising Flag Names
 
-By default, `autocli` generates flag names based on the names of the fields in your protobuf message. However, you can customise the flag names by providing a `FlagOptions` parameter to the `Builder.AddMessageFlags()` method. This parameter allows you to specify custom names for flags based on the names of the message fields. For example, if you have a message with the fields `test` and `test1`, you can use the following naming options to customise the flags
+By default, `autocli` generates flag names based on the names of the fields in your protobuf message. However, you can customise the flag names by providing a `FlagOptions`. This parameter allows you to specify custom names for flags based on the names of the message fields.
+
+For example, if you have a message with the fields `test` and `test1`, you can use the following naming options to customise the flags:
 
 ``` go
-options := autocliv1.RpcCommandOptions{ 
+autocliv1.RpcCommandOptions{ 
     FlagOptions: map[string]*autocliv1.FlagOptions{ 
         "test": { Name: "custom_name", }, 
         "test1": { Name: "other_name", }, 
     }, 
 }
-
-builder.AddMessageFlags(message, options)
 ```
 
-Note that `autocliv1.RpcCommandOptions` is a field of the `autocliv1.ServiceCommandDescriptor` struct, which is defined in the `autocliv1` package. To use this option, you can define an instance of `autocliv1.ModuleOptions` in your `appmodule.AppModule` implementation and specify the `FlagOptions` for the relevant service command descriptor.
+`FlagsOptions` is defined like sub commands in the `AutoCLIOptions()` method on your module.
+
+### Combining AutoCLI with Other Commands Within A Module
+
+AutoCLI can be used alongside other commands within a module. For example, the `gov` module uses AutoCLI to generate commands for the `query` subcommand, but also defines custom commands for the `proposer` subcommands.
+
+In order to enable this behavior, set in `autocliv1.ModuleOptions` the `CombineCommands` field to `true`.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/julien/custom-commands/x/gov/autocli.go#L98
+```
+
+If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).
 
 ## Conclusion
 
-`autocli` is a powerful tool for adding CLI interfaces to your Cosmos SDK-based applications. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
+`autocli` is a powerful tool for adding CLI interfaces to your Cosmos SDK-based applications without boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
 
-To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `Hubl`. `Hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With hubl, you can easily configure a new chain and query modules with just a few simple commands.
+To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
 
-For more information on `Hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).
+For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).

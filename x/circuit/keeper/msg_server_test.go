@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -93,6 +94,7 @@ func TestTripCircuitBreaker(t *testing.T) {
 
 	srv := keeper.NewMsgServerImpl(ft.keeper)
 	url := msgSend
+	sdkCtx := sdk.UnwrapSDKContext(ft.ctx)
 
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
 	require.NoError(t, err)
@@ -101,6 +103,10 @@ func TestTripCircuitBreaker(t *testing.T) {
 	admintrip := &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
 	require.NoError(t, err)
+	events := sdkCtx.EventManager().Events()
+	attr, ok := events[len(events)-1].GetAttribute("msg_url")
+	require.True(t, ok)
+	require.NotEmpty(t, attr.Value)
 
 	allowed, err := ft.keeper.IsAllowed(ft.ctx, url)
 	require.NoError(t, err)

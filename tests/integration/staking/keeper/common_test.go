@@ -48,14 +48,14 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
 func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
+	addrDels := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, numAddrs, sdk.NewInt(10000))
 	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
 }
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	addrs := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
@@ -90,9 +90,6 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 }
 
 func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
-	// bondDenom := app.StakingKeeper.BondDenom(ctx)
-	// coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	// app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)
 	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
 
 	return err

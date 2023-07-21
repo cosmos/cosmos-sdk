@@ -568,7 +568,7 @@ func (m *MsgCommunityPoolSpendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCommunityPoolSpendResponse proto.InternalMessageInfo
 
-// MsgWithdrawTokenizeShareRecordReward
+// MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a specific record.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawTokenizeShareRecordReward struct {
@@ -609,7 +609,7 @@ func (m *MsgWithdrawTokenizeShareRecordReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawTokenizeShareRecordReward proto.InternalMessageInfo
 
-// MsgWithdrawTokenizeShareRecordRewardResponse
+// MsgWithdrawTokenizeShareRecordReward defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawTokenizeShareRecordRewardResponse struct {
@@ -652,7 +652,8 @@ func (m *MsgWithdrawTokenizeShareRecordRewardResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawTokenizeShareRecordRewardResponse proto.InternalMessageInfo
 
-// MsgWithdrawAllTokenizeShareRecordReward
+// MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or all
+// records owned by the designated owner
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawAllTokenizeShareRecordReward struct {
@@ -694,7 +695,7 @@ func (m *MsgWithdrawAllTokenizeShareRecordReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawAllTokenizeShareRecordReward proto.InternalMessageInfo
 
-// MsgWithdrawAllTokenizeShareRecordRewardResponse
+// MsgWithdrawAllTokenizeShareRecordRewardResponse defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawAllTokenizeShareRecordRewardResponse struct {

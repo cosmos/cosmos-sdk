@@ -11295,7 +11295,8 @@ func (x *QueryCommunityPoolResponse) GetPool() []*v1beta1.DecCoin {
 	return nil
 }
 
-// QueryTokenizeShareRecordRewardRequest
+// QueryTokenizeShareRecordRewardRequest is the request type for the Query/TokenizeShareRecordReward RPC
+// method.
 //
 // Since: cosmos-sdk 0.47-lsm
 type QueryTokenizeShareRecordRewardRequest struct {
@@ -11333,7 +11334,8 @@ func (x *QueryTokenizeShareRecordRewardRequest) GetOwnerAddress() string {
 	return ""
 }
 
-// QueryTokenizeShareRecordRewardResponse
+// QueryTokenizeShareRecordRewardResponse is the response type for the Query/TokenizeShareRecordReward
+// RPC method.
 //
 // Since: cosmos-sdk 0.47-lsm
 type QueryTokenizeShareRecordRewardResponse struct {

@@ -24,6 +24,14 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		return err
 	}
 
+	if err := migrateAllValidatorBondAndLiquidSharesToZero(ctx, store, cdc); err != nil {
+		return err
+	}
+
+	if err := migrateAllDelegationValidatorBondsFalse(ctx, store, cdc); err != nil {
+		return err
+	}
+
 	if err := migrateTotalLiquidStakedTokens(ctx, store, cdc, sdk.ZeroInt()); err != nil {
 		return err
 	}
@@ -108,6 +116,42 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	store.Set(key, bz)
 }
 
+// migrateAllValidatorBondAndLiquidSharesToZero sets each validator's ValidatorBondShares and LiquidShares to zero
+func migrateAllValidatorBondAndLiquidSharesToZero(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		validator := types.MustUnmarshalValidator(cdc, iterator.Value())
+
+		validator.ValidatorBondShares = sdk.ZeroDec()
+		validator.LiquidShares = sdk.ZeroDec()
+
+		bz := types.MustMarshalValidator(cdc, &validator)
+		store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
+	}
+
+	return nil
+}
+
+// migrateAllDelegationValidatorBondsFalse sets each delegation's ValidatorBond to false
+func migrateAllDelegationValidatorBondsFalse(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(cdc, iterator.Value())
+
+		delegation.ValidatorBond = false
+
+		bz := types.MustMarshalDelegation(cdc, delegation)
+		delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+		store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), bz)
+	}
+
+	return nil
+}
+
 // migrateTotalLiquidStakedTokens migrates the total outstanding tokens owned by a liquid staking provider
 func migrateTotalLiquidStakedTokens(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, tokens sdk.Int) error {
 	tokensBz, err := tokens.Marshal()
@@ -116,5 +160,6 @@ func migrateTotalLiquidStakedTokens(ctx sdk.Context, store storetypes.KVStore, c
 	}
 
 	store.Set(types.TotalLiquidStakedTokensKey, tokensBz)
+
 	return nil
 }

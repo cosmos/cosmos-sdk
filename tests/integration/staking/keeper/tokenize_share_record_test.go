@@ -1,21 +1,25 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
-func (suite *IntegrationTestSuite) TestGetLastTokenizeShareRecordId() {
-	app, ctx := suite.app, suite.ctx
-	lastTokenizeShareRecordID := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
-	suite.Equal(lastTokenizeShareRecordID, uint64(0))
-	app.StakingKeeper.SetLastTokenizeShareRecordId(ctx, 100)
-	lastTokenizeShareRecordID = app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
-	suite.Equal(lastTokenizeShareRecordID, uint64(100))
+func TestGetLastTokenizeShareRecordId(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	lastTokenizeShareRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
+	require.Equal(t, lastTokenizeShareRecordID, uint64(0))
+	app.StakingKeeper.SetLastTokenizeShareRecordID(ctx, 100)
+	lastTokenizeShareRecordID = app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
+	require.Equal(t, lastTokenizeShareRecordID, uint64(100))
 }
 
-func (suite *IntegrationTestSuite) TestGetTokenizeShareRecord() {
-	app, ctx := suite.app, suite.ctx
-	owner1, owner2 := suite.addrs[0], suite.addrs[1]
+func TestGetTokenizeShareRecord(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	addrDels, _ := generateAddresses(app, ctx, 2)
+	owner1, owner2 := addrDels[0], addrDels[1]
 
 	tokenizeShareRecord1 := types.TokenizeShareRecord{
 		Id:            0,
@@ -36,26 +40,26 @@ func (suite *IntegrationTestSuite) TestGetTokenizeShareRecord() {
 		Validator:     "test-validator",
 	}
 	err := app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord1)
-	suite.NoError(err)
+	require.NoError(t, err)
 	err = app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord2)
-	suite.NoError(err)
+	require.NoError(t, err)
 	err = app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord3)
-	suite.NoError(err)
+	require.NoError(t, err)
 
 	tokenizeShareRecord, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 2)
-	suite.NoError(err)
-	suite.Equal(tokenizeShareRecord, tokenizeShareRecord3)
+	require.NoError(t, err)
+	require.Equal(t, tokenizeShareRecord, tokenizeShareRecord3)
 
 	tokenizeShareRecord, err = app.StakingKeeper.GetTokenizeShareRecordByDenom(ctx, tokenizeShareRecord2.GetShareTokenDenom())
-	suite.NoError(err)
-	suite.Equal(tokenizeShareRecord, tokenizeShareRecord2)
+	require.NoError(t, err)
+	require.Equal(t, tokenizeShareRecord, tokenizeShareRecord2)
 
 	tokenizeShareRecords := app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
-	suite.Equal(len(tokenizeShareRecords), 3)
+	require.Equal(t, len(tokenizeShareRecords), 3)
 
 	tokenizeShareRecords = app.StakingKeeper.GetTokenizeShareRecordsByOwner(ctx, owner1)
-	suite.Equal(len(tokenizeShareRecords), 2)
+	require.Equal(t, len(tokenizeShareRecords), 2)
 
 	tokenizeShareRecords = app.StakingKeeper.GetTokenizeShareRecordsByOwner(ctx, owner2)
-	suite.Equal(len(tokenizeShareRecords), 1)
+	require.Equal(t, len(tokenizeShareRecords), 1)
 }

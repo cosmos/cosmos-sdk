@@ -30,12 +30,19 @@ import (
 type E2ETestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	cfg              network.Config
+	network          *network.Network
+	heightWaitOffset int64
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
-	return &E2ETestSuite{cfg: cfg}
+	return &E2ETestSuite{
+		cfg: cfg,
+
+		// heightWaitOffset sets how many blocks to wait after executing txn.
+		// 2 blocks covers the state when previous height is being read just before a new block
+		heightWaitOffset: 2,
+	}
 }
 
 func (s *E2ETestSuite) SetupSuite() {
@@ -49,43 +56,61 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoinNormalized("10stake")
+	unbondCoin, err := sdk.ParseCoinNormalized("10stake")
+	s.Require().NoError(err)
+
+	tokenizeCoin, err := sdk.ParseCoinNormalized("1000stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
+	waitForHeight := int64(1)
+	_, err = s.network.WaitForHeight(waitForHeight)
+	s.Require().NoError(err)
+
 	// redelegate
-	out, err := MsgRedelegateExec(
+	MsgRedelegateExec(
+		s.T(),
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
 		val2.ValAddress,
-		unbond,
+		unbondCoin,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	waitForHeight++
+	_, err = s.network.WaitForHeight(waitForHeight)
+	s.Require().NoError(err)
 
-	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	// unbonding
+	MsgUnbondExec(s.T(), val.ClientCtx, val.Address, val.ValAddress, unbondCoin)
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	waitForHeight++
+	_, err = s.network.WaitForHeight(waitForHeight)
 	s.Require().NoError(err)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// tokenize shares twice (once for the transfer and one for the redeem)
+	for i := 1; i <= 2; i++ {
+		MsgTokenizeSharesExec(
+			s.T(),
+			val.ClientCtx,
+			val.Address,
+			val.ValAddress,
+			val.Address,
+			tokenizeCoin,
+			fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
+		)
+
+		waitForHeight++
+		_, err = s.network.WaitForHeight(waitForHeight)
+		s.Require().NoError(err)
+	}
+
+	// make sure all above txns confirmed
+	_, err = s.network.WaitForHeight(waitForHeight + 1)
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -211,6 +236,10 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewCreateValidatorCmd()
 			clientCtx := val.ClientCtx
 
@@ -271,6 +300,10 @@ func (s *E2ETestSuite) TestGetCmdQueryValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryValidator()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -313,6 +346,10 @@ func (s *E2ETestSuite) TestGetCmdQueryValidators() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryValidators()
 			clientCtx := val.ClientCtx
 
@@ -378,6 +415,10 @@ func (s *E2ETestSuite) TestGetCmdQueryDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryDelegation()
 			clientCtx := val.ClientCtx
 
@@ -434,6 +475,10 @@ func (s *E2ETestSuite) TestGetCmdQueryDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryDelegations()
 			clientCtx := val.ClientCtx
 
@@ -490,6 +535,10 @@ func (s *E2ETestSuite) TestGetCmdQueryValidatorDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryDelegations()
 			clientCtx := val.ClientCtx
 
@@ -534,6 +583,10 @@ func (s *E2ETestSuite) TestGetCmdQueryUnbondingDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryUnbondingDelegations()
 			clientCtx := val.ClientCtx
 
@@ -593,6 +646,10 @@ func (s *E2ETestSuite) TestGetCmdQueryUnbondingDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryUnbondingDelegation()
 			clientCtx := val.ClientCtx
 
@@ -607,7 +664,7 @@ func (s *E2ETestSuite) TestGetCmdQueryUnbondingDelegation() {
 				s.Require().NoError(err)
 				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
 				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
-				s.Require().Len(ubd.Entries, 2)
+				s.Require().Len(ubd.Entries, 1)
 			}
 		})
 	}
@@ -642,6 +699,10 @@ func (s *E2ETestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryValidatorUnbondingDelegations()
 			clientCtx := val.ClientCtx
 
@@ -691,6 +752,10 @@ func (s *E2ETestSuite) TestGetCmdQueryRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryRedelegations()
 			clientCtx := val.ClientCtx
 
@@ -767,6 +832,10 @@ func (s *E2ETestSuite) TestGetCmdQueryRedelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryRedelegation()
 			clientCtx := val.ClientCtx
 
@@ -819,6 +888,10 @@ func (s *E2ETestSuite) TestGetCmdQueryValidatorRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryValidatorRedelegations()
 			clientCtx := val.ClientCtx
 
@@ -870,6 +943,10 @@ func (s *E2ETestSuite) TestGetCmdQueryHistoricalInfo() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryHistoricalInfo()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -898,21 +975,28 @@ func (s *E2ETestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`bond_denom: stake
+global_liquid_staking_cap: "1.000000000000000000"
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
 min_commission_rate: "0.000000000000000000"
-unbonding_time: 1814400s`,
+unbonding_time: 1814400s
+validator_bond_factor: "-1.000000000000000000"
+validator_liquid_staking_cap: "1.000000000000000000"`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000","validator_bond_factor":"-1.000000000000000000","global_liquid_staking_cap":"1.000000000000000000","validator_liquid_staking_cap":"1.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryParams()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -950,6 +1034,10 @@ not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.GetCmdQueryPool()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -1058,6 +1146,10 @@ func (s *E2ETestSuite) TestNewEditValidatorCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewEditValidatorCmd()
 			clientCtx := val.ClientCtx
 
@@ -1144,6 +1236,10 @@ func (s *E2ETestSuite) TestNewDelegateCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewDelegateCmd()
 			clientCtx := val.ClientCtx
 
@@ -1230,6 +1326,10 @@ func (s *E2ETestSuite) TestNewRedelegateCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewRedelegateCmd()
 			clientCtx := val.ClientCtx
 
@@ -1297,6 +1397,10 @@ func (s *E2ETestSuite) TestNewUnbondCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewUnbondCmd()
 			clientCtx := val.ClientCtx
 
@@ -1400,6 +1504,10 @@ func (s *E2ETestSuite) TestNewCancelUnbondingDelegationCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
 			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
@@ -1414,7 +1522,7 @@ func (s *E2ETestSuite) TestNewCancelUnbondingDelegationCmd() {
 					s.Require().NoError(err)
 					s.Require().Len(ubds.UnbondingResponses, 1)
 					s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
-					return ubds.UnbondingResponses[0].Entries[1].CreationHeight
+					return ubds.UnbondingResponses[0].Entries[0].CreationHeight
 				}
 				tc.args = append(tc.args, fmt.Sprint(getCreationHeight()))
 			}
@@ -1443,9 +1551,8 @@ func (s *E2ETestSuite) TestBlockResults() {
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-	pub, err := k.GetPubKey()
+	newAddr, err := k.GetAddress()
 	require.NoError(err)
-	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
 	_, err = clitestutil.MsgSendExec(
@@ -1635,6 +1742,7 @@ func (s *E2ETestSuite) TestNewTokenizeSharesCmd() {
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
 				val.Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1647,6 +1755,10 @@ func (s *E2ETestSuite) TestNewTokenizeSharesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewTokenizeSharesCmd()
 			clientCtx := val.ClientCtx
 
@@ -1687,8 +1799,9 @@ func (s *E2ETestSuite) TestNewRedeemTokensCmd() {
 		{
 			"valid transaction of redeem token",
 			[]string{
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				sdk.NewCoin(fmt.Sprintf("%s/%d", val.ValAddress.String(), 1), sdk.NewInt(150)).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1701,6 +1814,10 @@ func (s *E2ETestSuite) TestNewRedeemTokensCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewRedeemTokensCmd()
 			clientCtx := val.ClientCtx
 
@@ -1763,9 +1880,10 @@ func (s *E2ETestSuite) TestNewTransferTokenizeShareRecordCmd() {
 		{
 			"valid transaction of transfer tokenize share record",
 			[]string{
-				"123",
+				"2",
 				val.Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1778,6 +1896,10 @@ func (s *E2ETestSuite) TestNewTransferTokenizeShareRecordCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			defer func() {
+				s.Require().NoError(s.network.WaitForNextBlock())
+			}()
+
 			cmd := cli.NewTransferTokenizeShareRecordCmd()
 			clientCtx := val.ClientCtx
 

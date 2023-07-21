@@ -91,7 +91,6 @@ func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks - just addition to fulfill the staking hook interface
-func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+func (h Hooks) BeforeTokenizeShareRecordRemoved(_ sdk.Context, _ uint64) error {
 	return nil
 }

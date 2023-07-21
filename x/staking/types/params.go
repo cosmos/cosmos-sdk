@@ -34,11 +34,11 @@ const (
 
 var (
 	// ValidatorBondFactor of -1 indicates that it's disabled
-	ValidatorBondDisabled = sdk.NewDecFromInt(sdk.NewInt(-1))
+	ValidatorBondCapDisabled = sdk.NewDecFromInt(sdk.NewInt(-1))
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = math.LegacyZeroDec()
 	// DefaultValidatorBondFactor is set to -1 (disabled)
-	DefaultValidatorBondFactor = ValidatorBondDisabled
+	DefaultValidatorBondFactor = ValidatorBondCapDisabled
 	// DefaultGlobalLiquidStakingCap is set to 100%
 	DefaultGlobalLiquidStakingCap = sdk.OneDec()
 	// DefaultValidatorLiquidStakingCap is set to 100%
@@ -258,7 +258,7 @@ func validateValidatorBondFactor(i interface{}) error {
 	if v.IsNil() {
 		return fmt.Errorf("validator bond factor cannot be nil: %s", v)
 	}
-	if v.IsNegative() && !v.Equal(ValidatorBondDisabled) {
+	if v.IsNegative() && !v.Equal(ValidatorBondCapDisabled) {
 		return fmt.Errorf("validator bond factor cannot be negative (except -1): %s", v)
 	}
 

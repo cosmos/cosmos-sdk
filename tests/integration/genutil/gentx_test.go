@@ -10,7 +10,6 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -80,12 +79,11 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.baseApp = app.BaseApp
 
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
-	one := math.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm)
 	suite.NoError(err)
 }
 

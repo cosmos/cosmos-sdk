@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
+import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the staking module's genesis state.
 message GenesisState {
@@ -39,15 +40,43 @@ message GenesisState {
 
   bool exported = 8;
 
-  // store tokenize share records to provide reward to record owners
+  // store tokenize share records to provide reward to record owners.
   //
   // Since: cosmos-sdk 0.47-lsm
   repeated TokenizeShareRecord tokenize_share_records = 9 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // last tokenize share record id, used for next share record id calculation
+  // last tokenize share record id, used for next share record id calculation.
   //
   // Since: cosmos-sdk 0.47-lsm
   uint64 last_tokenize_share_record_id = 10;
+
+  // total number of liquid staked tokens at genesis.
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  bytes total_liquid_staked_tokens = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  // tokenize shares locks at genesis.
+  //
+  // Since: cosmos-sdk 0.47-lsm
+  repeated TokenizeShareLock tokenize_share_locks = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// TokenizeSharesLock required for specifying account locks at genesis.
+//
+// Since: cosmos-sdk 0.47-lsm
+message TokenizeShareLock {
+  // Address of the account that is locked.
+  string address = 1;
+
+  // Status of the lock (LOCKED or LOCK_EXPIRING)
+  string status = 2;
+
+  // Completion time if the lock is expiring.
+  google.protobuf.Timestamp completion_time = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // LastValidatorPower required for validator set update logic.

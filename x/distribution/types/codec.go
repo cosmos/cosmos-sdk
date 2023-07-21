@@ -23,8 +23,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/distr/MsgCommunityPoolSpend")
-	legacy.RegisterAminoMsg(cdc, &MsgWithdrawTokenizeShareRecordReward{}, "lsm/MsgWithdrawTokenizeShareReward")
-	legacy.RegisterAminoMsg(cdc, &MsgWithdrawAllTokenizeShareRecordReward{}, "lsm/MsgWithdrawAllTokenizeShareReward")
+	legacy.RegisterAminoMsg(cdc, &MsgWithdrawTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawTokenizeReward")
+	legacy.RegisterAminoMsg(cdc, &MsgWithdrawAllTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawAllTokenizeReward")
 
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
 }

@@ -7579,7 +7579,7 @@ func (*MsgCommunityPoolSpendResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_distribution_v1beta1_tx_proto_rawDescGZIP(), []int{11}
 }
 
-// MsgWithdrawTokenizeShareRecordReward
+// MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a specific record.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawTokenizeShareRecordReward struct {
@@ -7625,7 +7625,7 @@ func (x *MsgWithdrawTokenizeShareRecordReward) GetRecordId() uint64 {
 	return 0
 }
 
-// MsgWithdrawTokenizeShareRecordRewardResponse
+// MsgWithdrawTokenizeShareRecordReward defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawTokenizeShareRecordRewardResponse struct {
@@ -7654,7 +7654,8 @@ func (*MsgWithdrawTokenizeShareRecordRewardResponse) Descriptor() ([]byte, []int
 	return file_cosmos_distribution_v1beta1_tx_proto_rawDescGZIP(), []int{13}
 }
 
-// MsgWithdrawAllTokenizeShareRecordReward
+// MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or all
+// records owned by the designated owner
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawAllTokenizeShareRecordReward struct {
@@ -7692,7 +7693,7 @@ func (x *MsgWithdrawAllTokenizeShareRecordReward) GetOwnerAddress() string {
 	return ""
 }
 
-// MsgWithdrawAllTokenizeShareRecordRewardResponse
+// MsgWithdrawAllTokenizeShareRecordRewardResponse defines the Msg/WithdrawTokenizeShareRecordReward response type.
 //
 // Since: cosmos-sdk 0.47-lsm
 type MsgWithdrawAllTokenizeShareRecordRewardResponse struct {

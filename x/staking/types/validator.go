@@ -48,20 +48,20 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:          operator.String(),
-		ConsensusPubkey:          pkAny,
-		Jailed:                   false,
-		Status:                   Unbonded,
-		Tokens:                   math.ZeroInt(),
-		DelegatorShares:          math.LegacyZeroDec(),
-		Description:              description,
-		UnbondingHeight:          int64(0),
-		UnbondingTime:            time.Unix(0, 0).UTC(),
-		Commission:               NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
-		MinSelfDelegation:        math.OneInt(),
-		UnbondingOnHoldRefCount:  0,
-		TotalValidatorBondShares: sdk.ZeroDec(),
-		TotalLiquidShares:        sdk.ZeroDec(),
+		OperatorAddress:         operator.String(),
+		ConsensusPubkey:         pkAny,
+		Jailed:                  false,
+		Status:                  Unbonded,
+		Tokens:                  math.ZeroInt(),
+		DelegatorShares:         math.LegacyZeroDec(),
+		Description:             description,
+		UnbondingHeight:         int64(0),
+		UnbondingTime:           time.Unix(0, 0).UTC(),
+		Commission:              NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+		MinSelfDelegation:       math.OneInt(),
+		UnbondingOnHoldRefCount: 0,
+		ValidatorBondShares:     sdk.ZeroDec(),
+		LiquidShares:            sdk.ZeroDec(),
 	}, nil
 }
 
@@ -520,10 +520,10 @@ func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
-func (v Validator) GetCommission() math.LegacyDec        { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() math.Int       { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() math.LegacyDec   { return v.DelegatorShares }
-func (v Validator) GetTotalLiquidShares() math.LegacyDec { return v.TotalLiquidShares }
+func (v Validator) GetCommission() math.LegacyDec      { return v.Commission.Rate }
+func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegation }
+func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
+func (v Validator) GetLiquidShares() math.LegacyDec    { return v.LiquidShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

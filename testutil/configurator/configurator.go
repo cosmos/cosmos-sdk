@@ -33,6 +33,7 @@ type Config struct {
 	setInitGenesis     bool
 }
 
+<<<<<<< HEAD
 var defaultConfig = &Config{
 	ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
 	BeginBlockersOrder: []string{
@@ -96,6 +97,76 @@ var defaultConfig = &Config{
 		"vesting",
 	},
 	setInitGenesis: true,
+=======
+func defaultConfig() *Config {
+	return &Config{
+		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
+		BeginBlockersOrder: []string{
+			"upgrade",
+			"mint",
+			"distribution",
+			"slashing",
+			"evidence",
+			"staking",
+			"auth",
+			"bank",
+			"gov",
+			"crisis",
+			"genutil",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"vesting",
+			"circuit",
+		},
+		EndBlockersOrder: []string{
+			"crisis",
+			"gov",
+			"staking",
+			"auth",
+			"bank",
+			"distribution",
+			"slashing",
+			"mint",
+			"genutil",
+			"evidence",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"upgrade",
+			"vesting",
+			"circuit",
+		},
+		InitGenesisOrder: []string{
+			"auth",
+			"bank",
+			"distribution",
+			"staking",
+			"slashing",
+			"gov",
+			"mint",
+			"crisis",
+			"genutil",
+			"evidence",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"upgrade",
+			"vesting",
+			"circuit",
+		},
+		setInitGenesis: true,
+	}
+>>>>>>> 0fa85b7a4 (fix: testutil/configurator: correctly create fresh copy of defaultConfig (#17089))
 }
 
 type ModuleOption func(config *Config)
@@ -295,7 +366,7 @@ func OmitInitGenesis() ModuleOption {
 }
 
 func NewAppConfig(opts ...ModuleOption) depinject.Config {
-	cfg := defaultConfig
+	cfg := defaultConfig()
 	for _, opt := range opts {
 		opt(cfg)
 	}

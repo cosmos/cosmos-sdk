@@ -827,7 +827,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 }
 
 func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
-	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	ctx, keeper, msgServer, ak := s.ctx, s.stakingKeeper, s.msgServer, s.accountKeeper
 	require := s.Require()
 
 	pk := ed25519.GenPrivKey().PubKey()
@@ -851,7 +851,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	require.NoError(err)
 	require.Equal(del, resDel)
 
-	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0)
+	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), ak.AddressCodec())
 	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)

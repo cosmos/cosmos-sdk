@@ -435,7 +435,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	if err == nil {
 		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else if errors.Is(err, types.ErrNoUnbondingDelegation) {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return ubd, err
 	}
@@ -691,7 +691,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else if errors.Is(err, types.ErrNoRedelegation) {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id)
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return types.Redelegation{}, err
 	}

@@ -231,7 +231,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	var lastValidatorPowers []types.LastValidatorPower
 
 	err = k.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr.String(), Power: power})
+		addrStr, err := k.validatorAddressCodec.BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addrStr, Power: power})
 		return false
 	})
 	if err != nil {

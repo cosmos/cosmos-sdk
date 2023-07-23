@@ -33,71 +33,6 @@ type Config struct {
 	setInitGenesis     bool
 }
 
-<<<<<<< HEAD
-var defaultConfig = &Config{
-	ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
-	BeginBlockersOrder: []string{
-		"upgrade",
-		"mint",
-		"distribution",
-		"slashing",
-		"evidence",
-		"staking",
-		"auth",
-		"bank",
-		"gov",
-		"crisis",
-		"genutil",
-		"authz",
-		"feegrant",
-		"nft",
-		"group",
-		"params",
-		"consensus",
-		"vesting",
-	},
-	EndBlockersOrder: []string{
-		"crisis",
-		"gov",
-		"staking",
-		"auth",
-		"bank",
-		"distribution",
-		"slashing",
-		"mint",
-		"genutil",
-		"evidence",
-		"authz",
-		"feegrant",
-		"nft",
-		"group",
-		"params",
-		"consensus",
-		"upgrade",
-		"vesting",
-	},
-	InitGenesisOrder: []string{
-		"auth",
-		"bank",
-		"distribution",
-		"staking",
-		"slashing",
-		"gov",
-		"mint",
-		"crisis",
-		"genutil",
-		"evidence",
-		"authz",
-		"feegrant",
-		"nft",
-		"group",
-		"params",
-		"consensus",
-		"upgrade",
-		"vesting",
-	},
-	setInitGenesis: true,
-=======
 func defaultConfig() *Config {
 	return &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
@@ -120,7 +55,6 @@ func defaultConfig() *Config {
 			"params",
 			"consensus",
 			"vesting",
-			"circuit",
 		},
 		EndBlockersOrder: []string{
 			"crisis",
@@ -141,7 +75,6 @@ func defaultConfig() *Config {
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
 		},
 		InitGenesisOrder: []string{
 			"auth",
@@ -162,11 +95,9 @@ func defaultConfig() *Config {
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
 		},
 		setInitGenesis: true,
 	}
->>>>>>> 0fa85b7a4 (fix: testutil/configurator: correctly create fresh copy of defaultConfig (#17089))
 }
 
 type ModuleOption func(config *Config)

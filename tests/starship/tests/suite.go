@@ -36,11 +36,6 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.config = config
 
-	// create chain clients
-	//modulesBasicMap := map[string][]module.AppModuleBasic{}
-	//for _, chain := range config.Chains {
-	//	modulesBasicMap[chain.Name] = lens.ModuleBasics
-	//}
 	chainClients, err := starship.NewChainClients(zap.L(), config, nil)
 	s.Require().NoError(err)
 	s.chainClients = chainClients

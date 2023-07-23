@@ -18,9 +18,9 @@ func (s *TestSuite) TestChainsStatus() {
 
 	for _, chainClient := range s.chainClients {
 		status, err := chainClient.GetStatus()
-		s.Assert().NoError(err)
+		s.Require().NoError(err)
 
-		s.Assert().Equal(chainClient.GetChainID(), status.NodeInfo.Network)
+		s.Require().Equal(chainClient.GetChainID(), status.NodeInfo.Network)
 	}
 }
 
@@ -45,7 +45,7 @@ func (s *TestSuite) TestChainTokenTransfer() {
 	s.Require().NoError(err)
 
 	// Assert correct transfers
-	s.Assert().Len(balances.Balances, 1)
-	s.Assert().Equal(balances.Balances.Denoms(), []string{denom})
-	s.Assert().Equal(balances.Balances[0].Amount, sdk.NewInt(2345000))
+	s.Require().Len(balances.Balances, 1)
+	s.Require().Equal(balances.Balances.Denoms(), []string{denom})
+	s.Require().Equal(balances.Balances[0].Amount, sdk.NewInt(2345000))
 }

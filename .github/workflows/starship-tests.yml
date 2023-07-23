@@ -1,0 +1,114 @@
+name: Starship Nightly Tests
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  # temporary run on pull requests for debugging
+  pull_request:
+    branches:
+      - "anmol/starship-integration"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-${{ github.ref }}-starship-nightly-tests
+  cancel-in-progress: true
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: cosmos/starship-simapp
+  TAG: nightly
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.20
+        id: go
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=schedule,pattern=nightly
+          flavor: |
+            latest=false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Packages
+        uses: docker/build-push-action@v4
+        with:
+          # build only for amd64 platform for faster builds
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.20
+        id: go
+
+      # Starship Infra setup
+      # - Connects to k8s cluster with kubeconfig (digital ocean)
+      # - Creates a new namespace based on the name (deleted in next step)
+      # - Spins up the infra with the given config file
+      # - Waits till all nodes are running (timeout 30m)
+      # - Port forward all ports to localhost for next steps to connect
+      - name: Setup Test infra
+        id: starship-action
+        uses: cosmology-tech/starship-action@0.2.12
+        with:
+          values: tests/starship/configs/ci.yaml
+          port-forward: true
+          version: 0.1.38
+
+      - name: Run Tests
+        run: |
+          cd tests/starship/
+          make test
+
+      # Starship resource cleanup on cluster
+      # todo(@anmol1696): change this to be post step of the action
+      - name: Cleanup cluster
+        if: always()
+        run: |
+          helm delete $DEVNET_NAME --debug --namespace $DEVNET_NAMESPACE --wait || true
+          kubectl delete namespace $DEVNET_NAMESPACE --wait=true || true
+        env:
+          DEVNET_NAME: ${{ steps.starship-action.outputs.name }}
+          DEVNET_NAMESPACE: ${{ steps.starship-action.outputs.namespace }}

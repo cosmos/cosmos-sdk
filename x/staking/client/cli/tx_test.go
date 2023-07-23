@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -431,7 +432,7 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 }
 
 func (s *CLITestSuite) TestNewDelegateCmd() {
-	cmd := cli.NewDelegateCmd()
+	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 
 	testCases := []struct {
 		name         string
@@ -494,7 +495,7 @@ func (s *CLITestSuite) TestNewDelegateCmd() {
 }
 
 func (s *CLITestSuite) TestNewRedelegateCmd() {
-	cmd := cli.NewRedelegateCmd()
+	cmd := cli.NewRedelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 
 	testCases := []struct {
 		name         string
@@ -576,7 +577,7 @@ func (s *CLITestSuite) TestNewRedelegateCmd() {
 }
 
 func (s *CLITestSuite) TestNewUnbondCmd() {
-	cmd := cli.NewUnbondCmd()
+	cmd := cli.NewUnbondCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 
 	testCases := []struct {
 		name         string
@@ -639,7 +640,7 @@ func (s *CLITestSuite) TestNewUnbondCmd() {
 }
 
 func (s *CLITestSuite) TestNewCancelUnbondingDelegationCmd() {
-	cmd := cli.NewCancelUnbondingDelegation()
+	cmd := cli.NewCancelUnbondingDelegation(addresscodec.NewBech32Codec("cosmosvaloper"))
 
 	testCases := []struct {
 		name         string

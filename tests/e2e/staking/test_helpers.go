@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stri
 	args = append(args, extraArgs...)
 
 	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewRedelegateCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewRedelegateCmd(addresscodec.NewBech32Codec("cosmos")), args)
 }
 
 // MsgUnbondExec creates a unbond message.
@@ -47,5 +48,5 @@ func MsgUnbondExec(clientCtx client.Context, from, valAddress,
 
 	args = append(args, commonArgs...)
 	args = append(args, extraArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(addresscodec.NewBech32Codec("cosmos")), args)
 }

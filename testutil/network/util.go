@@ -142,7 +142,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
+			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator, cfg.TxConfig.SigningContext().AddressCodec())
 		if err != nil {
 			return err
 		}

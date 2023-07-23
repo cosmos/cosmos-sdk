@@ -115,7 +115,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Use CLI to create a delegation from the new account to validator `val`.
-	cmd := cli.NewDelegateCmd()
+	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmos"))
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150)).String(),

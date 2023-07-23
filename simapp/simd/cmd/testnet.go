@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -144,7 +145,7 @@ Example:
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 
-			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
+			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(), args)
 		},
 	}
 
@@ -204,6 +205,7 @@ func initTestnetFiles(
 	nodeConfig *cmtconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
+	valAddrCodec runtime.ValidatorAddressCodec,
 	args initArgs,
 ) error {
 	if args.chainID == "" {
@@ -345,7 +347,7 @@ func initTestnetFiles(
 
 	err := collectGenFiles(
 		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
-		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator,
+		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator, valAddrCodec,
 	)
 	if err != nil {
 		return err
@@ -402,7 +404,7 @@ func initGenFiles(
 func collectGenFiles(
 	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator, valAddrCodec runtime.ValidatorAddressCodec,
 ) error {
 	var appState json.RawMessage
 	genTime := cmttime.Now()
@@ -423,7 +425,8 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGenesis, genBalIterator, genutiltypes.DefaultMessageValidator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGenesis, genBalIterator, genutiltypes.DefaultMessageValidator,
+			valAddrCodec)
 		if err != nil {
 			return err
 		}

@@ -112,7 +112,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 		sdk.NewCoins(
 			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
 		),
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
@@ -130,7 +130,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 		sdk.NewCoins(
 			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1)),
 		),
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s", flags.FlagOffline),
 		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),

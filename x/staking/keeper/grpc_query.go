@@ -617,16 +617,16 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 	resp := make(types.RedelegationResponses, len(redels))
 
 	for i, redel := range redels {
-		valSrcAddr, err := sdk.ValAddressFromBech32(redel.ValidatorSrcAddress)
+		_, err := k.validatorAddressCodec.StringToBytes(redel.ValidatorSrcAddress)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redel.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redel.ValidatorDstAddress)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redel.DelegatorAddress)
+		_, err = k.authKeeper.AddressCodec().StringToBytes(redel.DelegatorAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -649,9 +649,9 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 		}
 
 		resp[i] = types.NewRedelegationResponse(
-			delegatorAddress,
-			valSrcAddr,
-			valDstAddr,
+			redel.DelegatorAddress,
+			redel.ValidatorSrcAddress,
+			redel.ValidatorDstAddress,
 			entryResponses,
 		)
 	}

@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -56,13 +57,14 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning             = "pruning"
-	FlagPruningKeepRecent   = "pruning-keep-recent"
-	FlagPruningInterval     = "pruning-interval"
-	FlagIndexEvents         = "index-events"
-	FlagMinRetainBlocks     = "min-retain-blocks"
-	FlagIAVLCacheSize       = "iavl-cache-size"
-	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagPruning              = "pruning"
+	FlagPruningKeepRecent    = "pruning-keep-recent"
+	FlagPruningInterval      = "pruning-interval"
+	FlagIndexEvents          = "index-events"
+	FlagMinRetainBlocks      = "min-retain-blocks"
+	FlagIAVLCacheSize        = "iavl-cache-size"
+	FlagDisableIAVLFastNode  = "iavl-disable-fastnode"
+	FlagShutdownGraceSeconds = "shutdown-grace-seconds"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -170,6 +172,24 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			return wrapCPUProfile(serverCtx, func() error {
 				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
+
+			err = wrapCPUProfile(serverCtx, func() error {
+				return startInProcess(serverCtx, clientCtx, appCreator)
+			})
+
+			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
+
+			// wait for database with async writes to flush and close
+			graceSeconds, _ := cmd.Flags().GetUint32(FlagShutdownGraceSeconds)
+			if graceSeconds > 0 {
+				serverCtx.Logger.Info(fmt.Sprintf("allow %d seconds for database to flush", graceSeconds))
+				<-time.After(time.Duration(graceSeconds) * time.Second)
+				serverCtx.Logger.Info("finished waiting for database to flush")
+			} else {
+				serverCtx.Logger.Info("do not wait for database to flush")
+			}
+
+			return err
 		},
 	}
 
@@ -205,6 +225,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
+	cmd.Flags().Uint32(FlagShutdownGraceSeconds, 0, "On Shutdown, Seconds to wait for database to flush to disk")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

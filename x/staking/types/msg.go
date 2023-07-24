@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -45,9 +46,9 @@ func NewMsgCreateValidator(
 }
 
 // Validate validates the MsgCreateValidator sdk msg.
-func (msg MsgCreateValidator) Validate() error {
+func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	// note that unmarshaling from bech32 ensures both non-empty and valid
-	_, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	_, err := ac.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}

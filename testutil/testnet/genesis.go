@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -97,7 +98,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 
 	// Produce the create validator message.
 	msg, err := stakingtypes.NewMsgCreateValidator(
-		privVal.PubKey().Address().String(),
+		sdk.ValAddress(privVal.PubKey().Address()).String(),
 		pubKey,
 		amount,
 		stakingtypes.Description{
@@ -114,7 +115,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 		panic(err)
 	}
 
-	if err := msg.Validate(); err != nil {
+	if err := msg.Validate(address.NewBech32Codec("cosmosvaloper")); err != nil {
 		panic(err)
 	}
 

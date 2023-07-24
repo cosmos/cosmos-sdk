@@ -97,7 +97,7 @@ func (b *GenesisBuilder) GenTx(privVal secp256k1.PrivKey, val cmttypes.GenesisVa
 
 	// Produce the create validator message.
 	msg, err := stakingtypes.NewMsgCreateValidator(
-		privVal.PubKey().Address().Bytes(),
+		privVal.PubKey().Address().String(),
 		pubKey,
 		amount,
 		stakingtypes.Description{

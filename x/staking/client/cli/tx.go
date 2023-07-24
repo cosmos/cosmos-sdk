@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -34,7 +34,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func NewTxCmd(valAddrCodec address.Codec) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -44,7 +44,7 @@ func NewTxCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(
-		NewCreateValidatorCmd(),
+		NewCreateValidatorCmd(valAddrCodec),
 		NewEditValidatorCmd(),
 		NewDelegateCmd(valAddrCodec),
 		NewRedelegateCmd(valAddrCodec),
@@ -56,7 +56,7 @@ func NewTxCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 }
 
 // NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
-func NewCreateValidatorCmd() *cobra.Command {
+func NewCreateValidatorCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator [path/to/validator.json]",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -100,7 +100,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 				return err
 			}
 
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator, ac)
 			if err != nil {
 				return err
 			}
@@ -175,7 +175,7 @@ func NewEditValidatorCmd() *cobra.Command {
 }
 
 // NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
-func NewDelegateCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func NewDelegateCmd(valAddrCodec address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -217,7 +217,7 @@ $ %s tx staking delegate cosmoss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stak
 }
 
 // NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
-func NewRedelegateCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func NewRedelegateCmd(valAddrCodec address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -264,7 +264,7 @@ $ %s tx staking redelegate cosmoss1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos
 }
 
 // NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
-func NewUnbondCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func NewUnbondCmd(valAddrCodec address.Codec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -309,7 +309,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 }
 
 // NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
-func NewCancelUnbondingDelegation(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func NewCancelUnbondingDelegation(valAddrCodec address.Codec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -359,7 +359,7 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 	return cmd
 }
 
-func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, val validator) (tx.Factory, *types.MsgCreateValidator, error) {
+func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, val validator, valAc address.Codec) (tx.Factory, *types.MsgCreateValidator, error) {
 	valAddr := clientCtx.GetFromAddress()
 
 	description := types.NewDescription(
@@ -370,8 +370,12 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		val.Details,
 	)
 
+	valStr, err := valAc.BytesToString(sdk.ValAddress(valAddr))
+	if err != nil {
+		return txf, nil, err
+	}
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), val.PubKey, val.Amount, description, val.CommissionRates, val.MinSelfDelegation,
+		valStr, val.PubKey, val.Amount, description, val.CommissionRates, val.MinSelfDelegation,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -546,7 +550,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
+func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool, valCodec address.Codec) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
 	if err != nil {
@@ -579,8 +583,13 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
+	valStr, err := valCodec.BytesToString(sdk.ValAddress(valAddr))
+	if err != nil {
+		return txBldr, nil, err
+	}
+
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr),
+		valStr,
 		config.PubKey,
 		amount,
 		description,

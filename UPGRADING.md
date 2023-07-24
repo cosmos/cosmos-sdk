@@ -299,7 +299,7 @@ All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead 
 
 #### Rosetta
 
-Extracted Rosetta tool from the cosmos-sdk and simapp into it's own [rosetta repo](). Any user who is interested on using
+Extracted Rosetta tool from the cosmos-sdk and simapp into it's own [rosetta repo](https://github.com/cosmos/rosetta). Any user who is interested on using
 the tool can connect it standalone to any node without the need to add it as part of the node binary. The rosetta tool
 also allows multi chain connections.  
 

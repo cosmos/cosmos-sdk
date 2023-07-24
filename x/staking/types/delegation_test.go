@@ -37,7 +37,7 @@ func TestDelegationString(t *testing.T) {
 
 func TestUnbondingDelegationEqual(t *testing.T) {
 	ubd1 := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmovaloper"), addresscodec.NewBech32Codec("cosmos"))
+		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	ubd2 := ubd1
 
 	ok := ubd1.String() == ubd2.String()
@@ -52,7 +52,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 
 func TestUnbondingDelegationString(t *testing.T) {
 	ubd := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmovaloper"), addresscodec.NewBech32Codec("cosmos"))
+		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 
 	require.NotEmpty(t, ubd.String())
 }
@@ -60,10 +60,10 @@ func TestUnbondingDelegationString(t *testing.T) {
 func TestRedelegationEqual(t *testing.T) {
 	r1 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmovaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmovaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	require.True(t, proto.Equal(&r1, &r2))
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
@@ -74,7 +74,7 @@ func TestRedelegationEqual(t *testing.T) {
 func TestRedelegationString(t *testing.T) {
 	r := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(10), 1, addresscodec.NewBech32Codec("cosmovaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(10), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 
 	require.NotEmpty(t, r.String())
 }

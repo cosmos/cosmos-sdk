@@ -62,7 +62,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 func TestValidateGenesisBadMessage(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 
-	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()).String(), desc, nil, nil)
 
 	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()

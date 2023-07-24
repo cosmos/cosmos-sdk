@@ -148,6 +148,9 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 				return err
 			}
 			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			// The transaction cannot be generated offline since it requires a query
 			// to get all the validators.

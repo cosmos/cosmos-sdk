@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,6 +42,9 @@ $ <appd> tx slashing unjail --from mykey
 			}
 
 			valAddr, err := valAc.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgUnjail(valAddr)
 

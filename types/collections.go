@@ -135,6 +135,28 @@ func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) co
 	}
 }
 
+type legacyKeyCodec[T []byte] struct {
+	collcodec.KeyCodec[T]
+}
+
+func (g legacyKeyCodec[T]) Encode(buffer []byte, key T) (int, error) {
+	return g.EncodeNonTerminal(buffer, key)
+}
+
+func (g legacyKeyCodec[T]) Decode(buffer []byte) (int, T, error) {
+	return g.DecodeNonTerminal(buffer)
+}
+
+func (g legacyKeyCodec[T]) Size(key T) int { return g.SizeNonTerminal(key) }
+
+func (g legacyKeyCodec[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
+
+func LegacyKeyCodec[T []byte](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
+	return legacyKeyCodec[T]{
+		keyCodec,
+	}
+}
+
 // Collection Codecs
 
 type intValueCodec struct{}

@@ -169,12 +169,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 			}
 
-			return wrapCPUProfile(serverCtx, func() error {
-				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
-			})
-
 			err = wrapCPUProfile(serverCtx, func() error {
-				return startInProcess(serverCtx, clientCtx, appCreator)
+				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 
 			serverCtx.Logger.Debug("received quit signal")

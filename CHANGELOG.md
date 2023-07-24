@@ -46,8 +46,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/circuit) [17105](https://github.com/cosmos/cosmos-sdk/pull/17105) `msg_url` is skipped when publishing events
-
 ### API Breaking Changes
 
 * (x/staking) [17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:

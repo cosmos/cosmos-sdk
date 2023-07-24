@@ -1,17 +1,17 @@
 package cli
 
 import (
+	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd() *cobra.Command {
+func NewTxCmd(ac address.Codec) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -20,12 +20,12 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	slashingTxCmd.AddCommand(NewUnjailTxCmd())
+	slashingTxCmd.AddCommand(NewUnjailTxCmd(ac))
 	return slashingTxCmd
 }
 
 // NewUnjailTxCmd returns a CLI command handler for creating a MsgUnjail transaction.
-func NewUnjailTxCmd() *cobra.Command {
+func NewUnjailTxCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -39,9 +39,10 @@ $ <appd> tx slashing unjail --from mykey
 			if err != nil {
 				return err
 			}
-			valAddr := clientCtx.GetFromAddress()
 
-			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
+			valAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+
+			msg := types.NewMsgUnjail(valAddr)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

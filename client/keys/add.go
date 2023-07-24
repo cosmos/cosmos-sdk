@@ -82,7 +82,7 @@ Example:
 
 	// support old flags name for backwards compatibility
 	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
-		if name == "algo" {
+		if name == flags.FlagKeyAlgorithm {
 			name = flags.FlagKeyType
 		}
 

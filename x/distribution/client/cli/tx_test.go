@@ -99,7 +99,7 @@ func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
-			"invalid Bech32 prefix",
+			"hrp does not match bech32 prefix",
 		},
 		{
 			"valid transaction",

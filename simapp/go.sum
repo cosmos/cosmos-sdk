@@ -207,8 +207,6 @@ cosmossdk.io/store v1.0.0-alpha.1 h1:/151XxAgm0tiKuYrtJzMG61lf6enpPuP+D/hIN8cRjQ
 cosmossdk.io/store v1.0.0-alpha.1/go.mod h1:ejgU9GhRGMNBduVnDwC3RyhOmu4uKlNQlTiJgPmbDkI=
 cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4 h1:9Kw1JCbbhXHPR91/QgfCV46J1c10nXk1GTl6G60nbDg=
 cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:iP++FZ7DCHMYyo4T+q8fBy4X+ZDupUiBjTCpNTWsX18=
-cosmossdk.io/tools/rosetta v0.2.1-0.20230719143845-dff6b0e26aa4 h1:A2OkN/Q/572DUrFjl7i+Oz0jmXUqM+O7J5oQ5YFIs6c=
-cosmossdk.io/tools/rosetta v0.2.1-0.20230719143845-dff6b0e26aa4/go.mod h1:71fCSlenkfhKpcar6vxWS1ZGZTuEk6VKt/ONf7TmP2w=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4 h1:DFqO5h83+PWFSSoY32sNCePkMjDIKuRnm9MbvFxgp/g=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:yoA/iygemjoFYdHQccJnTZ0RVkQu4JT+1bwTa4dCye4=
 cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4 h1:oDdr/qO3btc1rZNOccBVZWg4mYjwTJipW373j8daWno=
@@ -337,8 +335,6 @@ github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZ
 github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6 h1:DJK8W/iB+s/qkTtmXSrHA49lp5O3OsR7E6z4byOLy34=
 github.com/cockroachdb/tokenbucket v0.0.0-20230613231145-182959a1fad6/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/coinbase/rosetta-sdk-go/types v1.0.0 h1:jpVIwLcPoOeCR6o1tU+Xv7r5bMONNbHU7MuEHboiFuA=
-github.com/coinbase/rosetta-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
 github.com/cometbft/cometbft v0.38.0-rc3 h1:Ly3eVPWoFu0y68PmZwLljucPdEBtfigZtqm+OV1W6dE=
 github.com/cometbft/cometbft v0.38.0-rc3/go.mod h1:5Jz0Z8YsHSf0ZaAqGvi/ifioSdVFPtEGrm8Y9T/993k=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
@@ -371,8 +367,6 @@ github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
 github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=
 github.com/cosmos/ledger-cosmos-go v0.13.0/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
-github.com/cosmos/rosetta-sdk-go v0.10.0 h1:E5RhTruuoA7KTIXUcMicL76cffyeoyvNybzUGSKFTcM=
-github.com/cosmos/rosetta-sdk-go v0.10.0/go.mod h1:SImAZkb96YbwvoRkzSMQB6noNJXFgWl/ENIznEoYQI4=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=

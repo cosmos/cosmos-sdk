@@ -27,9 +27,6 @@ cp ../depinject/README.md ./docs/packages/01-depinject.md
 cp ../collections/README.md ./docs/packages/02-collections.md
 cp ../orm/README.md ./docs/packages/03-orm.md
 
-## Add rosetta documentation
-cp ../tools/rosetta/README.md ./docs/run-node/04-rosetta.md
-
 ## Add architecture documentation
 cp -r ./architecture ./docs
 

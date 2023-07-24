@@ -207,8 +207,6 @@ cosmossdk.io/store v1.0.0-alpha.1 h1:/151XxAgm0tiKuYrtJzMG61lf6enpPuP+D/hIN8cRjQ
 cosmossdk.io/store v1.0.0-alpha.1/go.mod h1:ejgU9GhRGMNBduVnDwC3RyhOmu4uKlNQlTiJgPmbDkI=
 cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4 h1:9Kw1JCbbhXHPR91/QgfCV46J1c10nXk1GTl6G60nbDg=
 cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:iP++FZ7DCHMYyo4T+q8fBy4X+ZDupUiBjTCpNTWsX18=
-cosmossdk.io/tools/rosetta v0.2.1-0.20230719143845-dff6b0e26aa4 h1:A2OkN/Q/572DUrFjl7i+Oz0jmXUqM+O7J5oQ5YFIs6c=
-cosmossdk.io/tools/rosetta v0.2.1-0.20230719143845-dff6b0e26aa4/go.mod h1:71fCSlenkfhKpcar6vxWS1ZGZTuEk6VKt/ONf7TmP2w=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4 h1:DFqO5h83+PWFSSoY32sNCePkMjDIKuRnm9MbvFxgp/g=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:yoA/iygemjoFYdHQccJnTZ0RVkQu4JT+1bwTa4dCye4=
 cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4 h1:oDdr/qO3btc1rZNOccBVZWg4mYjwTJipW373j8daWno=

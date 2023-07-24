@@ -10,20 +10,11 @@ require (
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/store v1.0.0-alpha.1
-<<<<<<< HEAD
 	cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4
-	cosmossdk.io/tools/rosetta v0.2.1-0.20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4
-=======
-	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
->>>>>>> 506e87a69 (refactor!: remove rosetta from repo (#17112))
 	cosmossdk.io/x/tx v0.9.1
 	cosmossdk.io/x/upgrade v0.0.0-20230719143845-dff6b0e26aa4
 	github.com/cometbft/cometbft v0.38.0-rc3
@@ -206,20 +197,6 @@ require (
 // 	<temporary replace>
 // )
 
-<<<<<<< HEAD
-=======
-// SimApp on main always tests the latest extracted SDK modules importing the sdk
-replace (
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/tools/confix => ../tools/confix
-	cosmossdk.io/x/circuit => ../x/circuit
-	cosmossdk.io/x/evidence => ../x/evidence
-	cosmossdk.io/x/feegrant => ../x/feegrant
-	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/upgrade => ../x/upgrade
-)
-
->>>>>>> 506e87a69 (refactor!: remove rosetta from repo (#17112))
 // Below are the long-lived replace of the SimApp
 replace (
 	// use cosmos fork of keyring

@@ -124,15 +124,6 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tools/rosetta"
-    schedule:
-      interval: weekly
-      day: monday
-      time: "02:05"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
     directory: "/tools/confix"
     schedule:
       interval: weekly

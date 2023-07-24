@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +40,16 @@ func TestAuthorizeCircuitBreaker(t *testing.T) {
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[2], Permissions: &allmsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"authorize_circuit_breaker",
+			sdk.NewAttribute("granter", authority),
+			sdk.NewAttribute("grantee", addresses[2]),
+			sdk.NewAttribute("permission", allmsgs.String()),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	add2, err := ft.ac.StringToBytes(addresses[2])
 	require.NoError(t, err)
@@ -65,6 +76,16 @@ func TestAuthorizeCircuitBreaker(t *testing.T) {
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[3], Permissions: &somemsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"authorize_circuit_breaker",
+			sdk.NewAttribute("granter", authority),
+			sdk.NewAttribute("grantee", addresses[3]),
+			sdk.NewAttribute("permission", somemsgs.String()),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	add3, err := ft.ac.StringToBytes(addresses[3])
 	require.NoError(t, err)
@@ -94,7 +115,6 @@ func TestTripCircuitBreaker(t *testing.T) {
 
 	srv := keeper.NewMsgServerImpl(ft.keeper)
 	url := msgSend
-	sdkCtx := sdk.UnwrapSDKContext(ft.ctx)
 
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
 	require.NoError(t, err)
@@ -103,14 +123,49 @@ func TestTripCircuitBreaker(t *testing.T) {
 	admintrip := &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
 	require.NoError(t, err)
-	events := sdkCtx.EventManager().Events()
-	attr, ok := events[len(events)-1].GetAttribute("msg_url")
-	require.True(t, ok)
-	require.NotEmpty(t, attr.Value)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"trip_circuit_breaker",
+			sdk.NewAttribute("authority", authority),
+			sdk.NewAttribute("msg_url", url),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	allowed, err := ft.keeper.IsAllowed(ft.ctx, url)
 	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
+
+	// user with enough permissions tries to trip circuit breaker for two messages
+	//url, url2 := "cosmos.gov.v1beta1.MsgDeposit", "cosmos.gov.v1beta1.MsgVote"
+	//twomsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url, url2}}
+	//msg := &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[3], Permissions: twomsgs}
+	//_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
+	//require.NoError(t, err)
+	//
+	//// try to trip two messages with enough permissions
+	//twoMsgTrip := &types.MsgTripCircuitBreaker{Authority: addresses[3], MsgTypeUrls: []string{url, url2}}
+	//_, err = srv.TripCircuitBreaker(ft.ctx, twoMsgTrip)
+	//require.NoError(t, err)
+	//
+	//allowed, err = ft.keeper.IsAllowed(ft.ctx, url)
+	//require.NoError(t, err)
+	//require.False(t, allowed, "circuit breaker should be tripped")
+	//
+	//allowed, err = ft.keeper.IsAllowed(ft.ctx, url2)
+	//require.NoError(t, err)
+	//require.False(t, allowed, "circuit breaker should be tripped")
+	//
+	//require.Equal(
+	//	t,
+	//	sdk.NewEvent(
+	//		"trip_circuit_breaker",
+	//		sdk.NewAttribute("authority", addresses[1]),
+	//		sdk.NewAttribute("msg_url", strings.Join([]string{url, url2}, ",")),
+	//	),
+	//	lastEvent(ft.ctx),
+	//)
 
 	// user with all messages trips circuit breaker
 	// add a super user
@@ -124,6 +179,15 @@ func TestTripCircuitBreaker(t *testing.T) {
 	superTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, superTrip)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"trip_circuit_breaker",
+			sdk.NewAttribute("authority", addresses[1]),
+			sdk.NewAttribute("msg_url", url2),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	allowed, err = ft.keeper.IsAllowed(ft.ctx, url2)
 	require.NoError(t, err)
@@ -134,7 +198,7 @@ func TestTripCircuitBreaker(t *testing.T) {
 	_, err = srv.TripCircuitBreaker(ft.ctx, unknownTrip)
 	require.Error(t, err)
 
-	// user has permission to trip circuit breaker for two messages but only has permission for one
+	// user tries to trip circuit breaker for two messages but only has permission for one
 	url, url2 = "cosmos.staking.v1beta1.MsgCreateValidator", "cosmos.staking.v1beta1.MsgEditValidator"
 	somemsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[2], Permissions: somemsgs}
@@ -174,6 +238,15 @@ func TestResetCircuitBreaker(t *testing.T) {
 	adminReset := &types.MsgResetCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.ctx, adminReset)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"reset_circuit_breaker",
+			sdk.NewAttribute("authority", authority),
+			sdk.NewAttribute("msg_url", url),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	allowed, err = ft.keeper.IsAllowed(ft.ctx, url)
 	require.NoError(t, err)
@@ -212,6 +285,15 @@ func TestResetCircuitBreaker(t *testing.T) {
 	allMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.ctx, allMsgsReset)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"reset_circuit_breaker",
+			sdk.NewAttribute("authority", addresses[1]),
+			sdk.NewAttribute("msg_url", url),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	// user tries to reset a message they dont have permission to reset
 	url = "cosmos.staking.v1beta1.MsgCreateValidator"
@@ -229,9 +311,25 @@ func TestResetCircuitBreaker(t *testing.T) {
 	someMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url}}
 	_, err = srv.ResetCircuitBreaker(ft.ctx, someMsgsReset)
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"reset_circuit_breaker",
+			sdk.NewAttribute("authority", addresses[2]),
+			sdk.NewAttribute("msg_url", url),
+		),
+		lastEvent(ft.ctx),
+	)
 
 	// user tries to reset an already reset circuit breaker
 	admintrip = &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
 	require.Error(t, err)
+}
+
+func lastEvent(ctx context.Context) sdk.Event {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	events := sdkCtx.EventManager().Events()
+
+	return events[len(events)-1]
 }

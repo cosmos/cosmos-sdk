@@ -137,36 +137,6 @@ func TestTripCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
-	// user with enough permissions tries to trip circuit breaker for two messages
-	//url, url2 := "cosmos.gov.v1beta1.MsgDeposit", "cosmos.gov.v1beta1.MsgVote"
-	//twomsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url, url2}}
-	//msg := &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[3], Permissions: twomsgs}
-	//_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
-	//require.NoError(t, err)
-	//
-	//// try to trip two messages with enough permissions
-	//twoMsgTrip := &types.MsgTripCircuitBreaker{Authority: addresses[3], MsgTypeUrls: []string{url, url2}}
-	//_, err = srv.TripCircuitBreaker(ft.ctx, twoMsgTrip)
-	//require.NoError(t, err)
-	//
-	//allowed, err = ft.keeper.IsAllowed(ft.ctx, url)
-	//require.NoError(t, err)
-	//require.False(t, allowed, "circuit breaker should be tripped")
-	//
-	//allowed, err = ft.keeper.IsAllowed(ft.ctx, url2)
-	//require.NoError(t, err)
-	//require.False(t, allowed, "circuit breaker should be tripped")
-	//
-	//require.Equal(
-	//	t,
-	//	sdk.NewEvent(
-	//		"trip_circuit_breaker",
-	//		sdk.NewAttribute("authority", addresses[1]),
-	//		sdk.NewAttribute("msg_url", strings.Join([]string{url, url2}, ",")),
-	//	),
-	//	lastEvent(ft.ctx),
-	//)
-
 	// user with all messages trips circuit breaker
 	// add a super user
 	allmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{""}}

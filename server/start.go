@@ -177,9 +177,9 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return startInProcess(serverCtx, clientCtx, appCreator)
 			})
 
-			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
+			serverCtx.Logger.Debug("received quit signal")
 
-			// wait for database with async writes to flush and close
+			// wait for app.Close() and tmNode.Stop() to flush async db writes to disk
 			graceSeconds, _ := cmd.Flags().GetUint32(FlagShutdownGraceSeconds)
 			if graceSeconds > 0 {
 				serverCtx.Logger.Info(fmt.Sprintf("allow %d seconds for database to flush", graceSeconds))

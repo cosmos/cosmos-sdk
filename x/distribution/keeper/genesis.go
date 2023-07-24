@@ -47,7 +47,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 
-	if err = k.SetPreviousProposerConsAddr(ctx, previousProposer); err != nil {
+	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
 		panic(err)
 	}
 
@@ -160,7 +160,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	pp, err := k.GetPreviousProposerConsAddr(ctx)
+	pp, err := k.PreviousProposer.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

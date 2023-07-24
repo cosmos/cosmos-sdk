@@ -38,6 +38,7 @@ type Keeper struct {
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
 	ValidatorOutstandingRewards     collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	ValidatorHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
+	PreviousProposer                collections.Item[sdk.ConsAddress]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -107,6 +108,7 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
 		),
+		PreviousProposer: collections.NewItem(sb, types.ProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey)),
 	}
 
 	schema, err := sb.Build()

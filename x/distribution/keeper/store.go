@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
@@ -21,35 +19,6 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx context.Context, delAddr sdk.AccAdd
 		return delAddr, nil
 	}
 	return addr, err
-}
-
-// GetPreviousProposerConsAddr returns the proposer consensus address for the
-// current block.
-func (k Keeper) GetPreviousProposerConsAddr(ctx context.Context) (sdk.ConsAddress, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ProposerKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if bz == nil {
-		return nil, errors.New("previous proposer not set")
-	}
-
-	addrValue := gogotypes.BytesValue{}
-	err = k.cdc.Unmarshal(bz, &addrValue)
-	if err != nil {
-		return nil, err
-	}
-
-	return addrValue.GetValue(), nil
-}
-
-// set the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx context.Context, consAddr sdk.ConsAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz := k.cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
-	return store.Set(types.ProposerKey, bz)
 }
 
 // historical reference count (used for testcases)

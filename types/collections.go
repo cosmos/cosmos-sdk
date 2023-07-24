@@ -44,6 +44,12 @@ var (
 	// state backwards compatibility.
 	// Deprecated: use collections.Uint64Key instead.
 	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
+
+	// LengthPrefixedBytesKey is a collections KeyCodec to work with []byte.
+	// Deprecated: exists only for state compatibility reasons, should not be
+	// used for new storage keys using []byte. Please use the BytesKey provided
+	// in the collections package.
+	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{}
 )
 
 type addressUnion interface {
@@ -135,27 +141,23 @@ func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) co
 	}
 }
 
-type legacyKeyCodec[T []byte] struct {
-	collcodec.KeyCodec[T]
+// Deprecated: lengthPrefixedBytesKey is a special key codec used to retain state backwards compatibility
+// when a bytes key is used as an index key.
+type lengthPrefixedBytesKey struct {
+	collcodec.KeyCodec[[]byte]
 }
 
-func (g legacyKeyCodec[T]) Encode(buffer []byte, key T) (int, error) {
+func (g lengthPrefixedBytesKey) Encode(buffer []byte, key []byte) (int, error) {
 	return g.EncodeNonTerminal(buffer, key)
 }
 
-func (g legacyKeyCodec[T]) Decode(buffer []byte) (int, T, error) {
+func (g lengthPrefixedBytesKey) Decode(buffer []byte) (int, []byte, error) {
 	return g.DecodeNonTerminal(buffer)
 }
 
-func (g legacyKeyCodec[T]) Size(key T) int { return g.SizeNonTerminal(key) }
+func (g lengthPrefixedBytesKey) Size(key []byte) int { return g.SizeNonTerminal(key) }
 
-func (g legacyKeyCodec[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
-
-func LegacyKeyCodec[T []byte](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
-	return legacyKeyCodec[T]{
-		keyCodec,
-	}
-}
+func (g lengthPrefixedBytesKey) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
 
 // Collection Codecs
 

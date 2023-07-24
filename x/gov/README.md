@@ -1183,6 +1183,10 @@ where `proposal.json` contains:
 By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
 :::
 
+:::tip
+When metadata is not specified, the title is limited to 255 characters and the summary 40x the title length.
+:::
+
 ##### submit-legacy-proposal
 
 The `submit-legacy-proposal` command allows users to submit a governance legacy proposal along with an initial deposit.

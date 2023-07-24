@@ -1058,10 +1058,10 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 // Close is called in start cmd to gracefully cleanup resources.
 func (app *BaseApp) Close() error {
 	app.logger.Info("Closing application.db")
-	app.db.Close()
+	_ = app.db.Close()
 
 	if app.snapshotManager != nil {
-		app.snapshotManager.Close()
+		_ = app.snapshotManager.Close()
 	}
 
 	return nil

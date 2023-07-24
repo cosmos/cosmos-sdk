@@ -112,7 +112,7 @@ func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, id uint64,
-	valAc address.Codec, delAc address.Codec,
+	valAc, delAc address.Codec,
 ) UnbondingDelegation {
 	valAddr, err := valAc.BytesToString(validatorAddr)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -55,6 +56,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
 		0,
+		address.NewBech32Codec("cosmovaloper"), address.NewBech32Codec("cosmos"),
 	)
 
 	// set and retrieve a record

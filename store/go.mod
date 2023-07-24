@@ -1,4 +1,4 @@
-module cosmossdk.io/store
+module cosmossdk.io/store/v2
 
 go 1.20
 
@@ -23,9 +23,8 @@ require (
 	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
+	github.com/hashicorp/go-metrics v0.5.1
 )
-
-require github.com/hashicorp/go-metrics v0.5.1
 
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect

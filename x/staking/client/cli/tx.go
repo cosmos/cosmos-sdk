@@ -34,7 +34,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(valAddrCodec address.Codec) *cobra.Command {
+func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -45,11 +45,11 @@ func NewTxCmd(valAddrCodec address.Codec) *cobra.Command {
 
 	stakingTxCmd.AddCommand(
 		NewCreateValidatorCmd(valAddrCodec),
-		NewEditValidatorCmd(),
-		NewDelegateCmd(valAddrCodec),
-		NewRedelegateCmd(valAddrCodec),
-		NewUnbondCmd(valAddrCodec),
-		NewCancelUnbondingDelegation(valAddrCodec),
+		NewEditValidatorCmd(valAddrCodec),
+		NewDelegateCmd(valAddrCodec, ac),
+		NewRedelegateCmd(valAddrCodec, ac),
+		NewUnbondCmd(valAddrCodec, ac),
+		NewCancelUnbondingDelegation(valAddrCodec, ac),
 	)
 
 	return stakingTxCmd
@@ -119,7 +119,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 }
 
 // NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
-func NewEditValidatorCmd() *cobra.Command {
+func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
@@ -128,7 +128,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			valAddr := clientCtx.GetFromAddress()
+
 			moniker, _ := cmd.Flags().GetString(FlagEditMoniker)
 			identity, _ := cmd.Flags().GetString(FlagIdentity)
 			website, _ := cmd.Flags().GetString(FlagWebsite)
@@ -160,7 +160,12 @@ func NewEditValidatorCmd() *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			valAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgEditValidator(valAddr, description, newRate, newMinSelfDelegation)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -175,7 +180,7 @@ func NewEditValidatorCmd() *cobra.Command {
 }
 
 // NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
-func NewDelegateCmd(valAddrCodec address.Codec) *cobra.Command {
+func NewDelegateCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -199,13 +204,17 @@ $ %s tx staking delegate cosmoss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stak
 				return err
 			}
 
-			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := valAddrCodec.StringToBytes(args[0])
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgDelegate(delAddr, valAddr, amount)
+			_, err = valAddrCodec.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDelegate(delAddr, args[0], amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -217,7 +226,7 @@ $ %s tx staking delegate cosmoss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stak
 }
 
 // NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
-func NewRedelegateCmd(valAddrCodec address.Codec) *cobra.Command {
+func NewRedelegateCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -236,13 +245,17 @@ $ %s tx staking redelegate cosmoss1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos
 			if err != nil {
 				return err
 			}
-			delAddr := clientCtx.GetFromAddress()
-			valSrcAddr, err := valAddrCodec.StringToBytes(args[0])
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
-			valDstAddr, err := valAddrCodec.StringToBytes(args[1])
+			_, err = valAddrCodec.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+
+			_, err = valAddrCodec.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -252,7 +265,7 @@ $ %s tx staking redelegate cosmoss1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos
 				return err
 			}
 
-			msg := types.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, amount)
+			msg := types.NewMsgBeginRedelegate(delAddr, args[0], args[1], amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -264,7 +277,7 @@ $ %s tx staking redelegate cosmoss1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos
 }
 
 // NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
-func NewUnbondCmd(valAddrCodec address.Codec) *cobra.Command {
+func NewUnbondCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -286,8 +299,11 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 				return err
 			}
 
-			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := valAddrCodec.StringToBytes(args[0])
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			_, err = valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -297,7 +313,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 				return err
 			}
 
-			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
+			msg := types.NewMsgUndelegate(delAddr, args[0], amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -309,7 +325,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 }
 
 // NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
-func NewCancelUnbondingDelegation(valAddrCodec address.Codec) *cobra.Command {
+func NewCancelUnbondingDelegation(valAddrCodec, ac address.Codec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -332,8 +348,12 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 			if err != nil {
 				return err
 			}
-			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := valAddrCodec.StringToBytes(args[0])
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			_, err = valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -348,7 +368,7 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 				return errorsmod.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
 			}
 
-			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight, amount)
+			msg := types.NewMsgCancelUnbondingDelegation(delAddr, args[0], creationHeight, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

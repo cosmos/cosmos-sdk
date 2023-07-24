@@ -241,7 +241,7 @@ func SimulateMsgEditValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address.String(), description, &newCommissionRate, nil)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -321,7 +321,7 @@ func SimulateMsgDelegate(
 			}
 		}
 
-		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
+		msg := types.NewMsgDelegate(simAccount.Address.String(), val.GetOperator().String(), bondAmt)
 
 		txCtx := simulation.OperationInput{
 			R:             r,
@@ -413,7 +413,7 @@ func SimulateMsgUndelegate(
 		}
 
 		msg := types.NewMsgUndelegate(
-			delAddrBz, valAddr, sdk.NewCoin(bondDenom, unbondAmt),
+			delAddr, valAddr.String(), sdk.NewCoin(bondDenom, unbondAmt),
 		)
 
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
@@ -525,7 +525,7 @@ func SimulateMsgCancelUnbondingDelegate(
 		}
 
 		msg := types.NewMsgCancelUnbondingDelegation(
-			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
+			simAccount.Address.String(), valAddr.String(), unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
 		)
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)
@@ -666,7 +666,7 @@ func SimulateMsgBeginRedelegate(
 		}
 
 		msg := types.NewMsgBeginRedelegate(
-			delAddrBz, srcAddr, destAddr,
+			delAddr, srcAddr.String(), destAddr.String(),
 			sdk.NewCoin(bondDenom, redAmt),
 		)
 

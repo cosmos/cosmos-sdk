@@ -82,7 +82,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
-	cmd := stakingcli.NewDelegateCmd(clientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec())
+	cmd := stakingcli.NewDelegateCmd(clientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec(), clientCtx.InterfaceRegistry.SigningContext().AddressCodec())
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())

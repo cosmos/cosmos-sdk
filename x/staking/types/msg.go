@@ -94,50 +94,50 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr.String(),
+		ValidatorAddress:  valAddr,
 		MinSelfDelegation: newMinSelfDelegation,
 	}
 }
 
 // NewMsgDelegate creates a new MsgDelegate instance.
-func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
+func NewMsgDelegate(delAddr, valAddr string, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 	}
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
 func NewMsgBeginRedelegate(
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Coin,
+	delAddr, valSrcAddr, valDstAddr string, amount sdk.Coin,
 ) *MsgBeginRedelegate {
 	return &MsgBeginRedelegate{
-		DelegatorAddress:    delAddr.String(),
-		ValidatorSrcAddress: valSrcAddr.String(),
-		ValidatorDstAddress: valDstAddr.String(),
+		DelegatorAddress:    delAddr,
+		ValidatorSrcAddress: valSrcAddr,
+		ValidatorDstAddress: valDstAddr,
 		Amount:              amount,
 	}
 }
 
 // NewMsgUndelegate creates a new MsgUndelegate instance.
-func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
+func NewMsgUndelegate(delAddr, valAddr string, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 	}
 }
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
-func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
+func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 		CreationHeight:   creationHeight,
 	}

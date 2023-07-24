@@ -218,7 +218,7 @@ func (e RedelegationEntry) OnHold() bool {
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, sharesDst math.LegacyDec, id uint64,
-	valAc address.Codec, delAc address.Codec,
+	valAc, delAc address.Codec,
 ) Redelegation {
 	valSrcAddr, err := valAc.BytesToString(validatorSrcAddr)
 	if err != nil {

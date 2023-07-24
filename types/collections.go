@@ -147,7 +147,7 @@ type lengthPrefixedBytesKey struct {
 	collcodec.KeyCodec[[]byte]
 }
 
-func (g lengthPrefixedBytesKey) Encode(buffer []byte, key []byte) (int, error) {
+func (g lengthPrefixedBytesKey) Encode(buffer, key []byte) (int, error) {
 	return g.EncodeNonTerminal(buffer, key)
 }
 

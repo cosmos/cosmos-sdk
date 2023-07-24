@@ -20,9 +20,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/tools/hubl/internal/config"
 )
-
-const DefaultConfigDirName = ".hubl"
 
 type ChainInfo struct {
 	client *grpc.ClientConn
@@ -30,13 +29,13 @@ type ChainInfo struct {
 	Context   context.Context
 	ConfigDir string
 	Chain     string
-	Config    *ChainConfig
+	Config    *config.ChainConfig
 
 	ProtoFiles    *protoregistry.Files
 	ModuleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func NewChainInfo(configDir, chain string, config *ChainConfig) *ChainInfo {
+func NewChainInfo(configDir, chain string, config *config.ChainConfig) *ChainInfo {
 	return &ChainInfo{
 		Context:   context.Background(),
 		Config:    config,

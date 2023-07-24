@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"cosmossdk.io/tools/hubl/internal/flags"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +35,7 @@ func VersionCmd() *cobra.Command {
 		},
 	}
 
-	versionCmd.Flags().BoolVar(&long, flagLong, false, "display long version information")
+	versionCmd.Flags().BoolVar(&long, flags.FlagLong, false, "display long version information")
 
 	return versionCmd
 }

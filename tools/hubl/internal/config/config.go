@@ -1,4 +1,4 @@
-package internal
+package config
 
 import (
 	"bytes"
@@ -8,6 +8,10 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"cosmossdk.io/errors"
+)
+
+const (
+	DefaultConfigDirName = ".hubl"
 )
 
 type Config struct {
@@ -24,7 +28,7 @@ type GRPCEndpoint struct {
 	Insecure bool   `toml:"insecure"`
 }
 
-func LoadConfig(configDir string) (*Config, error) {
+func Load(configDir string) (*Config, error) {
 	configPath := configFilename(configDir)
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
@@ -44,7 +48,7 @@ func LoadConfig(configDir string) (*Config, error) {
 	return config, err
 }
 
-func SaveConfig(configDir string, config *Config) error {
+func Save(configDir string, config *Config) error {
 	buf := &bytes.Buffer{}
 	enc := toml.NewEncoder(buf)
 	if err := enc.Encode(config); err != nil {

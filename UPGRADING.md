@@ -295,6 +295,14 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
+### Tooling
+
+#### Rosetta
+
+Extracted Rosetta tool from the cosmos-sdk and simapp into it's own [rosetta repo](). Any user who is interested on using
+the tool can connect it standalone to any node without the need to add it as part of the node binary. The rosetta tool
+also allows multi chain connections.  
+
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Migration to CometBFT (Part 1)

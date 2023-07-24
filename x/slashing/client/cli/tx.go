@@ -25,7 +25,7 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewUnjailTxCmd returns a CLI command handler for creating a MsgUnjail transaction.
-func NewUnjailTxCmd(ac address.Codec) *cobra.Command {
+func NewUnjailTxCmd(valAc address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -40,7 +40,7 @@ $ <appd> tx slashing unjail --from mykey
 				return err
 			}
 
-			valAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			valAddr, err := valAc.BytesToString(clientCtx.GetFromAddress())
 
 			msg := types.NewMsgUnjail(valAddr)
 

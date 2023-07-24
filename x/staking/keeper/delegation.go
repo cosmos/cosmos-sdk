@@ -304,7 +304,7 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 	bonded := math.LegacyZeroDec()
 
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
-		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
@@ -385,7 +385,7 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
-	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	addr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -653,11 +653,11 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalRED(k.cdc, red)
-	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}
@@ -744,11 +744,11 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}

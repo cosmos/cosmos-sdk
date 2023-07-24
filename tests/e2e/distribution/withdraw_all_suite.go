@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -109,7 +110,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		}
-		cmd = cli.NewWithdrawAllRewardsCmd()
+		cmd = cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 		if err != nil {
 			return err
@@ -132,7 +133,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
+	cmd = cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
 	// expect 1 transaction in the generated file when --max-msgs in a tx set 2, since there are only delegations.

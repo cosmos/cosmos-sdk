@@ -173,7 +173,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	// don't need to run CometBFT updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
-			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
 			if err != nil {
 				panic(err)
 			}

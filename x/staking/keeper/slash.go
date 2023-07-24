@@ -309,7 +309,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			continue
 		}
 
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
 		if err != nil {
 			panic(err)
 		}

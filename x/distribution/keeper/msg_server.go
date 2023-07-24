@@ -45,7 +45,7 @@ func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWith
 }
 
 func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWithdrawDelegatorReward) (*types.MsgWithdrawDelegatorRewardResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -76,7 +76,7 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 }
 
 func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}

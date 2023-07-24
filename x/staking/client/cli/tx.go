@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -33,7 +34,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd() *cobra.Command {
+func NewTxCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -45,10 +46,10 @@ func NewTxCmd() *cobra.Command {
 	stakingTxCmd.AddCommand(
 		NewCreateValidatorCmd(),
 		NewEditValidatorCmd(),
-		NewDelegateCmd(),
-		NewRedelegateCmd(),
-		NewUnbondCmd(),
-		NewCancelUnbondingDelegation(),
+		NewDelegateCmd(valAddrCodec),
+		NewRedelegateCmd(valAddrCodec),
+		NewUnbondCmd(valAddrCodec),
+		NewCancelUnbondingDelegation(valAddrCodec),
 	)
 
 	return stakingTxCmd
@@ -174,9 +175,7 @@ func NewEditValidatorCmd() *cobra.Command {
 }
 
 // NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
-func NewDelegateCmd() *cobra.Command {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-
+func NewDelegateCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -185,9 +184,9 @@ func NewDelegateCmd() *cobra.Command {
 			fmt.Sprintf(`Delegate an amount of liquid coins to a validator from your wallet.
 
 Example:
-$ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+$ %s tx staking delegate cosmoss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 `,
-				version.AppName, bech32PrefixValAddr,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -201,7 +200,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 			}
 
 			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			valAddr, err := valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -218,9 +217,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 }
 
 // NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
-func NewRedelegateCmd() *cobra.Command {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-
+func NewRedelegateCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -229,9 +226,9 @@ func NewRedelegateCmd() *cobra.Command {
 			fmt.Sprintf(`Redelegate an amount of illiquid staking tokens from one validator to another.
 
 Example:
-$ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
+$ %s tx staking redelegate cosmoss1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmoss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 `,
-				version.AppName, bech32PrefixValAddr, bech32PrefixValAddr,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -240,12 +237,12 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 				return err
 			}
 			delAddr := clientCtx.GetFromAddress()
-			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
+			valSrcAddr, err := valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
 
-			valDstAddr, err := sdk.ValAddressFromBech32(args[1])
+			valDstAddr, err := valAddrCodec.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -267,7 +264,7 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 }
 
 // NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
-func NewUnbondCmd() *cobra.Command {
+func NewUnbondCmd(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -290,7 +287,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 			}
 
 			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			valAddr, err := valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -312,7 +309,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 }
 
 // NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
-func NewCancelUnbondingDelegation() *cobra.Command {
+func NewCancelUnbondingDelegation(valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -336,7 +333,7 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 				return err
 			}
 			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			valAddr, err := valAddrCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}

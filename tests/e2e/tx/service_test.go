@@ -600,7 +600,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		val1.Address,
 		addr,
 		sdk.NewCoins(coins),
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),

@@ -172,7 +172,7 @@ var (
 )
 
 func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {
-	cmd := stakingcli.NewDelegateCmd()
+	cmd := stakingcli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 	clientCtx := val.ClientCtx
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 }

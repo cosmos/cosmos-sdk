@@ -33,7 +33,7 @@ var _ types.MsgServer = msgServer{}
 
 // CreateValidator defines a method for creating a new validator
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -157,7 +157,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 // EditValidator defines a method for editing an existing validator
 func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -303,12 +303,12 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 
 // BeginRedelegate defines a method for performing a redelegation of coins from a source validator to a destination validator of given delegator
 func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
-	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorSrcAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid source validator address: %s", err)
 	}
 
-	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
+	valDstAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorDstAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid destination validator address: %s", err)
 	}
@@ -379,7 +379,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 
 // Undelegate defines a method for performing an undelegation from a delegate and a validator
 func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
-	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	addr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -451,7 +451,7 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation
 // and delegate back to the validator.
 func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}

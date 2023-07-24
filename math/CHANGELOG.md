@@ -36,14 +36,6 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
-## Improvements
-
-* [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Add `.ToLegacyDec()` method on `math.Int` type for converting to `math.LegacyDec`.
-* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved `math/Int.Size` by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
-
->>>>>>> 5442197d6 (chore: cherry-pick some inj changes (#17109))
 ### Bug Fixes
 
 * [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.

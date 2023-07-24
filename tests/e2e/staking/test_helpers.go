@@ -48,5 +48,5 @@ func MsgUnbondExec(clientCtx client.Context, from, valAddress,
 
 	args = append(args, commonArgs...)
 	args = append(args, extraArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(addresscodec.NewBech32Codec("cosmos")), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(addresscodec.NewBech32Codec("cosmosvaloper")), args)
 }

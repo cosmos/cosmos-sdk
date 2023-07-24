@@ -32,7 +32,7 @@ func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stri
 	args = append(args, extraArgs...)
 
 	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewRedelegateCmd(addresscodec.NewBech32Codec("cosmos")), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewRedelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper")), args)
 }
 
 // MsgUnbondExec creates a unbond message.

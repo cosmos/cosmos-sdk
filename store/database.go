@@ -1,5 +1,9 @@
 package store
 
+import (
+	"io"
+)
+
 // Reader wraps the Has and Get method of a backing data store.
 type Reader interface {
 	// Has retrieves if a key is present in the key-value data store.
@@ -25,4 +29,17 @@ type Writer interface {
 	//
 	// Note: <key> is safe to modify and read after calling Delete.
 	Delete(key []byte) error
+}
+
+// ReaderWriter combines the Reader and Writer interfaces.
+type ReaderWriter interface {
+	Reader
+	Writer
+}
+
+// Database contains all the methods required to allow handling different
+// key-value data stores backing the database.
+type Database interface {
+	ReaderWriter
+	io.Closer
 }

@@ -5,51 +5,10 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-// IterateHistoricalInfo provides an iterator over all stored HistoricalInfo
-// objects. For each HistoricalInfo object, cb will be called. If the cb returns
-// true, the iterator will break and close.
-func (k Keeper) IterateHistoricalInfo(ctx context.Context, cb func(types.HistoricalInfo) bool) error {
-	store := k.storeService.OpenKVStore(ctx)
-	iterator, err := store.Iterator(types.HistoricalInfoKey, storetypes.PrefixEndBytes(types.HistoricalInfoKey))
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		histInfo, err := types.UnmarshalHistoricalInfo(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
-		if cb(histInfo) {
-			break
-		}
-	}
-
-	return nil
-}
-
-// GetAllHistoricalInfo returns all stored HistoricalInfo objects.
-func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInfo, error) {
-	var infos []types.HistoricalInfo
-	err := k.HistoricalInfo.Walk(ctx, nil, func(key uint64, info types.HistoricalInfo) (stop bool, err error) {
-		infos = append(infos, info)
-		return false, nil
-	})
-
-	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
-		return nil, err
-	}
-
-	return infos, nil
-}
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
 // heights that are below pruning height

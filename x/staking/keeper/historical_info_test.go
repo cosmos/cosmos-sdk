@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -151,7 +152,12 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 		require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(int64(9+i)), hi))
 	}
 
-	infos, err := keeper.GetAllHistoricalInfo(ctx)
+	var infos []types.HistoricalInfo
+	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.HistoricalInfo) (stop bool, err error) {
+		infos = append(infos, info)
+		return false, nil
+	})
+
 	require.NoError(err)
 	require.Equal(expHistInfos, infos)
 }

@@ -1,0 +1,66 @@
+ @riley-stride riley-stride editadoel mes pasado
+Descripción
+Agregue el LSM de Iqlusion al SDK en v0.45.16-ics-lsm para usarlo en la próxima versión de Cosmoshub v11.
+
+Consulte esta publicación del foro de Iqlusion para obtener una descripción completa del plan de implementación de LSM en Cosmoshub.
+
+TLDR; En esta rama:
+
+Los cambios de ICS son administrados por el equipo de ICS/Hub
+Los cambios de LSM son gestionados por el equipo de Iqlusion
+Los cambios de SDK (solo se esperan correcciones de errores) son administrados por el equipo de SDK
+Crédito a@sampocspor mucho trabajo duro combinando ICS + LSM 🙌
+
+Descargos de responsabilidad para los revisores:
+Hay una última prueba de unidad fallida obstinada: TestGRPCServer_Reflection( LOC ). La prueba unitaria se queja de que TokenizeShareRecordno se puede acceder a la estructura, pero está definida aquí .
+Registro de errores
+
+--- FAIL: TestIntegrationTestSuite (105.88s)
+    server_test.go:45: setting up integration test suite
+    network.go:172: acquiring test network lock
+    network.go:177: created temporary directory: /var/folders/m5/12pnd05500n56z31y9rtmmsr0000gn/T/TestIntegrationTestSuite2846596830/001/chain-D7Uv8k3239444353
+    network.go:186: preparing test network...
+    network.go:379: starting test network...
+    network.go:384: started test network
+    --- FAIL: TestIntegrationTestSuite/TestGRPCServer_Reflection (89.70s)
+        server_test.go:126: 
+            	Error Trace:	/Users/rileyedmunds/iqlusion/cosmos-sdk/server/grpc/server_test.go:126
+            	Error:      	Received unexpected error:
+            	            	file "cosmos/staking/v1beta1/query.proto" included an unresolvable reference to ".cosmos.staking.v1beta1.TokenizeShareRecord"
+            	Test:       	TestIntegrationTestSuite/TestGRPCServer_Reflection
+La pelusa falla en esta rama. Sin embargo, el pelusa también falla en la rama v0.45.16-ics. Creemos que hemos resuelto todos los problemas de pelusa relacionados con las diferencias que se agregan en esta solicitud de extracción.
+La pelusa falla en esta rama. Sin embargo, el pelusa también falla en la rama v0.45.16-ics. Creemos que hemos resuelto todos los problemas de pelusa relacionados con las diferencias que se agregan en esta solicitud de extracción.
+
+MsgCancelUnbondingDelegationfue parte del diseño original de LSM ya que LSM se escribió originalmente en SDK46. Lo transferimos aquí como una función de seguridad, pero estamos abiertos a eliminarlo si el equipo SDK prefiere mantener 45 funciones completamente congeladas.
+
+Lista de verificación del autor
+Todos los artículos son obligatorios. Agregue una nota al elemento si el elemento no es aplicable y
+agregue enlaces a cualquier problema de seguimiento relevante.
+
+Tengo...
+
+incluido el prefijo de tipo correcto en el título de PR
+agregado !al prefijo de tipo si la API o el cliente cambian
+apuntó a la rama correcta (ver Orientación de relaciones públicas )
+proporcionó un enlace al problema o especificación relevante
+siguió las pautas para construir módulos
+incluyeron las pruebas unitarias y de integración necesarias
+agregó una entrada de registro de cambios aCHANGELOG.md
+comentarios incluidos para documentar el código Go
+actualizó la documentación o especificación relevante
+revisó "Archivos cambiados" y dejó comentarios si es necesario
+confirmado que todas las comprobaciones de CI han pasado
+Lista de verificación de revisores
+Todos los artículos son obligatorios. Agregue una nota si el artículo no es aplicable y agregue
+su identificador junto a los artículos revisados ​​si solo revisó artículos seleccionados.
+
+Tengo...
+
+confirmó el prefijo de tipo correcto en el título PR
+confirmado !en el prefijo de tipo si la API o el cliente rompen el cambio
+confirmado que se han abordado todos los elementos de la lista de verificación del autor
+revisó la lógica de la máquina de estado
+revisó el diseño y la denominación de la API
+la documentación revisada es precisa
+pruebas revisadas y cobertura de pruebas
+Probado manualmente (si corresponde

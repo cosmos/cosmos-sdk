@@ -99,11 +99,7 @@ By default, `autocli` generates a command for each method in your gRPC service. 
 This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go`.
 
 ```go reference
-<<<<<<< HEAD
-https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/gov/autocli.go#L9-L27
-=======
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/gov/autocli.go#L94-L97
->>>>>>> fa4d87ef7 (feat(client/v2): combine autocli and custom cmd within a module (#17088))
 ```
 
 ### Positional Arguments
@@ -115,11 +111,7 @@ To add positional arguments to a command, use the `autocliv1.PositionalArgDescri
 Here's an example of how to define a positional argument for the `Account` method of the `auth` service:
 
 ```go reference
-<<<<<<< HEAD
-https://github.com/cosmos/cosmos-sdk/blob/bcdf81cbaf8d70c4e4fa763f51292d54aed689fd/x/auth/autocli.go#L8-L32
-=======
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/auth/autocli.go#L25-L30
->>>>>>> fa4d87ef7 (feat(client/v2): combine autocli and custom cmd within a module (#17088))
 ```
 
 Then the command can be used as follows, instead of having to specify the `--address` flag:

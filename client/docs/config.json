@@ -31,6 +31,9 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/base/node/v1beta1/query.swagger.json"
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -150,6 +153,27 @@
           "TallyResult": "GroupTallyResult"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/circuit/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Accounts": "CircuitAccounts",
+          "Account": "CircuitAccount",
+          "Params": "CircuitParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/consensus/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ConsensusParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/app/v1alpha1/query.swagger.json"
     }
   ]
 }

@@ -566,7 +566,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := stakingtypes.NewDelegation(Addr, srcValAddr, shares)
+	del := stakingtypes.NewDelegation(Addr.String(), srcValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.GetDelegation(ctx, Addr, srcValAddr)
 	require.NoError(err)
@@ -720,7 +720,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
+	del := stakingtypes.NewDelegation(Addr.String(), ValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.GetDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)
@@ -845,7 +845,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := stakingtypes.NewDelegation(Addr, ValAddr, shares)
+	del := stakingtypes.NewDelegation(Addr.String(), ValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	resDel, err := keeper.GetDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)

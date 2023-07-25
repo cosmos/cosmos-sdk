@@ -25,9 +25,10 @@ type Keeper struct {
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority string
-	Schema    collections.Schema
-	Params    collections.Item[types.Params]
+	authority            string
+	Schema               collections.Schema
+	Params               collections.Item[types.Params]
+	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
 }
 
 // NewKeeper creates a slashing keeper
@@ -40,6 +41,13 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 		sk:           sk,
 		authority:    authority,
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		ValidatorSigningInfo: collections.NewMap(
+			sb,
+			types.ValidatorSigningInfoKeyPrefix,
+			"validator_signing_info",
+			sdk.ConsAddressKey,
+			codec.CollValue[types.ValidatorSigningInfo](cdc),
+		),
 	}
 
 	schema, err := sb.Build()

@@ -146,18 +146,19 @@ func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
+// TODO Change cryptotypes.PubKey
+func (pubKey *PubKey) Equals(other PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}
 
 	pubKeyBytes, err := pubKey.Bytes()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("[ERROR] There is an error: %e.", err)
 		return false
 	}
-
-	return subtle.ConstantTimeCompare(pubKeyBytes, other.Bytes()) == 1
+	otherBytes, _ := other.Bytes()
+	return subtle.ConstantTimeCompare(pubKeyBytes, otherBytes) == 1
 }
 
 // MarshalAmino overrides Amino binary marshaling.

@@ -1,0 +1,38 @@
+name: Copy Modified MD Files
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  copy_md_files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Check for modified MD files
+        id: check_changes
+        run: |
+          changed_files=$(git diff --name-only HEAD~1 -- '*.md')
+          echo "::set-output name=md_files::$changed_files"
+
+      - name: Clone destination repository
+        uses: actions/checkout@v2
+        with:
+          repository: cosmos/cosmos-sdk-docs
+          ref: ${{ github.event.ref }}
+
+      - name: Copy modified MD files to destination repository
+        run: |
+          md_files=${{ steps.check_changes.outputs.md_files }}
+          if [ -n "$md_files" ]; then
+            for file in $md_files; do
+              cp "$file" "./cosmos-sdk-docs/versioned_docs/$(basename $(dirname $file))/$file"
+            done
+            cd ./cosmos-sdk-docs
+            git add .
+            git commit -m "Copy modified MD files from source-repo"
+            git push origin ${{ github.event.ref }}
+          fi

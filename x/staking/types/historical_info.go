@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -25,22 +24,6 @@ func NewHistoricalInfo(header cmtproto.Header, valSet Validators, powerReduction
 		Header: header,
 		Valset: valSet,
 	}
-}
-
-// MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
-func MustUnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) HistoricalInfo {
-	hi, err := UnmarshalHistoricalInfo(cdc, value)
-	if err != nil {
-		panic(err)
-	}
-
-	return hi
-}
-
-// UnmarshalHistoricalInfo will unmarshal historical info and return any error
-func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi HistoricalInfo, err error) {
-	err = cdc.Unmarshal(value, &hi)
-	return hi, err
 }
 
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted

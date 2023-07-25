@@ -39,7 +39,7 @@ func (k Keeper) IterateHistoricalInfo(ctx context.Context, cb func(types.Histori
 // GetAllHistoricalInfo returns all stored HistoricalInfo objects.
 func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInfo, error) {
 	var infos []types.HistoricalInfo
-	err := k.HistoricalInfo.Walk(ctx, nil, func(key []byte, info types.HistoricalInfo) (stop bool, err error) {
+	err := k.HistoricalInfo.Walk(ctx, nil, func(key uint64, info types.HistoricalInfo) (stop bool, err error) {
 		infos = append(infos, info)
 		return false, nil
 	})
@@ -69,14 +69,14 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
 	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
-		_, err := k.HistoricalInfo.Get(ctx, types.GetHistoricalInfoKeyWithoutPrefix(i))
+		_, err := k.HistoricalInfo.Get(ctx, uint64(i))
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
 				break
 			}
 			return err
 		}
-		if err = k.HistoricalInfo.Remove(ctx, types.GetHistoricalInfoKeyWithoutPrefix(i)); err != nil {
+		if err = k.HistoricalInfo.Remove(ctx, uint64(i)); err != nil {
 			return err
 		}
 	}
@@ -93,7 +93,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	}
 
 	historicalEntry := types.NewHistoricalInfo(sdkCtx.BlockHeader(), lastVals, k.PowerReduction(ctx))
-	err = k.HistoricalInfo.Set(ctx, types.GetHistoricalInfoKeyWithoutPrefix(sdkCtx.BlockHeight()), historicalEntry)
+	err = k.HistoricalInfo.Set(ctx, uint64(sdkCtx.BlockHeight()), historicalEntry)
 	// Set latest HistoricalInfo at current height
 	return err
 }

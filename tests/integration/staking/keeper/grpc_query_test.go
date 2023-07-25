@@ -29,7 +29,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
 	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, types.GetHistoricalInfoKeyWithoutPrefix(5), hi))
+	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
 }
@@ -731,7 +731,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, types.GetHistoricalInfoKeyWithoutPrefix(5))
+	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, uint64(5))
 	assert.Assert(t, found)
 
 	var req *types.QueryHistoricalInfoRequest

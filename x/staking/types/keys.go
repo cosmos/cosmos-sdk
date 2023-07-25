@@ -418,10 +418,3 @@ func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
 func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
 	return append(GetREDsToValDstIndexKey(valDstAddr), address.MustLengthPrefix(delAddr)...)
 }
-
-// GetHistoricalInfoKeyWithoutPrefix returns a key prefix for indexing HistoricalInfo objects.
-func GetHistoricalInfoKeyWithoutPrefix(height int64) []byte {
-	heightBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(heightBytes, uint64(height))
-	return heightBytes
-}

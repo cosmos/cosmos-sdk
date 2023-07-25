@@ -236,7 +236,16 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	}
 
 	for i, slash := range slashes {
-		assert.NilError(t, f.distrKeeper.SetValidatorSlashEvent(f.sdkCtx, f.valAddr, uint64(i+2), 0, slash))
+		err := f.distrKeeper.ValidatorSlashEvents.Set(
+			f.sdkCtx,
+			collections.Join3[sdk.ValAddress, uint64, uint64](
+				f.valAddr,
+				uint64(i+2),
+				0,
+			),
+			slash,
+		)
+		assert.NilError(t, err)
 	}
 
 	var (

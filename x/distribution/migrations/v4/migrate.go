@@ -18,6 +18,9 @@ import (
 var (
 	OldProposerKey = []byte{0x01}
 	NewProposerKey = collections.NewPrefix(1)
+
+	OldValidatorSlashEventPrefix = []byte{0x08}
+	NewValidatorSlashEventPrefix = collections.NewPrefix(8)
 )
 
 func MigrateStore(ctx sdk.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {

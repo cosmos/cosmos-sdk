@@ -1,4 +1,4 @@
-package v4
+package v4_test
 
 import (
 	"testing"
@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	v4 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v4"
 )
 
 func TestMigration(t *testing.T) {
@@ -28,18 +29,18 @@ func TestMigration(t *testing.T) {
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	consAddr1 := types.ConsAddress(addr1)
 
-	err := SetPreviousProposerConsAddr(ctx, storeService, cdc, consAddr1)
+	err := v4.SetPreviousProposerConsAddr(ctx, storeService, cdc, consAddr1)
 	require.NoError(t, err)
 
-	gotAddr, err := GetPreviousProposerConsAddr(ctx, storeService, cdc)
+	gotAddr, err := v4.GetPreviousProposerConsAddr(ctx, storeService, cdc)
 	require.NoError(t, err)
 	require.Equal(t, consAddr1, gotAddr)
 
-	err = MigrateStore(ctx, storeService, cdc)
+	err = v4.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	sb := collections.NewSchemaBuilder(storeService)
-	prevProposer := collections.NewItem(sb, NewProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey))
+	prevProposer := collections.NewItem(sb, v4.NewProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey))
 	_, err = sb.Build()
 	require.NoError(t, err)
 

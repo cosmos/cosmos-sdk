@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -8,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -211,4 +215,81 @@ func TestFundCommunityPool(t *testing.T) {
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
+}
+
+func TestValidatorSlashEvent(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	addrs := simtestutil.CreateIncrementalAccounts(200)
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	err := CollsMigration(ctx, key, 200, func(i int64) {
+		// distrKeeper.OldSetValidatorSlashEvent(
+		// 	ctx,
+		// 	sdk.ValAddress(addrs[i]),
+		// 	uint64(i*100),
+		// 	uint64(i),
+		// 	types.ValidatorSlashEvent{
+		// 		ValidatorPeriod: uint64(i),
+		// 		Fraction:        math.LegacyNewDec(123),
+		// 	},
+		// )
+		distrKeeper.ValidatorSlashEvents.Set(
+			ctx,
+			collections.Join3(sdk.ValAddress(addrs[i]), uint64(i*100), uint64(i)),
+			types.ValidatorSlashEvent{
+				ValidatorPeriod: uint64(i),
+				Fraction:        math.LegacyNewDec(123),
+			},
+		)
+	},
+		"ab1b97a106410d9848a690286293c1ec7dfb63354dff6996152a49935d226250")
+
+	require.NoError(t, err)
+}
+
+func CollsMigration(
+	ctx sdk.Context,
+	storeKey *storetypes.KVStoreKey,
+	iterations int,
+	writeElem func(int64),
+	targetHash string,
+) error {
+	for i := int64(0); i < int64(iterations); i++ {
+		writeElem(i)
+	}
+
+	allkvs := []byte{}
+	it := ctx.KVStore(storeKey).Iterator(nil, nil)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		kv := append(it.Key(), it.Value()...)
+		allkvs = append(allkvs, kv...)
+	}
+
+	hash := sha256.Sum256(allkvs)
+	if hex.EncodeToString(hash[:]) != targetHash {
+		return fmt.Errorf("hashes don't match: %s != %s\n", hex.EncodeToString(hash[:]), targetHash)
+	}
+
+	return nil
 }

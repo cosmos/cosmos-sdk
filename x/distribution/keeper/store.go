@@ -3,11 +3,10 @@ package keeper
 import (
 	"context"
 	"errors"
+	"math"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -23,39 +22,43 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx context.Context, delAddr sdk.AccAdd
 
 // historical reference count (used for testcases)
 func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count uint64) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorHistoricalRewardsPrefix)
+	iter, err := k.ValidatorHistoricalRewards.Iterate(
+		ctx, nil,
+	)
+
+	if errors.Is(err, collections.ErrInvalidIterator) {
+		return
+	}
+
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var rewards types.ValidatorHistoricalRewards
-		k.cdc.MustUnmarshal(iter.Value(), &rewards)
+		rewards, err := iter.Value()
+		if err != nil {
+			panic(err)
+		}
 		count += uint64(rewards.ReferenceCount)
 	}
 	return
 }
 
 // get slash event for height
-func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := store.Get(types.GetValidatorSlashEventKey(val, height, period))
-	if err != nil {
-		return types.ValidatorSlashEvent{}, false, err
-	}
+// func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
+// 	event, err = k.ValidatorSlashEvents.Get(ctx,
+// 		collections.Join3[sdk.ValAddress, uint64, uint64](
+// 			val,
+// 			height,
+// 			period,
+// 		))
 
-	if b == nil {
-		return types.ValidatorSlashEvent{}, false, nil
-	}
+// 	if errors.Is(err, collections.ErrNotFound) {
+// 		return types.ValidatorSlashEvent{}, false, nil
+// 	}
 
-	err = k.cdc.Unmarshal(b, &event)
-	if err != nil {
-		return types.ValidatorSlashEvent{}, false, err
-	}
-
-	return event, true, nil
-}
+// 	return event, true, nil
+// }
 
 // set slash event for height
-func (k Keeper) SetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) error {
+func (k Keeper) OldSetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) error {
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := k.cdc.Marshal(&event)
 	if err != nil {
@@ -69,16 +72,31 @@ func (k Keeper) SetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, 
 func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
 ) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := store.Iterator(
-		types.GetValidatorSlashEventKeyPrefix(val, startingHeight),
-		types.GetValidatorSlashEventKeyPrefix(val, endingHeight+1),
+	rng := new(collections.Range[collections.Triple[sdk.ValAddress, uint64, uint64]]).
+		StartInclusive(collections.Join3(val, startingHeight, uint64(0))).
+		EndExclusive(collections.Join3(val, endingHeight+1, uint64(math.MaxUint64)))
+
+	iter, err := k.ValidatorSlashEvents.Iterate(
+		ctx,
+		rng,
 	)
+
+	if errors.Is(err, collections.ErrInvalidIterator) {
+		return
+	}
+
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var event types.ValidatorSlashEvent
-		k.cdc.MustUnmarshal(iter.Value(), &event)
-		_, height := types.GetValidatorSlashEventAddressHeight(iter.Key())
+		event, err := iter.Value()
+		if err != nil {
+			panic(err)
+		}
+		k, err := iter.Key()
+		if err != nil {
+			panic(err)
+		}
+
+		height := k.K2()
 		if handler(height, event) {
 			break
 		}
@@ -87,14 +105,24 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.
 
 // iterate over all slash events
 func (k Keeper) IterateValidatorSlashEvents(ctx context.Context, handler func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool)) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorSlashEventPrefix)
+	iter, err := k.ValidatorSlashEvents.Iterate(ctx, nil)
+	if errors.Is(err, collections.ErrInvalidIterator) {
+		return
+	}
+
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var event types.ValidatorSlashEvent
-		k.cdc.MustUnmarshal(iter.Value(), &event)
-		val, height := types.GetValidatorSlashEventAddressHeight(iter.Key())
-		if handler(val, height, event) {
+		event, err := iter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		k, err := iter.Key()
+		if err != nil {
+			panic(err)
+		}
+
+		if handler(k.K1(), k.K2(), event) {
 			break
 		}
 	}
@@ -102,20 +130,16 @@ func (k Keeper) IterateValidatorSlashEvents(ctx context.Context, handler func(va
 
 // delete slash events for a particular validator
 func (k Keeper) DeleteValidatorSlashEvents(ctx context.Context, val sdk.ValAddress) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.GetValidatorSlashEventPrefix(val))
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+	err := k.ValidatorSlashEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](val))
+	if err != nil {
+		panic(err)
 	}
 }
 
 // delete all slash events
 func (k Keeper) DeleteAllValidatorSlashEvents(ctx context.Context) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorSlashEventPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+	err := k.ValidatorSlashEvents.Clear(ctx, nil)
+	if err != nil {
+		panic(err)
 	}
 }

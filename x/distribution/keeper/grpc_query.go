@@ -8,9 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -178,18 +176,16 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
-
-	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
-		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
-			return nil, nil
+	events, pageRes, err := query.CollectionFilteredPaginate(ctx, k.ValidatorSlashEvents, req.Pagination, func(key collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ValidatorSlashEvent) (include bool, err error) {
+		if ev.ValidatorPeriod < req.StartingHeight || ev.ValidatorPeriod > req.EndingHeight {
+			return false, nil
 		}
-
-		return result, nil
-	}, func() *types.ValidatorSlashEvent {
-		return &types.ValidatorSlashEvent{}
-	})
+		return true, nil
+	}, func(_ collections.Triple[sdk.ValAddress, uint64, uint64], value types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
+		return &value, nil
+	},
+		query.WithCollectionPaginationTriplePrefix[sdk.ValAddress, uint64, uint64](valAddr),
+	)
 	if err != nil {
 		return nil, err
 	}

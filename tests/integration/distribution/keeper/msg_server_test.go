@@ -276,7 +276,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	height := f.app.LastBlockHeight()
 
 	_, err = f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-	assert.Error(t, err, "previous proposer not set")
+	assert.ErrorIs(t, err, collections.ErrNotFound)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -315,7 +315,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
 			assert.NilError(t, err)
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)

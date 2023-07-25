@@ -43,7 +43,7 @@ const (
 //
 // - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
-// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height><period>: ValidatorSlashEvent
 //
 // - 0x09: Params
 var (
@@ -55,7 +55,7 @@ var (
 	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = collections.NewPrefix(6) // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
-	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
+	ValidatorSlashEventPrefix            = collections.NewPrefix(8) // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
 
@@ -89,6 +89,23 @@ func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
 		append(address.MustLengthPrefix(v.Bytes()), heightBz...)...,
 	)
 }
+
+// func GetValidatorSlashHeightPeriodKey(height, period uint64) []byte {
+// 	heightBz := make([]byte, 8)
+// 	binary.BigEndian.PutUint64(heightBz, height)
+
+// 	periodBz := make([]byte, 8)
+// 	binary.BigEndian.PutUint64(periodBz, period)
+
+// 	return append(heightBz, periodBz...)
+// }
+
+// func GetHeightAndPeriodFromKey(key []byte) (height, period uint64) {
+// 	kv.AssertKeyAtLeastLength(key, 16)
+// 	height = binary.BigEndian.Uint64(key[:8])
+// 	period = binary.BigEndian.Uint64(key[8:16])
+// 	return
+// }
 
 // GetValidatorSlashEventKey creates the key for a validator's slash fraction.
 func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {

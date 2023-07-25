@@ -43,7 +43,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	validator, err := types.NewValidator(valAddr, PKs[0], types.NewDescription("Validator", "", "", "", ""))
 	validator.Status = types.Bonded
 	assert.NilError(t, err)
-	assert.NilError(t, f.stakingKeeper.SetValidator(ctx, validator))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(ctx, validator.GetOperator(), validator))
 
 	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 	assert.NilError(t, err)

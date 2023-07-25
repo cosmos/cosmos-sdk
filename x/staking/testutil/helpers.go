@@ -110,7 +110,7 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
 func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {
-	v, err := sh.k.GetValidator(sh.Ctx, addr)
+	v, err := sh.k.Validators.Get(sh.Ctx, addr)
 	require.NoError(sh.t, err)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")
 	if status >= 0 {

@@ -52,7 +52,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	}
 
 	// check to see if the pubkey or sender has been registered before
-	if _, err := k.GetValidator(ctx, valAddr); err == nil {
+	if _, err := k.Validators.Get(ctx, valAddr); err == nil {
 		return nil, types.ErrValidatorOwnerExists
 	}
 
@@ -116,7 +116,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
-	err = k.SetValidator(ctx, validator)
+	err = k.Validators.Set(ctx, validator.GetOperator(), validator)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 	}
 
 	// validator must already be registered
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		validator.MinSelfDelegation = *msg.MinSelfDelegation
 	}
 
-	err = k.SetValidator(ctx, validator)
+	err = k.Validators.Set(ctx, validator.GetOperator(), validator)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		)
 	}
 
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -495,7 +495,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		)
 	}
 
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}

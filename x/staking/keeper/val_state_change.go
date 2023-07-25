@@ -307,7 +307,7 @@ func (k Keeper) jailValidator(ctx context.Context, validator types.Validator) er
 	}
 
 	validator.Jailed = true
-	if err := k.SetValidator(ctx, validator); err != nil {
+	if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 		return err
 	}
 
@@ -321,7 +321,7 @@ func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) 
 	}
 
 	validator.Jailed = false
-	if err := k.SetValidator(ctx, validator); err != nil {
+	if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 		return err
 	}
 
@@ -338,7 +338,7 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 	validator = validator.UpdateStatus(types.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
-	if err := k.SetValidator(ctx, validator); err != nil {
+	if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 		return validator, err
 	}
 
@@ -396,7 +396,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 	validator.UnbondingIds = append(validator.UnbondingIds, id)
 
 	// save the now unbonded validator record and power index
-	if err = k.SetValidator(ctx, validator); err != nil {
+	if err = k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 		return validator, err
 	}
 
@@ -433,7 +433,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) completeUnbondingValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	validator = validator.UpdateStatus(types.Unbonded)
-	if err := k.SetValidator(ctx, validator); err != nil {
+	if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 		return validator, err
 	}
 

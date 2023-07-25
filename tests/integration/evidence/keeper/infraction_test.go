@@ -244,7 +244,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	// require we be able to unbond now
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	del, _ := f.stakingKeeper.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
-	validator, _ := f.stakingKeeper.GetValidator(ctx, operatorAddr)
+	validator, _ := f.stakingKeeper.Validators.Get(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom

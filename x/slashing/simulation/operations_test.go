@@ -219,7 +219,7 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	err = stakingKeeper.SetValidator(ctx, validator)
+	err = stakingKeeper.Validators.Set(ctx, validator.GetOperator(), validator)
 	if err != nil {
 		return stakingtypes.Validator{}, err
 	}

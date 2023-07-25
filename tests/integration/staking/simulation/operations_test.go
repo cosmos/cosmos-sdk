@@ -378,7 +378,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(ctx, 100)
 
-	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, validator))
+	s.Require().NoError(s.stakingKeeper.Validators.Set(ctx, validator.GetOperator(), validator))
 
 	return validator
 }

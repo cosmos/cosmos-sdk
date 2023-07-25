@@ -503,7 +503,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
-	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
+	val, found := f.stakingKeeper.Validators.Get(f.sdkCtx, f.valAddr)
 	assert.Assert(t, found)
 
 	// setup delegation

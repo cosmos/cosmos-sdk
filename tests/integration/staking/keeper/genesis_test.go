@@ -42,7 +42,7 @@ func TestInitGenesis(t *testing.T) {
 		DelegatorShares: math.LegacyNewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
 	}
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(f.sdkCtx, bondedVal.GetOperator(), bondedVal))
 
 	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
 	assert.NilError(t, err)
@@ -117,11 +117,11 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	// now make sure the validators are bonded and intra-tx counters are correct
-	resVal, found := (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[1])))
+	resVal, found := (f.stakingKeeper.Validators.Get(f.sdkCtx, sdk.ValAddress(addrs[1])))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
-	resVal, found = (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[2])))
+	resVal, found = (f.stakingKeeper.Validators.Get(f.sdkCtx, sdk.ValAddress(addrs[2])))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 

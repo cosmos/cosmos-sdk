@@ -340,7 +340,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: "not found",
 		},
 		{
 			name: "change commmission rate in <24hrs",
@@ -477,7 +477,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: "not found",
 		},
 		{
 			name: "zero amount",
@@ -630,7 +630,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: "not found",
 		},
 		{
 			name: "self redelegation",
@@ -769,7 +769,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: "not found",
 		},
 		{
 			name: "amount greater than delegated shares amount",
@@ -938,7 +938,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 				CreationHeight:   10,
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: "not found",
 		},
 		{
 			name: "amount is greater than balance",

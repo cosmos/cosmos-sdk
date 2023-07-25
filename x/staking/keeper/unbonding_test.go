@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 	for i, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.exists.setValidator {
-				require.NoError(s.stakingKeeper.SetValidator(s.ctx, tc.validator))
+				require.NoError(s.stakingKeeper.Validators.Set(s.ctx, tc.validator.GetOperator(), tc.validator))
 			}
 
 			if tc.exists.setValidatorByUnbondingID {
@@ -327,7 +327,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 	require.ErrorIs(err, types.ErrNoValidatorFound)
 
 	val := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
-	require.NoError(s.stakingKeeper.SetValidator(s.ctx, val))
+	require.NoError(s.stakingKeeper.Validators.Set(s.ctx, val.GetOperator(), val))
 	require.NoError(s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, val, unbondingID))
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
 	require.ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)

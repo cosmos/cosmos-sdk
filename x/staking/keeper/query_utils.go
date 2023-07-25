@@ -32,7 +32,7 @@ func (k Keeper) GetDelegatorValidators(
 			return nil, err
 		}
 
-		validator, err := k.GetValidator(ctx, valAddr)
+		validator, err := k.Validators.Get(ctx, valAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (k Keeper) GetDelegatorValidator(
 		return validator, err
 	}
 
-	return k.GetValidator(ctx, valAddr)
+	return k.Validators.Get(ctx, valAddr)
 }
 
 // GetAllDelegatorDelegations returns all delegations of a delegator

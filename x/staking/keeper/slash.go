@@ -325,7 +325,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			return math.ZeroInt(), err
 		}
 
-		dstValidator, err := k.GetValidator(ctx, valDstAddr)
+		dstValidator, err := k.Validators.Get(ctx, valDstAddr)
 		if err != nil {
 			return math.ZeroInt(), err
 		}

@@ -39,7 +39,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	for _, validator := range data.Validators {
-		if err := k.SetValidator(ctx, validator); err != nil {
+		if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 			panic(err)
 		}
 
@@ -183,7 +183,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 				panic(err)
 			}
 
-			validator, err := k.GetValidator(ctx, valAddr)
+			validator, err := k.Validators.Get(ctx, valAddr)
 			if err != nil {
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}

@@ -48,9 +48,9 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
 	assert.NilError(t, err)
 
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val1))
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val2))
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, val3))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(f.ctx, val1.GetOperator(), val1))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(f.ctx, val2.GetOperator(), val2))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(f.ctx, val3.GetOperator(), val3))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val1))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val2))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, val3))

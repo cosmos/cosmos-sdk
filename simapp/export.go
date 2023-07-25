@@ -203,7 +203,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
-		validator, err := app.StakingKeeper.GetValidator(ctx, addr)
+		validator, err := app.StakingKeeper.Validators.Get(ctx, addr)
 		if err != nil {
 			panic("expected validator, not found")
 		}
@@ -213,7 +213,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			validator.Jailed = true
 		}
 
-		if err = app.StakingKeeper.SetValidator(ctx, validator); err != nil {
+		if err = app.StakingKeeper.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
 			panic(err)
 		}
 		counter++

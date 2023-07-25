@@ -181,7 +181,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	assert.NilError(t, err)
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validator))
+	assert.NilError(t, f.stakingKeeper.Validators.Set(f.sdkCtx, validator.GetOperator(), validator))
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))

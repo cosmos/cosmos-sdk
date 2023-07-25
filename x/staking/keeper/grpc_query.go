@@ -77,7 +77,7 @@ func (k Querier) Validator(ctx context.Context, req *types.QueryValidatorRequest
 		return nil, err
 	}
 
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Keeper.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
@@ -457,7 +457,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return err
 		}
 
-		validator, err := k.GetValidator(ctx, valAddr)
+		validator, err := k.Keeper.Validators.Get(ctx, valAddr)
 		if err != nil {
 			return err
 		}
@@ -575,7 +575,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 		return types.DelegationResponse{}, err
 	}
 
-	val, err := k.GetValidator(ctx, valAddr)
+	val, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
@@ -631,7 +631,7 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 			return nil, err
 		}
 
-		val, err := k.GetValidator(ctx, valDstAddr)
+		val, err := k.Validators.Get(ctx, valDstAddr)
 		if err != nil {
 			return nil, err
 		}

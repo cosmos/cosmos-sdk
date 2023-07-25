@@ -308,7 +308,7 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
-		validator, err := k.GetValidator(ctx, validatorAddr)
+		validator, err := k.Validators.Get(ctx, validatorAddr)
 		if err == nil {
 			shares := delegation.Shares
 			tokens := validator.TokensFromSharesTruncated(shares)
@@ -992,7 +992,7 @@ func (k Keeper) Unbond(
 	}
 
 	// get validator
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return amount, err
 	}
@@ -1061,7 +1061,7 @@ func (k Keeper) Unbond(
 func (k Keeper) getBeginInfo(
 	ctx context.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
-	validator, err := k.GetValidator(ctx, valSrcAddr)
+	validator, err := k.Validators.Get(ctx, valSrcAddr)
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
 		return completionTime, height, false, nil
 	}
@@ -1099,7 +1099,7 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (time.Time, math.Int, error) {
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
@@ -1216,14 +1216,14 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrSelfRedelegation
 	}
 
-	dstValidator, err := k.GetValidator(ctx, valDstAddr)
+	dstValidator, err := k.Validators.Get(ctx, valDstAddr)
 	if errors.Is(err, types.ErrNoValidatorFound) {
 		return time.Time{}, types.ErrBadRedelegationDst
 	} else if err != nil {
 		return time.Time{}, err
 	}
 
-	srcValidator, err := k.GetValidator(ctx, valSrcAddr)
+	srcValidator, err := k.Validators.Get(ctx, valSrcAddr)
 	if errors.Is(err, types.ErrNoValidatorFound) {
 		return time.Time{}, types.ErrBadRedelegationSrc
 	} else if err != nil {
@@ -1345,7 +1345,7 @@ func (k Keeper) CompleteRedelegation(
 func (k Keeper) ValidateUnbondAmount(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,
 ) (shares math.LegacyDec, err error) {
-	validator, err := k.GetValidator(ctx, valAddr)
+	validator, err := k.Validators.Get(ctx, valAddr)
 	if err != nil {
 		return shares, err
 	}

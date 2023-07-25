@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -385,7 +386,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 
 	delegation, err = keeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.NoError(err)
-	validator, err = keeper.GetValidator(ctx, valAddrs[0])
+	validator, err = keeper.Validators.Get(ctx, valAddrs[0])
 	require.NoError(err)
 
 	remainingTokens := startTokens.Sub(bondTokens)
@@ -437,7 +438,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(keeper.TokensFromConsensusPower(ctx, 14), validator.Tokens)
 	require.Equal(stakingtypes.Unbonding, validator.Status)
@@ -493,7 +494,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(blockHeight, validator.UnbondingHeight)
 	params, err := keeper.GetParams(ctx)
@@ -564,7 +565,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(ctx.BlockHeight(), validator.UnbondingHeight)
 	params, err := keeper.GetParams(ctx)
@@ -577,7 +578,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.NoError(err)
 
 	// Make sure validator is still in state because there is still an outstanding delegation
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(validator.Status, stakingtypes.Unbonded)
 
@@ -594,8 +595,8 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.Equal(amount3, remainingTokens)
 
 	//  now validator should be deleted from state
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
+	require.ErrorIs(err, collections.ErrNotFound)
 }
 
 func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
@@ -651,7 +652,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	require.Equal(amount2, delTokens)
 
 	// validator should still be in state and still be in unbonding state
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(validator.Status, stakingtypes.Unbonding)
 
@@ -661,8 +662,8 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	require.NoError(err)
 
 	// validator should now be deleted from state
-	_, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+	_, err = keeper.Validators.Get(ctx, addrVals[0])
+	require.ErrorIs(err, collections.ErrNotFound)
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state
@@ -893,7 +894,7 @@ func (s *KeeperTestSuite) TestRedelegateSelfDelegation() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 2)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(stakingtypes.Unbonding, validator.Status)
@@ -951,7 +952,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(blockHeight, validator.UnbondingHeight)
 	params, err := keeper.GetParams(ctx)
@@ -1029,7 +1030,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
-	validator, err = keeper.GetValidator(ctx, addrVals[0])
+	validator, err = keeper.Validators.Get(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(ctx.BlockHeight(), validator.UnbondingHeight)
 	params, err := keeper.GetParams(ctx)

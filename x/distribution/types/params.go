@@ -9,9 +9,9 @@ import (
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:        math.LegacyNewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  math.LegacyZeroDec(),            // deprecated
-		BonusProposerReward: math.LegacyZeroDec(),            // deprecated
+		CommunityTax:        math.LegacyNewDec(0), // 0% from 50% previous default
+		BaseProposerReward:  math.LegacyZeroDec(), // deprecated
+		BonusProposerReward: math.LegacyZeroDec(), // deprecated
 		WithdrawAddrEnabled: true,
 	}
 }

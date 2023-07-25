@@ -46,6 +46,9 @@ const (
 // - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
 //
 // - 0x09: Params
+//
+// - 0x09
+// - 0x10<accAddrLen (1 Byte)><accAddr_Bytes>: sdk.AccAddress
 var (
 	FeePoolKey                           = collections.NewPrefix(0) // key for global distribution state
 	ProposerKey                          = []byte{0x01}             // key for the proposer operator address
@@ -57,6 +60,10 @@ var (
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
+	GovernanceContractAddress            = []byte{0x10}             // key for governance contract address
+	WinningGrantsKey                     = []byte{0x11}             // key for winning grants
+	ProposerRewardKey                    = []byte{0x12}             // key for proposer reward
+
 )
 
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
@@ -88,6 +95,10 @@ func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
 		ValidatorSlashEventPrefix,
 		append(address.MustLengthPrefix(v.Bytes()), heightBz...)...,
 	)
+}
+
+func GetWinningGrantsHeightKey() []byte {
+	return WinningGrantsKey
 }
 
 // GetValidatorSlashEventKey creates the key for a validator's slash fraction.

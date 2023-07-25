@@ -6,20 +6,23 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // NewMinter returns a new Minter object with the given inflation and annual
 // provisions values.
-func NewMinter(inflation, annualProvisions math.LegacyDec) Minter {
+func NewMinter(blockHeader tmproto.Header, inflation, annualProvisions math.LegacyDec) Minter {
 	return Minter{
+		BlockHeader:      blockHeader,
 		Inflation:        inflation,
 		AnnualProvisions: annualProvisions,
 	}
 }
 
 // InitialMinter returns an initial Minter object with a given inflation value.
-func InitialMinter(inflation math.LegacyDec) Minter {
+func InitialMinter(blockHeader tmproto.Header, inflation math.LegacyDec) Minter {
 	return NewMinter(
+		blockHeader,
 		inflation,
 		math.LegacyNewDec(0),
 	)
@@ -29,6 +32,7 @@ func InitialMinter(inflation math.LegacyDec) Minter {
 // which uses an inflation rate of 13%.
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
+		tmproto.Header{},
 		math.LegacyNewDecWithPrec(13, 2),
 	)
 }
@@ -77,6 +81,42 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.Legacy
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(math.NewInt(int64(params.BlocksPerYear)))
+	blocksPerYear := math.LegacyNewDec(int64(params.BlocksPerYear))
+	currentHeight := math.LegacyNewDec(m.BlockHeader.GetHeight())
+	//currentHeight := sdk.NewDec(6311520 * 2)
+
+	currentYear := currentHeight.Quo(blocksPerYear).TruncateDec()
+	mintedAmountPerBlock := params.MintedAmountPerBlock
+
+	for i := 0; i < int(currentYear.RoundInt64()); i++ {
+		reductionAmount := mintedAmountPerBlock.Mul(params.YearlyReduction)
+		mintedAmountPerBlock = mintedAmountPerBlock.Sub(reductionAmount)
+	}
+	provisionAmt := mintedAmountPerBlock
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+}
+
+// BlockPeriodProvision returns the provisions for a block based on the period
+func (m Minter) BlockPeriodProvision(params Params) sdk.Coin {
+	fmt.Println("BlockPeriodProvision ", params.BlocksPerYear)
+	fmt.Println("params.BlocksPerYear: ", params.BlocksPerYear)
+	blocksPerPeriod := math.LegacyNewDec(int64(params.BlocksPerYear))
+	currentHeight := math.LegacyNewDec(m.BlockHeader.GetHeight())
+	//currentHeight := sdk.NewDec(6311520 * 2)
+
+	fmt.Println("currentHeight: ", currentHeight)
+
+	currentPeriod := currentHeight.Quo(blocksPerPeriod).TruncateDec()
+	fmt.Println("currentPeriod: ", currentPeriod)
+	fmt.Println("currentYearlyReduction: ", params.YearlyReduction)
+
+	mintedAmountPerBlock := params.MintedAmountPerBlock
+
+	for i := 0; i < int(currentPeriod.RoundInt64()); i++ {
+		reductionAmount := mintedAmountPerBlock.Mul(params.YearlyReduction)
+		mintedAmountPerBlock = mintedAmountPerBlock.Sub(reductionAmount)
+	}
+	provisionAmt := mintedAmountPerBlock
+	fmt.Println("BlockPeriodProvision: ", sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt()))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	types2 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -56,6 +57,8 @@ type AccountKeeperI interface {
 
 	// AddressCodec returns the account address codec.
 	AddressCodec() address.Codec
+	// Retrieve all forever vesting account from the store.
+	GetAllForeverVestingAccounts(sdk.Context) []types2.ForeverVestingAccount
 }
 
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {

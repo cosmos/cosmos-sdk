@@ -25,6 +25,8 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
+	blockedAddrs  map[string]bool
+	winningGrants []types.WinningGrant
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
@@ -270,4 +272,11 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
 	return k.FeePool.Set(ctx, feePool)
+}
+
+func (k Keeper) GetAuthKeeper() types.AccountKeeper {
+	return k.authKeeper
+}
+func (k Keeper) GetBankKeeper() types.BankKeeper {
+	return k.bankKeeper
 }

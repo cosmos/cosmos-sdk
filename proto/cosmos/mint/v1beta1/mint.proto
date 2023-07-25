@@ -6,6 +6,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
+import "tendermint/types/types.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -21,6 +22,8 @@ message Minter {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
+  tendermint.types.Header block_header = 3 [(gogoproto.nullable) = false];
+
 }
 
 // Params defines the parameters for the x/mint module.
@@ -58,5 +61,19 @@ message Params {
     (amino.dont_omitempty) = true
   ];
   // expected blocks per year
-  uint64 blocks_per_year = 6;
+  string minted_amount_per_block = 6 [
+    (gogoproto.moretags)   = "yaml:\"minted_amount_per_block\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // expected blocks per year
+  uint64 blocks_per_year = 7 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  // expected blocks per year
+  uint64 max_mintable_amount = 8 [(gogoproto.moretags) = "yaml:\"max_mintable_amount\""];
+  // Yearly reduction to apply to minted amount
+  string yearly_reduction = 9 [
+    (gogoproto.moretags)   = "yaml:\"yearly_reduction\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

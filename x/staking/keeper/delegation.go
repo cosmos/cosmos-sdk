@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"time"
 
 	corestore "cosmossdk.io/core/store"
@@ -898,6 +899,8 @@ func (k Keeper) Delegate(
 		return math.LegacyZeroDec(), err
 	}
 
+	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+
 	// if subtractAccount is true then we are
 	// performing a delegation and not a redelegation, thus the source tokens are
 	// all non bonded
@@ -965,6 +968,15 @@ func (k Keeper) Delegate(
 	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, validator.GetOperator()); err != nil {
 		return newShares, err
 	}
+
+	// Transform bond amount to voting token
+	bujmesCoins := sdk.NewCoins(sdk.NewCoin(
+		"bujmes",
+		bondAmt,
+	))
+	k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, bujmesCoins)
+	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, bujmesCoins)
+	fmt.Printf("transfered %s to %s \n", bujmesCoins, delegatorAddress)
 
 	return newShares, nil
 }
@@ -1051,6 +1063,14 @@ func (k Keeper) Unbond(
 			return amount, err
 		}
 	}
+	// Remove and burn voting right relating to those bounded amount
+	bujmesCoins := sdk.NewCoins(sdk.NewCoin(
+		"bujmes",
+		amount,
+	))
+	fmt.Printf("transfered %s from %s to module \n", bujmesCoins, delegatorAddress)
+	k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, minttypes.ModuleName, bujmesCoins)
+	k.bankKeeper.BurnCoins(ctx, minttypes.ModuleName, bujmesCoins)
 
 	return amount, nil
 }

@@ -2,6 +2,9 @@ package types
 
 import (
 	context "context"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	types3 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	types2 "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"cosmossdk.io/core/address"
 
@@ -13,16 +16,19 @@ import (
 type AccountKeeper interface {
 	AddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx sdk.Context, acc types.AccountI)
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(context.Context, sdk.ModuleAccountI)
+	GetAllForeverVestingAccounts(ctx sdk.Context) []types3.ForeverVestingAccount
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-
+	GetAccountsBalances(ctx sdk.Context) []types2.Balance
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
@@ -52,6 +58,7 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx context.Context) ([]stakingtypes.Delegation, error)
 	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
+	GetBondedValidatorsByPower(ctx sdk.Context) []stakingtypes.Validator
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

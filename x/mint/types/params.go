@@ -11,26 +11,34 @@ import (
 )
 
 // NewParams returns Params instance with the given values.
-func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded math.LegacyDec, blocksPerYear uint64) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded math.LegacyDec, blocksPerYear uint64, maxMintableAmount uint64,
+	mintedAmountPerBlock math.LegacyDec,
+	yearlyReduction math.LegacyDec) Params {
 	return Params{
-		MintDenom:           mintDenom,
-		InflationRateChange: inflationRateChange,
-		InflationMax:        inflationMax,
-		InflationMin:        inflationMin,
-		GoalBonded:          goalBonded,
-		BlocksPerYear:       blocksPerYear,
+		MintDenom:            mintDenom,
+		InflationRateChange:  inflationRateChange,
+		InflationMax:         inflationMax,
+		InflationMin:         inflationMin,
+		GoalBonded:           goalBonded,
+		BlocksPerYear:        blocksPerYear,
+		MaxMintableAmount:    maxMintableAmount,
+		MintedAmountPerBlock: mintedAmountPerBlock,
+		YearlyReduction:      yearlyReduction,
 	}
 }
 
 // DefaultParams returns default x/mint module parameters.
 func DefaultParams() Params {
 	return Params{
-		MintDenom:           sdk.DefaultBondDenom,
-		InflationRateChange: math.LegacyNewDecWithPrec(13, 2),
-		InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-		InflationMin:        math.LegacyNewDecWithPrec(7, 2),
-		GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
-		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MintDenom:            sdk.DefaultBondDenom,
+		InflationRateChange:  math.LegacyNewDecWithPrec(13, 2),
+		InflationMax:         math.LegacyNewDecWithPrec(20, 2),
+		InflationMin:         math.LegacyNewDecWithPrec(7, 2),
+		GoalBonded:           math.LegacyNewDecWithPrec(67, 2),
+		BlocksPerYear:        uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MaxMintableAmount:    uint64(1000000000000000),
+		MintedAmountPerBlock: math.LegacyNewDecWithPrec(18*1e6, 0),
+		YearlyReduction:      math.LegacyNewDecWithPrec(1262079466, 10),
 	}
 }
 
@@ -52,6 +60,15 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
+		return err
+	}
+	if err := validateMaxMintableAmount(p.MaxMintableAmount); err != nil {
+		return err
+	}
+	if err := validateYearlyReduction(p.YearlyReduction); err != nil {
+		return err
+	}
+	if err := validateMintedAmountPerBlock(p.MintedAmountPerBlock); err != nil {
 		return err
 	}
 	if p.InflationMax.LT(p.InflationMin) {
@@ -164,6 +181,48 @@ func validateBlocksPerYear(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("blocks per year must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMintedAmountPerBlock(i interface{}) error {
+	v, ok := i.(math.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("minted amount per block cannot be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateYearlyReduction(i interface{}) error {
+	v, ok := i.(math.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("goal bonded cannot be negative: %s", v)
+	}
+	if v.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("yearly reduction too large (limited to 100%): %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxMintableAmount(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max mintable amount must be positive: %d", v)
 	}
 
 	return nil

@@ -57,7 +57,10 @@ func (msg MsgCreateValidator) Validate() error {
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+		// In the first 28 days period, we allow a 0 amount to be bonded
+		if !msg.Value.Amount.Equal(math.ZeroInt()) {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+		}
 	}
 
 	if msg.Description == (Description{}) {
@@ -72,7 +75,7 @@ func (msg MsgCreateValidator) Validate() error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
+	if !msg.MinSelfDelegation.IsPositive() && !msg.MinSelfDelegation.Equal(math.ZeroInt()) {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"minimum self delegation must be a positive integer",
@@ -80,6 +83,10 @@ func (msg MsgCreateValidator) Validate() error {
 	}
 
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
+		//FIXME: remove when we stop supporting 0 amount for self delegation
+		if msg.Value.Amount.Equal(math.ZeroInt()) {
+			return nil
+		}
 		return ErrSelfDelegationBelowMinimum
 	}
 

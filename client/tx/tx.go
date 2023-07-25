@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
@@ -73,7 +74,19 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
-		return err
+		shouldThrow := true
+		if len(msgs) == 1 {
+			msg := msgs[0]
+			// During IDP, we want to allow the creation of a validator for 0-stake
+			// Which means that account will not exist yet
+			// So we need to allow the creation of a validator without an account
+			if strings.HasPrefix(sdk.MsgTypeURL(msg), "/cosmos.staking.v1beta1.MsgCreateValidator") {
+				shouldThrow = false
+			}
+		}
+		if shouldThrow {
+			return err
+		}
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {

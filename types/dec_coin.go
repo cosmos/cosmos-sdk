@@ -670,3 +670,7 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 
 	return newDecCoins, nil
 }
+
+func (coins DecCoins) AddCoins(coinsB DecCoins) DecCoins {
+	return coins.safeAdd(coinsB)
+}

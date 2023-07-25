@@ -5,6 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"strings"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -49,12 +52,14 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 // PubKeys must be set in context for all signers before any other sigverify decorators run
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
-	ak AccountKeeper
+	ak         AccountKeeper
+	bankKeeper types.BankKeeper
 }
 
-func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
+func NewSetPubKeyDecorator(ak AccountKeeper, bk types.BankKeeper) SetPubKeyDecorator {
 	return SetPubKeyDecorator{
-		ak: ak,
+		ak:         ak,
+		bankKeeper: bk,
 	}
 }
 
@@ -78,8 +83,35 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	for i, pk := range pubkeys {
 		var err error
 		signerStrs[i], err = spkd.ak.AddressCodec().BytesToString(signers[i])
+		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
 		if err != nil {
-			return sdk.Context{}, err
+			// if tx is /cosmos.staking.v1beta1.MsgCreateValidator
+			isCreateValidator := false
+
+			messages := tx.GetMsgs()
+			if ctx.BlockHeader().Height < 483840 && len(messages) == 1 {
+				msg := messages[0]
+				if strings.HasPrefix(sdk.MsgTypeURL(msg), "/cosmos.staking.v1beta1.MsgCreateValidator") {
+					isCreateValidator = true
+				}
+			}
+			if !isCreateValidator {
+				fmt.Printf("err: %s", err)
+				return ctx, err
+			}
+
+			// In the specific IDP period, the validator's account may not exist, so we need to create it
+			// Create account if it doesn't exist
+			acc = spkd.ak.NewAccountWithAddress(ctx, signers[i])
+			// Set pubkey
+			err = acc.SetPubKey(pk)
+			// Set account number
+			acc.SetAccountNumber(0)
+			// Set sequence
+			acc.SetSequence(0)
+
+			// Set account
+			spkd.ak.SetAccount(ctx, acc)
 		}
 
 		// PublicKey was omitted from slice since it has already been set in context
@@ -95,7 +127,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
 
-		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+		acc, err = GetSignerAcc(ctx, spkd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -108,6 +140,46 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 		}
 		spkd.ak.SetAccount(ctx, acc)
+	}
+	messages := tx.GetMsgs()
+
+	for _, msg := range messages {
+		if strings.HasPrefix(sdk.MsgTypeURL(msg), "/cosmos.bank.v1beta1.MsgSend") {
+			msgSend, ok := msg.(*banktypes.MsgSend)
+			if !ok {
+				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid message type")
+			}
+
+			// Get MsgSend fromAddress
+			msgSigners := msg.GetSigners()
+			for _, msgSigner := range msgSigners {
+				signerAcc := spkd.ak.GetAccount(ctx, msgSigner)
+
+				if _, ok := signerAcc.(*types2.ForeverVestingAccount); ok {
+
+					// A ForeverVestingAccount is trying to send tokens
+					// We need to look if there is some ujmes in the transaction
+					for _, amount := range msgSend.Amount {
+						if amount.Denom == "ujmes" {
+							// Display amount of ujmes transferred
+							bujmesCoins := sdk.NewCoins(sdk.NewCoin("bujmes", amount.Amount))
+
+							// Move the bujmes from the signer to module
+							err := spkd.bankKeeper.SendCoinsFromAccountToModule(ctx, signerAcc.GetAddress(), govtypes.ModuleName, bujmesCoins)
+							if err != nil {
+								return ctx, err
+							}
+
+							// Burn the bujmes
+							err = spkd.bankKeeper.BurnCoins(ctx, govtypes.ModuleName, bujmesCoins)
+							if err != nil {
+								return ctx, err
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Also emit the following events, so that txs can be indexed by these

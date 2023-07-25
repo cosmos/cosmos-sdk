@@ -9,15 +9,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // Simulation parameter constants
 const (
-	Inflation           = "inflation"
-	InflationRateChange = "inflation_rate_change"
-	InflationMax        = "inflation_max"
-	InflationMin        = "inflation_min"
-	GoalBonded          = "goal_bonded"
+	Inflation            = "inflation"
+	InflationRateChange  = "inflation_rate_change"
+	InflationMax         = "inflation_max"
+	InflationMin         = "inflation_min"
+	GoalBonded           = "goal_bonded"
+	MaxCoinAmount        = "max_coin_amount"
+	MintedAmountPerBlock = "minted_amount_per_block"
+	YearlyReduction      = "yearly_reduction"
 )
 
 // GenInflation randomized Inflation
@@ -66,9 +70,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	mintDenom := simState.BondDenom
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)
-	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear)
+	maxMintableAmount := uint64(1000000000)
+	mintedAmountPerBlock := math.LegacyNewDec(20 * 1e6)
+	yearlyReduction := math.LegacyNewDecWithPrec(125, 3)
 
-	mintGenesis := types.NewGenesisState(types.InitialMinter(inflation), params)
+	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear, maxMintableAmount, mintedAmountPerBlock, yearlyReduction)
+
+	mintGenesis := types.NewGenesisState(types.InitialMinter(tmproto.Header{}, inflation), params)
 
 	bz, err := json.MarshalIndent(&mintGenesis, "", " ")
 	if err != nil {

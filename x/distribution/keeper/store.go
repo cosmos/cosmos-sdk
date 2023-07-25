@@ -41,33 +41,6 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 	return
 }
 
-// get slash event for height
-// func (k Keeper) GetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool, err error) {
-// 	event, err = k.ValidatorSlashEvents.Get(ctx,
-// 		collections.Join3[sdk.ValAddress, uint64, uint64](
-// 			val,
-// 			height,
-// 			period,
-// 		))
-
-// 	if errors.Is(err, collections.ErrNotFound) {
-// 		return types.ValidatorSlashEvent{}, false, nil
-// 	}
-
-// 	return event, true, nil
-// }
-
-// set slash event for height
-func (k Keeper) OldSetValidatorSlashEvent(ctx context.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) error {
-	store := k.storeService.OpenKVStore(ctx)
-	b, err := k.cdc.Marshal(&event)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.GetValidatorSlashEventKey(val, height, period), b)
-}
-
 // iterate over slash events between heights, inclusive
 func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),

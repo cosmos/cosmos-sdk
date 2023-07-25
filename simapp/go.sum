@@ -189,8 +189,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.0 h1:QsEMIWuv9xWDbF2HZnW4Lpu1/SejCztPu0LQx7t6MN4=
 cosmossdk.io/api v0.7.0/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
-cosmossdk.io/client/v2 v2.0.0-20230719143845-dff6b0e26aa4 h1:rXCotxNnD0DUpcVBYojEZWUTEIJ9p+sgkpEtZlV4+pE=
-cosmossdk.io/client/v2 v2.0.0-20230719143845-dff6b0e26aa4/go.mod h1:mrwVTC+6n90zDpvn4N12YJVl67QUCDQ3yEqIR4Ovp14=
+cosmossdk.io/client/v2 v2.0.0-20230725211428-f28adc7c9e83 h1:dsBUY9zfxl0qtiXZzdiQ+S7KuLERKCDsX4a/329+zlc=
+cosmossdk.io/client/v2 v2.0.0-20230725211428-f28adc7c9e83/go.mod h1:mrwVTC+6n90zDpvn4N12YJVl67QUCDQ3yEqIR4Ovp14=
 cosmossdk.io/collections v0.3.0 h1:v0eEqLBxebAV+t+Ahwf9tSJOu95HVLINwROXx2TTZ08=
 cosmossdk.io/collections v0.3.0/go.mod h1:CHE1+niUElL9ikCpevRZcp0yqQ4TU0TrEEGirN0mvIg=
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=

@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
@@ -29,7 +28,7 @@ type Keeper struct {
 	authKeeper        feegrant.AccountKeeper
 	Schema            collections.Schema
 	FeeAllowance      collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
-	FeeAllowanceQueue collections.Map[collections.Pair[time.Time, []byte], bool]
+	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
@@ -46,14 +45,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
 			"allowances",
-			collections.PairKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[feegrant.Grant](cdc),
 		),
 		FeeAllowanceQueue: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceQueueKeyPrefix,
 			"allowancesQueue",
-			collections.PairKeyCodec(sdk.TimeKey, collections.BytesKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BoolValue,
 		),
 	}
@@ -78,8 +77,6 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
-	ggp := granteeGranterPair(grantee, granter)
-
 	exp, err := feeAllowance.ExpiresAt()
 	if err != nil {
 		return err
@@ -95,7 +92,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	if exp != nil {
 		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
 		// remove the 1st byte and reuse the remaining key as it is
-		err = k.addToFeeAllowanceQueue(ctx, ggp, exp)
+		err = k.addToFeeAllowanceQueue(ctx, grantee, granter, exp)
 		if err != nil {
 			return err
 		}
@@ -165,7 +162,7 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 	}
 
 	if exp != nil {
-		if err := store.Delete(feegrant.FeeAllowancePrefixQueue(exp, feegrant.FeeAllowanceKey(grantee, granter)[1:])); err != nil {
+		if err := k.FeeAllowanceQueue.Remove(ctx, collections.Join3(*exp, grantee, granter)); err != nil {
 			return err
 		}
 	}
@@ -302,19 +299,19 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 	}, err
 }
 
-func (k Keeper) addToFeeAllowanceQueue(ctx context.Context, grantKey []byte, exp *time.Time) error {
-	return k.FeeAllowanceQueue.Set(ctx, collections.Join(*exp, grantKey), true)
+func (k Keeper) addToFeeAllowanceQueue(ctx context.Context, grantee sdk.AccAddress, granter sdk.AccAddress, exp *time.Time) error {
+	return k.FeeAllowanceQueue.Set(ctx, collections.Join3(*exp, grantee, granter), true)
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
-	rng := collections.NewPrefixUntilPairRange[time.Time, []byte](exp)
+	rng := collections.PrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 
-	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, []byte], value bool) (bool, error) {
-		grantee, granter := parseGranteeGranterPair(key.K2())
+	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
+		grantee, granter := key.K2(), key.K3()
 
-		if err := k.FeeAllowance.Remove(ctx, collections.Join(sdk.AccAddress(grantee), sdk.AccAddress(granter))); err != nil {
+		if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
 			return true, err
 		}
 
@@ -324,24 +321,10 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 
 		return false, nil
 	})
+
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return err
 	}
 
 	return nil
-}
-
-func granteeGranterPair(grantee, granter sdk.AccAddress) []byte {
-	return append(address.MustLengthPrefix(grantee.Bytes()), granter.Bytes()...)
-}
-
-func parseGranteeGranterPair(key []byte) (sdk.AccAddress, sdk.AccAddress) {
-	granteeAddrLen, _ := sdk.ParseLengthPrefixedBytes(key, 0, 1)
-	key = key[1:]
-
-	grantee, _ := sdk.ParseLengthPrefixedBytes(key, 0, int(granteeAddrLen[0]))
-	key = key[int(granteeAddrLen[0]):]
-
-	granter := key
-	return grantee, granter
 }

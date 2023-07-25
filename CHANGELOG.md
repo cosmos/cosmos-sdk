@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/group, x/gov) [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Let proposal summary be 40x longer than metadata limit.
+* (version) [#17096](https://github.com/cosmos/cosmos-sdk/pull/17096) Improve `getSDKVersion()` to handle module replacements.
 
 ### CLI Breaking Changes
 

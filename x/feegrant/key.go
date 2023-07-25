@@ -2,7 +2,6 @@ package feegrant
 
 import (
 	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -28,16 +27,3 @@ var (
 	// - 0x01<allowance_prefix_queue_key_bytes>: <empty value>
 	FeeAllowanceQueueKeyPrefix = collections.NewPrefix(1)
 )
-
-// ParseAddressesFromFeeAllowanceKey extracts and returns the granter, grantee from the given key.
-func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee []byte) {
-	// key is of format:
-	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
-	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
-	grantee, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
-
-	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrEndIndex+1, 1)
-	granter, _ = sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
-
-	return granter, grantee
-}

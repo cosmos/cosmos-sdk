@@ -124,16 +124,13 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-rosetta:
-	$(MAKE) -C tools/rosetta rosetta
-
 confix:
 	$(MAKE) -C tools/confix confix
 
 hubl:
 	$(MAKE) -C tools/hubl hubl
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
 
 mocks: $(MOCKS_DIR)
@@ -364,11 +361,6 @@ test-sim-profile-streaming:
 
 .PHONY: test-sim-profile test-sim-benchmark
 
-test-rosetta:
-	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
-	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
-.PHONY: test-rosetta
-
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
@@ -487,15 +479,3 @@ localnet-start: localnet-stop localnet-build-env localnet-build-nodes
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
-
-###############################################################################
-###                                rosetta                                  ###
-###############################################################################
-# builds rosetta test data dir
-rosetta-data:
-	-docker container rm data_dir_build
-	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
-	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
-	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/rosetta-ci/data.tar.gz"
-	docker container rm data_dir_build
-.PHONY: rosetta-data

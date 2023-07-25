@@ -90,23 +90,6 @@ func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
 	)
 }
 
-// func GetValidatorSlashHeightPeriodKey(height, period uint64) []byte {
-// 	heightBz := make([]byte, 8)
-// 	binary.BigEndian.PutUint64(heightBz, height)
-
-// 	periodBz := make([]byte, 8)
-// 	binary.BigEndian.PutUint64(periodBz, period)
-
-// 	return append(heightBz, periodBz...)
-// }
-
-// func GetHeightAndPeriodFromKey(key []byte) (height, period uint64) {
-// 	kv.AssertKeyAtLeastLength(key, 16)
-// 	height = binary.BigEndian.Uint64(key[:8])
-// 	period = binary.BigEndian.Uint64(key[8:16])
-// 	return
-// }
-
 // GetValidatorSlashEventKey creates the key for a validator's slash fraction.
 func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	periodBz := make([]byte, 8)

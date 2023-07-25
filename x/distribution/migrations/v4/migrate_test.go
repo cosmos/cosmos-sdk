@@ -3,16 +3,15 @@ package v4_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
@@ -27,7 +26,7 @@ func TestMigration(t *testing.T) {
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
-	consAddr1 := types.ConsAddress(addr1)
+	consAddr1 := sdk.ConsAddress(addr1)
 
 	err := v4.SetPreviousProposerConsAddr(ctx, storeService, cdc, consAddr1)
 	require.NoError(t, err)

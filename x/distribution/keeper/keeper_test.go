@@ -253,7 +253,7 @@ func TestValidatorSlashEvent(t *testing.T) {
 		// 		Fraction:        math.LegacyNewDec(123),
 		// 	},
 		// )
-		distrKeeper.ValidatorSlashEvents.Set(
+		err := distrKeeper.ValidatorSlashEvents.Set(
 			ctx,
 			collections.Join3(sdk.ValAddress(addrs[i]), uint64(i*100), uint64(i)),
 			types.ValidatorSlashEvent{
@@ -261,6 +261,7 @@ func TestValidatorSlashEvent(t *testing.T) {
 				Fraction:        math.LegacyNewDec(123),
 			},
 		)
+		require.NoError(t, err)
 	},
 		"ab1b97a106410d9848a690286293c1ec7dfb63354dff6996152a49935d226250")
 

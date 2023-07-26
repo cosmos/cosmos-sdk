@@ -66,7 +66,7 @@ func DiffCollectionsMigration(
 		h.Write(it.Value())
 	}
 
-	hash := sha256.Sum256(nil)
+	hash := h.Sum(nil)
 	if hex.EncodeToString(hash[:]) != targetHash {
 		return fmt.Errorf("hashes don't match: %s != %s", hex.EncodeToString(hash[:]), targetHash)
 	}

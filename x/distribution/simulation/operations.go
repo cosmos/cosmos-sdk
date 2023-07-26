@@ -149,7 +149,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -203,7 +203,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -252,7 +252,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			}
 		}
 
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
+		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address.String())
 
 		txCtx := simulation.OperationInput{
 			R:             r,

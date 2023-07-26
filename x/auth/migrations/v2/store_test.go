@@ -774,7 +774,7 @@ func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(1)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	val1, err := stakingtypes.NewValidator(valAddrs[0].String(), pks[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
 	stakingKeeper.SetValidator(ctx, val1)

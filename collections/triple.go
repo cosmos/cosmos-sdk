@@ -273,35 +273,19 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 	return size
 }
 
-// PrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
+// NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
 // Unstable: this API might change in the future.
-func PrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
 	return &Range[Triple[K1, K2, K3]]{
 		end: RangeKeyPrefixEnd(key),
 	}
 }
 
-func PrefixTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
-	key := TriplePrefix[K1, K2, K3](k1)
-	return &Range[Triple[K1, K2, K3]]{
-		start: RangeKeyExact(key),
-		end:   RangeKeyPrefixEnd(key),
-	}
-}
-
-func SuperPrefixTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
-	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
-	return &Range[Triple[K1, K2, K3]]{
-		start: RangeKeyExact(key),
-		end:   RangeKeyPrefixEnd(key),
-	}
-}
-
-// NewPrefixedTripleRange provides a Range for all keys prefixed with the given
+// NewPrefixTripleRange provides a Range for all keys prefixed with the given
 // first part of the Triple key.
-func NewPrefixedTripleRange[K1, K2, K3 any](prefix K1) Ranger[Triple[K1, K2, K3]] {
-	key := TriplePrefix[K1, K2, K3](prefix)
+func NewPrefixTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),

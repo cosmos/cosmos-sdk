@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -134,14 +135,13 @@ func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) 
 		return err
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
-	b := types.MustMarshalDelegation(k.cdc, delegation)
-	err = store.Set(types.GetDelegationKey(delegatorAddress, valAddr), b)
+	err = k.Delegations.Set(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valAddr)), delegation)
 	if err != nil {
 		return err
 	}
 
 	// set the delegation in validator delegator index
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.GetDelegationsByValKey(valAddr, delegatorAddress), []byte{})
 }
 

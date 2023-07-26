@@ -38,12 +38,12 @@ var (
 	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
 	ValidatorsByPowerIndexKey = []byte{0x23} // prefix for each key to a validator index, sorted by power
 
-	DelegationKey                    = []byte{0x31} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x32} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x33} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x34} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
+	DelegationKey                    = collections.NewPrefix(49) // key for a delegation
+	UnbondingDelegationKey           = []byte{0x32}              // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x33}              // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x34}              // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x35}              // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x36}              // prefix for each key for an redelegation, by destination validator operator
 
 	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs

@@ -90,9 +90,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// if expiry is not nil, add the new key to pruning queue.
 	if exp != nil {
-		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
-		// remove the 1st byte and reuse the remaining key as it is
-		err = k.addToFeeAllowanceQueue(ctx, grantee, granter, exp)
+		err = k.FeeAllowanceQueue.Set(ctx, collections.Join3(*exp, grantee, granter), true)
 		if err != nil {
 			return err
 		}
@@ -211,7 +209,8 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 		stop = cb(grant)
 		return stop, err
 	})
-	if err != nil {
+
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return err
 	}
 
@@ -299,10 +298,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 	}, err
 }
 
-func (k Keeper) addToFeeAllowanceQueue(ctx context.Context, grantee sdk.AccAddress, granter sdk.AccAddress, exp *time.Time) error {
-	return k.FeeAllowanceQueue.Set(ctx, collections.Join3(*exp, grantee, granter), true)
-}
-
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
@@ -310,6 +305,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()
+		fmt.Println("grantee, granter", grantee.String(), granter.String())
 
 		if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
 			return true, err

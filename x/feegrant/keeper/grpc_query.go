@@ -80,7 +80,6 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 			return &value, nil
 		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr),
 	)
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -115,20 +114,6 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 			return &grant, nil
 		},
 	)
-
-	// store := q.storeService.OpenKVStore(ctx)
-	// prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
-	// grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
-	// 	// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
-	// 	granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
-	// 	if !bytes.Equal(granter, granterAddr) {
-	// 		return nil, nil
-	// 	}
-
-	// 	return grant, nil
-	// }, func() *feegrant.Grant {
-	// 	return &feegrant.Grant{}
-	// })
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

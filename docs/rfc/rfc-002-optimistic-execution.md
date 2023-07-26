@@ -7,13 +7,13 @@
 
 ## Background
 
-Before ABCI++/1.0, the first and only time a CometBFT blockchain's application layer would know about a block proposal is after the voting period, at which point CometBFT would invoke BeginBlock, DeliverTx, EndBlock, and Commit ABCI methods of the application, with the block proposal contents passed in.
+Before ABCI++/1.0, the first and only time a CometBFT blockchain's application layer would know about a block proposal is after the voting period, at which point CometBFT would invoke `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` ABCI methods of the application, with the block proposal contents passed in.
 
 With the introduction of ABCI++/1.0, the application layer now receives the block proposal before the voting period commences. This can be used to optimistically execute the block proposal in parallel with the voting process, thus reducing the block time.
 
 ## Proposal
 
-Given that the application receives the block proposal in an earlier stage, it can be executed in the background so when FinalizeBlock is called the response can returned instantly.
+Given that the application receives the block proposal in an earlier stage (`ProcessProposal`), it can be executed in the background so when `FinalizeBlock` is called the response can returned instantly.
 
 ## Decision
 
@@ -27,15 +27,13 @@ The newly introduced ABCI method `ProcessProposal` is called after a node receiv
 >           and the Application should be ready to discard it in case another block is decided.
 >     * The Application MAY fully execute the block &mdash; immediate execution
 
-Nevertheless, synchronously executing the proposal preemptively would not improve block time because it would just change the order of events (so the time we would like to save will be spent at `PrepareProposal` instead of `FinalizeBlock`).
+Nevertheless, synchronously executing the proposal preemptively would not improve block time because it would just change the order of events (so the time we would like to save will be spent at `ProcessProposal` instead of `FinalizeBlock`).
 
 Instead we need to make block execution asynchronous by starting a goroutine in `ProcessProposal` (whose termination signal is kept in the application context) and returning a response immediately. That way, the actual block execution would happen at the same time as voting. When voting finishes and `FinalizeBlock` is called, the application handler can wait for the previously started goroutine to finish, and commit the resulting cache store if the block hash matches.
 
 Assuming average voting period takes `P` and average block execution takes `Q`, this would reduce the average block time by `P + Q - max(P, Q)`.
 
-Sei reported `P=~600ms` and `Q=~300ms` during a recent load test, meaning that optimistic execution could cut the block time by ~300ms.
-
-> Maybe add more examples about this.
+Sei Network reported `P=~600ms` and `Q=~300ms` during a load test, meaning that optimistic execution could cut the block time by ~300ms.
 
 The following diagram illustrates the intended flow:
 
@@ -57,7 +55,11 @@ flowchart LR;
     end
 ```
 
-In the case that a proposal is rejected during voting, the optimistic execution outcome is discarded (not committed). And to prevent a bad actor from exploiting optimistic execution to overwhelm nodes in the network, we will only perform optimistic execution for the first round of a height. (note: figure out what would be the issue about the last thing mentioned)
+Some considerations:
+
+- In the case that a proposal is being rejected by the local node, this node won't
+attempt to execute the proposal.
+- The app must drop any previous Optimistic Execution data if `ProcessProposal` is called, in other words, abort and restart.
 
 ### Implementation
 
@@ -76,11 +78,11 @@ To prevent bad validators from overwhelming other nodes, we will only allow opti
 Upon receiving a `ProcessProposal` call, the SDK would adopt the following procedure:
 
 ```
-if round == 0
-    set OE fields mentioned above in context
+if height > initial height
+    set OE fields
     create branches for all mutable states
     kick off an OP goroutine that optimistically process the proposal with the state branches
-else if block height != OE height in context OR block hash != OP hash in context
+else if block hash != OE hash
     send termination signal to the running OE goroutine
     clear up OE fields from the context
 else

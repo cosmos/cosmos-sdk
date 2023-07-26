@@ -129,10 +129,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker")
 	}
 
-	var urls string
-	if len(msg.GetMsgTypeUrls()) > 1 {
-		urls = strings.Join(msg.GetMsgTypeUrls(), ",")
-	}
+	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
@@ -183,10 +180,7 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
 	}
 
-	var urls string
-	if len(msg.GetMsgTypeUrls()) > 1 {
-		urls = strings.Join(msg.GetMsgTypeUrls(), ",")
-	}
+	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvents(sdk.Events{

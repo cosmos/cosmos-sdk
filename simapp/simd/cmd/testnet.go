@@ -84,7 +84,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
-		if name == "algo" {
+		if name == flags.FlagKeyAlgorithm {
 			name = flags.FlagKeyType
 		}
 

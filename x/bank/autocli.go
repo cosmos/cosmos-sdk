@@ -34,7 +34,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SpendableBalanceByDenom",
-					Use:            "spendable-balances [address] [denom]",
+					Use:            "spendable-balance [address] [denom]",
 					Short:          "Query the spendable balance of a single denom for a single account.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
 				},

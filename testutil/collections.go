@@ -26,7 +26,7 @@ import (
 //			storeKey,
 //			100,
 //			func(i int64) {
-//				err := SetPreviousProposerConsAddr(ctx, consAddr)
+//				err := SetPreviousProposerConsAddr(ctx, addrs[i])
 //				require.NoError(t, err)
 //			},
 //			"abcdef0123456789",
@@ -41,7 +41,7 @@ import (
 //			storeKey,
 //			100,
 //			func(i int64) {
-//				err := keeper.PreviousProposer.Set(ctx, consAddr)
+//				err := keeper.PreviousProposer.Set(ctx, addrs[i])
 //				require.NoError(t, err)
 //			},
 //			"abcdef0123456789",

@@ -1,0 +1,21 @@
+syntax="proto3";
+
+package cosmos.accounts.examples.counter.v1;
+
+option go_package = "cosmossdk.io/x/accounts/examples/counter/v1";
+
+message MsgInit {
+  uint64 counter_value = 1;
+}
+
+message MsgInitResponse {};
+
+message MsgIncreaseCounter {}
+message MsgIncreaseCounterResponse {
+  uint64 counter_value = 1;
+}
+
+message QueryCounterRequest {}
+message QueryCounterResponse {
+  uint64 counter_value = 1;
+}

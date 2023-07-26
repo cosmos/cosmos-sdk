@@ -9,9 +9,7 @@ sidebar_position: 1
 This document details how to build CLI and REST interfaces for a module. Examples from various Cosmos SDK modules are included.
 :::
 
-:::note
-
-## Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Building Modules Intro](./01-intro.md)
 

@@ -918,7 +918,7 @@ $ %s query staking all-tokenize-share-records
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "delegations")
+	flags.AddPaginationFlagsToCmd(cmd, "tokenize share records")
 
 	return cmd
 }

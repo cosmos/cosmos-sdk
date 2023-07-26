@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +39,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -91,6 +93,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -217,6 +220,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,

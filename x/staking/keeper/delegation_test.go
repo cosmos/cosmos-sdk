@@ -260,8 +260,9 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// should all pass
 	var completionTime time.Time
-	for i := uint32(0); i < maxEntries; i++ {
+	for i := int64(0); i < int64(maxEntries); i++ {
 		var err error
+		ctx = ctx.WithBlockHeight(i)
 		completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 		require.NoError(t, err)
 	}

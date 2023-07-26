@@ -903,23 +903,26 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// begin an unbonding delegation
+	unbondAmount := valTokens.QuoRaw(2)
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	tstaking.Undelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2), true)
+	tstaking.Undelegate(selfDelAddr, valAddr, unbondAmount, true)
 
 	// there should only be one entry in the ubd object
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, ubd.Entries[0].Balance, unbondAmount, "unbonding delegation balance")
 
 	// start a second ubd at this same time as the first
-	tstaking.Undelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2), true)
+	tstaking.Undelegate(selfDelAddr, valAddr, unbondAmount, true)
 
-	// now there should be two entries
+	// the second ubd should have modified the first one
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.True(t, found)
-	require.Len(t, ubd.Entries, 2)
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, ubd.Entries[0].Balance, valTokens, "unbonding delegation balance")
 
-	// move forwaubd in time, should complete both ubds
+	// move forward in time, should complete the ubds
 	ctx = tstaking.TurnBlockTimeDiff(1 * time.Second)
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.False(t, found)

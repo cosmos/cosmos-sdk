@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -114,7 +113,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
 	count := 0
 	err := k.ValidatorHistoricalRewards.Walk(
-		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
+		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards disttypes.ValidatorHistoricalRewards) (stop bool, err error) {
 			count += int(rewards.ReferenceCount)
 			return false, nil
 		},

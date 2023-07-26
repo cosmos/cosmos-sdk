@@ -8,9 +8,7 @@ sidebar_position: 1
 There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [gRPC, REST and CometBFT Endpoints](../core/06-grpc_rest.md)
 * [Running a Node](./01-run-node.md)

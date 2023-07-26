@@ -74,11 +74,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-<<<<<<< HEAD
 		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
-=======
-		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
->>>>>>> 58855c685 (refactor: remove global valaddress bech32 codec calls (1/2) (#17098))
 		if err != nil {
 			panic(err)
 		}
@@ -103,11 +99,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-<<<<<<< HEAD
 		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
-=======
-		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
->>>>>>> 58855c685 (refactor: remove global valaddress bech32 codec calls (1/2) (#17098))
 		if err != nil {
 			panic(err)
 		}

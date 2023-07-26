@@ -18,16 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-<<<<<<< HEAD
-func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
-	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
-	assert.NilError(t, err)
-=======
 func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	tb.Helper()
 	v, err := types.NewValidator(operator.String(), pubKey, types.Description{Moniker: moniker})
 	assert.NilError(tb, err)
->>>>>>> 58855c685 (refactor: remove global valaddress bech32 codec calls (1/2) (#17098))
 	return v
 }
 

@@ -32,15 +32,8 @@ func TestDecodeStore(t *testing.T) {
 	val, err := types.NewValidator(valAddr1.String(), delPk1, types.NewDescription("test", "test", "test", "test", "test"))
 	require.NoError(t, err)
 	del := types.NewDelegation(delAddr1.String(), valAddr1.String(), math.LegacyOneDec())
-<<<<<<< HEAD
-	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, math.OneInt(), 1)
-	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, math.OneInt(), math.LegacyOneDec(), 0)
-=======
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, math.OneInt(), 1, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, math.OneInt(), math.LegacyOneDec(), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
-	oneIntBz, err := math.OneInt().Marshal()
-	require.NoError(t, err)
->>>>>>> 58855c685 (refactor: remove global valaddress bech32 codec calls (1/2) (#17098))
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

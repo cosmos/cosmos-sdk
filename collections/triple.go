@@ -273,6 +273,15 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 	return size
 }
 
+// PrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
+// Unstable: this API might change in the future.
+func PrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		end: RangeKeyPrefixEnd(key),
+	}
+}
+
 func PrefixTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
 	return &Range[Triple[K1, K2, K3]]{

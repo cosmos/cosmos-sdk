@@ -4,9 +4,7 @@ sidebar_position: 1
 
 # Module Simulation
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Cosmos Blockchain Simulator](../core/12-simulation.md)
 :::
@@ -16,14 +14,16 @@ sidebar_position: 1
 This document details how to define each module simulation functions to be
 integrated with the application `SimulationManager`.
   
-* [Simulation package](#simulation-package)
-    * [Store decoders](#store-decoders)
-    * [Randomized genesis](#randomized-genesis)
-    * [Randomized parameter changes](#randomized-parameter-changes)
-    * [Random weighted operations](#random-weighted-operations)
-    * [Random proposal contents](#random-proposal-contents)
-* [Registering simulation functions](#registering-simulation-functions)
-* [App Simulator manager](#app-simulator-manager)
+* [Module Simulation](#module-simulation)
+    * [Synopsis](#synopsis)
+    * [Simulation package](#simulation-package)
+        * [Store decoders](#store-decoders)
+        * [Randomized genesis](#randomized-genesis)
+        * [Randomized parameter changes](#randomized-parameter-changes)
+        * [Random weighted operations](#random-weighted-operations)
+        * [Random proposal contents](#random-proposal-contents)
+    * [Registering simulation functions](#registering-simulation-functions)
+    * [App Simulator manager](#app-simulator-manager)
 
 ## Simulation package
 

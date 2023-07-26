@@ -13,9 +13,7 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 
@@ -105,9 +103,17 @@ Now that we have walked through the `PrepareProposal` & `ProcessProposal`, we ca
 There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple mempool implementations.
 Namely, the SDK provides the following mempools:
 
-* [No-op Mempool](#no-op-mempool)
-* [Sender Nonce Mempool](#sender-nonce-mempool)
-* [Priority Nonce Mempool](#priority-nonce-mempool)
+* [Application Mempool](#application-mempool)
+    * [Prepare Proposal](#prepare-proposal)
+    * [Process Proposal](#process-proposal)
+    * [Mempool](#mempool)
+        * [No-op Mempool](#no-op-mempool)
+        * [Sender Nonce Mempool](#sender-nonce-mempool)
+            * [MaxTxs](#maxtxs)
+            * [Seed](#seed)
+        * [Priority Nonce Mempool](#priority-nonce-mempool)
+            * [MaxTxs](#maxtxs-1)
+            * [Callback](#callback)
 
 The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-v2.md):
 

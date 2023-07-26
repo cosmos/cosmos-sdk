@@ -4,9 +4,7 @@ sidebar_position: 1
 
 # `x/auth/tx`
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Transactions](https://docs.cosmos.network/main/core/transactions#transaction-generation)
 * [Encoding](https://docs.cosmos.network/main/core/encoding#transaction-encoding)
@@ -21,13 +19,24 @@ This package represents the Cosmos SDK implementation of the `client.TxConfig`, 
 
 ## Contents
 
-* [Transactions](#transactions)
-    * [`TxConfig`](#txconfig)
-    * [`TxBuilder`](#txbuilder)
-    * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
-* [Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
+* [`x/auth/tx`](#xauthtx)
+    * [Abstract](#abstract)
+    * [Contents](#contents)
+    * [Transactions](#transactions)
+        * [`TxConfig`](#txconfig)
+        * [`TxBuilder`](#txbuilder)
+        * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
+    * [Client](#client)
+        * [CLI](#cli)
+            * [Query](#query)
+            * [Transactions](#transactions-1)
+            * [`encode`](#encode)
+            * [`decode`](#decode)
+        * [gRPC](#grpc)
+            * [`TxDecode`](#txdecode)
+            * [`TxEncode`](#txencode)
+            * [`TxDecodeAmino`](#txdecodeamino)
+            * [`TxEncodeAmino`](#txencodeamino)
 
 ## Transactions
 

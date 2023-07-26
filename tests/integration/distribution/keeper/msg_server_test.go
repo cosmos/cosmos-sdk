@@ -172,7 +172,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 
 	// setup staking validator
-	validator, err := stakingtypes.NewValidator(f.valAddr, PKS[0], stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(f.valAddr.String(), PKS[0], stakingtypes.Description{})
 	assert.NilError(t, err)
 	commission := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
 	validator, err = validator.SetInitialCommission(commission)

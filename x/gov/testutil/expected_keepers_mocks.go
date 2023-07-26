@@ -1056,6 +1056,20 @@ func (mr *MockStakingKeeperMockRecorder) TotalBondedTokens(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockStakingKeeper)(nil).TotalBondedTokens), arg0)
 }
 
+// ValidatorAddressCodec mocks base method.
+func (m *MockStakingKeeper) ValidatorAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ValidatorAddressCodec indicates an expected call of ValidatorAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorAddressCodec))
+}
+
 // MockDistributionKeeper is a mock of DistributionKeeper interface.
 type MockDistributionKeeper struct {
 	ctrl     *gomock.Controller

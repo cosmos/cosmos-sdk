@@ -72,7 +72,7 @@ func (k Querier) Validator(ctx context.Context, req *types.QueryValidatorRequest
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 	var ubds types.UnbondingDelegations
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 		return nil, err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 		return nil, err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +332,7 @@ func (k Querier) DelegatorValidator(ctx context.Context, req *types.QueryDelegat
 		return nil, err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -504,12 +504,12 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, err
 	}
 
-	srcValAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
+	srcValAddr, err := k.validatorAddressCodec.StringToBytes(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	dstValAddr, err := sdk.ValAddressFromBech32(req.DstValidatorAddr)
+	dstValAddr, err := k.validatorAddressCodec.StringToBytes(req.DstValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -527,7 +527,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 }
 
 func queryRedelegationsFromSrcValidator(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -617,16 +617,16 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 	resp := make(types.RedelegationResponses, len(redels))
 
 	for i, redel := range redels {
-		valSrcAddr, err := sdk.ValAddressFromBech32(redel.ValidatorSrcAddress)
+		_, err := k.validatorAddressCodec.StringToBytes(redel.ValidatorSrcAddress)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redel.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redel.ValidatorDstAddress)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redel.DelegatorAddress)
+		_, err = k.authKeeper.AddressCodec().StringToBytes(redel.DelegatorAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -649,9 +649,9 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 		}
 
 		resp[i] = types.NewRedelegationResponse(
-			delegatorAddress,
-			valSrcAddr,
-			valDstAddr,
+			redel.DelegatorAddress,
+			redel.ValidatorSrcAddress,
+			redel.ValidatorDstAddress,
 			entryResponses,
 		)
 	}

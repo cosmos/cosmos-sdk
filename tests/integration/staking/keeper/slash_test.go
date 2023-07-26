@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -61,7 +62,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), math.NewInt(10), 0)
+		time.Unix(5, 0), math.NewInt(10), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
@@ -120,7 +121,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), math.NewInt(10), math.LegacyNewDec(10), 0)
+		time.Unix(5, 0), math.NewInt(10), math.LegacyNewDec(10), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
@@ -258,7 +259,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, 0)
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
 	// slash validator for the first time
@@ -388,7 +389,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// set a redelegation
 	rdTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, math.LegacyNewDecFromInt(rdTokens), 0)
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, math.LegacyNewDecFromInt(rdTokens), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
 	// set the associated delegation
@@ -546,7 +547,7 @@ func TestSlashBoth(t *testing.T) {
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rdATokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, math.LegacyNewDecFromInt(rdATokens), 0)
+	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, math.LegacyNewDecFromInt(rdATokens), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rdA))
 
 	// set the associated delegation
@@ -557,7 +558,7 @@ func TestSlashBoth(t *testing.T) {
 	// unbonding delegation shouldn't be slashed)
 	ubdATokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 4)
 	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdATokens, 0)
+		time.Unix(0, 0), ubdATokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubdA))
 
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdATokens.MulRaw(2)))

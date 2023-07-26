@@ -40,11 +40,11 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	val1, err := stakingtypes.NewValidator(valAddrs[0].String(), pks[0], stakingtypes.Description{})
 	assert.NilError(t, err)
-	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
+	val2, err := stakingtypes.NewValidator(valAddrs[1].String(), pks[1], stakingtypes.Description{})
 	assert.NilError(t, err)
-	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
+	val3, err := stakingtypes.NewValidator(valAddrs[2].String(), pks[2], stakingtypes.Description{})
 	assert.NilError(t, err)
 
 	f.stakingKeeper.SetValidator(f.ctx, val1)

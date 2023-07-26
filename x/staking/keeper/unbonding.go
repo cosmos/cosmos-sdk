@@ -172,7 +172,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx context.Context, ubd typ
 	if err != nil {
 		return err
 	}
-	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -196,12 +196,12 @@ func (k Keeper) SetRedelegationByUnbondingID(ctx context.Context, red types.Rede
 		return err
 	}
 
-	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
 
-	valDstAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+	valDstAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (k Keeper) SetRedelegationByUnbondingID(ctx context.Context, red types.Rede
 func (k Keeper) SetValidatorByUnbondingID(ctx context.Context, val types.Validator, id uint64) error {
 	store := k.storeService.OpenKVStore(ctx)
 
-	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(val.OperatorAddress)
 	if err != nil {
 		return err
 	}

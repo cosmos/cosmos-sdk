@@ -345,7 +345,12 @@ func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 
 // Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
+<<<<<<< HEAD
 	v, err := types.NewValidator(operator, pubKey, types.Description{})
+=======
+	t.Helper()
+	v, err := types.NewValidator(operator.String(), pubKey, types.Description{})
+>>>>>>> 58855c685 (refactor: remove global valaddress bech32 codec calls (1/2) (#17098))
 	require.NoError(t, err)
 	return v
 }

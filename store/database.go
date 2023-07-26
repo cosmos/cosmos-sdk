@@ -41,5 +41,7 @@ type ReaderWriter interface {
 // key-value data stores backing the database.
 type Database interface {
 	ReaderWriter
+	Batcher
+	IteratorCreator
 	io.Closer
 }

@@ -6,16 +6,19 @@ import (
 	"cosmossdk.io/collections"
 	v1 "cosmossdk.io/x/accounts/examples/counter/v1"
 	"cosmossdk.io/x/accounts/sdk"
+	"github.com/cosmos/gogoproto/proto"
 )
 
-func NewCounter(sb *collections.SchemaBuilder) Counter {
+func NewCounter(deps *sdk.BuildDependencies) (Counter, error) {
 	return Counter{
-		Counter: collections.NewSequence(sb, collections.NewPrefix(0), "counter"),
-	}
+		Counter: collections.NewSequence(deps.SchemaBuilder, collections.NewPrefix(0), "counter"),
+		invoke:  deps.Invoker,
+	}, nil
 }
 
 type Counter struct {
 	Counter collections.Sequence
+	invoke  func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
 }
 
 func (a Counter) Init(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {

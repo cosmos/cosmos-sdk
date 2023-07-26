@@ -34,7 +34,11 @@ func (e *ExecuteRouter) Handler() func(ctx context.Context, msg proto.Message) (
 		if !exists {
 			return nil, fmt.Errorf("unknown method %s", name)
 		}
-		return handler(ctx, msg)
+		resp, err := handler(ctx, msg)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
 }
 

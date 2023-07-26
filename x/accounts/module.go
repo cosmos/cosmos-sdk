@@ -10,6 +10,19 @@ import (
 	"cosmossdk.io/x/accounts/tempcore/header"
 )
 
+func AddAccount[
+	IReq, IResp any, PIReq sdk.Msg[IReq], PIResp sdk.Msg[IResp],
+	Account sdk.Account[IReq, IResp, PIReq, PIResp],
+](
+	name string,
+	constructor func(deps *sdk.BuildDependencies) (Account, error),
+) func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error) {
+	return func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error) {
+		return internalaccounts.NewAccountImplementation[
+			IReq, IResp, PIReq, PIResp, Account](name, deps, constructor)
+	}
+}
+
 func NewAccounts[
 	H header.Header,
 ](
@@ -20,8 +33,13 @@ func NewAccounts[
 	sb := collections.NewSchemaBuilder(storeService)
 
 	module := Accounts[H]{
-		GlobalAccountNumber: collections.NewSequence(sb, GlobalAccountNumber, "global_account_number"),
+		Schema:              collections.Schema{},
+		GlobalAccountNumber: collections.NewSequence(sb, GlobalAccountNumberPrefix, "global_account_number"),
+		AccountsByType:      collections.NewMap(sb, AccountsTypePrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountsState:       collections.NewMap(sb, AccountsStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 		headerService:       headerService,
+		storeService:        storeService,
+		accounts:            map[string]internalaccounts.Implementation{},
 	}
 
 	schema, err := sb.Build()
@@ -52,10 +70,7 @@ type Accounts[H header.Header] struct {
 
 func (a Accounts[H]) registerAccounts(constructors ...func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error)) error {
 	for _, constructor := range constructors {
-		sb := collections.NewSchemaBuilder(internalaccounts.PrefixedStorageService(a.storeService))
-		deps := &sdk.BuildDependencies{
-			SchemaBuilder: sb,
-		}
+		deps := internalaccounts.MakeBuildDependencies(a.Execute)
 		accountImpl, err := constructor(deps)
 		if err != nil {
 			return err

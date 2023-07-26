@@ -3,5 +3,7 @@ package accounts
 import "cosmossdk.io/collections"
 
 var (
-	GlobalAccountNumber = collections.NewPrefix(0)
+	GlobalAccountNumberPrefix = collections.NewPrefix(0)
+	AccountsStatePrefix       = collections.NewPrefix(1)
+	AccountsTypePrefix        = collections.NewPrefix(2)
 )

@@ -3,7 +3,6 @@ package testutil_test
 import (
 	"testing"
 
-	"cosmossdk.io/store/types"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +12,7 @@ import (
 
 func TestDiffCollectionsMigration(t *testing.T) {
 	key := storetypes.NewKVStoreKey("test")
-	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient"))
+	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient"))
 
 	// First try with some invalid hash
 	err := testutil.DiffCollectionsMigration(
@@ -28,7 +27,7 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	require.Error(t, err)
 
 	// Now reset and try with the correct hash
-	ctx = testutil.DefaultContext(key, types.NewTransientStoreKey("transient"))
+	ctx = testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient"))
 	err = testutil.DiffCollectionsMigration(
 		ctx,
 		key,
@@ -41,7 +40,7 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Change the data a little and it will result in an error
-	ctx = testutil.DefaultContext(key, types.NewTransientStoreKey("transient"))
+	ctx = testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient"))
 	err = testutil.DiffCollectionsMigration(
 		ctx,
 		key,

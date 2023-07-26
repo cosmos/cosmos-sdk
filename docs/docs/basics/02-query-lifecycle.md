@@ -8,9 +8,7 @@ sidebar_position: 1
 This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back. The query is referred to as `MyQuery`.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Transaction Lifecycle](./01-tx-lifecycle.md)
 :::

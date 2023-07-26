@@ -8,9 +8,7 @@ sidebar_position: 1
 `Transactions` are objects created by end-users to trigger state changes in the application.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md)
 

@@ -8,9 +8,7 @@ sidebar_position: 1
 Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../core/00-baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`BeginBlocker` and `EndBlocker`](../basics/00-app-anatomy.md#begingblocker-and-endblocker).
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Introduction to Cosmos SDK Modules](./01-intro.md)
 

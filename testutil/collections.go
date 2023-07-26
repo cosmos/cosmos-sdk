@@ -17,6 +17,36 @@ import (
 //     of times to make sure no non-deterministic data is being used).
 //  3. Change the code to use collections and run the test function again to make
 //     sure the hash didn't change.
+//
+// First we write it as such:
+//
+//	func TestMigrateStore(t *testing.T) {
+//		DiffCollectionsMigration(
+//			ctx,
+//			storeKey,
+//			100,
+//			func(i int64) {
+//				err := SetPreviousProposerConsAddr(ctx, consAddr)
+//				require.NoError(t, err)
+//			},
+//			"abcdef0123456789",
+//		)
+//	}
+//
+// Then after we change the code to use collections, we modify the writeElem function:
+//
+//	func TestMigrateStore(t *testing.T) {
+//		DiffCollectionsMigration(
+//			ctx,
+//			storeKey,
+//			100,
+//			func(i int64) {
+//				err := keeper.PreviousProposer.Set(ctx, consAddr)
+//				require.NoError(t, err)
+//			},
+//			"abcdef0123456789",
+//		)
+//	}
 func DiffCollectionsMigration(
 	ctx sdk.Context,
 	storeKey *storetypes.KVStoreKey,
@@ -28,15 +58,15 @@ func DiffCollectionsMigration(
 		writeElem(i)
 	}
 
-	allkvs := []byte{}
+	h := sha256.New()
 	it := ctx.KVStore(storeKey).Iterator(nil, nil)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		kv := append(it.Key(), it.Value()...)
-		allkvs = append(allkvs, kv...)
+		h.Write(it.Key())
+		h.Write(it.Value())
 	}
 
-	hash := sha256.Sum256(allkvs)
+	hash := sha256.Sum256(nil)
 	if hex.EncodeToString(hash[:]) != targetHash {
 		return fmt.Errorf("hashes don't match: %s != %s", hex.EncodeToString(hash[:]), targetHash)
 	}

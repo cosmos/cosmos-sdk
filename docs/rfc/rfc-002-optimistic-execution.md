@@ -64,10 +64,10 @@ attempt to execute the proposal.
 ### Implementation
 
 The execution context needs to have the following information:
-- block info of the Optimistic Execution (OE) goroutine running, if any
-- termination and completion signal for the OE goroutine
+- The block proposal (`abci.RequestFinalizeBlock`)
+- Termination and completion signal for the OE goroutine
 
-The OE goroutine would run on top of a cached branch of the KVStore.
+The OE goroutine would run on top of a cached branch of the KVStore (which is the default behavior for `FinalizeBlock` as we only write to the underlying store once we've reached the end).
 
 The OE goroutine would periodically check if a termination signal has been sent to it, and stops if so. Once the OE goroutine finishes the execution it will set the completion signal.
 

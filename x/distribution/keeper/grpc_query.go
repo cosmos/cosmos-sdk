@@ -181,8 +181,8 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 			return false, nil
 		}
 		return true, nil
-	}, func(_ collections.Triple[sdk.ValAddress, uint64, uint64], value types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
-		return &value, nil
+	}, func(_ collections.Triple[sdk.ValAddress, uint64, uint64], value types.ValidatorSlashEvent) (types.ValidatorSlashEvent, error) {
+		return value, nil
 	},
 		query.WithCollectionPaginationTriplePrefix[sdk.ValAddress, uint64, uint64](valAddr),
 	)
@@ -190,12 +190,7 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, err
 	}
 
-	slashes := []types.ValidatorSlashEvent{}
-	for _, event := range events {
-		slashes = append(slashes, *event)
-	}
-
-	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation

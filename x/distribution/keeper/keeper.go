@@ -39,7 +39,7 @@ type Keeper struct {
 	ValidatorOutstandingRewards     collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	ValidatorHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
 	PreviousProposer                collections.Item[sdk.ConsAddress]
-	ValidatorSlashEvents            collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
+	ValidatorSlashEvents            collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent] // key is valAddr, height, period
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }

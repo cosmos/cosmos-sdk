@@ -20,27 +20,6 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx context.Context, delAddr sdk.AccAdd
 	return addr, err
 }
 
-// historical reference count (used for testcases)
-func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count uint64) {
-	iter, err := k.ValidatorHistoricalRewards.Iterate(
-		ctx, nil,
-	)
-
-	if errors.Is(err, collections.ErrInvalidIterator) {
-		return
-	}
-
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		rewards, err := iter.Value()
-		if err != nil {
-			panic(err)
-		}
-		count += uint64(rewards.ReferenceCount)
-	}
-	return
-}
-
 // iterate over slash events between heights, inclusive
 func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
@@ -71,31 +50,6 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.
 
 		height := k.K2()
 		if handler(height, event) {
-			break
-		}
-	}
-}
-
-// iterate over all slash events
-func (k Keeper) IterateValidatorSlashEvents(ctx context.Context, handler func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool)) {
-	iter, err := k.ValidatorSlashEvents.Iterate(ctx, nil)
-	if errors.Is(err, collections.ErrInvalidIterator) {
-		return
-	}
-
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		event, err := iter.Value()
-		if err != nil {
-			panic(err)
-		}
-
-		k, err := iter.Key()
-		if err != nil {
-			panic(err)
-		}
-
-		if handler(k.K1(), k.K2(), event) {
 			break
 		}
 	}

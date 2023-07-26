@@ -18,22 +18,21 @@ func SetParamsStaking(ctx sdk.Context, k stakingkeeper.Keeper) {
 
 // Set each validator's TotalValidatorBondShares and TotalLiquidShares to 0
 func SetAllValidatorBondAndLiquidSharesToZero(ctx sdk.Context, k stakingkeeper.Keeper) {
+	for _, val := range k.GetAllValidators(ctx) {
 
-	for _, Val := range k.GetAllValidators(ctx) {
+		val.TotalValidatorBondShares = sdk.ZeroDec()
+		val.TotalLiquidShares = sdk.ZeroDec()
 
-		Val.TotalValidatorBondShares = sdk.ZeroDec()
-		Val.TotalLiquidShares = sdk.ZeroDec()
-
-		k.SetValidator(ctx, Val)
+		k.SetValidator(ctx, val)
 	}
 }
 
 // Set each validator's ValidatorBond to false
 func SetAllDelegationValidatorBondsFalse(ctx sdk.Context, k stakingkeeper.Keeper) {
-	for _, Del := range k.GetAllDelegations(ctx) {
+	for _, del := range k.GetAllDelegations(ctx) {
 
-		Del.ValidatorBond = false
+		del.ValidatorBond = false
 
-		k.SetDelegation(ctx, Del)
+		k.SetDelegation(ctx, del)
 	}
 }

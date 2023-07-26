@@ -12,7 +12,6 @@ import (
 
 // Test setting params in the staking module
 func TestSetParamsStaking(t *testing.T) {
-
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -38,25 +37,24 @@ func TestSetParamsStaking(t *testing.T) {
 
 // Test setting each validator's TotalValidatorBondShares and TotalLiquidShares to 0
 func TestSetAllValidatorBondAndLiquidSharesToZero(t *testing.T) {
-
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	for _, Val := range app.StakingKeeper.GetAllValidators(ctx) {
+	for _, val := range app.StakingKeeper.GetAllValidators(ctx) {
 
 		// set the validator attributes on each val; exclude the new v11 attributes
 		preUpgradeValidator := stakingtypes.Validator{
-			OperatorAddress:   Val.OperatorAddress,
-			ConsensusPubkey:   Val.ConsensusPubkey,
-			Jailed:            Val.Jailed,
-			Status:            Val.Status,
-			Tokens:            Val.Tokens,
-			DelegatorShares:   Val.DelegatorShares,
-			Description:       Val.Description,
-			UnbondingHeight:   Val.UnbondingHeight,
-			MinSelfDelegation: Val.MinSelfDelegation,
-			Commission:        Val.Commission,
-			UnbondingTime:     Val.UnbondingTime,
+			OperatorAddress:   val.OperatorAddress,
+			ConsensusPubkey:   val.ConsensusPubkey,
+			Jailed:            val.Jailed,
+			Status:            val.Status,
+			Tokens:            val.Tokens,
+			DelegatorShares:   val.DelegatorShares,
+			Description:       val.Description,
+			UnbondingHeight:   val.UnbondingHeight,
+			MinSelfDelegation: val.MinSelfDelegation,
+			Commission:        val.Commission,
+			UnbondingTime:     val.UnbondingTime,
 		}
 		app.StakingKeeper.SetValidator(ctx, preUpgradeValidator)
 	}
@@ -64,15 +62,14 @@ func TestSetAllValidatorBondAndLiquidSharesToZero(t *testing.T) {
 	SetAllValidatorBondAndLiquidSharesToZero(ctx, app.StakingKeeper)
 
 	// check that the validator TotalValidatorBondShares and TotalLiquidShares were correctly set to 0
-	for _, Val := range app.StakingKeeper.GetAllValidators(ctx) {
-		require.Equal(t, sdk.ZeroDec(), Val.TotalValidatorBondShares)
-		require.Equal(t, sdk.ZeroDec(), Val.TotalLiquidShares)
+	for _, val := range app.StakingKeeper.GetAllValidators(ctx) {
+		require.Equal(t, sdk.ZeroDec(), val.TotalValidatorBondShares)
+		require.Equal(t, sdk.ZeroDec(), val.TotalLiquidShares)
 	}
 }
 
 // Test setting each validator's TotalDelegatorBondShares to 0
 func TestSetAllDelegatorBondSharesToZero(t *testing.T) {
-
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -90,8 +87,7 @@ func TestSetAllDelegatorBondSharesToZero(t *testing.T) {
 	SetAllDelegationValidatorBondsFalse(ctx, app.StakingKeeper)
 
 	// check that the delegation ValidatorBond was correctly set to false
-	for _, Del := range app.StakingKeeper.GetAllDelegations(ctx) {
-		require.Equal(t, false, Del.ValidatorBond)
+	for _, del := range app.StakingKeeper.GetAllDelegations(ctx) {
+		require.Equal(t, false, del.ValidatorBond)
 	}
-
 }

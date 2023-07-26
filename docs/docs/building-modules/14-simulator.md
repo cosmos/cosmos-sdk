@@ -4,8 +4,12 @@ sidebar_position: 1
 
 # Module Simulation
 
+<<<<<<< HEAD
 :::note
 ### Pre-requisite Readings
+=======
+:::note Pre-requisite Readings
+>>>>>>> 2c5f36c25 (docs: improve usage of `:::note` (#17132))
 
 * [Cosmos Blockchain Simulator](../core/12-simulation.md)
 :::

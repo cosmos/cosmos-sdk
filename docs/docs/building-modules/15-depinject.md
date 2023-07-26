@@ -4,9 +4,7 @@ sidebar_position: 1
 
 # Dependency Injection
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Cosmos SDK Dependency Injection Framework](../tooling/02-depinject.md)
 

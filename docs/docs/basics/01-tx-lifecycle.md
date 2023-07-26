@@ -8,8 +8,12 @@ sidebar_position: 1
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/01-transactions.md). The transaction is referred to as `Tx`.
 :::
 
+<<<<<<< HEAD
 :::note
 ### Pre-requisite Readings
+=======
+:::note Pre-requisite Readings
+>>>>>>> 2c5f36c25 (docs: improve usage of `:::note` (#17132))
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 :::

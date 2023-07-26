@@ -323,7 +323,7 @@ SIM_COMMIT ?= true
 
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
 
 test-sim-profile:

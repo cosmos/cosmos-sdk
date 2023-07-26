@@ -14,16 +14,14 @@ sidebar_position: 1
 This document details how to define each module simulation functions to be
 integrated with the application `SimulationManager`.
   
-* [Module Simulation](#module-simulation)
-    * [Synopsis](#synopsis)
-    * [Simulation package](#simulation-package)
-        * [Store decoders](#store-decoders)
-        * [Randomized genesis](#randomized-genesis)
-        * [Randomized parameter changes](#randomized-parameter-changes)
-        * [Random weighted operations](#random-weighted-operations)
-        * [Random proposal contents](#random-proposal-contents)
-    * [Registering simulation functions](#registering-simulation-functions)
-    * [App Simulator manager](#app-simulator-manager)
+* [Simulation package](#simulation-package)
+    * [Store decoders](#store-decoders)
+    * [Randomized genesis](#randomized-genesis)
+    * [Randomized parameter changes](#randomized-parameter-changes)
+    * [Random weighted operations](#random-weighted-operations)
+    * [Random proposal contents](#random-proposal-contents)
+* [Registering simulation functions](#registering-simulation-functions)
+* [App Simulator manager](#app-simulator-manager)
 
 ## Simulation package
 

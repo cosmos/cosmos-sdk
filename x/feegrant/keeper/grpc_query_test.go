@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 				suite.Require().Equal(len(resp.Allowances), 1)
 				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
 				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
-				suite.Require().Equal(resp.Pagination.Total, uint64(2))
+				suite.Require().Equal(resp.Pagination.Total, uint64(1))
 			},
 		},
 	}

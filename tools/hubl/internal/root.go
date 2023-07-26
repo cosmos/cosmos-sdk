@@ -4,9 +4,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/tools/hubl/internal/config"
 	"cosmossdk.io/tools/hubl/internal/keyring"
-	"github.com/spf13/cobra"
 )
 
 func RootCommand() (*cobra.Command, error) {

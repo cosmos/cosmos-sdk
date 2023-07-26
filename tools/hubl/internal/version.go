@@ -5,8 +5,9 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"cosmossdk.io/tools/hubl/internal/flags"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/hubl/internal/flags"
 )
 
 func VersionCmd() *cobra.Command {

@@ -6,18 +6,20 @@ import (
 	"io"
 	"path"
 
+	"github.com/spf13/cobra"
+
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256r1"
 	"cosmossdk.io/tools/hubl/internal/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cobra"
 )
 
 func Cmd() *cobra.Command {
@@ -26,7 +28,12 @@ func Cmd() *cobra.Command {
 		Short: "Global keyring management for Hubl",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SetContext(context.Background())
-			keyring, err := createKeyring(cmd.InOrStdin(), keyring.BackendFile)
+			backend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			if err != nil {
+				return err
+			}
+
+			keyring, err := createKeyring(cmd.InOrStdin(), backend)
 			if err != nil {
 				return err
 			}
@@ -50,6 +57,8 @@ func Cmd() *cobra.Command {
 		keys.AddKeyCommand(),
 		keys.ListKeysCmd(),
 	)
+
+	keyringCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
 
 	return keyringCmd
 }

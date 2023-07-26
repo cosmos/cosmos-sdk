@@ -42,19 +42,3 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.
 
 	return nil
 }
-
-// delete slash events for a particular validator
-func (k Keeper) DeleteValidatorSlashEvents(ctx context.Context, val sdk.ValAddress) {
-	err := k.ValidatorSlashEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](val))
-	if err != nil {
-		panic(err)
-	}
-}
-
-// delete all slash events
-func (k Keeper) DeleteAllValidatorSlashEvents(ctx context.Context) {
-	err := k.ValidatorSlashEvents.Clear(ctx, nil)
-	if err != nil {
-		panic(err)
-	}
-}

@@ -102,11 +102,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.enhanceCommandCommon(queryCmd, appOptions, customQueryCmds, enhanceQuery); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customQueryCmds); err != nil {
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds, enhanceQuery)
+		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
@@ -115,11 +115,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
-		if err := builder.enhanceCommandCommon(msgCmd, appOptions, customMsgCmds, enhanceMsg); err != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customMsgCmds); err != nil {
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds, enhanceMsg)
+		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
 		if err != nil {
 			return err
 		}

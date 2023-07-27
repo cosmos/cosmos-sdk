@@ -7,9 +7,9 @@
 
 ## Background
 
-Before ABCI++/1.0, the first and only time a CometBFT blockchain's application layer would know about a block proposal is after the voting period, at which point CometBFT would invoke `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` ABCI methods of the application, with the block proposal contents passed in.
+Before ABCI++, the first and only time a CometBFT blockchain's application layer would know about a block proposal is after the voting period, at which point CometBFT would invoke `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` ABCI methods of the application, with the block proposal contents passed in.
 
-With the introduction of ABCI++/1.0, the application layer now receives the block proposal before the voting period commences. This can be used to optimistically execute the block proposal in parallel with the voting process, thus reducing the block time.
+With the introduction of ABCI++, the application layer now receives the block proposal before the voting period commences. This can be used to optimistically execute the block proposal in parallel with the voting process, thus reducing the block time.
 
 ## Proposal
 
@@ -57,11 +57,10 @@ flowchart LR;
 
 Some considerations:
 
-- In the case that a proposal is being rejected by the local node, this node won't
-attempt to execute the proposal.
+- In the case that a proposal is being rejected by the local node, this node won't attempt to execute the proposal.
 - The app must drop any previous Optimistic Execution data if `ProcessProposal` is called, in other words, abort and restart.
 
-### Implementation
+## Implementation
 
 The execution context needs to have the following information:
 - The block proposal (`abci.RequestFinalizeBlock`)
@@ -71,34 +70,36 @@ The OE goroutine would run on top of a cached branch of the KVStore (which is th
 
 The OE goroutine would periodically check if a termination signal has been sent to it, and stops if so. Once the OE goroutine finishes the execution it will set the completion signal.
 
-To prevent bad validators from overwhelming other nodes, we will only allow optimistic processing for the first round proposal of a given height. (??? what does this mean exactly?)
-
-> Sei reported issues when there's a planned upgrade, once I figure out why, I'll add it here.
-
-Upon receiving a `ProcessProposal` call, the SDK would adopt the following procedure:
+Upon receiving a `ProcessProposal` call, the SDK would adopt the following procedure if OE is enabled:
 
 ```
-if height > initial height
+abort any running OE goroutine
+if height > initial height:
     set OE fields
-    create branches for all mutable states
-    kick off an OP goroutine that optimistically process the proposal with the state branches
-else if block hash != OE hash
-    send termination signal to the running OE goroutine
-    clear up OE fields from the context
-else
+    kick off an OP goroutine that optimistically process the proposal
+else:
     do nothing
 respond to CometBFT
 ```
 
+OE won't be enabled during the first block of the chain, regardless of the configuration. This is because during the first block `InitChain` writes to `finalizeBlockState` so `FinalizeBlock` starts with an already initialized state. In the case that an abort would be needed it would mean we need to run `InitChain` again or discard/recover the state; either way complicates the implementation too much just for a single block.
 
-> Maybe add more details about the implementation.
+Upon receiving a `FinalizeBlock` call, the SDK would adopt the following procedure:
 
+```
+if OE is enabled:
+    abort if the currently executing OE's hash doesn't match the proposal's hash
+    if aborted:
+        process the proposal synchronously
+    else:
+        respond to CometBFT
+```
 
 ## Consequences
 
 ### Backwards Compatibility
 
-This could be backported as far as Cosmos SDK v0.47 as that's the first version that includes the new ABCI++/1.0 interface.
+This can only be implemented on SDK versions using ABCI++, meaning v0.50.x and above.
 
 ### Positive
 
@@ -106,13 +107,12 @@ This could be backported as far as Cosmos SDK v0.47 as that's the first version 
 
 ### Negative
 
-- 
+- Adds some complexity to the SDK
+- Multiple rounds on a block that contains long running transactions could be problematic
 
 ### Neutral
 
-- 
-
-
+- Each node can decide whether to use this feature or not.
 
 ### References
 

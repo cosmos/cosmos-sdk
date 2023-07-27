@@ -44,10 +44,10 @@ func TestExportAndInitGenesis(t *testing.T) {
 
 	newInfo1, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
 	require.NotEqual(t, info1, newInfo1)
-	// Initialise genesis with genesis state before tombstone
+	// Initialize genesis with genesis state before tombstone
 	slashing.InitGenesis(ctx, app.SlashingKeeper, app.StakingKeeper, genesisState)
 
-	// Validator isTombstoned should return false as GenesisState is initialised
+	// Validator isTombstoned should return false as GenesisState is initialized
 	ok = app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))
 	require.False(t, ok)
 

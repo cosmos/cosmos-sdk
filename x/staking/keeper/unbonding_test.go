@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 type MockStakingHooks struct {
@@ -91,7 +92,7 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 
 func doUnbondingDelegation(
 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
-) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
+) (completionTime time.Time, bondedAmt, notBondedAmt sdk.Int) {
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -349,7 +350,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
-	// Not bonded amount back to what it was originaly
+	// Not bonded amount back to what it was originally
 	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }
 
@@ -381,6 +382,6 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
-	// Not bonded amount back to what it was originaly
+	// Not bonded amount back to what it was originally
 	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }

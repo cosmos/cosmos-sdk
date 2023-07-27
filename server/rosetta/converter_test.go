@@ -5,21 +5,17 @@ import (
 	"encoding/json"
 	"testing"
 
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

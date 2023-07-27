@@ -20,9 +20,9 @@ var initialProposalID = uint64(100000000000000)
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgDeposit      = "op_weight_msg_deposit"       //nolint:gosec
-	OpWeightMsgVote         = "op_weight_msg_vote"          //nolint:gosec
-	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote" //nolint:gosec
+	OpWeightMsgDeposit      = "op_weight_msg_deposit"       
+	OpWeightMsgVote         = "op_weight_msg_vote"          
+	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote" 
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

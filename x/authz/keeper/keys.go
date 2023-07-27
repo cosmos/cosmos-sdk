@@ -20,7 +20,7 @@ const StoreKey = authz.ModuleName
 // Items are stored with the following key: values
 //
 // - 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: Grant
-func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
+func grantStoreKey(grantee, granter sdk.AccAddress, msgType string) []byte {
 	m := conv.UnsafeStrToBytes(msgType)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)

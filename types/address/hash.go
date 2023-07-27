@@ -66,6 +66,6 @@ func Module(moduleName string, key []byte) []byte {
 }
 
 // Derive derives a new address from the main `address` and a derivation `key`.
-func Derive(address []byte, key []byte) []byte {
+func Derive(address, key []byte) []byte {
 	return Hash(conv.UnsafeBytesToStr(address), key)
 }

@@ -71,7 +71,7 @@ func (s *decimalInternalTestSuite) TestDecMarshalJSON() {
 				return
 			}
 			if !tt.wantErr {
-				s.Require().Equal(tt.want, string(got), "incorrect marshalled value")
+				s.Require().Equal(tt.want, string(got), "incorrect marshaled value")
 				unmarshalledDec := NewDec(0)
 				err := unmarshalledDec.UnmarshalJSON(got)
 				s.Require().NoError(err)

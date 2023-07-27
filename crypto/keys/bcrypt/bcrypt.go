@@ -85,7 +85,7 @@ type hashed struct {
 // cost. If the cost given is less than MinCost, the cost will be set to
 // DefaultCost, instead. Use CompareHashAndPassword, as defined in this package,
 // to compare the returned hashed password with its cleartext version.
-func GenerateFromPassword(salt []byte, password []byte, cost int) ([]byte, error) {
+func GenerateFromPassword(salt, password []byte, cost int) ([]byte, error) {
 	if len(salt) != maxSaltSize {
 		return nil, fmt.Errorf("salt len must be %v", maxSaltSize)
 	}
@@ -129,7 +129,7 @@ func Cost(hashedPassword []byte) (int, error) {
 	return p.cost, nil
 }
 
-func newFromPassword(salt []byte, password []byte, cost int) (*hashed, error) {
+func newFromPassword(salt, password []byte, cost int) (*hashed, error) {
 	if cost < MinCost {
 		cost = DefaultCost
 	}
@@ -210,7 +210,7 @@ func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cip
 	// Bug compatibility with C bcrypt implementations. They use the trailing
 	// NULL in the key string during expansion.
 	// We copy the key to prevent changing the underlying array.
-	ckey := append(key[:len(key):len(key)], 0) //nolint:gocritic // used in original https://cs.opensource.google/go/x/crypto/+/master:bcrypt/bcrypt.go
+	ckey := append(key[:len(key):len(key)], 0) 
 
 	c, err := blowfish.NewSaltedCipher(ckey, csalt)
 	if err != nil {

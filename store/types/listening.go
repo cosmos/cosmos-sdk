@@ -11,7 +11,7 @@ type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
 	// delete bool indicates if it was a delete; true: delete, false: set
-	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
+	OnWrite(storeKey StoreKey, key, value []byte, delete bool) error
 }
 
 // StoreKVPairWriteListener is used to configure listening to a KVStore by
@@ -33,7 +33,7 @@ func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairW
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed
 // Protobuf encoded StoreKVPairs.
-func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, key, value []byte, delete bool) error {
 	kvPair := &StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Key:      key,
@@ -65,7 +65,7 @@ func NewMemoryListener(key StoreKey) *MemoryListener {
 }
 
 // OnWrite implements WriteListener interface.
-func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
+func (fl *MemoryListener) OnWrite(storeKey StoreKey, key, value []byte, delete bool) error {
 	fl.stateCache = append(fl.stateCache, StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Delete:   delete,

@@ -179,7 +179,7 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	}
 }
 
-// MarshalInterface is a convenience function for proto marshalling interfaces. It packs
+// MarshalInterface is a convenience function for proto marshaling interfaces. It packs
 // the provided value, which must be an interface, in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use Marshal instead
 func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
@@ -213,7 +213,7 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return pc.UnpackAny(any, ptr)
 }
 
-// MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
+// MarshalInterfaceJSON is a convenience function for proto marshaling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {

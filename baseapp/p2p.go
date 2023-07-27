@@ -8,9 +8,10 @@ package baseapp
 // so this file mostly acts as confusing boilerplate.
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type peerFilters struct {

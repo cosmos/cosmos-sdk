@@ -126,12 +126,12 @@ func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
 	err := legacyCdc.UnmarshalJSON([]byte(txSigned), &tx)
 	require.NoError(t, err)
 
-	// Marshalling/unmarshalling the tx should work.
+	// Marshaling/unmarshalling the tx should work.
 	marshaledTx, err := legacyCdc.MarshalJSON(tx)
 	require.NoError(t, err)
 	require.Equal(t, string(marshaledTx), txSigned)
 
-	// Marshalling/unmarshalling the tx wrapped in a struct should work.
+	// Marshaling/unmarshalling the tx wrapped in a struct should work.
 	txRequest := &cli.BroadcastReq{
 		Mode: "block",
 		Tx:   tx,

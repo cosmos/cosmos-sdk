@@ -16,13 +16,12 @@ import (
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	// unnamed import of statik for swagger UI support
+	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 // Server defines the server's API interface.
@@ -57,7 +56,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 
 func New(clientCtx client.Context, logger log.Logger) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
-	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
+	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
 		EmitDefaults: true,
 		Indent:       "  ",
@@ -74,7 +73,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 
 			// This is necessary to get error details properly
-			// marshalled in unary requests.
+			// marshaled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
 
 			// Custom header matcher for mapping request headers to

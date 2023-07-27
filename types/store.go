@@ -54,7 +54,7 @@ func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, lim
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
+func DiffKVStores(a, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 

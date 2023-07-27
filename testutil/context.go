@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
-func DefaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
+func DefaultContext(key, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)

@@ -204,7 +204,7 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 		memStore.Set(types.FwdCapabilityKey(owner.Module, cap), []byte(owner.Name))
 
 		// Set the reverse mapping between the module and capability name and the
-		// index in the in-memory store. Since marshalling and unmarshalling into a store
+		// index in the in-memory store. Since marshaling and unmarshalling into a store
 		// will change memory address of capability, we simply store index as value here
 		// and retrieve the in-memory pointer to the capability from our map
 		memStore.Set(types.RevCapabilityKey(owner.Module, owner.Name), sdk.Uint64ToBigEndian(index))
@@ -252,7 +252,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
 
 	// Set the reverse mapping between the module and capability name and the
-	// index in the in-memory store. Since marshalling and unmarshalling into a store
+	// index in the in-memory store. Since marshaling and unmarshalling into a store
 	// will change memory address of capability, we simply store index as value here
 	// and retrieve the in-memory pointer to the capability from our map
 	memStore.Set(types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(index))
@@ -304,7 +304,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
 
 	// Set the reverse mapping between the module and capability name and the
-	// index in the in-memory store. Since marshalling and unmarshalling into a store
+	// index in the in-memory store. Since marshaling and unmarshalling into a store
 	// will change memory address of capability, we simply store index as value here
 	// and retrieve the in-memory pointer to the capability from our map
 	memStore.Set(types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(cap.GetIndex()))

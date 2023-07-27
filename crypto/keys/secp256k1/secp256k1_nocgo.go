@@ -6,7 +6,6 @@ package secp256k1
 import (
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
-
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -24,7 +23,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 // VerifyBytes verifies a signature of the form R || S.
 // It rejects signatures which are not in lower-S form.
-func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
+func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	if len(sigStr) != 64 {
 		return false
 	}

@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-
-	"github.com/gorilla/mux"
 )
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {

@@ -167,7 +167,7 @@ func (status *ProposalStatus) Unmarshal(data []byte) error {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

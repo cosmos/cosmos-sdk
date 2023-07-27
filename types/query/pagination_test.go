@@ -317,7 +317,7 @@ func ExamplePaginate() {
 	authStore := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key, value []byte) error {
 		var tempRes sdk.Coin
 		err := app.AppCodec().Unmarshal(value, &tempRes)
 		if err != nil {

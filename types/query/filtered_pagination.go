@@ -18,7 +18,7 @@ import (
 func FilteredPaginate(
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
-	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
+	onResult func(key, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
@@ -126,7 +126,7 @@ func FilteredPaginate(
 // If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
 // The resulting slice (of type F) can be of a different type than the one being iterated through
 // (type T), so it's possible to do any necessary transformation inside the onResult function.
-func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
+func GenericFilteredPaginate[T, F codec.ProtoMarshaler](
 	cdc codec.BinaryCodec,
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,

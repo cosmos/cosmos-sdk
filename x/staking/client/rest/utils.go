@@ -25,7 +25,7 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(clientCtx client.Context, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
+func queryTxs(clientCtx client.Context, action, delegatorAddr string) (*sdk.SearchTxsResult, error) {
 	page := 1
 	limit := 100
 	events := []string{

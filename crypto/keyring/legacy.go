@@ -100,7 +100,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
 // passphrase. An error is returned if the key does not exist or if the Info for
 // the key is invalid.
-func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (types.PrivKey, error) {
+func (kb dbKeybase) ExportPrivateKeyObject(name, passphrase string) (types.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 // ExportPrivKey returns a private key in ASCII armored format.
 // It returns an error if the key does not exist or a wrong encryption passphrase
 // is supplied.
-func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
+func (kb dbKeybase) ExportPrivKey(name, decryptPassphrase string,
 	encryptPassphrase string,
 ) (armor string, err error) {
 	priv, err := kb.ExportPrivateKeyObject(name, decryptPassphrase)

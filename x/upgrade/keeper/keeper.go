@@ -168,7 +168,7 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
-// (implicitly cancelling the current plan)
+// (implicitly canceling the current plan)
 // ScheduleUpgrade will also write the upgraded client to the upgraded client path
 // if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
@@ -376,7 +376,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 // `info` should be provided and contain Plan.Info data in order to support
 // auto download functionality by cosmovisor and other tools using upgarde-info.json
 // (GetUpgradeInfoPath()) file.
-func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name string, info string) error {
+func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name, info string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err

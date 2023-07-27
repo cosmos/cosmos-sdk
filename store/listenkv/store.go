@@ -32,7 +32,7 @@ func (s *Store) Get(key []byte) []byte {
 
 // Set implements the KVStore interface. It traces a write operation and
 // delegates the Set call to the parent KVStore.
-func (s *Store) Set(key []byte, value []byte) {
+func (s *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	s.parent.Set(key, value)
 	s.onWrite(false, key, value)
@@ -87,7 +87,7 @@ func newTraceIterator(parent types.Iterator, listeners []types.WriteListener) ty
 }
 
 // Domain implements the Iterator interface.
-func (li *listenIterator) Domain() (start []byte, end []byte) {
+func (li *listenIterator) Domain() (start, end []byte) {
 	return li.parent.Domain()
 }
 

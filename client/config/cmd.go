@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/spf13/cobra"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

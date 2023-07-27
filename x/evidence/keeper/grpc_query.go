@@ -3,16 +3,14 @@ package keeper
 import (
 	"context"
 
+	proto "github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	proto "github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -61,7 +59,7 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 	store := ctx.KVStore(k.storeKey)
 	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
-	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key, value []byte) error {
 		result, err := k.UnmarshalEvidence(value)
 		if err != nil {
 			return err

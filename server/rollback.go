@@ -3,10 +3,11 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
 	tmcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // NewRollbackCmd creates a command to rollback tendermint and multistore state by one height.

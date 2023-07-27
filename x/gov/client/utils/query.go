@@ -33,7 +33,7 @@ func (p Proposer) String() string {
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
 // will fetch and build deposits directly from the returned txs and return a
-// JSON marshalled result or any error that occurred.
+// JSON marshaled result or any error that occurred.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
@@ -89,7 +89,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
 // will fetch and build votes directly from the returned txs and return a JSON
-// marshalled result or any error that occurred.
+// marshaled result or any error that occurred.
 func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		votes      []types.Vote

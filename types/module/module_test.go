@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -15,6 +14,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -358,6 +359,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	someFieldWriter.Write([]byte(`"someValue"`))
 	return someFieldWriter.Close()
 }
+
 func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
 	rdr, err := src("someField")
 	if err != nil {

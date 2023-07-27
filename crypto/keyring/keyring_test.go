@@ -1153,7 +1153,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
-func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
+func requireEqualInfo(t *testing.T, key, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())
 	require.Equal(t, key.GetPubKey(), mnemonic.GetPubKey())

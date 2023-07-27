@@ -34,7 +34,7 @@ func TestHistoricalInfo(t *testing.T) {
 	require.NotPanics(t, func() {
 		value = types.ModuleCdc.MustMarshal(&hi)
 	})
-	require.NotNil(t, value, "Marshalled HistoricalInfo is nil")
+	require.NotNil(t, value, "Marshaled HistoricalInfo is nil")
 
 	recv, err := types.UnmarshalHistoricalInfo(types.ModuleCdc, value)
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")

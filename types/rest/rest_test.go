@@ -363,7 +363,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
-	// test marshalling failure
+	// test marshaling failure
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
 
@@ -388,7 +388,7 @@ func (badJSONMarshaller) MarshalJSON() ([]byte, error) {
 
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
-// the marshalled struct.
+// the marshaled struct.
 func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, expectedBody []byte) {
 	// test using regular struct
 	w := httptest.NewRecorder()
@@ -403,12 +403,12 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
-	marshalled, err := ctx.LegacyAmino.MarshalJSON(obj)
+	marshaled, err := ctx.LegacyAmino.MarshalJSON(obj)
 	require.NoError(t, err)
 
-	// test using marshalled struct
+	// test using marshaled struct
 	w = httptest.NewRecorder()
-	rest.PostProcessResponse(w, ctx, marshalled)
+	rest.PostProcessResponse(w, ctx, marshaled)
 
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result() //nolint:bodyclose

@@ -17,10 +17,10 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"          //nolint:gosec
-	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    //nolint:gosec
-	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" //nolint:gosec
-	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           //nolint:gosec
+	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"          
+	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    
+	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" 
+	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

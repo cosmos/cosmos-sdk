@@ -874,7 +874,7 @@ type MockListener struct {
 	stateCache []types.StoreKVPair
 }
 
-func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key, value []byte, delete bool) error {
 	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Key:      key,

@@ -58,7 +58,7 @@ type ValidatorSet interface {
 	TotalBondedTokens(sdk.Context) sdk.Int                       // total bonded tokens within the validator set
 	StakingTokenSupply(sdk.Context) sdk.Int                      // total staking token supply
 
-	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, InfractionType)
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator

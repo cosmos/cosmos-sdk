@@ -61,7 +61,7 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = Register(RootCodespace, 15, "no signatures supplied")
 
-	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
+	// ErrJSONMarshal defines an ABCI typed JSON marshaling error
 	ErrJSONMarshal = Register(RootCodespace, 16, "failed to marshal JSON bytes")
 
 	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error

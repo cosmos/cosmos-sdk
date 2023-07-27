@@ -3,10 +3,9 @@ package keeper
 import (
 	"github.com/gogo/protobuf/grpc"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.

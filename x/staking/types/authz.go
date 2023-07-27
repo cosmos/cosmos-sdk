@@ -16,7 +16,7 @@ var (
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
-func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
+func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
 	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 	}, nil
 }
 
-func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
+func validateAndBech32fy(allowed, denied []sdk.ValAddress) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
 		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
 	}

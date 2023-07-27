@@ -4,13 +4,11 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-
+	tiavl "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	tiavl "github.com/cosmos/iavl"
-
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -254,7 +252,7 @@ func mockStoreWithStuff() types.KVStore {
 	return store
 }
 
-func checkValue(t *testing.T, store types.KVStore, key []byte, expected []byte) {
+func checkValue(t *testing.T, store types.KVStore, key, expected []byte) {
 	bz := store.Get(key)
 	require.Equal(t, expected, bz)
 }

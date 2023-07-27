@@ -198,7 +198,7 @@ func ExampleFilteredPaginate() {
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
 	var balResult sdk.Coins
-	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {
@@ -229,7 +229,7 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
 	var balResult sdk.Coins
-	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	res, err = query.FilteredPaginate(accountStore, pageReq, func(key, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {

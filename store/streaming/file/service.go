@@ -27,7 +27,7 @@ type StreamingService struct {
 	storeListeners []*types.MemoryListener // a series of KVStore listeners for each KVStore
 	filePrefix     string                  // optional prefix for each of the generated files
 	writeDir       string                  // directory to write files into
-	codec          codec.BinaryCodec       // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	codec          codec.BinaryCodec       // marshaller used for re-marshaling the ABCI messages to write them out to the destination files
 
 	currentBlockNumber int64
 	blockMetadata      types.BlockMetadata

@@ -25,7 +25,7 @@ var FeeAllowanceKeyPrefix = []byte{0x00}
 
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee
 // We store by grantee first to allow searching by everyone who granted to you
-func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
+func FeeAllowanceKey(granter, grantee sdk.AccAddress) []byte {
 	return append(FeeAllowancePrefixByGrantee(grantee), address.MustLengthPrefix(granter.Bytes())...)
 }
 

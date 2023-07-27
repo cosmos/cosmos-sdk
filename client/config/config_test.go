@@ -53,7 +53,7 @@ func TestConfigCmd(t *testing.T) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(t, err)
 
-	//./build/simd config node //http://localhost:1
+	// ./build/simd config node //http://localhost:1
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"node"})

@@ -13,7 +13,7 @@ type byter interface {
 	Bytes() []byte
 }
 
-func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) {
+func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
 	// Marshal to JSON bytes.
 	js, err := cdc.MarshalJSON(src)
 	require.Nil(t, err, "%+v", err)

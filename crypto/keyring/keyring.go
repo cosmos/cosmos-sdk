@@ -112,7 +112,7 @@ type Importer interface {
 	ImportPrivKey(uid, armor, passphrase string) error
 
 	// ImportPubKey imports ASCII armored public keys.
-	ImportPubKey(uid string, armor string) error
+	ImportPubKey(uid, armor string) error
 }
 
 // LegacyInfoImporter is implemented by key stores that support import of Info types.
@@ -304,7 +304,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
+func (ks keystore) ImportPubKey(uid, armor string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
@@ -551,7 +551,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 	return info, mnemonic, nil
 }
 
-func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
+func (ks keystore) NewAccount(name, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (Info, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}

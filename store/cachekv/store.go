@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/tendermint/tendermint/libs/math"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -72,7 +72,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 }
 
 // Set implements types.KVStore.
-func (store *Store) Set(key []byte, value []byte) {
+func (store *Store) Set(key, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -397,7 +397,7 @@ func (store *Store) deleteKeysFromUnsortedCache(unsorted []*kv.Pair) {
 // etc
 
 // Only entrypoint to mutate store.cache.
-func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
+func (store *Store) setCacheValue(key, value []byte, deleted, dirty bool) {
 	types.AssertValidKey(key)
 
 	keyStr := conv.UnsafeBytesToStr(key)

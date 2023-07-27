@@ -198,7 +198,7 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-// checkAminoMarshalError checks if there are errors with marshalling non-amino
+// checkAminoMarshalError checks if there are errors with marshaling non-amino
 // txs with amino.
 func checkAminoMarshalError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to handle the SignMode errors

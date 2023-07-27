@@ -22,7 +22,7 @@ const (
 var DefaultPowerReduction = NewIntFromUint64(1000000)
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
-func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {
+func TokensToConsensusPower(tokens, powerReduction Int) int64 {
 	return (tokens.Quo(powerReduction)).Int64()
 }
 

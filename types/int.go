@@ -14,31 +14,31 @@ func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
 }
 
-func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
+func equal(i, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
 
-func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
+func gt(i, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
-func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
+func gte(i, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
 
-func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
+func lt(i, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
 
-func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
+func lte(i, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
 
-func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
+func add(i, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
 
-func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
+func sub(i, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
 
-func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
+func mul(i, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
 
-func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
+func div(i, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 
-func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
+func mod(i, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
 func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
 
-func min(i *big.Int, i2 *big.Int) *big.Int {
+func min(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
@@ -46,7 +46,7 @@ func min(i *big.Int, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
-func max(i *big.Int, i2 *big.Int) *big.Int {
+func max(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == -1 {
 		return new(big.Int).Set(i2)
 	}

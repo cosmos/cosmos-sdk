@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/gogo/protobuf/jsonpb"
-
 	"github.com/gogo/protobuf/proto"
 )
 

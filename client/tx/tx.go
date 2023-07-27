@@ -122,7 +122,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 
 		if err != nil || !ok {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "canceled transaction")
 			return err
 		}
 	}

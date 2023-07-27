@@ -141,12 +141,12 @@ func ValidateChanges(changes []ParamChange) error {
 }
 
 // ErrUnknownSubspace returns an unknown subspace error.
-func ErrUnknownSubspace(codespace string, space string) error {
+func ErrUnknownSubspace(codespace, space string) error {
 	return fmt.Errorf("unknown subspace %s", space)
 }
 
 // ErrSettingParameter returns an error for failing to set a parameter.
-func ErrSettingParameter(codespace string, key, subkey, value, msg string) error {
+func ErrSettingParameter(codespace, key, subkey, value, msg string) error {
 	return fmt.Errorf("error setting parameter %s on %s (%s): %s", value, key, subkey, msg)
 }
 

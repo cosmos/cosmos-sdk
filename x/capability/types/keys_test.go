@@ -34,7 +34,7 @@ func TestIndexFromKey(t *testing.T) {
 	require.Equal(t, uint64(3162), types.IndexFromKey([]byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xc, 0x5a}))
 }
 
-// to test the backward compatibiltiy of the new function
+// to test the backward compatibility of the new function
 func legacyFwdCapabilityKey(module string, cap *types.Capability) []byte {
 	return []byte(fmt.Sprintf("%s/fwd/%p", module, cap))
 }

@@ -17,7 +17,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	hexPK := "035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A"
 	bz, err := hex.DecodeString(hexPK)
 	require.NoError(t, err)
-	copy(tmpKey[:], bz)
+	copy(tmpKey, bz)
 
 	lInfo := newLedgerInfo("some_name", &secp256k1.PubKey{Key: tmpKey}, *hd.NewFundraiserParams(5, sdk.CoinType, 1), hd.Secp256k1Type)
 	require.Equal(t, TypeLedger, lInfo.GetType())

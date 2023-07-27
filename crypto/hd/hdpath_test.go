@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/types"
-
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var defaultBIP39Passphrase = ""
@@ -206,34 +206,34 @@ func ExampleSomeBIP32TestVecs() {
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// bitcoin
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// ether
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// INVALID
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 
 	fmt.Println()
@@ -245,13 +245,13 @@ func ExampleSomeBIP32TestVecs() {
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	fmt.Println()
 	fmt.Println("BIP 32 example")
@@ -261,7 +261,7 @@ func ExampleSomeBIP32TestVecs() {
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)
 	//

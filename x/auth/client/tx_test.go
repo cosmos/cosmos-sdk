@@ -137,7 +137,7 @@ func TestBatchScanner_Scan(t *testing.T) {
 	}
 }
 
-func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
+func compareEncoders(t *testing.T, expected, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "")
 

@@ -21,6 +21,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -493,9 +494,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
 		// abort any running OE
-		if app.oeEnabled && app.oeInfo != nil && app.oeInfo.Running() {
-			app.oeInfo.Abort()
-			_, _ = app.oeInfo.WaitResult() // ignore the result
+		if app.optimisticExecEnabled && app.optimisticExec != nil && app.optimisticExec.Running() {
+			app.optimisticExec.Abort()
+			_, _ = app.optimisticExec.WaitResult() // ignore the result
 		}
 
 		app.setState(execModeFinalize, header)
@@ -540,9 +541,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
 	// During the first block we'll be carrying state from InitChain, so it would be impossible for us to easily revert.
-	if app.oeEnabled && req.Height > app.initialHeight {
-		app.oeInfo = SetupOptimisticExecution(req, app.internalFinalizeBlock)
-		app.oeInfo.Execute()
+	if app.optimisticExecEnabled && req.Height > app.initialHeight {
+		app.optimisticExec = oe.Execute(req, app.internalFinalizeBlock, app.logger)
 	}
 
 	return resp, nil
@@ -730,7 +730,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.oeInfo != nil && app.oeInfo.ShouldAbort() {
+	if app.optimisticExec != nil && app.optimisticExec.ShouldAbort() {
 		return nil, nil
 	}
 
@@ -744,7 +744,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
 		// check before every tx if we should abort
-		if app.oeInfo != nil && app.oeInfo.ShouldAbort() {
+		if app.optimisticExec != nil && app.optimisticExec.ShouldAbort() {
 			return nil, nil
 		}
 
@@ -785,7 +785,6 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		// AppHash:               app.workingHash(),
 	}, nil
 }
 
@@ -800,11 +799,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	if app.oeInfo != nil && app.oeEnabled {
+	if app.optimisticExec != nil && app.optimisticExecEnabled {
 		// check if the hash we got is the same as the one we are executing
-		aborted := app.oeInfo.AbortIfNeeded(req.Hash)
+		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not
-		res, err := app.oeInfo.WaitResult()
+		res, err := app.optimisticExec.WaitResult()
 
 		// only return if we are not aborting
 		if !aborted {
@@ -819,7 +818,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
-	app.oeInfo = nil
+	app.optimisticExec = nil
 	res, err := app.internalFinalizeBlock(req)
 	if res != nil {
 		res.AppHash = app.workingHash()

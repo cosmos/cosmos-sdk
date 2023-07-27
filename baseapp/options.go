@@ -94,6 +94,11 @@ func SetChainID(chainID string) func(*BaseApp) {
 	return func(app *BaseApp) { app.chainID = chainID }
 }
 
+// SetOptimisticExecution enables or disables optimistic execution.
+func SetOptimisticExecution(enable bool) func(*BaseApp) {
+	return func(app *BaseApp) { app.optimisticExecEnabled = enable }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

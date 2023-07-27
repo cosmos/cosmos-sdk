@@ -223,6 +223,28 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	}, nil
 }
 
+// DenomMetadataByQueryString is identical to DenomMetadata query, but receives request via query string.
+func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.QueryDenomMetadataByQueryStringRequest) (*types.QueryDenomMetadataByQueryStringResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+	}
+
+	return &types.QueryDenomMetadataByQueryStringResponse{
+		Metadata: metadata,
+	}, nil
+}
+
 func (k BaseKeeper) DenomOwners(
 	goCtx context.Context,
 	req *types.QueryDenomOwnersRequest,

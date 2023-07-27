@@ -508,7 +508,84 @@ func (suite *KeeperTestSuite) TestQueryDenomMetadata() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryDenomOwners() {
+func (suite *KeeperTestSuite) TestQueryDenomMetadataByQueryStringRequest() {
+	var (
+		req         *types.QueryDenomMetadataByQueryStringRequest
+		expMetadata = types.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty denom",
+			func() {
+				req = &types.QueryDenomMetadataByQueryStringRequest{}
+			},
+			false,
+		},
+		{
+			"not found denom",
+			func() {
+				req = &types.QueryDenomMetadataByQueryStringRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				expMetadata = types.Metadata{
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				}
+
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &types.QueryDenomMetadataByQueryStringRequest{
+					Denom: expMetadata.Base,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := suite.ctx
+
+			res, err := suite.queryClient.DenomMetadataByQueryString(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadata)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	ctx := suite.ctx
 
 	keeper := suite.bankKeeper

@@ -32,10 +32,11 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema           collections.Schema
-	HistoricalInfo   collections.Map[uint64, types.HistoricalInfo]
-	LastTotalPower   collections.Item[math.Int]
-	ValidatorUpdates collections.Item[types.ValidatorUpdates]
+	Schema                 collections.Schema
+	HistoricalInfo         collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower         collections.Item[math.Int]
+	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -79,6 +80,12 @@ func NewKeeper(
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, codec.CollValue[types.HistoricalInfo](cdc)),
 		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
+		DelegationsByValidator: collections.NewMap(
+			sb, types.DelegationByValIndexKey,
+			"delegations_by_validator",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()

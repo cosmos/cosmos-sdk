@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -142,7 +143,7 @@ func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) 
 	}
 
 	// set the delegation in validator delegator index
-	return store.Set(types.GetDelegationsByValKey(valAddr, delegatorAddress), []byte{})
+	return k.DelegationsByValidator.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), []byte{})
 }
 
 // RemoveDelegation removes a delegation
@@ -168,7 +169,7 @@ func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegatio
 		return err
 	}
 
-	return store.Delete(types.GetDelegationsByValKey(valAddr, delegatorAddress))
+	return k.DelegationsByValidator.Remove(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)))
 }
 
 // GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations.
@@ -304,7 +305,7 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 	bonded := math.LegacyZeroDec()
 
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
-		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
+		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
@@ -385,7 +386,7 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
-	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -406,7 +407,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	addr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
+	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -653,11 +654,11 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalRED(k.cdc, red)
-	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
+	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
+	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}
@@ -744,11 +745,11 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
+	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
+	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}

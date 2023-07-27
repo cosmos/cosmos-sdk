@@ -182,8 +182,7 @@ type BaseApp struct {
 
 	cdc codec.Codec
 
-	optimisticExec        *oe.OptimisticExecution
-	optimisticExecEnabled bool
+	optimisticExec *oe.OptimisticExecution
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -193,16 +192,16 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:                logger,
-		name:                  name,
-		db:                    db,
-		cms:                   store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
-		storeLoader:           DefaultStoreLoader,
-		grpcQueryRouter:       NewGRPCQueryRouter(),
-		msgServiceRouter:      NewMsgServiceRouter(),
-		txDecoder:             txDecoder,
-		fauxMerkleMode:        false,
-		optimisticExecEnabled: true,
+		logger:           logger,
+		name:             name,
+		db:               db,
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		storeLoader:      DefaultStoreLoader,
+		grpcQueryRouter:  NewGRPCQueryRouter(),
+		msgServiceRouter: NewMsgServiceRouter(),
+		txDecoder:        txDecoder,
+		fauxMerkleMode:   false,
+		optimisticExec:   &oe.OptimisticExecution{},
 	}
 
 	for _, option := range options {

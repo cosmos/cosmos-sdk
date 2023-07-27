@@ -21,7 +21,6 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -494,7 +493,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
 		// abort any running OE
-		if app.optimisticExecEnabled && app.optimisticExec != nil && app.optimisticExec.Running() {
+		if app.optimisticExec != nil && app.optimisticExec.Running() {
 			app.optimisticExec.Abort()
 			_, _ = app.optimisticExec.WaitResult() // ignore the result
 		}
@@ -541,8 +540,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
 	// During the first block we'll be carrying state from InitChain, so it would be impossible for us to easily revert.
-	if app.optimisticExecEnabled && req.Height > app.initialHeight {
-		app.optimisticExec = oe.Execute(req, app.internalFinalizeBlock, app.logger)
+	if app.optimisticExec != nil && req.Height > app.initialHeight {
+		app.optimisticExec.Execute(req, app.internalFinalizeBlock, app.logger)
 	}
 
 	return resp, nil
@@ -799,7 +798,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	if app.optimisticExec != nil && app.optimisticExecEnabled {
+	if app.optimisticExec != nil {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not

@@ -12,6 +12,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,7 +97,7 @@ func SetChainID(chainID string) func(*BaseApp) {
 
 // SetOptimisticExecution enables or disables optimistic execution.
 func SetOptimisticExecution(enable bool) func(*BaseApp) {
-	return func(app *BaseApp) { app.optimisticExecEnabled = enable }
+	return func(app *BaseApp) { app.optimisticExec = &oe.OptimisticExecution{} }
 }
 
 func (app *BaseApp) SetName(name string) {

@@ -27,26 +27,24 @@ type OptimisticExecution struct {
 }
 
 // Execute initializes the OE and starts it in a goroutine.
-func Execute(
+func (oe *OptimisticExecution) Execute(
 	req *abci.RequestProcessProposal,
 	fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error),
 	logger log.Logger,
-) *OptimisticExecution {
-	oe := &OptimisticExecution{
-		stopCh: make(chan struct{}),
-		fn:     fn,
-		request: &abci.RequestFinalizeBlock{
-			Txs:                req.Txs,
-			DecidedLastCommit:  req.ProposedLastCommit,
-			Misbehavior:        req.Misbehavior,
-			Hash:               req.Hash,
-			Height:             req.Height,
-			Time:               req.Time,
-			NextValidatorsHash: req.NextValidatorsHash,
-			ProposerAddress:    req.ProposerAddress,
-		},
-		logger: logger,
+) {
+	oe.stopCh = make(chan struct{})
+	oe.fn = fn
+	oe.request = &abci.RequestFinalizeBlock{
+		Txs:                req.Txs,
+		DecidedLastCommit:  req.ProposedLastCommit,
+		Misbehavior:        req.Misbehavior,
+		Hash:               req.Hash,
+		Height:             req.Height,
+		Time:               req.Time,
+		NextValidatorsHash: req.NextValidatorsHash,
+		ProposerAddress:    req.ProposerAddress,
 	}
+	oe.logger = logger
 
 	oe.logger.Debug("OE started")
 	start := time.Now()
@@ -61,8 +59,6 @@ func Execute(
 		close(oe.stopCh)
 		oe.mtx.Unlock()
 	}()
-
-	return oe
 }
 
 // AbortIfNeeded aborts the OE if the request hash is not the same as the one in

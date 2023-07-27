@@ -888,12 +888,7 @@ func (k Keeper) Delegate(
 			return math.LegacyDec{}, err1
 		}
 
-		valAddrStr, err1 := k.validatorAddressCodec.BytesToString(valbz)
-		if err1 != nil {
-			return math.LegacyDec{}, err1
-		}
-
-		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
+		delegation = types.NewDelegation(delAddrStr, validator.GetOperator(), math.LegacyZeroDec())
 		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, valbz)
 	} else {
 		return math.LegacyZeroDec(), err

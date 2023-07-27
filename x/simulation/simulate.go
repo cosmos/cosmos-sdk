@@ -59,6 +59,7 @@ func SimulateFromSeed(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
+	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
@@ -316,12 +317,12 @@ Comment: %s`,
 	}
 }
 
-
 func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string,
 ) (numOpsRan int) {
+	tb.Helper()
 	queuedOp, ok := queueOps[height]
 	if !ok {
 		return 0
@@ -356,6 +357,7 @@ func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string,
 ) (numOpsRan int) {
+	tb.Helper()
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
 

@@ -25,6 +25,7 @@ func (h MockStakingHooks) AfterUnbondingInitiated(_ sdk.Context, id uint64) erro
 func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 	app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress,
 ) {
+	t.Helper()
 	_, app, ctx = createTestInput()
 
 	stakingKeeper := keeper.NewKeeper(
@@ -93,6 +94,7 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 func doUnbondingDelegation(
 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
 ) (completionTime time.Time, bondedAmt, notBondedAmt sdk.Int) {
+	t.Helper()
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -123,6 +125,7 @@ func doUnbondingDelegation(
 func doRedelegation(
 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
 ) (completionTime time.Time) {
+	t.Helper()
 	var err error
 	completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(1))
 	require.NoError(t, err)
@@ -141,6 +144,7 @@ func doRedelegation(
 func doValidatorUnbonding(
 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, addrVal sdk.ValAddress, hookCalled *bool,
 ) (validator types.Validator) {
+	t.Helper()
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal)
 	require.True(t, found)
 	// Check that status is bonded

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,7 +106,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &abci.ConsensusParams{
-				Evidence: &tmprototypes.EvidenceParams{
+				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},
@@ -171,7 +170,10 @@ func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	err = ps.db.Set(key, bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {

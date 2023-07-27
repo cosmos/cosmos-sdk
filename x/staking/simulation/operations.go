@@ -16,11 +16,11 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgCreateValidator = "op_weight_msg_create_validator" 
-	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"   
-	OpWeightMsgDelegate        = "op_weight_msg_delegate"         
-	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"       
-	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate" 
+	OpWeightMsgCreateValidator = "op_weight_msg_create_validator"
+	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"
+	OpWeightMsgDelegate        = "op_weight_msg_delegate"
+	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"
+	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

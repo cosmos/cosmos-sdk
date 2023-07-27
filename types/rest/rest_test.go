@@ -390,6 +390,7 @@ func (badJSONMarshaller) MarshalJSON() ([]byte, error) {
 // runs PostProcessResponse on the objects regular interface and on
 // the marshaled struct.
 func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, expectedBody []byte) {
+	t.Helper()
 	// test using regular struct
 	w := httptest.NewRecorder()
 
@@ -421,6 +422,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 }
 
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {
+	t.Helper()
 	req, err := http.NewRequest(method, url, body)
 	require.NoError(t, err)
 	err = req.ParseForm()

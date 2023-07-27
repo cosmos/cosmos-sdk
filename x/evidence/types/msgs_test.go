@@ -13,6 +13,7 @@ import (
 )
 
 func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidenceI {
+	t.Helper()
 	msg, err := types.NewMsgSubmitEvidence(s, e)
 	require.NoError(t, err)
 	return msg

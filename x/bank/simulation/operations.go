@@ -18,8 +18,8 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSend      = "op_weight_msg_send"      
-	OpWeightMsgMultiSend = "op_weight_msg_multisend" 
+	OpWeightMsgSend      = "op_weight_msg_send"
+	OpWeightMsgMultiSend = "op_weight_msg_multisend"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

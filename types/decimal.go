@@ -807,5 +807,6 @@ func MaxDec(d1, d2 Dec) Dec {
 
 // intended to be used with require/assert:  require.True(DecEq(...))
 func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

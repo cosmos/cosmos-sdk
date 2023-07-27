@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,11 +37,6 @@ func Test_runListCmd(t *testing.T) {
 	t.Cleanup(func() {
 		kb.Delete("something") // nolint:errcheck
 	})
-
-	type args struct {
-		cmd  *cobra.Command
-		args []string
-	}
 
 	testData := []struct {
 		name    string

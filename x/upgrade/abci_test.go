@@ -95,6 +95,7 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 }
 
 func VerifyDoUpgrade(t *testing.T) {
+	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
@@ -115,6 +116,7 @@ func VerifyDoUpgrade(t *testing.T) {
 }
 
 func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.Panics(t, func() {
@@ -169,6 +171,7 @@ func TestHaltIfTooNew(t *testing.T) {
 }
 
 func VerifyCleared(t *testing.T, newCtx sdk.Context) {
+	t.Helper()
 	t.Log("Verify that the upgrade plan has been cleared")
 	bz, err := s.querier(newCtx, []string{types.QueryCurrent}, abci.RequestQuery{})
 	require.NoError(t, err)
@@ -221,18 +224,21 @@ func TestPlanStringer(t *testing.T) {
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
 	t.Log("Verify that upgrade was not done")
 	height := s.keeper.GetDoneHeight(newCtx, name)
 	require.Zero(t, height)
 }
 
 func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
 	t.Log("Verify that the upgrade plan has been executed")
 	height := s.keeper.GetDoneHeight(newCtx, name)
 	require.NotZero(t, height)
 }
 
 func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
+	t.Helper()
 	t.Log("Verify if the skip upgrade has been set")
 
 	for k := range skipUpgradeHeights {

@@ -1281,6 +1281,7 @@ func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
+	t.Helper()
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -1312,6 +1313,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 }
 
 func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk.Handler {
+	t.Helper()
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		store := ctx.KVStore(capKey)
@@ -1363,6 +1365,7 @@ func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
 // check counter matches what's in store.
 // increment and store
 func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+	t.Helper()
 	storedCounter := getIntFromStore(store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
@@ -1621,6 +1624,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
 func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
+	t.Helper()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	routerOpt := func(bapp *BaseApp) {
@@ -1757,6 +1761,7 @@ func useDefaultLoader(app *BaseApp) {
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
@@ -1774,6 +1779,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(store.PruneDefault)
 	key := sdk.NewKVStoreKey(storeKey)

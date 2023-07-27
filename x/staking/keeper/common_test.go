@@ -37,6 +37,7 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
+	t.Helper()
 	return t, exp.MinEqual(&got), "expected:\n%v\ngot:\n%v", exp, got
 }
 

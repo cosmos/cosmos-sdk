@@ -28,6 +28,7 @@ type Helper struct {
 
 // NewHelper creates staking Handler wrapper for tests
 func NewHelper(t *testing.T, ctx sdk.Context, k keeper.Keeper) *Helper {
+	t.Helper()
 	return &Helper{t, staking.NewHandler(k), k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
 }
 

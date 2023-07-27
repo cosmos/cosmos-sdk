@@ -27,6 +27,7 @@ var (
 )
 
 func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) stakingtypes.Validator {
+	t.Helper()
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.Equal(t, expFound, found)
@@ -34,6 +35,7 @@ func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound
 }
 
 func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAddress, expFound bool) types.ValidatorSigningInfo {
+	t.Helper()
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	signingInfo, found := app.SlashingKeeper.GetValidatorSigningInfo(ctxCheck, addr)
 	require.Equal(t, expFound, found)

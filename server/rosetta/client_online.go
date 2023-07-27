@@ -505,7 +505,7 @@ func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
 		return 0, err
 	}
 
-	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"") 
+	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"")
 	if err != nil {
 		return 0, err
 	}

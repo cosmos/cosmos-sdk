@@ -20,6 +20,7 @@ import (
 const custom = "custom"
 
 func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) (types.DepositParams, types.VotingParams, types.TallyParams) {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamDeposit}, "/"),
 		Data: []byte{},
@@ -63,6 +64,7 @@ func getQueriedProposals(
 	t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier,
 	depositor, voter sdk.AccAddress, status types.ProposalStatus, page, limit int,
 ) []types.Proposal {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryProposalsParams(page, limit, status, voter, depositor)),
@@ -79,6 +81,7 @@ func getQueriedProposals(
 }
 
 func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) types.Deposit {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDeposit}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryDepositParams(proposalID, depositor)),
@@ -95,6 +98,7 @@ func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, qu
 }
 
 func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64) []types.Deposit {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDeposits}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryProposalParams(proposalID)),
@@ -111,6 +115,7 @@ func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, q
 }
 
 func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64, voter sdk.AccAddress) types.Vote {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryVoteParams(proposalID, voter)),
@@ -129,6 +134,7 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, queri
 func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier,
 	proposalID uint64, page, limit int,
 ) []types.Vote {
+	t.Helper()
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryProposalVotesParams(proposalID, page, limit)),
@@ -391,6 +397,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 // only 1 vote, this function checks equality of structs while skipping that
 // field.
 func checkEqualVotes(t *testing.T, vote1, vote2 types.Vote) {
+	t.Helper()
 	require.Equal(t, vote1.Options, vote2.Options)
 	require.Equal(t, vote1.Voter, vote2.Voter)
 	require.Equal(t, vote1.ProposalId, vote2.ProposalId)

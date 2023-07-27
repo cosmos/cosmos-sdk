@@ -17,7 +17,6 @@ import (
 var (
 	granterPk   = ed25519.GenPrivKey().PubKey()
 	granterAddr = sdk.AccAddress(granterPk.Address())
-	granteePk   = ed25519.GenPrivKey().PubKey()
 	granteeAddr = sdk.AccAddress(granterPk.Address())
 )
 

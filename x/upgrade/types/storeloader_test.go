@@ -29,6 +29,7 @@ func defaultLogger() log.Logger {
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
@@ -46,6 +47,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)

@@ -260,6 +260,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 }
 
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
+	t.Helper()
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)

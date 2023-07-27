@@ -57,6 +57,7 @@ func aminoTxEncoder() sdk.TxEncoder {
 
 // simple one store baseapp
 func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
+	t.Helper()
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
@@ -126,6 +127,7 @@ func TestLoadVersionPruning(t *testing.T) {
 }
 
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+	t.Helper()
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -157,12 +159,6 @@ func TestGetMaximumBlockGas(t *testing.T) {
 }
 
 func TestListSnapshots(t *testing.T) {
-	type setupConfig struct {
-		blocks            uint64
-		blockTxs          int
-		snapshotInterval  uint64
-		snapshotKeepEvery uint32
-	}
 
 	app, _ := setupBaseAppWithSnapshots(t, 2, 5)
 

@@ -64,7 +64,7 @@ func tmToProto(tmPk tmMultisig) (*LegacyAminoPubKey, error) {
 }
 
 // MarshalAminoJSON overrides amino JSON unmarshaling.
-func (m LegacyAminoPubKey) MarshalAminoJSON() (tmMultisig, error) { 
+func (m LegacyAminoPubKey) MarshalAminoJSON() (tmMultisig, error) {
 	return protoToTm(&m)
 }
 

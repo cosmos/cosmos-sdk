@@ -23,6 +23,7 @@ func BenchmarkValidateGenesis400Validators(b *testing.B) {
 }
 
 func benchmarkValidateGenesis(b *testing.B, n int) {
+	b.Helper()
 	b.ReportAllocs()
 
 	validators := make([]types.Validator, 0, n)

@@ -68,12 +68,6 @@ func (s *contextTestSuite) TestLogContext() {
 	ctx.Logger().Error("error")
 }
 
-type dummy int64 //nolint:unused
-
-func (d dummy) Clone() interface{} {
-	return d
-}
-
 // Testing saving/loading sdk type values to/from the context
 func (s *contextTestSuite) TestContextWithCustom() {
 	var ctx types.Context

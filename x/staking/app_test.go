@@ -15,6 +15,7 @@ import (
 )
 
 func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
+	t.Helper()
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, addr)
 
@@ -26,6 +27,7 @@ func checkDelegation(
 	t *testing.T, app *simapp.SimApp, delegatorAddr sdk.AccAddress,
 	validatorAddr sdk.ValAddress, expFound bool, expShares sdk.Dec,
 ) {
+	t.Helper()
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	delegation, found := app.StakingKeeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {

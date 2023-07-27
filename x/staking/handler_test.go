@@ -26,6 +26,7 @@ import (
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount sdk.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+	t.Helper()
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, accAmount)

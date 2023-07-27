@@ -1,6 +1,7 @@
 package multisig_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/schnorr"
 	"strings"
 	"testing"
 
@@ -26,7 +27,8 @@ import (
 func TestNewMultiSig(t *testing.T) {
 	require := require.New(t)
 	pk1 := secp256k1.GenPrivKey().PubKey()
-	pks := []cryptotypes.PubKey{pk1, pk1}
+	pkSchnorr := schnorr.GenPrivKey().PubKey()
+	pks := []cryptotypes.PubKey{pk1, pk1, pkSchnorr}
 
 	require.NotNil(kmultisig.NewLegacyAminoPubKey(1, pks),
 		"Should support not unique public keys")
@@ -42,8 +44,9 @@ func TestAddress(t *testing.T) {
 func TestEquals(t *testing.T) {
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	pubKey3 := schnorr.GenPrivKey().PubKey()
 
-	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, pubKey2})
+	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, pubKey2, pubKey3})
 	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, multisigKey})
 
 	testCases := []struct {
@@ -299,6 +302,7 @@ func generatePubKeys(n int) []cryptotypes.PubKey {
 	for i := 0; i < n; i++ {
 		pks[i] = secp256k1.GenPrivKey().PubKey()
 	}
+	pks[n-1] = schnorr.GenPrivKey().PubKey()
 	return pks
 }
 
@@ -313,6 +317,12 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
 	}
+
+	privKeySchnorr := schnorr.GenPrivKey()
+	pubKeys[n-1] = privKeySchnorr.PubKey()
+	sigSchnorr, _ := privKeySchnorr.Sign(msg)
+	signatures[n-1] = &signing.SingleSignatureData{Signature: sigSchnorr}
+
 	return
 }
 

@@ -35,7 +35,15 @@ func GenPrivKey() *PrivKey {
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating priv key: %e", err)
 	}
-	return &PrivKey{Key: binary, Suite: suite, Scalar: keyPair.Private}
+	return &PrivKey{Key: binary}
+}
+
+func (privKey *PrivKey) GetKeyPair() *key.Pair {
+	suite := edwards25519.NewBlakeSHA256Ed25519()
+	keyPair := key.NewKeyPair(suite)
+	_ = keyPair.Private.UnmarshalBinary(privKey.Key)
+
+	return keyPair
 }
 
 // Bytes returns the private key byte format.
@@ -43,10 +51,15 @@ func (privKey *PrivKey) Bytes() []byte {
 	return privKey.Key
 }
 
+func (privKey *PrivKey) String() string {
+	return fmt.Sprintf("PrivKeyShnorr{%X}", privKey.Key)
+}
+
 // Sign produces a signature on the provided message.
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	suite := edwards25519.NewBlakeSHA256Ed25519()
-	signedMsg, err := schnorr.Sign(suite, privKey.Scalar, msg)
+	keyPair := privKey.GetKeyPair()
+	signedMsg, err := schnorr.Sign(suite, keyPair.Private, msg)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Signing message failed: %e", err)
 	}
@@ -55,15 +68,18 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 // PubKey gets the corresponding public key from the private key.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	var g kyber.Group = privKey.Suite
+	suite := edwards25519.NewBlakeSHA256Ed25519()
+	keyPair := privKey.GetKeyPair()
+
+	var g kyber.Group = suite
 	// Gets public key by y = g ^ x definition where x is the private key scalar
-	publicKey := g.Point().Mul(privKey.Scalar, nil)
+	publicKey := g.Point().Mul(keyPair.Private, nil)
 	binary, err := publicKey.MarshalBinary()
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating pub key: %e", err)
 	}
 
-	return &PubKey{Key: binary, Suite: privKey.Suite, Point: publicKey}
+	return &PubKey{Key: binary}
 }
 
 // Type returns key type
@@ -100,8 +116,6 @@ func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 		return fmt.Errorf("[ERROR] invalid privkey size.")
 	}
 
-	fmt.Println("###", privKey)
-	fmt.Println("###>", privKey.Key)
 	privKey.Key = bz
 
 	return nil
@@ -134,12 +148,23 @@ func (pubKey *PubKey) Bytes() []byte {
 	return pubKey.Key
 }
 
+func (pubKey *PubKey) GetKeyPair() *key.Pair {
+	suite := edwards25519.NewBlakeSHA256Ed25519()
+	keyPair := key.NewKeyPair(suite)
+	_ = keyPair.Public.UnmarshalBinary(pubKey.Key)
+
+	return keyPair
+}
+
 func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	if len(sig) != SignatureSize {
 		return false
 	}
 
-	err := schnorr.Verify(pubKey.Suite, pubKey.Point, msg, sig)
+	suite := edwards25519.NewBlakeSHA256Ed25519()
+	keyPair := pubKey.GetKeyPair()
+
+	err := schnorr.Verify(suite, keyPair.Public, msg, sig)
 	if err != nil {
 		fmt.Printf("[ERROR] while verifying signature: %e", err)
 	}

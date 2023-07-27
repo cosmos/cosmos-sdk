@@ -2,7 +2,6 @@ package schnorr_test
 
 import (
 	"encoding/base64"
-	"fmt"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/schnorr"
@@ -148,7 +147,6 @@ func TestMarshalAmino(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.expBinary, bz)
 
-			fmt.Println("typ", tc.typ)
 			err = aminoCdc.Unmarshal(bz, tc.typ)
 			require.NoError(t, err)
 

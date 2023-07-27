@@ -89,12 +89,15 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	val1.Status = stakingtypes.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	require.NoError(keeper.SetValidator(ctx, val1))
-	require.NoError(keeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10))
+	valbz, err := keeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	require.NoError(err)
+	require.NoError(keeper.SetLastValidatorPower(ctx, valbz, 10))
 	val2 := testutil.NewValidator(s.T(), addrVals[3], PKs[3])
 	val1.Status = stakingtypes.Bonded
 	val2.Tokens = keeper.TokensFromConsensusPower(ctx, 80)
 	require.NoError(keeper.SetValidator(ctx, val2))
-	require.NoError(keeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80))
+	valbz, err = keeper.ValidatorAddressCodec().StringToBytes(val2.GetOperator())
+	require.NoError(keeper.SetLastValidatorPower(ctx, valbz, 80))
 
 	vals := []stakingtypes.Validator{val1, val2}
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))

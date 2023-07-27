@@ -94,7 +94,7 @@ func (v Validators) Len() int {
 
 // Implements sort interface
 func (v Validators) Less(i, j int) bool {
-	return bytes.Compare(v[i].GetOperator().Bytes(), v[j].GetOperator().Bytes()) == -1
+	return strings.Compare(v[i].GetOperator(), v[j].GetOperator()) == -1
 }
 
 // Implements sort interface
@@ -446,15 +446,8 @@ func (v *Validator) Equal(v2 *Validator) bool {
 func (v Validator) IsJailed() bool        { return v.Jailed }
 func (v Validator) GetMoniker() string    { return v.Description.Moniker }
 func (v Validator) GetStatus() BondStatus { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress {
-	if v.OperatorAddress == "" {
-		return nil
-	}
-	addr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return addr
+func (v Validator) GetOperator() string {
+	return v.OperatorAddress
 }
 
 // ConsPubKey returns the validator PubKey as a cryptotypes.PubKey.

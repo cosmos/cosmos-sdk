@@ -24,7 +24,7 @@ type ValidatorI interface {
 	IsBonded() bool                                                 // check if has a bonded status
 	IsUnbonded() bool                                               // check if has status unbonded
 	IsUnbonding() bool                                              // check if has status unbonding
-	GetOperator() sdk.ValAddress                                    // operator address to receive/return validators coins
+	GetOperator() string                                            // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                        // validation consensus pubkey (cryptotypes.PubKey)
 	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)             // validation consensus pubkey (CometBFT)
 	GetConsAddr() (sdk.ConsAddress, error)                          // validation consensus address

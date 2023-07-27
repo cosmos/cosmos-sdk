@@ -119,7 +119,7 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
-			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))
+			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.ValidatorAddressCodec())
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				broken = true

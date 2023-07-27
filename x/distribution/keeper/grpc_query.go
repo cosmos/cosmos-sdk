@@ -45,7 +45,7 @@ func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	rewards, err := k.Keeper.ValidatorOutstandingRewards.Get(ctx, valAdr)
@@ -136,7 +136,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 	commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAdr)
 	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
@@ -171,7 +171,7 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, status.Errorf(codes.InvalidArgument, "starting height greater than ending height (%d > %d)", req.StartingHeight, req.EndingHeight)
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
@@ -207,7 +207,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}

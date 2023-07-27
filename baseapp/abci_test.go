@@ -1578,13 +1578,13 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	// set max block gas limit to 99, this will allow 9 txs of 10 gas each, the last one should NOT
-	// be included
+	// set max block gas limit to 99, this will allow 9 txs of 10 gas each.
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{MaxGas: 99},
 		},
 	})
+
 	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()

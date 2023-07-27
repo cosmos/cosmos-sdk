@@ -223,8 +223,6 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	}, nil
 }
 
-<<<<<<< HEAD
-=======
 // DenomMetadataByQueryString is identical to DenomMetadata query, but receives request via query string.
 func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.QueryDenomMetadataByQueryStringRequest) (*types.QueryDenomMetadataByQueryStringResponse, error) {
 	if req == nil {
@@ -247,50 +245,6 @@ func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.Que
 	}, nil
 }
 
-// DenomMetadataV2 is identical to DenomMetadata but receives protoreflect types instead of gogo types.  It exists to
-// resolve a cyclic dependency existent between x/auth and x/bank, so that x/auth may call this keeper without
-// depending on x/bank.
-func (k BaseKeeper) DenomMetadataV2(c context.Context, req *v1beta1.QueryDenomMetadataRequest) (*v1beta1.QueryDenomMetadataResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if err := sdk.ValidateDenom(req.Denom); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
-	}
-
-	denomUnits := make([]*v1beta1.DenomUnit, len(metadata.DenomUnits))
-	for i, unit := range metadata.DenomUnits {
-		denomUnits[i] = &v1beta1.DenomUnit{
-			Denom:    unit.Denom,
-			Exponent: unit.Exponent,
-			Aliases:  unit.Aliases,
-		}
-	}
-	metadataV2 := &v1beta1.Metadata{
-		Description: metadata.Description,
-		DenomUnits:  denomUnits,
-		Base:        metadata.Base,
-		Display:     metadata.Display,
-		Name:        metadata.Name,
-		Symbol:      metadata.Symbol,
-		Uri:         metadata.URI,
-		UriHash:     metadata.URIHash,
-	}
-
-	return &v1beta1.QueryDenomMetadataResponse{
-		Metadata: metadataV2,
-	}, nil
-}
-
->>>>>>> c2958326e (feat(bank): Add secondary query for bank metadata (#16852))
 func (k BaseKeeper) DenomOwners(
 	goCtx context.Context,
 	req *types.QueryDenomOwnersRequest,

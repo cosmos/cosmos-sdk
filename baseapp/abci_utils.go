@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/cockroachdb/errors"
@@ -38,8 +39,8 @@ type (
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
-		TotalBondedTokens(ctx sdk.Context) math.Int
+		GetValidatorByConsAddr(context.Context, cryptotypes.Address) (Validator, error)
+		TotalBondedTokens(ctx context.Context) (math.Int, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -130,7 +131,11 @@ func ValidateVoteExtensions(
 
 	// Ensure we have at least 2/3 voting power that submitted valid vote
 	// extensions.
-	totalVP := valStore.TotalBondedTokens(ctx)
+	totalVP, err := valStore.TotalBondedTokens(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get total bonded tokens: %w", err)
+	}
+
 	percentSubmitted := math.LegacyNewDecFromInt(sumVP).Quo(math.LegacyNewDecFromInt(totalVP))
 	if percentSubmitted.LT(VoteExtensionThreshold) {
 		return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)

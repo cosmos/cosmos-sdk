@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	math "cosmossdk.io/math"
@@ -91,7 +92,7 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 }
 
 // GetValidatorByConsAddr mocks base method.
-func (m *MockValidatorStore) GetValidatorByConsAddr(arg0 types0.Context, arg1 types.Address) (baseapp.Validator, error) {
+func (m *MockValidatorStore) GetValidatorByConsAddr(arg0 context.Context, arg1 types.Address) (baseapp.Validator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidatorByConsAddr", arg0, arg1)
 	ret0, _ := ret[0].(baseapp.Validator)
@@ -106,11 +107,12 @@ func (mr *MockValidatorStoreMockRecorder) GetValidatorByConsAddr(arg0, arg1 inte
 }
 
 // TotalBondedTokens mocks base method.
-func (m *MockValidatorStore) TotalBondedTokens(ctx types0.Context) math.Int {
+func (m *MockValidatorStore) TotalBondedTokens(ctx context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TotalBondedTokens", ctx)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TotalBondedTokens indicates an expected call of TotalBondedTokens.

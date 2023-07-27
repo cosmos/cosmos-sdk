@@ -1739,7 +1739,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 
 	consAddr := sdk.ConsAddress(addr.String())
 	valStore.EXPECT().GetValidatorByConsAddr(gomock.Any(), consAddr.Bytes()).Return(val1, nil).AnyTimes()
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000)).AnyTimes()
+	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {

@@ -83,8 +83,8 @@ func NewKeeper(
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(
-				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey),
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey),
+				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			),
 			codec.CollValue[types.Delegation](cdc),
 		),

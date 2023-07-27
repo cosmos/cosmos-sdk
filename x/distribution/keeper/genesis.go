@@ -52,7 +52,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	}
 
 	for _, rew := range data.OutstandingRewards {
-		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -63,7 +63,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		valAddr, err := sdk.ValAddressFromBech32(acc.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(acc.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -73,17 +73,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, his.Period), his.Rewards)
+		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -93,7 +93,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -102,13 +102,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(valAddr, sdk.AccAddress(delegatorAddress)), del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}

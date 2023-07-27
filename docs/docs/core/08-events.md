@@ -7,9 +7,7 @@ sidebar_position: 1
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 * [CometBFT Documentation on Events](https://docs.cometbft.com/v0.37/spec/abci/abci++_basic_concepts#events)

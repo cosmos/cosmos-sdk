@@ -282,9 +282,9 @@ func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]]
 	}
 }
 
-// NewPrefixTripleRange provides a Range for all keys prefixed with the given
+// NewPrefixedTripleRange provides a Range for all keys prefixed with the given
 // first part of the Triple key.
-func NewPrefixTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
@@ -292,9 +292,9 @@ func NewPrefixTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	}
 }
 
-// NewSuperPrefixTripleRange provides a Range for all keys prefixed with the given
+// NewSuperPrefixedTripleRange provides a Range for all keys prefixed with the given
 // first and second parts of the Triple key.
-func NewSuperPrefixTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
+func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
 	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),

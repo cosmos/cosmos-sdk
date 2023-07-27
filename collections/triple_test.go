@@ -37,14 +37,14 @@ func TestTripleRange(t *testing.T) {
 	}
 
 	// we prefix over (1) we expect 3 results
-	iter, err := keySet.Iterate(ctx, collections.NewPrefixTripleRange[uint64, string, []byte](uint64(1)))
+	iter, err := keySet.Iterate(ctx, collections.NewPrefixedTripleRange[uint64, string, []byte](uint64(1)))
 	require.NoError(t, err)
 	gotKeys, err := iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, keys[:3], gotKeys)
 
 	// we super prefix over Join(1, "A") we expect 2 results
-	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixTripleRange[uint64, string, []byte](1, "A"))
+	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixedTripleRange[uint64, string, []byte](1, "A"))
 	require.NoError(t, err)
 	gotKeys, err = iter.Keys()
 	require.NoError(t, err)

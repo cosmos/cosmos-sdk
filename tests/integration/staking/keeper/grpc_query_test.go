@@ -568,7 +568,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 				}
 			},
 			false,
-			"invalid Bech32",
+			"hrp does not match bech32 prefix",
 		},
 		{
 			"delegation not found for validator",

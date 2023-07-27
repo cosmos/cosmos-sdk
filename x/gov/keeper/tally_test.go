@@ -10,6 +10,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -31,6 +32,7 @@ func TestTally(t *testing.T) {
 	var (
 		// handy functions
 		setTotalBonded = func(s suite, n int64) {
+			s.mocks.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 			s.mocks.stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).
 				Return(sdkmath.NewInt(n), nil)
 		}

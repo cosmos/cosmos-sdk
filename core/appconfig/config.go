@@ -13,10 +13,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
-	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/core/internal"
+	"cosmossdk.io/depinject"
 )
 
 // LoadJSON loads an app config in JSON format.

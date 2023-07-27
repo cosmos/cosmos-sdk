@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
-
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -15,7 +15,8 @@ import (
 )
 
 func TestVotes(t *testing.T) {
-	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, mocks, _, ctx := setupGovKeeper(t)
+	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
@@ -31,7 +32,8 @@ func TestVotes(t *testing.T) {
 	require.Error(t, govKeeper.AddVote(ctx, 10, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""), "invalid proposal ID")
 
 	proposal.Status = v1.StatusVotingPeriod
-	govKeeper.SetProposal(ctx, proposal)
+	err = govKeeper.SetProposal(ctx, proposal)
+	require.NoError(t, err)
 
 	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
 

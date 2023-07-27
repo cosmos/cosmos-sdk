@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-
-	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,16 +79,14 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx context.Context) math.Int {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.stakingKeeper.StakingTokenSupply(sdkCtx)
+func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
+	return k.stakingKeeper.StakingTokenSupply(ctx)
 }
 
 // BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx context.Context) math.LegacyDec {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.stakingKeeper.BondedRatio(sdkCtx)
+func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
+	return k.stakingKeeper.BondedRatio(ctx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's

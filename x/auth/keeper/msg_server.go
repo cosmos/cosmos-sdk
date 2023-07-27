@@ -24,7 +24,7 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if ms.ak.authority != msg.Authority {
 		return nil, fmt.Errorf(
-			"expected gov account as only signer for proposal message; invalid authority; expected %s, got %s",
+			"expected authority account as only signer for proposal message; invalid authority; expected %s, got %s",
 			ms.ak.authority, msg.Authority)
 	}
 

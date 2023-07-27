@@ -3,22 +3,22 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
-
-	"github.com/cosmos/cosmos-proto/anyutil"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestDecode(t *testing.T) {
@@ -118,4 +118,32 @@ func (d dummyAddressCodec) StringToBytes(text string) ([]byte, error) {
 
 func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
 	return hex.EncodeToString(bz), nil
+}
+
+func TestDecodeTxBodyPanic(t *testing.T) {
+	crashVector := []byte{
+		0x0a, 0x0a, 0x09, 0xe7, 0xbf, 0xba, 0xe6, 0x82, 0x9a, 0xe6, 0xaa, 0x30,
+	}
+
+	cdc := new(dummyAddressCodec)
+	signingCtx, err := signing.NewContext(signing.Options{
+		AddressCodec:          cdc,
+		ValidatorAddressCodec: cdc,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dec, err := decode.NewDecoder(decode.Options{
+		SigningContext: signingCtx,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = dec.Decode(crashVector)
+	if err == nil {
+		t.Fatal("expected a non-nil error")
+	}
+	if g, w := err.Error(), "could not consume length prefix"; !strings.Contains(g, w) {
+		t.Fatalf("error mismatch\n%s\ndoes not contain\n\t%q", g, w)
+	}
 }

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -24,7 +25,7 @@ var (
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey,
+	valAddr string, pubKey cryptotypes.PubKey,
 	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
@@ -36,7 +37,7 @@ func NewMsgCreateValidator(
 	}
 	return &MsgCreateValidator{
 		Description:       description,
-		ValidatorAddress:  valAddr.String(),
+		ValidatorAddress:  valAddr,
 		Pubkey:            pkAny,
 		Value:             selfDelegation,
 		Commission:        commission,
@@ -44,22 +45,10 @@ func NewMsgCreateValidator(
 	}, nil
 }
 
-// GetSigners implements the sdk.Msg interface. It returns the address(es) that
-// must sign over msg.GetSignBytes().
-// If the validator address is not same as delegator's, then the validator must
-// sign the msg as well.
-func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
-	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-
-	valAccAddr := sdk.AccAddress(valAddr)
-
-	return []sdk.AccAddress{valAccAddr}
-}
-
 // Validate validates the MsgCreateValidator sdk msg.
-func (msg MsgCreateValidator) Validate() error {
+func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	// note that unmarshaling from bech32 ensures both non-empty and valid
-	_, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	_, err := ac.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -105,87 +94,51 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr.String(),
+		ValidatorAddress:  valAddr,
 		MinSelfDelegation: newMinSelfDelegation,
 	}
 }
 
-// GetSigners implements the sdk.Msg interface.
-func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
-	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
-}
-
 // NewMsgDelegate creates a new MsgDelegate instance.
-func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
+func NewMsgDelegate(delAddr, valAddr string, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 	}
-}
-
-// GetSigners implements the sdk.Msg interface.
-func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
 func NewMsgBeginRedelegate(
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Coin,
+	delAddr, valSrcAddr, valDstAddr string, amount sdk.Coin,
 ) *MsgBeginRedelegate {
 	return &MsgBeginRedelegate{
-		DelegatorAddress:    delAddr.String(),
-		ValidatorSrcAddress: valSrcAddr.String(),
-		ValidatorDstAddress: valDstAddr.String(),
+		DelegatorAddress:    delAddr,
+		ValidatorSrcAddress: valSrcAddr,
+		ValidatorDstAddress: valDstAddr,
 		Amount:              amount,
 	}
 }
 
-// GetSigners implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
-}
-
 // NewMsgUndelegate creates a new MsgUndelegate instance.
-func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
+func NewMsgUndelegate(delAddr, valAddr string, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 	}
-}
-
-// GetSigners implements the sdk.Msg interface.
-func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
 }
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
-func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
+func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Amount:           amount,
 		CreationHeight:   creationHeight,
 	}
-}
-
-// GetSigners implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
-}
-
-// GetSigners returns the expected signers for a MsgUpdateParams message
-func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
 }

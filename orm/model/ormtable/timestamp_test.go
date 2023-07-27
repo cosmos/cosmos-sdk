@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testkv"

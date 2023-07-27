@@ -26,6 +26,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
@@ -43,6 +44,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
@@ -126,8 +128,9 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, int64(1), oldApp.LastBlockHeight())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
-				_, err := oldApp.Commit()
+				_, err := oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
+				require.NoError(t, err)
+				_, err = oldApp.Commit()
 				require.NoError(t, err)
 			}
 
@@ -147,7 +150,8 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
 			// "execute" one block
-			newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
+			_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
+			require.NoError(t, err)
 			_, err = newApp.Commit()
 			require.NoError(t, err)
 			require.Equal(t, upgradeHeight, newApp.LastBlockHeight())

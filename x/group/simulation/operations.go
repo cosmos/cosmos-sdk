@@ -14,10 +14,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 var initialGroupID = uint64(100000000000000)
@@ -298,7 +297,7 @@ func SimulateMsgCreateGroupWithPolicy(
 			GroupPolicyMetadata: simtypes.RandStringOfLength(r, 10),
 			GroupPolicyAsAdmin:  r.Float32() < 0.5,
 		}
-		msg.SetDecisionPolicy(decisionPolicy)
+		err = msg.SetDecisionPolicy(decisionPolicy)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to set decision policy"), nil, err
 		}

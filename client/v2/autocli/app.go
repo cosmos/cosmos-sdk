@@ -1,7 +1,10 @@
 package autocli
 
 import (
-	"errors"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -11,8 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -36,7 +38,9 @@ type AppOptions struct {
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
 	// AddressCodec is the address codec to use for the app.
-	AddressCodec address.Codec
+	AddressCodec          address.Codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -57,7 +61,11 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
-			AddressCodec: appOptions.AddressCodec,
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          proto.HybridResolver,
+			AddressCodec:          appOptions.AddressCodec,
+			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -70,8 +78,8 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if builder.AddressCodec == nil {
-		return errors.New("address codec is required in builder")
+	if err := builder.Validate(); err != nil {
+		return err
 	}
 
 	// extract any custom commands from modules
@@ -94,11 +102,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.enhanceCommandCommon(queryCmd, appOptions, customQueryCmds, enhanceQuery); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customQueryCmds); err != nil {
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds, enhanceQuery)
+		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
@@ -107,11 +115,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
-		if err := builder.enhanceCommandCommon(msgCmd, appOptions, customMsgCmds, enhanceMsg); err != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customMsgCmds); err != nil {
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds, enhanceMsg)
+		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
 		if err != nil {
 			return err
 		}

@@ -7,11 +7,12 @@ import (
 	"time"
 
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisBuilder_GenesisTime(t *testing.T) {

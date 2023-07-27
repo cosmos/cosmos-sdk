@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -13,13 +14,9 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
-	cosmos_proto "github.com/cosmos/cosmos-proto"
-
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
@@ -98,7 +95,7 @@ func (r *SignModeHandler) SpecVersion() uint64 {
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
 func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
-	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
+	// Scalars, such as math.Int and math.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind:
 		if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
 			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)

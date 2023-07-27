@@ -14,9 +14,8 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"
@@ -93,11 +92,6 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	}
 
 	return cli.GetTxCmd(evidenceCLIHandlers)
-}
-
-// GetQueryCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers the evidence module's interface types

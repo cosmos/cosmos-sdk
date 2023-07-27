@@ -3,10 +3,12 @@ package simulation
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewStoreDecoderFuncFromCollectionsSchema(t *testing.T) {

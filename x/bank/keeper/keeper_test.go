@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -32,8 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
@@ -50,9 +48,9 @@ const (
 
 var (
 	holderAcc    = authtypes.NewEmptyModuleAccount(holder)
-	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner)
+	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
 	minterAcc    = authtypes.NewEmptyModuleAccount(authtypes.Minter, authtypes.Minter)
-	mintAcc      = authtypes.NewEmptyModuleAccount(minttypes.ModuleName, authtypes.Minter)
+	mintAcc      = authtypes.NewEmptyModuleAccount(banktypes.MintModuleName, authtypes.Minter)
 	multiPermAcc = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
 
 	baseAcc = authtypes.NewBaseAccountWithAddress(sdk.AccAddress([]byte("baseAcc")))
@@ -144,7 +142,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		storeService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
 		log.NewNopLogger(),
 	)
 
@@ -220,6 +218,16 @@ func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.Accoun
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
+func (suite *KeeperTestSuite) mockDelegateCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+	suite.mockDelegateCoins(suite.ctx, acc, moduleAcc)
+}
+
+func (suite *KeeperTestSuite) mockUndelegateCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr *authtypes.BaseAccount) {
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+	suite.mockUnDelegateCoins(suite.ctx, accAddr, moduleAcc)
+}
+
 func (suite *KeeperTestSuite) mockDelegateCoins(ctx context.Context, acc, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
@@ -254,8 +262,8 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 
 	tests := map[string]string{
 		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
+		"gov module account":     authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
+		"another module account": authtypes.NewModuleAddress(banktypes.MintModuleName).String(),
 	}
 
 	for name, expected := range tests {
@@ -308,12 +316,73 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
-	require.NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
 
 	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
 	require.Error(keeper.SendCoinsFromModuleToAccount(
-		ctx, minttypes.ModuleName, accAddrs[4], initCoins,
+		ctx, banktypes.MintModuleName, accAddrs[4], initCoins,
 	))
+}
+
+func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
+	ctx := suite.ctx
+	require := suite.Require()
+	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
+
+	// set initial balances
+	suite.mockMintCoins(mintAcc)
+	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
+
+	suite.mockSendCoinsFromModuleToAccount(mintAcc, holderAcc.GetAddress())
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, banktypes.MintModuleName, holderAcc.GetAddress(), initCoins))
+
+	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", holderAcc.GetAddress(), initCoins)
+	})
+
+	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
+	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins)
+	})
+
+	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
+	require.Panics(func() {
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
+	})
+
+	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
+	authKeeper.EXPECT().GetAccount(suite.ctx, holderAcc.GetAddress()).Return(holderAcc)
+	require.Error(
+		keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+	)
+	suite.mockSendCoinsFromModuleToModule(holderAcc, burnerAcc)
+	require.NoError(
+		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), authtypes.Burner, initCoins),
+	)
+
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+
+	suite.mockSendCoinsFromModuleToAccount(burnerAcc, baseAcc.GetAddress())
+	require.NoError(
+		keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins),
+	)
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+
+	suite.mockDelegateCoinsFromAccountToModule(baseAcc, burnerAcc)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	require.NoError(keeper.DelegateCoinsFromAccountToModule(sdkCtx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+
+	suite.mockUndelegateCoinsFromModuleToAccount(burnerAcc, baseAcc)
+	require.NoError(keeper.UndelegateCoinsFromModuleToAccount(sdkCtx, authtypes.Burner, baseAcc.GetAddress(), initCoins))
+	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 }
 
 func (suite *KeeperTestSuite) TestSupply_SendCoins() {
@@ -323,25 +392,25 @@ func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)
-	require.NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
 
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, holderAcc.GetAddress())
-	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, banktypes.MintModuleName, holderAcc.GetAddress(), initCoins))
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress("").Return(nil)
 	require.Panics(func() {
-		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck // we're testing for a panic, not an error
+		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	})
 
 	authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
@@ -382,16 +451,16 @@ func (suite *KeeperTestSuite) TestSupply_MintCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, "", initCoins) }, "no module account") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, "", initCoins) }, "no module account")
 
 	suite.mockMintCoins(burnerAcc)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission")
 
 	suite.mockMintCoins(minterAcc)
 	require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: math.NewInt(-10)}}), "insufficient coins")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) })
 
 	suite.mockMintCoins(minterAcc)
 	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
@@ -435,13 +504,13 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") //nolint:errcheck // we're testing for a panic, not an error
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission")
 
 	suite.mockBurnCoins(burnerAcc)
 	require.Error(keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation), "insufficient coins")
@@ -623,7 +692,8 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[1])
 	suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[1], balances))
@@ -650,7 +720,8 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 	require.NoError(suite.bankKeeper.ValidateBalance(ctx, accAddrs[0]))
 
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[1])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[1], balances))
@@ -861,7 +932,8 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -893,7 +965,8 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -926,7 +999,8 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	}
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -957,7 +1031,8 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -994,7 +1069,8 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
 	}
 
-	vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+	vacc, err := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -1026,7 +1102,8 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -1083,7 +1160,8 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
@@ -1784,10 +1862,10 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 			require.NoError(migrator.Migrate3to4(ctx))
 
 			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
 			require.Equal(def, newParams.DefaultSendEnabled)
 
-			for _, se := range params.SendEnabled { //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+			for _, se := range params.SendEnabled {
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				require.Equal(se.Enabled, actual, se.Denom)
 			}
@@ -1800,7 +1878,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	require := suite.Require()
 
 	params := banktypes.NewParams(true)
-	params.SendEnabled = []*banktypes.SendEnabled{ //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+	params.SendEnabled = []*banktypes.SendEnabled{
 		{Denom: "paramscointrue", Enabled: true},
 		{Denom: "paramscoinfalse", Enabled: false},
 	}
@@ -1809,7 +1887,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	suite.Run("stored params are as expected", func() {
 		actual := bankKeeper.GetParams(ctx)
 		require.True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // SA1019: banktypes.Params.SendEnabled is deprecated: Use bankkeeper.IsSendEnabledDenom instead.
+		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // we're testing the old way here
 	})
 
 	suite.Run("send enabled params converted to store", func() {

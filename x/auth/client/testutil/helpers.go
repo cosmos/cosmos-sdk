@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -88,12 +87,6 @@ func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...stri
 	}
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAuxToFeeCommand(), append(args, extraArgs...))
-}
-
-func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, ac address.Codec, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
-
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(ac), append(args, extraArgs...))
 }
 
 func TxMultiSignBatchExec(clientCtx client.Context, filename, from, sigFile1, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {

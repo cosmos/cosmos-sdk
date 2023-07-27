@@ -3,8 +3,9 @@ package internal
 import (
 	"testing"
 
-	"cosmossdk.io/store/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/store/types"
 )
 
 func TestGetSetDelete(t *testing.T) {
@@ -182,6 +183,7 @@ func TestDBIterator(t *testing.T) {
 }
 
 func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg string) {
+	t.Helper()
 	i := 0
 	for itr.Valid() {
 		key := itr.Key()

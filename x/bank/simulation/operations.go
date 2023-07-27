@@ -12,7 +12,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -22,6 +21,8 @@ const (
 	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
 	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
 	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
+
+	distributionModuleName = "distribution"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -347,7 +348,11 @@ func sendMsgMultiSend(
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 	for i := 0; i < len(msg.Inputs); i++ {
-		addr := sdk.MustAccAddressFromBech32(msg.Inputs[i].Address)
+		addr, err := ak.AddressCodec().StringToBytes(msg.Inputs[i].Address)
+		if err != nil {
+			panic(err)
+		}
+
 		acc := ak.GetAccount(ctx, addr)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
@@ -356,7 +361,11 @@ func sendMsgMultiSend(
 		fees sdk.Coins
 		err  error
 	)
-	addr := sdk.MustAccAddressFromBech32(msg.Inputs[0].Address)
+
+	addr, err := ak.AddressCodec().StringToBytes(msg.Inputs[0].Address)
+	if err != nil {
+		panic(err)
+	}
 	// feePayer is the first signer, i.e. first input address
 	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
@@ -420,7 +429,7 @@ func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount i
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
-		acc := ak.GetModuleAccount(ctx, disttypes.ModuleName)
+		acc := ak.GetModuleAccount(ctx, distributionModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),
 			PrivKey: nil,

@@ -21,12 +21,6 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 	}
 }
 
-// GetSigners returns the expected signers for a MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
@@ -34,12 +28,6 @@ func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount 
 		ToAddress:   toAddr.String(),
 		Amount:      amount,
 	}
-}
-
-// GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
-func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
-	from, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{from}
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
@@ -50,13 +38,4 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 		StartTime:      startTime,
 		VestingPeriods: periods,
 	}
-}
-
-// GetSigners returns the expected signers for a MsgCreatePeriodicVestingAccount.
-func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
 }

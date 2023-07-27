@@ -236,11 +236,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // Delegation mocks base method.
-func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress, arg2 types.ValAddress) types0.DelegationI {
+func (m *MockStakingKeeper) Delegation(arg0 context.Context, arg1 types.AccAddress, arg2 types.ValAddress) (types0.DelegationI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
 	ret0, _ := ret[0].(types0.DelegationI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Delegation indicates an expected call of Delegation.
@@ -250,11 +251,12 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 }
 
 // GetAllDelegatorDelegations mocks base method.
-func (m *MockStakingKeeper) GetAllDelegatorDelegations(ctx types.Context, delegator types.AccAddress) []types0.Delegation {
+func (m *MockStakingKeeper) GetAllDelegatorDelegations(ctx context.Context, delegator types.AccAddress) ([]types0.Delegation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllDelegatorDelegations", ctx, delegator)
 	ret0, _ := ret[0].([]types0.Delegation)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAllDelegatorDelegations indicates an expected call of GetAllDelegatorDelegations.
@@ -264,11 +266,12 @@ func (mr *MockStakingKeeperMockRecorder) GetAllDelegatorDelegations(ctx, delegat
 }
 
 // GetAllSDKDelegations mocks base method.
-func (m *MockStakingKeeper) GetAllSDKDelegations(ctx types.Context) []types0.Delegation {
+func (m *MockStakingKeeper) GetAllSDKDelegations(ctx context.Context) ([]types0.Delegation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllSDKDelegations", ctx)
 	ret0, _ := ret[0].([]types0.Delegation)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAllSDKDelegations indicates an expected call of GetAllSDKDelegations.
@@ -278,11 +281,12 @@ func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx interface{}) *
 }
 
 // GetAllValidators mocks base method.
-func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types0.Validator {
+func (m *MockStakingKeeper) GetAllValidators(ctx context.Context) ([]types0.Validator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
 	ret0, _ := ret[0].([]types0.Validator)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetAllValidators indicates an expected call of GetAllValidators.
@@ -292,9 +296,11 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types0.DelegationI) bool) {
+func (m *MockStakingKeeper) IterateDelegations(ctx context.Context, delegator types.AccAddress, fn func(int64, types0.DelegationI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateDelegations indicates an expected call of IterateDelegations.
@@ -304,9 +310,11 @@ func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn i
 }
 
 // IterateValidators mocks base method.
-func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types0.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateValidators", arg0, arg1)
+	ret := m.ctrl.Call(m, "IterateValidators", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateValidators indicates an expected call of IterateValidators.
@@ -316,11 +324,12 @@ func (mr *MockStakingKeeperMockRecorder) IterateValidators(arg0, arg1 interface{
 }
 
 // Validator mocks base method.
-func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress) types0.ValidatorI {
+func (m *MockStakingKeeper) Validator(arg0 context.Context, arg1 types.ValAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
 	ret0, _ := ret[0].(types0.ValidatorI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Validator indicates an expected call of Validator.
@@ -329,12 +338,27 @@ func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validator", reflect.TypeOf((*MockStakingKeeper)(nil).Validator), arg0, arg1)
 }
 
+// ValidatorAddressCodec mocks base method.
+func (m *MockStakingKeeper) ValidatorAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ValidatorAddressCodec indicates an expected call of ValidatorAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorAddressCodec))
+}
+
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types0.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
 	ret0, _ := ret[0].(types0.ValidatorI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ValidatorByConsAddr indicates an expected call of ValidatorByConsAddr.
@@ -367,9 +391,11 @@ func (m *MockStakingHooks) EXPECT() *MockStakingHooksMockRecorder {
 }
 
 // AfterDelegationModified mocks base method.
-func (m *MockStakingHooks) AfterDelegationModified(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) {
+func (m *MockStakingHooks) AfterDelegationModified(ctx context.Context, delAddr types.AccAddress, valAddr types.ValAddress) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AfterDelegationModified", ctx, delAddr, valAddr)
+	ret := m.ctrl.Call(m, "AfterDelegationModified", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // AfterDelegationModified indicates an expected call of AfterDelegationModified.
@@ -379,9 +405,11 @@ func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, va
 }
 
 // AfterValidatorCreated mocks base method.
-func (m *MockStakingHooks) AfterValidatorCreated(ctx types.Context, valAddr types.ValAddress) {
+func (m *MockStakingHooks) AfterValidatorCreated(ctx context.Context, valAddr types.ValAddress) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AfterValidatorCreated", ctx, valAddr)
+	ret := m.ctrl.Call(m, "AfterValidatorCreated", ctx, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // AfterValidatorCreated indicates an expected call of AfterValidatorCreated.

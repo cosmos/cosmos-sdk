@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -65,8 +64,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 	}
 
 	kvStore := m.sa(ctx)
-	kvStore.Set(bytesKey, valueBytes)
-	return nil
+	return kvStore.Set(bytesKey, valueBytes)
 }
 
 // Get returns the value associated with the provided key,
@@ -147,6 +145,59 @@ func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key
 			return nil
 		}
 	}
+	return nil
+}
+
+// Clear clears the collection contained within the provided key range.
+// A nil ranger equals to clearing the whole collection. In case the collection
+// is empty no error will be returned.
+// NOTE: this API needs to be used with care, considering that as of today
+// cosmos-sdk stores the deletion records to be committed in a memory cache,
+// clearing a lot of data might make the node go OOM.
+func (m Map[K, V]) Clear(ctx context.Context, ranger Ranger[K]) error {
+	startBytes, endBytes, _, err := parseRangeInstruction(m.prefix, m.kc, ranger)
+	if err != nil {
+		return err
+	}
+	return deleteDomain(m.sa(ctx), startBytes, endBytes)
+}
+
+const clearBatchSize = 10000
+
+// deleteDomain deletes the domain of an iterator, the key difference
+// is that it uses batches to clear the store meaning that it will read
+// the keys within the domain close the iterator and then delete them.
+func deleteDomain(s store.KVStore, start, end []byte) error {
+	for {
+		iter, err := s.Iterator(start, end)
+		if err != nil {
+			return err
+		}
+
+		keys := make([][]byte, 0, clearBatchSize)
+		for ; iter.Valid() && len(keys) < clearBatchSize; iter.Next() {
+			keys = append(keys, iter.Key())
+		}
+
+		// we close the iterator here instead of deferring
+		err = iter.Close()
+		if err != nil {
+			return err
+		}
+
+		for _, key := range keys {
+			err = s.Delete(key)
+			if err != nil {
+				return err
+			}
+		}
+
+		// If we've retrieved less than the batchSize, we're done.
+		if len(keys) < clearBatchSize {
+			break
+		}
+	}
+
 	return nil
 }
 

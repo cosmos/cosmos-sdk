@@ -1,7 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -46,14 +49,17 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 		var count int
 		var outstanding sdk.DecCoins
 
-		k.IterateValidatorOutstandingRewards(ctx, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+		err := k.ValidatorOutstandingRewards.Walk(ctx, nil, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
 			outstanding = rewards.GetRewards()
 			if outstanding.IsAnyNegative() {
 				count++
 				msg += fmt.Sprintf("\t%v has negative outstanding coins: %v\n", addr, outstanding)
 			}
-			return false
+			return false, nil
 		})
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+			return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding", err.Error()), true
+		}
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding",
@@ -69,14 +75,23 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		var remaining sdk.DecCoins
 
-		valDelegationAddrs := make(map[string][]sdk.AccAddress)
-		for _, del := range k.stakingKeeper.GetAllSDKDelegations(ctx) {
-			valAddr := del.GetValidatorAddr().String()
-			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
+		valDelegationAddrs := make(map[string][][]byte)
+		allDelegations, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, del := range allDelegations {
+			delAddr, err := k.authKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())
+			if err != nil {
+				panic(err)
+			}
+			valAddr := del.GetValidatorAddr()
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], delAddr)
 		}
 
 		// iterate over all validators
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		err = k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 
 			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
@@ -100,6 +115,9 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 			return false
 		})
+		if err != nil {
+			panic(err)
+		}
 
 		broken := len(remaining) > 0 && remaining[0].Amount.IsNegative()
 		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
@@ -111,11 +129,19 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		valCount := uint64(0)
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})
-		dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		dels, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		slashCount := uint64(0)
 		k.IterateValidatorSlashEvents(ctx,
 			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
@@ -141,10 +167,13 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedCoins sdk.DecCoins
-		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+		err := k.ValidatorOutstandingRewards.Walk(ctx, nil, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
 			expectedCoins = expectedCoins.Add(rewards.Rewards...)
-			return false
+			return false, nil
 		})
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+			return sdk.FormatInvariant(types.ModuleName, "module account coins", err.Error()), true
+		}
 
 		communityPool, err := k.FeePool.Get(ctx)
 		if err != nil {

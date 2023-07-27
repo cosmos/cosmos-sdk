@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -106,10 +106,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	)
 
 	// set outstanding rewards
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// set commission
-	require.NoError(t, distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorsAccumulatedCommission.Set(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
 	// withdraw commission
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", math.NewInt(1)), sdk.NewCoin("stake", math.NewInt(1)))
@@ -120,7 +120,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	require.NoError(t, err)
 
 	// check remainder
-	remainderValCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
+	remainderValCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
 	require.NoError(t, err)
 	remainder := remainderValCommission.Commission
 	require.Equal(t, sdk.DecCoins{
@@ -162,8 +162,8 @@ func TestGetTotalRewards(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
 	}
 
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
-	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.ValidatorOutstandingRewards.Set(ctx, valAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	expectedRewards := valCommission.MulDec(math.LegacyNewDec(2))
 	totalRewards := distrKeeper.GetTotalRewards(ctx)

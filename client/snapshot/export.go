@@ -1,10 +1,12 @@
 package snapshot
 
 import (
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cobra"
 )
 
 // ExportSnapshotCmd returns a command to take a snapshot of the application state

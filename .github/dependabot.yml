@@ -124,15 +124,6 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tools/rosetta"
-    schedule:
-      interval: weekly
-      day: monday
-      time: "02:05"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
     directory: "/tools/confix"
     schedule:
       interval: weekly
@@ -242,6 +233,13 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
+      - dependency-name: "github.com/cometbft/*"
+        dependency-type: "all"
+    ignore:
+      - dependency-name: "github.com/cometbft/cometbft"
+        # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.37.x
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: gomod
     directory: "/"
@@ -260,3 +258,10 @@ updates:
         dependency-type: "all"
       - dependency-name: "cosmossdk.io/*"
         dependency-type: "all"
+      - dependency-name: "github.com/cometbft/*"
+        dependency-type: "all"
+    ignore:
+      - dependency-name: "github.com/cometbft/cometbft"
+        # cometbft 0.38 is not semver, but we want to only update "patch" versions for 0.38.x
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]

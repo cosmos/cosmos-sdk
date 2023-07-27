@@ -48,34 +48,34 @@ type BankKeeper interface {
 // ValidatorSet expected properties for the set of all validators (noalias)
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
-	IterateValidators(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+	IterateValidators(context.Context,
+		func(index int64, validator ValidatorI) (stop bool)) error
 
 	// iterate through bonded validators by operator address, execute func for each validator
-	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+	IterateBondedValidatorsByPower(context.Context,
+		func(index int64, validator ValidatorI) (stop bool)) error
 
 	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
-	IterateLastValidators(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+	IterateLastValidators(context.Context,
+		func(index int64, validator ValidatorI) (stop bool)) error
 
-	Validator(sdk.Context, sdk.ValAddress) ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) math.Int                      // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) math.Int                     // total staking token supply
+	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (ValidatorI, error) // get a particular validator by consensus address
+	TotalBondedTokens(context.Context) (math.Int, error)                      // total bonded tokens within the validator set
+	StakingTokenSupply(context.Context) (math.Int, error)                     // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) math.Int
-	SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) math.Int
-	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
-	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
+	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
+	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) (math.Int, error)
+	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
+	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) DelegationI
+	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (DelegationI, error)
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint32
+	MaxValidators(context.Context) (uint32, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)
@@ -84,8 +84,8 @@ type DelegationSet interface {
 
 	// iterate through all delegations from one delegator by validator-AccAddress,
 	//   execute func for each validator
-	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation DelegationI) (stop bool))
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
+		fn func(index int64, delegation DelegationI) (stop bool)) error
 }
 
 // Event Hooks
@@ -96,19 +96,19 @@ type DelegationSet interface {
 
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
-	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error                           // Must be called when a validator is created
-	BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error                         // Must be called when a validator's state changes
-	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator is deleted
+	AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error                           // Must be called when a validator is created
+	BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error                         // Must be called when a validator's state changes
+	AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator is deleted
 
-	AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error         // Must be called when a validator is bonded
-	AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator begins unbonding
+	AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error         // Must be called when a validator is bonded
+	AfterValidatorBeginUnbonding(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator begins unbonding
 
-	BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is created
-	BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error // Must be called when a delegation's shares are modified
-	BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is removed
-	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
-	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
-	AfterUnbondingInitiated(ctx sdk.Context, id uint64) error
+	BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is created
+	BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error // Must be called when a delegation's shares are modified
+	BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is removed
+	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
+	BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
+	AfterUnbondingInitiated(ctx context.Context, id uint64) error
 }
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.

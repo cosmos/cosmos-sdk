@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -161,6 +160,12 @@ func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema 
 		collectionsByPrefix: map[string]Collection{},
 	}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (s Schema) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (s Schema) IsAppModule() {}
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {

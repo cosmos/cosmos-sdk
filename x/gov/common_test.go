@@ -6,10 +6,11 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -44,6 +45,7 @@ var (
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
 func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
+	t.Helper()
 	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
 	require.NoError(t, err)
 
@@ -112,6 +114,7 @@ type suite struct {
 }
 
 func createTestSuite(t *testing.T) suite {
+	t.Helper()
 	res := suite{}
 
 	app, err := simtestutil.SetupWithConfiguration(

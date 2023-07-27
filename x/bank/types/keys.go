@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,6 +17,16 @@ const (
 
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
+
+	// GovModuleName duplicates the gov module's name to avoid a cyclic dependency with x/gov.
+	// It should be synced with the gov module's name if it is ever changed.
+	// See: https://github.com/cosmos/cosmos-sdk/blob/b62a28aac041829da5ded4aeacfcd7a42873d1c8/x/gov/types/keys.go#L9
+	GovModuleName = "gov"
+
+	// MintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
+	// It should be synced with the mint module's name if it is ever changed.
+	// See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
+	MintModuleName = "mint"
 )
 
 // KVStore keys
@@ -33,27 +44,13 @@ var (
 	ParamsKey = collections.NewPrefix(5)
 )
 
-// NewBalanceCompatValueCodec is a codec for encoding Balances in a backwards compatible way
-// with respect to the old format.
-func NewBalanceCompatValueCodec() collcodec.ValueCodec[math.Int] {
-	return balanceCompatValueCodec{
-		sdk.IntValue,
-	}
-}
-
-type balanceCompatValueCodec struct {
-	collcodec.ValueCodec[math.Int]
-}
-
-func (v balanceCompatValueCodec) Decode(b []byte) (math.Int, error) {
-	i, err := v.ValueCodec.Decode(b)
-	if err == nil {
-		return i, nil
-	}
+// BalanceValueCodec is a codec for encoding bank balances in a backwards compatible way.
+// Historically, balances were represented as Coin, now they're represented as a simple math.Int
+var BalanceValueCodec = collcodec.NewAltValueCodec(sdk.IntValue, func(bytes []byte) (math.Int, error) {
 	c := new(sdk.Coin)
-	err = c.Unmarshal(b)
+	err := c.Unmarshal(bytes)
 	if err != nil {
 		return math.Int{}, err
 	}
 	return c.Amount, nil
-}
+})

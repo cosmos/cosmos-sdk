@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
@@ -57,7 +56,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(types.GovModuleName).String(),
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
@@ -67,19 +66,23 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
-	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 
+	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {
 	stakingTokenSupply := math.NewIntFromUint64(100000000000)
-	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply)
-	s.Require().Equal(s.mintKeeper.StakingTokenSupply(s.ctx), stakingTokenSupply)
+	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply, nil)
+	tokenSupply, err := s.mintKeeper.StakingTokenSupply(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(tokenSupply, stakingTokenSupply)
 
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
-	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio)
-	s.Require().Equal(s.mintKeeper.BondedRatio(s.ctx), bondedRatio)
+	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil)
+	ratio, err := s.mintKeeper.BondedRatio(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(ratio, bondedRatio)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)

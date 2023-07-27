@@ -13,9 +13,7 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 
@@ -44,10 +42,13 @@ Allowing the application to handle ordering enables the application to define ho
 it would like the block constructed. 
 
 The Cosmos SDK defines the `DefaultProposalHandler` type, which provides applications with
-`PrepareProposal` and `ProcessProposal` handlers.
+`PrepareProposal` and `ProcessProposal` handlers. If you decide to implement your
+own `PrepareProposal` handler, you must be sure to ensure that the transactions
+selected DO NOT exceed the maximum block gas (if set) and the maximum bytes provided
+by `req.MaxBytes`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
@@ -78,10 +79,13 @@ proposal is proposed.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L927-L942
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L153-L159
 ```
 
-Like `PrepareProposal` this implementation is the default and can be modified by the application developer in [`app.go`](./01-app-go-v2.md):
+Like `PrepareProposal` this implementation is the default and can be modified by
+the application developer in [`app.go`](./01-app-go-v2.md). If you decide to implement
+your own `ProcessProposal` handler, you must be sure to ensure that the transactions
+provided in the proposal DO NOT exceed the maximum block gas (if set).
 
 ```go
 processOpt := func(app *baseapp.BaseApp) {

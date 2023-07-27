@@ -41,11 +41,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // GetParams mocks base method.
-func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
+func (m *MockStakingKeeper) GetParams(ctx context.Context) (types1.Params, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
 	ret0, _ := ret[0].(types1.Params)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetParams indicates an expected call of GetParams.
@@ -55,11 +56,12 @@ func (mr *MockStakingKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types1.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types1.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
 	ret0, _ := ret[0].(types1.ValidatorI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ValidatorByConsAddr indicates an expected call of ValidatorByConsAddr.

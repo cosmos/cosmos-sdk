@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,9 +27,12 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	keeper.sk.IterateBondedValidatorsByPower(sdkCtx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		currValidators[validator.GetOperator().String()] = v1.NewValidatorGovInfo(
+	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		valStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(validator.GetOperator())
+		if err != nil {
+			return false
+		}
+		currValidators[valStr] = v1.NewValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
@@ -40,6 +42,10 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 		return false
 	})
+	if err != nil {
+		return false, false, tallyResults, err
+	}
+
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 	err = keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
@@ -48,15 +54,18 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 			return false, err
 		}
 
-		valAddrStr := sdk.ValAddress(voter).String()
+		valAddrStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(voter)
+		if err != nil {
+			return false, err
+		}
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		keeper.sk.IterateDelegations(sdkCtx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
-			valAddrStr := delegation.GetValidatorAddr().String()
+		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
+			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := currValidators[valAddrStr]; ok {
 				// There is no need to handle the special case that validator address equal to voter address.
@@ -77,6 +86,9 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 			return false
 		})
+		if err != nil {
+			return false, err
+		}
 
 		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	})
@@ -110,12 +122,17 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	if keeper.sk.TotalBondedTokens(sdkCtx).IsZero() {
+	totalBonded, err := keeper.sk.TotalBondedTokens(ctx)
+	if err != nil {
+		return false, false, tallyResults, err
+	}
+
+	if totalBonded.IsZero() {
 		return false, false, tallyResults, nil
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(math.LegacyNewDecFromInt(keeper.sk.TotalBondedTokens(sdkCtx)))
+	percentVoting := totalVotingPower.Quo(math.LegacyNewDecFromInt(totalBonded))
 	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -37,6 +38,12 @@ var (
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
 	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
+
+	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
+	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
+	// state backwards compatibility.
+	// Deprecated: use collections.Uint64Key instead.
+	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
 )
 
 type addressUnion interface {
@@ -137,10 +144,10 @@ func (i intValueCodec) Encode(value math.Int) ([]byte, error) {
 }
 
 func (i intValueCodec) Decode(b []byte) (math.Int, error) {
-	v := new(Int)
+	v := new(math.Int)
 	err := v.Unmarshal(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
@@ -149,16 +156,16 @@ func (i intValueCodec) EncodeJSON(value math.Int) ([]byte, error) {
 	return value.MarshalJSON()
 }
 
-func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
-	v := new(Int)
+func (i intValueCodec) DecodeJSON(b []byte) (math.Int, error) {
+	v := new(math.Int)
 	err := v.UnmarshalJSON(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
 
-func (i intValueCodec) Stringify(value Int) string {
+func (i intValueCodec) Stringify(value math.Int) string {
 	return value.String()
 }
 
@@ -208,3 +215,37 @@ func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	return t.Decode(buffer[:timeSize])
 }
 func (t timeKeyCodec) SizeNonTerminal(key time.Time) int { return t.Size(key) }
+
+type leUint64Key struct{}
+
+func (l leUint64Key) Encode(buffer []byte, key uint64) (int, error) {
+	binary.LittleEndian.PutUint64(buffer, key)
+	return 8, nil
+}
+
+func (l leUint64Key) Decode(buffer []byte) (int, uint64, error) {
+	if size := len(buffer); size < 8 {
+		return 0, 0, fmt.Errorf("invalid buffer size, wanted 8 at least got %d", size)
+	}
+	return 8, binary.LittleEndian.Uint64(buffer), nil
+}
+
+func (l leUint64Key) Size(_ uint64) int { return 8 }
+
+func (l leUint64Key) EncodeJSON(value uint64) ([]byte, error) {
+	return collections.Uint64Key.EncodeJSON(value)
+}
+
+func (l leUint64Key) DecodeJSON(b []byte) (uint64, error) { return collections.Uint64Key.DecodeJSON(b) }
+
+func (l leUint64Key) Stringify(key uint64) string { return collections.Uint64Key.Stringify(key) }
+
+func (l leUint64Key) KeyType() string { return "little-endian-uint64" }
+
+func (l leUint64Key) EncodeNonTerminal(buffer []byte, key uint64) (int, error) {
+	return l.Encode(buffer, key)
+}
+
+func (l leUint64Key) DecodeNonTerminal(buffer []byte) (int, uint64, error) { return l.Decode(buffer) }
+
+func (l leUint64Key) SizeNonTerminal(_ uint64) int { return 8 }

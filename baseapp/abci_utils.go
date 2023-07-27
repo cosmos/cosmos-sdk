@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
@@ -13,6 +12,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,11 +41,16 @@ type (
 		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
 		TotalBondedTokens(ctx sdk.Context) math.Int
 	}
+
+	// GasTx defines the contract that a transaction with a gas limit must implement.
+	GasTx interface {
+		GetGas() uint64
+	}
 )
 
 // ValidateVoteExtensions defines a helper function for verifying vote extension
 // signatures that may be passed or manually injected into a block proposal from
-// a proposer in ProcessProposal. It returns an error if any signature is invalid
+// a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
 func ValidateVoteExtensions(
@@ -55,7 +61,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && cp.Abci.VoteExtensionsEnableHeight > 0
+	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
@@ -66,7 +72,7 @@ func ValidateVoteExtensions(
 		return buf.Bytes(), nil
 	}
 
-	var sumVP math.Int
+	sumVP := math.NewInt(0)
 	for _, vote := range extCommit.Votes {
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
@@ -186,9 +192,15 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 		}
 
+		var maxBlockGas int64
+		if b := ctx.ConsensusParams().Block; b != nil {
+			maxBlockGas = b.MaxGas
+		}
+
 		var (
 			selectedTxs  [][]byte
 			totalTxBytes int64
+			totalTxGas   uint64
 		)
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -207,12 +219,31 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 					panic(err)
 				}
 			} else {
+				var txGasLimit uint64
 				txSize := int64(len(bz))
-				if totalTxBytes += txSize; totalTxBytes <= req.MaxTxBytes {
-					selectedTxs = append(selectedTxs, bz)
-				} else {
-					// We've reached capacity per req.MaxTxBytes so we cannot select any
-					// more transactions.
+
+				gasTx, ok := memTx.(GasTx)
+				if ok {
+					txGasLimit = gasTx.GetGas()
+				}
+
+				// only add the transaction to the proposal if we have enough capacity
+				if (txSize + totalTxBytes) < req.MaxTxBytes {
+					// If there is a max block gas limit, add the tx only if the limit has
+					// not been met.
+					if maxBlockGas > 0 && (txGasLimit+totalTxGas) <= uint64(maxBlockGas) {
+						totalTxGas += txGasLimit
+						totalTxBytes += txSize
+						selectedTxs = append(selectedTxs, bz)
+					} else {
+						totalTxBytes += txSize
+						selectedTxs = append(selectedTxs, bz)
+					}
+				}
+
+				// Check if we've reached capacity. If so, we cannot select any more
+				// transactions.
+				if totalTxBytes >= req.MaxTxBytes || (maxBlockGas > 0 && (totalTxGas >= uint64(maxBlockGas))) {
 					break
 				}
 			}
@@ -244,10 +275,28 @@ func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 	}
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		var totalTxGas uint64
+
+		var maxBlockGas int64
+		if b := ctx.ConsensusParams().Block; b != nil {
+			maxBlockGas = b.MaxGas
+		}
+
 		for _, txBytes := range req.Txs {
-			_, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
+			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+			}
+
+			if maxBlockGas > 0 {
+				gasTx, ok := tx.(GasTx)
+				if ok {
+					totalTxGas += gasTx.GetGas()
+				}
+
+				if totalTxGas > uint64(maxBlockGas) {
+					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				}
 			}
 		}
 

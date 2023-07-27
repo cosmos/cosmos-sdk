@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -46,41 +47,43 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, previousProposer)
+	if err = k.SetPreviousProposerConsAddr(ctx, previousProposer); err != nil {
+		panic(err)
+	}
 
 	for _, rew := range data.OutstandingRewards {
-		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		err = k.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		if err != nil {
 			panic(err)
 		}
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		valAddr, err := sdk.ValAddressFromBech32(acc.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(acc.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, acc.Accumulated)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +93,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -99,13 +102,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -164,38 +167,44 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
-	k.IterateValidatorOutstandingRewards(ctx,
-		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
-				ValidatorAddress:   addr.String(),
-				OutstandingRewards: rewards.Rewards,
-			})
-			return false
-		},
+	err = k.ValidatorOutstandingRewards.Walk(ctx, nil, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
+		outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
+			ValidatorAddress:   addr.String(),
+			OutstandingRewards: rewards.Rewards,
+		})
+		return false, nil
+	},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
-	k.IterateValidatorAccumulatedCommissions(ctx,
-		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
-			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
-				ValidatorAddress: addr.String(),
-				Accumulated:      commission,
-			})
-			return false
-		},
-	)
+	err = k.ValidatorsAccumulatedCommission.Walk(ctx, nil, func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool, err error) {
+		acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
+			ValidatorAddress: addr.String(),
+			Accumulated:      commission,
+		})
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
-	k.IterateValidatorHistoricalRewards(ctx,
-		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
+	err = k.ValidatorHistoricalRewards.Walk(ctx, nil,
+		func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
-				ValidatorAddress: val.String(),
-				Period:           period,
+				ValidatorAddress: key.K1().String(),
+				Period:           key.K2(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
 	err = k.ValidatorCurrentRewards.Walk(ctx, nil,
@@ -212,16 +221,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
-	k.IterateDelegatorStartingInfos(ctx,
-		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
-			dels = append(dels, types.DelegatorStartingInfoRecord{
-				ValidatorAddress: val.String(),
-				DelegatorAddress: del.String(),
-				StartingInfo:     info,
-			})
-			return false
-		},
-	)
+	err = k.DelegatorStartingInfo.Walk(ctx, nil, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value types.DelegatorStartingInfo) (stop bool, err error) {
+		dels = append(dels, types.DelegatorStartingInfoRecord{
+			DelegatorAddress: key.K2().String(),
+			ValidatorAddress: key.K1().String(),
+			StartingInfo:     value,
+		})
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
 	k.IterateValidatorSlashEvents(ctx,

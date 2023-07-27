@@ -20,12 +20,13 @@ func TestStoreMigration(t *testing.T) {
 	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(stakingKey, tStakingKey)
 	paramstore := paramtypes.NewSubspace(encCfg.Codec, encCfg.Amino, stakingKey, tStakingKey, "staking")
+	store := ctx.KVStore(stakingKey)
 
 	// Check no params
 	require.False(t, paramstore.Has(ctx, types.KeyMinCommissionRate))
 
 	// Run migrations.
-	err := v3.MigrateStore(ctx, stakingKey, encCfg.Codec, paramstore)
+	err := v3.MigrateStore(ctx, store, encCfg.Codec, paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.

@@ -42,7 +42,8 @@ func TestPaginationProperty(t *testing.T) {
 			}
 			dest := reconstructedTableModels[offset:end]
 			tableModelsIt := testTableModelIterator(tableModels, nil)
-			Paginate(tableModelsIt, pageRequest, &dest)
+			_, err := Paginate(tableModelsIt, pageRequest, &dest)
+			require.NoError(t, err)
 			reconstructedTableModels = append(reconstructedTableModels, dest...)
 		}
 

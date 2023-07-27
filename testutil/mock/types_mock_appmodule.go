@@ -18,7 +18,6 @@ import (
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	cobra "github.com/spf13/cobra"
 )
 
 // MockAppModuleWithAllExtensions is a mock of AppModuleWithAllExtensions interface.
@@ -99,34 +98,6 @@ func (m *MockAppModuleWithAllExtensions) ExportGenesis(arg0 types1.Context, arg1
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).ExportGenesis), arg0, arg1)
-}
-
-// GetQueryCmd mocks base method.
-func (m *MockAppModuleWithAllExtensions) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockAppModuleWithAllExtensions) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).GetTxCmd))
 }
 
 // InitGenesis mocks base method.

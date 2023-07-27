@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
 func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions) (*MessageBinder, error) {
@@ -24,6 +25,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 
 	isPositional := map[string]bool{}
 	hasVarargs := false
+	hasOptional := false
 	n := len(commandOptions.PositionalArgs)
 	// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
 	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
@@ -35,12 +37,24 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 			return nil, fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
 		}
 
+		if arg.Optional && arg.Varargs {
+			return nil, fmt.Errorf("positional argument %s can't be both optional and varargs", arg.ProtoField)
+		}
+
 		if arg.Varargs {
 			if i != n-1 {
 				return nil, fmt.Errorf("varargs positional argument %s must be the last argument", arg.ProtoField)
 			}
 
 			hasVarargs = true
+		}
+
+		if arg.Optional {
+			if i != n-1 {
+				return nil, fmt.Errorf("optional positional argument %s must be the last argument", arg.ProtoField)
+			}
+
+			hasOptional = true
 		}
 
 		_, hasValue, err := b.addFieldFlag(
@@ -61,8 +75,11 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	if hasVarargs {
-		handler.CobraArgs = cobra.MinimumNArgs(n)
+		handler.CobraArgs = cobra.MinimumNArgs(n - 1)
 		handler.hasVarargs = true
+	} else if hasOptional {
+		handler.CobraArgs = cobra.RangeArgs(n-1, n)
+		handler.hasOptional = true
 	} else {
 		handler.CobraArgs = cobra.ExactArgs(n)
 	}

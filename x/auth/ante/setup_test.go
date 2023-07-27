@@ -3,14 +3,10 @@ package ante_test
 import (
 	"testing"
 
-<<<<<<< HEAD
-=======
-	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
->>>>>>> 75b4918b9 (fix: check tx gas limit against block gas limit (#16547))
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,7 +29,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	suite.txBuilder.SetGasLimit(101)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	require.NoError(t, err)
 
 	sud := ante.NewSetUpContextDecorator()
@@ -42,8 +38,8 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	suite.ctx = suite.ctx.
 		WithBlockHeight(1).
 		WithGasMeter(storetypes.NewGasMeter(0)).
-		WithConsensusParams(cmtproto.ConsensusParams{
-			Block: &cmtproto.BlockParams{
+		WithConsensusParams(&tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 100,
 			},
 		})

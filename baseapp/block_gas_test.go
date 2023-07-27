@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"testing"
 
@@ -166,17 +167,13 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-<<<<<<< HEAD
-			baseGas := uint64(51732) // baseGas is the gas consumed before tx msg
-=======
-			baseGas := uint64(57504) // baseGas is the gas consumed before tx msg
->>>>>>> 75b4918b9 (fix: check tx gas limit against block gas limit (#16547))
+			baseGas := uint64(51682) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit
 				expGasConsumed = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 			}
-			require.Equal(t, expGasConsumed, ctx.BlockGasMeter().GasConsumed())
+			require.Equal(t, expGasConsumed, ctx.BlockGasMeter().GasConsumed(), fmt.Sprintf("exp: %d, got: %d", expGasConsumed, ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted
 			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased

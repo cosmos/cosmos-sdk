@@ -14,34 +14,39 @@ import (
 	"go.dedis.ch/kyber/v4/util/key"
 )
 
-// TODO recheck these values
+// TODO -> Check error handling
+// TODO -> Verify: These values are the same as ed25519 to maintain compatibility
 const (
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
-	PrivKeySize = 64
+	PrivKeySize = 32
 	// SignatureSize Size of an Schnorr signature
 	SignatureSize = 64
 
 	keyType = "schnorr"
 )
 
-// GenPrivKey generates a new Schnorr private key. These Schnorr keys must not
+// GenPrivKey generates a new Schnorr private key.
 func GenPrivKey() *PrivKey {
 	suite := edwards25519.NewBlakeSHA256Ed25519()
 	keyPair := key.NewKeyPair(suite)
-	return &PrivKey{Key: keyPair.Private, Suite: suite}
+	binary, err := keyPair.Private.MarshalBinary()
+	if err != nil {
+		fmt.Printf("[ERRPR] While generating priv key: %e", err)
+	}
+	return &PrivKey{Key: binary, Suite: suite, Scalar: keyPair.Private}
 }
 
 // Bytes returns the private key byte format.
-func (privKey *PrivKey) Bytes() ([]byte, error) {
-	return privKey.Key.MarshalBinary()
+func (privKey *PrivKey) Bytes() []byte {
+	return privKey.Key
 }
 
 // Sign produces a signature on the provided message.
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	suite := edwards25519.NewBlakeSHA256Ed25519()
-	signedMsg, err := schnorr.Sign(suite, privKey.Key, msg)
+	signedMsg, err := schnorr.Sign(suite, privKey.Scalar, msg)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Signing message failed: %e", err)
 	}
@@ -49,10 +54,16 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 }
 
 // PubKey gets the corresponding public key from the private key.
-func (privKey *PrivKey) PubKey() *PubKey {
+func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 	var g kyber.Group = privKey.Suite
 	// Gets public key by y = g ^ x definition where x is the private key scalar
-	return &PubKey{Key: g.Point().Mul(privKey.Key, nil), Suite: privKey.Suite}
+	publicKey := g.Point().Mul(privKey.Scalar, nil)
+	binary, err := publicKey.MarshalBinary()
+	if err != nil {
+		fmt.Printf("[ERRPR] While generating pub key: %e", err)
+	}
+
+	return &PubKey{Key: binary, Suite: privKey.Suite, Point: publicKey}
 }
 
 // Type returns key type
@@ -60,25 +71,20 @@ func (privKey *PrivKey) Type() string {
 	return keyType
 }
 
-// Equals
-// Runs in constant time based on length of the keys.
+// Equals comparse 2 keys
 func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
 
-	privKeyBytes, err := privKey.Bytes()
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
+	privKeyBytes := privKey.Bytes()
 
 	return subtle.ConstantTimeCompare(privKeyBytes, other.Bytes()) == 1
 }
 
 // MarshalAmino overrides Amino binary marshaling.
 func (privKey PrivKey) MarshalAmino() ([]byte, error) {
-	return privKey.Bytes()
+	return privKey.Key, nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
@@ -94,13 +100,21 @@ func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 		return fmt.Errorf("[ERROR] invalid privkey size.")
 	}
 
-	return privKey.Key.UnmarshalBinary(bz)
+	fmt.Println("###", privKey)
+	fmt.Println("###>", privKey.Key)
+	privKey.Key = bz
+
+	return nil
 }
 
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
 func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
+
+func (privKey *PrivKey) Reset() { *privKey = PrivKey{} }
+
+func (*PrivKey) ProtoMessage() {}
 
 //-------------------------------------
 
@@ -109,20 +123,15 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // It doesn't implement ADR-28 addresses and it must not be used
 // in SDK except in a tendermint validator context.
 func (pubKey *PubKey) Address() crypto.Address {
-	pubKeyBytes, err := pubKey.Bytes()
-	if err != nil {
-		panic(err)
-	}
-
-	if len(pubKeyBytes) != PubKeySize {
+	if len(pubKey.Bytes()) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
-	return crypto.Address(tmhash.SumTruncated(pubKeyBytes))
+	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()))
 }
 
 // Bytes returns the PubKey byte format.
-func (pubKey *PubKey) Bytes() ([]byte, error) {
-	return pubKey.Key.MarshalBinary()
+func (pubKey *PubKey) Bytes() []byte {
+	return pubKey.Key
 }
 
 func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
@@ -130,7 +139,7 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 		return false
 	}
 
-	err := schnorr.Verify(pubKey.Suite, pubKey.Key, msg, sig)
+	err := schnorr.Verify(pubKey.Suite, pubKey.Point, msg, sig)
 	if err != nil {
 		fmt.Printf("[ERROR] while verifying signature: %e", err)
 	}
@@ -147,23 +156,17 @@ func (pubKey *PubKey) Type() string {
 }
 
 // TODO Change cryptotypes.PubKey
-func (pubKey *PubKey) Equals(other PubKey) bool {
+func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}
 
-	pubKeyBytes, err := pubKey.Bytes()
-	if err != nil {
-		fmt.Printf("[ERROR] There is an error: %e.", err)
-		return false
-	}
-	otherBytes, _ := other.Bytes()
-	return subtle.ConstantTimeCompare(pubKeyBytes, otherBytes) == 1
+	return subtle.ConstantTimeCompare(pubKey.Bytes(), other.Bytes()) == 1
 }
 
 // MarshalAmino overrides Amino binary marshaling.
 func (pubKey PubKey) MarshalAmino() ([]byte, error) {
-	return pubKey.Bytes()
+	return pubKey.Key, nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
@@ -177,10 +180,16 @@ func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 		return errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
 
-	return pubKey.Key.UnmarshalBinary(bz)
+	pubKey.Key = bz
+
+	return nil
 }
 
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
 }
+
+func (pubKey *PubKey) Reset() { *pubKey = PubKey{} }
+
+func (*PubKey) ProtoMessage() {}

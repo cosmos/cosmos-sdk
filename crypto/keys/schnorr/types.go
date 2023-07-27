@@ -10,11 +10,13 @@ type Suite interface {
 }
 
 type PrivKey struct {
-	Key kyber.Scalar
+	Key    []byte
+	Scalar kyber.Scalar
 	Suite
 }
 
 type PubKey struct {
-	Key kyber.Point
+	Key   []byte
+	Point kyber.Point
 	Suite
 }

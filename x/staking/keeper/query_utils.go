@@ -27,7 +27,12 @@ func (k Keeper) GetDelegatorValidators(
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, err := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return nil, err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +53,12 @@ func (k Keeper) GetDelegatorValidator(
 		return validator, err
 	}
 
-	return k.GetValidator(ctx, delegation.GetValidatorAddr())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return validator, err
+	}
+
+	return k.GetValidator(ctx, valAddr)
 }
 
 // GetAllDelegatorDelegations returns all delegations of a delegator
@@ -121,19 +131,19 @@ func (k Keeper) GetAllRedelegations(
 
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorSrcAddress)
+		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorSrcAddress)
 		if err != nil {
 			return nil, err
 		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
 		if err != nil {
 			return nil, err
 		}
-		if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
+		if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
 			continue
 		}
 
-		if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
+		if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
 			continue
 		}
 

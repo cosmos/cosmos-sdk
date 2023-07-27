@@ -76,7 +76,12 @@ func TestCometRPC_SingleRPCServer(t *testing.T) {
 
 		return cs
 	})
-	defer nodes.StopAndWait()
+	defer func() {
+		err := nodes.StopAndWait()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	require.NoError(t, err)
 
 	// Once HTTP client to be shared across the following subtests.
@@ -160,8 +165,12 @@ func TestCometRPC_MultipleRPCError(t *testing.T) {
 			rootDir,
 		).RPCListen() // Every node has RPCListen enabled, which will cause a failure.
 	})
-	defer nodes.StopAndWait()
-
+	defer func() {
+		err := nodes.StopAndWait()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	// Returned error is convertible to CometRPCInUseError.
 	// We can't test the exact value because it includes a stack trace.
 	require.Error(t, err)

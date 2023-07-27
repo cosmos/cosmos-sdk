@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -481,19 +482,19 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 
 	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
 	// format for normalization
-	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	deletingAddr, err := k.validatorAddressCodec.StringToBytes(val.OperatorAddress)
 	if err != nil {
 		return err
 	}
 
 	for _, addr := range addrs {
-		storedAddr, err := sdk.ValAddressFromBech32(addr)
+		storedAddr, err := k.validatorAddressCodec.StringToBytes(addr)
 		if err != nil {
 			// even if we don't error here, it will error in UnbondAllMatureValidators at unbond time
 			return err
 		}
-		if !storedAddr.Equals(deletingAddr) {
-			newAddrs = append(newAddrs, storedAddr.String())
+		if !bytes.Equal(storedAddr, deletingAddr) {
+			newAddrs = append(newAddrs, addr)
 		}
 	}
 
@@ -546,7 +547,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 			}
 
 			for _, valAddr := range addrs.Addresses {
-				addr, err := sdk.ValAddressFromBech32(valAddr)
+				addr, err := k.validatorAddressCodec.StringToBytes(valAddr)
 				if err != nil {
 					return err
 				}

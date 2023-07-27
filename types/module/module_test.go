@@ -219,7 +219,12 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
+	require.NotPanics(t, func() {
+		err := mm.RegisterServices(cfg)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -575,7 +580,10 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"someKey"`))
+	_, err = someFieldWriter.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return someFieldWriter.Close()
 }
 
@@ -602,7 +610,10 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"someKey"`))
+	_, err = wrt.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return wrt.Close()
 }
 

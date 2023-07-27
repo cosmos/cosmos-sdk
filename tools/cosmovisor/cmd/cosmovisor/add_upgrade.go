@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 func NewAddUpgradeCmd() *cobra.Command {
 	addUpgrade := &cobra.Command{
 		Use:          "add-upgrade [upgrade-name] [path to executable]",
-		Short:        "Manually add upgrade binary to Cosmovisor",
+		Short:        "Add APP upgrade binary to cosmovisor",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(2),
 		RunE:         AddUpgrade,
@@ -37,9 +38,9 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	logger := cfg.Logger(os.Stdout)
 
-	upgradeName := strings.ToLower(args[0])
-	if len(upgradeName) == 0 {
-		return fmt.Errorf("upgrade name cannot be empty")
+	upgradeName := args[0]
+	if !cfg.DisableRecase {
+		upgradeName = strings.ToLower(args[0])
 	}
 
 	executablePath := args[1]
@@ -93,7 +94,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", upgradetypes.UpgradeInfoFilename, upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", filepath.Join(cfg.UpgradeInfoFilePath(), upgradetypes.UpgradeInfoFilename), upgradeName, upgradeHeight))
 	}
 
 	return nil

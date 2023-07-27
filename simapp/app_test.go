@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -28,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -119,8 +119,10 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(&abci.RequestInitChain{})
-	app.Commit()
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name         string
@@ -315,20 +317,24 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 
 func TestAddressCodecFactory(t *testing.T) {
 	var addrCodec address.Codec
-	var valAddressCodec authtypes.ValidatorAddressCodec
+	var valAddressCodec runtime.ValidatorAddressCodec
+	var consAddressCodec runtime.ConsensusAddressCodec
 
 	err := depinject.Inject(
 		depinject.Configs(
 			network.MinimumAppConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&addrCodec, &valAddressCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok := addrCodec.(customAddressCodec)
 	require.False(t, ok)
 	require.NotNil(t, valAddressCodec)
 	_, ok = valAddressCodec.(customAddressCodec)
+	require.False(t, ok)
+	require.NotNil(t, consAddressCodec)
+	_, ok = consAddressCodec.(customAddressCodec)
 	require.False(t, ok)
 
 	// Set the address codec to the custom one
@@ -338,15 +344,19 @@ func TestAddressCodecFactory(t *testing.T) {
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },
-				func() authtypes.ValidatorAddressCodec { return customAddressCodec{} },
+				func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
+				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
 			),
 		),
-		&addrCodec, &valAddressCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok = addrCodec.(customAddressCodec)
 	require.True(t, ok)
 	require.NotNil(t, valAddressCodec)
 	_, ok = valAddressCodec.(customAddressCodec)
+	require.True(t, ok)
+	require.NotNil(t, consAddressCodec)
+	_, ok = consAddressCodec.(customAddressCodec)
 	require.True(t, ok)
 }

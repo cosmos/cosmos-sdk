@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
+	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -23,12 +23,19 @@ var _ types.DelegationSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
-	authKeeper   types.AccountKeeper
-	bankKeeper   types.BankKeeper
-	hooks        types.StakingHooks
-	authority    string
+	storeService          storetypes.KVStoreService
+	cdc                   codec.BinaryCodec
+	authKeeper            types.AccountKeeper
+	bankKeeper            types.BankKeeper
+	hooks                 types.StakingHooks
+	authority             string
+	validatorAddressCodec addresscodec.Codec
+	consensusAddressCodec addresscodec.Codec
+
+	Schema           collections.Schema
+	HistoricalInfo   collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower   collections.Item[math.Int]
+	ValidatorUpdates collections.Item[types.ValidatorUpdates]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -38,7 +45,10 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	authority string,
+	validatorAddressCodec addresscodec.Codec,
+	consensusAddressCodec addresscodec.Codec,
 ) *Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -53,14 +63,30 @@ func NewKeeper(
 		panic("authority is not a valid acc address")
 	}
 
-	return &Keeper{
-		storeService: storeService,
-		cdc:          cdc,
-		authKeeper:   ak,
-		bankKeeper:   bk,
-		hooks:        nil,
-		authority:    authority,
+	if validatorAddressCodec == nil || consensusAddressCodec == nil {
+		panic("validator and/or consensus address codec are nil")
 	}
+
+	k := &Keeper{
+		storeService:          storeService,
+		cdc:                   cdc,
+		authKeeper:            ak,
+		bankKeeper:            bk,
+		hooks:                 nil,
+		authority:             authority,
+		validatorAddressCodec: validatorAddressCodec,
+		consensusAddressCodec: consensusAddressCodec,
+		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
+		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, codec.CollValue[types.HistoricalInfo](cdc)),
+		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
+	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Logger returns a module-specific logger.
@@ -89,65 +115,17 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
-// GetLastTotalPower loads the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.LastTotalPowerKey)
-	if err != nil {
-		return math.ZeroInt(), err
-	}
-
-	if bz == nil {
-		return math.ZeroInt(), nil
-	}
-
-	ip := sdk.IntProto{}
-	err = k.cdc.Unmarshal(bz, &ip)
-	if err != nil {
-		return math.ZeroInt(), err
-	}
-
-	return ip.Int, nil
-}
-
-// SetLastTotalPower sets the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&sdk.IntProto{Int: power})
-	if err != nil {
-		return err
-	}
-	return store.Set(types.LastTotalPowerKey, bz)
-}
-
 // GetAuthority returns the x/staking module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// SetValidatorUpdates sets the ABCI validator power updates for the current block.
-func (k Keeper) SetValidatorUpdates(ctx context.Context, valUpdates []abci.ValidatorUpdate) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&types.ValidatorUpdates{Updates: valUpdates})
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ValidatorUpdatesKey, bz)
+// ValidatorAddressCodec returns the app validator address codec.
+func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
+	return k.validatorAddressCodec
 }
 
-// GetValidatorUpdates returns the ABCI validator power updates within the current block.
-func (k Keeper) GetValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ValidatorUpdatesKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var valUpdates types.ValidatorUpdates
-	err = k.cdc.Unmarshal(bz, &valUpdates)
-	if err != nil {
-		return nil, err
-	}
-
-	return valUpdates.Updates, nil
+// ConsensusAddressCodec returns the app consensus address codec.
+func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
+	return k.consensusAddressCodec
 }

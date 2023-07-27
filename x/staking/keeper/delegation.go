@@ -129,15 +129,20 @@ func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) 
 		return err
 	}
 
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return err
+	}
+
 	store := k.storeService.OpenKVStore(ctx)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	err = store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
+	err = store.Set(types.GetDelegationKey(delegatorAddress, valAddr), b)
 	if err != nil {
 		return err
 	}
 
 	// set the delegation in validator delegator index
-	return store.Set(types.GetDelegationsByValKey(delegation.GetValidatorAddr(), delegatorAddress), []byte{})
+	return store.Set(types.GetDelegationsByValKey(valAddr, delegatorAddress), []byte{})
 }
 
 // RemoveDelegation removes a delegation
@@ -147,18 +152,23 @@ func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegatio
 		return err
 	}
 
-	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
-	if err := k.Hooks().BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
-		return err
-	}
-
-	store := k.storeService.OpenKVStore(ctx)
-	err = store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 	if err != nil {
 		return err
 	}
 
-	return store.Delete(types.GetDelegationsByValKey(delegation.GetValidatorAddr(), delegatorAddress))
+	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
+	if err := k.Hooks().BeforeDelegationRemoved(ctx, delegatorAddress, valAddr); err != nil {
+		return err
+	}
+
+	store := k.storeService.OpenKVStore(ctx)
+	err = store.Delete(types.GetDelegationKey(delegatorAddress, valAddr))
+	if err != nil {
+		return err
+	}
+
+	return store.Delete(types.GetDelegationsByValKey(valAddr, delegatorAddress))
 }
 
 // GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations.
@@ -294,7 +304,7 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 	bonded := math.LegacyZeroDec()
 
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
-		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
@@ -375,7 +385,7 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
-	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -396,7 +406,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	addr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -425,7 +435,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	if err == nil {
 		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else if errors.Is(err, types.ErrNoUnbondingDelegation) {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return ubd, err
 	}
@@ -643,11 +653,11 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalRED(k.cdc, red)
-	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}
@@ -681,7 +691,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else if errors.Is(err, types.ErrNoRedelegation) {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id)
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return types.Redelegation{}, err
 	}
@@ -734,11 +744,11 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
 	}
-	valDestAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+	valDestAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorDstAddress)
 	if err != nil {
 		return err
 	}
@@ -868,17 +878,22 @@ func (k Keeper) Delegate(
 		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else if errors.Is(err, types.ErrNoDelegation) {
 		// not found
-		delegation = types.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
+		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
+		if err1 != nil {
+			return math.LegacyDec{}, err1
+		}
+
+		valAddrStr, err1 := k.validatorAddressCodec.BytesToString(validator.GetOperator())
+		if err1 != nil {
+			return math.LegacyDec{}, err1
+		}
+
+		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
 		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
 	} else {
 		return math.LegacyZeroDec(), err
 	}
 
-	if err != nil {
-		return math.LegacyZeroDec(), err
-	}
-
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return math.LegacyZeroDec(), err
 	}
@@ -908,7 +923,7 @@ func (k Keeper) Delegate(
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmt))
-		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, sendName, coins); err != nil {
+		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delAddr, sendName, coins); err != nil {
 			return math.LegacyDec{}, err
 		}
 	} else {
@@ -947,7 +962,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Call the after-modification hook
-	if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, validator.GetOperator()); err != nil {
 		return newShares, err
 	}
 
@@ -1009,8 +1024,14 @@ func (k Keeper) Unbond(
 		if err = k.SetDelegation(ctx, delegation); err != nil {
 			return amount, err
 		}
+
+		valAddr, err1 := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return amount, err1
+		}
+
 		// call the after delegation modification hook
-		err = k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+		err = k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr)
 	}
 
 	if err != nil {

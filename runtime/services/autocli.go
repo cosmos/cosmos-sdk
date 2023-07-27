@@ -32,6 +32,7 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 }
 
 // ExtractAutoCLIOptions extracts autocli ModuleOptions from the provided app modules.
+//
 // Example Usage:
 //
 //	ExtractAutoCLIOptions(ModuleManager.Modules)

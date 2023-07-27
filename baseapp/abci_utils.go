@@ -231,10 +231,12 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 				if (txSize + totalTxBytes) < req.MaxTxBytes {
 					// If there is a max block gas limit, add the tx only if the limit has
 					// not been met.
-					if maxBlockGas > 0 && (txGasLimit+totalTxGas) <= uint64(maxBlockGas) {
-						totalTxGas += txGasLimit
-						totalTxBytes += txSize
-						selectedTxs = append(selectedTxs, bz)
+					if maxBlockGas > 0 {
+						if (txGasLimit + totalTxGas) <= uint64(maxBlockGas) {
+							totalTxGas += txGasLimit
+							totalTxBytes += txSize
+							selectedTxs = append(selectedTxs, bz)
+						}
 					} else {
 						totalTxBytes += txSize
 						selectedTxs = append(selectedTxs, bz)

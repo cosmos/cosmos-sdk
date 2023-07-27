@@ -38,7 +38,8 @@ func TestDeposits(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			govKeeper, authKeeper, bankKeeper, stakingKeeper, distKeeper, _, ctx := setupGovKeeper(t)
+			govKeeper, mocks, _, ctx := setupGovKeeper(t)
+			authKeeper, bankKeeper, stakingKeeper, distKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper, mocks.distributionKeeper
 			trackMockBalances(bankKeeper, distKeeper)
 
 			// With expedited proposals the minimum deposit is higher, so we must
@@ -136,7 +137,9 @@ func TestDeposits(t *testing.T) {
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
-			govKeeper.RefundAndDeleteDeposits(ctx, proposalID)
+			err = govKeeper.RefundAndDeleteDeposits(ctx, proposalID)
+			require.NoError(t, err)
+
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.ErrorIs(t, err, collections.ErrNotFound)
 			require.Equal(t, addr0Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -148,7 +151,9 @@ func TestDeposits(t *testing.T) {
 			proposalID = proposal.Id
 			_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 			require.NoError(t, err)
-			govKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+			err = govKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+			require.NoError(t, err)
+
 			deposits, _ = govKeeper.GetDeposits(ctx, proposalID)
 			require.Len(t, deposits, 0)
 			require.Equal(t, addr0Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -245,7 +250,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
+			govKeeper, _, _, ctx := setupGovKeeper(t)
 
 			params := v1.DefaultParams()
 			if tc.expedited {
@@ -255,9 +260,10 @@ func TestValidateInitialDeposit(t *testing.T) {
 			}
 			params.MinInitialDepositRatio = sdkmath.LegacyNewDec(tc.minInitialDepositPercent).Quo(sdkmath.LegacyNewDec(100)).String()
 
-			govKeeper.Params.Set(ctx, params)
+			err := govKeeper.Params.Set(ctx, params)
+			require.NoError(t, err)
 
-			err := govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
+			err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
 
 			if tc.expectError {
 				require.Error(t, err)
@@ -307,7 +313,8 @@ func TestChargeDeposit(t *testing.T) {
 			}
 
 			t.Run(testName(i), func(t *testing.T) {
-				govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+				govKeeper, mocks, _, ctx := setupGovKeeper(t)
+				authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
 				params := v1.DefaultParams()
 				params.ProposalCancelRatio = tc.proposalCancelRatio
 				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000000))

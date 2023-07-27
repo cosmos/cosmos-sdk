@@ -6,8 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/log"
 )
 
 type OptimisticExecution struct {

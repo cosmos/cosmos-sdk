@@ -38,7 +38,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if err := msg.Validate(); err != nil {
+	if err := msg.Validate(k.validatorAddressCodec); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +99,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		}
 	}
 
-	validator, err := types.NewValidator(valAddr, pk, msg.Description)
+	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
 	if err != nil {
 		return nil, err
 	}

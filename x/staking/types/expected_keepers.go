@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -76,6 +77,12 @@ type ValidatorSet interface {
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
+
+	// CmtConsPublicKeyByConsAddr returns the consensus public key by consensus address
+	CmtConsPublicKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+
+	// ConsAddressByConsPublicKey returns the consensus address by consensus address
+	BondedTokensByConsAddr(context.Context, sdk.ConsAddress) (math.Int, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

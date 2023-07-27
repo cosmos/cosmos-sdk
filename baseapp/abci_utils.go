@@ -7,7 +7,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -16,7 +15,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -27,20 +25,13 @@ import (
 var VoteExtensionThreshold = math.LegacyNewDecWithPrec(667, 3)
 
 type (
-	// Validator defines the interface contract require for verifying vote extension
-	// signatures. Typically, this will be implemented by the x/staking module,
-	// which has knowledge of the CometBFT public key.
-	Validator interface {
-		CmtConsPublicKey() (cmtprotocrypto.PublicKey, error)
-		BondedTokens() math.Int
-	}
-
 	// ValidatorStore defines the interface contract require for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetValidatorByConsAddr(context.Context, cryptotypes.Address) (Validator, error)
 		TotalBondedTokens(ctx context.Context) (math.Int, error)
+		CmtConsPublicKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+		BondedTokensByConsAddr(context.Context, sdk.ConsAddress) (math.Int, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -63,7 +54,7 @@ func ValidateVoteExtensions(
 ) error {
 	cp := ctx.ConsensusParams()
 	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
-
+	fmt.Println(currentHeight, cp)
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
@@ -90,17 +81,8 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("vote extensions enabled; received empty vote extension signature at height %d", currentHeight)
 		}
 
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := valStore.GetValidatorByConsAddr(ctx, valConsAddr)
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X: %w", valConsAddr, err)
-		}
-		if validator == nil {
-			return fmt.Errorf("validator %X not found", valConsAddr)
-		}
-
-		cmtPubKeyProto, err := validator.CmtConsPublicKey()
+		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		cmtPubKeyProto, err := valStore.CmtConsPublicKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
 			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
 		}
@@ -126,7 +108,11 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
 
-		sumVP = sumVP.Add(validator.BondedTokens())
+		bondedTokens, err := valStore.BondedTokensByConsAddr(ctx, valConsAddr)
+		if err != nil {
+			return fmt.Errorf("failed to get validator %X bonded tokens: %w", valConsAddr, err)
+		}
+		sumVP = sumVP.Add(bondedTokens)
 	}
 
 	// Ensure we have at least 2/3 voting power that submitted valid vote

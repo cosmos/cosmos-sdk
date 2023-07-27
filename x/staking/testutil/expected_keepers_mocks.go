@@ -10,6 +10,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
+	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
@@ -339,6 +340,36 @@ func NewMockValidatorSet(ctrl *gomock.Controller) *MockValidatorSet {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockValidatorSet) EXPECT() *MockValidatorSetMockRecorder {
 	return m.recorder
+}
+
+// BondedTokensByConsAddr mocks base method.
+func (m *MockValidatorSet) BondedTokensByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BondedTokensByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(math.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BondedTokensByConsAddr indicates an expected call of BondedTokensByConsAddr.
+func (mr *MockValidatorSetMockRecorder) BondedTokensByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).BondedTokensByConsAddr), arg0, arg1)
+}
+
+// CmtConsPublicKeyByConsAddr mocks base method.
+func (m *MockValidatorSet) CmtConsPublicKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CmtConsPublicKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CmtConsPublicKeyByConsAddr indicates an expected call of CmtConsPublicKeyByConsAddr.
+func (mr *MockValidatorSetMockRecorder) CmtConsPublicKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CmtConsPublicKeyByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).CmtConsPublicKeyByConsAddr), arg0, arg1)
 }
 
 // Delegation mocks base method.

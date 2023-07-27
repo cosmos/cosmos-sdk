@@ -10,63 +10,9 @@ import (
 
 	math "cosmossdk.io/math"
 	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	baseapp "github.com/cosmos/cosmos-sdk/baseapp"
-	types "github.com/cosmos/cosmos-sdk/crypto/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
-
-// MockValidator is a mock of Validator interface.
-type MockValidator struct {
-	ctrl     *gomock.Controller
-	recorder *MockValidatorMockRecorder
-}
-
-// MockValidatorMockRecorder is the mock recorder for MockValidator.
-type MockValidatorMockRecorder struct {
-	mock *MockValidator
-}
-
-// NewMockValidator creates a new mock instance.
-func NewMockValidator(ctrl *gomock.Controller) *MockValidator {
-	mock := &MockValidator{ctrl: ctrl}
-	mock.recorder = &MockValidatorMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockValidator) EXPECT() *MockValidatorMockRecorder {
-	return m.recorder
-}
-
-// BondedTokens mocks base method.
-func (m *MockValidator) BondedTokens() math.Int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedTokens")
-	ret0, _ := ret[0].(math.Int)
-	return ret0
-}
-
-// BondedTokens indicates an expected call of BondedTokens.
-func (mr *MockValidatorMockRecorder) BondedTokens() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokens", reflect.TypeOf((*MockValidator)(nil).BondedTokens))
-}
-
-// CmtConsPublicKey mocks base method.
-func (m *MockValidator) CmtConsPublicKey() (crypto.PublicKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CmtConsPublicKey")
-	ret0, _ := ret[0].(crypto.PublicKey)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CmtConsPublicKey indicates an expected call of CmtConsPublicKey.
-func (mr *MockValidatorMockRecorder) CmtConsPublicKey() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CmtConsPublicKey", reflect.TypeOf((*MockValidator)(nil).CmtConsPublicKey))
-}
 
 // MockValidatorStore is a mock of ValidatorStore interface.
 type MockValidatorStore struct {
@@ -91,19 +37,34 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 	return m.recorder
 }
 
-// GetValidatorByConsAddr mocks base method.
-func (m *MockValidatorStore) GetValidatorByConsAddr(arg0 context.Context, arg1 types.Address) (baseapp.Validator, error) {
+// BondedTokensByConsAddr mocks base method.
+func (m *MockValidatorStore) BondedTokensByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(baseapp.Validator)
+	ret := m.ctrl.Call(m, "BondedTokensByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(math.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetValidatorByConsAddr indicates an expected call of GetValidatorByConsAddr.
-func (mr *MockValidatorStoreMockRecorder) GetValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+// BondedTokensByConsAddr indicates an expected call of BondedTokensByConsAddr.
+func (mr *MockValidatorStoreMockRecorder) BondedTokensByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).GetValidatorByConsAddr), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensByConsAddr), arg0, arg1)
+}
+
+// CmtConsPublicKeyByConsAddr mocks base method.
+func (m *MockValidatorStore) CmtConsPublicKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CmtConsPublicKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CmtConsPublicKeyByConsAddr indicates an expected call of CmtConsPublicKeyByConsAddr.
+func (mr *MockValidatorStoreMockRecorder) CmtConsPublicKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CmtConsPublicKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).CmtConsPublicKeyByConsAddr), arg0, arg1)
 }
 
 // TotalBondedTokens mocks base method.
@@ -182,7 +143,7 @@ func (m *MockProposalTxVerifier) EXPECT() *MockProposalTxVerifierMockRecorder {
 }
 
 // PrepareProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types0.Tx) ([]byte, error) {
+func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", tx)
 	ret0, _ := ret[0].([]byte)
@@ -197,10 +158,10 @@ func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx interfa
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types0.Tx, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
-	ret0, _ := ret[0].(types0.Tx)
+	ret0, _ := ret[0].(types.Tx)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -66,32 +66,29 @@ func (k Keeper) GetAllDelegations(ctx context.Context) (delegations []types.Dele
 
 // GetValidatorDelegations returns all delegations to a specific validator.
 // Useful for querier.
-func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) (delegations []types.Delegation, err error) {
+func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) ([]types.Delegation, error) {
 	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetDelegationsByValPrefixKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return delegations, err
-	}
-	defer iterator.Close()
 
-	for ; iterator.Valid(); iterator.Next() {
+	var delegations []types.Delegation
+	rng := collections.NewPrefixedPairRange[sdk.ValAddress, sdk.AccAddress](valAddr)
+	err := k.DelegationsByValidator.Walk(ctx, rng, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (stop bool, err error) {
 		var delegation types.Delegation
-		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
-		if err != nil {
-			return delegations, err
-		}
-
+		valAddr, delAddr := key.K1(), key.K2()
 		bz, err := store.Get(types.GetDelegationKey(delAddr, valAddr))
 		if err != nil {
-			return delegations, err
+			return true, err
 		}
 
 		if err := k.cdc.Unmarshal(bz, &delegation); err != nil {
-			return delegations, err
+			return true, err
 		}
 
 		delegations = append(delegations, delegation)
+
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return nil, err
 	}
 
 	return delegations, nil

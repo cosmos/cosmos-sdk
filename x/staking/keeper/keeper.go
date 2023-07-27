@@ -83,7 +83,7 @@ func NewKeeper(
 		DelegationsByValidator: collections.NewMap(
 			sb, types.DelegationByValIndexKey,
 			"delegations_by_validator",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey),
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
 	}

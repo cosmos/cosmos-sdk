@@ -17,7 +17,8 @@ import (
 // TODO -> Check error handling
 // TODO -> Verify: These values are the same as ed25519 to maintain compatibility
 const (
-	PubKeyName = "tendermint/PubKeySchnorr"
+	PubKeyName  = "tendermint/PubKeySchnorr"
+	PrivKeyName = "tendermint/PrivKeySchnorr"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.

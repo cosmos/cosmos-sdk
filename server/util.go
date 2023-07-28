@@ -403,7 +403,7 @@ func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.Cancel
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
 	if len(rv) == 0 {
-		rv = cast.ToString(opts.Get("db-backend"))
+		rv = cast.ToString(opts.Get("db_backend"))
 	}
 
 	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported

@@ -71,3 +71,33 @@ func GetDelegationsByValPrefixKey(valAddr sdk.ValAddress) []byte {
 func GetDelegationsByValKey(valAddr sdk.ValAddress, delAddr sdk.AccAddress) []byte {
 	return append(GetDelegationsByValPrefixKey(valAddr), delAddr...)
 }
+
+// ParseDelegationsByValKey parses given key and returns validator, delegator address bytes
+func ParseDelegationsByValKey(bz []byte) (sdk.ValAddress, sdk.AccAddress, error) {
+	prefixLength := len(DelegationByValIndexKey)
+	if prefix := bz[:prefixLength]; !bytes.Equal(prefix, DelegationByValIndexKey) {
+		return nil, nil, fmt.Errorf("invalid prefix; expected: %X, got: %x", DelegationByValIndexKey, prefix)
+	}
+
+	bz = bz[prefixLength:] // remove the prefix byte
+	if len(bz) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse: %X", bz)
+	}
+
+	valAddrLen := bz[0]
+	bz = bz[1:] // remove the length byte of validator address.
+	if len(bz) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse validator address: %X", bz)
+	}
+
+	val := bz[0:int(valAddrLen)]
+
+	bz = bz[int(valAddrLen):] // remove the delegator bytes
+	if len(bz) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
+	}
+
+	del := bz
+
+	return val, del, nil
+}

@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -101,24 +102,26 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 	}
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
 	var (
 		dels    types.Delegations
 		pageRes *query.PageResponse
 	)
-	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
-		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
-		var delegation types.Delegation
-		err = k.cdc.Unmarshal(bz, &delegation)
-		if err != nil {
-			return err
-		}
+	dels, pageRes, err = query.CollectionPaginate(ctx, k.DelegationsByValidator,
+		req.Pagination, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (types.Delegation, error) {
+			valAddr, delAddr := key.K1(), key.K2()
+			var delegation types.Delegation
 
-		dels = append(dels, delegation)
-		return nil
-	})
+			bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
+			err = k.cdc.Unmarshal(bz, &delegation)
+			if err != nil {
+				return types.Delegation{}, err
+			}
+
+			return delegation, nil
+		}, query.WithCollectionPaginationPairPrefix[sdk.ValAddress, sdk.AccAddress](valAddr))
+
 	if err != nil {
 		delegations, pageResponse, err := k.getValidatorDelegationsLegacy(ctx, req)
 		if err != nil {

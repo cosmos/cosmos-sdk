@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
+
 * (x/bank) [#16795](https://github.com/cosmos/cosmos-sdk/pull/16852) Add `DenomMetadataByQueryString` query in bank module to support metadata query by query string.
+
 ### Improvements
 
 * (x/group, x/gov) [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Let proposal summary be 40x longer than metadata limit.
@@ -54,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * (x/feegrant) [16535](https://github.com/cosmos/cosmos-sdk/pull/16535) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
-* (x/slashing) [17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
+* (x/staking) [17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
     * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`,
 * (x/staking) [17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:
     * remove `Keeper`: `SetValidatorUpdates`, `GetValidatorUpdates`

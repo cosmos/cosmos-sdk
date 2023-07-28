@@ -15,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -24,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -702,6 +704,32 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
 	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))
+}
+
+func (suite *KeeperTestSuite) TestSendCoins_Invalid_NoSpendableCoins() {
+	coin := sdk.NewInt64Coin("stake", 10)
+	coins := sdk.NewCoins(coin)
+	balances := coins
+
+	now := cmttime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := coins
+	sendCoins := coins
+
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	suite.mockFundAccount(accAddrs[0])
+	suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	suite.Require().NoError(err)
+
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
+	e := errorsmod.Wrapf(
+		sdkerrors.ErrInsufficientFunds,
+		"spendable balance 0stake is smaller than %s",
+		coin,
+	)
+	suite.Require().EqualError(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins), e.Error())
 }
 
 func (suite *KeeperTestSuite) TestValidateBalance() {

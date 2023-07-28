@@ -1,0 +1,27 @@
+syntax = "proto3";
+package cosmos.crypto.schnorr;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/schnorr";
+option (gogoproto.messagename_all)      = true;
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.goproto_getters_all)  = false;
+
+// PubKey defines a Schnorr public key
+message PubKey {
+  option (amino.name) = "tendermint/PubKeySchnorr";
+  option (amino.message_encoding)     = "key_field";
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes key = 1 [(gogoproto.customtype) = "schnorrPK"];
+}
+
+// PrivKey defines a Schnorr private key.
+message PrivKey {
+  option (amino.name)             = "tendermint/PrivKeySchnorr";
+  option (amino.message_encoding) = "key_field";
+
+  bytes secret = 1 [(gogoproto.customtype) = "schnorrSK"];
+}

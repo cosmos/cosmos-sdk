@@ -2,14 +2,16 @@ package schnorr_test
 
 import (
 	"encoding/base64"
+	"testing"
+
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/schnorr"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestSignAndValidateSchnorr(t *testing.T) {

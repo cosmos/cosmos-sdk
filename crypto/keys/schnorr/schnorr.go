@@ -1,17 +1,20 @@
 package schnorr
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"crypto/subtle"
 	"fmt"
+
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/group/edwards25519"
 	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/kyber/v4/util/key"
+
+	errorsmod "cosmossdk.io/errors"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // TODO -> Check error handling
@@ -89,7 +92,7 @@ func (privKey *PrivKey) Type() string {
 	return keyType
 }
 
-// Equals comparse 2 keys
+// Equals compares 2 keys
 func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
@@ -115,7 +118,7 @@ func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshaling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PrivKeySize {
-		return fmt.Errorf("[ERROR] invalid privkey size.")
+		return fmt.Errorf("[ERROR] invalid privkey size")
 	}
 
 	privKey.Key = bz

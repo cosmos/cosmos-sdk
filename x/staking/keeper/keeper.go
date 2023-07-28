@@ -32,11 +32,12 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema           collections.Schema
-	HistoricalInfo   collections.Map[uint64, types.HistoricalInfo]
-	LastTotalPower   collections.Item[math.Int]
-	ValidatorUpdates collections.Item[types.ValidatorUpdates]
-	Delegations      collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
+	Schema                 collections.Schema
+	HistoricalInfo         collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower         collections.Item[math.Int]
+	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	Delegations            collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -87,6 +88,12 @@ func NewKeeper(
 				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			),
 			codec.CollValue[types.Delegation](cdc),
+		),
+		DelegationsByValidator: collections.NewMap(
+			sb, types.DelegationByValIndexKey,
+			"delegations_by_validator",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.BytesValue,
 		),
 	}
 

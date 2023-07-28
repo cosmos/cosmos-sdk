@@ -159,7 +159,6 @@ func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValA
 
 	rng := collections.NewPrefixedPairRange[sdk.ValAddress, sdk.AccAddress](existingValAddr)
 	err := k.DelegationsByValidator.Walk(f.sdkCtx, rng, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (stop bool, err error) {
-		// var delegation types.Delegation
 		valAddr, delAddr := key.K1(), key.K2()
 
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))

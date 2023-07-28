@@ -166,13 +166,13 @@ func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValA
 
 		// remove old operator addr from delegation
 		if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
-			panic(err)
+			return true, err
 		}
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr
 		if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
-			panic(err)
+			return true, err
 		}
 
 		return false, nil

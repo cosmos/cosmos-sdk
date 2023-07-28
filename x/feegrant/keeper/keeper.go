@@ -305,7 +305,6 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()
-		fmt.Println("grantee, granter", grantee.String(), granter.String())
 
 		if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
 			return true, err

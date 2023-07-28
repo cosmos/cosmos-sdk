@@ -27,6 +27,9 @@ func (k Keeper) GetAllDelegations(ctx context.Context) ([]types.Delegation, erro
 			return false, nil
 		},
 	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return nil, err
+	}
 
 	return delegations, err
 }

@@ -4,19 +4,20 @@ go 1.20
 
 require (
 	github.com/cockroachdb/errors v1.10.0
-	github.com/regen-network/gocuke v0.6.2
+	github.com/regen-network/gocuke v0.6.3
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	gotest.tools/v3 v3.5.0
 )
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
-	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
+	github.com/cucumber/common/messages/go/v19 v19.1.2 // indirect
+	github.com/cucumber/gherkin/go/v26 v26.0.3 // indirect
+	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
+	github.com/cucumber/tag-expressions/go/v5 v5.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/getsentry/sentry-go v0.21.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect

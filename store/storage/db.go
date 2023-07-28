@@ -6,10 +6,7 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-var (
-	_ store.Database = (*Database)(nil)
-	_ store.Batch    = (*Database)(nil)
-)
+var _ store.Database = (*Database)(nil)
 
 // Database defines the state storage (SS) backend.
 type Database struct {
@@ -40,5 +37,37 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) Has(key []byte) (bool, error) {
+	panic("not implemented")
+}
+
+func (db *Database) Get(key []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (db *Database) Set(key, value []byte) error {
+	panic("not implemented")
+}
+
+func (db *Database) Delete(key []byte) error {
+	panic("not implemented")
+}
+
+func (db *Database) NewBatch() store.Batch {
+	panic("not implemented")
+}
+
+func (db *Database) NewIterator() store.Iterator {
+	panic("not implemented")
+}
+
+func (db *Database) NewStartIterator(start []byte) store.Iterator {
+	panic("not implemented")
+}
+
+func (db *Database) NewEndIterator(start []byte) store.Iterator {
+	panic("not implemented")
+}
+
+func (db *Database) NewPrefixIterator(prefix []byte) store.Iterator {
 	panic("not implemented")
 }

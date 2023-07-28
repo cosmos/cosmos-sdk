@@ -98,10 +98,8 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-
 	var grants []*feegrant.Grant
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.FeeAllowance, req.Pagination,
+	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
 		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
 			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
 				return false, nil

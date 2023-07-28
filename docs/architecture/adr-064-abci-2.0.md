@@ -218,7 +218,9 @@ a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+	TotalBondedTokens(ctx context.Context) (math.Int, error)
+	CmtConsPublicKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+	BondedTokensByConsAddr(context.Context, sdk.ConsAddress) (math.Int, error)
 }
 
 // ValidateVoteExtensions is a function that an application can execute in
@@ -229,17 +231,8 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 			continue
 		}
 
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := app.validatorStore.GetValidatorByConsAddr(ctx, valConsAddr)
-		if err != nil {
-			return fmt.Errorf("failed to get validator %s for vote extension", valConsAddr)
-		}
-
-		cmtPubKey, err := validator.CmtConsPublicKey()
-		if err != nil {
-			return fmt.Errorf("failed to convert public key: %w", err)
-		}
+		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		cmtPubKey, err := valStore.CmtConsPublicKeyByConsAddr(ctx, valConsAddr)
 
 		if len(vote.ExtensionSignature) == 0 {
 			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)

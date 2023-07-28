@@ -116,7 +116,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		err = k.ValidatorSlashEvents.Set(
 			ctx,
 			collections.Join3(
-				valAddr,
+				sdk.ValAddress(valAddr),
 				evt.Height,
 				evt.Period,
 			),

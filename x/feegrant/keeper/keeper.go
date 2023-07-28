@@ -301,7 +301,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
-	rng := collections.PrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
+	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()

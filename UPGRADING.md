@@ -20,13 +20,13 @@ Following an exhaustive list:
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
-However, these commands and flags is still supported for backward compatibility.
+However, these commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
 Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
-* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
 #### Enable Vote Extensions

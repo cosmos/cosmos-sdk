@@ -3,9 +3,10 @@ package types
 import (
 	context "context"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

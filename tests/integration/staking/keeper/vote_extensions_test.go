@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"testing"
 
-	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

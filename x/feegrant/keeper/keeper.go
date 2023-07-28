@@ -51,7 +51,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 		FeeAllowanceQueue: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceQueueKeyPrefix,
-			"allowancesQueue",
+			"allowances_queue",
 			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BoolValue,
 		),
@@ -206,8 +206,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 	defer iter.Close()
 
 	err := k.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (stop bool, err error) {
-		stop = cb(grant)
-		return stop, err
+		return cb(grant), nil
 	})
 
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {

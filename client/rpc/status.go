@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/cometbft/cometbft/p2p"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -16,17 +17,17 @@ import (
 // ValidatorInfo is info about the node's validator, same as CometBFT,
 // except that we use our own PubKey.
 type validatorInfo struct {
-	Address     []byte
-	PubKey      cryptotypes.PubKey
-	VotingPower int64
+	Address     []byte             `json:"address"`
+	PubKey      cryptotypes.PubKey `json:"pub_key"`
+	VotingPower int64              `json:"voting_power"`
 }
 
 // ResultStatus is node's info, same as CometBFT, except that we use our own
 // PubKey.
 type resultStatus struct {
-	NodeInfo      p2p.DefaultNodeInfo
-	SyncInfo      coretypes.SyncInfo
-	ValidatorInfo validatorInfo
+	NodeInfo      p2p.DefaultNodeInfo `json:"node_info"`
+	SyncInfo      coretypes.SyncInfo  `json:"sync_info"`
+	ValidatorInfo validatorInfo       `json:"validator_info"`
 }
 
 // StatusCommand returns the command to return the status of the network.
@@ -63,17 +64,17 @@ func StatusCommand() *cobra.Command {
 				},
 			}
 
-			output, err := clientCtx.LegacyAmino.MarshalJSON(statusWithPk)
+			output, err := json.Marshal(statusWithPk)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(string(output))
-			return nil
+			return clientCtx.PrintRaw(output)
 		},
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(flags.FlagOutput, "o", "text", "Output format (text|json)")
 
 	return cmd
 }

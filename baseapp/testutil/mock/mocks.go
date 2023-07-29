@@ -37,34 +37,20 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 	return m.recorder
 }
 
-// BondedTokensByConsAddr mocks base method.
-func (m *MockValidatorStore) BondedTokensByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, error) {
+// BondedTokensAndPubKeyByConsAddr mocks base method.
+func (m *MockValidatorStore) BondedTokensAndPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, crypto.PublicKey, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedTokensByConsAddr", arg0, arg1)
+	ret := m.ctrl.Call(m, "BondedTokensAndPubKeyByConsAddr", arg0, arg1)
 	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(crypto.PublicKey)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// BondedTokensByConsAddr indicates an expected call of BondedTokensByConsAddr.
-func (mr *MockValidatorStoreMockRecorder) BondedTokensByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+// BondedTokensAndPubKeyByConsAddr indicates an expected call of BondedTokensAndPubKeyByConsAddr.
+func (mr *MockValidatorStoreMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensByConsAddr), arg0, arg1)
-}
-
-// CmtConsPublicKeyByConsAddr mocks base method.
-func (m *MockValidatorStore) CmtConsPublicKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CmtConsPublicKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(crypto.PublicKey)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CmtConsPublicKeyByConsAddr indicates an expected call of CmtConsPublicKeyByConsAddr.
-func (mr *MockValidatorStoreMockRecorder) CmtConsPublicKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CmtConsPublicKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).CmtConsPublicKeyByConsAddr), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
 }
 
 // TotalBondedTokens mocks base method.

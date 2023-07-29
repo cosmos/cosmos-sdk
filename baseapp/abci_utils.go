@@ -30,8 +30,7 @@ type (
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
 		TotalBondedTokens(ctx context.Context) (math.Int, error)
-		CmtConsPublicKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
-		BondedTokensByConsAddr(context.Context, sdk.ConsAddress) (math.Int, error)
+		BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -81,9 +80,9 @@ func ValidateVoteExtensions(
 		}
 
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		cmtPubKeyProto, err := valStore.CmtConsPublicKeyByConsAddr(ctx, valConsAddr)
+		bondedTokens, cmtPubKeyProto, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
+			return fmt.Errorf("failed to get validator %X info (bonded tokens and public key): %w", valConsAddr, err)
 		}
 
 		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtPubKeyProto)
@@ -107,10 +106,6 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
 
-		bondedTokens, err := valStore.BondedTokensByConsAddr(ctx, valConsAddr)
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X bonded tokens: %w", valConsAddr, err)
-		}
 		sumVP = sumVP.Add(bondedTokens)
 	}
 

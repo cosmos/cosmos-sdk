@@ -9,12 +9,21 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
+<<<<<<< HEAD
 	cosmossdk.io/store v1.0.0-alpha.1
 	cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4
+=======
+	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
+	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
+>>>>>>> 33051ceb3 (perf(abci): removes the goroutine when call `SnapshotIfApplicable` (#17174))
 	cosmossdk.io/x/tx v0.9.1
 	cosmossdk.io/x/upgrade v0.0.0-20230719143845-dff6b0e26aa4
 	github.com/cometbft/cometbft v0.38.0-rc3

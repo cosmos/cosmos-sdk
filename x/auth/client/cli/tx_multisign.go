@@ -61,6 +61,7 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.Flags().MarkHidden(flags.FlagOutput)
 
 	return cmd
 }
@@ -180,6 +181,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
+<<<<<<< HEAD
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 		if outputDoc == "" {
 			cmd.Printf("%s\n", json)
@@ -187,20 +189,23 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+=======
+		closeFunc, err := setOutputFile(cmd)
+>>>>>>> 0b5e7ed0a (refactor: hide `--output` flags that don't work (#17188))
 		if err != nil {
 			return err
 		}
 
-		defer func() {
-			err2 := fp.Close()
-			if err == nil {
-				err = err2
-			}
-		}()
+		defer closeFunc()
 
+<<<<<<< HEAD
 		err = clientCtx.PrintBytes(json)
 
 		return
+=======
+		cmd.Printf("%s\n", json)
+		return nil
+>>>>>>> 0b5e7ed0a (refactor: hide `--output` flags that don't work (#17188))
 	}
 }
 
@@ -235,6 +240,7 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 	)
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.Flags().MarkHidden(flags.FlagOutput) // signing makes sense to output only json
 
 	return cmd
 }

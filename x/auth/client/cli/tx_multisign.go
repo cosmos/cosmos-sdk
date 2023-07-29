@@ -181,24 +181,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-		if outputDoc == "" {
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
-		}
-
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+		closeFunc, err := setOutputFile(cmd)
 		if err != nil {
 			return err
 		}
 
-		defer func() {
-			err2 := fp.Close()
-			if err == nil {
-				err = err2
-			}
-		}()
+		defer closeFunc()
 
-		return clientCtx.PrintBytes(json)
+		cmd.Printf("%s\n", json)
+		return nil
 	}
 }
 

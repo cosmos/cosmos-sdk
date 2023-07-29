@@ -1734,8 +1734,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	}
 
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().CmtConsPublicKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil).AnyTimes()
-	valStore.EXPECT().BondedTokensByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), nil)
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
 	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
 
 	// set up baseapp
@@ -1824,7 +1823,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	valStore.EXPECT().BondedTokensByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), nil)
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))

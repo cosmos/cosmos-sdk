@@ -3,11 +3,11 @@ package rpc
 import (
 	"strconv"
 
-	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -41,22 +41,12 @@ func ValidatorCommand() *cobra.Command {
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			node, err := clientCtx.GetNode()
+			response, err := cmtservice.ValidatorsOutput(cmd.Context(), clientCtx, height, page, limit)
 			if err != nil {
 				return err
 			}
 
-			validatorsRes, err := node.Validators(cmd.Context(), height, &page, &limit)
-			if err != nil {
-				return err
-			}
-
-			output, err := cmtjson.Marshal(validatorsRes)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintRaw(output)
+			return clientCtx.PrintProto(response)
 		},
 	}
 

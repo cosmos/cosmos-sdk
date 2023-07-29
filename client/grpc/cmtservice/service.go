@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -82,12 +81,12 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
 func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Height > chainHeight {
+	if req.Height > blockHeight {
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
@@ -110,7 +109,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 		return nil, err
 	}
 
-	return validatorsOutput(ctx, s.clientCtx, nil, page, limit)
+	return ValidatorsOutput(ctx, s.clientCtx, nil, page, limit)
 }
 
 func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
@@ -132,16 +131,16 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, err
 	}
 
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to parse chain height")
 	}
 
-	if req.Height > chainHeight {
+	if req.Height > blockHeight {
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	r, err := validatorsOutput(ctx, s.clientCtx, &req.Height, page, limit)
+	r, err := ValidatorsOutput(ctx, s.clientCtx, &req.Height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +152,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	}, nil
 }
 
-func validatorsOutput(ctx context.Context, clientCtx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
+func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
 	vs, err := getValidators(ctx, clientCtx, height, page, limit)
 	if err != nil {
 		return nil, err

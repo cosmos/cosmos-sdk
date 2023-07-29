@@ -181,31 +181,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-<<<<<<< HEAD
-		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-		if outputDoc == "" {
-			cmd.Printf("%s\n", json)
-			return
-		}
-
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
-=======
 		closeFunc, err := setOutputFile(cmd)
->>>>>>> 0b5e7ed0a (refactor: hide `--output` flags that don't work (#17188))
 		if err != nil {
 			return err
 		}
 
 		defer closeFunc()
 
-<<<<<<< HEAD
-		err = clientCtx.PrintBytes(json)
-
-		return
-=======
 		cmd.Printf("%s\n", json)
 		return nil
->>>>>>> 0b5e7ed0a (refactor: hide `--output` flags that don't work (#17188))
 	}
 }
 

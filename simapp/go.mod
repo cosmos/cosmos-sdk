@@ -9,21 +9,12 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
-<<<<<<< HEAD
-	cosmossdk.io/store v1.0.0-alpha.1
+	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
 	cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4
-=======
-	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
-	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
->>>>>>> 33051ceb3 (perf(abci): removes the goroutine when call `SnapshotIfApplicable` (#17174))
 	cosmossdk.io/x/tx v0.9.1
 	cosmossdk.io/x/upgrade v0.0.0-20230719143845-dff6b0e26aa4
 	github.com/cometbft/cometbft v0.38.0-rc3
@@ -189,8 +180,8 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/grpc v1.56.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230726155614-23370e0ffb3e // indirect
+	google.golang.org/grpc v1.57.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

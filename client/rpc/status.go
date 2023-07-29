@@ -74,7 +74,7 @@ func StatusCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().StringP(flags.FlagOutput, "o", "text", "Output format (text|json)")
+	cmd.Flags().StringP(flags.FlagOutput, "o", "json", "Output format (text|json)")
 
 	return cmd
 }

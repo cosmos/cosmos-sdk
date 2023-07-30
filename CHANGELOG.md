@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/bank) [#16795](https://github.com/cosmos/cosmos-sdk/pull/16852) Add `DenomMetadataByQueryString` query in bank module to support metadata query by query string.
+* (cli) [#17184](https://github.com/cosmos/cosmos-sdk/pull/17184) `status` command add support for text format output
 
 ### Improvements
 

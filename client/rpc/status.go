@@ -31,6 +31,13 @@ func StatusCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			// In order to maintain backwards compatibility, the default json format output
+			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
+			if outputFormat == flags.OutputFormatJSON {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
+			}
+
 			return clientCtx.PrintRaw(output)
 		},
 	}

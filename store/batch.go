@@ -22,3 +22,7 @@ type Batcher interface {
 	// db until a final write is called.
 	NewBatch() Batch
 }
+
+type VersionedBatcher interface {
+	NewBatch(version uint64) Batch
+}

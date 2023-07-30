@@ -41,3 +41,10 @@ type IteratorCreator interface {
 	// with a particular key prefix.
 	NewPrefixIterator(prefix []byte) Iterator
 }
+
+type VersionedIteratorCreator interface {
+	NewIterator(version uint64) Iterator
+	NewStartIterator(version uint64, start []byte) Iterator
+	NewEndIterator(version uint64, start []byte) Iterator
+	NewPrefixIterator(version uint64, prefix []byte) Iterator
+}

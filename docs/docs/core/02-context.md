@@ -40,9 +40,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
 * **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
-* **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to events emitted by the blockchain.**
-* **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience.**
-* **HeaderInfo:** The `headerInfo` field contains information about the current header, such as the chain ID, gas limit, and timestamp.**
+* **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to state changes emitted by the blockchain. The streaming manager is used by the state listening API, which is described in [ADR 038](../../architecture/adr-038-state-listening.md).
+* **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience.
+* **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp.
 
 <!-- TODO update with added values -->
 

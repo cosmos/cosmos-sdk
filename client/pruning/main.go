@@ -6,13 +6,11 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
@@ -21,7 +19,7 @@ const FlagAppDBBackend = "app-db-backend"
 
 // Cmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
-func Cmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
+func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -38,11 +36,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		Example: "prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'",
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// bind flags to the Context's Viper so we can get pruning options.
-			vp := viper.New()
-			if err := vp.BindPFlags(cmd.Flags()); err != nil {
-				return err
-			}
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			vp := serverCtx.Viper
 
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
@@ -60,11 +55,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				pruningOptions.KeepRecent,
 			)
 
-			home := vp.GetString(flags.FlagHome)
-			if home == "" {
-				home = defaultNodeHome
-			}
-
+			home := serverCtx.Config.RootDir
 			db, err := openDB(home, server.GetAppDBBackend(vp))
 			if err != nil {
 				return err
@@ -97,7 +88,6 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
 	cmd.Flags().Uint64(server.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(server.FlagPruningInterval, 10,

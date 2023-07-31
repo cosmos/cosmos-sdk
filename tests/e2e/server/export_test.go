@@ -193,20 +193,19 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	})
 	app.Commit()
 
-	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
-			var simApp *simapp.SimApp
-			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
-				if err := simApp.LoadHeight(height); err != nil {
-					return types.ExportedApp{}, err
-				}
-			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
+	cmd := server.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+		var simApp *simapp.SimApp
+		if height != -1 {
+			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
+			if err := simApp.LoadHeight(height); err != nil {
+				return types.ExportedApp{}, err
 			}
+		} else {
+			simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
+		}
 
-			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-		}, tempDir)
+		return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	})
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

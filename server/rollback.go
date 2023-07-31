@@ -6,12 +6,11 @@ import (
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
-func NewRollbackCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
+func NewRollbackCmd(appCreator types.AppCreator) *cobra.Command {
 	var removeBlock bool
 
 	cmd := &cobra.Command{
@@ -27,9 +26,8 @@ application.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := GetServerContextFromCmd(cmd)
-			cfg := ctx.Config
-			home := cfg.RootDir
-			db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+
+			db, err := openDB(ctx.Config.RootDir, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}
@@ -50,7 +48,6 @@ application.
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().BoolVar(&removeBlock, "hard", false, "remove last block as well as state")
 	return cmd
 }

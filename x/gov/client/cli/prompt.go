@@ -98,6 +98,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 			prompt.Validate = client.ValidatePromptAddress
 		}
 
+		// TODO(@julienrbrt) use scalar annotation instead of dumb string name matching
 		if strings.Contains(fieldName, "addr") ||
 			strings.Contains(fieldName, "sender") ||
 			strings.Contains(fieldName, "voter") ||
@@ -156,9 +157,8 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadata, error) {
-	// set metadata
-	metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
+	metadata, err := PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
@@ -207,8 +207,48 @@ func getProposalSuggestions() []string {
 	return types
 }
 
+// PromptMetadata prompts for proposal metadata or only title and summary if skip is true
+func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
+	var (
+		metadata types.ProposalMetadata
+		err      error
+	)
+
+	if !skip {
+		metadata, err = Prompt(types.ProposalMetadata{}, "proposal")
+		if err != nil {
+			return metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
+		}
+	} else {
+		// prompt for title and summary
+		titlePrompt := promptui.Prompt{
+			Label:    "Enter proposal title",
+			Validate: client.ValidatePromptNotEmpty,
+		}
+
+		metadata.Title, err = titlePrompt.Run()
+		if err != nil {
+			return metadata, fmt.Errorf("failed to set proposal title: %w", err)
+		}
+
+		summaryPrompt := promptui.Prompt{
+			Label:    "Enter proposal summary",
+			Validate: client.ValidatePromptNotEmpty,
+		}
+
+		metadata.Summary, err = summaryPrompt.Run()
+		if err != nil {
+			return metadata, fmt.Errorf("failed to set proposal summary: %w", err)
+		}
+	}
+
+	return metadata, nil
+}
+
 // NewCmdDraftProposal let a user generate a draft proposal.
 func NewCmdDraftProposal() *cobra.Command {
+	flagSkipMetadata := "skip-metadata"
+
 	cmd := &cobra.Command{
 		Use:          "draft-proposal",
 		Short:        "Generate a draft proposal json file. The generated proposal json contains only one message (skeleton).",
@@ -266,7 +306,9 @@ func NewCmdDraftProposal() *cobra.Command {
 				}
 			}
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec)
+			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
+
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}
@@ -275,17 +317,20 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			if err := writeFile(draftMetadataFileName, metadata); err != nil {
-				return err
+			if !skipMetadataPrompt {
+				if err := writeFile(draftMetadataFileName, metadata); err != nil {
+					return err
+				}
 			}
 
-			fmt.Printf("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			cmd.Println("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.")
 
 			return nil
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagSkipMetadata, false, "skip metadata prompt")
 
 	return cmd
 }

@@ -27,24 +27,24 @@ type Iterator interface {
 type IteratorCreator interface {
 	// NewIterator creates an iterator over the entire key space contained within
 	// the backing key-value database.
-	NewIterator() Iterator
+	NewIterator(storeKey string) Iterator
 
 	// NewStartIterator creates an iterator over a subset of a database key space
 	// starting at a particular key.
-	NewStartIterator(start []byte) Iterator
+	NewStartIterator(storeKey string, start []byte) Iterator
 
 	// NewEndIterator creates an iterator over a subset of a database key space
 	// ending at a particular key.
-	NewEndIterator(start []byte) Iterator
+	NewEndIterator(storeKey string, start []byte) Iterator
 
 	// NewPrefixIterator creates an iterator over a subset of a database key space
 	// with a particular key prefix.
-	NewPrefixIterator(prefix []byte) Iterator
+	NewPrefixIterator(storeKey string, prefix []byte) Iterator
 }
 
 type VersionedIteratorCreator interface {
-	NewIterator(version uint64) Iterator
-	NewStartIterator(version uint64, start []byte) Iterator
-	NewEndIterator(version uint64, start []byte) Iterator
-	NewPrefixIterator(version uint64, prefix []byte) Iterator
+	NewIterator(storeKey string, version uint64) Iterator
+	NewStartIterator(storeKey string, version uint64, start []byte) Iterator
+	NewEndIterator(storeKey string, version uint64, start []byte) Iterator
+	NewPrefixIterator(storeKey string, version uint64, prefix []byte) Iterator
 }

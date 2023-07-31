@@ -31,9 +31,10 @@ var (
 // However, it can be used to read key/value pairs at any version.
 type Database struct {
 	mu      sync.RWMutex
-	db      store.VersionedDatabase
+	vdb     store.VersionedDatabase
 	version uint64
-	mem     map[string]dbEntry
+	memSize int
+	mem     map[string]map[string]dbEntry
 	batch   store.Batch
 }
 
@@ -45,54 +46,67 @@ type dbEntry struct {
 	version uint64
 }
 
-func New(db store.VersionedDatabase, version uint64, memSize int) *Database {
-	return &Database{
-		db:      db,
+// New creates a new instance of a state storage (SS) backend Database and returns
+// a reference to it. It takes a backing physical storage backend, the current
+// version/height that will be committed, the list of store keys to support and
+// the pre-allocation size for each store key.
+func New(vdb store.VersionedDatabase, version uint64, storeKeys []string, memSize int) *Database {
+	db := &Database{
+		vdb:     vdb,
 		version: version,
-		mem:     make(map[string]dbEntry, memSize),
-		batch:   db.NewBatch(version),
+		memSize: memSize,
+		batch:   vdb.NewBatch(version),
 	}
+
+	for _, storeKey := range storeKeys {
+		db.mem[storeKey] = make(map[string]dbEntry, memSize)
+	}
+
+	return db
 }
 
 func (db *Database) Close() error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	if err := db.db.Close(); err != nil {
+	if err := db.vdb.Close(); err != nil {
 		return err
 	}
 
-	db.db = nil
+	// reset all mutable fields
+	db.vdb = nil
 	db.mem = nil
 	db.batch = nil
 
 	return nil
 }
 
-func (db *Database) Has(version uint64, key []byte) (bool, error) {
+func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	if db.mem == nil {
 		return false, store.ErrClosed
 	}
+	// TODO: Should we enforce reads have a store key set?
 
-	if entry, ok := db.mem[string(key)]; ok && entry.version == version {
+	if entry, ok := db.mem[storeKey][string(key)]; ok && entry.version == version {
 		return !entry.delete, nil
 	}
 
-	return db.db.Has(version, key)
+	return db.vdb.Has(storeKey, version, key)
 }
 
-func (db *Database) Get(version uint64, key []byte) ([]byte, error) {
+func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	if db.mem == nil {
 		return nil, store.ErrClosed
 	}
+	// TODO: Should we enforce reads have a store key set?
 
-	if entry, ok := db.mem[string(key)]; ok && entry.version == version {
+	if entry, ok := db.mem[storeKey][string(key)]; ok && entry.version == version {
 		if entry.delete {
 			return nil, store.ErrRecordNotFound
 		}
@@ -100,10 +114,10 @@ func (db *Database) Get(version uint64, key []byte) ([]byte, error) {
 		return slices.Clone(entry.value), nil
 	}
 
-	return db.db.Get(version, key)
+	return db.vdb.Get(storeKey, version, key)
 }
 
-func (db *Database) Set(version uint64, key, value []byte) error {
+func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -111,14 +125,17 @@ func (db *Database) Set(version uint64, key, value []byte) error {
 		return store.ErrClosed
 	}
 	if version != db.version {
-		return fmt.Errorf("invalid version; expected %d, got %d", db.version, version)
+		return fmt.Errorf("expected %d, got %d: %w", store.ErrInvalidVersion, db.version, version)
+	}
+	if _, hasStoreKey := db.mem[storeKey]; !hasStoreKey {
+		return fmt.Errorf("%s: %w", store.ErrUnknownStoreKey, storeKey)
 	}
 
-	db.mem[string(key)] = dbEntry{value: slices.Clone(value), version: version}
+	db.mem[storeKey][string(key)] = dbEntry{value: slices.Clone(value), version: version}
 	return nil
 }
 
-func (db *Database) Delete(version uint64, key []byte) error {
+func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -126,10 +143,13 @@ func (db *Database) Delete(version uint64, key []byte) error {
 		return store.ErrClosed
 	}
 	if version != db.version {
-		return fmt.Errorf("invalid version; expected %d, got %d", db.version, version)
+		return fmt.Errorf("expected %d, got %d: %w", store.ErrInvalidVersion, db.version, version)
+	}
+	if _, hasStoreKey := db.mem[storeKey]; !hasStoreKey {
+		return fmt.Errorf("%s: %w", store.ErrUnknownStoreKey, storeKey)
 	}
 
-	db.mem[string(key)] = dbEntry{delete: true, version: version}
+	db.mem[storeKey][string(key)] = dbEntry{delete: true, version: version}
 
 	return nil
 }
@@ -158,13 +178,15 @@ func (db *Database) commitBatch() error {
 
 	db.batch.Reset()
 
-	for key, entry := range db.mem {
-		if entry.delete {
-			if err := db.batch.Delete([]byte(key)); err != nil {
+	for storeKey, entries := range db.mem {
+		for key, entry := range entries {
+			if entry.delete {
+				if err := db.batch.Delete(storeKey, []byte(key)); err != nil {
+					return err
+				}
+			} else if err := db.batch.Set(storeKey, []byte(key), entry.value); err != nil {
 				return err
 			}
-		} else if err := db.batch.Set([]byte(key), entry.value); err != nil {
-			return err
 		}
 	}
 
@@ -178,21 +200,21 @@ func (db *Database) commitBatch() error {
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {
-	return db.db.GetLatestVersion()
+	return db.vdb.GetLatestVersion()
 }
 
-func (db *Database) NewIterator(version uint64) store.Iterator {
+func (db *Database) NewIterator(storekey string, version uint64) store.Iterator {
 	panic("not implemented")
 }
 
-func (db *Database) NewStartIterator(version uint64, start []byte) store.Iterator {
+func (db *Database) NewStartIterator(storekey string, version uint64, start []byte) store.Iterator {
 	panic("not implemented")
 }
 
-func (db *Database) NewEndIterator(version uint64, start []byte) store.Iterator {
+func (db *Database) NewEndIterator(storekey string, version uint64, start []byte) store.Iterator {
 	panic("not implemented")
 }
 
-func (db *Database) NewPrefixIterator(version uint64, prefix []byte) store.Iterator {
+func (db *Database) NewPrefixIterator(storekey string, version uint64, prefix []byte) store.Iterator {
 	panic("not implemented")
 }

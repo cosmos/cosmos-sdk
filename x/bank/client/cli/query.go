@@ -34,6 +34,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
 		GetCmdQuerySendEnabled(),
+		GetSpendableBalancesCmd(),
 	)
 
 	return cmd
@@ -98,6 +99,46 @@ Example:
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
+
+	return cmd
+}
+
+func GetSpendableBalancesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "spendable-balances [address]",
+		Short:   "Query for account spendable balances by address",
+		Example: fmt.Sprintf("$ %s query %s spendable-balances [address]", version.AppName, types.ModuleName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.SpendableBalances(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "spendable balances")
 
 	return cmd
 }

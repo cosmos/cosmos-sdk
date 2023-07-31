@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
-	"cosmossdk.io/x/accounts/sdk"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
@@ -17,10 +16,10 @@ type (
 	fromKey              struct{}
 )
 
-func MakeBuildDependencies(invoke func(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error)) *sdk.BuildDependencies {
-	return &sdk.BuildDependencies{
+func MakeBuildDependencies(invoke func(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error)) *BuildDependencies {
+	return &BuildDependencies{
 		SchemaBuilder: collections.NewSchemaBuilder(StoreService()),
-		Invoker: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
+		Execute: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
 			sender := whoami(ctx)
 			return invoke(ctx, sender[:], to[:], msg)
 		},

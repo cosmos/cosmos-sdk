@@ -10,16 +10,12 @@ import (
 	"cosmossdk.io/x/accounts/tempcore/header"
 )
 
-func AddAccount[
-	IReq, IResp any, PIReq sdk.Msg[IReq], PIResp sdk.Msg[IResp],
-	Account sdk.Account[IReq, IResp, PIReq, PIResp],
-](
+func AddAccount[A sdk.Account](
 	name string,
-	constructor func(deps *sdk.BuildDependencies) (Account, error),
+	constructor func(deps *sdk.BuildDependencies) (A, error),
 ) func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error) {
 	return func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error) {
-		return internalaccounts.NewAccountImplementation[
-			IReq, IResp, PIReq, PIResp, Account](name, deps, constructor)
+		return internalaccounts.NewAccountImplementation(name, deps, constructor)
 	}
 }
 
@@ -76,7 +72,7 @@ func (a Accounts[H]) registerAccounts(constructors ...func(deps *sdk.BuildDepend
 			return err
 		}
 
-		typ := accountImpl.Type()
+		typ := accountImpl.Type
 		if _, ok := a.accounts[typ]; ok {
 			return fmt.Errorf("account type %s already registered", typ)
 		}

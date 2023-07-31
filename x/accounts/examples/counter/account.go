@@ -12,7 +12,7 @@ import (
 func NewCounter(deps *sdk.BuildDependencies) (Counter, error) {
 	return Counter{
 		Counter: collections.NewSequence(deps.SchemaBuilder, collections.NewPrefix(0), "counter"),
-		invoke:  deps.Invoker,
+		invoke:  deps.Execute,
 	}, nil
 }
 
@@ -56,4 +56,10 @@ func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) error {
 			return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
 		})
 	return err
+}
+
+func (a Counter) RegisterInitHandler(router *sdk.InitRouter) error {
+	return sdk.RegisterInitHandler(router, func(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
+		return a.Init(ctx, msg)
+	})
 }

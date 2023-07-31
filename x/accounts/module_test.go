@@ -19,7 +19,7 @@ func TestModule(t *testing.T) {
 	module, err := accounts.NewAccounts[header.Header](
 		ss,
 		hs,
-		accounts.AddAccount[counterv1.MsgInit, counterv1.MsgInitResponse]("counter", counter.NewCounter),
+		accounts.AddAccount("counter", counter.NewCounter),
 	)
 	require.NoError(t, err)
 

@@ -1,4 +1,4 @@
-package sdk
+package accounts
 
 import (
 	"context"
@@ -77,14 +77,26 @@ func RegisterExecuteHandler[
 	return nil
 }
 
-// Account defines a generic account interface.
-type Account[IReq, IResp any, IReqP Msg[IReq], IRespP Msg[IResp]] interface {
-	// Init is given a request and its duty is to initialise the account.
-	Init(ctx context.Context, initMsg IReq) (IResp, error)
-	// RegisterExecuteHandlers is given a router and the account should register
-	// its execute handlers.
-	RegisterExecuteHandlers(router *ExecuteRouter) error
-	// RegisterQueryHandlers is given a router and the account should register
-	// its query handlers.
-	RegisterQueryHandlers(router *QueryRouter) error
+func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *InitRouter, handler func(ctx context.Context, msg Req) (Resp, error)) error {
+	router.init = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+		concreteReq, ok := msg.(ReqP)
+		if !ok {
+			return nil, fmt.Errorf("invalid message type %T, wanted: %s", msg, proto.MessageName(ReqP(new(Req))))
+		}
+
+		resp, err := handler(ctx, *concreteReq)
+		if err != nil {
+			return nil, err
+		}
+		return RespP(&resp), nil
+	}
+	return nil
+}
+
+type InitRouter struct {
+	init func(ctx context.Context, msg proto.Message) (proto.Message, error)
+}
+
+func (i InitRouter) Handler() func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+	return i.init
 }

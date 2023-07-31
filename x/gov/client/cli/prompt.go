@@ -66,8 +66,14 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		// if the field is a struct skip or not slice of string or int then skip
 		switch v.Field(i).Kind() {
 		case reflect.Struct:
-			// TODO(@julienrbrt) in the future we can add a recursive call to Prompt
-			continue
+			result, err := Prompt(v.Field(i).Interface(), namePrefix)
+			if err != nil {
+				return data, err
+			}
+
+			if v.Field(i).CanSet() {
+				v.Field(i).Set(reflect.ValueOf(result))
+			}
 		case reflect.Slice:
 			if v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int {
 				continue
@@ -76,7 +82,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 
 		// create prompts
 		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s's %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
+			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
 			Validate: client.ValidatePromptNotEmpty,
 		}
 

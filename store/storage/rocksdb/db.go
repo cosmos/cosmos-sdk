@@ -1,6 +1,8 @@
 package rocksdb
 
 import (
+	"fmt"
+
 	"cosmossdk.io/store/v2"
 	"github.com/linxGnu/grocksdb"
 )
@@ -12,13 +14,23 @@ const (
 	latestVersionKey = "s/latest"
 )
 
-// TODO: STORE KEYS
-
 var _ store.VersionedDatabase = (*Database)(nil)
 
 type Database struct {
 	db       *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
+}
+
+func New(dataDir string) (*Database, error) {
+	db, cfHandle, err := OpenRocksDB(dataDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
+	}
+
+	return &Database{
+		db:       db,
+		cfHandle: cfHandle,
+	}, nil
 }
 
 func (db *Database) Close() error {

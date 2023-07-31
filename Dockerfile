@@ -48,5 +48,8 @@ CMD ["simd"]
 STOPSIGNAL SIGTERM
 WORKDIR /root
 
+# Install minimum necessary dependencies
+RUN apk add --no-cache curl make bash jq sed
+
 # Copy over binaries from the build-env
 COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd

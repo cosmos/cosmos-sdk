@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
@@ -23,7 +22,7 @@ func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStor
 			return err
 		}
 
-		store.Set(types.GetDelegationsByValKey(val, del), []byte{})
+		store.Set(GetDelegationsByValKey(val, del), []byte{})
 	}
 
 	return nil

@@ -95,6 +95,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
 				"v1beta1": {Service: govv1beta1.Query_ServiceDesc.ServiceName},
 			},
+			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: govv1.Msg_ServiceDesc.ServiceName,

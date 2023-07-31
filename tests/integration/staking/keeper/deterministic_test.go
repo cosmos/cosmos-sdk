@@ -669,10 +669,10 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
 
-		assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(
+		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 			f.ctx,
-			height,
-			&historicalInfo,
+			uint64(height),
+			historicalInfo,
 		))
 
 		req := &stakingtypes.QueryHistoricalInfoRequest{
@@ -693,10 +693,10 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	height := int64(127)
 
-	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(
+	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 		f.ctx,
-		height,
-		&historicalInfo,
+		uint64(height),
+		historicalInfo,
 	))
 
 	req := &stakingtypes.QueryHistoricalInfoRequest{

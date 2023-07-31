@@ -211,11 +211,7 @@ func (w *wrapper) FeePayer() []byte {
 }
 
 func (w *wrapper) FeeGranter() []byte {
-	feeGranter := w.tx.AuthInfo.Fee.Granter
-	if feeGranter != "" {
-		return sdk.MustAccAddressFromBech32(feeGranter)
-	}
-	return nil
+	return w.tx.FeeGranter(w.cdc)
 }
 
 func (w *wrapper) GetTip() *tx.Tip {

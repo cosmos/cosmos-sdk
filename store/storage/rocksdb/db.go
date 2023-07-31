@@ -22,22 +22,23 @@ type Database struct {
 }
 
 func (db *Database) Close() error {
+	db.db.Close()
+	return nil
+}
+
+func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
 	panic("not implemented!")
 }
 
-func (db *Database) Has(version uint64, key []byte) (bool, error) {
+func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
 	panic("not implemented!")
 }
 
-func (db *Database) Get(version uint64, key []byte) ([]byte, error) {
+func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
 	panic("not implemented!")
 }
 
-func (db *Database) Set(version uint64, key, value []byte) error {
-	panic("not implemented!")
-}
-
-func (db *Database) Delete(version uint64, key []byte) error {
+func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	panic("not implemented!")
 }
 
@@ -45,19 +46,19 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	panic("not implemented!")
 }
 
-func (db *Database) NewIterator(version uint64) store.Iterator {
+func (db *Database) NewIterator(storeKey string, version uint64) store.Iterator {
 	panic("not implemented!")
 }
 
-func (db *Database) NewStartIterator(version uint64, start []byte) store.Iterator {
+func (db *Database) NewStartIterator(storeKey string, version uint64, start []byte) store.Iterator {
 	panic("not implemented!")
 }
 
-func (db *Database) NewEndIterator(version uint64, start []byte) store.Iterator {
+func (db *Database) NewEndIterator(storeKey string, version uint64, start []byte) store.Iterator {
 	panic("not implemented!")
 }
 
-func (db *Database) NewPrefixIterator(version uint64, prefix []byte) store.Iterator {
+func (db *Database) NewPrefixIterator(storeKey string, version uint64, prefix []byte) store.Iterator {
 	panic("not implemented!")
 }
 

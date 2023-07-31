@@ -493,7 +493,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
 		// abort any running OE
-		if app.optimisticExec != nil && app.optimisticExec.Running() {
+		if app.optimisticExec.Running() {
 			app.optimisticExec.Abort()
 			_, _ = app.optimisticExec.WaitResult() // ignore the result
 		}
@@ -540,8 +540,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
 	// During the first block we'll be carrying state from InitChain, so it would be impossible for us to easily revert.
-	if app.optimisticExec != nil && req.Height > app.initialHeight {
-		app.optimisticExec.Execute(req, app.internalFinalizeBlock, app.logger)
+	if app.optimisticExec.Enabled() && req.Height > app.initialHeight {
+		app.optimisticExec.Execute(req)
 	}
 
 	return resp, nil
@@ -729,7 +729,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.optimisticExec != nil && app.optimisticExec.ShouldAbort() {
+	if app.optimisticExec.ShouldAbort() {
 		return nil, nil
 	}
 
@@ -742,11 +742,6 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
 	for _, rawTx := range req.Txs {
-		// check before every tx if we should abort
-		if app.optimisticExec != nil && app.optimisticExec.ShouldAbort() {
-			return nil, nil
-		}
-
 		var response *abci.ExecTxResult
 
 		if _, err := app.txDecoder(rawTx); err == nil {
@@ -764,6 +759,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 			)
 		}
 
+		// check after every tx if we should abort
+		if app.optimisticExec.ShouldAbort() {
+			return nil, nil
+		}
+
 		txResults = append(txResults, response)
 	}
 
@@ -774,6 +774,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	endBlock, err := app.endBlock(app.finalizeBlockState.ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	// check after endBlock if we should abort, to avoid propagating the result
+	if app.optimisticExec.ShouldAbort() {
+		return nil, nil
 	}
 
 	events = append(events, endBlock.Events...)
@@ -798,7 +803,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	if app.optimisticExec != nil {
+	if app.optimisticExec.Enabled() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not
@@ -817,7 +822,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
-	app.optimisticExec = nil
+	app.optimisticExec.Reset()
 	res, err := app.internalFinalizeBlock(req)
 	if res != nil {
 		res.AppHash = app.workingHash()

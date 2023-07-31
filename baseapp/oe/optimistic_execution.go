@@ -26,21 +26,33 @@ type OptimisticExecution struct {
 	logger        log.Logger
 }
 
-func NewOptimisticExecution() *OptimisticExecution {
-	return &OptimisticExecution{}
+func NewOptimisticExecution(logger log.Logger, fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)) *OptimisticExecution {
+	return &OptimisticExecution{logger: logger, fn: fn}
+}
+
+func (oe *OptimisticExecution) Reset() {
+	oe.mtx.Lock()
+	defer oe.mtx.Unlock()
+	oe.request = nil
+	oe.response = nil
+	oe.err = nil
+	oe.executionTime = 0
+	oe.shouldAbort = false
+	oe.running = false
+}
+
+func (oe *OptimisticExecution) Enabled() bool {
+	return oe != nil
 }
 
 // Execute initializes the OE and starts it in a goroutine.
 func (oe *OptimisticExecution) Execute(
 	req *abci.RequestProcessProposal,
-	fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error),
-	logger log.Logger,
 ) {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
 
 	oe.stopCh = make(chan struct{})
-	oe.fn = fn
 	oe.request = &abci.RequestFinalizeBlock{
 		Txs:                req.Txs,
 		DecidedLastCommit:  req.ProposedLastCommit,
@@ -51,7 +63,6 @@ func (oe *OptimisticExecution) Execute(
 		NextValidatorsHash: req.NextValidatorsHash,
 		ProposerAddress:    req.ProposerAddress,
 	}
-	oe.logger = logger
 
 	oe.logger.Debug("OE started")
 	start := time.Now()
@@ -90,6 +101,10 @@ func (oe *OptimisticExecution) Abort() {
 // ShouldAbort must only be used in the fn passed to SetupOptimisticExecution to
 // check if the OE was aborted and return as soon as possible.
 func (oe *OptimisticExecution) ShouldAbort() bool {
+	if oe == nil {
+		return false
+	}
+
 	oe.mtx.RLock()
 	defer oe.mtx.RUnlock()
 	return oe.shouldAbort
@@ -97,8 +112,12 @@ func (oe *OptimisticExecution) ShouldAbort() bool {
 
 // Running returns true if the OE is still running.
 func (oe *OptimisticExecution) Running() bool {
-	defer oe.mtx.RUnlock()
+	if oe == nil {
+		return false
+	}
+
 	oe.mtx.RLock()
+	defer oe.mtx.RUnlock()
 	return oe.running
 }
 

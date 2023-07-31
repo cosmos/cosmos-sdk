@@ -201,8 +201,9 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
-		optimisticExec:   oe.NewOptimisticExecution(),
 	}
+
+	SetOptimisticExecution()(app)
 
 	for _, option := range options {
 		option(app)

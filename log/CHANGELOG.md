@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#17194](https://github.com/cosmos/cosmos-sdk/pull/17194) Avoid repeating parse log level in filterFunc.
 
+### Bug Fixes
+
+* [#17205](https://github.com/cosmos/cosmos-sdk/pull/17205) Fix types that do not implement the `json.Marshaler` interface.
+
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.1.0) - 2023-04-27
 
 * [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce options to configure logger (enable/disable colored output, customize log timestamps).

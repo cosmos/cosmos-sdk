@@ -6,13 +6,16 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const FlagAppDBBackend = "app-db-backend"
@@ -33,11 +36,17 @@ The pruning option is provided via the 'pruning' argument or alternatively with 
 
 Note: When the --app-db-backend flag is not specified, the default backend type is 'goleveldb'.
 Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
-		Example: "prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'",
+		Example: fmt.Sprintf("%s prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'", version.AppName),
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			vp := serverCtx.Viper
+			// bind flags to the Context's Viper so we can get pruning options.
+			vp := viper.New()
+			if err := vp.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
+			if err := vp.BindPFlags(cmd.PersistentFlags()); err != nil {
+				return err
+			}
 
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
@@ -55,7 +64,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				pruningOptions.KeepRecent,
 			)
 
-			home := serverCtx.Config.RootDir
+			home := vp.GetString(flags.FlagHome)
 			db, err := openDB(home, server.GetAppDBBackend(vp))
 			if err != nil {
 				return err

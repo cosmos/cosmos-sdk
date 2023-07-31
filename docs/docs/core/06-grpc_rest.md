@@ -78,7 +78,7 @@ The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sd
 
 ## CometBFT RPC
 
-Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/master/rpc/).
+Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/main/rpc/).
 
 Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
 

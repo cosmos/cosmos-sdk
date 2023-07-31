@@ -1,28 +1,33 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"os"
 
-	starship "github.com/cosmology-tech/starship/clients/go/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
+
+	"cosmossdk.io/simapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 var (
 	configFile = "../configs/devnet.yaml"
-	ChainID    = "simapp"
+	chainID    = "simapp"
+	denom      = "stake"
 )
 
 type TestSuite struct {
 	suite.Suite
 
-	config       *starship.Config
-	chainClients starship.ChainClients
+	config   *Config
+	app      *simapp.SimApp
+	txConfig client.TxConfig
+	grpcConn *grpc.ClientConn
 }
 
 func (s *TestSuite) SetupTest() {
@@ -31,28 +36,33 @@ func (s *TestSuite) SetupTest() {
 	// read config file from yaml
 	yamlFile, err := os.ReadFile(configFile)
 	s.Require().NoError(err)
-	config := &starship.Config{}
+	config := &Config{}
 	err = yaml.Unmarshal(yamlFile, config)
 	s.Require().NoError(err)
 	s.config = config
 
-	chainClients, err := starship.NewChainClients(zap.L(), config, nil)
+	db := dbm.NewMemDB()
+	logger := log.NewTestLogger(s.T())
+	app := simapp.NewSimappWithCustomOptions(s.T(), false, simapp.SetupOptions{
+		Logger:  logger.With("instance", "first"),
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()),
+	})
+	s.app = app
+	s.txConfig = app.TxConfig()
+
+	grpcConn, err := grpc.Dial(
+		config.GetChain(chainID).GetGRPCAddr(),
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())))
 	s.Require().NoError(err)
-	s.chainClients = chainClients
+	s.grpcConn = grpcConn
 }
 
-func (s *TestSuite) TransferTokens(chain *starship.ChainClient, addr string, amount int, denom string) {
-	coin, err := sdk.ParseCoinNormalized(fmt.Sprintf("%d%s", amount, denom))
-	s.Require().NoError(err)
-
-	// Build transaction message
-	req := &banktypes.MsgSend{
-		FromAddress: chain.Address,
-		ToAddress:   addr,
-		Amount:      sdk.Coins{coin},
+func (s *TestSuite) TearDownTest() {
+	s.T().Log("tearing down e2e integration test suite...")
+	err := s.grpcConn.Close()
+	if err != nil {
+		panic(err)
 	}
-
-	res, err := chain.Client.SendMsg(context.Background(), req, "Transfer tokens for e2e tests")
-	s.Require().NoError(err)
-	s.Require().NotEmpty(res)
 }

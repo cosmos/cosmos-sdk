@@ -1,7 +1,7 @@
 chains:
   - name: simapp
     type: simapp
-    image: ghcr.io/cosmos/starship-simapp:nightly
+    image: ghcr.io/cosmos/starship-simapp:latest
     numValidators: 2
     ports:
       rest: 1317

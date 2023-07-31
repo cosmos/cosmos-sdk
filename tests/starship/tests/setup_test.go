@@ -2,50 +2,73 @@ package main
 
 import (
 	"context"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (s *TestSuite) TestChainsStatus() {
-	s.T().Log("runing test for /status endpoint for each chain")
+func (s *TestSuite) TestChainTokenTransfer() {
+	txBuilder := s.txConfig.NewTxBuilder()
 
-	for _, chainClient := range s.chainClients {
-		status, err := chainClient.GetStatus()
+	// create a new address, and send it some tokens from faucet
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	err := CreditFromFaucet(s.config, addr1.String())
+	s.Require().NoError(err)
+
+	s.T().Run("query balance for addr1", func(t *testing.T) {
+		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
+			Address: addr1.String(),
+			Denom:   denom,
+		})
+		s.Require().NoError(err)
+		s.Require().Equal(int64(1000000000), balance.Balance.Amount.Int64())
+	})
+
+	s.T().Run("send tokens from addr1 to addr2", func(t *testing.T) {
+		// get account number and sequence
+		accNum, seq, err := GetAccSeqNumber(s.grpcConn, addr1.String())
 		s.Require().NoError(err)
 
-		s.Require().Equal(chainClient.GetChainID(), status.NodeInfo.Network)
-	}
-}
+		// build tx into the txBuilder
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(1230000))))
+		s.Require().NoError(err)
+		err = txBuilder.SetMsgs(msg)
+		s.Require().NoError(err)
+		txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(200000))))
+		txBuilder.SetGasLimit(200000)
+		txBuilder.SetTimeoutHeight(100000)
 
-func (s *TestSuite) TestChainTokenTransfer() {
-	chain1, err := s.chainClients.GetChainClient(ChainID)
-	s.Require().NoError(err)
+		// sign txn
+		_, txBytes, err := CreateTestTx(s.txConfig, txBuilder, []cryptotypes.PrivKey{priv1}, []uint64{accNum}, []uint64{seq}, chainID)
+		s.Require().NoError(err)
 
-	keyName := "test-transfer"
-	address, err := chain1.CreateRandWallet(keyName)
-	s.Require().NoError(err)
-
-	denom, err := chain1.GetChainDenom()
-	s.Require().NoError(err)
-
-	s.TransferTokens(chain1, address, 2345000, denom)
-
-	// Verify the address recived the token
-	balances, err := banktypes.NewQueryClient(chain1.Client).AllBalances(context.Background(), &banktypes.QueryAllBalancesRequest{
-		Address:    address,
-		Pagination: nil,
+		// broadcast tx
+		txClient := tx.NewServiceClient(s.grpcConn)
+		res, err := txClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes})
+		s.Require().NoError(err)
+		s.Require().Equal(uint32(0), res.TxResponse.Code)
 	})
-	s.Require().NoError(err)
 
-	// Assert correct transfers
-	s.Require().Len(balances.Balances, 1)
-	s.Require().Equal(balances.Balances.Denoms(), []string{denom})
-	s.Require().Equal(balances.Balances[0].Amount, sdk.NewInt(2345000))
+	s.T().Run("query balance for addr2", func(t *testing.T) {
+		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
+			Address: addr2.String(),
+			Denom:   denom,
+		})
+		s.Require().NoError(err)
+		s.Require().Equal(int64(1230000), balance.Balance.Amount.Int64())
+	})
 }

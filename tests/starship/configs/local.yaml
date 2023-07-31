@@ -1,8 +1,9 @@
 chains:
   - name: simapp
     type: simapp
-    image: ghcr.io/cosmology-tech/starship/simapp:v0.47.3
-    numValidators: 2
+    #image: ghcr.io/cosmos/starship-simapp:latest
+    image: anmol1696/simapp:latest
+    numValidators: 1
     ports:
       rest: 1317
       rpc: 26657

@@ -1,4 +1,4 @@
-name: Starship Nightly Tests
+name: Starship Nightly E2E Tests
 
 on:
   schedule:
@@ -44,9 +44,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha
-            type=schedule,pattern=nightly
+            type=schedule,pattern=latest
           flavor: |
-            latest=false
+            latest=true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -67,6 +67,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          file: tests/starship/Dockerfile
 
   e2e-test:
     runs-on: ubuntu-latest

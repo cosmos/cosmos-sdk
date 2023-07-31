@@ -36,7 +36,7 @@ func CreditFromFaucet(config *Config, address string) error {
 
 	// Check the response status code
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status code:", res.StatusCode)
+		return fmt.Errorf("request failed with status code: %d", res.StatusCode)
 	}
 
 	return nil

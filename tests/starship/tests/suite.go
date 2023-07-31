@@ -3,12 +3,13 @@ package main
 import (
 	"os"
 
-	"cosmossdk.io/log"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 
+	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,6 +44,7 @@ func (s *TestSuite) SetupTest() {
 
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(s.T())
+	// todo: cannot use simapp, since it starts a server, will have to create txConfig manually
 	app := simapp.NewSimappWithCustomOptions(s.T(), false, simapp.SetupOptions{
 		Logger:  logger.With("instance", "first"),
 		DB:      db,

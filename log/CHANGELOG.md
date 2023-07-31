@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#17205](https://github.com/cosmos/cosmos-sdk/pull/17205) Fix marshaling cometbft `log.Lazy` struct.
+* [#17205](https://github.com/cosmos/cosmos-sdk/pull/17205) Fix types that do not implement the `json.Marshaler` interface.
 
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.1.0) - 2023-04-27
 

@@ -532,3 +532,17 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(pkBz, res.Info.PubKey.Value)
 }
+
+func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
+		Address: addr.String(),
+	})
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res.Info)
+	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Nil(res.Info.PubKey)
+}

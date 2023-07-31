@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,10 @@ import (
 func init() {
 	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
 		switch v := i.(type) {
+		case json.Marshaler:
+			return json.Marshal(i)
+		case encoding.TextMarshaler:
+			return json.Marshal(i)
 		case fmt.Stringer:
 			return fmt.Appendf([]byte("\""), "%s%s", v.String(), "\""), nil
 		default:

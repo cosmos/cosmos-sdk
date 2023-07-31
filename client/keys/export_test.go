@@ -72,12 +72,12 @@ func Test_runExportCmd(t *testing.T) {
 			kbHome := t.TempDir()
 			defaultArgs := []string{
 				"keyname1",
-				fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, tc.keyringBackend),
 			}
 
 			cmd := ExportKeyCommand()
-			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			cmd.SetArgs(append(defaultArgs, tc.extraArgs...))
 			mockIn, mockOut := testutil.ApplyMockIO(cmd)

@@ -258,7 +258,7 @@ $ %s query block --%s=%s <hash>
 	return cmd
 }
 
-// QueryBlockResultCmd implements the default command for a BlockResults query.
+// QueryBlockResultsCmd implements the default command for a BlockResults query.
 func QueryBlockResultsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block-results [height]",
@@ -298,7 +298,7 @@ func QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintString(string(blockResStr) + "\n")
+			return clientCtx.PrintRaw(blockResStr)
 		},
 	}
 

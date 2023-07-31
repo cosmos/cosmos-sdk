@@ -109,7 +109,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}
 
-		msg := types.NewMsgUnjail(validator.GetOperator())
+		msg := types.NewMsgUnjail(validator.GetOperator().String())
 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

@@ -26,12 +26,19 @@ type OptimisticExecution struct {
 	logger        log.Logger
 }
 
+func NewOptimisticExecution() *OptimisticExecution {
+	return &OptimisticExecution{}
+}
+
 // Execute initializes the OE and starts it in a goroutine.
 func (oe *OptimisticExecution) Execute(
 	req *abci.RequestProcessProposal,
 	fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error),
 	logger log.Logger,
 ) {
+	oe.mtx.Lock()
+	defer oe.mtx.Unlock()
+
 	oe.stopCh = make(chan struct{})
 	oe.fn = fn
 	oe.request = &abci.RequestFinalizeBlock{
@@ -83,8 +90,8 @@ func (oe *OptimisticExecution) Abort() {
 // ShouldAbort must only be used in the fn passed to SetupOptimisticExecution to
 // check if the OE was aborted and return as soon as possible.
 func (oe *OptimisticExecution) ShouldAbort() bool {
-	defer oe.mtx.RUnlock()
 	oe.mtx.RLock()
+	defer oe.mtx.RUnlock()
 	return oe.shouldAbort
 }
 

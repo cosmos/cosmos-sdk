@@ -603,7 +603,7 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 	return v.Jailed, nil
 }
 
-// CmtConsPublicKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
+// BondedTokensAndPubKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
 func (k Keeper) BondedTokensAndPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error) {
 	v, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {

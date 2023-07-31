@@ -232,6 +232,9 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
 		bondedTokens, cmtPubKey, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
+		if err != nil {
+			return fmt.Errorf("failed to get bonded tokens and public key for validator %s: %w", valConsAddr, err)
+		}
 
 		if len(vote.ExtensionSignature) == 0 {
 			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)

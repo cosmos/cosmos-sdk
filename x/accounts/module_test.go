@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/examples/counter"
 	counterv1 "cosmossdk.io/x/accounts/examples/counter/v1"
+	"cosmossdk.io/x/accounts/examples/echo"
 	"cosmossdk.io/x/accounts/tempcore/header"
 	"github.com/stretchr/testify/require"
 )
@@ -20,6 +21,7 @@ func TestModule(t *testing.T) {
 		ss,
 		hs,
 		accounts.AddAccount("counter", counter.NewCounter),
+		accounts.AddAccount("echo", echo.NewEcho),
 	)
 	require.NoError(t, err)
 

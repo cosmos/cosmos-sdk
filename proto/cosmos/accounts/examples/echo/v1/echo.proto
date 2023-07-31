@@ -1,0 +1,22 @@
+syntax="proto3";
+
+package cosmos.accounts.examples.echo.v1;
+
+option go_package = "cosmossdk.io/x/accounts/examples/echo/v1";
+
+message MsgEcho {
+  string message = 1;
+}
+
+message MsgEchoResponse {
+  string message = 1;
+  bytes sender = 2;
+}
+
+message QueryEchoRequest {
+  string message = 1;
+}
+
+message QueryEchoResponse {
+  string message = 1;
+}

@@ -54,10 +54,6 @@ func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) {
 		newValue, err := a.IncreaseCounterValue(ctx)
 		return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
 	})
-
-	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgEcho) (v1.MsgEchoResponse, error) {
-		return v1.MsgEchoResponse{Message: msg.Message, Sender: sdk.Sender(ctx)}, nil
-	})
 }
 
 func (a Counter) RegisterInitHandler(router *sdk.InitRouter) {

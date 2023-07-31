@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/types"
 )
 
 type Msg[T any] interface {
@@ -100,5 +101,10 @@ type InitRouter struct {
 }
 
 func (i InitRouter) Handler() func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+	if i.init == nil {
+		RegisterInitHandler(&i, func(ctx context.Context, msg types.Empty) (types.Empty, error) {
+			return types.Empty{}, nil
+		})
+	}
 	return i.init
 }

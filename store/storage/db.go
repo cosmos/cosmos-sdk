@@ -4,10 +4,16 @@ import (
 	"fmt"
 	"sync"
 
-	"cosmossdk.io/store/v2"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+
+	"cosmossdk.io/store/v2"
 )
+
+// TODO: @bez
+//
+// - Implement iterator methods
+// - Define and implement pruning method(s)
 
 // DefaultMemDBSize defines the default pre-allocation size of the in-memory
 // database used to accumulate database entries prior to committing them to disk.

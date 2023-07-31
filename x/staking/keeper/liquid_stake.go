@@ -328,16 +328,21 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 	iterator := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
 	defer iterator.Close()
 
+	// collect all unlocked addresses
 	unlockedAddresses = []string{}
 	for ; iterator.Valid(); iterator.Next() {
 		authorizations := types.PendingTokenizeShareAuthorizations{}
 		k.cdc.MustUnmarshal(iterator.Value(), &authorizations)
 
 		for _, addressString := range authorizations.Addresses {
-			k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(addressString))
 			unlockedAddresses = append(unlockedAddresses, addressString)
 		}
 		store.Delete(iterator.Key())
+	}
+
+	// remove the lock from each unlocked address
+	for _, unlockedAddress := range unlockedAddresses {
+		k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(unlockedAddress))
 	}
 
 	return unlockedAddresses

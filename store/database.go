@@ -28,6 +28,7 @@ type Reader interface {
 type VersionedWriter interface {
 	Set(version uint64, key, value []byte) error
 	Delete(version uint64, key []byte) error
+	GetLatestVersion() (uint64, error)
 }
 
 // Writer wraps the Set method of a backing data store.

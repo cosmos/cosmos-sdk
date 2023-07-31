@@ -14,6 +14,7 @@ import (
 //
 // - Implement iterator methods
 // - Define and implement pruning method(s)
+// - Import/snapshot method(s)???
 
 // DefaultMemDBSize defines the default pre-allocation size of the in-memory
 // database used to accumulate database entries prior to committing them to disk.
@@ -174,6 +175,10 @@ func (db *Database) commitBatch() error {
 	db.batch.Reset()
 
 	return nil
+}
+
+func (db *Database) GetLatestVersion() (uint64, error) {
+	return db.db.GetLatestVersion()
 }
 
 func (db *Database) NewIterator(version uint64) store.Iterator {

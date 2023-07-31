@@ -15,7 +15,23 @@ message MsgIncreaseCounterResponse {
   uint64 counter_value = 1;
 }
 
-message QueryCounterRequest {}
-message QueryCounterResponse {
-  uint64 counter_value = 1;
+message MsgEcho {
+  string message = 1;
 }
+
+message MsgEchoResponse {
+  bytes sender = 1;
+  string message = 2;
+}
+
+message MsgExecute {
+  bytes target = 1;
+  bytes msg = 2;
+}
+
+message MsgExecuteResponse {
+  bytes result = 1;
+}
+
+message QueryCounterRequest {}
+message QueryCounterResponse { uint64 counter_value = 1; }

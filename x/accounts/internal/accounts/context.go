@@ -21,7 +21,7 @@ func MakeBuildDependencies(invoke func(ctx context.Context, from []byte, to []by
 		SchemaBuilder: collections.NewSchemaBuilder(StoreService()),
 		Execute: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
 			sender := whoami(ctx)
-			return invoke(ctx, sender[:], to[:], msg)
+			return invoke(GetOriginalContext(ctx), sender[:], to[:], msg)
 		},
 	}
 }
@@ -48,6 +48,10 @@ func (s storeSvc) OpenKVStore(ctx context.Context) store.KVStore {
 	return ctx.Value(storeKey{}).(store.KVStore)
 }
 
-func whoami(ctx context.Context) [32]byte {
-	return ctx.Value(selfKey{}).([32]byte)
+func whoami(ctx context.Context) []byte {
+	return ctx.Value(selfKey{}).([]byte)
+}
+
+func Sender(ctx context.Context) []byte {
+	return ctx.Value(fromKey{}).([]byte)
 }

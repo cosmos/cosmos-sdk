@@ -18,7 +18,8 @@ func NewCounter(deps *sdk.BuildDependencies) (Counter, error) {
 
 type Counter struct {
 	Counter collections.Sequence
-	invoke  func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+
+	invoke func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
 }
 
 func (a Counter) Init(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
@@ -37,29 +38,30 @@ func (a Counter) IncreaseCounterValue(ctx context.Context) (uint64, error) {
 	return a.Counter.Next(ctx)
 }
 
-func (a Counter) RegisterQueryHandlers(router *sdk.QueryRouter) error {
-	err := sdk.RegisterQueryHandler(router, func(ctx context.Context, msg v1.QueryCounterRequest) (v1.QueryCounterResponse, error) {
+func (a Counter) Execute(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error) {
+	return a.invoke(ctx, target, msg)
+}
+
+func (a Counter) RegisterQueryHandlers(router *sdk.QueryRouter) {
+	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg v1.QueryCounterRequest) (v1.QueryCounterResponse, error) {
 		value, err := a.GetCounterValue(ctx)
 		return v1.QueryCounterResponse{CounterValue: value}, err
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) error {
-	err := sdk.RegisterExecuteHandler(router,
-		func(ctx context.Context, msg v1.MsgIncreaseCounter) (v1.MsgIncreaseCounterResponse, error) {
-			newValue, err := a.IncreaseCounterValue(ctx)
-			return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
-		})
-	return err
+func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) {
+	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgIncreaseCounter) (v1.MsgIncreaseCounterResponse, error) {
+		newValue, err := a.IncreaseCounterValue(ctx)
+		return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
+	})
+
+	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgEcho) (v1.MsgEchoResponse, error) {
+		return v1.MsgEchoResponse{Message: msg.Message, Sender: sdk.Sender(ctx)}, nil
+	})
 }
 
-func (a Counter) RegisterInitHandler(router *sdk.InitRouter) error {
-	return sdk.RegisterInitHandler(router, func(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
+func (a Counter) RegisterInitHandler(router *sdk.InitRouter) {
+	sdk.RegisterInitHandler(router, func(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
 		return a.Init(ctx, msg)
 	})
 }

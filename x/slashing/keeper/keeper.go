@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -24,18 +25,37 @@ type Keeper struct {
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority string
+	authority            string
+	Schema               collections.Schema
+	Params               collections.Item[types.Params]
+	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
 }
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
-	return Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		legacyAmino:  legacyAmino,
 		sk:           sk,
 		authority:    authority,
+		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		ValidatorSigningInfo: collections.NewMap(
+			sb,
+			types.ValidatorSigningInfoKeyPrefix,
+			"validator_signing_info",
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorSigningInfo](cdc),
+		),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/slashing module's authority.
@@ -113,7 +133,10 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.sk.Jail(sdkCtx, consAddr)
+	err := k.sk.Jail(sdkCtx, consAddr)
+	if err != nil {
+		return err
+	}
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,

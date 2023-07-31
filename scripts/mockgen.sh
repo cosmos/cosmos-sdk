@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 mockgen_cmd="mockgen"
-$mockgen_cmd -source=baseapp/abci_utils.go -package mock -destination baseapp/testutil/mock/validator_store.go
+$mockgen_cmd -source=baseapp/abci_utils.go -package mock -destination baseapp/testutil/mock/mocks.go
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
 $mockgen_cmd -package mock -destination store/mock/cosmos_cosmos_db_DB.go github.com/cosmos/cosmos-db DB
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go

@@ -8,8 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -20,31 +18,12 @@ var header = cmtproto.Header{
 }
 
 func createValidators(t *testing.T) []types.Validator {
+	t.Helper()
 	return []types.Validator{
 		newValidator(t, valAddr1, pk1),
 		newValidator(t, valAddr2, pk2),
 		newValidator(t, valAddr3, pk3),
 	}
-}
-
-func TestHistoricalInfo(t *testing.T) {
-	validators := createValidators(t)
-	hi := types.NewHistoricalInfo(header, validators, sdk.DefaultPowerReduction)
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
-
-	var value []byte
-	require.NotPanics(t, func() {
-		value = legacy.Cdc.MustMarshal(&hi)
-	})
-	require.NotNil(t, value, "Marshaled HistoricalInfo is nil")
-
-	recv, err := types.UnmarshalHistoricalInfo(codec.NewAminoCodec(legacy.Cdc), value)
-	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
-	require.Equal(t, hi.Header, recv.Header)
-	for i := range hi.Valset {
-		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
-	}
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
 }
 
 func TestValidateBasic(t *testing.T) {

@@ -74,6 +74,51 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 }
 
+// TestPlanDisableRecase will test upgrades without lower case plan names
+func (s *processTestSuite) TestPlanDisableRecase() {
+	// binaries from testdata/validate directory
+	require := s.Require()
+	home := copyTestData(s.T(), "norecase")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, DisableRecase: true}
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
+
+	// should run the genesis binary and produce expected output
+	stdout, stderr := newBuffer(), newBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
+
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	args := []string{"foo", "bar", "1234", upgradeFile}
+	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
+
+	// ensure this is upgraded now and produces new output
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(err)
+
+	require.Equal(cfg.UpgradeBin("Chain2"), currentBin)
+	args = []string{"second", "run", "--verbose"}
+	stdout.Reset()
+	stderr.Reset()
+
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.False(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+
+	// ended without other upgrade
+	require.Equal(cfg.UpgradeBin("Chain2"), currentBin)
+}
+
 func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	// binaries from testdata/validate directory
 	require := s.Require()
@@ -93,7 +138,6 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	start := time.Now()
-
 	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdout, stderr)
 	require.NoError(err)
 	require.True(doUpgrade)
@@ -103,6 +147,51 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	if time.Since(start) < cfg.RestartDelay {
 		require.FailNow("restart delay not met")
 	}
+}
+
+// TestPlanShutdownGrace will test upgrades without lower case plan names
+func (s *processTestSuite) TestPlanShutdownGrace() {
+	// binaries from testdata/validate directory
+	require := s.Require()
+	home := copyTestData(s.T(), "dontdie")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
+
+	// should run the genesis binary and produce expected output
+	stdout, stderr := newBuffer(), newBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
+
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	args := []string{"foo", "bar", "1234", upgradeFile}
+	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\nWARN Need Flush\nFlushed\n", upgradeFile), stdout.String())
+
+	// ensure this is upgraded now and produces new output
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(err)
+
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+	args = []string{"second", "run", "--verbose"}
+	stdout.Reset()
+	stderr.Reset()
+
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.False(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+
+	// ended without other upgrade
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
@@ -115,8 +204,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
-	buf := newBuffer() // inspect output using buf.String()
-	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -130,7 +218,6 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
-
 	require.NoError(err)
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())
@@ -180,14 +267,14 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{
-		Home: home, Name: "autod",
+		Home:                  home,
+		Name:                  "autod",
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
 		CustomPreupgrade:      "missing.sh",
 	}
-	buf := newBuffer() // inspect output using buf.String()
-	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

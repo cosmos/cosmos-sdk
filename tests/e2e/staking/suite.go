@@ -115,7 +115,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Use CLI to create a delegation from the new account to validator `val`.
-	cmd := cli.NewDelegateCmd()
+	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150)).String(),
@@ -133,7 +133,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
-	s.network.RetryForBlocks(func() error {
+	_ = s.network.RetryForBlocks(func() error {
 		latestHeight, err := s.network.LatestHeight()
 		require.NoError(err)
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)

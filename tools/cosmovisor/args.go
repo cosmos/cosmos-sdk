@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -27,6 +25,7 @@ const (
 	EnvDownloadMustHaveChecksum = "DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM"
 	EnvRestartUpgrade           = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvRestartDelay             = "DAEMON_RESTART_DELAY"
+	EnvShutdownGrace            = "DAEMON_SHUTDOWN_GRACE"
 	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
 	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
@@ -35,6 +34,7 @@ const (
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
+	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
 )
 
 const (
@@ -44,9 +44,6 @@ const (
 	currentLink = "current"
 )
 
-// must be the same as x/upgrade/types.UpgradeInfoFilename
-const defaultFilename = "upgrade-info.json"
-
 // Config is the information passed in to control the daemon
 type Config struct {
 	Home                     string
@@ -55,6 +52,7 @@ type Config struct {
 	DownloadMustHaveChecksum bool
 	RestartAfterUpgrade      bool
 	RestartDelay             time.Duration
+	ShutdownGrace            time.Duration
 	PollInterval             time.Duration
 	UnsafeSkipBackup         bool
 	DataBackupPath           string
@@ -63,6 +61,7 @@ type Config struct {
 	ColorLogs                bool
 	TimeFormatLogs           string
 	CustomPreupgrade         string
+	DisableRecase            bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -96,7 +95,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", defaultFilename)
+	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -183,6 +182,9 @@ func GetConfigFromEnv() (*Config, error) {
 	if cfg.TimeFormatLogs, err = TimeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
 		errs = append(errs, err)
 	}
+	if cfg.DisableRecase, err = BooleanOption(EnvDisableRecase, false); err != nil {
+		errs = append(errs, err)
+	}
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
@@ -207,6 +209,17 @@ func GetConfigFromEnv() (*Config, error) {
 		}
 	}
 
+	cfg.ShutdownGrace = 0 // default value but makes it explicit
+	shutdownGrace := os.Getenv(EnvShutdownGrace)
+	if shutdownGrace != "" {
+		val, err := parseEnvDuration(shutdownGrace)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvShutdownGrace, err))
+		} else {
+			cfg.ShutdownGrace = val
+		}
+	}
+
 	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
 	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
@@ -224,7 +237,7 @@ func (cfg *Config) Logger(dst io.Writer) log.Logger {
 	var logger log.Logger
 
 	if cfg.DisableLogs {
-		logger = log.NewCustomLogger(zerolog.Nop())
+		logger = log.NewNopLogger()
 	} else {
 		logger = log.NewLogger(dst,
 			log.ColorOption(cfg.ColorLogs),
@@ -428,6 +441,7 @@ func (cfg Config) DetailString() string {
 		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvShutdownGrace, cfg.ShutdownGrace.String()},
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
@@ -436,6 +450,7 @@ func (cfg Config) DetailString() string {
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
+		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

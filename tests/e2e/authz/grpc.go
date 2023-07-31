@@ -74,7 +74,8 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
 				require.NoError(err)
 				require.Len(g.Grants, 1)
-				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				err = g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				require.NoError(err)
 				auth, err := g.Grants[0].GetAuthorization()
 				require.NoError(err)
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
@@ -199,7 +200,7 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			7,
+			6,
 		},
 	}
 	for _, tc := range testCases {

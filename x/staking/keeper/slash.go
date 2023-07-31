@@ -31,7 +31,7 @@ import (
 // CONTRACT:
 //
 //	Infraction was committed at the current height or at a past height,
-//	not at a height in the future
+//	but not at a height in the future
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
 	logger := k.Logger(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -53,9 +53,14 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
 		//        slashed in this case - which we don't explicitly check, but should be true.
 		// Log the slash attempt for future reference (maybe we should tag it too)
+		conStr, err := k.consensusAddressCodec.BytesToString(consAddr)
+		if err != nil {
+			panic(err)
+		}
+
 		logger.Error(
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
-			"validator", consAddr.String(),
+			"validator", conStr,
 		)
 		return math.NewInt(0), nil
 	} else if err != nil {
@@ -170,9 +175,13 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		panic("invalid validator status")
 	}
 
+	valAddr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
 	logger.Info(
 		"validator slashed by slash factor",
-		"validator", validator.GetOperator().String(),
+		"validator", valAddr,
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
@@ -300,7 +309,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			continue
 		}
 
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
 		if err != nil {
 			panic(err)
 		}

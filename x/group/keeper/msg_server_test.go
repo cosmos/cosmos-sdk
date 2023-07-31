@@ -1742,6 +1742,17 @@ func (s *TestSuite) TestSubmitProposal() {
 			expErrMsg: "limit exceeded",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
+		"summary too long": {
+			req: &group.MsgSubmitProposal{
+				GroupPolicyAddress: accountAddr.String(),
+				Proposers:          []string{addr2.String()},
+				Metadata:           "{\"title\":\"title\",\"summary\":\"description\"}",
+				Summary:            strings.Repeat("a", 256*40),
+			},
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+			postRun:   func(sdkCtx sdk.Context) {},
+		},
 		"group policy required": {
 			req: &group.MsgSubmitProposal{
 				Proposers: []string{addr2.String()},
@@ -3332,9 +3343,11 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					Admin:              s.addrs[0].String(),
 					GroupPolicyAddress: groupPolicyAddr,
 				}
-				newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
-
-				_, err := k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
+				err := newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
+				if err != nil {
+					return err
+				}
+				_, err = k.UpdateGroupPolicyDecisionPolicy(ctx, newGroupPolicy)
 				return err
 			},
 			expErrMsg: "PROPOSAL_STATUS_ABORTED",

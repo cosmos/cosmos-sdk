@@ -307,7 +307,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	msgs := []sdk.Msg{msg1}
 
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)
@@ -317,5 +317,5 @@ func TestBuilderFeeGranter(t *testing.T) {
 
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
-	require.Equal(t, addr1.String(), txBuilder.GetTx().FeeGranter())
+	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
 }

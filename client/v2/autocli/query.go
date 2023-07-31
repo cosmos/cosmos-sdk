@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -16,11 +15,11 @@ import (
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command, enhanceQuery enhanceCommandFunc) (*cobra.Command, error) {
+func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
 
-	if err := b.enhanceCommandCommon(queryCmd, appOptions, customCmds, enhanceQuery); err != nil {
+	if err := b.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customCmds); err != nil {
 		return nil, err
 	}
 
@@ -46,11 +45,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		return nil
 	}
 
-	resolver := b.FileResolver
-	if resolver == nil {
-		resolver = protoregistry.GlobalFiles
-	}
-	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
+	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
 		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
@@ -83,6 +78,12 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
+		}
+
+		if findSubCommand(cmd, methodCmd.Name()) != nil {
+			// do not overwrite existing commands
+			// @julienrbrt: should we display a warning?
+			continue
 		}
 
 		cmd.AddCommand(methodCmd)
@@ -121,7 +122,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 		bz, err := jsonMarshalOptions.Marshal(output.Interface())
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
 		}
 
 		return b.outOrStdoutFormat(cmd, bz)

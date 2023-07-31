@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
+// GetDelegatorValidators returns all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(
 	ctx context.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) (types.Validators, error) {
@@ -27,7 +27,12 @@ func (k Keeper) GetDelegatorValidators(
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, err := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return nil, err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +44,7 @@ func (k Keeper) GetDelegatorValidators(
 	return validators[:i], nil // trim
 }
 
-// return a validator that a delegator is bonded to
+// GetDelegatorValidator returns a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
@@ -48,10 +53,15 @@ func (k Keeper) GetDelegatorValidator(
 		return validator, err
 	}
 
-	return k.GetValidator(ctx, delegation.GetValidatorAddr())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return validator, err
+	}
+
+	return k.GetValidator(ctx, valAddr)
 }
 
-// return all delegations for a delegator
+// GetAllDelegatorDelegations returns all delegations of a delegator
 func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
@@ -76,7 +86,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 	return delegations, nil
 }
 
-// return all unbonding-delegations for a delegator
+// GetAllUnbondingDelegations returns all unbonding-delegations of a delegator
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
@@ -101,7 +111,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 	return unbondingDelegations, nil
 }
 
-// return all redelegations for a delegator
+// GetAllRedelegations returns all redelegations of a delegator
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {
@@ -121,19 +131,19 @@ func (k Keeper) GetAllRedelegations(
 
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorSrcAddress)
+		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorSrcAddress)
 		if err != nil {
 			return nil, err
 		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
 		if err != nil {
 			return nil, err
 		}
-		if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
+		if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
 			continue
 		}
 
-		if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
+		if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
 			continue
 		}
 

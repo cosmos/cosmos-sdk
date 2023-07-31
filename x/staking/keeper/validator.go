@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// get a single validator
+// GetValidator gets a single validator
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	value, err := store.Get(types.GetValidatorKey(addr))
@@ -41,7 +42,7 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 	return validator
 }
 
-// get a single validator by consensus address
+// GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	opAddr, err := store.Get(types.GetValidatorByConsAddrKey(consAddr))
@@ -65,14 +66,14 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 	return validator
 }
 
-// set the main record holding validator details
+// SetValidator sets the main record holding validator details
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalValidator(k.cdc, &validator)
 	return store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
-// validator index
+// SetValidatorByConsAddr sets a validator by conesensus address
 func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Validator) error {
 	consPk, err := validator.GetConsAddr()
 	if err != nil {
@@ -82,7 +83,7 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 	return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
 }
 
-// validator index
+// SetValidatorByPowerIndex sets a validator by power index
 func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	// jailed validators are not kept in the power index
 	if validator.Jailed {
@@ -93,19 +94,19 @@ func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Va
 	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
-// validator index
+// DeleteValidatorByPowerIndex deletes a record by power index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 }
 
-// validator index
+// SetNewValidatorByPowerIndex adds new entry by power index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
-// Update the tokens of an existing validator, update the validators power index key
+// AddValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types.Validator,
 	tokensToAdd math.Int,
 ) (valOut types.Validator, addedShares math.LegacyDec, err error) {
@@ -124,7 +125,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types
 	return validator, addedShares, err
 }
 
-// Update the tokens of an existing validator, update the validators power index key
+// RemoveValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator types.Validator,
 	sharesToRemove math.LegacyDec,
 ) (valOut types.Validator, removedTokens math.Int, err error) {
@@ -142,7 +143,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator ty
 	return validator, removedTokens, err
 }
 
-// Update the tokens of an existing validator, update the validators power index key
+// RemoveValidatorTokens updates the tokens of an existing validator, updates the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx context.Context,
 	validator types.Validator, tokensToRemove math.Int,
 ) (types.Validator, error) {
@@ -190,7 +191,7 @@ func (k Keeper) UpdateValidatorCommission(ctx context.Context,
 	return commission, nil
 }
 
-// remove the validator record and associated indexes
+// RemoveValidator removes the validator record and associated indexes
 // except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
 func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) error {
 	// first retrieve the old validator record
@@ -235,7 +236,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 // get groups of validators
 
-// get the set of all validators with no limits, used during genesis dump
+// GetAllValidators gets the set of all validators with no limits, used during genesis dump
 func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 
@@ -256,7 +257,7 @@ func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Valida
 	return validators, nil
 }
 
-// return a given amount of all the validators
+// GetValidators returns a given amount of all the validators
 func (k Keeper) GetValidators(ctx context.Context, maxRetrieve uint32) (validators []types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	validators = make([]types.Validator, maxRetrieve)
@@ -279,7 +280,7 @@ func (k Keeper) GetValidators(ctx context.Context, maxRetrieve uint32) (validato
 	return validators[:i], nil // trim if the array length < maxRetrieve
 }
 
-// get the current group of bonded validators sorted by power-rank
+// GetBondedValidatorsByPower gets the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx context.Context) ([]types.Validator, error) {
 	maxValidators, err := k.MaxValidators(ctx)
 	if err != nil {
@@ -307,7 +308,7 @@ func (k Keeper) GetBondedValidatorsByPower(ctx context.Context) ([]types.Validat
 	return validators[:i], nil // trim
 }
 
-// returns an iterator for the current validator power store
+// ValidatorsPowerStoreIterator returns an iterator for the current validator power store
 func (k Keeper) ValidatorsPowerStoreIterator(ctx context.Context) (corestore.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.ReverseIterator(types.ValidatorsByPowerIndexKey, storetypes.PrefixEndBytes(types.ValidatorsByPowerIndexKey))
@@ -315,7 +316,7 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx context.Context) (corestore.Ite
 
 // Last Validator Index
 
-// Load the last validator power.
+// GetLastValidatorPower loads the last validator power.
 // Returns zero if the operator was not a validator last block.
 func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddress) (power int64, err error) {
 	store := k.storeService.OpenKVStore(ctx)
@@ -337,7 +338,7 @@ func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddre
 	return intV.GetValue(), nil
 }
 
-// Set the last validator power.
+// SetLastValidatorPower sets the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddress, power int64) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&gogotypes.Int64Value{Value: power})
@@ -347,19 +348,19 @@ func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddre
 	return store.Set(types.GetLastValidatorPowerKey(operator), bz)
 }
 
-// Delete the last validator power.
+// DeleteLastValidatorPower deletes the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAddress) error {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Delete(types.GetLastValidatorPowerKey(operator))
 }
 
-// returns an iterator for the consensus validators in the last block
+// lastValidatorsIterator returns an iterator for the consensus validators in the last block
 func (k Keeper) LastValidatorsIterator(ctx context.Context) (corestore.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Iterator(types.LastValidatorPowerKey, storetypes.PrefixEndBytes(types.LastValidatorPowerKey))
 }
 
-// Iterate over last validator powers.
+// IterateLastValidatorPowers iterates over last validator powers.
 func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) error {
 	iter, err := k.LastValidatorsIterator(ctx)
 	if err != nil {
@@ -382,7 +383,7 @@ func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(ope
 	return nil
 }
 
-// get the group of the bonded validators
+// GetLastValidators gets the group of the bonded validators
 func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 
@@ -481,19 +482,19 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 
 	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
 	// format for normalization
-	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	deletingAddr, err := k.validatorAddressCodec.StringToBytes(val.OperatorAddress)
 	if err != nil {
 		return err
 	}
 
 	for _, addr := range addrs {
-		storedAddr, err := sdk.ValAddressFromBech32(addr)
+		storedAddr, err := k.validatorAddressCodec.StringToBytes(addr)
 		if err != nil {
 			// even if we don't error here, it will error in UnbondAllMatureValidators at unbond time
 			return err
 		}
-		if !storedAddr.Equals(deletingAddr) {
-			newAddrs = append(newAddrs, storedAddr.String())
+		if !bytes.Equal(storedAddr, deletingAddr) {
+			newAddrs = append(newAddrs, addr)
 		}
 	}
 
@@ -546,7 +547,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 			}
 
 			for _, valAddr := range addrs.Addresses {
-				addr, err := sdk.ValAddressFromBech32(valAddr)
+				addr, err := k.validatorAddressCodec.StringToBytes(valAddr)
 				if err != nil {
 					return err
 				}
@@ -591,6 +592,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	return nil
 }
 
+// IsValidatorJailed checks and returns boolean of a validator status jailed or not.
 func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bool, error) {
 	v, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {

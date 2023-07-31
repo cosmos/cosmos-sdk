@@ -894,7 +894,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.prepareCheckStater(app.checkState.ctx)
 	}
 
-	go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
+	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
 }

@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -237,6 +238,9 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
+			if len(spendable) == 0 {
+				spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
+			}
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInsufficientFunds,
 				"spendable balance %s is smaller than %s",

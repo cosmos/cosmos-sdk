@@ -115,14 +115,18 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 			if !isAllowed {
 				return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 			}
+			permExists := false
 			for _, msgurl := range perms.LimitTypeUrls {
 				if msgTypeURL == msgurl {
-					if err = srv.DisableList.Set(ctx, msgTypeURL); err != nil {
-						return nil, err
-					}
-				} else {
-					return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+					permExists = true
 				}
+			}
+
+			if !permExists {
+				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+			}
+			if err = srv.DisableList.Set(ctx, msgTypeURL); err != nil {
+				return nil, err
 			}
 		}
 	default:

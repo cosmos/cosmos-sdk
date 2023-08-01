@@ -117,7 +117,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 	}
 
 	cmd := server.StartCmd(nil)
-	cmd.PersistentFlags().String(flags.FlagHome, "/foober", "")
+	cmd.PersistentFlags().String(flags.FlagHome, "/foobar", "")
 	if err := cmd.PersistentFlags().Set(flags.FlagHome, tempDir); err != nil {
 		t.Fatalf("Could not set home flag [%T] %v", err, err)
 	}

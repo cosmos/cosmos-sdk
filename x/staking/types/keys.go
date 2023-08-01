@@ -53,7 +53,7 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = []byte{0x50}              // prefix for the historical info
+	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
@@ -213,47 +213,6 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 // VALUE: staking/Delegation
 func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
-}
-
-// GetDelegationsByValKey creates the key for delegations by validator address
-// VALUE: staking/Delegation
-func GetDelegationsByValKey(valAddr sdk.ValAddress, delAddr sdk.AccAddress) []byte {
-	return append(GetDelegationsByValPrefixKey(valAddr), delAddr...)
-}
-
-// GetDelegationsByValPrefixKey builds a prefix key bytes with the given validator address bytes.
-func GetDelegationsByValPrefixKey(valAddr sdk.ValAddress) []byte {
-	return append(DelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
-}
-
-// ParseDelegationsByValKey parses given key and returns validator, delegator address bytes
-func ParseDelegationsByValKey(bz []byte) (sdk.ValAddress, sdk.AccAddress, error) {
-	prefixLength := len(DelegationByValIndexKey)
-	if prefix := bz[:prefixLength]; !bytes.Equal(prefix, DelegationByValIndexKey) {
-		return nil, nil, fmt.Errorf("invalid prefix; expected: %X, got: %x", DelegationByValIndexKey, prefix)
-	}
-
-	bz = bz[prefixLength:] // remove the prefix byte
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse: %X", bz)
-	}
-
-	valAddrLen := bz[0]
-	bz = bz[1:] // remove the length byte of validator address.
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse validator address: %X", bz)
-	}
-
-	val := bz[0:int(valAddrLen)]
-
-	bz = bz[int(valAddrLen):] // remove the delegator bytes
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
-	}
-
-	del := bz
-
-	return val, del, nil
 }
 
 // GetDelegationsKey creates the prefix for a delegator for all validators
@@ -417,11 +376,4 @@ func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
 // from an address to a source validator.
 func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
 	return append(GetREDsToValDstIndexKey(valDstAddr), address.MustLengthPrefix(delAddr)...)
-}
-
-// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
-func GetHistoricalInfoKey(height int64) []byte {
-	heightBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(heightBytes, uint64(height))
-	return append(HistoricalInfoKey, heightBytes...)
 }

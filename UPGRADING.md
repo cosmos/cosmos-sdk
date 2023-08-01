@@ -20,13 +20,13 @@ Following an exhaustive list:
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
-However, these commands and flags is still supported for backward compatibility.
+However, these commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
 Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
-* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
 
 #### Enable Vote Extensions
@@ -294,6 +294,14 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 
 The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
+
+### Tooling
+
+#### Rosetta
+
+Extracted Rosetta tool from the cosmos-sdk and simapp into it's own [rosetta repo](https://github.com/cosmos/rosetta). Any user who is interested on using
+the tool can connect it standalone to any node without the need to add it as part of the node binary. The rosetta tool
+also allows multi chain connections.  
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

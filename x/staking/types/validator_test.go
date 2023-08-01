@@ -346,7 +346,7 @@ func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 // Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
 	t.Helper()
-	v, err := types.NewValidator(operator, pubKey, types.Description{})
+	v, err := types.NewValidator(operator.String(), pubKey, types.Description{})
 	require.NoError(t, err)
 	return v
 }

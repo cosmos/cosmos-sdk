@@ -43,7 +43,7 @@ application.
 				return fmt.Errorf("failed to rollback to version: %w", err)
 			}
 
-			fmt.Printf("Rolled back state to height %d and hash %X", height, hash)
+			fmt.Printf("Rolled back state to height %d and hash %X\n", height, hash)
 			return nil
 		},
 	}

@@ -569,6 +569,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
+		WithExecMode(sdk.ExecModeVoteExtension).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,

@@ -182,23 +182,23 @@ func (m *MsgIncreaseCounterResponse) GetCounterValue() uint64 {
 	return 0
 }
 
-type MsgExecute struct {
+type MsgExecuteEcho struct {
 	Target []byte `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
-	Msg    []byte `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Msg    string `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 }
 
-func (m *MsgExecute) Reset()         { *m = MsgExecute{} }
-func (m *MsgExecute) String() string { return proto.CompactTextString(m) }
-func (*MsgExecute) ProtoMessage()    {}
-func (*MsgExecute) Descriptor() ([]byte, []int) {
+func (m *MsgExecuteEcho) Reset()         { *m = MsgExecuteEcho{} }
+func (m *MsgExecuteEcho) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteEcho) ProtoMessage()    {}
+func (*MsgExecuteEcho) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e863335ce4c22f21, []int{4}
 }
-func (m *MsgExecute) XXX_Unmarshal(b []byte) error {
+func (m *MsgExecuteEcho) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExecute) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgExecuteEcho) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExecute.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgExecuteEcho.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -208,48 +208,48 @@ func (m *MsgExecute) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *MsgExecute) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExecute.Merge(m, src)
+func (m *MsgExecuteEcho) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteEcho.Merge(m, src)
 }
-func (m *MsgExecute) XXX_Size() int {
+func (m *MsgExecuteEcho) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExecute) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExecute.DiscardUnknown(m)
+func (m *MsgExecuteEcho) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteEcho.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExecute proto.InternalMessageInfo
+var xxx_messageInfo_MsgExecuteEcho proto.InternalMessageInfo
 
-func (m *MsgExecute) GetTarget() []byte {
+func (m *MsgExecuteEcho) GetTarget() []byte {
 	if m != nil {
 		return m.Target
 	}
 	return nil
 }
 
-func (m *MsgExecute) GetMsg() []byte {
+func (m *MsgExecuteEcho) GetMsg() string {
 	if m != nil {
 		return m.Msg
 	}
-	return nil
+	return ""
 }
 
-type MsgExecuteResponse struct {
-	Result []byte `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+type MsgExecuteEchoResponse struct {
+	Result string `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
 }
 
-func (m *MsgExecuteResponse) Reset()         { *m = MsgExecuteResponse{} }
-func (m *MsgExecuteResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgExecuteResponse) ProtoMessage()    {}
-func (*MsgExecuteResponse) Descriptor() ([]byte, []int) {
+func (m *MsgExecuteEchoResponse) Reset()         { *m = MsgExecuteEchoResponse{} }
+func (m *MsgExecuteEchoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteEchoResponse) ProtoMessage()    {}
+func (*MsgExecuteEchoResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e863335ce4c22f21, []int{5}
 }
-func (m *MsgExecuteResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgExecuteEchoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExecuteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgExecuteEchoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExecuteResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgExecuteEchoResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -259,23 +259,23 @@ func (m *MsgExecuteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *MsgExecuteResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExecuteResponse.Merge(m, src)
+func (m *MsgExecuteEchoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteEchoResponse.Merge(m, src)
 }
-func (m *MsgExecuteResponse) XXX_Size() int {
+func (m *MsgExecuteEchoResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExecuteResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExecuteResponse.DiscardUnknown(m)
+func (m *MsgExecuteEchoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteEchoResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExecuteResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgExecuteEchoResponse proto.InternalMessageInfo
 
-func (m *MsgExecuteResponse) GetResult() []byte {
+func (m *MsgExecuteEchoResponse) GetResult() string {
 	if m != nil {
 		return m.Result
 	}
-	return nil
+	return ""
 }
 
 type QueryCounterRequest struct {
@@ -363,8 +363,8 @@ func init() {
 	proto.RegisterType((*MsgInitResponse)(nil), "cosmos.accounts.examples.counter.v1.MsgInitResponse")
 	proto.RegisterType((*MsgIncreaseCounter)(nil), "cosmos.accounts.examples.counter.v1.MsgIncreaseCounter")
 	proto.RegisterType((*MsgIncreaseCounterResponse)(nil), "cosmos.accounts.examples.counter.v1.MsgIncreaseCounterResponse")
-	proto.RegisterType((*MsgExecute)(nil), "cosmos.accounts.examples.counter.v1.MsgExecute")
-	proto.RegisterType((*MsgExecuteResponse)(nil), "cosmos.accounts.examples.counter.v1.MsgExecuteResponse")
+	proto.RegisterType((*MsgExecuteEcho)(nil), "cosmos.accounts.examples.counter.v1.MsgExecuteEcho")
+	proto.RegisterType((*MsgExecuteEchoResponse)(nil), "cosmos.accounts.examples.counter.v1.MsgExecuteEchoResponse")
 	proto.RegisterType((*QueryCounterRequest)(nil), "cosmos.accounts.examples.counter.v1.QueryCounterRequest")
 	proto.RegisterType((*QueryCounterResponse)(nil), "cosmos.accounts.examples.counter.v1.QueryCounterResponse")
 }
@@ -374,7 +374,7 @@ func init() {
 }
 
 var fileDescriptor_e863335ce4c22f21 = []byte{
-	// 290 bytes of a gzipped FileDescriptorProto
+	// 299 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0x4c, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x4c, 0x4e, 0xce, 0x2f, 0xcd, 0x2b, 0x29, 0xd6, 0x4f, 0xad, 0x48, 0xcc,
 	0x2d, 0xc8, 0x49, 0x2d, 0xd6, 0x07, 0xf3, 0x53, 0x8b, 0xf4, 0xcb, 0x0c, 0x61, 0x4c, 0xbd, 0x82,
@@ -383,17 +383,17 @@ var fileDescriptor_e863335ce4c22f21 = []byte{
 	0x2e, 0x5e, 0xa8, 0x44, 0x7c, 0x59, 0x62, 0x4e, 0x69, 0xaa, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x4b,
 	0x10, 0x0f, 0x54, 0x30, 0x0c, 0x24, 0xa6, 0x24, 0xc8, 0xc5, 0x0f, 0x55, 0x1f, 0x94, 0x5a, 0x5c,
 	0x90, 0x9f, 0x57, 0x9c, 0xaa, 0x24, 0xc2, 0x25, 0x04, 0x16, 0x4a, 0x2e, 0x4a, 0x4d, 0x2c, 0x4e,
-	0x75, 0x86, 0xa8, 0x56, 0x72, 0xe4, 0x92, 0xc2, 0x14, 0x85, 0xe9, 0x21, 0xce, 0x2e, 0x33, 0x2e,
-	0x2e, 0xdf, 0xe2, 0x74, 0xd7, 0x8a, 0xd4, 0xe4, 0xd2, 0x92, 0x54, 0x21, 0x31, 0x2e, 0xb6, 0x92,
-	0xc4, 0xa2, 0xf4, 0xd4, 0x12, 0xb0, 0x5a, 0x9e, 0x20, 0x28, 0x4f, 0x48, 0x80, 0x8b, 0x39, 0xb7,
-	0x38, 0x5d, 0x82, 0x09, 0x2c, 0x08, 0x62, 0x2a, 0xe9, 0x80, 0x1d, 0x04, 0xd5, 0x07, 0xb7, 0x52,
-	0x8c, 0x8b, 0xad, 0x28, 0xb5, 0xb8, 0x34, 0x07, 0xae, 0x1f, 0xc2, 0x53, 0x12, 0xe5, 0x12, 0x0e,
-	0x2c, 0x4d, 0x2d, 0xaa, 0x84, 0x3b, 0xb1, 0xb0, 0x34, 0xb5, 0xb8, 0x44, 0xc9, 0x9a, 0x4b, 0x04,
-	0x55, 0x98, 0x04, 0x97, 0x3b, 0xb9, 0x9e, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83,
-	0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43,
-	0x94, 0x36, 0x24, 0x52, 0x8a, 0x53, 0xb2, 0xf5, 0x32, 0xf3, 0xf5, 0x2b, 0xf0, 0xc6, 0x67, 0x12,
-	0x1b, 0x38, 0x22, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x39, 0x0c, 0x16, 0xfd, 0x01,
-	0x00, 0x00,
+	0x75, 0x86, 0xa8, 0x56, 0x72, 0xe4, 0x92, 0xc2, 0x14, 0x85, 0xe9, 0x21, 0xce, 0x2e, 0x2b, 0x2e,
+	0x3e, 0xdf, 0xe2, 0x74, 0xd7, 0x8a, 0xd4, 0xe4, 0xd2, 0x92, 0x54, 0xd7, 0xe4, 0x8c, 0x7c, 0x21,
+	0x31, 0x2e, 0xb6, 0x92, 0xc4, 0xa2, 0xf4, 0xd4, 0x12, 0xb0, 0x7a, 0x9e, 0x20, 0x28, 0x4f, 0x48,
+	0x80, 0x8b, 0x39, 0xb7, 0x38, 0x5d, 0x82, 0x49, 0x81, 0x51, 0x83, 0x33, 0x08, 0xc4, 0x54, 0x32,
+	0xe0, 0x12, 0x43, 0xd5, 0x0b, 0xb7, 0x5a, 0x8c, 0x8b, 0xad, 0x28, 0xb5, 0xb8, 0x34, 0x07, 0x62,
+	0x06, 0x67, 0x10, 0x94, 0xa7, 0x24, 0xca, 0x25, 0x1c, 0x58, 0x9a, 0x5a, 0x54, 0x09, 0x77, 0x6a,
+	0x61, 0x69, 0x6a, 0x71, 0x89, 0x92, 0x35, 0x97, 0x08, 0xaa, 0x30, 0x09, 0x3e, 0x70, 0x72, 0x3d,
+	0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63,
+	0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x6d, 0x48, 0xe4, 0x14, 0xa7, 0x64,
+	0xeb, 0x65, 0xe6, 0xeb, 0x57, 0xe0, 0x8d, 0xd7, 0x24, 0x36, 0x70, 0x84, 0x1a, 0x03, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0xbd, 0xd5, 0xc2, 0xc5, 0x05, 0x02, 0x00, 0x00,
 }
 
 func (m *MsgInit) Marshal() (dAtA []byte, err error) {
@@ -498,7 +498,7 @@ func (m *MsgIncreaseCounterResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExecute) Marshal() (dAtA []byte, err error) {
+func (m *MsgExecuteEcho) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -508,12 +508,12 @@ func (m *MsgExecute) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExecute) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgExecuteEcho) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExecute) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgExecuteEcho) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -535,7 +535,7 @@ func (m *MsgExecute) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExecuteResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgExecuteEchoResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -545,12 +545,12 @@ func (m *MsgExecuteResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExecuteResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgExecuteEchoResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExecuteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgExecuteEchoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -669,7 +669,7 @@ func (m *MsgIncreaseCounterResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgExecute) Size() (n int) {
+func (m *MsgExecuteEcho) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -686,7 +686,7 @@ func (m *MsgExecute) Size() (n int) {
 	return n
 }
 
-func (m *MsgExecuteResponse) Size() (n int) {
+func (m *MsgExecuteEchoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -964,7 +964,7 @@ func (m *MsgIncreaseCounterResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExecute) Unmarshal(dAtA []byte) error {
+func (m *MsgExecuteEcho) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -987,10 +987,10 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExecute: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgExecuteEcho: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExecute: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgExecuteEcho: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1031,7 +1031,7 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCounter
@@ -1041,25 +1041,23 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCounter
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCounter
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Msg = append(m.Msg[:0], dAtA[iNdEx:postIndex]...)
-			if m.Msg == nil {
-				m.Msg = []byte{}
-			}
+			m.Msg = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1082,7 +1080,7 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgExecuteEchoResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1105,17 +1103,17 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExecuteResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgExecuteEchoResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExecuteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgExecuteEchoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCounter
@@ -1125,25 +1123,23 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCounter
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCounter
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Result = append(m.Result[:0], dAtA[iNdEx:postIndex]...)
-			if m.Result == nil {
-				m.Result = []byte{}
-			}
+			m.Result = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

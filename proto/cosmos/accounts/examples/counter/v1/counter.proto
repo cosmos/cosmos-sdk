@@ -15,13 +15,13 @@ message MsgIncreaseCounterResponse {
   uint64 counter_value = 1;
 }
 
-message MsgExecute {
+message MsgExecuteEcho {
   bytes target = 1;
-  bytes msg = 2;
+  string msg = 2;
 }
 
-message MsgExecuteResponse {
-  bytes result = 1;
+message MsgExecuteEchoResponse {
+  string result = 1;
 }
 
 message QueryCounterRequest {}

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/collections"
 	v1 "cosmossdk.io/x/accounts/examples/counter/v1"
+	echov1 "cosmossdk.io/x/accounts/examples/echo/v1"
 	"cosmossdk.io/x/accounts/sdk"
 	"github.com/cosmos/gogoproto/proto"
 )
@@ -53,6 +54,19 @@ func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) {
 	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgIncreaseCounter) (v1.MsgIncreaseCounterResponse, error) {
 		newValue, err := a.IncreaseCounterValue(ctx)
 		return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
+	})
+
+	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgExecuteEcho) (v1.MsgExecuteEchoResponse, error) {
+		resp, err := a.invoke(ctx, msg.Target, &echov1.MsgEcho{
+			Message: msg.Msg,
+		})
+		if err != nil {
+			return v1.MsgExecuteEchoResponse{}, err
+		}
+		echoResp := resp.(*echov1.MsgEchoResponse)
+		return v1.MsgExecuteEchoResponse{
+			Result: echoResp.Message,
+		}, nil
 	})
 }
 

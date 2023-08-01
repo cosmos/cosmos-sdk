@@ -11,6 +11,7 @@ import (
 	counterv1 "cosmossdk.io/x/accounts/examples/counter/v1"
 	"cosmossdk.io/x/accounts/examples/echo"
 	"cosmossdk.io/x/accounts/tempcore/header"
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,18 +28,27 @@ func TestModule(t *testing.T) {
 
 	sender := []byte("sender")
 
-	addr, resp, err := module.Create(ctx, "counter", sender, &counterv1.MsgInit{CounterValue: 100})
+	counterAddr, resp, err := module.Create(ctx, "counter", sender, &counterv1.MsgInit{CounterValue: 100})
 	require.NoError(t, err)
-	t.Log(addr, resp)
 
-	resp, err = module.Execute(ctx, sender, addr, &counterv1.MsgIncreaseCounter{})
+	echoAddr, _, err := module.Create(ctx, "echo", sender, &types.Empty{})
+	require.NoError(t, err)
+
+	resp, err = module.Execute(ctx, sender, counterAddr, &counterv1.MsgIncreaseCounter{})
 	require.NoError(t, err)
 	require.NotNil(t, resp, "response is nil")
 	t.Log(resp.String())
 
-	resp, err = module.Query(ctx, addr, &counterv1.QueryCounterRequest{})
+	resp, err = module.Query(ctx, counterAddr, &counterv1.QueryCounterRequest{})
 	require.NoError(t, err)
 	require.NotNil(t, resp, "response is nil")
+	t.Log(resp.String())
+
+	// test comms between accounts
+
+	resp, err = module.Execute(ctx, sender, counterAddr, &counterv1.MsgExecuteEcho{Target: echoAddr, Msg: "hello"})
+	require.NoError(t, err)
+
 	t.Log(resp.String())
 }
 

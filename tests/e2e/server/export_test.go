@@ -35,7 +35,6 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
 	assert.NilError(t, cmd.ExecuteContext(ctx))
 
 	var exportedAppGenesis genutiltypes.AppGenesis
@@ -54,7 +53,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+	serverCtxPtr := ctx.Value(server.ServerContextKey)
+	serverCtxPtr.(*server.Context).Config.SetRoot("foobar")
 
 	err := cmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
@@ -103,8 +103,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			output := &bytes.Buffer{}
 			cmd.SetOut(output)
-			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
+			cmd.SetArgs(tc.flags)
 			assert.NilError(t, cmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis
@@ -137,8 +136,7 @@ func TestExportCmd_Output(t *testing.T) {
 
 			output := &bytes.Buffer{}
 			cmd.SetOut(output)
-			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
+			cmd.SetArgs(tc.flags)
 			assert.NilError(t, cmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis

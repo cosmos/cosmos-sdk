@@ -48,7 +48,6 @@ const (
 	execModeSimulate                        // Simulate a transaction
 	execModePrepareProposal                 // Prepare a block proposal
 	execModeProcessProposal                 // Process a block proposal
-	execModeVoteExtension                   // Extend or verify a pre-commit vote
 	execModeFinalize                        // Finalize a block proposal
 )
 

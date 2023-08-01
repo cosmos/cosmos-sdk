@@ -198,6 +198,40 @@ depinject.Supply(
 
 Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
+#### AutoCLI
+
+[`AutoCLI`](https://docs.cosmos.network/main/building-modules/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
+
+```go
+if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+	panic(err)
+}
+```
+
+Where `autoCliOpts` is the autocli options of the app, containing all modules and codecs.
+That value can injected by depinject ([see root_v2](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/simd/cmd/root_v2.go#L49-L67)) or manually provided by the app ([see legacy app.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/app.go#L636-L655)).
+
+:::warning
+Not doing this will result in all core SDK modules queries not to be included in the binary.
+:::
+
+Additionally `AutoCLI` automatically adds the custom modules commands to the root command for all modules implementing the [`appmodule.AppModule`](https://pkg.go.dev/cosmossdk.io/core/appmodule#AppModule) interface.
+This means, after ensuring all the used modules implement this interface, the following can be removed from your `root.go`:
+
+```diff
+func txCommand() *cobra.Command {
+	....
+- appd.ModuleBasics.AddTxCommands(cmd)
+}
+```
+
+```diff
+func queryCommand() *cobra.Command {
+	....
+- appd.ModuleBasics.AddQueryCommands(cmd)
+}
+```
+
 ### Packages
 
 #### Math

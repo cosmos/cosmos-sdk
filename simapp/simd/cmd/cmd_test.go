@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-func TestInitCmd(t *testing.T) {
+func TestRootExecuteCmd(t *testing.T) {
 	rootCmd := cmd.NewRootCmd()
 	rootCmd.SetArgs([]string{
 		"init",        // Test the init cmd

@@ -3,7 +3,6 @@ package v3
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -14,6 +13,16 @@ type subspace interface {
 	HasKeyTable() bool
 	WithKeyTable(paramtypes.KeyTable) paramtypes.Subspace
 	Set(ctx sdk.Context, key []byte, value interface{})
+}
+
+// keeper contains the staking keeper functions required
+// for the migration
+type keeper interface {
+	GetAllDelegations(ctx sdk.Context) []types.Delegation
+	GetAllValidators(ctx sdk.Context) []types.Validator
+	SetDelegation(ctx sdk.Context, delegation types.Delegation)
+	SetValidator(ctx sdk.Context, validator types.Validator)
+	RefreshTotalLiquidStaked(ctx sdk.Context) error
 }
 
 // Adds the following LSM params:
@@ -30,7 +39,7 @@ func migrateParamsStore(ctx sdk.Context, paramstore subspace) {
 }
 
 // Set each validator's TotalValidatorBondShares and TotalLiquidShares to 0
-func migrateValidators(ctx sdk.Context, k stakingkeeper.Keeper) {
+func migrateValidators(ctx sdk.Context, k keeper) {
 	for _, validator := range k.GetAllValidators(ctx) {
 		validator.TotalValidatorBondShares = sdk.ZeroDec()
 		validator.TotalLiquidShares = sdk.ZeroDec()
@@ -39,7 +48,7 @@ func migrateValidators(ctx sdk.Context, k stakingkeeper.Keeper) {
 }
 
 // Set each delegation's ValidatorBond field to false
-func migrateDelegations(ctx sdk.Context, k stakingkeeper.Keeper) {
+func migrateDelegations(ctx sdk.Context, k keeper) {
 	for _, delegation := range k.GetAllDelegations(ctx) {
 		delegation.ValidatorBond = false
 		k.SetDelegation(ctx, delegation)
@@ -51,16 +60,16 @@ func migrateDelegations(ctx sdk.Context, k stakingkeeper.Keeper) {
 //   - Setting each validator's TotalValidatorBondShares and TotalLiquidShares to 0
 //   - Setting each delegation's ValidatorBond field to false
 //   - Calculating the total liquid staked by summing the delegations from ICA accounts
-func MigrateStore(ctx sdk.Context, k stakingkeeper.Keeper, paramstore subspace) error {
-	k.Logger(ctx).Info("Migrating param store")
+func MigrateStore(ctx sdk.Context, k keeper, paramstore subspace) error {
+	ctx.Logger().Info("Staking LSM Migration: Migrating param store")
 	migrateParamsStore(ctx, paramstore)
 
-	k.Logger(ctx).Info("Migrating validators")
+	ctx.Logger().Info("Staking LSM Migration: Migrating validators")
 	migrateValidators(ctx, k)
 
-	k.Logger(ctx).Info("Migrating delegations")
+	ctx.Logger().Info("Staking LSM Migration: Migrating delegations")
 	migrateDelegations(ctx, k)
 
-	k.Logger(ctx).Info("Calculating total liquid staked")
+	ctx.Logger().Info("Staking LSM Migration: Calculating total liquid staked")
 	return k.RefreshTotalLiquidStaked(ctx)
 }

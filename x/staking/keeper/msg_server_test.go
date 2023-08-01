@@ -993,6 +993,106 @@ func TestValidatorBond(t *testing.T) {
 	}
 }
 
+func TestChangeValidatorBond(t *testing.T) {
+	_, app, ctx := createTestInput()
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	checkValidatorBondShares := func(validatorAddress sdk.ValAddress, expectedShares sdk.Int) {
+		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
+		require.True(t, found, "validator should have been found")
+		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
+	}
+
+	// Create a delegator and 2 validators
+	addresses := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1_000_000))
+	pubKeys := simapp.CreateTestPubKeys(3)
+
+	validatorAPubKey := pubKeys[1]
+	validatorBPubKey := pubKeys[2]
+
+	delegatorAddress := addresses[0]
+	validatorAAddress := sdk.ValAddress(validatorAPubKey.Address())
+	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
+
+	validatorA := teststaking.NewValidator(t, validatorAAddress, validatorAPubKey)
+	validatorB := teststaking.NewValidator(t, validatorBAddress, validatorBPubKey)
+
+	validatorA.Tokens = sdk.NewInt(1_000_000)
+	validatorB.Tokens = sdk.NewInt(1_000_000)
+	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
+	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
+
+	app.StakingKeeper.SetValidator(ctx, validatorA)
+	app.StakingKeeper.SetValidator(ctx, validatorB)
+
+	// The test will go through Delegate/Redelegate/Undelegate messages with the following
+	delegation1Amount := sdk.NewInt(1000)
+	delegation2Amount := sdk.NewInt(1000)
+	redelegateAmount := sdk.NewInt(500)
+	undelegateAmount := sdk.NewInt(500)
+
+	delegate1Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation1Amount)
+	delegate2Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation2Amount)
+	redelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), redelegateAmount)
+	undelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), undelegateAmount)
+
+	// Delegate to validator A - validator bond shares should not change
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegate1Coin,
+	})
+	require.NoError(t, err, "no error expected during first delegation")
+
+	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+
+	// Flag the delegation as a validator bond
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+	})
+	require.NoError(t, err, "no error expected during validator bond")
+
+	checkValidatorBondShares(validatorAAddress, delegation1Amount)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+
+	// Delegate more - it should increase the validator bond shares
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegate2Coin,
+	})
+	require.NoError(t, err, "no error expected during second delegation")
+
+	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+
+	// Redelegate partially from A to B - it should remove the bond shares from the source validator
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount))
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+
+	// Undelegate from validator A - it should have removed the shares
+	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           undelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during undelegation")
+
+	expectedBondShares := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount).Sub(undelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondShares)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+}
+
 func TestEnableDisableTokenizeShares(t *testing.T) {
 	_, app, ctx := createTestInput()
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)

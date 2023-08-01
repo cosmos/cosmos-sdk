@@ -118,7 +118,33 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")
-		_ = cmd.Process.Kill()
+
+		if l.cfg.ShutdownGrace > 0 {
+			// Interrupt signal
+			l.logger.Info("sent interrupt to app, waiting for exit")
+			_ = cmd.Process.Signal(os.Interrupt)
+
+			// Wait app exit
+			psChan := make(chan *os.ProcessState)
+			go func() {
+				pstate, _ := cmd.Process.Wait()
+				psChan <- pstate
+			}()
+
+			// Timeout and kill
+			select {
+			case <-psChan:
+				// Normal Exit
+				l.logger.Info("app exited normally")
+			case <-time.After(l.cfg.ShutdownGrace):
+				l.logger.Info("DAEMON_SHUTDOWN_GRACE exceeded, killing app")
+				// Kill after grace period
+				_ = cmd.Process.Kill()
+			}
+		} else {
+			// Default: Immediate app kill
+			_ = cmd.Process.Kill()
+		}
 	case err := <-cmdDone:
 		l.fw.Stop()
 		// no error -> command exits normally (eg. short command like `gaiad version`)

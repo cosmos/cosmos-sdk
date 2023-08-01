@@ -4,9 +4,7 @@ sidebar_position: 1
 
 # Modules depinject-ready
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Depinject Documentation](../packages/01-depinject.md)
 

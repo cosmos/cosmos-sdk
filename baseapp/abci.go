@@ -45,13 +45,14 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
-	app.initialHeight = req.InitialHeight
-
 	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// Set the initial height, which will be used to determine if we are proposing
 	// or processing the first block or not.
 	app.initialHeight = req.InitialHeight
+	if app.initialHeight == 0 { // If initial height is 0, set it to 1
+		app.initialHeight = 1
+	}
 
 	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
@@ -547,7 +548,8 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
 	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-	app.setState(execModeVoteExtension, emptyHeader)
+	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -555,14 +557,14 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	cp := app.GetConsensusParams(ctx)
 
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
-	app.voteExtensionState.ctx = app.voteExtensionState.ctx.
+	ctx = ctx.
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
@@ -587,7 +589,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		}
 	}()
 
-	resp, err = app.extendVote(app.voteExtensionState.ctx, req)
+	resp, err = app.extendVote(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to extend vote", "height", req.Height, "error", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
@@ -607,9 +609,13 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
+	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
+	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	cp := app.GetConsensusParams(ctx)
 
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
@@ -630,7 +636,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		}
 	}()
 
-	resp, err = app.verifyVoteExt(app.voteExtensionState.ctx, req)
+	resp, err = app.verifyVoteExt(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to verify vote extension", "height", req.Height, "error", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
@@ -675,51 +681,48 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		AppHash:            app.LastCommitID().Hash,
 	}
 
-	// Initialize the FinalizeBlock state. If this is the first block, it should
-	// already be initialized in InitChain. Otherwise app.finalizeBlockState will be
-	// nil, since it is reset on Commit.
+	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
+	// nil, it means we are replaying this block and we need to set the state here
+	// given that during block replay ProcessProposal is not executed by CometBFT.
 	if app.finalizeBlockState == nil {
 		app.setState(execModeFinalize, header)
-	} else {
-		// In the first block, app.finalizeBlockState.ctx will already be initialized
-		// by InitChain. Context is now updated with Header information.
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-			WithBlockHeader(header).
-			WithBlockHeight(req.Height).
-			WithHeaderInfo(coreheader.Info{
-				ChainID: app.chainID,
-				Height:  req.Height,
-				Time:    req.Time,
-				Hash:    req.Hash,
-				AppHash: app.LastCommitID().Hash,
-			})
 	}
 
-	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
-
+	// Context is now updated with Header information.
 	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-		WithBlockGasMeter(gasMeter).
+		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
-		WithVoteInfos(req.DecidedLastCommit.Votes).
-		WithExecMode(sdk.ExecModeFinalize).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
 			AppHash: app.LastCommitID().Hash,
-		}).WithCometInfo(cometInfo{
-		Misbehavior:     req.Misbehavior,
-		ValidatorsHash:  req.NextValidatorsHash,
-		ProposerAddress: req.ProposerAddress,
-		LastCommit:      req.DecidedLastCommit,
-	})
+		}).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithExecMode(sdk.ExecModeFinalize).
+		WithCometInfo(cometInfo{
+			Misbehavior:     req.Misbehavior,
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      req.DecidedLastCommit,
+		})
+
+	// GasMeter must be set after we get a context with updated consensus params.
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash)
+	}
+
+	if app.preFinalizeBlockHook != nil {
+		if err := app.preFinalizeBlockHook(app.finalizeBlockState.ctx, req); err != nil {
+			return nil, err
+		}
 	}
 
 	beginBlock := app.beginBlock(req)
@@ -842,7 +845,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.prepareCheckStater(app.checkState.ctx)
 	}
 
-	go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
+	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
 }

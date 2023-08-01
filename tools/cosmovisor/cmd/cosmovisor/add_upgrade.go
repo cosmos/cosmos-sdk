@@ -17,7 +17,7 @@ import (
 func NewAddUpgradeCmd() *cobra.Command {
 	addUpgrade := &cobra.Command{
 		Use:          "add-upgrade [upgrade-name] [path to executable]",
-		Short:        "Manually add upgrade binary to Cosmovisor",
+		Short:        "Add APP upgrade binary to cosmovisor",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(2),
 		RunE:         AddUpgrade,

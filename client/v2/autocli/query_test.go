@@ -331,6 +331,8 @@ func TestEverything(t *testing.T) {
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", "100000foo",
 		"--an-address", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+		"--a-validator-address", "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z",
+		"--a-consensus-address", "cosmosvalcons16vm0nx49eam4q0xasdnwdzsdl6ymgyjt757sgr",
 		"--bz", "c2RncXdlZndkZ3NkZw==",
 		"--page-count-total",
 		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
@@ -353,6 +355,19 @@ func TestEverything(t *testing.T) {
 		"--some-messages", `{"baz":-1}`,
 		"--uints", "1,2,3",
 		"--uints", "4",
+	)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, fixture.conn.lastRequest, fixture.conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestPubKeyParsingConsensusAddress(t *testing.T) {
+	fixture := initFixture(t)
+
+	_, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand,
+		"echo",
+		"1", "abc", "1foo",
+		"--a-consensus-address", "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"j8qdbR+AlH/V6aBTCSWXRvX3JUESF2bV+SEzndBhF0o=\"}",
+		"-u", "27", // shorthand
 	)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, fixture.conn.lastRequest, fixture.conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
@@ -561,7 +576,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	}, enhanceQuery)
+	})
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "query"})
 	assert.NilError(t, cmd.Execute())
@@ -576,7 +591,6 @@ func TestNotFoundErrors(t *testing.T) {
 
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd("query", "Querying subcommands")
-
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}

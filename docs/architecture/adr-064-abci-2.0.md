@@ -105,10 +105,11 @@ type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseEx
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
-A new execution state, `voteExtensionState`, will be introduced and provided as
-the `Context` that is supplied to both handlers. It will contain relevant metadata
-such as the block height and block hash. Note, `voteExtensionState` is never
-committed and will exist as ephemeral state only in the context of a single block.
+An ephemeral context and state will be supplied to both handlers. The
+context will contain relevant metadata such as the block height and block hash.
+The state will be a cached version of the committed state of the application and
+will be discarded after the execution of the handler, this means that both handlers
+get a fresh state view and no changes made to it will be written.
 
 If an application decides to implement `ExtendVoteHandler`, it must return a
 non-nil `ResponseExtendVote.VoteExtension`.

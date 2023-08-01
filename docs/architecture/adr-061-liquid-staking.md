@@ -29,7 +29,7 @@ These changes to the staking module have been in development for more than a yea
 
 Liquid proof of stake systems exacerbate the risk that a single entity - the liquid staking provider - amasses more than ⅓ the total staked supply on a given chain, giving it the power to halt that chain’s block production or censor transactions and proposals.
 
-Liquid proof of stake may also exacerbates the principal agent risk that exists at the heart of the delegated proof of stake system. The core of the problem is that validators do not actually own the stake that is delegated to them. This leaves them open to perverse incentives to attack the consensus system. Cosmos introduced the idea of min self bond in the staking. This creates a minimum amount of stake the must be bonded by the validators operator key. This feature has very little effect on the behavior of delegates.
+Liquid proof of stake may also exacerbate the principal agent risk that exists at the heart of the delegated proof of stake system. The core of the problem is that validators do not actually own the stake that is delegated to them. This leaves them open to perverse incentives to attack the consensus system. Cosmos introduced the idea of min self bond in the staking. This creates a minimum amount of stake the must be bonded by the validators operator key. This feature has very little effect on the behavior of delegates.
 
 ## Decision
 

@@ -44,30 +44,14 @@ func (k Keeper) DeleteUnbondingIndex(ctx context.Context, id uint64) error {
 // GetUnbondingType returns the enum type of unbonding which is any of
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) GetUnbondingType(ctx context.Context, id uint64) (unbondingType types.UnbondingType, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GetUnbondingTypeKey(id))
-	if err != nil {
-		return unbondingType, err
-	}
-
-	if bz == nil {
-		return unbondingType, types.ErrNoUnbondingType
-	}
-
-	return types.UnbondingType(binary.BigEndian.Uint64(bz)), nil
+	ubdType, err := k.UnbondingType.Get(ctx, id)
+	return types.UnbondingType(ubdType), err
 }
 
 // SetUnbondingType sets the enum type of unbonding which is any of
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType types.UnbondingType) error {
-	store := k.storeService.OpenKVStore(ctx)
-
-	// Convert into bytes for storage
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, uint64(unbondingType))
-
-	return store.Set(types.GetUnbondingTypeKey(id), bz)
+	return k.UnbondingType.Set(ctx, id, int64(unbondingType))
 }
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID

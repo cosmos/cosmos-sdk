@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -53,7 +54,7 @@ func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
 				require.NoError(err)
 				require.Equal(tc.expected, unbondingType)
 			} else {
-				require.ErrorIs(err, types.ErrNoUnbondingType)
+				require.ErrorIs(err, collections.ErrNotFound)
 			}
 		})
 	}
@@ -277,7 +278,7 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 
 	// no unbondingID set
 	err := s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrNoUnbondingType)
+	require.ErrorIs(err, collections.ErrNotFound)
 
 	// unbonding delegation
 	require.NoError(s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_UnbondingDelegation))

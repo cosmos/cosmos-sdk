@@ -209,7 +209,7 @@ if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 ```
 
 Where `autoCliOpts` is the autocli options of the app, containing all modules and codecs.
-That value can injected by depinject ([see root_v2](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/simd/cmd/root_v2.go#L49-L67)) or manually provided by the app ([see legacy app.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/app.go#L636-L655)).
+That value can injected by depinject ([see root_v2.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/simd/cmd/root_v2.go#L49-L67)) or manually provided by the app ([see legacy app.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/app.go#L636-L655)).
 
 :::warning
 Not doing this will result in all core SDK modules queries not to be included in the binary.

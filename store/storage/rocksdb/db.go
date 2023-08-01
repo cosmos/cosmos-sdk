@@ -91,12 +91,44 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	return copyAndFreeSlice(slice), nil
 }
 
+// Set will store a given key/value pair in addition to setting the provided version
+// as the latest version. Note, a caller should prefer to create a batch instead
+// of calling Set() directly.
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	panic("not implemented!")
+	var ts [TimestampSize]byte
+	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+
+	batch := grocksdb.NewWriteBatch()
+	defer batch.Destroy()
+
+	batch.Put([]byte(latestVersionKey), ts[:])
+
+	prefixedKey := prependStoreKey(storeKey, key)
+	batch.PutCFWithTS(db.cfHandle, prefixedKey, ts[:], value)
+
+	return db.storage.Write(defaultWriteOpts, batch)
 }
 
+// Delete will remove a given key/value pair in addition to setting the provided
+// version as the latest version. Note, a caller should prefer to create a batch
+// instead of calling Delete() directly.
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	panic("not implemented!")
+	var ts [TimestampSize]byte
+	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+
+	batch := grocksdb.NewWriteBatch()
+	defer batch.Destroy()
+
+	batch.Put([]byte(latestVersionKey), ts[:])
+
+	prefixedKey := prependStoreKey(storeKey, key)
+	batch.DeleteCFWithTS(db.cfHandle, prefixedKey, ts[:])
+
+	return db.storage.Write(defaultWriteOpts, batch)
+}
+
+func (db *Database) NewBatch(version uint64) store.Batch {
+	return NewBatch(db, version)
 }
 
 func (db *Database) NewIterator(storeKey string, version uint64) store.Iterator {
@@ -112,10 +144,6 @@ func (db *Database) NewEndIterator(storeKey string, version uint64, start []byte
 }
 
 func (db *Database) NewPrefixIterator(storeKey string, version uint64, prefix []byte) store.Iterator {
-	panic("not implemented!")
-}
-
-func (db *Database) NewBatch(version uint64) store.Batch {
 	panic("not implemented!")
 }
 

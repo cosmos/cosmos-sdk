@@ -682,6 +682,20 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
+			name: "community tax is nil",
+			msg: &distrtypes.MsgUpdateParams{
+				Authority: f.distrKeeper.GetAuthority(),
+				Params: distrtypes.Params{
+					CommunityTax:        math.LegacyDec{},
+					WithdrawAddrEnabled: withdrawAddrEnabled,
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
+				},
+			},
+			expErr:    true,
+			expErrMsg: "community tax must be not nil",
+		},
+		{
 			name: "community tax > 1",
 			msg: &distrtypes.MsgUpdateParams{
 				Authority: f.distrKeeper.GetAuthority(),
@@ -693,7 +707,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
+			expErrMsg: "community tax too large: 2.000000000000000000",
 		},
 		{
 			name: "negative community tax",
@@ -707,7 +721,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
+			expErrMsg: "community tax must be positive: -0.200000000000000000",
 		},
 		{
 			name: "base proposer reward set",

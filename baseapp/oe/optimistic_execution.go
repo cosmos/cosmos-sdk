@@ -30,6 +30,9 @@ func NewOptimisticExecution(logger log.Logger, fn func(*abci.RequestFinalizeBloc
 	return &OptimisticExecution{logger: logger, fn: fn}
 }
 
+// Reset resets the OE context. Must be called whenever we want to invalidate
+// the current OE. For example when on FinalizeBlock we want to process the
+// block async, we run Reset() to make sure ShouldAbort() returns always false.
 func (oe *OptimisticExecution) Reset() {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
@@ -82,6 +85,10 @@ func (oe *OptimisticExecution) Execute(
 // AbortIfNeeded aborts the OE if the request hash is not the same as the one in
 // the running OE. Returns true if the OE was aborted.
 func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
+	if oe == nil {
+		return false
+	}
+
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
 	if rand.Intn(100) > 80 || !bytes.Equal(oe.request.Hash, reqHash) {

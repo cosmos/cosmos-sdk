@@ -472,7 +472,7 @@ localnet-stop:
 
 # localnet-start will run a 4-node testnet locally. The nodes are
 # based off the docker images in: ./contrib/images/simd-env
-localnet-start: localnet-stop localnet-build-env localnet-build-nodes
+localnet-start: localnet-stop localnet-build-nodes
 
 # localnet-debug will run a 4-node testnet locally in debug mode
 # you can read more about the debug mode here: ./contrib/images/simd-dlv/README.md

@@ -203,8 +203,6 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 	}
 
-	SetOptimisticExecution()(app)
-
 	for _, option := range options {
 		option(app)
 	}

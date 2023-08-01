@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/math v1.0.1
+	cosmossdk.io/store v1.0.0-alpha.1
 	github.com/cometbft/cometbft v0.38.0-rc3
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.10
@@ -17,6 +18,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.1
 	github.com/hashicorp/go-plugin v1.4.10
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
+	github.com/linxGnu/grocksdb v1.8.0
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.6.0
@@ -24,11 +26,6 @@ require (
 	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
-)
-
-require (
-	cosmossdk.io/store v1.0.0-alpha.1
-	github.com/linxGnu/grocksdb v1.7.16
 )
 
 require (

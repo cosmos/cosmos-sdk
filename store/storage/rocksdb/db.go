@@ -60,6 +60,19 @@ func (db *Database) SetLatestVersion(version uint64) error {
 	return db.storage.Put(defaultWriteOpts, []byte(latestVersionKey), ts[:])
 }
 
+func (db *Database) GetLatestVersion() (uint64, error) {
+	bz, err := db.storage.GetBytes(defaultReadOpts, []byte(latestVersionKey))
+	if err != nil {
+		return 0, err
+	}
+
+	if len(bz) == 0 {
+		return 0, nil
+	}
+
+	return binary.LittleEndian.Uint64(bz), nil
+}
+
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
 	slice, err := db.GetSlice(storeKey, version, key)
 	if err != nil {
@@ -83,10 +96,6 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 }
 
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	panic("not implemented!")
-}
-
-func (db *Database) GetLatestVersion() (uint64, error) {
 	panic("not implemented!")
 }
 
@@ -136,10 +145,6 @@ func storePrefix(storeKey string) []byte {
 func prependStoreKey(storeKey string, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
-
-// moveSliceToBytes will free the slice and copy out a go []byte
-// This function can be applied on *Slice returned from Key() and Value()
-// of an Iterator, because they are marked as freed.
 
 // copyAndFreeSlice will copy a given RocksDB slice and free it. If the slice does
 // not exist, <nil> will be returned.

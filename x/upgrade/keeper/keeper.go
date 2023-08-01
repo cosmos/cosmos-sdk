@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -510,11 +509,6 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
-	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
-	if err != nil {
-		return err
-	}
-
 	upgradeInfo := types.Plan{
 		Name:   p.Name,
 		Height: height,
@@ -525,22 +519,18 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		return err
 	}
 
+	upgradeInfoFilePath, upgradeInfoFileDir := k.GetUpgradeInfoPath()
+	if err = os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
+		return fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
+	}
+
 	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
-func (k Keeper) GetUpgradeInfoPath() (string, error) {
-	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
-	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
-	}
-
-	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
-}
-
-// getHomeDir returns the height at which the given upgrade was executed
-func (k Keeper) getHomeDir() string {
-	return k.homePath
+func (k Keeper) GetUpgradeInfoPath() (string, string) {
+	upgradeInfoFileDir := filepath.Join(k.homePath, "data")
+	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), upgradeInfoFileDir
 }
 
 // ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
@@ -550,11 +540,7 @@ func (k Keeper) getHomeDir() string {
 func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	var upgradeInfo types.Plan
 
-	upgradeInfoPath, err := k.GetUpgradeInfoPath()
-	if err != nil {
-		return upgradeInfo, err
-	}
-
+	upgradeInfoPath, _ := k.GetUpgradeInfoPath()
 	data, err := os.ReadFile(upgradeInfoPath)
 	if err != nil {
 		// if file does not exist, assume there are no upgrades
@@ -565,11 +551,8 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 		return upgradeInfo, err
 	}
 
-	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
-		return upgradeInfo, err
-	}
-
-	return upgradeInfo, nil
+	err = json.Unmarshal(data, &upgradeInfo)
+	return upgradeInfo, err
 }
 
 // SetDowngradeVerified updates downgradeVerified.

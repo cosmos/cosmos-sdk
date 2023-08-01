@@ -3,7 +3,6 @@ package upgrade_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 	"time"
 
@@ -379,12 +378,6 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	t.Log("Verify upgrade height from file matches ")
 	require.Equal(upgradeInfo.Height, planHeight)
 	require.Equal(upgradeInfo.Name, plan.Name)
-
-	// clear the test file
-	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(err)
-	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(err)
 }
 
 // TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.

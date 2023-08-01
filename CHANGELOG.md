@@ -44,7 +44,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+<<<<<<< HEAD
 * (testutil) [#17216](https://github.com/cosmos/cosmos-sdk/issues/17216) Add `DefaultContextWithKeys` to `testutil` package.
+=======
+* (x/group, x/gov) [#17220](https://github.com/cosmos/cosmos-sdk/pull/17220) Add `--skip-metadata` flag in `draft-proposal` to skip metadata prompt.
+>>>>>>> 5de37005f (feat(gov,group): allow `draft-proposal` to skip metatada prompt (#17220))
 * (x/group, x/gov) [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Let proposal summary be 40x longer than metadata limit.
 * (version) [#17096](https://github.com/cosmos/cosmos-sdk/pull/17096) Improve `getSDKVersion()` to handle module replacements.
 

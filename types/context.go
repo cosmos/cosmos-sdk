@@ -25,7 +25,6 @@ const (
 	ExecModeSimulate
 	ExecModePrepareProposal
 	ExecModeProcessProposal
-	ExecModeVoteExtension
 	ExecModeFinalize
 )
 

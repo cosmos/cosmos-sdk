@@ -81,10 +81,6 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		}
 
 		fieldName := strings.ToLower(v.Type().Field(i).Name)
-		// validation per field name
-		if strings.Contains(fieldName, "url") {
-			prompt.Validate = client.ValidatePromptURL
-		}
 
 		if strings.EqualFold(fieldName, "authority") {
 			// pre-fill with gov address

@@ -61,7 +61,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 
 	// run test simd keys list - to see that the migrated key is there
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(s.appName, keyring.BackendTest, s.dir, mockIn, s.cdc)
@@ -75,7 +75,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagHome, s.dir),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, s.dir),
 		fmt.Sprintf("--%s=false", flagListNames),
 	})
 

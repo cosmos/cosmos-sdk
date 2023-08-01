@@ -47,3 +47,12 @@ func TestParams_ValidateBasic(t *testing.T) {
 func TestDefaultParams(t *testing.T) {
 	require.NoError(t, types.DefaultParams().ValidateBasic())
 }
+
+func TestNilCommunityTax(t *testing.T) {
+	var p types.Params
+	s := `{"community_tax": "", "base_proposer_reward": "", "bonus_proposer_reward": "", "withdraw_addr_enabled": false}`
+	p.Unmarshal([]byte(s))
+	if p.ValidateBasic() == nil {
+		t.Errorf("ValidateBasic() should return error when CommunityTax is nil: error")
+	}
+}

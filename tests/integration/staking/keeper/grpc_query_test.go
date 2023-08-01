@@ -224,7 +224,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 				}
 			},
 			false,
-			"no delegation for (address, validator) tuple",
+			"not found",
 		},
 		{
 			"empty delegator address",

@@ -31,7 +31,7 @@ func (k Keeper) GetAllDelegations(ctx context.Context) ([]types.Delegation, erro
 		return nil, err
 	}
 
-	return delegations, err
+	return delegations, nil
 }
 
 // GetValidatorDelegations returns all delegations to a specific validator.

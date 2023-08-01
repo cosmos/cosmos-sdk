@@ -71,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (server) [#17177](https://github.com/cosmos/cosmos-sdk/pull/17177) Remove `iavl-lazy-loading` configuration.
 * (rosetta) [#16276](https://github.com/cosmos/cosmos-sdk/issues/16276) Rosetta migration to standalone repo.
+* (cli) [#17184](https://github.com/cosmos/cosmos-sdk/pull/17184) All json keys returned by the `status` command are now snake case instead of pascal case.
 
 ## [v0.50.0-beta.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-beta.0) - 2023-07-19
 

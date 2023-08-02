@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1225,28 +1224,32 @@ func TestICADelegateUndelegate(t *testing.T) {
 
 func TestCancelUnbondingDelegation(t *testing.T) {
 	// setup the app
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	_, app, ctx := createTestInput()
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 
 	// set the not bonded pool module account
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 5)
+	startCoin := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), startCoin))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
-	// accounts
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
-	validators := app.StakingKeeper.GetValidators(ctx, 10)
-	require.Equal(t, len(validators), 1)
+	// create a  validator
+	validatorPubKey := simapp.CreateTestPubKeys(1)[0]
+	validatorAddr := sdk.ValAddress(validatorPubKey.Address())
 
-	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
-	require.NoError(t, err)
+	validator := teststaking.NewValidator(t, validatorAddr, validatorPubKey)
+	validator.Tokens = startTokens
+	validator.DelegatorShares = sdk.NewDecFromInt(startTokens)
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	// create a delegator
+	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
 	delegatorAddr := delAddrs[0]
 
 	// setting the ubd entry
@@ -1255,6 +1258,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		delegatorAddr, validatorAddr, 10,
 		ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
+		1,
 	)
 
 	// set and retrieve a record
@@ -1342,7 +1346,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(ctx, &testCase.req)
+			_, err := msgServer.CancelUnbondingDelegation(sdk.WrapSDKContext(ctx), &testCase.req)
 			if testCase.ExceptErr {
 				require.Error(t, err)
 			} else {

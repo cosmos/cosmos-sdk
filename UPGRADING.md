@@ -255,6 +255,18 @@ References to `types/store.go` which contained aliases for store types have been
 The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
+##### Streaming
+
+[ADR-38](https://docs.cosmos.network/main/architecture/adr-038-state-listening) has been implemented in the SDK.
+
+To continue using state streaming, replace `streaming.LoadStreamingServices` by the following in your `app.go`:
+
+```go
+if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+	panic(err)
+}
+```
+
 #### Client
 
 The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.

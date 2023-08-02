@@ -32,7 +32,7 @@ func TestCollectionsCorrectness(t *testing.T) {
 	})
 
 	t.Run("BytesIndexingKey", func(t *testing.T) {
-		colltest.TestKeyCodec(t, LengthPrefixedBytesKey, []byte("heello"))
+		colltest.TestKeyCodec(t, LengthPrefixedBytesKey, []byte{})
 	})
 }
 

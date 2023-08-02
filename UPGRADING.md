@@ -269,7 +269,7 @@ It is now recommended to validate message directly in the message server. When t
 
 * Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
-* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager registers detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
 * The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 
@@ -295,18 +295,18 @@ Capability has been moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC v8 
 
 ##### Expedited Proposals
 
-The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
+The `gov` v1 module now supports expedited governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
 
 ##### Cancelling Proposals
 
-The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+The `gov` module now supports cancelling governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
 
 ```text
-	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
-	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
 ```
 
-By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
+By default, the new `ProposalCancelRatio` parameter is set to `0.5` during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
 #### `x/evidence`
 
@@ -340,9 +340,9 @@ All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead 
 
 #### Rosetta
 
-Extracted Rosetta tool from the cosmos-sdk and simapp into it's own [rosetta repo](https://github.com/cosmos/rosetta). Any user who is interested on using
-the tool can connect it standalone to any node without the need to add it as part of the node binary. The rosetta tool
-also allows multi chain connections.  
+Rosetta has moved to it's own [repo](https://github.com/cosmos/rosetta) and not imported by the Cosmos SDK SimApp by default.
+Any user who is interested on using the tool can connect it standalone to any node without the need to add it as part of the node binary.
+The rosetta tool also allows multi chain connections.  
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

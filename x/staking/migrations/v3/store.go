@@ -30,7 +30,7 @@ type keeper interface {
 // - GlobalLiquidStakingCap
 // - ValidatorLiquidStakingCap
 func MigrateParamsStore(ctx sdk.Context, paramstore subspace) {
-	if paramstore.HasKeyTable() {
+	if !paramstore.HasKeyTable() {
 		paramstore.WithKeyTable(types.ParamKeyTable())
 	}
 	paramstore.Set(ctx, types.KeyValidatorBondFactor, types.DefaultValidatorBondFactor)

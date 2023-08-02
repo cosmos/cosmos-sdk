@@ -53,6 +53,19 @@ func TestMigrateParamsStore(t *testing.T) {
 	require.True(t, paramstore.Has(ctx, types.KeyValidatorBondFactor))
 	require.True(t, paramstore.Has(ctx, types.KeyGlobalLiquidStakingCap))
 	require.True(t, paramstore.Has(ctx, types.KeyValidatorLiquidStakingCap))
+
+	// Confirm default values are set
+	var validatorBondFactor sdk.Dec
+	paramstore.Get(ctx, types.KeyValidatorBondFactor, &validatorBondFactor)
+	require.Equal(t, types.DefaultValidatorBondFactor, validatorBondFactor)
+
+	var globalLiquidStakingCap sdk.Dec
+	paramstore.Get(ctx, types.KeyGlobalLiquidStakingCap, &globalLiquidStakingCap)
+	require.Equal(t, types.DefaultGlobalLiquidStakingCap, globalLiquidStakingCap)
+
+	var validatorLiquidStakingCap sdk.Dec
+	paramstore.Get(ctx, types.KeyValidatorLiquidStakingCap, &validatorLiquidStakingCap)
+	require.Equal(t, types.DefaultValidatorLiquidStakingCap, validatorLiquidStakingCap)
 }
 
 // Test setting each validator's TotalValidatorBondShares and TotalLiquidShares to 0

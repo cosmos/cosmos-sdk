@@ -45,7 +45,7 @@ func (db *Database) Close() error {
 	return nil
 }
 
-func (db *Database) GetSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
 	return db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
@@ -74,7 +74,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	slice, err := db.GetSlice(storeKey, version, key)
+	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
 	}
@@ -83,7 +83,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	slice, err := db.GetSlice(storeKey, version, key)
+	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
 	}
@@ -131,19 +131,19 @@ func (db *Database) NewBatch(version uint64) store.Batch {
 	return NewBatch(db, version)
 }
 
-func (db *Database) NewIterator(storeKey string, version uint64) store.Iterator {
-	panic("not implemented!")
+func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	prefix := storePrefix(storeKey)
+	start, end = iterateWithPrefix(prefix, start, end)
+
+	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
+	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) NewStartIterator(storeKey string, version uint64, start []byte) store.Iterator {
-	panic("not implemented!")
-}
-
-func (db *Database) NewEndIterator(storeKey string, version uint64, start []byte) store.Iterator {
-	panic("not implemented!")
-}
-
-func (db *Database) NewPrefixIterator(storeKey string, version uint64, prefix []byte) store.Iterator {
+func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	panic("not implemented!")
 }
 
@@ -186,4 +186,54 @@ func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 	copy(v, s.Data())
 
 	return v
+}
+
+func cloneAppend(bz []byte, tail []byte) (res []byte) {
+	res = make([]byte, len(bz)+len(tail))
+
+	copy(res, bz)
+	copy(res[len(bz):], tail)
+
+	return res
+}
+
+func copyIncr(bz []byte) []byte {
+	if len(bz) == 0 {
+		panic("copyIncr expects non-zero bz length")
+	}
+
+	ret := make([]byte, len(bz))
+	copy(ret, bz)
+
+	for i := len(bz) - 1; i >= 0; i-- {
+		if ret[i] < byte(0xFF) {
+			ret[i]++
+			return ret
+		}
+
+		ret[i] = byte(0x00)
+
+		if i == 0 {
+			// overflow
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func iterateWithPrefix(prefix, begin, end []byte) ([]byte, []byte) {
+	if len(prefix) == 0 {
+		return begin, end
+	}
+
+	begin = cloneAppend(prefix, begin)
+
+	if end == nil {
+		end = copyIncr(prefix)
+	} else {
+		end = cloneAppend(prefix, end)
+	}
+
+	return begin, end
 }

@@ -2,10 +2,13 @@ package store
 
 // Iterator ...
 type Iterator interface {
-	// Next moves the iterator to the next key/value pair. It returns whether
-	// the iterator successfully moved to a new key/value pair. The iterator may
-	// return false if the underlying database has been closed before the iteration
-	// has completed, in which case future calls to Error() must return ErrClosed.
+	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
+	Domain() ([]byte, []byte)
+
+	// Valid returns if the iterator is currently valid.
+	Valid() bool
+
+	// Next moves the iterator to the next key/value pair.
 	Next() bool
 
 	// Error returns any accumulated error. Error() should be called after all
@@ -25,26 +28,11 @@ type Iterator interface {
 
 // IteratorCreator ...
 type IteratorCreator interface {
-	// NewIterator creates an iterator over the entire key space contained within
-	// the backing key-value database.
-	NewIterator(storeKey string) Iterator
-
-	// NewStartIterator creates an iterator over a subset of a database key space
-	// starting at a particular key.
-	NewStartIterator(storeKey string, start []byte) Iterator
-
-	// NewEndIterator creates an iterator over a subset of a database key space
-	// ending at a particular key.
-	NewEndIterator(storeKey string, start []byte) Iterator
-
-	// NewPrefixIterator creates an iterator over a subset of a database key space
-	// with a particular key prefix.
-	NewPrefixIterator(storeKey string, prefix []byte) Iterator
+	NewIterator(storeKey string, start, end []byte) (Iterator, error)
+	NewReverseIterator(storeKey string, start, end []byte) (Iterator, error)
 }
 
 type VersionedIteratorCreator interface {
-	NewIterator(storeKey string, version uint64) Iterator
-	NewStartIterator(storeKey string, version uint64, start []byte) Iterator
-	NewEndIterator(storeKey string, version uint64, start []byte) Iterator
-	NewPrefixIterator(storeKey string, version uint64, prefix []byte) Iterator
+	NewIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	NewReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
 }

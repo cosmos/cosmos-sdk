@@ -203,18 +203,10 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return db.vdb.GetLatestVersion()
 }
 
-func (db *Database) NewIterator(storekey string, version uint64) store.Iterator {
-	panic("not implemented")
+func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+	panic("not implemented!")
 }
 
-func (db *Database) NewStartIterator(storekey string, version uint64, start []byte) store.Iterator {
-	panic("not implemented")
-}
-
-func (db *Database) NewEndIterator(storekey string, version uint64, start []byte) store.Iterator {
-	panic("not implemented")
-}
-
-func (db *Database) NewPrefixIterator(storekey string, version uint64, prefix []byte) store.Iterator {
-	panic("not implemented")
+func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+	panic("not implemented!")
 }

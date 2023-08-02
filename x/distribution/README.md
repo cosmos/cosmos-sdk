@@ -356,18 +356,18 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
     return err
   }
 
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return err
-	}
+  feePool, err := k.FeePool.Get(ctx)
+  if err != nil {
+    return err
+  }
 
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
+  feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
 	
   if err := k.FeePool.Set(ctx, feePool); err != nil {
     return err
   }
 
-	return nil
+  return nil
 }
 ```
 

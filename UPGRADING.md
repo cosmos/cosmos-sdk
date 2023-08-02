@@ -163,7 +163,9 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 
 #### Logger
 
-`depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+Replace all your CometBFT logger imports by `cosmossdk.io/log`.
+
+Additionally, `depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(

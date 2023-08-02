@@ -29,7 +29,7 @@ The newly introduced ABCI method `ProcessProposal` is called after a node receiv
 
 Nevertheless, synchronously executing the proposal preemptively would not improve block time because it would just change the order of events (so the time we would like to save will be spent at `ProcessProposal` instead of `FinalizeBlock`).
 
-Instead we need to make block execution asynchronous by starting a goroutine in `ProcessProposal` (whose termination signal is kept in the application context) and returning a response immediately. That way, the actual block execution would happen at the same time as voting. When voting finishes and `FinalizeBlock` is called, the application handler can wait for the previously started goroutine to finish, and commit the resulting cache store if the block hash matches.
+Instead, we need to make block execution asynchronous by starting a goroutine in `ProcessProposal` (whose termination signal is kept in the application context) and returning a response immediately. That way, the actual block execution would happen at the same time as voting. When voting finishes and `FinalizeBlock` is called, the application handler can wait for the previously started goroutine to finish, and commit the resulting cache store if the block hash matches.
 
 Assuming average voting period takes `P` and average block execution takes `Q`, this would reduce the average block time by `P + Q - max(P, Q)`.
 

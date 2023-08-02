@@ -13,5 +13,5 @@ var (
 	ErrDenomMetadataNotFound = sdkerrors.Register(ModuleName, 6, "client denom metadata not found")
 	ErrInvalidKey            = sdkerrors.Register(ModuleName, 7, "invalid key")
 	ErrDuplicateEntry        = sdkerrors.Register(ModuleName, 8, "duplicate entry")
-	ErrMultipleSenders       = sdkerrors.Register(ModuleName, 9, "multiple senders not allowed")
+	ErrManyToMany            = sdkerrors.Register(ModuleName, 9, "multiple senders to multiple receivers not allowed")
 )

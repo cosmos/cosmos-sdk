@@ -272,7 +272,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 			{addr3, sdk.Coins{}},
 		},
 	}
-	expErr := "multiple senders not allowed"
+	expErr := types.ErrManyToMany.Error()
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	txGen := simapp.MakeTestEncodingConfig().TxConfig

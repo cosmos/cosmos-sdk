@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -172,6 +174,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 
 	input1 := NewInput(addr1, atom123)
 	input2 := NewInput(addr1, eth123)
+	inputMulti := NewInput(addr1, atom123.Add(atom124...))
 	output1 := NewOutput(addr2, atom123)
 	output2 := NewOutput(addr2, atom124)
 	outputMulti := NewOutput(addr2, atom123eth123)
@@ -210,21 +213,28 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			true,
 			MsgMultiSend{
 				Inputs:  []Input{input1},
-				Outputs: []Output{output1},
-			},
-		},
-		{
-			false,
-			MsgMultiSend{
-				Inputs:  []Input{input1, input2}, // only 1 input allowed
-				Outputs: []Output{outputMulti},
+				Outputs: []Output{output1}, // one-to-one
 			},
 		},
 		{
 			true,
 			MsgMultiSend{
-				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdk.NewInt(2)))},
-				Outputs: []Output{output1, output1},
+				Inputs:  []Input{input1, input2},
+				Outputs: []Output{outputMulti}, // many-to-one
+			},
+		},
+		{
+			true,
+			MsgMultiSend{
+				Inputs:  []Input{inputMulti},
+				Outputs: []Output{output1, output2}, // one-to-many
+			},
+		},
+		{
+			false,
+			MsgMultiSend{
+				Inputs:  []Input{input1, input2},
+				Outputs: []Output{output1, output2}, // many-to-many not allowed
 			},
 		},
 	}
@@ -236,6 +246,219 @@ func TestMsgMultiSendValidation(t *testing.T) {
 				require.NoError(t, err, "%d: %+v", i, err)
 			} else {
 				require.Error(t, err, "%d", i)
+			}
+		})
+	}
+}
+
+func TestValidateInputsOutputs(t *testing.T) {
+	addr1 := sdk.AccAddress("_______alice________")
+	addr2 := sdk.AccAddress("________bob_________")
+	addr3 := sdk.AccAddress("_______carol________")
+	addr4 := sdk.AccAddress("_______dave_________")
+
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	tests := []struct {
+		name    string
+		inputs  []Input
+		outputs []Output
+		expErr  string
+	}{
+		{
+			name:    "no inputs",
+			inputs:  nil,
+			outputs: []Output{NewOutput(addr1, cz("123atom"))},
+			expErr:  ErrNoInputs.Error(),
+		},
+		{
+			name:    "no outputs",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: nil,
+			expErr:  ErrNoOutputs.Error(),
+		},
+		{
+			name:    "many to many",
+			inputs:  []Input{NewInput(addr1, cz("123atom")), NewInput(addr2, cz("456eth"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom")), NewOutput(addr1, cz("456eth"))},
+			expErr:  ErrManyToMany.Error(),
+		},
+		{
+			name:    "one input invalid",
+			inputs:  []Input{{Address: "nope", Coins: cz("123atom")}},
+			outputs: []Output{NewOutput(addr2, cz("123atom"))},
+			expErr:  "invalid input address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name: "three inputs: first invalid",
+			inputs: []Input{
+				{Address: "nope", Coins: cz("100atom")},
+				NewInput(addr1, cz("20atom")),
+				NewInput(addr2, cz("3atom")),
+			},
+			outputs: []Output{NewOutput(addr3, cz("123atom"))},
+			expErr:  "invalid input address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name: "three inputs: last invalid",
+			inputs: []Input{
+				NewInput(addr1, cz("100atom")),
+				NewInput(addr2, cz("20atom")),
+				{Address: "nope", Coins: cz("3atom")},
+			},
+			outputs: []Output{NewOutput(addr3, cz("123atom"))},
+			expErr:  "invalid input address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name: "negative coins in input",
+			inputs: []Input{
+				NewInput(addr1, cz("124atom")),
+				NewInput(addr1, sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdkmath.NewInt(-1)}}),
+			},
+			outputs: []Output{NewOutput(addr2, cz("123atom"))},
+			expErr:  "-1atom: invalid coins",
+		},
+		{
+			name:    "one output invalid",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{{Address: "nope", Coins: cz("123atom")}},
+			expErr:  "invalid output address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name:   "three outputs: first invalid",
+			inputs: []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{
+				{Address: "nope", Coins: cz("100atom")},
+				NewOutput(addr2, cz("20atom")),
+				NewOutput(addr3, cz("3atom")),
+			},
+			expErr: "invalid output address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name:   "three outputs: last invalid",
+			inputs: []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{
+				NewOutput(addr2, cz("100atom")),
+				NewOutput(addr3, cz("20atom")),
+				{Address: "nope", Coins: cz("3atom")},
+			},
+			expErr: "invalid output address: decoding bech32 failed: invalid bech32 string length 4: invalid address",
+		},
+		{
+			name:   "negative coins in output",
+			inputs: []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{
+				NewOutput(addr2, cz("124atom")),
+				NewOutput(addr3, sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdkmath.NewInt(-1)}}),
+			},
+			expErr: "-1atom: invalid coins",
+		},
+		{
+			name:    "amount mismatch one denom too much input",
+			inputs:  []Input{NewInput(addr1, cz("124atom"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch one denom too much output",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{NewOutput(addr2, cz("124atom"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch different denoms",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{NewOutput(addr2, cz("123eth"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch input has extra denom",
+			inputs:  []Input{NewInput(addr1, cz("123atom,123eth"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch output has extra denom",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom,123eth"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch first denom okay second not",
+			inputs:  []Input{NewInput(addr1, cz("123atom,124eth"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom,123eth"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch second denom okay first not",
+			inputs:  []Input{NewInput(addr1, cz("124atom,123eth"))},
+			outputs: []Output{NewOutput(addr2, cz("123atom,123eth"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "amount mismatch two denoms in each but different denoms",
+			inputs:  []Input{NewInput(addr1, cz("123atom")), NewInput(addr2, cz("321eth"))},
+			outputs: []Output{NewOutput(addr3, cz("123atom,321esh"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:   "one to three amount mismatch",
+			inputs: []Input{NewInput(addr1, cz("124atom,123eth"))},
+			outputs: []Output{
+				NewOutput(addr2, cz("100atom,3eth")),
+				NewOutput(addr3, cz("20atom,20eth")),
+				NewOutput(addr4, cz("3atom,100eth")),
+			},
+			expErr: ErrInputOutputMismatch.Error(),
+		},
+		{
+			name: "three to one amount mismatch",
+			inputs: []Input{
+				NewInput(addr1, cz("100atom,3eth")),
+				NewInput(addr2, cz("20atom,20eth")),
+				NewInput(addr3, cz("4atom,100eth")),
+			},
+			outputs: []Output{NewOutput(addr4, cz("123atom,123eth"))},
+			expErr:  ErrInputOutputMismatch.Error(),
+		},
+		{
+			name:    "one to one okay",
+			inputs:  []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{NewOutput(addr1, cz("123atom"))},
+		},
+		{
+			name:   "one to many okay",
+			inputs: []Input{NewInput(addr1, cz("123atom"))},
+			outputs: []Output{
+				NewOutput(addr2, cz("100atom")),
+				NewOutput(addr3, cz("20atom")),
+				NewOutput(addr4, cz("3atom")),
+			},
+		},
+		{
+			name: "many to one okay",
+			inputs: []Input{
+				NewInput(addr1, cz("100atom")),
+				NewInput(addr2, cz("20atom")),
+				NewInput(addr3, cz("3atom")),
+			},
+			outputs: []Output{NewOutput(addr4, cz("123atom"))},
+		},
+	}
+	//
+	// amounts mismatch
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateInputsOutputs(tc.inputs, tc.outputs)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ValidateInputsOutputs error")
+			} else {
+				assert.NoError(t, err, "ValidateInputsOutputs error")
 			}
 		})
 	}

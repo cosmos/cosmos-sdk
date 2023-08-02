@@ -359,7 +359,7 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
 
-	inputs := types.Input{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))}
+	inputs := []types.Input{{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))}}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
@@ -388,16 +388,16 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
 	app.AccountKeeper.SetAccount(ctx, acc3)
 
-	input := types.Input{
-		Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
+	inputs := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, input, []types.Output{}))
-	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
@@ -409,8 +409,8 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
-	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, insufficientInput, insufficientOutputs))
-	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, []types.Input{insufficientInput}, insufficientOutputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
@@ -431,6 +431,9 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 		amt      sdk.Coins
 	}
 	var actualRestrictionArgs []*restrictionArgs
+	// restrictionError creates a new SendRestrictionFn that records the args
+	// provided to it and returns the 1st provided message on the 1st call, etc.
+	// A "" message returns nil. Any extra calls return nil.
 	restrictionError := func(messages ...string) types.SendRestrictionFn {
 		i := -1
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
@@ -449,6 +452,8 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			return toAddr, nil
 		}
 	}
+	// restrictionPassthrough creates a new SendRestrictionFn that records the args
+	// provided to it and returns the provided toAddr without an error.
 	restrictionPassthrough := func() types.SendRestrictionFn {
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 			actualRestrictionArgs = append(actualRestrictionArgs, &restrictionArgs{
@@ -460,6 +465,9 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			return toAddr, nil
 		}
 	}
+	// restrictionError creates a new SendRestrictionFn that records the args
+	// provided to it and returns the 1st newToAddrs on the 1st call, etc.
+	// An empty address returns the toAddr. Any extra calls return the toAddr.
 	restrictionNewTo := func(newToAddrs ...sdk.AccAddress) types.SendRestrictionFn {
 		i := -1
 		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
@@ -479,148 +487,260 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 		}
 	}
 	type expBals struct {
-		from sdk.Coins
-		to1  sdk.Coins
-		to2  sdk.Coins
+		from1 sdk.Coins
+		from2 sdk.Coins
+		to1   sdk.Coins
+		to2   sdk.Coins
 	}
 
 	app, setupCtx := suite.app, suite.ctx
 
-	addr1 := sdk.AccAddress("addr1_iocoinsr______")
-	addr2 := sdk.AccAddress("addr2_iocoinsr______")
-	addr3 := sdk.AccAddress("addr3_iocoinsr______")
+	fromAddr1 := sdk.AccAddress("fromAddr1_iocoinsr__")
+	fromAddr2 := sdk.AccAddress("fromAddr2_iocoinsr__")
+	toAddr1 := sdk.AccAddress("toAddr1_iocoinsr______")
+	toAddr2 := sdk.AccAddress("toAddr2_iocoinsr______")
 
 	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
-	fromAddr := addr1
-	toAddr1 := addr2
-	toAddr2 := addr3
 
-	acc1 := app.AccountKeeper.NewAccountWithAddress(setupCtx, addr1)
-	app.AccountKeeper.SetAccount(setupCtx, acc1)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, setupCtx, addr1, balances))
-	acc2 := app.AccountKeeper.NewAccountWithAddress(setupCtx, addr2)
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, setupCtx, fromAddr1, balances), "FundAccount fromAddr1")
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, setupCtx, fromAddr2, balances), "FundAccount fromAddr2")
+	acc2 := app.AccountKeeper.NewAccountWithAddress(setupCtx, toAddr1)
 	app.AccountKeeper.SetAccount(setupCtx, acc2)
-	acc3 := app.AccountKeeper.NewAccountWithAddress(setupCtx, addr3)
+	acc3 := app.AccountKeeper.NewAccountWithAddress(setupCtx, toAddr2)
 	app.AccountKeeper.SetAccount(setupCtx, acc3)
 
 	tests := []struct {
-		name        string
-		fn          types.SendRestrictionFn
-		inputCoins  sdk.Coins
-		outputs     []types.Output
-		outputAddrs []sdk.AccAddress
-		expArgs     []*restrictionArgs
-		expErr      string
-		expBals     expBals
+		name    string
+		fn      types.SendRestrictionFn
+		inputs  []types.Input
+		outputs []types.Output
+		expArgs []*restrictionArgs
+		expErr  string
+		expBals expBals
 	}{
 		{
-			name:        "nil restriction",
-			fn:          nil,
-			inputCoins:  sdk.NewCoins(newFooCoin(5)),
-			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(5))}},
-			outputAddrs: []sdk.AccAddress{toAddr1},
+			name:    "nil restriction",
+			fn:      nil,
+			inputs:  []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(5)))},
+			outputs: []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(5))}},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(995), newBarCoin(500)),
-				to1:  sdk.NewCoins(newFooCoin(5)),
-				to2:  sdk.Coins{},
+				from1: sdk.NewCoins(newFooCoin(995), newBarCoin(500)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(5)),
+				to2:   sdk.Coins{},
 			},
 		},
 		{
-			name:        "passthrough restriction single output",
-			fn:          restrictionPassthrough(),
-			inputCoins:  sdk.NewCoins(newFooCoin(10)),
-			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(10))}},
-			outputAddrs: []sdk.AccAddress{toAddr1},
-			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(10))}},
+			name:    "passthrough restriction single output",
+			fn:      restrictionPassthrough(),
+			inputs:  []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(10)))},
+			outputs: []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(10))}},
+			expArgs: []*restrictionArgs{{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(10))}},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(985), newBarCoin(500)),
-				to1:  sdk.NewCoins(newFooCoin(15)),
-				to2:  sdk.Coins{},
+				from1: sdk.NewCoins(newFooCoin(985), newBarCoin(500)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(15)),
+				to2:   sdk.Coins{},
 			},
 		},
 		{
-			name:        "new to restriction single output",
-			fn:          restrictionNewTo(toAddr2),
-			inputCoins:  sdk.NewCoins(newFooCoin(26)),
-			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(26))}},
-			outputAddrs: []sdk.AccAddress{toAddr2},
-			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(26))}},
+			name:    "new to restriction single output",
+			fn:      restrictionNewTo(toAddr2),
+			inputs:  []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(26)))},
+			outputs: []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(26))}},
+			expArgs: []*restrictionArgs{{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(26))}},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
-				to1:  sdk.NewCoins(newFooCoin(15)),
-				to2:  sdk.NewCoins(newFooCoin(26)),
+				from1: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(15)),
+				to2:   sdk.NewCoins(newFooCoin(26)),
 			},
 		},
 		{
-			name:        "error restriction single output",
-			fn:          restrictionError("restriction test error"),
-			inputCoins:  sdk.NewCoins(newBarCoin(88)),
-			outputs:     []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newBarCoin(88))}},
-			outputAddrs: []sdk.AccAddress{},
-			expArgs:     []*restrictionArgs{{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(88))}},
-			expErr:      "restriction test error",
+			name:    "error restriction single output",
+			fn:      restrictionError("restriction test error"),
+			inputs:  []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newBarCoin(88)))},
+			outputs: []types.Output{{Address: toAddr1.String(), Coins: sdk.NewCoins(newBarCoin(88))}},
+			expArgs: []*restrictionArgs{{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(88))}},
+			expErr:  "restriction test error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
-				to1:  sdk.NewCoins(newFooCoin(15)),
-				to2:  sdk.NewCoins(newFooCoin(26)),
+				from1: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(15)),
+				to2:   sdk.NewCoins(newFooCoin(26)),
 			},
 		},
 		{
-			name:       "passthrough restriction two outputs",
-			fn:         restrictionPassthrough(),
-			inputCoins: sdk.NewCoins(newFooCoin(11), newBarCoin(12)),
+			name:   "passthrough restriction two outputs",
+			fn:     restrictionPassthrough(),
+			inputs: []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(11), newBarCoin(12)))},
 			outputs: []types.Output{
 				{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(11))},
 				{Address: toAddr2.String(), Coins: sdk.NewCoins(newBarCoin(12))},
 			},
-			outputAddrs: []sdk.AccAddress{toAddr1, toAddr2},
 			expArgs: []*restrictionArgs{
-				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
-				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(12))},
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
+				{fromAddr: fromAddr1, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(12))},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
-				to1:  sdk.NewCoins(newFooCoin(26)),
-				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
+				from1: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(26)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
 		},
 		{
-			name:       "error restriction two outputs error on second",
-			fn:         restrictionError("", "second restriction error"),
-			inputCoins: sdk.NewCoins(newFooCoin(44)),
+			name:   "error restriction two outputs error on second",
+			fn:     restrictionError("", "second restriction error"),
+			inputs: []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(44)))},
 			outputs: []types.Output{
 				{Address: toAddr1.String(), Coins: sdk.NewCoins(newFooCoin(12))},
 				{Address: toAddr2.String(), Coins: sdk.NewCoins(newFooCoin(32))},
 			},
-			outputAddrs: []sdk.AccAddress{toAddr1},
 			expArgs: []*restrictionArgs{
-				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(12))},
-				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newFooCoin(32))},
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(12))},
+				{fromAddr: fromAddr1, toAddr: toAddr2, amt: sdk.NewCoins(newFooCoin(32))},
 			},
 			expErr: "second restriction error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
-				to1:  sdk.NewCoins(newFooCoin(26)),
-				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
+				from1: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(26)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
 		},
 		{
-			name:       "new to restriction two outputs",
-			fn:         restrictionNewTo(toAddr2, toAddr1),
-			inputCoins: sdk.NewCoins(newBarCoin(35)),
+			name:   "new to restriction two outputs",
+			fn:     restrictionNewTo(toAddr2, toAddr1),
+			inputs: []types.Input{types.NewInput(fromAddr1, sdk.NewCoins(newBarCoin(35)))},
 			outputs: []types.Output{
 				{Address: toAddr1.String(), Coins: sdk.NewCoins(newBarCoin(10))},
 				{Address: toAddr2.String(), Coins: sdk.NewCoins(newBarCoin(25))},
 			},
-			outputAddrs: []sdk.AccAddress{toAddr1, toAddr2},
 			expArgs: []*restrictionArgs{
-				{fromAddr: fromAddr, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(10))},
-				{fromAddr: fromAddr, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(25))},
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(10))},
+				{fromAddr: fromAddr1, toAddr: toAddr2, amt: sdk.NewCoins(newBarCoin(25))},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(453)),
-				to1:  sdk.NewCoins(newFooCoin(26), newBarCoin(25)),
-				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
+				from1: sdk.NewCoins(newFooCoin(948), newBarCoin(453)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(500)),
+				to1:   sdk.NewCoins(newFooCoin(26), newBarCoin(25)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
+			},
+		},
+		{
+			name: "passthrough restriction two inputs",
+			fn:   restrictionPassthrough(),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(11))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newBarCoin(13))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(11), newBarCoin(13)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
+				{fromAddr: fromAddr2, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(13))},
+			},
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(937), newBarCoin(453)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(487)),
+				to1:   sdk.NewCoins(newFooCoin(37), newBarCoin(38)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
+			},
+		},
+		{
+			name: "error restriction two inputs error on first",
+			fn:   restrictionError("first restriction error"),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(11))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newBarCoin(13))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(11), newBarCoin(13)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
+			},
+			expErr: "first restriction error",
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(937), newBarCoin(453)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(487)),
+				to1:   sdk.NewCoins(newFooCoin(37), newBarCoin(38)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
+			},
+		},
+		{
+			name: "error restriction two inputs error on second",
+			fn:   restrictionError("", "second restriction error"),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(11))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newBarCoin(13))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(11), newBarCoin(13)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(11))},
+				{fromAddr: fromAddr2, toAddr: toAddr1, amt: sdk.NewCoins(newBarCoin(13))},
+			},
+			expErr: "second restriction error",
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(937), newBarCoin(453)),
+				from2: sdk.NewCoins(newFooCoin(1000), newBarCoin(487)),
+				to1:   sdk.NewCoins(newFooCoin(37), newBarCoin(38)),
+				to2:   sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
+			},
+		},
+		{
+			name: "new to restriction two inputs change first",
+			fn:   restrictionNewTo(toAddr2),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(37), newBarCoin(53))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newFooCoin(111), newBarCoin(87))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(148), newBarCoin(140)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(37), newBarCoin(53))},
+				{fromAddr: fromAddr2, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(111), newBarCoin(87))},
+			},
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(900), newBarCoin(400)),
+				from2: sdk.NewCoins(newFooCoin(889), newBarCoin(400)),
+				to1:   sdk.NewCoins(newFooCoin(148), newBarCoin(125)),
+				to2:   sdk.NewCoins(newFooCoin(63), newBarCoin(75)),
+			},
+		},
+		{
+			name: "new to restriction two inputs change second",
+			fn:   restrictionNewTo(nil, toAddr2),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(90), newBarCoin(40))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newFooCoin(89), newBarCoin(21))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(179), newBarCoin(61)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(90), newBarCoin(40))},
+				{fromAddr: fromAddr2, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(89), newBarCoin(21))},
+			},
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(810), newBarCoin(360)),
+				from2: sdk.NewCoins(newFooCoin(800), newBarCoin(379)),
+				to1:   sdk.NewCoins(newFooCoin(238), newBarCoin(165)),
+				to2:   sdk.NewCoins(newFooCoin(152), newBarCoin(96)),
+			},
+		},
+		{
+			name: "new to restriction two inputs change both",
+			fn:   restrictionNewTo(toAddr2, toAddr2),
+			inputs: []types.Input{
+				types.NewInput(fromAddr1, sdk.NewCoins(newFooCoin(10), newBarCoin(60))),
+				types.NewInput(fromAddr2, sdk.NewCoins(newFooCoin(100), newBarCoin(79))),
+			},
+			outputs: []types.Output{types.NewOutput(toAddr1, sdk.NewCoins(newFooCoin(110), newBarCoin(139)))},
+			expArgs: []*restrictionArgs{
+				{fromAddr: fromAddr1, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(10), newBarCoin(60))},
+				{fromAddr: fromAddr2, toAddr: toAddr1, amt: sdk.NewCoins(newFooCoin(100), newBarCoin(79))},
+			},
+			expBals: expBals{
+				from1: sdk.NewCoins(newFooCoin(800), newBarCoin(300)),
+				from2: sdk.NewCoins(newFooCoin(700), newBarCoin(300)),
+				to1:   sdk.NewCoins(newFooCoin(238), newBarCoin(165)),
+				to2:   sdk.NewCoins(newFooCoin(262), newBarCoin(235)),
 			},
 		},
 	}
@@ -634,15 +754,12 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			actualRestrictionArgs = nil
 			baseKeeper.SetSendRestriction(tc.fn)
 
+			ctxTestKey := "input-output-coins-test"
 			ctx, writeCache := suite.ctx.CacheContext()
-			input := types.Input{
-				Address: fromAddr.String(),
-				Coins:   tc.inputCoins,
-			}
-
+			ctx = ctx.WithValue(ctxTestKey, tc.name)
 			var err error
 			testFunc := func() {
-				err = baseKeeper.InputOutputCoins(ctx, input, tc.outputs)
+				err = baseKeeper.InputOutputCoins(ctx, tc.inputs, tc.outputs)
 			}
 			suite.Require().NotPanics(testFunc, "InputOutputCoins")
 			if err == nil {
@@ -655,16 +772,28 @@ func (suite *IntegrationTestSuite) TestInputOutputCoinsWithRestrictions() {
 			}
 			if len(tc.expArgs) > 0 {
 				for i, expArgs := range tc.expArgs {
-					suite.Assert().Equal(ctx, actualRestrictionArgs[i].ctx, "[%d] ctx provided to restriction", i)
+					if i >= len(actualRestrictionArgs) {
+						break
+					}
+					ctxTestVal := actualRestrictionArgs[i].ctx.Value(ctxTestKey)
+					if suite.Assert().NotNil(ctxTestVal, "[%d] ctx.Value(%q) provided to restriction", i, ctxTestKey) {
+						ctxTestValStr, isStr := ctxTestVal.(string)
+						if suite.Assert().True(isStr, "[%d] can cast test value in ctx provided to restriction %v (%T) to a string", i, ctxTestVal, ctxTestVal) {
+							suite.Assert().Equal(ctxTestValStr, tc.name, "[%d] test value in the ctx provided to restriction", i)
+						}
+					}
 					suite.Assert().Equal(expArgs.fromAddr, actualRestrictionArgs[i].fromAddr, "[%d] fromAddr provided to restriction", i)
 					suite.Assert().Equal(expArgs.toAddr, actualRestrictionArgs[i].toAddr, "[%d] toAddr provided to restriction", i)
 					suite.Assert().Equal(expArgs.amt.String(), actualRestrictionArgs[i].amt.String(), "[%d] amt provided to restriction", i)
 				}
+				suite.Assert().Len(actualRestrictionArgs, len(tc.expArgs), "calls made to the restriction function")
 			} else {
 				suite.Assert().Nil(actualRestrictionArgs, "args provided to a restriction")
 			}
-			fromBal := baseKeeper.GetAllBalances(suite.ctx, fromAddr)
-			suite.Assert().Equal(tc.expBals.from.String(), fromBal.String(), "fromAddr balance")
+			from1Bal := baseKeeper.GetAllBalances(suite.ctx, fromAddr1)
+			suite.Assert().Equal(tc.expBals.from1.String(), from1Bal.String(), "fromAddr1 balance")
+			from2Bal := baseKeeper.GetAllBalances(suite.ctx, fromAddr2)
+			suite.Assert().Equal(tc.expBals.from2.String(), from2Bal.String(), "fromAddr2 balance")
 			to1Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr1)
 			suite.Assert().Equal(tc.expBals.to1.String(), to1Bal.String(), "toAddr1 balance")
 			to2Bal := baseKeeper.GetAllBalances(suite.ctx, toAddr2)
@@ -1028,8 +1157,8 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := types.Input{
-		Address: addr.String(), Coins: coins,
+	inputs := []types.Input{
+		{Address: addr.String(), Coins: coins},
 	}
 	outputs := []types.Output{
 		{Address: addr3.String(), Coins: newCoins},
@@ -1072,7 +1201,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	emF := sdk.NewEventManager()
 	ctx = ctx.WithEventManager(emF)
-	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 	events := emF.ABCIEvents()
 	if !suite.Assert().Equal(expFailEvents, events, "events after InputOutputCoins failure") {
 		suite.T().Logf("Expected Events:\n%s", strings.Join(abciEventsStrings(expFailEvents), "\n"))
@@ -1099,7 +1228,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	emS := sdk.NewEventManager()
 	ctx = ctx.WithEventManager(emS)
-	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 	events = emS.ABCIEvents()
 	if !suite.Assert().Equal(expPassEvents, events, "events after InputOutputCoins success") {
 		suite.T().Logf("Expected Events:\n%s", strings.Join(abciEventsStrings(expPassEvents), "\n"))

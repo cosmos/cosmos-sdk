@@ -110,7 +110,7 @@ type SendKeeper interface {
     PrependSendRestriction(restriction types.SendRestrictionFn)
     ClearSendRestriction()
 
-    InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
+    InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
     SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params

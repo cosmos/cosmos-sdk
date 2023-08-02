@@ -156,13 +156,13 @@ func (s *SendRestrictionTestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn
 	s.ReqOKAddPermSanct("sanctionedAddr", sanctionedAddr)
 
 	// Do an InputOutputCoins from the sanctioned address to the others.
-	input := banktypes.Input{Address: sanctionedAddr.String(), Coins: cz(6_000)}
+	inputs := []banktypes.Input{{Address: sanctionedAddr.String(), Coins: cz(6_000)}}
 	outputs := []banktypes.Output{
 		{Address: otherAddr1.String(), Coins: cz(1_000)},
 		{Address: otherAddr2.String(), Coins: cz(2_000)},
 		{Address: otherAddr3.String(), Coins: cz(3_000)},
 	}
-	err := s.App.BankKeeper.InputOutputCoins(s.SdkCtx, input, outputs)
+	err := s.App.BankKeeper.InputOutputCoins(s.SdkCtx, inputs, outputs)
 
 	s.Run("error is as expected", func() {
 		exp := "cannot send from " + sanctionedAddr.String() + ": account is sanctioned"

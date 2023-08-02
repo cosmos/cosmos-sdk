@@ -229,14 +229,14 @@ func (s *TestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn() {
 	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.addr5, cz(888)), "FundAccount addr5 888%s", denom)
 
 	// Do an InputOutputCoins from 5 to 1, 2, 3, and 4.
-	input := banktypes.Input{Address: s.addr5.String(), Coins: cz(322)}
+	inputs := []banktypes.Input{{Address: s.addr5.String(), Coins: cz(322)}}
 	outputs := []banktypes.Output{
 		{Address: s.addr1.String(), Coins: cz(33)},
 		{Address: s.addr2.String(), Coins: cz(55)},
 		{Address: s.addr3.String(), Coins: cz(89)},
 		{Address: s.addr4.String(), Coins: cz(145)},
 	}
-	s.Require().NoError(s.app.BankKeeper.InputOutputCoins(s.sdkCtx, input, outputs), "InputOutputCoins")
+	s.Require().NoError(s.app.BankKeeper.InputOutputCoins(s.sdkCtx, inputs, outputs), "InputOutputCoins")
 
 	expBalances := []struct {
 		name string

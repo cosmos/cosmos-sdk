@@ -74,21 +74,7 @@ func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {
-	// this just makes sure all the inputs and outputs are properly formatted,
-	// not that they actually have the money inside
-	if len(msg.Inputs) == 0 {
-		return ErrNoInputs
-	}
-
-	if len(msg.Inputs) != 1 {
-		return ErrMultipleSenders
-	}
-
-	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs
-	}
-
-	return ValidateInputsOutputs(msg.Inputs[0], msg.Outputs)
+	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
 }
 
 // GetSignBytes Implements Msg.
@@ -161,15 +147,32 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	}
 }
 
-// ValidateInputsOutputs validates that each respective input and output is
-// valid and that the sum of inputs is equal to the sum of outputs.
-func ValidateInputsOutputs(input Input, outputs []Output) error {
+// ValidateInputsOutputs validates that:
+// - There's at least one input.
+// - There's at least one output.
+// - There's either exactly one input or exactly one output.
+// - Each respective input and output is valid.
+// - The sum of inputs equals the sum of outputs.
+func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
+	if len(inputs) == 0 {
+		return ErrNoInputs
+	}
+	if len(outputs) == 0 {
+		return ErrNoOutputs
+	}
+	if len(inputs) != 1 && len(outputs) != 1 {
+		return ErrManyToMany
+	}
+
 	var totalIn, totalOut sdk.Coins
 
-	if err := input.ValidateBasic(); err != nil {
-		return err
+	for _, input := range inputs {
+		if err := input.ValidateBasic(); err != nil {
+			return err
+		}
+
+		totalIn = totalIn.Add(input.Coins...)
 	}
-	totalIn = input.Coins
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
@@ -179,9 +182,16 @@ func ValidateInputsOutputs(input Input, outputs []Output) error {
 		totalOut = totalOut.Add(out.Coins...)
 	}
 
-	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
+	// The coins.IsEqual(coins) function panics if both have the same number of denoms,
+	// but they're different. We don't want the panic here, so check the coins manually.
+	// Assume that .Add returns sorted Coins.
+	if len(totalIn) != len(totalOut) {
 		return ErrInputOutputMismatch
+	}
+	for i, coinIn := range totalIn {
+		if coinIn.Denom != totalOut[i].Denom || !coinIn.Amount.Equal(totalOut[i].Amount) {
+			return ErrInputOutputMismatch
+		}
 	}
 
 	return nil

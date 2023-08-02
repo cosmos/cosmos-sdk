@@ -49,7 +49,7 @@ var (
 	// Deprecated: exists only for state compatibility reasons, should not be
 	// used for new storage keys using []byte. Please use the BytesKey provided
 	// in the collections package.
-	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{}
+	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
 type addressUnion interface {

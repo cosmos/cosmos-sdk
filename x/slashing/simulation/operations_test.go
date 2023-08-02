@@ -159,12 +159,13 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	validator0, err := getTestingValidator0(ctx, suite.stakingKeeper, suite.accounts)
 	suite.Require().NoError(err)
 
-	// setup validator0 by consensus address
-	err = suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
-	suite.Require().NoError(err)
-
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
+
+	// setup validator0 by consensus address
+	err = suite.stakingKeeper.ValidatorByConsensusAddress.Set(ctx, val0ConsAddress, validator0.GetOperator())
+	suite.Require().NoError(err)
+
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
 	err = suite.slashingKeeper.ValidatorSigningInfo.Set(ctx, val0ConsAddress, info)

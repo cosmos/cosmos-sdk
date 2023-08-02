@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestRevocation() {
 
 	// initial state
 	require.NoError(keeper.SetValidator(ctx, validator))
-	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
+	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validator.GetOperator()))
 	val, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.False(val.IsJailed())
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	validator := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
 	require.NoError(keeper.SetValidator(ctx, validator))
-	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
+	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validator.GetOperator()))
 
 	fraction := sdkmath.LegacyNewDecWithPrec(5, 1)
 	_, err := keeper.Slash(ctx, consAddr, 1, 10, fraction)

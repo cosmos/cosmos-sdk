@@ -779,8 +779,11 @@ func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper
 	val1, err := stakingtypes.NewValidator(valAddrs[0].String(), pks[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
+	consAddr, err := val1.GetConsAddr()
+	require.NoError(t, err)
+
 	require.NoError(t, stakingKeeper.SetValidator(ctx, val1))
-	require.NoError(t, stakingKeeper.SetValidatorByConsAddr(ctx, val1))
+	require.NoError(t, stakingKeeper.ValidatorByConsensusAddress.Set(ctx, consAddr, val1.GetOperator()))
 	require.NoError(t, stakingKeeper.SetNewValidatorByPowerIndex(ctx, val1))
 
 	_, err = stakingKeeper.Delegate(ctx, addrs[0], valTokens, stakingtypes.Unbonded, val1, true)

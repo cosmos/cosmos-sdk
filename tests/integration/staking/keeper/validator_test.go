@@ -144,7 +144,11 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	validator, _ = validator.AddTokensFromDel(valTokens)
 	assert.Equal(t, types.Unbonded, validator.Status)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
-	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, validator))
+
+	consAddr, err := validator.GetConsAddr()
+	assert.NilError(t, err)
+	assert.NilError(t, f.stakingKeeper.ValidatorByConsensusAddress.Set(f.sdkCtx, consAddr, validator.GetOperator()))
+
 	validator = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validator, true)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
 

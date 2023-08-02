@@ -37,14 +37,17 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
+
+	consAddr, err := validator.GetConsAddr()
+	require.NoError(err)
 	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByPowerIndex(ctx, validator))
-	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
+	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validator.GetOperator()))
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
-	validator, err := keeper.GetValidator(ctx, valAddr)
+	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 
@@ -54,8 +57,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
 
 	// check each store for being saved
-	consAddr, err := validator.GetConsAddr()
-	require.NoError(err)
+
 	resVal, err := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.NoError(err)
 	require.True(validator.MinEqual(&resVal))
@@ -121,7 +123,11 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// set and retrieve a record
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
-	require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[0]))
+
+	consAddr, err := validators[0].GetConsAddr()
+	require.NoError(err)
+	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validators[0].GetOperator()))
+
 	resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[0].MinEqual(&resVal))

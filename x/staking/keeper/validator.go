@@ -73,17 +73,6 @@ func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) err
 	return store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
-// SetValidatorByConsAddr sets a validator by conesensus address
-func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Validator) error {
-	consPk, err := validator.GetConsAddr()
-	if err != nil {
-		return err
-	}
-	return k.ValidatorByConsensusAddress.Set(ctx, consPk, validator.GetOperator())
-	// store := k.storeService.OpenKVStore(ctx)
-	// return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
-}
-
 // SetValidatorByPowerIndex sets a validator by power index
 func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	// jailed validators are not kept in the power index

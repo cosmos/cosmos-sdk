@@ -91,12 +91,6 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
 }
 
-// GetValidatorByConsAddrKey creates the key for the validator with pubkey
-// VALUE: validator operator address ([]byte)
-func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
-	return append(ValidatorsByConsAddrKey, address.MustLengthPrefix(addr)...)
-}
-
 // AddressFromValidatorsKey creates the validator operator address from ValidatorsKey
 func AddressFromValidatorsKey(key []byte) []byte {
 	kv.AssertKeyAtLeastLength(key, 3)

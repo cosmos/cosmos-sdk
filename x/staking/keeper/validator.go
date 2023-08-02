@@ -44,8 +44,7 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	opAddr, err := store.Get(types.GetValidatorByConsAddrKey(consAddr))
+	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
 	if err != nil {
 		return validator, err
 	}
@@ -209,7 +208,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorByConsAddrKey(valConsAddr)); err != nil {
+	if err = k.ValidatorByConsensusAddress.Remove(ctx, valConsAddr); err != nil {
 		return err
 	}
 

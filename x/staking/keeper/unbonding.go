@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,7 +47,7 @@ func (k Keeper) DeleteUnbondingIndex(ctx context.Context, id uint64) error {
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) GetUnbondingType(ctx context.Context, id uint64) (unbondingType types.UnbondingType, err error) {
 	ubdType, err := k.UnbondingType.Get(ctx, id)
-	if ubdType == 0 {
+	if errors.Is(err, collections.ErrNotFound) {
 		return unbondingType, types.ErrNoUnbondingType
 	}
 	return types.UnbondingType(ubdType), err

@@ -29,7 +29,7 @@ type keeper interface {
 // - ValidatorBondFactor
 // - GlobalLiquidStakingCap
 // - ValidatorLiquidStakingCap
-func migrateParamsStore(ctx sdk.Context, paramstore subspace) {
+func MigrateParamsStore(ctx sdk.Context, paramstore subspace) {
 	if paramstore.HasKeyTable() {
 		paramstore.WithKeyTable(types.ParamKeyTable())
 	}
@@ -39,7 +39,7 @@ func migrateParamsStore(ctx sdk.Context, paramstore subspace) {
 }
 
 // Set each validator's TotalValidatorBondShares and TotalLiquidShares to 0
-func migrateValidators(ctx sdk.Context, k keeper) {
+func MigrateValidators(ctx sdk.Context, k keeper) {
 	for _, validator := range k.GetAllValidators(ctx) {
 		validator.TotalValidatorBondShares = sdk.ZeroDec()
 		validator.TotalLiquidShares = sdk.ZeroDec()
@@ -48,7 +48,7 @@ func migrateValidators(ctx sdk.Context, k keeper) {
 }
 
 // Set each delegation's ValidatorBond field to false
-func migrateDelegations(ctx sdk.Context, k keeper) {
+func MigrateDelegations(ctx sdk.Context, k keeper) {
 	for _, delegation := range k.GetAllDelegations(ctx) {
 		delegation.ValidatorBond = false
 		k.SetDelegation(ctx, delegation)
@@ -62,13 +62,13 @@ func migrateDelegations(ctx sdk.Context, k keeper) {
 //   - Calculating the total liquid staked by summing the delegations from ICA accounts
 func MigrateStore(ctx sdk.Context, k keeper, paramstore subspace) error {
 	ctx.Logger().Info("Staking LSM Migration: Migrating param store")
-	migrateParamsStore(ctx, paramstore)
+	MigrateParamsStore(ctx, paramstore)
 
 	ctx.Logger().Info("Staking LSM Migration: Migrating validators")
-	migrateValidators(ctx, k)
+	MigrateValidators(ctx, k)
 
 	ctx.Logger().Info("Staking LSM Migration: Migrating delegations")
-	migrateDelegations(ctx, k)
+	MigrateDelegations(ctx, k)
 
 	ctx.Logger().Info("Staking LSM Migration: Calculating total liquid staked")
 	return k.RefreshTotalLiquidStaked(ctx)

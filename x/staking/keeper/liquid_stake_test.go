@@ -1008,8 +1008,8 @@ func TestTokenizeShareAuthorizationQueue(t *testing.T) {
 	require.Equal(t, expectedUnlockedAddresses["10"], actualAddresses, "addresses unlocked from time 10")
 }
 
-// Test CalculateTotalLiquidStaked
-func TestCalculateTotalLiquidStaked(t *testing.T) {
+// Test RefreshTotalLiquidStaked
+func TestRefreshTotalLiquidStaked(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh

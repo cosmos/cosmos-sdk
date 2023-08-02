@@ -5,6 +5,12 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Migration to Collections
+
+Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
+Many functions have been removed due to this changes as the API can be smaller thanks to collections.
+For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
 ### Migration to CometBFT (Part 2)
@@ -27,7 +33,7 @@ For backward compatibility, the `**/tendermint/**` gRPC services are still suppo
 Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
-* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
+* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
 
 #### Enable Vote Extensions
 
@@ -81,7 +87,10 @@ to `BeginBlock` or `EndBlock`.
 
 ### Config files
 
-A new tool has been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+Confix is a new SDK tool for modifying and migrating configuration of the SDK.
+It is the replacement of the `config.Cmd` command from the `client/config` package.
+
+Use the following command to migrate your configuration:
 
 ```bash
 simd config migrate v0.50
@@ -97,15 +106,13 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 #### Database Support
 
-ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
-
-**TODO: talk about db migration tool.**
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use a database migration tool.
 
 ### Protobuf
 
-With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+With the deprecation of the Amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
-For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/rapidgen/rapidgen.go#L102) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/tx/aminojson/aminojson_test.go#L94).
 
 **TODO: summarize proto annotation requirements.**
 
@@ -117,7 +124,7 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
-These changes are directly applicable to your application wiring.
+**These changes are directly applicable to your application wiring.**
 
 #### Module Assertions
 

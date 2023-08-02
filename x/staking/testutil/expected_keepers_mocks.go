@@ -15,43 +15,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockDistributionKeeper is a mock of DistributionKeeper interface.
-type MockDistributionKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockDistributionKeeperMockRecorder
-}
-
-// MockDistributionKeeperMockRecorder is the mock recorder for MockDistributionKeeper.
-type MockDistributionKeeperMockRecorder struct {
-	mock *MockDistributionKeeper
-}
-
-// NewMockDistributionKeeper creates a new mock instance.
-func NewMockDistributionKeeper(ctrl *gomock.Controller) *MockDistributionKeeper {
-	mock := &MockDistributionKeeper{ctrl: ctrl}
-	mock.recorder = &MockDistributionKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
-	return m.recorder
-}
-
-// GetValidatorOutstandingRewardsCoins mocks base method.
-func (m *MockDistributionKeeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val types.ValAddress) types.DecCoins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValidatorOutstandingRewardsCoins", ctx, val)
-	ret0, _ := ret[0].(types.DecCoins)
-	return ret0
-}
-
-// GetValidatorOutstandingRewardsCoins indicates an expected call of GetValidatorOutstandingRewardsCoins.
-func (mr *MockDistributionKeeperMockRecorder) GetValidatorOutstandingRewardsCoins(ctx, val interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorOutstandingRewardsCoins", reflect.TypeOf((*MockDistributionKeeper)(nil).GetValidatorOutstandingRewardsCoins), ctx, val)
-}
-
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {
 	ctrl     *gomock.Controller

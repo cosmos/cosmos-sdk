@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -32,11 +33,12 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema                 collections.Schema
-	HistoricalInfo         collections.Map[uint64, types.HistoricalInfo]
-	LastTotalPower         collections.Item[math.Int]
-	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
-	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	Schema                      collections.Schema
+	HistoricalInfo              collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower              collections.Item[math.Int]
+	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -85,6 +87,12 @@ func NewKeeper(
 			"delegations_by_validator",
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
+		),
+		ValidatorByConsensusAddress: collections.NewMap(
+			sb, types.ValidatorsByConsAddrKey,
+			"validator_by_cons_addr",
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 	}
 

@@ -66,14 +66,14 @@ The execution context needs to have the following information:
 - The block proposal (`abci.RequestFinalizeBlock`)
 - Termination and completion signal for the OE goroutine
 
-The OE goroutine would run on top of a cached branch of the KVStore (which is the default behavior for `FinalizeBlock` as we only write to the underlying store once we've reached the end).
+The OE goroutine would run on top of a cached branch of the root multi-store (which is the default behavior for `FinalizeBlock` as we only write to the underlying store once we've reached the end).
 
 The OE goroutine would periodically check if a termination signal has been sent to it, and stops if so. Once the OE goroutine finishes the execution it will set the completion signal.
 
 Upon receiving a `ProcessProposal` call, the SDK would adopt the following procedure if OE is enabled:
 
 ```
-abort any running OE goroutine
+abort any running OE goroutine and wait for goroutine exit
 if height > initial height:
     set OE fields
     kick off an OP goroutine that optimistically process the proposal

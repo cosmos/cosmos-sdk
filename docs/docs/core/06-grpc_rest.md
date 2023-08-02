@@ -78,7 +78,7 @@ The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sd
 
 ## CometBFT RPC
 
-Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/master/rpc/).
+Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/main/rpc/).
 
 Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
 
@@ -86,7 +86,8 @@ Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
     * any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.Query/AllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
     * `/app/simulate`: this will simulate a transaction, and return some information such as gas used.
     * `/app/version`: this will return the application's version.
-    * `/store/{path}`: this will query the store directly.
+    * `/store/{storeName}/key`: this will directly query the named store for data associated with the key represented in the `data` parameter.
+    * `/store/{storeName}/subspace`: this will directly query the named store for key/value pairs in which the key has the value of the `data` parameter as a prefix.
     * `/p2p/filter/addr/{port}`: this will return a filtered list of the node's P2P peers by address port.
     * `/p2p/filter/id/{id}`: this will return a filtered list of the node's P2P peers by ID.
 * `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./01-transactions.md#broadcasting-the-transaction), but they all use these 3 CometBFT RPCs under the hood.

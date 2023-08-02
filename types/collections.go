@@ -155,9 +155,13 @@ func (g lengthPrefixedBytesKey) Decode(buffer []byte) (int, []byte, error) {
 	return g.DecodeNonTerminal(buffer)
 }
 
-func (g lengthPrefixedBytesKey) Size(key []byte) int { return g.SizeNonTerminal(key) }
+func (g lengthPrefixedBytesKey) Size(key []byte) int {
+	return g.SizeNonTerminal(key)
+}
 
-func (g lengthPrefixedBytesKey) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
+func (g lengthPrefixedBytesKey) KeyType() string {
+	return "index_key/" + g.KeyCodec.KeyType()
+}
 
 // Collection Codecs
 

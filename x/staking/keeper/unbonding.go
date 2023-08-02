@@ -51,7 +51,7 @@ func (k Keeper) GetUnbondingType(ctx context.Context, id uint64) (unbondingType 
 // SetUnbondingType sets the enum type of unbonding which is any of
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType types.UnbondingType) error {
-	return k.UnbondingType.Set(ctx, id, int64(unbondingType))
+	return k.UnbondingType.Set(ctx, id, uint64(unbondingType))
 }
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID

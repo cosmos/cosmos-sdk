@@ -96,9 +96,9 @@ func SetChainID(chainID string) func(*BaseApp) {
 }
 
 // SetOptimisticExecution enables optimistic execution.
-func SetOptimisticExecution() func(*BaseApp) {
+func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp) {
 	return func(app *BaseApp) {
-		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock)
+		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock, opts...)
 	}
 }
 

@@ -734,7 +734,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.optimisticExec.ShouldAbort() {
+	if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
 		return nil, nil
 	}
 
@@ -765,7 +765,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		}
 
 		// check after every tx if we should abort
-		if app.optimisticExec.ShouldAbort() {
+		if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
 			return nil, nil
 		}
 
@@ -782,7 +782,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	}
 
 	// check after endBlock if we should abort, to avoid propagating the result
-	if app.optimisticExec.ShouldAbort() {
+	if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
 		return nil, nil
 	}
 
@@ -808,7 +808,7 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	if app.optimisticExec.Enabled() {
+	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not

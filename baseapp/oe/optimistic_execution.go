@@ -16,6 +16,7 @@ type OptimisticExecution struct {
 	stopCh      chan struct{}
 	shouldAbort bool
 	running     bool
+	initialized bool
 
 	// we could use generics here in the future to allow other types of req/resp
 	fn            func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)
@@ -24,10 +25,23 @@ type OptimisticExecution struct {
 	err           error
 	executionTime time.Duration
 	logger        log.Logger
+
+	// debugging options
+	abortRate int // number from 0 to 100
 }
 
-func NewOptimisticExecution(logger log.Logger, fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)) *OptimisticExecution {
-	return &OptimisticExecution{logger: logger, fn: fn}
+func NewOptimisticExecution(logger log.Logger, fn func(*abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error), opts ...func(*OptimisticExecution)) *OptimisticExecution {
+	oe := &OptimisticExecution{logger: logger, fn: fn}
+	for _, opt := range opts {
+		opt(oe)
+	}
+	return oe
+}
+
+func WithAbortRate(rate int) func(*OptimisticExecution) {
+	return func(oe *OptimisticExecution) {
+		oe.abortRate = rate
+	}
 }
 
 // Reset resets the OE context. Must be called whenever we want to invalidate
@@ -42,10 +56,23 @@ func (oe *OptimisticExecution) Reset() {
 	oe.executionTime = 0
 	oe.shouldAbort = false
 	oe.running = false
+	oe.initialized = false
 }
 
 func (oe *OptimisticExecution) Enabled() bool {
 	return oe != nil
+}
+
+// Initialized returns true if the OE was initialized, meaning that it contains
+// a request and it was run or it is running.
+func (oe *OptimisticExecution) Initialized() bool {
+	if oe == nil {
+		return false
+	}
+	oe.mtx.RLock()
+	defer oe.mtx.RUnlock()
+
+	return oe.initialized
 }
 
 // Execute initializes the OE and starts it in a goroutine.
@@ -70,11 +97,13 @@ func (oe *OptimisticExecution) Execute(
 	oe.logger.Debug("OE started")
 	start := time.Now()
 	oe.running = true
+	oe.initialized = true
+
 	go func() {
 		resp, err := oe.fn(oe.request)
 		oe.mtx.Lock()
 		oe.executionTime = time.Since(start)
-		oe.logger.Debug("OE finished", "duration", oe.executionTime)
+		oe.logger.Debug("OE finished", "duration", oe.executionTime.String())
 		oe.response, oe.err = resp, err
 		oe.running = false
 		close(oe.stopCh)
@@ -91,10 +120,20 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
-	if rand.Intn(100) > 80 || !bytes.Equal(oe.request.Hash, reqHash) {
-		oe.logger.Debug("OE aborted")
+
+	if !bytes.Equal(oe.request.Hash, reqHash) {
+		oe.logger.Debug("OE aborted due to hash mismatch", "oe_hash", oe.request.Hash, "req_hash", reqHash)
 		oe.shouldAbort = true
 	}
+
+	// test abort rate
+	if oe.abortRate > 0 && !oe.shouldAbort {
+		oe.shouldAbort = rand.Intn(100) < oe.abortRate
+		if oe.shouldAbort {
+			oe.logger.Debug("OE aborted due to test abort rate")
+		}
+	}
+
 	return oe.shouldAbort
 }
 

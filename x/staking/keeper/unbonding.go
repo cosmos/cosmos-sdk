@@ -45,6 +45,9 @@ func (k Keeper) DeleteUnbondingIndex(ctx context.Context, id uint64) error {
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) GetUnbondingType(ctx context.Context, id uint64) (unbondingType types.UnbondingType, err error) {
 	ubdType, err := k.UnbondingType.Get(ctx, id)
+	if ubdType == 0 {
+		return unbondingType, types.ErrNoUnbondingType
+	}
 	return types.UnbondingType(ubdType), err
 }
 

@@ -38,20 +38,6 @@ func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
 	return m.recorder
 }
 
-// GetFeePoolCommunityCoins mocks base method.
-func (m *MockDistributionKeeper) GetFeePoolCommunityCoins(ctx context.Context) types.DecCoins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFeePoolCommunityCoins", ctx)
-	ret0, _ := ret[0].(types.DecCoins)
-	return ret0
-}
-
-// GetFeePoolCommunityCoins indicates an expected call of GetFeePoolCommunityCoins.
-func (mr *MockDistributionKeeperMockRecorder) GetFeePoolCommunityCoins(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeePoolCommunityCoins", reflect.TypeOf((*MockDistributionKeeper)(nil).GetFeePoolCommunityCoins), ctx)
-}
-
 // GetValidatorOutstandingRewardsCoins mocks base method.
 func (m *MockDistributionKeeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val types.ValAddress) types.DecCoins {
 	m.ctrl.T.Helper()

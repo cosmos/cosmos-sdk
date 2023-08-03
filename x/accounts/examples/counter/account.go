@@ -7,7 +7,7 @@ import (
 	echov1 "cosmossdk.io/api/cosmos/accounts/examples/echo/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/sdk"
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewCounter(deps *sdk.BuildDependencies) (Counter, error) {
@@ -44,9 +44,9 @@ func (a Counter) Execute(ctx context.Context, target []byte, msg proto.Message) 
 }
 
 func (a Counter) RegisterQueryHandlers(router *sdk.QueryRouter) {
-	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg counterv1.QueryCounterRequest) (counterv1.QueryCounterResponse, error) {
+	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg *counterv1.QueryCounterRequest) (*counterv1.QueryCounterResponse, error) {
 		value, err := a.GetCounterValue(ctx)
-		return counterv1.QueryCounterResponse{CounterValue: value}, err
+		return &counterv1.QueryCounterResponse{CounterValue: value}, err
 	})
 }
 

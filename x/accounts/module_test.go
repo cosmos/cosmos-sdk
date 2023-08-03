@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/x/accounts/examples/counter"
 	"cosmossdk.io/x/accounts/examples/echo"
 	"cosmossdk.io/x/accounts/tempcore/header"
-	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func TestModule(t *testing.T) {
@@ -31,25 +31,25 @@ func TestModule(t *testing.T) {
 	counterAddr, resp, err := module.Create(ctx, "counter", sender, &counterv1.MsgInit{CounterValue: 100})
 	require.NoError(t, err)
 
-	echoAddr, _, err := module.Create(ctx, "echo", sender, &types.Empty{})
+	echoAddr, _, err := module.Create(ctx, "echo", sender, &emptypb.Empty{})
 	require.NoError(t, err)
 
 	resp, err = module.Execute(ctx, sender, counterAddr, &counterv1.MsgIncreaseCounter{})
 	require.NoError(t, err)
 	require.NotNil(t, resp, "response is nil")
-	t.Log(resp.String())
+	t.Log(resp)
 
 	resp, err = module.Query(ctx, counterAddr, &counterv1.QueryCounterRequest{})
 	require.NoError(t, err)
 	require.NotNil(t, resp, "response is nil")
-	t.Log(resp.String())
+	t.Log(resp)
 
 	// test comms between accounts
 
 	resp, err = module.Execute(ctx, sender, counterAddr, &counterv1.MsgExecuteEcho{Target: echoAddr, Msg: "hello"})
 	require.NoError(t, err)
 
-	t.Log(resp.String())
+	t.Log(resp)
 }
 
 func accountDeps[H header.Header]() (header.Service[H], store.KVStoreService, context.Context) {

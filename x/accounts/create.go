@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	internalaccounts "cosmossdk.io/x/accounts/internal/accounts"
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (a Accounts[H]) Create(ctx context.Context, typ string, from []byte, msg proto.Message) ([]byte, proto.Message, error) {

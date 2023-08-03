@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (a Accounts[H]) Execute(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error) {

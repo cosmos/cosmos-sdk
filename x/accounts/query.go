@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (a Accounts[H]) Query(ctx context.Context, addr []byte, msg proto.Message) (proto.Message, error) {

@@ -45,7 +45,7 @@ func (e *ExecuteRouter) Handler() (func(ctx context.Context, msg proto.Message) 
 
 func RegisterQueryHandler[
 	Req any, Resp any, ReqP Msg[Req], RespP Msg[Resp],
-](router *QueryRouter, handler func(ctx context.Context, msg ReqP) (RespP, error)) {
+](router *QueryRouter, handler func(ctx context.Context, msg *Req) (*Resp, error)) {
 	if router.er == nil {
 		router.er = &ExecuteRouter{}
 	}
@@ -54,7 +54,7 @@ func RegisterQueryHandler[
 
 func RegisterExecuteHandler[
 	Req any, Resp any, ReqP Msg[Req], RespP Msg[Resp],
-](router *ExecuteRouter, handler func(ctx context.Context, msg ReqP) (RespP, error)) {
+](router *ExecuteRouter, handler func(ctx context.Context, msg *Req) (*Resp, error)) {
 	if router.methodsMap == nil {
 		router.methodsMap = make(map[protoreflect.FullName]func(ctx context.Context, msg proto.Message) (proto.Message, error))
 	}
@@ -63,33 +63,13 @@ func RegisterExecuteHandler[
 	if exists {
 		router.err = fmt.Errorf("method %s already registered", methodName)
 	}
-	router.methodsMap[methodName] = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
-		concreteReq, ok := msg.(ReqP)
-		if !ok {
-			return nil, fmt.Errorf("invalid message type %T, wanted: %s", msg, methodName)
-		}
 
-		resp, err := handler(ctx, concreteReq)
-		if err != nil {
-			return nil, err
-		}
-		return RespP(resp), nil
-	}
+	interfaceHandler := makeProtoHandler[Req, Resp, ReqP, RespP](handler)
+	router.methodsMap[methodName] = interfaceHandler
 }
 
-func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *InitRouter, handler func(ctx context.Context, msg Req) (Resp, error)) {
-	router.init = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
-		concreteReq, ok := msg.(ReqP)
-		if !ok {
-			return nil, fmt.Errorf("invalid message type %T, wanted: %s", msg, proto.MessageName(ReqP(new(Req))))
-		}
-
-		resp, err := handler(ctx, *concreteReq)
-		if err != nil {
-			return nil, err
-		}
-		return RespP(&resp), nil
-	}
+func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *InitRouter, handler func(ctx context.Context, msg *Req) (*Resp, error)) {
+	router.init = makeProtoHandler[Req, Resp, ReqP, RespP](handler)
 }
 
 type InitRouter struct {
@@ -103,4 +83,25 @@ func (i InitRouter) Handler() func(ctx context.Context, msg proto.Message) (prot
 		})
 	}
 	return i.init
+}
+
+func makeProtoHandler[
+	Req, Resp any, ReqP Msg[Req], RespP Msg[Resp],
+](
+	handler func(ctx context.Context, req *Req) (*Resp, error),
+) func(context.Context, proto.Message) (proto.Message, error) {
+	reqName := proto.MessageName(ReqP(new(Req)))
+	return func(ctx context.Context, req proto.Message) (proto.Message, error) {
+		concreteRequest, ok := req.(ReqP)
+		if !ok {
+			invalidReqName := proto.MessageName(req)
+			return nil, fmt.Errorf("expected request of type %s, got %s", reqName, invalidReqName)
+		}
+
+		resp, err := handler(ctx, (*Req)(concreteRequest))
+		if err != nil {
+			return nil, err
+		}
+		return RespP(resp), nil
+	}
 }

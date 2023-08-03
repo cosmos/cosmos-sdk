@@ -9,12 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DistributionKeeper expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx context.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) sdk.DecCoins
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	AddressCodec() address.Codec

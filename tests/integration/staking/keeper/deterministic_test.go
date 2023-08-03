@@ -235,19 +235,16 @@ func createAndSetValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) s
 func setValidator(t *testing.T, f *deterministicFixture, validator stakingtypes.Validator) {
 	t.Helper()
 
-	consAddr, err := validator.GetConsAddr()
-	assert.NilError(t, err)
-
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator))
-	assert.NilError(t, f.stakingKeeper.ValidatorByConsensusAddress.Set(f.ctx, consAddr, validator.GetOperator()))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
 	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins))
 
-	_, err = f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
+	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
 }
 

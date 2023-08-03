@@ -44,12 +44,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		}
 
 		// Manually set indices for the first time
-		consAddr, err := validator.GetConsAddr()
-		if err != nil {
-			panic(err)
-		}
-
-		if err := k.ValidatorByConsensusAddress.Set(ctx, consAddr, validator.GetOperator()); err != nil {
+		if err := k.SetValidatorByConsAddr(ctx, validator); err != nil {
 			panic(err)
 		}
 

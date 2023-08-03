@@ -78,19 +78,13 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val1))
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val2))
 
-	consAddr1, err := val1.GetConsAddr()
-	assert.NilError(t, err)
-
-	consAddr2, err := val2.GetConsAddr()
-	assert.NilError(t, err)
-
-	assert.NilError(t, f.stakingKeeper.ValidatorByConsensusAddress.Set(f.sdkCtx, consAddr1, val1.GetOperator()))
-	assert.NilError(t, f.stakingKeeper.ValidatorByConsensusAddress.Set(f.sdkCtx, consAddr2, val2.GetOperator()))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2))
 
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1))
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val2))
 
-	_, err = f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[0]), types.Unbonded, val1, true)
+	_, err := f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[0]), types.Unbonded, val1, true)
 	assert.NilError(t, err)
 	_, err = f.stakingKeeper.Delegate(f.sdkCtx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, powers[1]), types.Unbonded, val2, true)
 	assert.NilError(t, err)

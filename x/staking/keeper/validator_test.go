@@ -38,16 +38,14 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
 
-	consAddr, err := validator.GetConsAddr()
-	require.NoError(err)
 	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByPowerIndex(ctx, validator))
-	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validator.GetOperator()))
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
-	validator, err = keeper.GetValidator(ctx, valAddr)
+	validator, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 
@@ -57,7 +55,8 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
 
 	// check each store for being saved
-
+	consAddr, err := validator.GetConsAddr()
+	require.NoError(err)
 	resVal, err := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.NoError(err)
 	require.True(validator.MinEqual(&resVal))
@@ -123,10 +122,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	// set and retrieve a record
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
-
-	consAddr, err := validators[0].GetConsAddr()
-	require.NoError(err)
-	require.NoError(keeper.ValidatorByConsensusAddress.Set(ctx, consAddr, validators[0].GetOperator()))
+	require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[0]))
 
 	resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)

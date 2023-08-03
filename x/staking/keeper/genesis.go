@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -210,11 +212,15 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
 
-	err := k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
-		unbondingDelegations = append(unbondingDelegations, ubd)
-		return false
-	})
-	if err != nil {
+	err := k.UnbondingDelegation.Walk(
+		ctx,
+		nil,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, ubd)
+			return false, err
+		},
+	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		panic(err)
 	}
 

@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,13 +74,17 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			panic(err)
 		}
 
-		err = k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
-			for _, entry := range ubd.Entries {
-				notBonded = notBonded.Add(entry.Balance)
-			}
-			return false
-		})
-		if err != nil {
+		err = k.UnbondingDelegation.Walk(
+			ctx,
+			nil,
+			func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+				for _, entry := range ubd.Entries {
+					notBonded = notBonded.Add(entry.Balance)
+				}
+				return false, err
+			},
+		)
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 			panic(err)
 		}
 

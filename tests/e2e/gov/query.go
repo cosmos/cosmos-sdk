@@ -33,7 +33,7 @@ func (s *E2ETestSuite) TestCmdProposer() {
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
-			fmt.Sprintf("{\"proposal_id\":\"%s\",\"proposer\":\"%s\"}", "1", val.Address.String()),
+			fmt.Sprintf("{\"proposal_id\":%d,\"proposer\":\"%s\"}", 1, val.Address.String()),
 		},
 	}
 

@@ -1,11 +1,12 @@
 chains:
   - name: simapp
     type: simapp
-    image: ghcr.io/cosmos/starship-simapp:latest
+    image: ghcr.io/cosmos/simapp:latest
     numValidators: 2
     ports:
       rest: 1317
       rpc: 26657
+      grpc: 9091
       faucet: 8001
     resources:
       cpu: "0.2"

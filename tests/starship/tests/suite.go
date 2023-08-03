@@ -1,19 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 
-	dbm "github.com/cosmos/cosmos-db"
-
-	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 var (
@@ -26,8 +21,7 @@ type TestSuite struct {
 	suite.Suite
 
 	config   *Config
-	app      *simapp.SimApp
-	txConfig client.TxConfig
+	cdc      Codec
 	grpcConn *grpc.ClientConn
 }
 
@@ -42,21 +36,34 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.config = config
 
-	db := dbm.NewMemDB()
-	logger := log.NewTestLogger(s.T())
-	// todo: cannot use simapp, since it starts a server, will have to create txConfig manually
-	app := simapp.NewSimappWithCustomOptions(s.T(), false, simapp.SetupOptions{
-		Logger:  logger.With("instance", "first"),
-		DB:      db,
-		AppOpts: simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()),
-	})
-	s.app = app
-	s.txConfig = app.TxConfig()
+	//db := dbm.NewMemDB()
+	//logger := log.NewTestLogger(s.T())
+	//// todo: cannot use simapp, since it starts a server, will have to create txConfig manually
+	//app := simapp.NewSimappWithCustomOptions(s.T(), false, simapp.SetupOptions{
+	//	Logger:  logger.With("instance", "first"),
+	//	DB:      db,
+	//	AppOpts: simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()),
+	//})
+	//s.app = app
+	//s.txConfig = app.TxConfig()
+
+	//tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()))
+	//encodingConfig := params.EncodingConfig{
+	//	InterfaceRegistry: tempApp.InterfaceRegistry(),
+	//	Codec:             tempApp.AppCodec(),
+	//	TxConfig:          tempApp.TxConfig(),
+	//	Amino:             tempApp.LegacyAmino(),
+	//}
+	//
+	//s.encodingConfig = encodingConfig
+	//s.txConfig = encodingConfig.TxConfig
+
+	s.cdc = DefaultCodec()
 
 	grpcConn, err := grpc.Dial(
-		config.GetChain(chainID).GetGRPCAddr(),
+		fmt.Sprintf("0.0.0.0:%d", config.GetChain(chainID).Ports.Grpc),
 		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())))
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cdc.InterfaceRegistry).GRPCCodec())))
 	s.Require().NoError(err)
 	s.grpcConn = grpcConn
 }
@@ -64,7 +71,5 @@ func (s *TestSuite) SetupTest() {
 func (s *TestSuite) TearDownTest() {
 	s.T().Log("tearing down e2e integration test suite...")
 	err := s.grpcConn.Close()
-	if err != nil {
-		panic(err)
-	}
+	s.Require().NoError(err)
 }

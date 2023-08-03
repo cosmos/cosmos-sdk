@@ -1,11 +1,12 @@
 chains:
   - name: simapp
     type: simapp
-    image: ghcr.io/cosmos/starship-simapp:latest
+    image: ghcr.io/cosmos/simapp:latest
     numValidators: 30
     ports:
       rest: 1317
       rpc: 26657
+      grpc: 9091
       faucet: 8001
     faucet:
       # use v0.31.0-alpha.2 cosmjs-faucet for compatibility with simapp v0.47.3

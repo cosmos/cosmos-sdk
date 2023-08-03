@@ -29,15 +29,17 @@ func CreditFromFaucet(config *Config, address string) error {
 		return err
 	}
 
-	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
+	_, err = http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return err
 	}
 
 	// Check the response status code
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status code: %d", res.StatusCode)
-	}
+	// Note: ignore reponse error due to cosmjs error
+	// todo: add check for error
+	//if res.StatusCode != http.StatusOK {
+	//	return fmt.Errorf("request failed with status code: %d", res.StatusCode)
+	//}
 
 	return nil
 }

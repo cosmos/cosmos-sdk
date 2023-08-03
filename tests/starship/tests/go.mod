@@ -3,8 +3,6 @@ module github.com/cosmos-sdk/tests/starship/tests
 go 1.20
 
 replace (
-	// We always want to test against the latest version of the simapp.
-	cosmossdk.io/simapp => ../../../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
 	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
@@ -22,6 +20,7 @@ replace (
 	cosmossdk.io/errors => ../../../errors
 	cosmossdk.io/log => ../../../log
 	cosmossdk.io/math => ../../../math
+	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/store => ../../../store
 	cosmossdk.io/x/circuit => ../../../x/circuit
 	cosmossdk.io/x/evidence => ../../../x/evidence
@@ -32,6 +31,7 @@ replace (
 )
 
 require (
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
@@ -53,7 +53,6 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/collections v0.3.1-0.20230727092431-f0f777fa3cb7 // indirect
 	cosmossdk.io/core v0.9.0 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect

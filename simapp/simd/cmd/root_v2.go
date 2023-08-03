@@ -3,44 +3,26 @@
 package cmd
 
 import (
-	"errors"
-	"io"
 	"os"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
-	"github.com/cosmos/cosmos-sdk/client/debug"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/pruning"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
@@ -54,7 +36,13 @@ func NewRootCmd() *cobra.Command {
 		moduleBasicManager module.BasicManager
 	)
 
-	if err := depinject.Inject(depinject.Configs(simapp.AppConfig, depinject.Supply(log.NewNopLogger())),
+	if err := depinject.Inject(
+		depinject.Configs(simapp.AppConfig,
+			depinject.Supply(
+				log.NewNopLogger(),
+				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
+			),
+		),
 		&interfaceRegistry,
 		&appCodec,
 		&txConfig,
@@ -128,6 +116,7 @@ func NewRootCmd() *cobra.Command {
 
 	return rootCmd
 }
+<<<<<<< HEAD
 
 // initCometBFTConfig helps to override default CometBFT Config values.
 // return cmtcfg.DefaultConfig if no custom configuration is required for the application.
@@ -346,3 +335,5 @@ func appExport(
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
+=======
+>>>>>>> b61f611f0 (fix(simapp): do not create data dir at each run (#17240))

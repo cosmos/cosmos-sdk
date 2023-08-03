@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Protocol Buffers
 
-It is known that Cosmos SDK uses protocol buffers extensively, this docuemnt is meant to provide a guide on how it is used in the cosmos-sdk. 
+It is known that Cosmos SDK uses protocol buffers extensively, this document is meant to provide a guide on how it is used in the cosmos-sdk.
 
 To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.12.x`
 

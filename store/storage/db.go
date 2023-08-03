@@ -10,11 +10,13 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-// TODO: @bez
+// TODO:
 //
-// - Implement iterator methods
 // - Define and implement pruning method(s)
 // - Import/snapshot method(s)???
+// - Should we make this an interface?
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/17279
 
 // DefaultMemDBSize defines the default pre-allocation size of the in-memory
 // database used to accumulate database entries prior to committing them to disk.
@@ -125,10 +127,10 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 		return store.ErrClosed
 	}
 	if version != db.version {
-		return fmt.Errorf("expected %d, got %d: %w", store.ErrInvalidVersion, db.version, version)
+		return fmt.Errorf("expected %d, got %d: %w", db.version, version, store.ErrInvalidVersion)
 	}
 	if _, hasStoreKey := db.mem[storeKey]; !hasStoreKey {
-		return fmt.Errorf("%s: %w", store.ErrUnknownStoreKey, storeKey)
+		return fmt.Errorf("%s: %w", storeKey, store.ErrUnknownStoreKey)
 	}
 
 	db.mem[storeKey][string(key)] = dbEntry{value: slices.Clone(value), version: version}
@@ -143,10 +145,10 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 		return store.ErrClosed
 	}
 	if version != db.version {
-		return fmt.Errorf("expected %d, got %d: %w", store.ErrInvalidVersion, db.version, version)
+		return fmt.Errorf("expected %d, got %d: %w", db.version, version, store.ErrInvalidVersion)
 	}
 	if _, hasStoreKey := db.mem[storeKey]; !hasStoreKey {
-		return fmt.Errorf("%s: %w", store.ErrUnknownStoreKey, storeKey)
+		return fmt.Errorf("%s: %w", storeKey, store.ErrUnknownStoreKey)
 	}
 
 	db.mem[storeKey][string(key)] = dbEntry{delete: true, version: version}
@@ -165,6 +167,13 @@ func (db *Database) Commit() error {
 	db.reset()
 
 	return nil
+}
+
+func (db *Database) isClosed() bool {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	return db.vdb == nil
 }
 
 func (db *Database) reset() {

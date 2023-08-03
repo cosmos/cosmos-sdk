@@ -89,8 +89,9 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 }
 
 // RegisterStores registers the provided store keys.
-// This method should only be used for integrating with
-// modules which are not registered using the app config.
+// This method should only be used for registering extra stores
+// wiich is necessary for modules that not registered using the app config.
+// To be used in combination of RegisterModules.
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)
 	a.MountStores(keys...)

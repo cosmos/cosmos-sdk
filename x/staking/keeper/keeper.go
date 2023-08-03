@@ -38,6 +38,7 @@ type Keeper struct {
 	LastTotalPower              collections.Item[math.Int]
 	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
 	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingID                 collections.Sequence
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	UnbondingType               collections.Map[uint64, uint64]
 }
@@ -89,6 +90,7 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
+		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
 		ValidatorByConsensusAddress: collections.NewMap(
 			sb, types.ValidatorsByConsAddrKey,
 			"validator_by_cons_addr",

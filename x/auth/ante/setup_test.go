@@ -3,13 +3,50 @@ package ante_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/stretchr/testify/require"
 )
+
+func TestSetupDecorator_BlockMaxGas(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	require.NoError(t, suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(101)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	require.NoError(t, err)
+
+	sud := ante.NewSetUpContextDecorator()
+	antehandler := sdk.ChainAnteDecorators(sud)
+
+	suite.ctx = suite.ctx.
+		WithBlockHeight(1).
+		WithGasMeter(storetypes.NewGasMeter(0)).
+		WithConsensusParams(&tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
+				MaxGas: 100,
+			},
+		})
+
+	_, err = antehandler(suite.ctx, tx, false)
+	require.Error(t, err)
+}
 
 func TestSetup(t *testing.T) {
 	suite := SetupTestSuite(t, true)

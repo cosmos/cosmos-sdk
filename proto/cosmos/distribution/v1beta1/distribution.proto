@@ -143,6 +143,17 @@ message DelegationDelegatorReward {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
+// TokenizeShareRecordReward represents the properties of tokenize share
+message TokenizeShareRecordReward {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64 record_id = 1;
+
+  repeated cosmos.base.v1beta1.DecCoin reward = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
 // with a deposit
 message CommunityPoolSpendProposalWithDeposit {

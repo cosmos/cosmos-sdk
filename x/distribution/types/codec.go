@@ -17,6 +17,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
 	cdc.RegisterConcrete(&MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool", nil)
 	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
+	cdc.RegisterConcrete(&MsgWithdrawTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawTokenizeReward", nil)
+	cdc.RegisterConcrete(&MsgWithdrawAllTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawAllTokenizeReward", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -26,6 +28,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgWithdrawValidatorCommission{},
 		&MsgSetWithdrawAddress{},
 		&MsgFundCommunityPool{},
+		&MsgWithdrawTokenizeShareRecordReward{},
+		&MsgWithdrawAllTokenizeShareRecordReward{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

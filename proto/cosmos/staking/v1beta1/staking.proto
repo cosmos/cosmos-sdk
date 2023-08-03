@@ -113,20 +113,25 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
   // Deprecated: This field has been deprecated with LSM in favor of the validator bond
-  string min_self_delegation = 11 [deprecated = true];
+  string min_self_delegation = 11 [
+    deprecated             = true,
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
   // Number of shares self bonded from the validator
-  string total_validator_bond_shares = 14 [
-    (gogoproto.moretags)   = "yaml:\"total_validator_bond_shares\"",
+  string validator_bond_shares = 14 [
+    (gogoproto.moretags)   = "yaml:\"validator_bond_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // Total number of shares either tokenized or owned by a liquid staking provider
-  string total_liquid_shares = 15 [
-    (gogoproto.moretags)   = "yaml:\"total_liquid_shares\"",
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 15 [
+    (gogoproto.moretags)   = "yaml:\"liquid_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -311,25 +316,26 @@ message Params {
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
   // validator_bond_factor is required as a safety check for tokenizing shares and
   // delegations from liquid staking providers
-  string validator_bond_factor = 6 [
+  string validator_bond_factor = 7 [
     (gogoproto.moretags)   = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // global_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers
-  string global_liquid_staking_cap = 7 [
+  string global_liquid_staking_cap = 8 [
     (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // validator_liquid_staking_cap represents a cap on the portion of stake that
   // comes from liquid staking providers for a specific validator
-  string validator_liquid_staking_cap = 8 [
+  string validator_liquid_staking_cap = 9 [
     (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  reserved 6;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -400,8 +406,7 @@ message ValidatorUpdates {
 
 // TokenizeShareRecord represents a tokenized delegation
 message TokenizeShareRecord {
-  option (gogoproto.description) = true;
-  option (gogoproto.equal)       = true;
+  option (gogoproto.equal) = true;
 
   uint64 id             = 1;
   string owner          = 2;

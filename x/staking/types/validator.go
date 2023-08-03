@@ -47,19 +47,19 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:          operator.String(),
-		ConsensusPubkey:          pkAny,
-		Jailed:                   false,
-		Status:                   Unbonded,
-		Tokens:                   sdk.ZeroInt(),
-		DelegatorShares:          sdk.ZeroDec(),
-		Description:              description,
-		UnbondingHeight:          int64(0),
-		UnbondingTime:            time.Unix(0, 0).UTC(),
-		Commission:               NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		UnbondingOnHoldRefCount:  0,
-		TotalValidatorBondShares: sdk.ZeroDec(),
-		TotalLiquidShares:        sdk.ZeroDec(),
+		OperatorAddress:         operator.String(),
+		ConsensusPubkey:         pkAny,
+		Jailed:                  false,
+		Status:                  Unbonded,
+		Tokens:                  sdk.ZeroInt(),
+		DelegatorShares:         sdk.ZeroDec(),
+		Description:             description,
+		UnbondingHeight:         int64(0),
+		UnbondingTime:           time.Unix(0, 0).UTC(),
+		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		UnbondingOnHoldRefCount: 0,
+		ValidatorBondShares:     sdk.ZeroDec(),
+		LiquidShares:            sdk.ZeroDec(),
 	}, nil
 }
 
@@ -512,7 +512,7 @@ func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
-func (v Validator) GetTotalLiquidShares() sdk.Dec { return v.TotalLiquidShares }
+func (v Validator) GetLiquidShares() sdk.Dec      { return v.LiquidShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

@@ -21,6 +21,14 @@ service Msg {
   // full commission to the validator address.
   rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
 
+  // WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+  rpc WithdrawTokenizeShareRecordReward(MsgWithdrawTokenizeShareRecordReward)
+      returns (MsgWithdrawTokenizeShareRecordRewardResponse);
+
+  // WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+  rpc WithdrawAllTokenizeShareRecordReward(MsgWithdrawAllTokenizeShareRecordReward)
+      returns (MsgWithdrawAllTokenizeShareRecordRewardResponse);
+
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
@@ -63,6 +71,30 @@ message MsgWithdrawValidatorCommission {
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
 message MsgWithdrawValidatorCommissionResponse {}
+
+// MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a specific record
+message MsgWithdrawTokenizeShareRecordReward {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  uint64 record_id     = 2;
+}
+
+// MsgWithdrawTokenizeShareRecordReward defines the Msg/WithdrawTokenizeShareRecordReward response type.
+message MsgWithdrawTokenizeShareRecordRewardResponse {}
+
+// MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or all
+// records owned by the designated owner
+message MsgWithdrawAllTokenizeShareRecordReward {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+}
+
+// MsgWithdrawAllTokenizeShareRecordRewardResponse defines the Msg/WithdrawTokenizeShareRecordReward response type.
+message MsgWithdrawAllTokenizeShareRecordRewardResponse {}
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.

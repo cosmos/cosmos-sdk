@@ -57,13 +57,13 @@ var (
 	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
 	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
-	TokenizeShareRecordPrefix          = []byte{0x71} // key for tokenizeshare record prefix
-	TokenizeShareRecordIDByOwnerPrefix = []byte{0x72} // key for tokenizeshare record id by owner prefix
-	TokenizeShareRecordIDByDenomPrefix = []byte{0x73} // key for tokenizeshare record id by denom prefix
-	LastTokenizeShareRecordIDKey       = []byte{0x74} // key for last tokenize share record id
-	TotalLiquidStakedTokensKey         = []byte{0x75} // key for total liquid staked tokens
-	TokenizeSharesLockPrefix           = []byte{0x76} // key for locking tokenize shares
-	TokenizeSharesUnlockQueuePrefix    = []byte{0x77} // key for the queue that unlocks tokenize shares
+	TokenizeShareRecordPrefix          = []byte{0x81} // key for tokenizeshare record prefix
+	TokenizeShareRecordIDByOwnerPrefix = []byte{0x82} // key for tokenizeshare record id by owner prefix
+	TokenizeShareRecordIDByDenomPrefix = []byte{0x83} // key for tokenizeshare record id by denom prefix
+	LastTokenizeShareRecordIDKey       = []byte{0x84} // key for last tokenize share record id
+	TotalLiquidStakedTokensKey         = []byte{0x85} // key for total liquid staked tokens
+	TokenizeSharesLockPrefix           = []byte{0x86} // key for locking tokenize shares
+	TokenizeSharesUnlockQueuePrefix    = []byte{0x87} // key for the queue that unlocks tokenize shares
 )
 
 type UnbondingType int

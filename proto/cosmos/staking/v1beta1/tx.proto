@@ -29,10 +29,12 @@ service Msg {
 
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
+  // This allows a validator to stop their services and jail themselves without
+  // experiencing a slash
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
 
   // UnbondValidator defines a method for performing the status transition for a validator
-  // from bonded to unbonded
+  // from bonded to unbonding
   rpc UnbondValidator(MsgUnbondValidator) returns (MsgUnbondValidatorResponse);
 
   // CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
@@ -71,13 +73,19 @@ message MsgCreateValidator {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description              description       = 1 [(gogoproto.nullable) = false];
-  CommissionRates          commission        = 2 [(gogoproto.nullable) = false];
+  Description     description = 1 [(gogoproto.nullable) = false];
+  CommissionRates commission  = 2 [(gogoproto.nullable) = false];
+  // Deprecated: This field has been deprecated with LSM in favor of the validator bond
+  string min_self_delegation = 3 [
+    deprecated             = true,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.nullable)   = false
+  ];
   string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
-  reserved 3;
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
@@ -99,7 +107,12 @@ message MsgEditValidator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags)   = "yaml:\"commission_rate\""
   ];
-  reserved 4;
+  string min_self_delegation = 4 [
+    deprecated             = true,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.

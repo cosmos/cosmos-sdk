@@ -899,7 +899,16 @@ $ %s query staking all-tokenize-share-records
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AllTokenizeShareRecords(cmd.Context(), &types.QueryAllTokenizeShareRecordsRequest{})
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			params := &types.QueryAllTokenizeShareRecordsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.AllTokenizeShareRecords(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -909,6 +918,7 @@ $ %s query staking all-tokenize-share-records
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "tokenize share records")
 
 	return cmd
 }

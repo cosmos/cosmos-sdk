@@ -260,8 +260,9 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// should all pass
 	var completionTime time.Time
-	for i := uint32(0); i < maxEntries; i++ {
+	for i := int64(0); i < int64(maxEntries); i++ {
 		var err error
+		ctx = ctx.WithBlockHeight(i)
 		completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 		require.NoError(t, err)
 	}
@@ -799,7 +800,7 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }
 
 func TestValidatorBondRedelegate(t *testing.T) {
@@ -891,5 +892,5 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
+	require.Equal(t, validator.ValidatorBondShares, sdk.ZeroDec())
 }

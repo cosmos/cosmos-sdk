@@ -596,10 +596,29 @@ func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllT
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	records := k.GetAllTokenizeShareRecords(ctx)
+
+	var records []types.TokenizeShareRecord
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.TokenizeShareRecordPrefix)
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var tokenizeShareRecord types.TokenizeShareRecord
+		if err := k.cdc.Unmarshal(value, &tokenizeShareRecord); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			records = append(records, tokenizeShareRecord)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryAllTokenizeShareRecordsResponse{
-		Records: records,
+		Records:    records,
+		Pagination: pageRes,
 	}, nil
 }
 

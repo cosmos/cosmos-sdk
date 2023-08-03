@@ -37,7 +37,7 @@ and defines overall functioning of the staking module.
 
 - Params: `Paramsspace("staking") -> legacy_amino(params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.1/proto/cosmos/staking/v1beta1/staking.proto#L230-L241
++++ https://github.com/cosmos/cosmos-sdk/blob/80b365e60ce2757284c8e91168ad4e28a9171768/proto/cosmos/staking/v1beta1/staking.proto#L301-L339
 
 ## Validator
 
@@ -94,7 +94,7 @@ is updated during the validator set update process which takes place in [`EndBlo
 
 Each validator's state is stored in a `Validator` struct:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/staking.proto#L65-L99
++++ https://github.com/cosmos/cosmos-sdk/blob/80b365e60ce2757284c8e91168ad4e28a9171768/proto/cosmos/staking/v1beta1/staking.proto#L76-L138
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L63
 
@@ -108,9 +108,10 @@ with the `ValidatorAddr` Delegators are indexed in the store as follows:
 Stake holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
-the transaction is the owner of the bond.
+the transaction is the owner of the bond. A delegation marked as validator bond
+makes liquid staking to that validator possible.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/staking.proto#L159-L170
++++ https://github.com/cosmos/cosmos-sdk/blob/80b365e60ce2757284c8e91168ad4e28a9171768/proto/cosmos/staking/v1beta1/staking.proto#L198-L214
 
 ### Delegator Shares
 

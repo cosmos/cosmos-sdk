@@ -10,6 +10,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
+	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
@@ -288,6 +289,22 @@ func NewMockValidatorSet(ctrl *gomock.Controller) *MockValidatorSet {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockValidatorSet) EXPECT() *MockValidatorSetMockRecorder {
 	return m.recorder
+}
+
+// BondedTokensAndPubKeyByConsAddr mocks base method.
+func (m *MockValidatorSet) BondedTokensAndPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, crypto.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BondedTokensAndPubKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(math.Int)
+	ret1, _ := ret[1].(crypto.PublicKey)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// BondedTokensAndPubKeyByConsAddr indicates an expected call of BondedTokensAndPubKeyByConsAddr.
+func (mr *MockValidatorSetMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
 }
 
 // Delegation mocks base method.

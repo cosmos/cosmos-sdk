@@ -9,6 +9,7 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -44,9 +45,8 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	opAddr, err := store.Get(types.GetValidatorByConsAddrKey(consAddr))
-	if err != nil {
+	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return validator, err
 	}
 
@@ -79,8 +79,8 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 	if err != nil {
 		return err
 	}
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+
+	return k.ValidatorByConsensusAddress.Set(ctx, consPk, validator.GetOperator())
 }
 
 // SetValidatorByPowerIndex sets a validator by power index
@@ -219,7 +219,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorByConsAddrKey(valConsAddr)); err != nil {
+	if err = k.ValidatorByConsensusAddress.Remove(ctx, valConsAddr); err != nil {
 		return err
 	}
 

@@ -37,7 +37,6 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
-
 	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByPowerIndex(ctx, validator))
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
@@ -123,7 +122,6 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[0]))
-
 	resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[0].MinEqual(&resVal))

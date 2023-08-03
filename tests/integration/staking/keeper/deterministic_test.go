@@ -234,7 +234,6 @@ func createAndSetValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) s
 
 func setValidator(t *testing.T, f *deterministicFixture, validator stakingtypes.Validator) {
 	t.Helper()
-
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator))

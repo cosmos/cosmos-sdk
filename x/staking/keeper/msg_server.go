@@ -218,13 +218,12 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
 			return nil, err
 		}
-	}
-
-	// Note: this is required for downstream uses of the validator variable
-	// since the validator's liquid shares were updated above
-	validator, found = k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
+		// Note: this is required for downstream uses of the validator variable
+		// since the validator's liquid shares were updated above
+		validator, found = k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
 	}
 
 	// NOTE: source funds are always unbonded

@@ -28,7 +28,12 @@ type Iterator interface {
 
 // IteratorCreator ...
 type IteratorCreator interface {
+	// NewIterator creates a new iterator for the given store name and domain, where
+	// domain is defined by [start, end). Note, both start and end are optional.
 	NewIterator(storeKey string, start, end []byte) (Iterator, error)
+	// NewReverseIterator creates a new reverse iterator for the given store name
+	// and domain, where domain is defined by [start, end). Note, both start and
+	// end are optional.
 	NewReverseIterator(storeKey string, start, end []byte) (Iterator, error)
 }
 

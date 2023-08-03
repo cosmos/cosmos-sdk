@@ -144,7 +144,15 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 }
 
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	prefix := storePrefix(storeKey)
+	start, end = iterateWithPrefix(prefix, start, end)
+
+	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
+	return newRocksDBIterator(itr, prefix, start, end, true), nil
 }
 
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.

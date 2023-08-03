@@ -30,7 +30,10 @@ type Schemas struct {
 	QueryMsg   QueryMessageSchema
 }
 
-type ExecuteMessageSchema struct{}
+type ExecuteMessageSchema struct {
+	DecodeRequest  func([]byte) (proto.Message, error)
+	EncodeResponse func(proto.Message) ([]byte, error)
+}
 type QueryMessageSchema struct{}
 
 type InitMsgSchema struct {

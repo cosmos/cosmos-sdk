@@ -61,8 +61,39 @@ func (m msgServerImpl[H]) Create(ctx context.Context, create *accountsv1.MsgCrea
 }
 
 func (m msgServerImpl[H]) Execute(ctx context.Context, execute *accountsv1.MsgExecute) (*accountsv1.MsgExecuteResponse, error) {
-	// TODO implement me
-	panic("implement me")
+	sender, err := m.accounts.addressCodec.StringToBytes(execute.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	accAddr, err := m.accounts.addressCodec.StringToBytes(execute.Target)
+	if err != nil {
+		return nil, err
+	}
+
+	accountImpl, err := m.accounts.getAccountImpl(ctx, accAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	msg, err := accountImpl.Schemas.ExecuteMsg.DecodeRequest(execute.Message)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := m.accounts.Execute(ctx, sender, accAddr, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedResp, err := accountImpl.Schemas.ExecuteMsg.EncodeResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &accountsv1.MsgExecuteResponse{
+		Response: encodedResp,
+	}, nil
 }
 
 func (m msgServerImpl[H]) Migrate(ctx context.Context, migrate *accountsv1.MsgMigrate) (*accountsv1.MsgMigrateResponse, error) {

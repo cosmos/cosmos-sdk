@@ -38,11 +38,11 @@ func MigrateParamsStore(ctx sdk.Context, paramstore subspace) {
 	paramstore.Set(ctx, types.KeyValidatorLiquidStakingCap, types.DefaultValidatorLiquidStakingCap)
 }
 
-// Set each validator's TotalValidatorBondShares and TotalLiquidShares to 0
+// Set each validator's ValidatorBondShares and LiquidShares to 0
 func MigrateValidators(ctx sdk.Context, k keeper) {
 	for _, validator := range k.GetAllValidators(ctx) {
-		validator.TotalValidatorBondShares = sdk.ZeroDec()
-		validator.TotalLiquidShares = sdk.ZeroDec()
+		validator.ValidatorBondShares = sdk.ZeroDec()
+		validator.LiquidShares = sdk.ZeroDec()
 		k.SetValidator(ctx, validator)
 	}
 }
@@ -57,7 +57,7 @@ func MigrateDelegations(ctx sdk.Context, k keeper) {
 
 // Peforms the in-place store migration for adding LSM support to v0.45.16-ics, including:
 //   - Adding params ValidatorBondFactor, GlobalLiquidStakingCap, ValidatorLiquidStakingCap
-//   - Setting each validator's TotalValidatorBondShares and TotalLiquidShares to 0
+//   - Setting each validator's ValidatorBondShares and LiquidShares to 0
 //   - Setting each delegation's ValidatorBond field to false
 //   - Calculating the total liquid staked by summing the delegations from ICA accounts
 func MigrateStore(ctx sdk.Context, k keeper, paramstore subspace) error {

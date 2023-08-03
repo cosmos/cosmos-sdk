@@ -68,7 +68,7 @@ func TestMigrateParamsStore(t *testing.T) {
 	require.Equal(t, types.DefaultValidatorLiquidStakingCap, validatorLiquidStakingCap)
 }
 
-// Test setting each validator's TotalValidatorBondShares and TotalLiquidShares to 0
+// Test setting each validator's ValidatorBondShares and LiquidShares to 0
 func TestMigrateValidators(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -123,13 +123,13 @@ func TestMigrateValidators(t *testing.T) {
 		setLegacyValidator(store, app.AppCodec(), validator)
 	}
 
-	// Migrate to the new types which adds TotalValidatorBondShares and TotalLiquidShares
+	// Migrate to the new types which adds ValidatorBondShares and LiquidShares
 	v3.MigrateValidators(ctx, app.StakingKeeper)
 
-	// check that the validator TotalValidatorBondShares and TotalLiquidShares were correctly set to 0
+	// check that the validator ValidatorBondShares and LiquidShares were correctly set to 0
 	for _, val := range app.StakingKeeper.GetAllValidators(ctx) {
-		require.Equal(t, sdk.ZeroDec(), val.TotalValidatorBondShares)
-		require.Equal(t, sdk.ZeroDec(), val.TotalLiquidShares)
+		require.Equal(t, sdk.ZeroDec(), val.ValidatorBondShares)
+		require.Equal(t, sdk.ZeroDec(), val.LiquidShares)
 	}
 
 	// check that the other validator attributes were unchanged

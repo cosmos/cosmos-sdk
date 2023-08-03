@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	corestore "cosmossdk.io/core/store"
@@ -600,4 +601,19 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 	}
 
 	return v.Jailed, nil
+}
+
+// BondedTokensAndPubKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
+func (k Keeper) BondedTokensAndPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error) {
+	v, err := k.GetValidatorByConsAddr(ctx, addr)
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	pubkey, err := v.CmtConsPublicKey()
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	return v.BondedTokens(), pubkey, nil
 }

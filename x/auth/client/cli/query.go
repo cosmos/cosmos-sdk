@@ -255,7 +255,8 @@ func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) 
 func QueryEventForTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "event-query-tx-for [hash]",
-		Short: "event-query-tx-for [hash]",
+		Short: "Query for a transaction by hash",
+		Long:  `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

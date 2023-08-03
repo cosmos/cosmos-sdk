@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -44,6 +45,7 @@ func NewTxCmd() *cobra.Command {
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
 		NewUnbondValidatorCmd(),
+		NewCancelUnbondingDelegation(),
 		NewTokenizeSharesCmd(),
 		NewRedeemTokensCmd(),
 		NewTransferTokenizeShareRecordCmd(),
@@ -290,6 +292,56 @@ $ %s tx staking unbond-validator --from mykey
 			}
 
 			msg := types.NewMsgUnbondValidator(sdk.ValAddress(clientCtx.GetFromAddress()))
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCancelUnbondingDelegation() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "cancel-unbond [validator-addr] [amount] [creation-height]",
+		Short: "Cancel unbonding delegation and delegate back to the validator",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel Unbonding Delegation and delegate back to the validator.
+
+Example:
+$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		Example: fmt.Sprintf(`$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey`,
+			version.AppName, bech32PrefixValAddr),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			creationHeight, err := strconv.ParseInt(args[2], 10, 64)
+			if err != nil {
+				return sdkerrors.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
+			}
+
+			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

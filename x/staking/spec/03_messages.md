@@ -13,13 +13,12 @@ The validator must be created with an initial delegation from the operator.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L35-L51
++++ https://github.com/cosmos/cosmos-sdk/blob/80b365e60ce2757284c8e91168ad4e28a9171768/proto/cosmos/staking/v1beta1/tx.proto#L71-L89
 
 This message is expected to fail if:
 
 - another validator with this operator address is already registered
 - another validator with this pubkey is already registered
-- the initial self-delegation tokens are of a denom not specified as the bonding denom
 - the commission parameters are faulty, namely:
     - `MaxRate` is either > 1 or < 0
     - the initial `Rate` is either negative or > `MaxRate`
@@ -27,8 +26,7 @@ This message is expected to fail if:
 - the description fields are too large
 
 This message creates and stores the `Validator` object at appropriate indexes.
-Additionally a self-delegation is made with the initial tokens delegation
-tokens `Delegation`. The validator always starts as unbonded but may be bonded
+The validator always starts as unbonded but may be bonded
 in the first end-block.
 
 ## MsgEditValidator
@@ -65,6 +63,12 @@ This message is expected to fail if:
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 - the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
 - the amount delegated is less than the minimum allowed delegation
+- the delegator is a liquid staking provider and
+    - the delegation exceeds the global liquid staking cap
+    - the delegation exceeds the validator liquid staking cap
+    - the delegation exceeds the validator bond cap
+
+When this message is processed the following actions occur:
 
 If an existing `Delegation` object for provided addresses does not already
 exist then it is created as part of this message otherwise the existing
@@ -76,6 +80,9 @@ the number of currently delegated tokens.
 
 The validator is updated in the `ValidatorByPower` index, and the delegation is
 tracked in validator object in the `Validators` index.
+
+If the delegator is a liquid staking provider, increment `TotalLiquidStakedTokens`
+ and validator's `liquid_shares`.
 
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
@@ -102,6 +109,7 @@ This message is expected to fail if:
 - the delegation has less shares than the ones worth of `Amount`
 - existing `UnbondingDelegation` has maximum entries as defined by `params.MaxEntries`
 - the `Amount` has a denomination different than one defined by `params.BondDenom`
+- the unbonded delegation is a ValidatorBond and the reduction in validator bond would cause the existing liquid delegations to exceed the validator's bond cap
 
 When this message is processed the following actions occur:
 
@@ -112,7 +120,7 @@ When this message is processed the following actions occur:
     - `Unbonding` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
     - `Unbonded` - then send the coins the message `DelegatorAddr`
 - if there are no more `Shares` in the delegation, then the delegation object is removed from the store
-    - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+- if the delegator is a liquid staking provider, decrement `TotalLiquidStakedTokens` and validator's `liquid_shares`
 
 ![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
 
@@ -138,6 +146,8 @@ This message is expected to fail if:
 - the source validator has a receiving redelegation which is not matured (aka. the redelegation may be transitive)
 - existing `Redelegation` has maximum entries as defined by `params.MaxEntries`
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
+- if the delegation is a `ValidatorBond` and the reduction in validator bond would cause the existing liquid delegation to exceed the cap
+- if delegator is a liquid staking provider and the delegation exceeds the global liquid staking cap, the validator liquid staking cap or the validator bond cap
 
 When this message is processed the following actions occur:
 
@@ -149,6 +159,27 @@ When this message is processed the following actions occur:
     - `Unbonded` - no action required in this step
 - Delegate the token worth to the destination validator, possibly moving tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
-    - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+- if delegator is a liquid staking provider, decrement src validator's `liquid_shares` and increment dest validator's `liquid_shares`
 
 ![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+
+## MsgCancelUnbondingDelegation
+
+The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and deleagate back to a previous validator.
+
++++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
+
+This message is expected to fail if:
+
+* the `unbondingDelegation` entry is already processed.
+* the `cancel unbonding delegation` amount is greater than the `unbondingDelegation` entry balance.
+* the `cancel unbonding delegation` height doesn't exists in the `unbondingDelegationQueue` of the delegator.
+
+When this message is processed the following actions occur:
+
+* if the `unbondingDelegation` Entry balance is zero 
+    * in this condition `unbondingDelegation` entry will be removed from `unbondingDelegationQueue`.
+    * otherwise `unbondingDelegationQueue` will be updated with new `unbondingDelegation` entry balance and initial balance
+* the validator's `DelegatorShares` and the delegation's `Shares` are both increased by the message `Amount`.

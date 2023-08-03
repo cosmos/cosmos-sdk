@@ -203,3 +203,17 @@ This message is expected to fail if:
 
 When this message is processed the following actions occur:
 - At execution, the specified amount of delegation disappear from the account and share tokens are provided.
+
+### `MsgDisableTokenizeShares`
+
+The `MsgDisableTokenizeShares` message is used to disable the ability to tokenize stake. When tokenization is disabled, a lock is placed on the account, effectively preventing the conversion of any of their delegations. Re-enabling tokenization would initiate the removal of the lock, but the process is not immediate. The lock removal is queued, with the lock itself persisting throughout the unbonding period. Following the completion of the unbonding period, the lock would be completely removed, restoring the account's ablility to tokenize. For LST protocols that enable the lock, this delay better positions the base layer to coordinate a recovery in the event of an exploit.
+
+When this message is processed the following actions occur:
+- a lock is placed on the account, preventing tokenization of any of the account's delegations. The tokenize share lock store is implemented by keying on the account address and storing a timestamp as the value. The timestamp is empty when the lock is set.
+
+### `MsgEnableTokenizeShares`
+
+The `MsgEnableTokenizeShares` message begins the re-allowing of tokenizing shares for an address, which will complete after the unbonding period. The time at which the lock is completely removed is returned in the response.
+
+When this message is processed the following actions occur:
+- The tokenize share lock timestamp gets populated with the unlock completion time. The tokenize share lock store, implemented by keying on the account address and storing a timestamp as the value.

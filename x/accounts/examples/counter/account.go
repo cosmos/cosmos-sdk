@@ -3,9 +3,9 @@ package counter
 import (
 	"context"
 
+	counterv1 "cosmossdk.io/api/cosmos/accounts/examples/counter/v1"
+	echov1 "cosmossdk.io/api/cosmos/accounts/examples/echo/v1"
 	"cosmossdk.io/collections"
-	v1 "cosmossdk.io/x/accounts/examples/counter/v1"
-	echov1 "cosmossdk.io/x/accounts/examples/echo/v1"
 	"cosmossdk.io/x/accounts/sdk"
 	"github.com/cosmos/gogoproto/proto"
 )
@@ -23,12 +23,12 @@ type Counter struct {
 	invoke func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
 }
 
-func (a Counter) Init(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
+func (a Counter) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
 	err := a.Counter.Set(ctx, msg.CounterValue)
 	if err != nil {
-		return v1.MsgInitResponse{}, err
+		return nil, err
 	}
-	return v1.MsgInitResponse{}, nil
+	return nil, nil
 }
 
 func (a Counter) GetCounterValue(ctx context.Context) (uint64, error) {
@@ -44,34 +44,34 @@ func (a Counter) Execute(ctx context.Context, target []byte, msg proto.Message) 
 }
 
 func (a Counter) RegisterQueryHandlers(router *sdk.QueryRouter) {
-	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg v1.QueryCounterRequest) (v1.QueryCounterResponse, error) {
+	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg counterv1.QueryCounterRequest) (counterv1.QueryCounterResponse, error) {
 		value, err := a.GetCounterValue(ctx)
-		return v1.QueryCounterResponse{CounterValue: value}, err
+		return counterv1.QueryCounterResponse{CounterValue: value}, err
 	})
 }
 
 func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) {
-	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgIncreaseCounter) (v1.MsgIncreaseCounterResponse, error) {
+	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg *counterv1.MsgIncreaseCounter) (*counterv1.MsgIncreaseCounterResponse, error) {
 		newValue, err := a.IncreaseCounterValue(ctx)
-		return v1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
+		return &counterv1.MsgIncreaseCounterResponse{CounterValue: newValue}, err
 	})
 
-	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg v1.MsgExecuteEcho) (v1.MsgExecuteEchoResponse, error) {
+	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg *counterv1.MsgExecuteEcho) (*counterv1.MsgExecuteEchoResponse, error) {
 		resp, err := a.invoke(ctx, msg.Target, &echov1.MsgEcho{
 			Message: msg.Msg,
 		})
 		if err != nil {
-			return v1.MsgExecuteEchoResponse{}, err
+			return nil, err
 		}
 		echoResp := resp.(*echov1.MsgEchoResponse)
-		return v1.MsgExecuteEchoResponse{
+		return &counterv1.MsgExecuteEchoResponse{
 			Result: echoResp.Message,
 		}, nil
 	})
 }
 
 func (a Counter) RegisterInitHandler(router *sdk.InitRouter) {
-	sdk.RegisterInitHandler(router, func(ctx context.Context, msg v1.MsgInit) (v1.MsgInitResponse, error) {
+	sdk.RegisterInitHandler(router, func(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
 		return a.Init(ctx, msg)
 	})
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/collections"
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 // Account defines a generic account interface.
@@ -23,4 +23,9 @@ type BuildDependencies struct {
 	SchemaBuilder *collections.SchemaBuilder
 	Execute       func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
 	Query         func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+}
+
+type Msg[T any] interface {
+	*T
+	proto.Message
 }

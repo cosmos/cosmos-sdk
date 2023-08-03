@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
+	counterv1 "cosmossdk.io/api/cosmos/accounts/examples/counter/v1"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/examples/counter"
-	counterv1 "cosmossdk.io/x/accounts/examples/counter/v1"
 	"cosmossdk.io/x/accounts/examples/echo"
 	"cosmossdk.io/x/accounts/tempcore/header"
 	"github.com/cosmos/gogoproto/types"

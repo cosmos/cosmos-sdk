@@ -4,14 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/cosmos/gogoproto/types"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
-
-type Msg[T any] interface {
-	*T
-	proto.Message
-}
 
 type QueryRouter struct{ er *ExecuteRouter }
 
@@ -20,7 +16,7 @@ func (e *QueryRouter) Handler() (func(ctx context.Context, msg proto.Message) (p
 }
 
 type ExecuteRouter struct {
-	methodsMap map[string]func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	methodsMap map[protoreflect.FullName]func(ctx context.Context, msg proto.Message) (proto.Message, error)
 	err        error
 }
 
@@ -49,7 +45,7 @@ func (e *ExecuteRouter) Handler() (func(ctx context.Context, msg proto.Message) 
 
 func RegisterQueryHandler[
 	Req any, Resp any, ReqP Msg[Req], RespP Msg[Resp],
-](router *QueryRouter, handler func(ctx context.Context, msg Req) (Resp, error)) {
+](router *QueryRouter, handler func(ctx context.Context, msg ReqP) (RespP, error)) {
 	if router.er == nil {
 		router.er = &ExecuteRouter{}
 	}
@@ -58,9 +54,9 @@ func RegisterQueryHandler[
 
 func RegisterExecuteHandler[
 	Req any, Resp any, ReqP Msg[Req], RespP Msg[Resp],
-](router *ExecuteRouter, handler func(ctx context.Context, msg Req) (Resp, error)) {
+](router *ExecuteRouter, handler func(ctx context.Context, msg ReqP) (RespP, error)) {
 	if router.methodsMap == nil {
-		router.methodsMap = make(map[string]func(ctx context.Context, msg proto.Message) (proto.Message, error))
+		router.methodsMap = make(map[protoreflect.FullName]func(ctx context.Context, msg proto.Message) (proto.Message, error))
 	}
 	methodName := proto.MessageName(ReqP(new(Req)))
 	_, exists := router.methodsMap[methodName]
@@ -73,11 +69,11 @@ func RegisterExecuteHandler[
 			return nil, fmt.Errorf("invalid message type %T, wanted: %s", msg, methodName)
 		}
 
-		resp, err := handler(ctx, *concreteReq)
+		resp, err := handler(ctx, concreteReq)
 		if err != nil {
 			return nil, err
 		}
-		return RespP(&resp), nil
+		return RespP(resp), nil
 	}
 }
 
@@ -102,8 +98,8 @@ type InitRouter struct {
 
 func (i InitRouter) Handler() func(ctx context.Context, msg proto.Message) (proto.Message, error) {
 	if i.init == nil {
-		RegisterInitHandler(&i, func(ctx context.Context, msg types.Empty) (types.Empty, error) {
-			return types.Empty{}, nil
+		RegisterInitHandler(&i, func(ctx context.Context, msg *emptypb.Empty) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
 		})
 	}
 	return i.init

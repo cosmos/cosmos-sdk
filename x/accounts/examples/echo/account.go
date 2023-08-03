@@ -3,7 +3,7 @@ package echo
 import (
 	"context"
 
-	v1 "cosmossdk.io/x/accounts/examples/echo/v1"
+	echov1 "cosmossdk.io/api/cosmos/accounts/examples/echo/v1"
 	"cosmossdk.io/x/accounts/sdk"
 )
 
@@ -15,8 +15,8 @@ func NewEcho(_ *sdk.BuildDependencies) (Echo, error) {
 
 func (a Echo) RegisterInitHandler(_ *sdk.InitRouter) {}
 func (a Echo) RegisterExecuteHandlers(r *sdk.ExecuteRouter) {
-	sdk.RegisterExecuteHandler(r, func(ctx context.Context, msg v1.MsgEcho) (v1.MsgEchoResponse, error) {
-		return v1.MsgEchoResponse{
+	sdk.RegisterExecuteHandler(r, func(ctx context.Context, msg *echov1.MsgEcho) (*echov1.MsgEchoResponse, error) {
+		return &echov1.MsgEchoResponse{
 			Message: msg.Message,
 			Sender:  sdk.Sender(ctx),
 		}, nil
@@ -24,8 +24,8 @@ func (a Echo) RegisterExecuteHandlers(r *sdk.ExecuteRouter) {
 }
 
 func (a Echo) RegisterQueryHandlers(r *sdk.QueryRouter) {
-	sdk.RegisterQueryHandler(r, func(ctx context.Context, msg v1.QueryEchoRequest) (v1.QueryEchoResponse, error) {
-		return v1.QueryEchoResponse{
+	sdk.RegisterQueryHandler(r, func(ctx context.Context, msg *echov1.QueryEchoRequest) (*echov1.QueryEchoResponse, error) {
+		return &echov1.QueryEchoResponse{
 			Message: msg.Message,
 		}, nil
 	})

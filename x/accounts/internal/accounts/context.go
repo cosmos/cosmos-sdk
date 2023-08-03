@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
-	proto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type (
@@ -20,7 +20,7 @@ func MakeBuildDependencies(invoke func(ctx context.Context, from []byte, to []by
 	return &BuildDependencies{
 		SchemaBuilder: collections.NewSchemaBuilder(StoreService()),
 		Execute: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
-			sender := whoami(ctx)
+			sender := Whoami(ctx)
 			return invoke(GetOriginalContext(ctx), sender[:], to[:], msg)
 		},
 	}
@@ -48,7 +48,7 @@ func (s storeSvc) OpenKVStore(ctx context.Context) store.KVStore {
 	return ctx.Value(storeKey{}).(store.KVStore)
 }
 
-func whoami(ctx context.Context) []byte {
+func Whoami(ctx context.Context) []byte {
 	return ctx.Value(selfKey{}).([]byte)
 }
 

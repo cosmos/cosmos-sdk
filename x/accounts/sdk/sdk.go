@@ -36,6 +36,6 @@ func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *
 	internalaccounts.RegisterInitHandler[Req, Resp, ReqP, RespP](router, handler)
 }
 
-func Sender(ctx context.Context) []byte {
-	return internalaccounts.Sender(ctx)
-}
+func Sender(ctx context.Context) []byte { return internalaccounts.Sender(ctx) }
+
+func Whoami(ctx context.Context) []byte { return internalaccounts.Whoami(ctx) }

@@ -183,3 +183,23 @@ When this message is processed the following actions occur:
     * in this condition `unbondingDelegation` entry will be removed from `unbondingDelegationQueue`.
     * otherwise `unbondingDelegationQueue` will be updated with new `unbondingDelegation` entry balance and initial balance
 * the validator's `DelegatorShares` and the delegation's `Shares` are both increased by the message `Amount`.
+
+### `MsgTokenizeShares`
+
+The `MsgTokenizeShares` message is used to create tokenize delegated tokens. At execution, the specified amount of delegation disappear from the account and share tokens are provided. Share tokens are denominated in the validator and record id of the underlying delegation.
+
+A user may tokenize some or all of their delegation.
+
+They will receive shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
+
+MsgTokenizeSharesResponse provides the number of tokens generated and their denom.
+
+This message is expected to fail if:
+- the delegation is a `ValidatorBond` (`ValidatorBond` cannot be tokenized).
+- the the sender is NOT a liquid staking provider and tokenized shares would exceed the global liquid staking cap, the validator liquid staking cap, or the validator bond cap
+- the account has `TokenizeSharesLock` enabled.
+- the account is a `VestingAccount`. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as an acceptable tradeoff vs. the complex book keeping required to track vested tokens.
+- the delegator has zero delegation.
+
+When this message is processed the following actions occur:
+- At execution, the specified amount of delegation disappear from the account and share tokens are provided.

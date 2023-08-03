@@ -88,3 +88,16 @@ The staking module emits the following events:
 | message                       | module              | staking                             |
 | message                       | action              | cancel_unbond                       |
 | message                       | sender              | {senderAddress}                     |
+
+### MsgTokenizeShares
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| tokenize_shares               | validator           | {validatorAddress}                  |
+| tokenize_shares               | delegator           | {delegatorAddress}                  |
+| tokenize_shares               | share_owner         | {tokenizedShareOwner}               |
+| tokenize_shares               | share_record_id     | {shareRecordId}                     |
+| tokenize_shares               | amount              | {tokenizeShareAmount}               |
+| message                       | module              | staking                             |
+| message                       | action              | tokenize_shares                     |
+| message                       | sender              | {senderAddress}                     |

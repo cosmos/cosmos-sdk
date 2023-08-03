@@ -204,6 +204,19 @@ This message is expected to fail if:
 When this message is processed the following actions occur:
 - At execution, the specified amount of delegation disappear from the account and share tokens are provided.
 
+
+### `MsgRedeemTokensforShares`
+
+The `MsgRedeemTokensforShares` message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
+
+This message is expected to fail if:
+- the unbonded delegation is a ValidatorBond and the reduction in validator bond would cause the existing liquid delegations to exceed the validator's bond cap
+
+When this message is processed the following actions occur:
+- the delegator's share tokens will disappear and standard delegations will appear in their place
+- if the delegator is a liquid staking provider, decrement `TotalLiquidStakedTokens` and validator's `liquid_shares`
+
+
 ### `MsgDisableTokenizeShares`
 
 The `MsgDisableTokenizeShares` message is used to disable the ability to tokenize stake. When tokenization is disabled, a lock is placed on the account, effectively preventing the conversion of any of their delegations. Re-enabling tokenization would initiate the removal of the lock, but the process is not immediate. The lock removal is queued, with the lock itself persisting throughout the unbonding period. Following the completion of the unbonding period, the lock would be completely removed, restoring the account's ablility to tokenize. For LST protocols that enable the lock, this delay better positions the base layer to coordinate a recovery in the event of an exploit.

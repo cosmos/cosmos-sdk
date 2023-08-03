@@ -101,3 +101,14 @@ The staking module emits the following events:
 | message                       | module              | staking                             |
 | message                       | action              | tokenize_shares                     |
 | message                       | sender              | {senderAddress}                     |
+
+### MsgRedeemTokensForShares
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| redeem_shares                 | validator           | {validatorAddress}                  |
+| redeem_shares                 | delegator           | {delegatorAddress}                  |
+| redeem_shares                 | amount              | {redeemShareAmount}                 |
+| message                       | module              | staking                             |
+| message                       | action              | redeem_shares                       |
+| message                       | sender              | {senderAddress}                     |

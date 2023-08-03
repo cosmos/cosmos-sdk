@@ -29,15 +29,22 @@ type Database struct {
 }
 
 func New(dataDir string) (*Database, error) {
-	db, cfHandle, err := OpenRocksDB(dataDir)
+	storage, cfHandle, err := OpenRocksDB(dataDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
 	}
 
 	return &Database{
-		storage:  db,
+		storage:  storage,
 		cfHandle: cfHandle,
 	}, nil
+}
+
+func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) *Database {
+	return &Database{
+		storage:  storage,
+		cfHandle: cfHandle,
+	}
 }
 
 func (db *Database) Close() error {

@@ -9,6 +9,7 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -45,7 +46,7 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return validator, err
 	}
 

@@ -18,7 +18,7 @@ import (
 func TestModule(t *testing.T) {
 	hs, ss, ctx := accountDeps[header.Header]()
 
-	module, err := accounts.NewAccounts[header.Header](
+	module, err := accounts.NewAccounts(
 		ss,
 		hs,
 		accounts.AddAccount("counter", counter.NewCounter),

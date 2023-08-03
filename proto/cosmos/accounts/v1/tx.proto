@@ -4,4 +4,32 @@ package cosmos.accounts.v1;
 
 option go_package = "cosmossdk.io/x/accounts/v1";
 
-service Msg {}
+service Msg {
+  rpc Create(MsgCreate) returns (MsgCreateResponse) {};
+  rpc Execute(MsgExecute) returns (MsgExecuteResponse) {};
+  rpc Migrate(MsgMigrate) returns (MsgMigrateResponse) {};
+}
+
+message MsgCreate {
+  string creator = 1;
+  string account_type = 2;
+  bytes message = 3;
+}
+
+message MsgCreateResponse {
+  string address = 1;
+  bytes response = 2;
+}
+
+message MsgExecute {
+  string sender = 1;
+  string target = 2;
+  bytes message = 3;
+}
+
+message MsgExecuteResponse {
+  bytes response = 1;
+}
+
+message MsgMigrate {}
+message MsgMigrateResponse {}

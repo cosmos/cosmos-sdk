@@ -3,7 +3,6 @@ package accounts
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -34,24 +33,26 @@ func NewAccountImplementation[
 	}
 
 	// build schema
-	schema, err := deps.SchemaBuilder.Build()
+	schemas, err := NewSchemas(deps.SchemaBuilder, initRouter, executeRouter, queryRouter)
 	if err != nil {
 		return Implementation{}, err
 	}
+
 	return Implementation{
-		StateSchema: schema,
-		Execute:     execHandler,
-		Query:       queryHandler,
-		Init:        initRouter.Handler(),
-		Type:        typeName,
+		Schemas: schemas,
+		Execute: execHandler,
+		Query:   queryHandler,
+		Init:    initRouter.Handler(),
+		Type:    typeName,
 	}, nil
 }
 
 // Implementation represents the implementation of the Accounts module.
 type Implementation struct {
-	StateSchema collections.Schema
-	Execute     func(ctx context.Context, msg proto.Message) (proto.Message, error)
-	Query       func(ctx context.Context, msg proto.Message) (proto.Message, error)
-	Init        func(ctx context.Context, msg proto.Message) (proto.Message, error)
-	Type        string
+	Schemas *Schemas
+
+	Execute func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	Query   func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	Init    func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	Type    string
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	internalaccounts "cosmossdk.io/x/accounts/internal/accounts"
 	"cosmossdk.io/x/accounts/sdk"
@@ -60,6 +61,7 @@ type Accounts[H header.Header] struct {
 
 	headerService header.Service[H]
 	storeService  store.KVStoreService
+	addressCodec  address.Codec
 
 	accounts map[string]internalaccounts.Implementation // maps an account implementation by its type.
 }

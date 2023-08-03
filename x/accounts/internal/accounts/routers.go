@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -70,10 +71,26 @@ func RegisterExecuteHandler[
 
 func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *InitRouter, handler func(ctx context.Context, msg *Req) (*Resp, error)) {
 	router.init = makeProtoHandler[Req, Resp, ReqP, RespP](handler)
+	router.schema = &InitMsgSchema{
+		DecodeRequest: func(bytes []byte) (proto.Message, error) {
+			req := new(Req)
+			err := protojson.Unmarshal(bytes, ReqP(req))
+			if err != nil {
+				return nil, err
+			}
+
+			return ReqP(req), nil
+		},
+		EncodeResponse: func(message proto.Message) ([]byte, error) {
+			return protojson.Marshal(message)
+		},
+	}
 }
 
 type InitRouter struct {
 	init func(ctx context.Context, msg proto.Message) (proto.Message, error)
+
+	schema *InitMsgSchema
 }
 
 func (i InitRouter) Handler() func(ctx context.Context, msg proto.Message) (proto.Message, error) {

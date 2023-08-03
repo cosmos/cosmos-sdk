@@ -173,23 +173,22 @@ func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegatio
 func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
-	if err != nil {
-		return unbondingDelegations, err
-	}
-	defer iterator.Close()
-
 	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		unbondingDelegation, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return unbondingDelegations, err
-		}
-		unbondingDelegations[i] = unbondingDelegation
-		i++
+	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err = k.UnbondingDelegation.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
+			i++
+			unbondingDelegations = append(unbondingDelegations, value)
+			if i >= int(maxRetrieve) {
+				return false, err
+			}
+			return false, err
+		},
+	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return nil, err
 	}
 
 	return unbondingDelegations[:i], nil // trim if the array length < maxRetrieve
@@ -265,36 +264,20 @@ func (k Keeper) IterateUnbondingDelegations(ctx context.Context, fn func(index i
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
-	err := k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
-		for _, entry := range ubd.Entries {
-			unbonding = unbonding.Add(entry.Balance)
-		}
-		return false
-	})
+	err := k.UnbondingDelegation.Walk(
+		ctx,
+		nil,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+			for _, entry := range ubd.Entries {
+				unbonding = unbonding.Add(entry.Balance)
+			}
+			return false, nil
+		},
+	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		return unbonding, err
+	}
 	return unbonding, err
-}
-
-// IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
-func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd types.UnbondingDelegation) (stop bool)) error {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetUBDsKey(delegator)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		ubd, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
-		if cb(ubd) {
-			break
-		}
-	}
-
-	return nil
 }
 
 // GetDelegatorBonded returs the total amount a delegator has bonded.

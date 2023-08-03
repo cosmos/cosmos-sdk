@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,24 +92,17 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
+	err := k.UnbondingDelegation.Walk(
+		ctx,
+		collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator),
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return false, err
+		},
+	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return nil, err
 	}
-	defer iterator.Close()
-
-	for i := 0; iterator.Valid(); iterator.Next() {
-		unbondingDelegation, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		i++
-	}
-
 	return unbondingDelegations, nil
 }
 

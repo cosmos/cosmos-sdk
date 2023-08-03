@@ -359,23 +359,23 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 	var unbondingDelegations types.UnbondingDelegations
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	unbStore := prefix.NewStore(store, types.GetUBDsKey(delAddr))
-	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key, value []byte) error {
-		unbond, err := types.UnmarshalUBD(k.cdc, value)
-		if err != nil {
-			return err
-		}
-		unbondingDelegations = append(unbondingDelegations, unbond)
-		return nil
-	})
+	unbondingDelegations, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.Keeper.UnbondingDelegation,
+		req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (ubd types.UnbondingDelegation, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return value, err
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
+	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{

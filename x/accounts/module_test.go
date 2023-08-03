@@ -52,9 +52,25 @@ func TestModule(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log(resp)
+
+	// dump state
+	state, err := module.DumpState(ctx, counterAddr)
+	require.NoError(t, err)
+
+	t.Log(string(state))
 }
 
 func accountDeps[H header.Header]() (address.Codec, header.Service[H], store.KVStoreService, context.Context) {
 	ss, ctx := colltest.MockStore()
-	return nil, nil, ss, ctx
+	return addressCodec{}, nil, ss, ctx
+}
+
+type addressCodec struct{}
+
+func (a addressCodec) StringToBytes(addr string) ([]byte, error) {
+	return []byte(addr), nil
+}
+
+func (a addressCodec) BytesToString(addr []byte) (string, error) {
+	return string(addr), nil
 }

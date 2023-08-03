@@ -17,20 +17,24 @@ func NewAccountImplementation[
 	if err != nil {
 		return Implementation{}, err
 	}
+
 	executeRouter := &ExecuteRouter{}
 	account.RegisterExecuteHandlers(executeRouter)
-	queryRouter := &QueryRouter{}
-	account.RegisterQueryHandlers(queryRouter)
-	initRouter := &InitRouter{}
-	account.RegisterInitHandler(initRouter)
 	execHandler, err := executeRouter.Handler()
 	if err != nil {
 		return Implementation{}, err
 	}
+
+	queryRouter := &QueryRouter{}
+	account.RegisterQueryHandlers(queryRouter)
 	queryHandler, err := queryRouter.Handler()
 	if err != nil {
 		return Implementation{}, err
 	}
+
+	initRouter := &InitRouter{}
+	account.RegisterInitHandler(initRouter)
+	initHandler := initRouter.Handler()
 
 	// build schema
 	schemas, err := NewSchemas(deps.SchemaBuilder, initRouter, executeRouter, queryRouter)
@@ -42,7 +46,7 @@ func NewAccountImplementation[
 		Schemas: schemas,
 		Execute: execHandler,
 		Query:   queryHandler,
-		Init:    initRouter.Handler(),
+		Init:    initHandler,
 		Type:    typeName,
 	}, nil
 }

@@ -3,6 +3,8 @@ package accounts
 import (
 	"cosmossdk.io/collections"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func NewSchemas(
@@ -18,8 +20,7 @@ func NewSchemas(
 	return &Schemas{
 		State:      stateSchema,
 		InitMsg:    *initRouter.schema,
-		ExecuteMsg: ExecuteMessageSchema{},
-		QueryMsg:   QueryMessageSchema{},
+		ExecuteMsg: *executeRouter.schema,
 	}, nil
 }
 
@@ -33,6 +34,8 @@ type Schemas struct {
 type ExecuteMessageSchema struct {
 	DecodeRequest  func([]byte) (proto.Message, error)
 	EncodeResponse func(proto.Message) ([]byte, error)
+
+	requestDecoders map[protoreflect.FullName]func(anyPB *anypb.Any) (proto.Message, error)
 }
 type QueryMessageSchema struct{}
 

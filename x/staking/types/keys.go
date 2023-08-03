@@ -47,7 +47,7 @@ var (
 
 	UnbondingIDKey    = collections.NewPrefix(55) // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38}              // prefix for an index for looking up unbonding operations by their IDs
-	UnbondingTypeKey  = []byte{0x39}              // prefix for an index containing the type of unbonding operations
+	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -70,13 +70,6 @@ const (
 	UnbondingType_Redelegation
 	UnbondingType_ValidatorUnbonding
 )
-
-// GetUnbondingTypeKey returns a key for an index containing the type of unbonding operations
-func GetUnbondingTypeKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(UnbondingTypeKey, bz...)
-}
 
 // GetUnbondingIndexKey returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
 func GetUnbondingIndexKey(id uint64) []byte {

@@ -38,6 +38,7 @@ type Keeper struct {
 	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 	UnbondingID            collections.Sequence
+	UnbondingType          collections.Map[uint64, uint64]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -87,7 +88,8 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
-		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
+		UnbondingID:   collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
+		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()

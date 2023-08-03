@@ -112,3 +112,13 @@ The staking module emits the following events:
 | message                       | module              | staking                             |
 | message                       | action              | redeem_shares                       |
 | message                       | sender              | {senderAddress}                     |
+
+### MsgValidatorBond
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| validator_bond                | validator           | {validatorAddress}                  |
+| validator_bond                | delegator           | {delegatorAddress}                  |
+| message                       | module              | staking                             |
+| message                       | action              | validator_bond                      |
+| message                       | sender              | {senderAddress}                     |

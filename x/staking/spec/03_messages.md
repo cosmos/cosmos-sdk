@@ -167,7 +167,7 @@ When this message is processed the following actions occur:
 
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and deleagate back to a previous validator.
 
-+++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
 
@@ -194,6 +194,8 @@ They will receive shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the
 
 MsgTokenizeSharesResponse provides the number of tokens generated and their denom.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/aab739edf2ca3cfb35c4104a25ec93bdc24a640f/proto/cosmos/staking/v1beta1/tx.proto#L190-L204
+
 This message is expected to fail if:
 - the delegation is a `ValidatorBond` (`ValidatorBond` cannot be tokenized).
 - the the sender is NOT a liquid staking provider and tokenized shares would exceed the global liquid staking cap, the validator liquid staking cap, or the validator bond cap
@@ -209,6 +211,8 @@ When this message is processed the following actions occur:
 
 The `MsgRedeemTokensforShares` message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/aab739edf2ca3cfb35c4104a25ec93bdc24a640f/proto/cosmos/staking/v1beta1/tx.proto#L206-L213
+
 This message is expected to fail if:
 - the unbonded delegation is a ValidatorBond and the reduction in validator bond would cause the existing liquid delegations to exceed the validator's bond cap
 
@@ -216,10 +220,27 @@ When this message is processed the following actions occur:
 - the delegator's share tokens will disappear and standard delegations will appear in their place
 - if the delegator is a liquid staking provider, decrement `TotalLiquidStakedTokens` and validator's `liquid_shares`
 
+### `MsgValidatorBond`
+
+The `MsgValidatorBond` message is used to validator bond a delegation to a validator. If the validator bond factor is greater than 0, this will allow more delegation shares to be issued from the validator.
+
+This design allows the chain to force an amount of self-delegation by validators participating in liquid staking schemes. The validator bond system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. 
+
+With a validator-bond factor of 250, for every 1 token a validator self-bonds, that validator is eligible to receive up to two-hundred-and-fifty tokens delegated from liquid staking providers. The validator-bond has no impact on anything other than eligibility for delegations from liquid staking providers.
+
+Without self-bonding tokens, a validator can’t receive delegations from liquid staking providers. And if a validator’s maximum amount of delegated tokens from liquid staking providers has been met, it would have to self-bond more tokens to become eligible for additional liquid staking provider delegations.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/aab739edf2ca3cfb35c4104a25ec93bdc24a640f/proto/cosmos/staking/v1beta1/tx.proto#L257-L265
+
+When this message is processed the following actions occur:
+- the delegations's `validator_bond` factor is marked `true`
+- the validator's capacity for liquid staking increases: it can accept more tokenized shares and delegations from liquid staking providers.
 
 ### `MsgDisableTokenizeShares`
 
 The `MsgDisableTokenizeShares` message is used to disable the ability to tokenize stake. When tokenization is disabled, a lock is placed on the account, effectively preventing the conversion of any of their delegations. Re-enabling tokenization would initiate the removal of the lock, but the process is not immediate. The lock removal is queued, with the lock itself persisting throughout the unbonding period. Following the completion of the unbonding period, the lock would be completely removed, restoring the account's ablility to tokenize. For LST protocols that enable the lock, this delay better positions the base layer to coordinate a recovery in the event of an exploit.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/aab739edf2ca3cfb35c4104a25ec93bdc24a640f/proto/cosmos/staking/v1beta1/tx.proto#L233-L239
 
 When this message is processed the following actions occur:
 - a lock is placed on the account, preventing tokenization of any of the account's delegations. The tokenize share lock store is implemented by keying on the account address and storing a timestamp as the value. The timestamp is empty when the lock is set.
@@ -227,6 +248,8 @@ When this message is processed the following actions occur:
 ### `MsgEnableTokenizeShares`
 
 The `MsgEnableTokenizeShares` message begins the re-allowing of tokenizing shares for an address, which will complete after the unbonding period. The time at which the lock is completely removed is returned in the response.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/aab739edf2ca3cfb35c4104a25ec93bdc24a640f/proto/cosmos/staking/v1beta1/tx.proto#L244-L250
 
 When this message is processed the following actions occur:
 - The tokenize share lock timestamp gets populated with the unlock completion time. The tokenize share lock store, implemented by keying on the account address and storing a timestamp as the value.

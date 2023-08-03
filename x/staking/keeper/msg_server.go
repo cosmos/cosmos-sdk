@@ -205,16 +205,6 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	tokens := msg.Amount.Amount
 
-	// If the delegation exists already and is a validator bond, increment the validator bond shares
-	delegation, found := k.Keeper.GetDelegation(ctx, delegatorAddress, valAddr)
-	if found && delegation.ValidatorBond {
-		shares, err := validator.SharesFromTokens(tokens)
-		if err != nil {
-			return nil, err
-		}
-		k.IncreaseValidatorBondShares(ctx, validator, shares)
-	}
-
 	// if this delegation is from a liquid staking provider (identified if the delegator
 	// is an ICA account), it cannot exceed the global or validator bond cap
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
@@ -241,6 +231,15 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, tokens, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
+	}
+
+	// If the delegation is a validator bond, increment the validator bond shares
+	delegation, found := k.Keeper.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegation
+	}
+	if delegation.ValidatorBond {
+		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 
 	if tokens.IsInt64() {

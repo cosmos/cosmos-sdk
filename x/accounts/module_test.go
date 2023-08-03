@@ -6,6 +6,7 @@ import (
 
 	counterv1 "cosmossdk.io/api/cosmos/accounts/examples/counter/v1"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/examples/counter"
@@ -16,11 +17,12 @@ import (
 )
 
 func TestModule(t *testing.T) {
-	hs, ss, ctx := accountDeps[header.Header]()
+	addressCodec, headerService, storeService, ctx := accountDeps[header.Header]()
 
 	module, err := accounts.NewAccounts(
-		ss,
-		hs,
+		addressCodec,
+		storeService,
+		headerService,
 		accounts.AddAccount("counter", counter.NewCounter),
 		accounts.AddAccount("echo", echo.NewEcho),
 	)
@@ -52,7 +54,7 @@ func TestModule(t *testing.T) {
 	t.Log(resp)
 }
 
-func accountDeps[H header.Header]() (header.Service[H], store.KVStoreService, context.Context) {
+func accountDeps[H header.Header]() (address.Codec, header.Service[H], store.KVStoreService, context.Context) {
 	ss, ctx := colltest.MockStore()
-	return nil, ss, ctx
+	return nil, nil, ss, ctx
 }

@@ -23,6 +23,7 @@ func AddAccount[A sdk.Account](
 func NewAccounts[
 	H header.Header,
 ](
+	addressCodec address.Codec,
 	storeService store.KVStoreService,
 	headerService header.Service[H],
 	accounts ...func(bd *sdk.BuildDependencies) (internalaccounts.Implementation, error),
@@ -36,6 +37,7 @@ func NewAccounts[
 		AccountsState:       collections.NewMap(sb, AccountsStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 		headerService:       headerService,
 		storeService:        storeService,
+		addressCodec:        addressCodec,
 		accounts:            map[string]internalaccounts.Implementation{},
 	}
 

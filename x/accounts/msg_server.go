@@ -6,6 +6,8 @@ import (
 
 	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	"cosmossdk.io/x/accounts/tempcore/header"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ accountsv1.MsgServer = msgServerImpl[header.Header]{}
@@ -64,6 +66,5 @@ func (m msgServerImpl[H]) Execute(ctx context.Context, execute *accountsv1.MsgEx
 }
 
 func (m msgServerImpl[H]) Migrate(ctx context.Context, migrate *accountsv1.MsgMigrate) (*accountsv1.MsgMigrateResponse, error) {
-	// TODO implement me
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }

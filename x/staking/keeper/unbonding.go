@@ -16,13 +16,6 @@ func (k Keeper) IncrementUnbondingID(ctx context.Context) (unbondingID uint64, e
 	if err != nil {
 		return 0, err
 	}
-	unbondingID++
-
-	err = k.UnbondingID.Set(ctx, unbondingID)
-	if err != nil {
-		return 0, err
-	}
-
 	return unbondingID, err
 }
 

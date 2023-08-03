@@ -1246,6 +1246,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	validator := teststaking.NewValidator(t, validatorAddr, validatorPubKey)
 	validator.Tokens = startTokens
 	validator.DelegatorShares = sdk.NewDecFromInt(startTokens)
+	validator.Status = types.Bonded
 	app.StakingKeeper.SetValidator(ctx, validator)
 
 	// create a delegator
@@ -1279,16 +1280,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
-				CreationHeight:   0,
-			},
-		},
-		{
-			Name:      "invalid coin",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 		},

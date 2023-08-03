@@ -138,6 +138,11 @@ if err := app.RegisterModules(&exampleAppModule); err != nil {
 // ....
 ```
 
+:::warning
+When using AutoCLI and combining app wiring and non app wiring modules. The AutoCLI options should be manually constructed instead of injected.
+Otherwise it will miss the non depinject modules and not register their CLI.
+:::
+
 ### Complete `app_v2.go`
 
 :::tip

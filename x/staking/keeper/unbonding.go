@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 
 	"cosmossdk.io/collections"
@@ -14,25 +13,11 @@ import (
 
 // IncrementUnbondingID increments and returns a unique ID for an unbonding operation
 func (k Keeper) IncrementUnbondingID(ctx context.Context) (unbondingID uint64, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.UnbondingIDKey)
+	unbondingID, err = k.UnbondingID.Next(ctx)
 	if err != nil {
 		return 0, err
 	}
-
-	if bz != nil {
-		unbondingID = binary.BigEndian.Uint64(bz)
-	}
-
 	unbondingID++
-
-	// Convert back into bytes for storage
-	bz = make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, unbondingID)
-
-	if err = store.Set(types.UnbondingIDKey, bz); err != nil {
-		return 0, err
-	}
 
 	return unbondingID, err
 }
@@ -45,30 +30,17 @@ func (k Keeper) DeleteUnbondingIndex(ctx context.Context, id uint64) error {
 // GetUnbondingType returns the enum type of unbonding which is any of
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) GetUnbondingType(ctx context.Context, id uint64) (unbondingType types.UnbondingType, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GetUnbondingTypeKey(id))
-	if err != nil {
-		return unbondingType, err
-	}
-
-	if bz == nil {
+	ubdType, err := k.UnbondingType.Get(ctx, id)
+	if errors.Is(err, collections.ErrNotFound) {
 		return unbondingType, types.ErrNoUnbondingType
 	}
-
-	return types.UnbondingType(binary.BigEndian.Uint64(bz)), nil
+	return types.UnbondingType(ubdType), err
 }
 
 // SetUnbondingType sets the enum type of unbonding which is any of
 // {UnbondingDelegation | Redelegation | ValidatorUnbonding}
 func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType types.UnbondingType) error {
-	store := k.storeService.OpenKVStore(ctx)
-
-	// Convert into bytes for storage
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, uint64(unbondingType))
-
-	return store.Set(types.GetUnbondingTypeKey(id), bz)
+	return k.UnbondingType.Set(ctx, id, uint64(unbondingType))
 }
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID

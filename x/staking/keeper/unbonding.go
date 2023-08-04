@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 
 	"cosmossdk.io/collections"
@@ -14,25 +13,11 @@ import (
 
 // IncrementUnbondingID increments and returns a unique ID for an unbonding operation
 func (k Keeper) IncrementUnbondingID(ctx context.Context) (unbondingID uint64, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.UnbondingIDKey)
+	unbondingID, err = k.UnbondingID.Next(ctx)
 	if err != nil {
 		return 0, err
 	}
-
-	if bz != nil {
-		unbondingID = binary.BigEndian.Uint64(bz)
-	}
-
 	unbondingID++
-
-	// Convert back into bytes for storage
-	bz = make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, unbondingID)
-
-	if err = store.Set(types.UnbondingIDKey, bz); err != nil {
-		return 0, err
-	}
 
 	return unbondingID, err
 }

@@ -38,10 +38,10 @@ type Keeper struct {
 	LastTotalPower              collections.Item[math.Int]
 	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
 	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
-	UnbondingDelegation         collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.UnbondingDelegation]
 	UnbondingID                 collections.Sequence
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	UnbondingType               collections.Map[uint64, uint64]
+	UnbondingDelegations        collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -91,15 +91,15 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
-		UnbondingDelegation: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.UnbondingDelegation](cdc)),
-		UnbondingID:         collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
+		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
 		ValidatorByConsensusAddress: collections.NewMap(
 			sb, types.ValidatorsByConsAddrKey,
 			"validator_by_cons_addr",
 			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
-		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingType:        collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

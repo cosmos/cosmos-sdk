@@ -359,23 +359,27 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 	var unbondingDelegations types.UnbondingDelegations
 
-	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	unbondingDelegations, pageRes, err := query.CollectionPaginate(
+	_, pageRes, err := query.CollectionPaginate(
 		ctx,
-		k.Keeper.UnbondingDelegation,
+		k.UnbondingDelegations,
 		req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (ubd types.UnbondingDelegation, err error) {
-			unbondingDelegations = append(unbondingDelegations, value)
-			return value, err
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (unbond types.UnbondingDelegation, err error) {
+			unbond, err = types.UnmarshalUBD(k.cdc, value)
+			if err != nil {
+				return unbond, err
+			}
+			unbondingDelegations = append(unbondingDelegations, unbond)
+			return unbond, nil
 		},
 		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
 	)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{

@@ -92,12 +92,17 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
-	err := k.UnbondingDelegation.Walk(
+	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err := k.UnbondingDelegations.Walk(
 		ctx,
-		collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator),
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
-			unbondingDelegations = append(unbondingDelegations, value)
-			return false, err
+		rng,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+			unbondingDelegation, err := types.UnmarshalUBD(k.cdc, value)
+			if err != nil {
+				return true, err
+			}
+			unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
+			return false, nil
 		},
 	)
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {

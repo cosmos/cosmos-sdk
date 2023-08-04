@@ -175,16 +175,21 @@ func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAd
 
 	i := 0
 	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
-	err = k.UnbondingDelegation.Walk(
+	err = k.UnbondingDelegations.Walk(
 		ctx,
 		rng,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
-			i++
-			unbondingDelegations = append(unbondingDelegations, value)
-			if i >= int(maxRetrieve) {
-				return false, err
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+			unbondingDelegation, err := types.UnmarshalUBD(k.cdc, value)
+			if err != nil {
+				return true, err
 			}
-			return false, err
+			unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
+			i++
+
+			if i >= int(maxRetrieve) {
+				return true, nil
+			}
+			return false, nil
 		},
 	)
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
@@ -240,10 +245,15 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
-	err := k.UnbondingDelegation.Walk(
+	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err := k.UnbondingDelegations.Walk(
 		ctx,
-		nil,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+		rng,
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+			ubd, err := types.UnmarshalUBD(k.cdc, value)
+			if err != nil {
+				return true, err
+			}
 			for _, entry := range ubd.Entries {
 				unbonding = unbonding.Add(entry.Balance)
 			}

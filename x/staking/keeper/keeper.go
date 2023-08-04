@@ -37,6 +37,7 @@ type Keeper struct {
 	LastTotalPower         collections.Item[math.Int]
 	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingIndex         collections.Map[uint64, []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -86,6 +87,7 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
+		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

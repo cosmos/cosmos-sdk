@@ -123,7 +123,9 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 //   - Setting each validator's ValidatorBondShares and LiquidShares to 0
 //   - Setting each delegation's ValidatorBond field to false
 //   - Calculating the total liquid staked by summing the delegations from ICA accounts
-func MigrateStore(ctx sdk.Context, k keeper, paramstore subspace) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace, k keeper, paramstore subspace) error {
+	store := ctx.KVStore(storeKey)
+
 	ctx.Logger().Info("Staking LSM Migration: Migrating param store")
 	MigrateParamsStore(ctx, paramstore)
 
@@ -132,6 +134,12 @@ func MigrateStore(ctx sdk.Context, k keeper, paramstore subspace) error {
 
 	ctx.Logger().Info("Staking LSM Migration: Migrating delegations")
 	MigrateDelegations(ctx, k)
+
+	ctx.Logger().Info("Staking LSM Migration: Migrating UBD entries")
+	// migrate unbonding delegations
+	if err := migrateUBDEntries(ctx, store, cdc, legacySubspace); err != nil {
+		return err
+	}
 
 	ctx.Logger().Info("Staking LSM Migration: Calculating total liquid staked")
 	return k.RefreshTotalLiquidStaked(ctx)

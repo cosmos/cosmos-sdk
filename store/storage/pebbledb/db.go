@@ -62,7 +62,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	}
 
 	if len(bz) == 0 {
-		return 0, nil
+		return 0, closer.Close()
 	}
 
 	return binary.LittleEndian.Uint64(bz), closer.Close()

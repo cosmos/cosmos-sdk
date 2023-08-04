@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,8 +52,10 @@ func TestMap_Clear(t *testing.T) {
 		ctx, m := makeTest()
 		err := m.Clear(ctx, nil)
 		require.NoError(t, err)
-		_, err = m.Iterate(ctx, nil)
-		require.ErrorIs(t, err, ErrInvalidIterator)
+		err = m.Walk(ctx, nil, func(key uint64, value uint64) (bool, error) {
+			return false, fmt.Errorf("should never be called")
+		})
+		require.NoError(t, err)
 	})
 
 	t.Run("custom ranger", func(t *testing.T) {

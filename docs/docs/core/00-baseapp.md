@@ -90,7 +90,6 @@ Then, parameters used to define [volatile states](#state-updates) (i.e. cached s
   [`Commit`](#commit) and gets re-initialized on `FinalizeBlock`.
 * `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
 * `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
-* `voteExtensionState`: This state is updated during [`ExtendVote`](#extendvote) & [`VerifyVoteExtension`](#verifyvoteextension).
 
 Finally, a few more important parameters:
 
@@ -130,7 +129,7 @@ Naturally, developers can add additional `options` based on their application's 
 ## State Updates
 
 The `BaseApp` maintains four primary volatile states and a root or main state. The main state
-is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processProposalState`, `voteExtensionState` and `finalizeBlockState`
+is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processProposalState` and `finalizeBlockState`
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.

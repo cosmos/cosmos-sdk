@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -59,7 +60,11 @@ func GetCmdQueryProposer() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintObjectLegacy(prop)
+			output, err := json.Marshal(prop)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintRaw(output)
 		},
 	}
 

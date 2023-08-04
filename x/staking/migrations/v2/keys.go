@@ -13,8 +13,9 @@ const (
 )
 
 var (
-	DelegationKey     = []byte{0x31} // prefix for the delegation
-	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+	ValidatorsByConsAddrKey = []byte{0x22} // prefix for validators by consensus address
+	DelegationKey           = []byte{0x31} // prefix for the delegation
+	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
 )
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
@@ -28,7 +29,13 @@ func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
 }
 
-// gets the prefix for a delegator for all validators
+// GetDelegationsKey gets the prefix for a delegator for all validators
 func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
 	return append(DelegationKey, address.MustLengthPrefix(delAddr.Bytes())...)
+}
+
+// GetValidatorByConsAddrKey creates the key for the validator with pubkey
+// VALUE: validator operator address ([]byte)
+func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
+	return append(ValidatorsByConsAddrKey, address.MustLengthPrefix(addr)...)
 }

@@ -59,7 +59,7 @@ Of course, it is possible to define different types of internal `keeper`s for th
 Typically, a *getter* method will have the following signature
 
 ```go
-func (k Keeper) Get(ctx sdk.Context, key string) returnType
+func (k Keeper) Get(ctx context.Context, key string) returnType
 ```
 
 and the method will go through the following steps:
@@ -71,7 +71,7 @@ and the method will go through the following steps:
 Similarly, a *setter* method will have the following signature
 
 ```go
-func (k Keeper) Set(ctx sdk.Context, key string, value valueType)
+func (k Keeper) Set(ctx context.Context, key string, value valueType)
 ```
 
 and the method will go through the following steps:

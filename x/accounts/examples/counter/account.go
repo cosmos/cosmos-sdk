@@ -7,20 +7,19 @@ import (
 	echov1 "cosmossdk.io/api/cosmos/accounts/examples/echo/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/sdk"
-	"google.golang.org/protobuf/proto"
 )
 
 func NewCounter(deps *sdk.BuildDependencies) (Counter, error) {
 	return Counter{
 		Counter: collections.NewSequence(deps.SchemaBuilder, collections.NewPrefix(0), "counter"),
-		invoke:  deps.Execute,
+		invoker: deps.Execute,
 	}, nil
 }
 
 type Counter struct {
 	Counter collections.Sequence
 
-	invoke func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+	invoker sdk.Invoker
 }
 
 func (a Counter) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
@@ -39,10 +38,6 @@ func (a Counter) IncreaseCounterValue(ctx context.Context) (uint64, error) {
 	return a.Counter.Next(ctx)
 }
 
-func (a Counter) Execute(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error) {
-	return a.invoke(ctx, target, msg)
-}
-
 func (a Counter) RegisterQueryHandlers(router *sdk.QueryRouter) {
 	sdk.RegisterQueryHandler(router, func(ctx context.Context, msg *counterv1.QueryCounterRequest) (*counterv1.QueryCounterResponse, error) {
 		value, err := a.GetCounterValue(ctx)
@@ -57,16 +52,10 @@ func (a Counter) RegisterExecuteHandlers(router *sdk.ExecuteRouter) {
 	})
 
 	sdk.RegisterExecuteHandler(router, func(ctx context.Context, msg *counterv1.MsgExecuteEcho) (*counterv1.MsgExecuteEchoResponse, error) {
-		resp, err := a.invoke(ctx, msg.Target, &echov1.MsgEcho{
+		resp, err := sdk.Invoke[echov1.MsgEchoResponse](a.invoker, ctx, msg.Target, &echov1.MsgEcho{
 			Message: msg.Msg,
 		})
-		if err != nil {
-			return nil, err
-		}
-		echoResp := resp.(*echov1.MsgEchoResponse)
-		return &counterv1.MsgExecuteEchoResponse{
-			Result: echoResp.Message,
-		}, nil
+		return &counterv1.MsgExecuteEchoResponse{Result: resp.Message}, err
 	})
 }
 

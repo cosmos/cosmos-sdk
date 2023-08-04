@@ -18,6 +18,7 @@ type (
 	InitRouter        = internalaccounts.InitRouter
 	Account           = internalaccounts.Account
 	BuildDependencies = internalaccounts.BuildDependencies
+	Invoker           = internalaccounts.Invoker
 )
 
 func RegisterQueryHandler[
@@ -39,3 +40,7 @@ func RegisterInitHandler[Req, Resp any, ReqP Msg[Req], RespP Msg[Resp]](router *
 func Sender(ctx context.Context) []byte { return internalaccounts.Sender(ctx) }
 
 func Whoami(ctx context.Context) []byte { return internalaccounts.Whoami(ctx) }
+
+func Invoke[Resp, Req any, RespP Msg[Resp], ReqP Msg[Req]](invoker Invoker, ctx context.Context, target []byte, req ReqP) (RespP, error) {
+	return internalaccounts.Invoke[Resp, Req, RespP, ReqP](invoker, ctx, target, req)
+}

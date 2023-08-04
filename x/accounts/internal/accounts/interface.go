@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"google.golang.org/protobuf/proto"
@@ -19,9 +20,29 @@ type Account interface {
 	RegisterQueryHandlers(router *QueryRouter)
 }
 
+func Invoke[Resp, Req any, RespP Msg[Resp], ReqP Msg[Req]](client Invoker, ctx context.Context, target []byte, req ReqP) (RespP, error) {
+	resp, err := client.invoke(ctx, target, req)
+	if err != nil {
+		return nil, err
+	}
+	concreteResp, ok := resp.(RespP)
+	if !ok {
+		return nil, fmt.Errorf(
+			"unexpected response type: %s, wanted: %s",
+			proto.MessageName(resp),
+			proto.MessageName(RespP(new(Resp))),
+		)
+	}
+	return concreteResp, nil
+}
+
+type Invoker struct {
+	invoke func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+}
+
 type BuildDependencies struct {
 	SchemaBuilder *collections.SchemaBuilder
-	Execute       func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+	Execute       Invoker
 	Query         func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
 }
 

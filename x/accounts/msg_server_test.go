@@ -9,9 +9,9 @@ import (
 	"cosmossdk.io/x/accounts/examples/counter"
 	"cosmossdk.io/x/accounts/examples/echo"
 	"cosmossdk.io/x/accounts/tempcore/header"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -50,7 +50,7 @@ func TestMsgServer(t *testing.T) {
 }
 
 func messageToAnyJSON(t *testing.T, msg proto.Message) []byte {
-	anyMsg, err := anypb.New(&counterv1.MsgIncreaseCounter{})
+	anyMsg, err := anypb.New(msg)
 	require.NoError(t, err)
 
 	anyMsgJSON, err := protojson.Marshal(anyMsg)

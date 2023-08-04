@@ -238,11 +238,6 @@ func GetUBDsKey(delAddr sdk.AccAddress) []byte {
 	return append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)
 }
 
-// GetUBDsByValIndexKey creates the prefix keyspace for the indexes of unbonding delegations for a validator
-func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
-	return append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
-}
-
 // GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
 func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)

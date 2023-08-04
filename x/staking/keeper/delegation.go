@@ -215,26 +215,29 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetUBDsByValIndexKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
+	rng := collections.NewPrefixUntilPairRange[sdk.ValAddress, sdk.AccAddress](valAddr)
+	err = k.UnbondingDelegationByValIndex.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (stop bool, err error) {
+			valAddr := key.K1()
+			delAddr := key.K2()
+			ubdkey := types.GetUBDKey(delAddr, valAddr)
+			ubdValue, err := store.Get(ubdkey)
+			if err != nil {
+				return true, err
+			}
+			unbondingDelegation, err := types.UnmarshalUBD(k.cdc, ubdValue)
+			if err != nil {
+				return true, err
+			}
+			ubds = append(ubds, unbondingDelegation)
+			return false, nil
+		},
+	)
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return ubds, err
 	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetUBDKeyFromValIndexKey(iterator.Key())
-		value, err := store.Get(key)
-		if err != nil {
-			return ubds, err
-		}
-		ubd, err := types.UnmarshalUBD(k.cdc, value)
-		if err != nil {
-			return ubds, err
-		}
-		ubds = append(ubds, ubd)
-	}
-
 	return ubds, nil
 }
 

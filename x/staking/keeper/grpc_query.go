@@ -183,19 +183,25 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
-	ubdStore := prefix.NewStore(store, srcValPrefix)
-	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key, value []byte) error {
-		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
+	_, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.UnbondingDelegationByValIndex,
+		req.Pagination,
+		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (types.UnbondingDelegation, error) {
+			valAddr := key.K1()
+			delAddr := key.K2()
+			ubdKey := types.GetUBDKey(delAddr, valAddr)
+			storeValue := store.Get(ubdKey)
 
-		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
-		if err != nil {
-			return err
-		}
-		ubds = append(ubds, ubd)
-		return nil
-	})
+			ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
+			if err != nil {
+				return types.UnbondingDelegation{}, err
+			}
+			ubds = append(ubds, ubd)
+			return ubd, nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.ValAddress, sdk.AccAddress](valAddr),
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

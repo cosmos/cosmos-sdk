@@ -33,14 +33,15 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema                      collections.Schema
-	HistoricalInfo              collections.Map[uint64, types.HistoricalInfo]
-	LastTotalPower              collections.Item[math.Int]
-	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
-	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
-	UnbondingID                 collections.Sequence
-	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
-	UnbondingType               collections.Map[uint64, uint64]
+	Schema                        collections.Schema
+	HistoricalInfo                collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower                collections.Item[math.Int]
+	ValidatorUpdates              collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator        collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingID                   collections.Sequence
+	ValidatorByConsensusAddress   collections.Map[sdk.ConsAddress, sdk.ValAddress]
+	UnbondingType                 collections.Map[uint64, uint64]
+	UnbondingDelegationByValIndex collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -98,6 +99,12 @@ func NewKeeper(
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingDelegationByValIndex: collections.NewMap(
+			sb, types.UnbondingDelegationByValIndexKey,
+			"unbonding_delegation_by_val_index",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()

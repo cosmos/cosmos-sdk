@@ -107,6 +107,15 @@ func TestMap_IterateRaw(t *testing.T) {
 	keys, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []uint64{2, 1, 0}, keys)
+
+	// test invalid iter
+	_, err = m.IterateRaw(ctx, []byte{0x2, 0x0}, []byte{0x0, 0x0}, OrderAscending)
+	require.ErrorIs(t, err, ErrInvalidIterator)
+
+	// test on empty collection iterating does not error
+	require.NoError(t, m.Clear(ctx, nil))
+	_, err = m.IterateRaw(ctx, nil, nil, OrderAscending)
+	require.NoError(t, err)
 }
 
 func Test_encodeKey(t *testing.T) {

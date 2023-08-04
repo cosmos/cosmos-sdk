@@ -60,7 +60,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsByConsAddrKey",
 			v1.GetValidatorByConsAddrKey(consAddr),
-			types.GetValidatorByConsAddrKey(consAddr),
+			v2.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",

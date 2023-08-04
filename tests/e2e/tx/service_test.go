@@ -187,11 +187,11 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 				// Check the result and gas used are correct.
 				//
 				// The 12 events are:
-				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - Sending Fee to the pool: coin_spent, coin_received and transfer
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
-				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
-				s.Require().Equal(12, len(res.GetResult().GetEvents()))
+				// - Sending Amount to recipient: coin_spent, coin_received and transfer
+				// - Msg events: message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1> (in one message)
+				s.Require().Equal(10, len(res.GetResult().GetEvents()))
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -233,7 +233,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().Equal(12, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 12 events.
+				s.Require().Equal(10, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 10 events.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})

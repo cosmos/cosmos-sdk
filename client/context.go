@@ -321,17 +321,6 @@ func (ctx Context) PrintProto(toPrint proto.Message) error {
 	return ctx.printOutput(out)
 }
 
-// PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
-// and uses amino JSON encoding.
-// Deprecated: It will be removed in the near future!
-func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
-	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
-	if err != nil {
-		return err
-	}
-	return ctx.printOutput(out)
-}
-
 // PrintRaw is a variant of PrintProto that doesn't require a proto.Message type
 // and uses a raw JSON message. No marshaling is performed.
 func (ctx Context) PrintRaw(toPrint json.RawMessage) error {

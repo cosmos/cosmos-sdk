@@ -99,8 +99,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/genesis
 
 Let us go through the two added methods:
 
-* `InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
-* `ExportGenesis(sdk.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
+* `InitGenesis(context.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
+* `ExportGenesis(context.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
 
 ### `AppModule`
 
@@ -154,7 +154,7 @@ The `HasBeginBlocker` is an extension interface from `AppModule`. All modules th
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L56-L63
 ```
 
-* `BeginBlock(sdk.Context) error`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block.
+* `BeginBlock(context.Context) error`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block.
 
 ### `HasEndBlocker`
 
@@ -164,7 +164,7 @@ The `HasEndBlocker` is an extension interface from `AppModule`. All modules that
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L66-L72
 ```
 
-* `EndBlock(sdk.Context) error`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block.
+* `EndBlock(context.Context) error`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block.
 
 ### `HasABCIEndblock`
 
@@ -174,7 +174,7 @@ The `HasABCIEndblock` is an extension interface from `AppModule`. All modules th
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L222-L225
 ```
 
-* `EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error)`: This method gives module developers the option to inform the underlying consensus engine of validator set changes (e.g. the `staking` module).
+* `EndBlock(context.Context) ([]abci.ValidatorUpdate, error)`: This method gives module developers the option to inform the underlying consensus engine of validator set changes (e.g. the `staking` module).
 
 ### `HasPrecommit`
 
@@ -184,7 +184,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L49-L52
 ```
 
-* `Precommit(sdk.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`finalizeblockstate`](../core/00-baseapp.md#state-updates) of the block to be committed. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
+* `Precommit(context.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`finalizeblockstate`](../core/00-baseapp.md#state-updates) of the block to be committed. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
 
 ### `HasPrepareCheckState`
 
@@ -194,7 +194,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L49-L52
 ```
 
-* `PrepareCheckState(sdk.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`checkState`](../core/00-baseapp.md#state-updates) of the next block. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
+* `PrepareCheckState(context.Context)`: This method gives module developers the option to implement logic that is automatically triggered during [`Commit'](../core/00-baseapp.md#commit) of each block using the [`checkState`](../core/00-baseapp.md#state-updates) of the next block. Implement empty if no logic needs to be triggered during `Commit` of each block for this module.
 
 ### Implementing the Application Module Interfaces
 
@@ -263,14 +263,14 @@ The module manager is used throughout the application whenever an action on a co
 * `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./07-invariants.md) of module implementing the `HasInvariants` interface.
 * `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino)`: Registers legacy [`Msg`](./02-messages-and-queries.md#messages) and [`querier`](./04-query-services.md#legacy-queriers) routes.
 * `RegisterServices(cfg Configurator)`: Registers the services of modules implementing the `HasServices` interface.
-* `InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage)`: Calls the [`InitGenesis`](./08-genesis.md#initgenesis) function of each module when the application is first started, in the order defined in `OrderInitGenesis`. Returns an `abci.ResponseInitChain` to the underlying consensus engine, which can contain validator updates.
-* `ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec)`: Calls the [`ExportGenesis`](./08-genesis.md#exportgenesis) function of each module, in the order defined in `OrderExportGenesis`. The export constructs a genesis file from a previously existing state, and is mainly used when a hard-fork upgrade of the chain is required.
-* `ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string)`: Behaves the same as `ExportGenesis`, except takes a list of modules to export.
-* `BeginBlock(ctx sdk.Context) error`: At the beginning of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./05-beginblock-endblock.md) function of each modules implementing the `BeginBlockAppModule` interface, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules.
-* `EndBlock(ctx sdk.Context) error`: At the end of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `HasEndBlocker` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
+* `InitGenesis(ctx context.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage)`: Calls the [`InitGenesis`](./08-genesis.md#initgenesis) function of each module when the application is first started, in the order defined in `OrderInitGenesis`. Returns an `abci.ResponseInitChain` to the underlying consensus engine, which can contain validator updates.
+* `ExportGenesis(ctx context.Context, cdc codec.JSONCodec)`: Calls the [`ExportGenesis`](./08-genesis.md#exportgenesis) function of each module, in the order defined in `OrderExportGenesis`. The export constructs a genesis file from a previously existing state, and is mainly used when a hard-fork upgrade of the chain is required.
+* `ExportGenesisForModules(ctx context.Context, cdc codec.JSONCodec, modulesToExport []string)`: Behaves the same as `ExportGenesis`, except takes a list of modules to export.
+* `BeginBlock(ctx context.Context) error`: At the beginning of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./05-beginblock-endblock.md) function of each modules implementing the `BeginBlockAppModule` interface, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules.
+* `EndBlock(ctx context.Context) error`: At the end of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `HasEndBlocker` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
 * `EndBlock(context.Context) ([]abci.ValidatorUpdate, error)`: At the end of each block, this function is called from [`BaseApp`](../core/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `HasEndBlocker` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/02-context.md) with an event manager to aggregate [events](../core/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
-* `Precommit(ctx sdk.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately before the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `Precommit` function of each modules implementing the `HasPrecommit` interface, in the order defined in `OrderPrecommiters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the newly committed block's [`finalizeblockstate`](../core/00-baseapp.md#state-updates).
-* `PrepareCheckState(ctx sdk.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately after the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `PrepareCheckState` function of each module implementing the `HasPrepareCheckState` interface, in the order defined in `OrderPrepareCheckStaters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the next block's [`checkState`](../core/00-baseapp.md#state-updates). Writes to this state will be present in the [`checkState`](../core/00-baseapp.md#state-updates) of the next block, and therefore this method can be used to prepare the `checkState` for the next block.
+* `Precommit(ctx context.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately before the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `Precommit` function of each modules implementing the `HasPrecommit` interface, in the order defined in `OrderPrecommiters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the newly committed block's [`finalizeblockstate`](../core/00-baseapp.md#state-updates).
+* `PrepareCheckState(ctx context.Context)`: During [`Commit`](../core/00-baseapp.md#commit), this function is called from `BaseApp` immediately after the [`deliverState`](../core/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../core/04-store.md#commitmultistore) and, in turn calls the `PrepareCheckState` function of each module implementing the `HasPrepareCheckState` interface, in the order defined in `OrderPrepareCheckStaters`. It creates a child [context](../core/02-context.md) where the underlying `CacheMultiStore` is that of the next block's [`checkState`](../core/00-baseapp.md#state-updates). Writes to this state will be present in the [`checkState`](../core/00-baseapp.md#state-updates) of the next block, and therefore this method can be used to prepare the `checkState` for the next block.
 
 Here's an example of a concrete integration within an `simapp`:
 

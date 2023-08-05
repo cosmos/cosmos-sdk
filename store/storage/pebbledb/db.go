@@ -12,7 +12,7 @@ import (
 const (
 	VersionSize = 8
 
-	StorePrefixTpl   = "s/k:%d/%s/"
+	StorePrefixTpl   = "s/k:%d/%s/" // s/k:<version>/<storeKey>/<key>
 	latestVersionKey = "s/latest"
 )
 

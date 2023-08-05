@@ -28,7 +28,7 @@ var (
 // to the upstream caller. I.e. writes should be buffered until a commit is signaled,
 // which can then write a batch to disk.
 type Database struct {
-	mu  sync.RWMutex
+	mu  sync.Mutex
 	vdb store.VersionedDatabase
 }
 
@@ -55,15 +55,15 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	db.mu.RLock()
-	defer db.mu.RUnlock()
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
 	return db.vdb.Has(storeKey, version, key)
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	db.mu.RLock()
-	defer db.mu.RUnlock()
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
 	return db.vdb.Get(storeKey, version, key)
 }
@@ -83,8 +83,8 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 }
 
 func (db *Database) isClosed() bool {
-	db.mu.RLock()
-	defer db.mu.RUnlock()
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
 	return db.vdb == nil
 }

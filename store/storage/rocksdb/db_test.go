@@ -20,6 +20,7 @@ func TestDatabase_Close(t *testing.T) {
 func TestDatabase_LatestVersion(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	lv, err := db.GetLatestVersion()
 	require.NoError(t, err)
@@ -38,6 +39,7 @@ func TestDatabase_LatestVersion(t *testing.T) {
 func TestDatabase_CRUD(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	ok, err := db.Has(storeKey1, 1, []byte("key"))
 	require.NoError(t, err)
@@ -69,6 +71,7 @@ func TestDatabase_CRUD(t *testing.T) {
 func TestDatabase_Batch(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	batch := db.NewBatch(1)
 
@@ -108,6 +111,7 @@ func TestDatabase_Batch(t *testing.T) {
 func TestDatabase_ResetBatch(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	batch := db.NewBatch(1)
 
@@ -134,6 +138,7 @@ func TestDatabase_ResetBatch(t *testing.T) {
 func TestDatabase_Iterator(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	batch := db.NewBatch(1)
 
@@ -183,6 +188,7 @@ func TestDatabase_Iterator(t *testing.T) {
 func TestDatabase_ReverseIterator(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
+	defer db.Close()
 
 	batch := db.NewBatch(1)
 

@@ -103,7 +103,7 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 // of calling Set() directly.
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	batch := grocksdb.NewWriteBatch()
 	defer batch.Destroy()
@@ -121,7 +121,7 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 // instead of calling Delete() directly.
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	batch := grocksdb.NewWriteBatch()
 	defer batch.Destroy()
@@ -169,7 +169,7 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	if version == 0 {
 		ver = math.MaxUint64
 	} else {
-		ver = uint64(version)
+		ver = version
 	}
 
 	var ts [TimestampSize]byte

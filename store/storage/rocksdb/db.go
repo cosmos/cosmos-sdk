@@ -203,6 +203,14 @@ func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 	return v
 }
 
+func readOnlySlice(s *grocksdb.Slice) []byte {
+	if !s.Exists() {
+		return nil
+	}
+
+	return s.Data()
+}
+
 func cloneAppend(front []byte, tail []byte) (res []byte) {
 	res = make([]byte, len(front)+len(tail))
 

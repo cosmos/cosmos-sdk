@@ -203,11 +203,11 @@ func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 	return v
 }
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
-	res = make([]byte, len(bz)+len(tail))
+func cloneAppend(front []byte, tail []byte) (res []byte) {
+	res = make([]byte, len(front)+len(tail))
 
-	copy(res, bz)
-	copy(res[len(bz):], tail)
+	n := copy(res, front)
+	copy(res[n:], tail)
 
 	return res
 }

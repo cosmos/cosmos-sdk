@@ -1,6 +1,7 @@
 package rocksdb
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -29,15 +30,22 @@ type Database struct {
 }
 
 func New(dataDir string) (*Database, error) {
-	db, cfHandle, err := OpenRocksDB(dataDir)
+	storage, cfHandle, err := OpenRocksDB(dataDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
 	}
 
 	return &Database{
-		storage:  db,
+		storage:  storage,
 		cfHandle: cfHandle,
 	}, nil
+}
+
+func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) *Database {
+	return &Database{
+		storage:  storage,
+		cfHandle: cfHandle,
+	}
 }
 
 func (db *Database) Close() error {
@@ -96,7 +104,7 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 // of calling Set() directly.
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	batch := grocksdb.NewWriteBatch()
 	defer batch.Destroy()
@@ -114,7 +122,7 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 // instead of calling Delete() directly.
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	batch := grocksdb.NewWriteBatch()
 	defer batch.Destroy()
@@ -136,6 +144,10 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrKeyEmpty
 	}
 
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
 	prefix := storePrefix(storeKey)
 	start, end = iterateWithPrefix(prefix, start, end)
 
@@ -146,6 +158,10 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
 	}
 
 	prefix := storePrefix(storeKey)
@@ -162,7 +178,7 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	if version == 0 {
 		ver = math.MaxUint64
 	} else {
-		ver = uint64(version)
+		ver = version
 	}
 
 	var ts [TimestampSize]byte
@@ -196,11 +212,19 @@ func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 	return v
 }
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
-	res = make([]byte, len(bz)+len(tail))
+func readOnlySlice(s *grocksdb.Slice) []byte {
+	if !s.Exists() {
+		return nil
+	}
 
-	copy(res, bz)
-	copy(res[len(bz):], tail)
+	return s.Data()
+}
+
+func cloneAppend(front []byte, tail []byte) (res []byte) {
+	res = make([]byte, len(front)+len(tail))
+
+	n := copy(res, front)
+	copy(res[n:], tail)
 
 	return res
 }

@@ -24,7 +24,7 @@ func newRocksDBIterator(source *grocksdb.Iterator, prefix, start, end []byte, re
 			source.Seek(end)
 
 			if source.Valid() {
-				eoaKey := copyAndFreeSlice(source.Key()) // end or after key
+				eoaKey := readOnlySlice(source.Key()) // end or after key
 				if bytes.Compare(end, eoaKey) <= 0 {
 					source.Prev()
 				}
@@ -75,7 +75,7 @@ func (itr *iterator) Valid() bool {
 	// if key is at the end or past it, consider it invalid
 	start := itr.start
 	end := itr.end
-	key := copyAndFreeSlice(itr.source.Key())
+	key := readOnlySlice(itr.source.Key())
 
 	if itr.reverse {
 		if start != nil && bytes.Compare(key, start) < 0 {

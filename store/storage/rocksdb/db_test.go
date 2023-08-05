@@ -183,6 +183,11 @@ func TestDatabase_Iterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 9, count)
+
+	// start must be <= end
+	iter3, err := db.NewIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	require.Error(t, err)
+	require.Nil(t, iter3)
 }
 
 func TestDatabase_ReverseIterator(t *testing.T) {
@@ -233,4 +238,9 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 9, count)
+
+	// start must be <= end
+	iter3, err := db.NewReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	require.Error(t, err)
+	require.Nil(t, iter3)
 }

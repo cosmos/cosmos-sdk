@@ -11,4 +11,5 @@ var (
 	ErrUnknownStoreKey = errors.New("unknown store key")
 	ErrInvalidVersion  = errors.New("invalid version")
 	ErrKeyEmpty        = errors.New("key empty")
+	ErrStartAfterEnd   = errors.New("start key after end key")
 )

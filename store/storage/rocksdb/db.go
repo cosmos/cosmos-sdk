@@ -1,6 +1,7 @@
 package rocksdb
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -143,6 +144,10 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrKeyEmpty
 	}
 
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
 	prefix := storePrefix(storeKey)
 	start, end = iterateWithPrefix(prefix, start, end)
 
@@ -153,6 +158,10 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
 	}
 
 	prefix := storePrefix(storeKey)

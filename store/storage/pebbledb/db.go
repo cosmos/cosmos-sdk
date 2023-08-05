@@ -2,6 +2,7 @@ package pebbledb
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/store/v2"
@@ -11,7 +12,7 @@ import (
 const (
 	VersionSize = 8
 
-	StorePrefixTpl   = "s/k:%s/"
+	StorePrefixTpl   = "s/k:%d/%s/"
 	latestVersionKey = "s/latest"
 )
 
@@ -66,4 +67,25 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	}
 
 	return binary.LittleEndian.Uint64(bz), closer.Close()
+}
+
+func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
+	_, closer, err := db.storage.Get(prependStoreKey(storeKey, version, key))
+	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, closer.Close()
+}
+
+func storePrefix(storeKey string, version uint64) []byte {
+	return []byte(fmt.Sprintf(StorePrefixTpl, version, storeKey))
+}
+
+func prependStoreKey(storeKey string, version uint64, key []byte) []byte {
+	return append(storePrefix(storeKey, version), key...)
 }

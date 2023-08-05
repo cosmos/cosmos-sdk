@@ -61,6 +61,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/staking) [#17260](https://github.com/cosmos/cosmos-sdk/pull/17260) Use collections for `DelegationKey`:
+    * remove from `types`: `GetDelegationKey`, `GetDelegationsKey`
 * (x/staking) [#17256](https://github.com/cosmos/cosmos-sdk/pull/17256) Use collections for `UnbondingID`.
 * (x/staking) [#17260](https://github.com/cosmos/cosmos-sdk/pull/17260) Use collections for `ValidatorByConsAddr`:
     * remove from `types`: `GetValidatorByConsAddrKey`
@@ -71,7 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `Keeper`: `GetPreviousProposerConsAddr`, `SetPreviousProposerConsAddr`, `GetValidatorHistoricalReferenceCount`, `GetValidatorSlashEvent`, `SetValidatorSlashEvent`.
 * (x/feegrant) [#16535](https://github.com/cosmos/cosmos-sdk/pull/16535) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
 * (x/staking) [#17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
-    * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`,
+    * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`
 * (x/staking) [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062) Use collections for `ValidatorUpdates`:
     * remove `Keeper`: `SetValidatorUpdates`, `GetValidatorUpdates`
 * (x/slashing) [#17023](https://github.com/cosmos/cosmos-sdk/pull/17023) Use collections for `ValidatorSigningInfo`:

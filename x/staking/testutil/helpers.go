@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -118,12 +117,6 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 		require.Equal(sh.t, status, v.Status)
 	}
 	return v
-}
-
-// CheckDelegator asserts that a delegator exists
-func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
-	_, ok := sh.k.Delegations.Get(sh.Ctx, collections.Join(delegator, val))
-	require.Equal(sh.t, ok, found)
 }
 
 // TurnBlock calls EndBlocker and updates the block time

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -227,10 +228,13 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 
 	delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr)))
 	if err != nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"delegation with delegator %s not found for validator %s",
-			req.DelegatorAddr, req.ValidatorAddr)
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"delegation with delegator %s not found for validator %s",
+				req.DelegatorAddr, req.ValidatorAddr)
+		}
+		return nil, err
 	}
 
 	delResponse, err := delegationToDelegationResponse(ctx, k.Keeper, delegation)

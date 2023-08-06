@@ -36,7 +36,7 @@ func TestManager_List(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []*types.Snapshot{}, list)
 
-	manager.Close() // check api call compiles - does not return any value
+	require.NoError(t, manager.Close())
 }
 
 func TestManager_LoadChunk(t *testing.T) {

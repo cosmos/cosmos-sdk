@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -122,12 +123,7 @@ func (s *CLITestSuite) TestGenTxCmd() {
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd := cli.GenTxCmd(
-				module.NewBasicManager(),
-				clientCtx.TxConfig,
-				banktypes.GenesisBalancesIterator{},
-				clientCtx.HomeDir,
-			)
+			cmd := cli.GenTxCmd(module.NewBasicManager(), clientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, address.NewBech32Codec("cosmosvaloper"))
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 

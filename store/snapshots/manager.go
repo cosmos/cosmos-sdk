@@ -514,7 +514,8 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 		m.logger.Debug("snapshot is skipped", "height", height)
 		return
 	}
-	m.snapshot(height)
+	// start the routine after need to create a snapshot
+	go m.snapshot(height)
 }
 
 // shouldTakeSnapshot returns true is snapshot should be taken at height.

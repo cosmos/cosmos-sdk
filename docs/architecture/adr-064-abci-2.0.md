@@ -106,10 +106,11 @@ type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseEx
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
-A new execution state, `voteExtensionState`, will be introduced and provided as
-the `Context` that is supplied to both handlers. It will contain relevant metadata
-such as the block height and block hash. Note, `voteExtensionState` is never
-committed and will exist as ephemeral state only in the context of a single block.
+An ephemeral context and state will be supplied to both handlers. The
+context will contain relevant metadata such as the block height and block hash.
+The state will be a cached version of the committed state of the application and
+will be discarded after the execution of the handler, this means that both handlers
+get a fresh state view and no changes made to it will be written.
 
 If an application decides to implement `ExtendVoteHandler`, it must return a
 non-nil `ResponseExtendVote.VoteExtension`.
@@ -218,7 +219,8 @@ a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+	TotalBondedTokens(ctx context.Context) (math.Int, error)
+	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
 }
 
 // ValidateVoteExtensions is a function that an application can execute in
@@ -229,16 +231,10 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 			continue
 		}
 
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := app.validatorStore.GetValidatorByConsAddr(ctx, valConsAddr)
+		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		bondedTokens, cmtPubKey, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get validator %s for vote extension", valConsAddr)
-		}
-
-		cmtPubKey, err := validator.CmtConsPublicKey()
-		if err != nil {
-			return fmt.Errorf("failed to convert public key: %w", err)
+			return fmt.Errorf("failed to get bonded tokens and public key for validator %s: %w", valConsAddr, err)
 		}
 
 		if len(vote.ExtensionSignature) == 0 {

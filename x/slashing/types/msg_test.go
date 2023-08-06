@@ -12,7 +12,7 @@ import (
 
 func TestMsgUnjailGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("abcd")
-	msg := NewMsgUnjail(sdk.ValAddress(addr))
+	msg := NewMsgUnjail(sdk.ValAddress(addr).String())
 	pc := codec.NewProtoCodec(types.NewInterfaceRegistry())
 	bytes, err := pc.MarshalAminoJSON(msg)
 	require.NoError(t, err)

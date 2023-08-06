@@ -12,6 +12,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -47,6 +48,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.stakingKeeper = slashingtestutil.NewMockStakingKeeper(ctrl)
+	s.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	s.ctx = ctx
 	s.slashingKeeper = slashingkeeper.NewKeeper(

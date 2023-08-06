@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -39,6 +40,13 @@ func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
 
 	it, err := m.Iterate(ctx, nil)
 	if err != nil {
+		// if the iterator is invalid, the state can be empty
+		// and we can just return an empty array.
+		if errors.Is(err, ErrInvalidIterator) {
+			_, err = io.WriteString(writer, "]")
+			return err
+		}
+
 		return err
 	}
 	defer it.Close()

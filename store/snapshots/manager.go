@@ -550,3 +550,9 @@ func (m *Manager) snapshot(height int64) {
 		m.logger.Debug("pruned state snapshots", "pruned", pruned)
 	}
 }
+
+// close snapshot database
+func (m *Manager) Close() {
+	m.logger.Info("snapshotManager Close Database")
+	m.store.db.Close()
+}

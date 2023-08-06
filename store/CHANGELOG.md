@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#14645](https://github.com/cosmos/cosmos-sdk/pull/14645) Add limit to the length of key and value.
 * [#15683](https://github.com/cosmos/cosmos-sdk/pull/15683) `rootmulti.Store.CacheMultiStoreWithVersion` now can handle loading archival states that don't persist any of the module stores the current state has.
 * [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving restoring snapshot locally.
+* [#17294](https://github.com/cosmos/cosmos-sdk/pull/17294) Add snapshot manager Close method
 
 ### API Breaking Changes
 

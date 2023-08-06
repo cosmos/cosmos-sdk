@@ -75,7 +75,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	}
 
 	if len(bz) == 0 {
-		return 0, nil
+		return 0, store.ErrVersionNotFound
 	}
 
 	return binary.LittleEndian.Uint64(bz), nil

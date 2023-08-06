@@ -12,4 +12,5 @@ var (
 	ErrInvalidVersion  = errors.New("invalid version")
 	ErrKeyEmpty        = errors.New("key empty")
 	ErrStartAfterEnd   = errors.New("start key after end key")
+	ErrVersionNotFound = errors.New("version not found")
 )

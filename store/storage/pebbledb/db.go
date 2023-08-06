@@ -76,10 +76,26 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 			return false, nil
 		}
 
-		return false, err
+		return false, fmt.Errorf("failed to get PebbleDB value: %w", err)
 	}
 
 	return true, closer.Close()
+}
+
+func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+	bz, closer, err := db.storage.Get(prependStoreKey(storeKey, version, key))
+	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("failed to get PebbleDB value: %w", err)
+	}
+
+	bzCopy := make([]byte, len(bz))
+	copy(bzCopy, bz)
+
+	return bzCopy, closer.Close()
 }
 
 func storePrefix(storeKey string, version uint64) []byte {

@@ -23,7 +23,7 @@ func TestDatabase_LatestVersion(t *testing.T) {
 	defer db.Close()
 
 	lv, err := db.GetLatestVersion()
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Zero(t, lv)
 
 	expected := uint64(1)

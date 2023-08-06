@@ -99,15 +99,35 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	var ts [VersionSize]byte
-	binary.LittleEndian.PutUint64(ts[:], version)
+	var versionBz [VersionSize]byte
+	binary.LittleEndian.PutUint64(versionBz[:], version)
 
 	batch := db.storage.NewBatch()
 
-	if err := batch.Set([]byte(latestVersionKey), ts[:], nil); err != nil {
+	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
 	if err := batch.Set(prependStoreKey(storeKey, version, key), value, nil); err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+
+	if err := batch.Commit(defaultWriteOpts); err != nil {
+		return fmt.Errorf("failed to commit PebbleDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
+	var versionBz [VersionSize]byte
+	binary.LittleEndian.PutUint64(versionBz[:], version)
+
+	batch := db.storage.NewBatch()
+
+	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+	if err := batch.Delete(prependStoreKey(storeKey, version, key), nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
 

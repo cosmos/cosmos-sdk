@@ -1057,12 +1057,18 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 
 // Close is called in start cmd to gracefully cleanup resources.
 func (app *BaseApp) Close() error {
+	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)
 	app.logger.Info("Closing application.db")
 	_ = app.db.Close()
 
+	// Close app.snapshotManager
+	// - opened when app chains use cosmos-sdk/server/util.go/DefaultBaseappOptions (boilerplate)
+	// - which calls cosmos-sdk/server/util.go/GetSnapshotStore
+	// - which is passed to baseapp/options.go/SetSnapshot
+	// - to set app.snapshotManager = snapshots.NewManager
 	if app.snapshotManager != nil {
-		_ = app.snapshotManager.Close()
+		app.logger.Info("Closing snapshots/metadata.db")
+		app.snapshotManager.Close()
 	}
-
 	return nil
 }

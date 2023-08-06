@@ -76,7 +76,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 			return false, nil
 		}
 
-		return false, fmt.Errorf("failed to get PebbleDB value: %w", err)
+		return false, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
 	return true, closer.Close()
@@ -89,13 +89,33 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("failed to get PebbleDB value: %w", err)
+		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
 	bzCopy := make([]byte, len(bz))
 	copy(bzCopy, bz)
 
 	return bzCopy, closer.Close()
+}
+
+func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
+	var ts [VersionSize]byte
+	binary.LittleEndian.PutUint64(ts[:], version)
+
+	batch := db.storage.NewBatch()
+
+	if err := batch.Set([]byte(latestVersionKey), ts[:], nil); err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+	if err := batch.Set(prependStoreKey(storeKey, version, key), value, nil); err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+
+	if err := batch.Commit(defaultWriteOpts); err != nil {
+		return fmt.Errorf("failed to commit PebbleDB batch: %w", err)
+	}
+
+	return nil
 }
 
 func storePrefix(storeKey string, version uint64) []byte {

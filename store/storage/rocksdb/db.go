@@ -139,8 +139,8 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	return db.storage.Write(defaultWriteOpts, batch)
 }
 
-func (db *Database) NewBatch(version uint64) store.Batch {
-	return NewBatch(db, version)
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	return NewBatch(db, version), nil
 }
 
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {

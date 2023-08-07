@@ -93,11 +93,15 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	app.Commit()
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
-	app.Commit()
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	return app
 }
@@ -590,11 +594,10 @@ func TestBaseAppAnteHandler(t *testing.T) {
 // - https://github.com/cosmos/cosmos-sdk/issues/7662
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
-	app := getQueryBaseapp(t)
 
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app = baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)

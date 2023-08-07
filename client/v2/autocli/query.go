@@ -114,9 +114,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		}
 
 		output := outputType.New()
-		ctx := cmd.Context()
-		err = clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
-		if err != nil {
+		if err := clientConn.Invoke(cmd.Context(), methodName, input.Interface(), output.Interface()); err != nil {
 			return err
 		}
 

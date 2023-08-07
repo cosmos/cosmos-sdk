@@ -95,7 +95,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 		return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 	}
 
-	migrationFunc := GetMigrationCallback(target)
+	migrationFunc := migrations[target]
 	if migrationFunc == nil {
 		return fmt.Errorf("unknown migration function for version: %s", target)
 	}

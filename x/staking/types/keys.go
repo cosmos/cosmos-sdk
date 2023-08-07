@@ -219,20 +219,6 @@ func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 	return append(append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...), address.MustLengthPrefix(delAddr)...)
 }
 
-// GetUBDKeyFromValIndexKey rearranges the ValIndexKey to get the UBDKey
-func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
-	kv.AssertKeyAtLeastLength(indexKey, 2)
-	addrs := indexKey[1:] // remove prefix bytes
-
-	valAddrLen := addrs[0]
-	kv.AssertKeyAtLeastLength(addrs, 2+int(valAddrLen))
-	valAddr := addrs[1 : 1+valAddrLen]
-	kv.AssertKeyAtLeastLength(addrs, 3+int(valAddrLen))
-	delAddr := addrs[valAddrLen+2:]
-
-	return GetUBDKey(delAddr, valAddr)
-}
-
 // GetUBDsKey creates the prefix for all unbonding delegations from a delegator
 func GetUBDsKey(delAddr sdk.AccAddress) []byte {
 	return append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)

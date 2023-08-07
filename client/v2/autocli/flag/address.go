@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,7 +19,7 @@ import (
 type addressStringType struct{}
 
 func (a addressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.AddressCodec}
+	return &addressValue{addressCodec: b.AddressCodec, keyring: b.Keyring}
 }
 
 func (a addressStringType) DefaultValue() string {
@@ -28,7 +29,7 @@ func (a addressStringType) DefaultValue() string {
 type validatorAddressStringType struct{}
 
 func (a validatorAddressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.ValidatorAddressCodec}
+	return &addressValue{addressCodec: b.ValidatorAddressCodec, keyring: b.Keyring}
 }
 
 func (a validatorAddressStringType) DefaultValue() string {
@@ -38,6 +39,7 @@ func (a validatorAddressStringType) DefaultValue() string {
 type addressValue struct {
 	value        string
 	addressCodec address.Codec
+	keyring      keyring.Keyring
 }
 
 func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
@@ -50,7 +52,14 @@ func (a addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue it only supports bech32 addresses.
 func (a *addressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	// check if it's a keyring address
+	_, err := a.keyring.LookupKey(s)
+	if err == nil {
+		a.value = s
+		return nil
+	}
+
+	_, err = a.addressCodec.StringToBytes(s)
 	if err != nil {
 		return fmt.Errorf("invalid bech32 account address: %w", err)
 	}
@@ -67,7 +76,7 @@ func (a addressValue) Type() string {
 type consensusAddressStringType struct{}
 
 func (a consensusAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	return &consensusAddressValue{addressValue: addressValue{addressCodec: b.ConsensusAddressCodec}}
+	return &consensusAddressValue{addressValue: addressValue{addressCodec: b.ConsensusAddressCodec, keyring: b.Keyring}}
 }
 
 func (a consensusAddressStringType) DefaultValue() string {
@@ -87,7 +96,14 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	// check if it's a keyring address
+	_, err := a.keyring.LookupKey(s)
+	if err == nil {
+		a.value = s
+		return nil
+	}
+
+	_, err = a.addressCodec.StringToBytes(s)
 	if err == nil {
 		a.value = s
 		return nil

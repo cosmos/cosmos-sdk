@@ -142,6 +142,14 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+	panic("not implemented!")
+}
+
+func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+	panic("not implemented!")
+}
+
 func storePrefix(storeKey string, version uint64) []byte {
 	return []byte(fmt.Sprintf(StorePrefixTpl, version, storeKey))
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -36,7 +37,7 @@ func TestDecodeStore(t *testing.T) {
 		Pairs: []kv.Pair{
 			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshal(&info)},
 			{Key: types.ValidatorMissedBlockBitmapKey(consAddr1, 6), Value: missed},
-			{Key: types.AddrPubkeyRelationKey(delAddr1), Value: bz},
+			{Key: append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(delAddr1)...), Value: bz},
 			{Key: []byte{0x99}, Value: []byte{0x99}}, // This test should panic
 		},
 	}

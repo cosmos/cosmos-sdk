@@ -53,7 +53,7 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			sb,
 			types.AddrPubkeyRelationKeyPrefix,
 			"addr_pubkey_relation",
-			collections.BytesKey,
+			sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			codec.CollInterfaceValue[cryptotypes.PubKey](cdc),
 		),
 	}
@@ -79,13 +79,12 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
-	key := types.AddrPubkeyRelationKey(pubkey.Address())
-	return k.AddrPubkeyRelation.Set(ctx, key, pubkey)
+	return k.AddrPubkeyRelation.Set(ctx, pubkey.Address(), pubkey)
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	return k.AddrPubkeyRelation.Get(ctx, types.AddrPubkeyRelationKey(a))
+	return k.AddrPubkeyRelation.Get(ctx, a)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -141,5 +140,5 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
-	return k.AddrPubkeyRelation.Remove(ctx, types.AddrPubkeyRelationKey(addr))
+	return k.AddrPubkeyRelation.Remove(ctx, addr)
 }

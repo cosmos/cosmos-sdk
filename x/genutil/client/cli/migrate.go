@@ -57,6 +57,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 `, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+<<<<<<< HEAD
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			var err error
@@ -124,6 +125,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			cmd.Println(string(sortedBz))
 			return nil
+=======
+			return MigrateHandler(cmd, args, migrations)
+>>>>>>> 7a778f5c9 (refactor: add MigrateHandler to allow reuse migrate genesis related function  (#17296))
 		},
 	}
 
@@ -131,4 +135,85 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd
+}
+
+// MigrateHandler handles the migration command with a migration map as input,
+// returning an error upon failure.
+func MigrateHandler(cmd *cobra.Command, args []string, migrations types.MigrationMap) error {
+	clientCtx := client.GetClientContextFromCmd(cmd)
+
+	target := args[0]
+	migrationFunc, ok := migrations[target]
+	if !ok || migrationFunc == nil {
+		versions := maps.Keys(migrations)
+		sort.Strings(versions)
+		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
+	}
+
+	importGenesis := args[1]
+	appGenesis, err := types.AppGenesisFromFile(importGenesis)
+	if err != nil {
+		return err
+	}
+
+	if err := appGenesis.ValidateAndComplete(); err != nil {
+		return fmt.Errorf("make sure that you have correctly migrated all CometBFT consensus params. Refer the UPGRADING.md (%s): %w", chainUpgradeGuide, err)
+	}
+
+	// Since some default values are valid values, we just print to
+	// make sure the user didn't forget to update these values.
+	if appGenesis.Consensus.Params.Evidence.MaxBytes == 0 {
+		fmt.Printf("Warning: consensus.params.evidence.max_bytes is set to 0. If this is"+
+			" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
+			" upgrade guide at %s.\n", chainUpgradeGuide)
+	}
+
+	var initialState types.AppMap
+	if err := json.Unmarshal(appGenesis.AppState, &initialState); err != nil {
+		return fmt.Errorf("failed to JSON unmarshal initial genesis state: %w", err)
+	}
+
+	newGenState, err := migrationFunc(initialState, clientCtx)
+	if err != nil {
+		return fmt.Errorf("failed to migrate genesis state: %w", err)
+	}
+
+	appGenesis.AppState, err = json.Marshal(newGenState)
+	if err != nil {
+		return fmt.Errorf("failed to JSON marshal migrated genesis state: %w", err)
+	}
+
+	genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
+	if genesisTime != "" {
+		var t time.Time
+
+		err := t.UnmarshalText([]byte(genesisTime))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal genesis time: %w", err)
+		}
+
+		appGenesis.GenesisTime = t
+	}
+
+	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
+	if chainID != "" {
+		appGenesis.ChainID = chainID
+	}
+
+	bz, err := json.Marshal(appGenesis)
+	if err != nil {
+		return fmt.Errorf("failed to marshal app genesis: %w", err)
+	}
+
+	outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+	if outputDocument == "" {
+		cmd.Println(string(bz))
+		return nil
+	}
+
+	if err = appGenesis.SaveAs(outputDocument); err != nil {
+		return err
+	}
+
+	return nil
 }

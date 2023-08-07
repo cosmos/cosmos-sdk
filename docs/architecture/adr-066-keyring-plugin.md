@@ -42,6 +42,7 @@ The idea is to define a service method for each method already present in the ke
 Similarly, a request/response message will be defined for each service method.
 
 #### Service Definition
+
 ```protobuf
 service KeyringService {
   rpc Backend(BackendRequest) returns (BackendResponse);
@@ -69,6 +70,7 @@ service KeyringService {
 ```
 
 #### Messages Definition
+
 ```protobuf
 syntax = "proto3";
 
@@ -228,6 +230,7 @@ message ExportPrivKeyArmorByAddressResponse {
   string armor = 1;
 } 
 ```
+
 Some messages are identical and could be consolidated into a single message.
 However, creating separate messages for each RPC allows for individual extensibility in the future.
 
@@ -240,7 +243,9 @@ currently defined types, such as `Record`, `PubKey`, and `PrivKey`, in the same 
 the existing keyring does.
 
 #### Keyring Plugin GRPC Definition
+
 `PluginKeyring` interface implements the gRPC service defined before in the proto files.
+
 ```go
 type PluginKeyring interface {
 	Backend(BackendRequest) BackendResponse
@@ -268,7 +273,9 @@ type PluginKeyring interface {
 ```
 
 #### Client
+
 Client is what the main process will instantiate.
+
 ```go
 type pluginClient interface {
     PluginKeyring
@@ -286,7 +293,9 @@ func (c *Client) Backend(r *BackendRequest) (*BackendResponse, error) {
 ```
 
 #### Server
+
 Server is what plugins will instantiate.
+
 ```go
 type PluginServer interface {
     KeyringServiceServer // generated with protoc
@@ -304,6 +313,7 @@ func (s Server) Backend(ctx context.Context, r *BackendRequest) (*BackendRespons
 ```
 
 #### KeyringGrpc
+
 ```go
 type keyringGRPC interface {
 	plugin.Plugin       // hashicorp/go-plugin
@@ -334,6 +344,7 @@ func (p *KeyringGRPC) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker,
 ```
 
 #### Keyring Concrete Type
+
 ```go
 import "github.com/hashicorp/go-plugin"
 
@@ -360,6 +371,7 @@ func NewKeyring(...) *PluginsKeyStore {
 ```
 
 #### Plugin Concrete type
+
 ```go
 import "github.com/hashicorp/go-plugin"
 
@@ -389,6 +401,7 @@ func main() {
 }
 
 ```
+
 ### Security
 
 Plugins must run in the same local network as the main process thus some security is guaranteed as the data never
@@ -399,17 +412,20 @@ leaves the same machine. In any case connection can be secured with tls.
 This new keyring could be implemented either in the keyring package of the SDK or in a new repository.
 
 #### New Repository
+
 If it is implemented in a different repository, the `keyring.New` method should be updated to support
 the instantiation of a keyring for plugins.
 
 A new dependency will be added to the SDK.
 
 #### Keyring Package
+
 If the new keyring implementation is defined in the keyring package, it would be beneficial to
 consider the following cosmetic refactors:
- * keyring.go: This file should define abstract types only, along with some common functions.
- * keyStore: Move the [keyStore](https://github.com/cosmos/cosmos-sdk/blob/v0.47.3/crypto/keyring/keyring.go#L206) code to its own file, along with all its associated functions. 
- * factory.go: Create a factory file responsible for instantiating different keyrings. 
+
+* keyring.go: This file should define abstract types only, along with some common functions.
+* keyStore: Move the [keyStore](https://github.com/cosmos/cosmos-sdk/blob/v0.47.3/crypto/keyring/keyring.go#L206) code to its own file, along with all its associated functions. 
+* factory.go: Create a factory file responsible for instantiating different keyrings. 
 
 
 ## Consequences

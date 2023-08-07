@@ -9,6 +9,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -75,7 +76,26 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
+		if module, ok := appModule.(module.HasServices); ok {
+			module.RegisterServices(a.configurator)
+		} else if module, ok := appModule.(appmodule.HasServices); ok {
+			if err := module.RegisterServices(a.configurator); err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
+}
+
+// RegisterStores registers the provided store keys.
+// This method should only be used for registering extra stores
+// wiich is necessary for modules that not registered using the app config.
+// To be used in combination of RegisterModules.
+func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
+	a.storeKeys = append(a.storeKeys, keys...)
+	a.MountStores(keys...)
+
 	return nil
 }
 

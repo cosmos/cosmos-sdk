@@ -222,6 +222,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (stop bool, err error) {
 			valAddr := key.K1()
 			delAddr := key.K2()
+			delAddr = delAddr[1:] // remove prefix bytes
 			ubdkey := types.GetUBDKey(delAddr, valAddr)
 			ubdValue, err := store.Get(ubdkey)
 			if err != nil {

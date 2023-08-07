@@ -234,7 +234,7 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 				"delegation with delegator %s not found for validator %s",
 				req.DelegatorAddr, req.ValidatorAddr)
 		}
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	delResponse, err := delegationToDelegationResponse(ctx, k.Keeper, delegation)

@@ -93,7 +93,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return db.vdb.GetLatestVersion()
 }
 
-func (db *Database) NewBatch(version uint64) store.Batch {
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return db.vdb.NewBatch(version)
 }
 

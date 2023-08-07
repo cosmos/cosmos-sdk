@@ -20,9 +20,9 @@ type Batch interface {
 type Batcher interface {
 	// NewBatch creates a write-only database that buffers changes to the underlying
 	// db until a final write is called.
-	NewBatch() Batch
+	NewBatch() (Batch, error)
 }
 
 type VersionedBatcher interface {
-	NewBatch(version uint64) Batch
+	NewBatch(version uint64) (Batch, error)
 }

@@ -73,7 +73,8 @@ func TestDatabase_Batch(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	batch := db.NewBatch(1)
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
 		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
@@ -113,7 +114,8 @@ func TestDatabase_ResetBatch(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	batch := db.NewBatch(1)
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
 		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
@@ -140,7 +142,8 @@ func TestDatabase_Iterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	batch := db.NewBatch(1)
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
@@ -195,7 +198,8 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	batch := db.NewBatch(1)
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099

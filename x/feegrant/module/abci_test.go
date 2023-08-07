@@ -89,7 +89,7 @@ func TestFeegrantPruning(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Len(t, res.Allowances, 3)
+	require.Len(t, res.Allowances, 2)
 
 	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
 	module.EndBlocker(testCtx.Ctx, feegrantKeeper)

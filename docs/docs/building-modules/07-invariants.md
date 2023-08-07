@@ -8,9 +8,7 @@ sidebar_position: 1
 An invariant is a property of the application that should always be true. In the context of the Cosmos SDK, an `Invariant` is a function that checks for a particular invariant. These functions are useful to detect bugs early on and act upon them to limit their potential consequences (e.g. by halting the chain). They are also useful in the development process of the application to detect bugs via simulations.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Keepers](./06-keeper.md)
 
@@ -32,7 +30,7 @@ In practice, each module implements `Invariant`s in a `keeper/invariants.go` fil
 // Example for an Invariant that checks balance-related invariants
 
 func BalanceInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
+	return func(ctx context.Context) (string, bool) {
         // Implement checks for balance-related invariants
     }
 }
@@ -46,7 +44,7 @@ Additionally, module developers should generally implement an `AllInvariants` fu
 
 func AllInvariants(k Keeper) sdk.Invariant {
 
-	return func(ctx sdk.Context) (string, bool) {
+	return func(ctx context.Context) (string, bool) {
 		res, stop := BalanceInvariants(k)(ctx)
 		if stop {
 			return res, stop

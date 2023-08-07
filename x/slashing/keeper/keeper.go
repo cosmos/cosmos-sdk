@@ -46,7 +46,7 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			sb,
 			types.ValidatorSigningInfoKeyPrefix,
 			"validator_signing_info",
-			sdk.ConsAddressKey,
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorSigningInfo](cdc),
 		),
 		AddrPubkeyRelation: collections.NewMap(

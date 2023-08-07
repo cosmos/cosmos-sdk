@@ -21,34 +21,34 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithd
 	}
 }
 
-func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
+func NewMsgWithdrawDelegatorReward(delAddr, valAddr string) *MsgWithdrawDelegatorReward {
 	return &MsgWithdrawDelegatorReward{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 	}
 }
 
-func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {
+func NewMsgWithdrawValidatorCommission(valAddr string) *MsgWithdrawValidatorCommission {
 	return &MsgWithdrawValidatorCommission{
-		ValidatorAddress: valAddr.String(),
+		ValidatorAddress: valAddr,
 	}
 }
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
 // a funding amount.
-func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFundCommunityPool {
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor string) *MsgFundCommunityPool {
 	return &MsgFundCommunityPool{
 		Amount:    amount,
-		Depositor: depositor.String(),
+		Depositor: depositor,
 	}
 }
 
 // NewMsgDepositValidatorRewardsPool returns a new MsgDepositValidatorRewardsPool
 // with a depositor and a funding amount.
-func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coins) *MsgDepositValidatorRewardsPool {
+func NewMsgDepositValidatorRewardsPool(depositor, valAddr string, amount sdk.Coins) *MsgDepositValidatorRewardsPool {
 	return &MsgDepositValidatorRewardsPool{
 		Amount:           amount,
-		Depositor:        depositor.String(),
-		ValidatorAddress: valAddr.String(),
+		Depositor:        depositor,
+		ValidatorAddress: valAddr,
 	}
 }

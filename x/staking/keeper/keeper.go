@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -34,8 +33,14 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema         collections.Schema
-	LastTotalPower collections.Item[math.Int]
+	Schema                      collections.Schema
+	HistoricalInfo              collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower              collections.Item[math.Int]
+	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingID                 collections.Sequence
+	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
+	UnbondingType               collections.Map[uint64, uint64]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -77,6 +82,22 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
+		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, codec.CollValue[types.HistoricalInfo](cdc)),
+		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
+		DelegationsByValidator: collections.NewMap(
+			sb, types.DelegationByValIndexKey,
+			"delegations_by_validator",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.BytesValue,
+		),
+		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
+		ValidatorByConsensusAddress: collections.NewMap(
+			sb, types.ValidatorsByConsAddrKey,
+			"validator_by_cons_addr",
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collcodec.KeyToValueCodec(sdk.ValAddressKey),
+		),
+		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
@@ -126,31 +147,4 @@ func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
 // ConsensusAddressCodec returns the app consensus address codec.
 func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
 	return k.consensusAddressCodec
-}
-
-// SetValidatorUpdates sets the ABCI validator power updates for the current block.
-func (k Keeper) SetValidatorUpdates(ctx context.Context, valUpdates []abci.ValidatorUpdate) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&types.ValidatorUpdates{Updates: valUpdates})
-	if err != nil {
-		return err
-	}
-	return store.Set(types.ValidatorUpdatesKey, bz)
-}
-
-// GetValidatorUpdates returns the ABCI validator power updates within the current block.
-func (k Keeper) GetValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.ValidatorUpdatesKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var valUpdates types.ValidatorUpdates
-	err = k.cdc.Unmarshal(bz, &valUpdates)
-	if err != nil {
-		return nil, err
-	}
-
-	return valUpdates.Updates, nil
 }

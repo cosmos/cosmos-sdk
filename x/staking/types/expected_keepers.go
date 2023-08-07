@@ -3,17 +3,13 @@ package types
 import (
 	context "context"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// DistributionKeeper expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx context.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) sdk.DecCoins
-}
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
@@ -76,6 +72,10 @@ type ValidatorSet interface {
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
+
+	// BondedTokensAndPubKeyByConsAddr returns the bonded tokens and consensus public key for a validator.
+	// Used in vote extension validation.
+	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

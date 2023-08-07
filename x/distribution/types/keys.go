@@ -43,19 +43,19 @@ const (
 //
 // - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
-// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height><period>: ValidatorSlashEvent
 //
 // - 0x09: Params
 var (
 	FeePoolKey                           = collections.NewPrefix(0) // key for global distribution state
-	ProposerKey                          = []byte{0x01}             // key for the proposer operator address
+	ProposerKey                          = collections.NewPrefix(1) // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix    = collections.NewPrefix(2) // key for outstanding rewards
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = collections.NewPrefix(4) // key for delegator starting info
 	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = collections.NewPrefix(6) // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
-	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
+	ValidatorSlashEventPrefix            = collections.NewPrefix(8) // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
 

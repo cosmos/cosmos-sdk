@@ -2,7 +2,6 @@ package flag
 
 import (
 	"context"
-	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -13,7 +12,7 @@ import (
 type coinType struct{}
 
 type coinValue struct {
-	value []*basev1beta1.Coin
+	value *basev1beta1.Coin
 }
 
 func (c coinType) NewValue(_ context.Context, _ *Builder) Value {
@@ -29,28 +28,19 @@ func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
-
-	return protoreflect.ValueOfMessage(c.value[0].ProtoReflect()), nil
+	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
 }
 
 func (c *coinValue) String() string {
-	stringCoin, _ := coins.FormatCoins(c.value, nil)
-	return stringCoin
+	return c.value.String()
 }
 
 func (c *coinValue) Set(stringValue string) error {
-	coinsStr := strings.Split(stringValue, ",")
-	result := make([]*basev1beta1.Coin, len(coinsStr))
-
-	for i, coinStr := range coinsStr {
-		coin, err := coins.ParseCoin(coinStr)
-		if err != nil {
-			return err
-		}
-		result[i] = coin
+	coin, err := coins.ParseCoin(stringValue)
+	if err != nil {
+		return err
 	}
-
-	c.value = result
+	c.value = coin
 	return nil
 }
 

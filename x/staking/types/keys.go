@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/core/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -101,7 +101,7 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
 // VALUE: validator operator address ([]byte)
-func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int, valAc address.Codec) []byte {
+func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int, valAc addresscodec.Codec) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	// NOTE the larger values are of higher value
 

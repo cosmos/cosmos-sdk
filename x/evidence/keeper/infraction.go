@@ -39,7 +39,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		return nil
 	}
 
-	if !validator.GetOperator().Empty() {
+	if len(validator.GetOperator()) != 0 {
 		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
 			// Ignore evidence that cannot be handled.
 			//

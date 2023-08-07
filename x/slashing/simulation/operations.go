@@ -92,7 +92,12 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}
 
-		selfDel, err := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		bz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to convert validator address to bytes"), nil, err
+		}
+
+		selfDel, err := sk.Delegation(ctx, simAccount.Address, bz)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, err
 		}
@@ -109,7 +114,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}
 
-		msg := types.NewMsgUnjail(validator.GetOperator().String())
+		msg := types.NewMsgUnjail(validator.GetOperator())
 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

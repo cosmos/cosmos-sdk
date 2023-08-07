@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -45,7 +46,7 @@ func TestGetValidatorPowerRank(t *testing.T) {
 		{val4, "230000010000000000149c288ede7df62742fc3b7d0962045a8cef0f79f6"},
 	}
 	for i, tt := range tests {
-		got := hex.EncodeToString(types.GetValidatorsByPowerIndexKey(tt.validator, sdk.DefaultPowerReduction))
+		got := hex.EncodeToString(types.GetValidatorsByPowerIndexKey(tt.validator, sdk.DefaultPowerReduction, address.NewBech32Codec("cosmosvalcons")))
 
 		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
 	}

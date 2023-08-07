@@ -9,7 +9,6 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -74,8 +73,6 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
 		if module, ok := appModule.(module.HasServices); ok {
-			module.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(appmodule.HasServices); ok {
 			module.RegisterServices(a.configurator)
 		}
 	}

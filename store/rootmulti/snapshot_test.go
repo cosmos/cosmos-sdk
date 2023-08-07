@@ -146,8 +146,8 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 			ch := make(chan io.ReadCloser)
 			go func() {
 				streamWriter := snapshots.NewStreamWriter(ch)
-				defer streamWriter.Close()
 				require.NotNil(t, streamWriter)
+				defer streamWriter.Close()
 				err := store.Snapshot(version, streamWriter)
 				require.NoError(t, err)
 			}()
@@ -257,6 +257,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		go func() {
 			streamWriter := snapshots.NewStreamWriter(chunks)
 			require.NotNil(b, streamWriter)
+			defer streamWriter.Close()
 			err := source.Snapshot(uint64(version), streamWriter)
 			require.NoError(b, err)
 		}()
@@ -293,6 +294,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 		go func() {
 			writer := snapshots.NewStreamWriter(chunks)
 			require.NotNil(b, writer)
+			defer writer.Close()
 			err := source.Snapshot(version, writer)
 			require.NoError(b, err)
 		}()

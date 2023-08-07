@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/client/v2/autocli/flag/maps"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/client/v2/autocli/flag/maps"
 )
 
 func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {

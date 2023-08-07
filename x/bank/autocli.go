@@ -87,17 +87,5 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{
-					RpcMethod:      "Send",
-					Use:            "send [from_key_or_address] [to_address] [amount]",
-					Short:          "Send funds from one account to another.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
-				},
-			},
-			EnhanceCustomCommand: true,
-		},
 	}
 }

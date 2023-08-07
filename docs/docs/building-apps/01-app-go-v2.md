@@ -117,6 +117,31 @@ More information on how work `depinject.Configs` and `depinject.Supply` can be f
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L186-L216
 ```
 
+### Registering non app wiring modules
+
+It is possible to combine app wiring / depinject enabled modules with non app wiring modules.
+To do so, use the `app.RegisterModules` method to register the modules on your app, as well as `app.RegisterStores` for registering the extra stores needed.
+
+```go
+// ....
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+
+// register module manually
+app.RegisterStores(storetypes.NewKVStoreKey(example.ModuleName))
+app.ExampleKeeper = examplekeeper.NewKeeper(app.appCodec, app.AccountKeeper.AddressCodec(), runtime.NewKVStoreService(app.GetKey(example.ModuleName)), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+exampleAppModule := examplemodule.NewAppModule(app.ExampleKeeper)
+if err := app.RegisterModules(&exampleAppModule); err != nil {
+	panic(err)
+}
+
+// ....
+```
+
+:::warning
+When using AutoCLI and combining app wiring and non app wiring modules. The AutoCLI options should be manually constructed instead of injected.
+Otherwise it will miss the non depinject modules and not register their CLI.
+:::
+
 ### Complete `app_v2.go`
 
 :::tip

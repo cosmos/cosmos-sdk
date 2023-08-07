@@ -123,13 +123,7 @@ func (s *CLITestSuite) TestGenTxCmd() {
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd := cli.GenTxCmd(
-				module.NewBasicManager(),
-				clientCtx.TxConfig,
-				banktypes.GenesisBalancesIterator{},
-				clientCtx.HomeDir,
-				address.NewBech32Codec("cosmosvaloper"),
-			)
+			cmd := cli.GenTxCmd(module.NewBasicManager(), clientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, address.NewBech32Codec("cosmosvaloper"))
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 

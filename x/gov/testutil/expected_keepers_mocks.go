@@ -262,6 +262,21 @@ func (mr *MockBankKeeperMockRecorder) DenomMetadata(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadata", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadata), arg0, arg1)
 }
 
+// DenomMetadataByQueryString mocks base method.
+func (m *MockBankKeeper) DenomMetadataByQueryString(arg0 context.Context, arg1 *types0.QueryDenomMetadataByQueryStringRequest) (*types0.QueryDenomMetadataByQueryStringResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DenomMetadataByQueryString", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QueryDenomMetadataByQueryStringResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DenomMetadataByQueryString indicates an expected call of DenomMetadataByQueryString.
+func (mr *MockBankKeeperMockRecorder) DenomMetadataByQueryString(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadataByQueryString", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadataByQueryString), arg0, arg1)
+}
+
 // DenomOwners mocks base method.
 func (m *MockBankKeeper) DenomOwners(arg0 context.Context, arg1 *types0.QueryDenomOwnersRequest) (*types0.QueryDenomOwnersResponse, error) {
 	m.ctrl.T.Helper()

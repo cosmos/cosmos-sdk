@@ -74,7 +74,7 @@ module to know that the upgrade has been safely applied, a handler with the name
 Here is an example handler for an upgrade named "my-fancy-upgrade":
 
 ```go
-app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx sdk.Context, plan upgrade.Plan) {
+app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx context.Context, plan upgrade.Plan) {
  // Perform any migrations of the state store needed for this upgrade
 })
 ```
@@ -88,7 +88,7 @@ Here is a sample code to set store migrations with an upgrade:
 
 ```go
 // this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
-app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx sdk.Context, plan upgrade.Plan) {
+app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx context.Context, plan upgrade.Plan) {
  // upgrade changes here
 })
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

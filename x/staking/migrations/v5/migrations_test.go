@@ -112,10 +112,10 @@ func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.Sto
 	var delegations []stakingtypes.Delegation
 
 	store := ctx.KVStore(storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, stakingtypes.GetDelegationsByValPrefixKey(valAddr))
+	iterator := storetypes.KVStorePrefixIterator(store, v5.GetDelegationsByValPrefixKey(valAddr))
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation stakingtypes.Delegation
-		valAddr, delAddr, err := stakingtypes.ParseDelegationsByValKey(iterator.Key())
+		valAddr, delAddr, err := v5.ParseDelegationsByValKey(iterator.Key())
 		if err != nil {
 			panic(err)
 		}

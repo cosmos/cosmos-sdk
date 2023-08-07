@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -414,6 +415,10 @@ func TestTally(t *testing.T) {
 			assert.Equal(t, tt.expectedPass, pass, "wrong pass")
 			assert.Equal(t, tt.expectedBurn, burn, "wrong burn")
 			assert.Equal(t, tt.expectedTally, tally)
+			// Assert votes removal after tally
+			rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
+			_, err = suite.keeper.Votes.Iterate(suite.ctx, rng)
+			assert.ErrorIs(t, err, collections.ErrInvalidIterator, "votes must be removed after tally")
 		})
 	}
 }

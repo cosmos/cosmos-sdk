@@ -100,7 +100,7 @@ Module's `handler` function should also set a new `EventManager` to the `context
 
 ```go
 func NewHandler(keeper Keeper) sdk.Handler {
-    return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+    return func(ctx context.Context, msg sdk.Msg) (*sdk.Result, error) {
         ctx = ctx.WithEventManager(sdk.NewEventManager())
         switch msg := msg.(type) {
 ```

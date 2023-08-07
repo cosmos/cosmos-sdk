@@ -8,6 +8,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/client/v2/autocli/flag/maps"
 )
 
 func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind, valueKind protoreflect.Kind, name, shorthand, usage string) HasValue {
@@ -18,126 +20,126 @@ func bindSimpleMapFlag(flagSet *pflag.FlagSet, keyKind, valueKind protoreflect.K
 			val := flagSet.StringToStringP(name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := StringToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.StringToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 			val := flagSet.StringToInt64P(name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := StringToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.StringToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := StringToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.StringToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := StringToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.StringToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		switch valueKind {
 		case protoreflect.StringKind:
-			val := Int32ToStringP(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToStringP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := Int32ToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			val := Int32ToInt64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToInt64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := Int32ToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := Int32ToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := Int32ToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.Int32ToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 		switch valueKind {
 		case protoreflect.StringKind:
-			val := Int64ToStringP(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToStringP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := Int64ToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			val := Int64ToInt64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToInt64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := Int64ToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := Int64ToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := Int64ToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.Int64ToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 	case protoreflect.Uint32Kind:
 		switch valueKind {
 		case protoreflect.StringKind:
-			val := Uint32ToStringP(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToStringP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := Uint32ToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			val := Uint32ToInt64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToInt64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := Uint32ToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := Uint32ToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := Uint32ToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint32ToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 	case protoreflect.Uint64Kind:
 		switch valueKind {
 		case protoreflect.StringKind:
-			val := Uint64ToStringP(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToStringP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := Uint64ToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			val := Uint64ToInt64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToInt64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := Uint64ToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := Uint64ToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := Uint64ToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.Uint64ToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 	case protoreflect.BoolKind:
 		switch valueKind {
 		case protoreflect.StringKind:
-			val := BoolToStringP(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToStringP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfString)
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			val := BoolToInt32P(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToInt32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt32)
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			val := BoolToInt64P(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToInt64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfInt64)
 		case protoreflect.Uint32Kind:
-			val := BoolToUint32P(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToUint32P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint32)
 		case protoreflect.Uint64Kind:
-			val := BoolToUint64P(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToUint64P(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfUint64)
 		case protoreflect.BoolKind:
-			val := BoolToBoolP(flagSet, name, shorthand, nil, usage)
+			val := maps.BoolToBoolP(flagSet, name, shorthand, nil, usage)
 			return newMapValue(val, protoreflect.ValueOfBool)
 		}
 

@@ -89,6 +89,7 @@ func (f fieldBinding) bind(msg protoreflect.Message) error {
 	if err != nil {
 		return err
 	}
+
 	kind := f.field.Kind()
 	if !(field.IsList() ||
 		field.IsMap() ||
@@ -96,5 +97,6 @@ func (f fieldBinding) bind(msg protoreflect.Message) error {
 		kind == protoreflect.GroupKind) {
 		msg.Set(f.field, val)
 	}
+
 	return nil
 }

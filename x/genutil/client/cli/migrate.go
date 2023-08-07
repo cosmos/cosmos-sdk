@@ -57,77 +57,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 `, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-<<<<<<< HEAD
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			var err error
-
-			target := args[0]
-			importGenesis := args[1]
-
-			genDoc, err := validateGenDoc(importGenesis)
-			if err != nil {
-				return err
-			}
-
-			// Since some default values are valid values, we just print to
-			// make sure the user didn't forget to update these values.
-			if genDoc.ConsensusParams.Evidence.MaxBytes == 0 {
-				fmt.Printf("Warning: consensus_params.evidence.max_bytes is set to 0. If this is"+
-					" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
-					" upgrade guide at %s.\n", chainUpgradeGuide)
-			}
-
-			var initialState types.AppMap
-			if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
-				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
-			}
-
-			migrationFunc := GetMigrationCallback(target)
-			if migrationFunc == nil {
-				return fmt.Errorf("unknown migration function for version: %s", target)
-			}
-
-			// TODO: handler error from migrationFunc call
-			newGenState := migrationFunc(initialState, clientCtx)
-
-			genDoc.AppState, err = json.Marshal(newGenState)
-			if err != nil {
-				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
-			}
-
-			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
-			if genesisTime != "" {
-				var t time.Time
-
-				err := t.UnmarshalText([]byte(genesisTime))
-				if err != nil {
-					return errors.Wrap(err, "failed to unmarshal genesis time")
-				}
-
-				genDoc.GenesisTime = t
-			}
-
-			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			if chainID != "" {
-				genDoc.ChainID = chainID
-			}
-
-			bz, err := tmjson.Marshal(genDoc)
-			if err != nil {
-				return errors.Wrap(err, "failed to marshal genesis doc")
-			}
-
-			sortedBz, err := sdk.SortJSON(bz)
-			if err != nil {
-				return errors.Wrap(err, "failed to sort JSON genesis doc")
-			}
-
-			cmd.Println(string(sortedBz))
-			return nil
-=======
-			return MigrateHandler(cmd, args, migrations)
->>>>>>> 7a778f5c9 (refactor: add MigrateHandler to allow reuse migrate genesis related function  (#17296))
+			return MigrateHandler(cmd, args, migrationMap)
 		},
 	}
 
@@ -142,45 +72,40 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 func MigrateHandler(cmd *cobra.Command, args []string, migrations types.MigrationMap) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 
-	target := args[0]
-	migrationFunc, ok := migrations[target]
-	if !ok || migrationFunc == nil {
-		versions := maps.Keys(migrations)
-		sort.Strings(versions)
-		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
-	}
+	var err error
 
+	target := args[0]
 	importGenesis := args[1]
-	appGenesis, err := types.AppGenesisFromFile(importGenesis)
+
+	genDoc, err := validateGenDoc(importGenesis)
 	if err != nil {
 		return err
 	}
 
-	if err := appGenesis.ValidateAndComplete(); err != nil {
-		return fmt.Errorf("make sure that you have correctly migrated all CometBFT consensus params. Refer the UPGRADING.md (%s): %w", chainUpgradeGuide, err)
-	}
-
 	// Since some default values are valid values, we just print to
 	// make sure the user didn't forget to update these values.
-	if appGenesis.Consensus.Params.Evidence.MaxBytes == 0 {
-		fmt.Printf("Warning: consensus.params.evidence.max_bytes is set to 0. If this is"+
+	if genDoc.ConsensusParams.Evidence.MaxBytes == 0 {
+		fmt.Printf("Warning: consensus_params.evidence.max_bytes is set to 0. If this is"+
 			" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
 			" upgrade guide at %s.\n", chainUpgradeGuide)
 	}
 
 	var initialState types.AppMap
-	if err := json.Unmarshal(appGenesis.AppState, &initialState); err != nil {
-		return fmt.Errorf("failed to JSON unmarshal initial genesis state: %w", err)
+	if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
+		return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 	}
 
-	newGenState, err := migrationFunc(initialState, clientCtx)
-	if err != nil {
-		return fmt.Errorf("failed to migrate genesis state: %w", err)
+	migrationFunc := GetMigrationCallback(target)
+	if migrationFunc == nil {
+		return fmt.Errorf("unknown migration function for version: %s", target)
 	}
 
-	appGenesis.AppState, err = json.Marshal(newGenState)
+	// TODO: handler error from migrationFunc call
+	newGenState := migrationFunc(initialState, clientCtx)
+
+	genDoc.AppState, err = json.Marshal(newGenState)
 	if err != nil {
-		return fmt.Errorf("failed to JSON marshal migrated genesis state: %w", err)
+		return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 	}
 
 	genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
@@ -189,31 +114,27 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 
 		err := t.UnmarshalText([]byte(genesisTime))
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal genesis time: %w", err)
+			return errors.Wrap(err, "failed to unmarshal genesis time")
 		}
 
-		appGenesis.GenesisTime = t
+		genDoc.GenesisTime = t
 	}
 
 	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 	if chainID != "" {
-		appGenesis.ChainID = chainID
+		genDoc.ChainID = chainID
 	}
 
-	bz, err := json.Marshal(appGenesis)
+	bz, err := tmjson.Marshal(genDoc)
 	if err != nil {
-		return fmt.Errorf("failed to marshal app genesis: %w", err)
+		return errors.Wrap(err, "failed to marshal genesis doc")
 	}
 
-	outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-	if outputDocument == "" {
-		cmd.Println(string(bz))
-		return nil
+	sortedBz, err := sdk.SortJSON(bz)
+	if err != nil {
+		return errors.Wrap(err, "failed to sort JSON genesis doc")
 	}
 
-	if err = appGenesis.SaveAs(outputDocument); err != nil {
-		return err
-	}
-
+	cmd.Println(string(sortedBz))
 	return nil
 }

@@ -67,10 +67,10 @@ func accountDeps[H header.Header]() (address.Codec, header.Service[H], store.KVS
 
 type addressCodec struct{}
 
-func (a addressCodec) StringToBytes(addr string) ([]byte, error) {
+func (addressCodec) StringToBytes(addr string) ([]byte, error) {
 	return []byte(addr), nil
 }
 
-func (a addressCodec) BytesToString(addr []byte) (string, error) {
+func (addressCodec) BytesToString(addr []byte) (string, error) {
 	return string(addr), nil
 }

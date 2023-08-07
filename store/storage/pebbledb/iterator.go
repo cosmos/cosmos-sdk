@@ -1,52 +1,53 @@
-package rocksdb
+package pebbledb
 
 import (
 	"bytes"
 
 	"cosmossdk.io/store/v2"
-	"github.com/linxGnu/grocksdb"
+	"github.com/cockroachdb/pebble"
 )
 
 var _ store.Iterator = (*iterator)(nil)
 
 type iterator struct {
-	source             *grocksdb.Iterator
+	source             *pebble.Iterator
 	prefix, start, end []byte
 	reverse            bool
 	invalid            bool
 }
 
-func newRocksDBIterator(source *grocksdb.Iterator, prefix, start, end []byte, reverse bool) *iterator {
+func newPebbleDBIterator(src *pebble.Iterator, prefix, start, end []byte, reverse bool) *iterator {
 	if reverse {
 		if end == nil {
-			source.SeekToLast()
+			_ = src.Last()
 		} else {
-			source.Seek(end)
+			_ = src.SeekGE(end)
 
-			if source.Valid() {
-				eoaKey := readOnlySlice(source.Key()) // end or after key
+			if src.Valid() {
+				eoaKey := src.Key() // end or after key
 				if bytes.Compare(end, eoaKey) <= 0 {
-					source.Prev()
+					src.Prev()
 				}
+
 			} else {
-				source.SeekToLast()
+				_ = src.Last()
 			}
 		}
 	} else {
 		if start == nil {
-			source.SeekToFirst()
+			_ = src.First()
 		} else {
-			source.Seek(start)
+			_ = src.SeekGE(start)
 		}
 	}
 
 	return &iterator{
-		source:  source,
+		source:  src,
 		prefix:  prefix,
 		start:   start,
 		end:     end,
 		reverse: reverse,
-		invalid: !source.Valid(),
+		invalid: !src.Valid(),
 	}
 }
 
@@ -79,7 +80,7 @@ func (itr *iterator) Valid() bool {
 	}
 
 	// if source has error, consider it invalid
-	if err := itr.source.Err(); err != nil {
+	if err := itr.source.Error(); err != nil {
 		itr.invalid = true
 		return false
 	}
@@ -93,7 +94,7 @@ func (itr *iterator) Valid() bool {
 	// if key is at the end or past it, consider it invalid
 	start := itr.start
 	end := itr.end
-	key := readOnlySlice(itr.source.Key())
+	key := itr.source.Key()
 
 	if itr.reverse {
 		if start != nil && bytes.Compare(key, start) < 0 {
@@ -112,12 +113,22 @@ func (itr *iterator) Valid() bool {
 
 func (itr *iterator) Key() []byte {
 	itr.assertIsValid()
-	return copyAndFreeSlice(itr.source.Key())[len(itr.prefix):]
+	key := itr.source.Key()
+
+	keyCopy := make([]byte, len(key))
+	_ = copy(keyCopy, key)
+
+	return keyCopy[len(itr.prefix):]
 }
 
 func (itr *iterator) Value() []byte {
 	itr.assertIsValid()
-	return copyAndFreeSlice(itr.source.Value())
+	val := itr.source.Value()
+
+	valCopy := make([]byte, len(val))
+	_ = copy(valCopy, val)
+
+	return valCopy
 }
 
 func (itr iterator) Next() bool {
@@ -133,11 +144,11 @@ func (itr iterator) Next() bool {
 }
 
 func (itr *iterator) Error() error {
-	return itr.source.Err()
+	return itr.source.Error()
 }
 
 func (itr *iterator) Close() {
-	itr.source.Close()
+	_ = itr.source.Close()
 	itr.source = nil
 }
 

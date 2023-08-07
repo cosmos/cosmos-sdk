@@ -154,6 +154,38 @@ func TestDatabase_ResetBatch(t *testing.T) {
 	require.LessOrEqual(t, batch.Size(), 12)
 }
 
+func TestDatabase_IteratorDomain(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	testCases := map[string]struct {
+		start, end []byte
+	}{
+		"empty domain": {},
+		"start without end domain": {
+			start: []byte("key010"),
+		},
+		"start and end domain": {
+			start: []byte("key010"),
+			end:   []byte("key020"),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			iter, err := db.NewIterator(storeKey1, 1, tc.start, tc.end)
+			require.NoError(t, err)
+
+			defer iter.Close()
+
+			start, end := iter.Domain()
+			require.Equal(t, tc.start, start)
+			require.Equal(t, tc.end, end)
+		})
+	}
+}
+
 func TestDatabase_Iterator(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)

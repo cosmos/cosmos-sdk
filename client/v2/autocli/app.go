@@ -42,6 +42,9 @@ type AppOptions struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec
+
+	// Keyring is the keyring to use for client/v2.
+	Keyring keyring.Keyring `optional:"true"`
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -67,7 +70,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
-			Keyring:               keyring.NoKeyring{},
+			Keyring:               appOptions.Keyring,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

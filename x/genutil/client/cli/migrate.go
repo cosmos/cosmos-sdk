@@ -62,7 +62,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 `, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return MigrateHandler(cmd, args, GetMigrationCallback)
+			return MigrateHandler(cmd, args, migrationMap)
 		},
 	}
 
@@ -74,8 +74,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 // MigrateHandler handles the migration command with a migration map as input,
 // returning an error upon failure.
-// func MigrateHandler(cmd *cobra.Command, args []string, migrations types.MigrationMap) error {
-func MigrateHandler(cmd *cobra.Command, args []string, cb func(version string) types.MigrationCallback) error {
+func MigrateHandler(cmd *cobra.Command, args []string, migrations types.MigrationMap) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 
 	var err error
@@ -101,7 +100,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, cb func(version string) t
 		return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 	}
 
-	migrationFunc := cb(target)
+	migrationFunc := migrations[target]
 	if migrationFunc == nil {
 		return fmt.Errorf("unknown migration function for version: %s", target)
 	}

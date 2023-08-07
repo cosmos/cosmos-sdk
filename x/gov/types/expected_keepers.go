@@ -18,16 +18,17 @@ type ParamSubspace interface {
 
 // StakingKeeper expected staking keeper (Validator and Delegator sets) (noalias)
 type StakingKeeper interface {
+	ValidatorAddressCodec() addresscodec.Codec
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
-		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
-	)
+		context.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
+	) error
 
-	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
+	TotalBondedTokens(context.Context) (math.Int, error) // total bonded tokens within the validator set
 	IterateDelegations(
-		ctx sdk.Context, delegator sdk.AccAddress,
+		ctx context.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),
-	)
+	) error
 }
 
 // DistributionKeeper defines the expected distribution keeper (noalias)
@@ -37,7 +38,7 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	addresscodec.Codec
+	AddressCodec() addresscodec.Codec
 
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 

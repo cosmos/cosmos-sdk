@@ -3,9 +3,11 @@ package genutil
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/genesis"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,9 +55,8 @@ func ValidateAccountInGenesis(
 		func(bal bankexported.GenesisBalance) (stop bool) {
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
-
 			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
+			if strings.EqualFold(accAddress, addr.String()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
@@ -96,17 +97,17 @@ func DeliverGenTxs(
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to decode GenTx '%s': %w", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to encode GenTx '%s': %w", genTx, err)
 		}
 
 		err = deliverTx.ExecuteGenesisTx(bz)
 		if err != nil {
-			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %w", genTx, err)
 		}
 	}
 

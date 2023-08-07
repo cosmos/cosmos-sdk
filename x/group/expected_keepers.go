@@ -9,7 +9,7 @@ import (
 )
 
 type AccountKeeper interface {
-	address.Codec
+	AddressCodec() address.Codec
 
 	// NewAccount returns a new account with the next account number. Does not save the new account to the store.
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI

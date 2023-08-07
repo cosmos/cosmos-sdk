@@ -314,7 +314,7 @@ Updates in the 1st category include changes of the `Screen` struct or its corres
 
 Updates in the 2nd category include changes to any of the value renderers or to the transaction envelope. For example, the ordering of fields in the envelope can be swapped, or the timestamp formatting can be modified. Since SIGN_MODE_TEXTUAL sends `Screen`s to the hardware device, this type of change do not need a hardware wallet application update. They are however state-machine-breaking, and must be documented as such. They require the coordination of SDK developers with client-side developers (e.g. CosmJS), so that the updates are released on both sides close to each other in time.
 
-We define a spec version, which is an integer that must be incremented on each update of either category. This spec version will be exposed by the SDK's implementation, and can be communicated to clients. For example, SDK v0.48 might use the spec version 1, and SDK v0.49 might use 2; thanks to this versioning, clients can know how to craft SIGN_MODE_TEXTUAL transactions based on the target SDK version.
+We define a spec version, which is an integer that must be incremented on each update of either category. This spec version will be exposed by the SDK's implementation, and can be communicated to clients. For example, SDK v0.50 might use the spec version 1, and SDK v0.51 might use 2; thanks to this versioning, clients can know how to craft SIGN_MODE_TEXTUAL transactions based on the target SDK version.
 
 The current spec version is defined in the "Status" section, on the top of this document. It is initialized to `0` to allow flexibility in choosing how to define future versions, as it would allow adding a field either in the SignDoc Go struct or in Protobuf in a backwards-compatible way.
 
@@ -328,9 +328,10 @@ See [annex 2](./adr-050-sign-mode-textual-annex2.md).
 2. A transaction with a bit of everything: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/094abcd393379acbbd043996024d66cd65246fb1/tx/textual/internal/testdata/e2e.json#L71-L270).
 
 The examples below are stored in a JSON file with the following fields:
-- `proto`: the representation of the transaction in ProtoJSON,
-- `screens`: the transaction rendered into SIGN_MODE_TEXTUAL screens,
-- `cbor`: the sign bytes of the transaction, which is the CBOR encoding of the screens.
+
+* `proto`: the representation of the transaction in ProtoJSON,
+* `screens`: the transaction rendered into SIGN_MODE_TEXTUAL screens,
+* `cbor`: the sign bytes of the transaction, which is the CBOR encoding of the screens.
 
 ## Consequences
 

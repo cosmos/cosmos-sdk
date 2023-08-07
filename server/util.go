@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -189,14 +190,12 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		}
 
 		opts = append(opts, log.FilterOption(filterFunc))
-
-	case ctx.Viper.GetBool("trace"): // cmtcli.TraceFlag
-		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
-		// Note it overrides log level passed in `log_levels`.
-		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
 	default:
 		opts = append(opts, log.LevelOption(logLvl))
 	}
+
+	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
+	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
 
 	return log.NewLogger(out, opts...), nil
 }
@@ -246,10 +245,16 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
-		conf.RPC.PprofListenAddress = "localhost:6060"
-		conf.P2P.RecvRate = 5120000
-		conf.P2P.SendRate = 5120000
-		conf.Consensus.TimeoutCommit = 5 * time.Second
+		defaultCometCfg := cmtcfg.DefaultConfig()
+		// The SDK is opinionated about those comet values, so we set them here.
+		// We verify first that the user has not changed them for not overriding them.
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
+		}
+		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
+			conf.RPC.PprofListenAddress = "localhost:6060"
+		}
+
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:
@@ -306,7 +311,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -323,15 +328,15 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmd(appCreator, defaultNodeHome)
+	startCmd := StartCmd(appCreator)
 	addStartFlags(startCmd)
 
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
-		ExportCmd(appExport, defaultNodeHome),
+		ExportCmd(appExport),
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator, defaultNodeHome),
+		NewRollbackCmd(appCreator),
 	)
 }
 
@@ -371,18 +376,27 @@ func ExternalIP() (string, error) {
 // the cleanup function is called, indicating the caller can gracefully exit or
 // return.
 //
-// Note, this performs a non-blocking process so the caller must ensure the
-// corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(cancelFn context.CancelFunc, logger log.Logger) {
+// Note, the blocking behavior of this depends on the block argument.
+// The caller must ensure the corresponding context derived from the cancelFn is used correctly.
+func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
+	f := func() {
 		sig := <-sigCh
 		cancelFn()
 
 		logger.Info("caught signal", "signal", sig.String())
-	}()
+	}
+
+	if block {
+		g.Go(func() error {
+			f()
+			return nil
+		})
+	} else {
+		go f()
+	}
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.
@@ -501,7 +515,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		defaultMempool,
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}

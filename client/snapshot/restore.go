@@ -4,10 +4,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )

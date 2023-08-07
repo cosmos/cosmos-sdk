@@ -45,7 +45,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	}
 
 	for _, vote := range data.Votes {
-		addr, err := ak.StringToBytes(vote.Voter)
+		addr, err := ak.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
 			panic(err)
 		}
@@ -58,11 +58,20 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case v1.StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
+			err := k.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id), proposal.Id)
+			if err != nil {
+				panic(err)
+			}
 		case v1.StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+			err := k.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+			if err != nil {
+				panic(err)
+			}
 		}
-		k.SetProposal(ctx, *proposal)
+		err := k.SetProposal(ctx, *proposal)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// if account has zero balance it probably means it's not set, so we set it

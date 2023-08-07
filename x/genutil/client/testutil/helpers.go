@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -25,8 +24,9 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) erro
 		return err
 	}
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx.Config.SetRoot(home)
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -36,7 +36,7 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) erro
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", flags.FlagHome, home)})
+	cmd.SetArgs([]string{"appnode-test"})
 
 	return cmd.ExecuteContext(ctx)
 }

@@ -10,7 +10,10 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -62,7 +65,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
 
 	// unbonding the amount
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
@@ -104,22 +107,22 @@ func (s *E2ETestSuite) TestBlockResults() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Use CLI to create a delegation from the new account to validator `val`.
-	cmd := cli.NewDelegateCmd()
+	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150)).String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
@@ -130,7 +133,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
-	s.network.RetryForBlocks(func() error {
+	_ = s.network.RetryForBlocks(func() error {
 		latestHeight, err := s.network.LatestHeight()
 		require.NoError(err)
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)

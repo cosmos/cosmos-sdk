@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"
@@ -72,13 +72,15 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := s1.app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := s1.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	header := cmtproto.Header{Height: s1.app.LastBlockHeight() + 1}
-	s1.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s1.app.LastBlockHeight() + 1,
+	})
+	assert.NilError(t, err)
 
-	ctx = s1.app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx = s1.app.BaseApp.NewContext(false)
 	// Create two proposals, put the second into the voting period
 	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	assert.NilError(t, err)
@@ -120,31 +122,43 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	s2 := suite{}
+	db := dbm.NewMemDB()
+	conf2 := simtestutil.DefaultStartUpConfig()
+	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		simtestutil.DefaultStartUpConfig(),
+		conf2,
 		&s2.AccountKeeper, &s2.BankKeeper, &s2.DistrKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
 	)
 	assert.NilError(t, err)
 
-	s2.app.InitChain(
-		abci.RequestInitChain{
+	clearDB(t, db)
+	err = s2.app.CommitMultiStore().LoadLatestVersion()
+	assert.NilError(t, err)
+
+	_, err = s2.app.InitChain(
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	assert.NilError(t, err)
 
-	s2.app.Commit()
-	s2.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}})
+	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s2.app.LastBlockHeight() + 1,
+	})
+	assert.NilError(t, err)
 
-	header = cmtproto.Header{Height: s2.app.LastBlockHeight() + 1}
-	s2.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s2.app.LastBlockHeight() + 1,
+	})
+	assert.NilError(t, err)
 
-	ctx2 := s2.app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx2 := s2.app.BaseApp.NewContext(false)
 
 	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
@@ -172,4 +186,20 @@ func TestImportExportQueues(t *testing.T) {
 	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
+}
+
+func clearDB(t *testing.T, db *dbm.MemDB) {
+	t.Helper()
+	iter, err := db.Iterator(nil, nil)
+	assert.NilError(t, err)
+	defer iter.Close()
+
+	var keys [][]byte
+	for ; iter.Valid(); iter.Next() {
+		keys = append(keys, iter.Key())
+	}
+
+	for _, k := range keys {
+		assert.NilError(t, db.Delete(k))
+	}
 }

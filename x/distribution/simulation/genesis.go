@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -29,16 +30,10 @@ func GenWithdrawEnabled(r *rand.Rand) bool {
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
 	var communityTax math.LegacyDec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, CommunityTax, &communityTax, simState.Rand,
-		func(r *rand.Rand) { communityTax = GenCommunityTax(r) },
-	)
+	simState.AppParams.GetOrGenerate(CommunityTax, &communityTax, simState.Rand, func(r *rand.Rand) { communityTax = GenCommunityTax(r) })
 
 	var withdrawEnabled bool
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, WithdrawEnabled, &withdrawEnabled, simState.Rand,
-		func(r *rand.Rand) { withdrawEnabled = GenWithdrawEnabled(r) },
-	)
+	simState.AppParams.GetOrGenerate(WithdrawEnabled, &withdrawEnabled, simState.Rand, func(r *rand.Rand) { withdrawEnabled = GenWithdrawEnabled(r) })
 
 	distrGenesis := types.GenesisState{
 		FeePool: types.InitialFeePool(),

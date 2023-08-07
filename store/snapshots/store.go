@@ -315,6 +315,12 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	return nil
 }
 
+// saveChunkContent save the chunk to disk
+func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
+	return os.WriteFile(path, chunk, 0o600)
+}
+
 // saveSnapshot saves snapshot metadata to the database.
 func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	value, err := proto.Marshal(snapshot)

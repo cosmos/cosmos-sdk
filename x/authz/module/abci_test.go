@@ -4,13 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -61,8 +63,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
 
-	accountKeeper.EXPECT().StringToBytes(granter.String()).Return(granter, nil).AnyTimes()
-	accountKeeper.EXPECT().BytesToString(granter).Return(granter.String(), nil).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	authzKeeper := keeper.NewKeeper(storeService, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
 
@@ -80,7 +81,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	queryClient := authz.NewQueryClient(queryHelper)
 
 	checkGrants := func(ctx sdk.Context, expectedNum int) {
-		authzmodule.BeginBlocker(ctx, authzKeeper)
+		err := authzmodule.BeginBlocker(ctx, authzKeeper)
+		require.NoError(t, err)
 
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 			Granter: granter.String(),

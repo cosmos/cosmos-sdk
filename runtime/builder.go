@@ -38,6 +38,7 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
+
 	if err := a.app.ModuleManager.RegisterServices(a.app.configurator); err != nil {
 		panic(err)
 	}

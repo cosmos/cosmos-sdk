@@ -9,11 +9,11 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
@@ -37,6 +37,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx
 
@@ -50,12 +51,12 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress(types.GovModuleName).String(),
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
@@ -63,72 +64,25 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
 		s.mintKeeper.Logger(testCtx.Ctx))
 
-	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
+	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
-	s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())
 
+	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
-}
-
-func (s *IntegrationTestSuite) TestParams() {
-	testCases := []struct {
-		name      string
-		input     types.Params
-		expectErr bool
-	}{
-		{
-			name: "set invalid params (⚠️ not validated in keeper)",
-			input: types.Params{
-				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: math.LegacyNewDecWithPrec(-13, 2),
-				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-				InflationMin:        math.LegacyNewDecWithPrec(7, 2),
-				GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
-				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
-			},
-			expectErr: false,
-		},
-		{
-			name: "set full valid params",
-			input: types.Params{
-				MintDenom:           sdk.DefaultBondDenom,
-				InflationRateChange: math.LegacyNewDecWithPrec(8, 2),
-				InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-				InflationMin:        math.LegacyNewDecWithPrec(2, 2),
-				GoalBonded:          math.LegacyNewDecWithPrec(37, 2),
-				BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
-			},
-			expectErr: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			expected := s.mintKeeper.GetParams(s.ctx)
-			err := s.mintKeeper.SetParams(s.ctx, tc.input)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				expected = tc.input
-				s.Require().NoError(err)
-			}
-
-			p := s.mintKeeper.GetParams(s.ctx)
-			s.Require().Equal(expected, p)
-		})
-	}
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {
 	stakingTokenSupply := math.NewIntFromUint64(100000000000)
-	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply)
-	s.Require().Equal(s.mintKeeper.StakingTokenSupply(s.ctx), stakingTokenSupply)
+	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply, nil)
+	tokenSupply, err := s.mintKeeper.StakingTokenSupply(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(tokenSupply, stakingTokenSupply)
 
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
-	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio)
-	s.Require().Equal(s.mintKeeper.BondedRatio(s.ctx), bondedRatio)
+	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil)
+	ratio, err := s.mintKeeper.BondedRatio(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(ratio, bondedRatio)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)

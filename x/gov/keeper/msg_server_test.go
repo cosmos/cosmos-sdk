@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -20,11 +19,7 @@ const (
 	o1  = "-0.1"
 )
 
-var (
-	longAddress       = "cosmos1v9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpg0s5ed"
-	longAddressError  = "address max length is 255"
-	emptyAddressError = "empty address string is not allowed"
-)
+var longAddressError = "address max length is 255"
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 	suite.reset()
@@ -41,8 +36,6 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		ToAddress:   proposer.String(),
 		Amount:      coins,
 	}
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1.MsgSubmitProposal, error)
@@ -109,6 +102,36 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "proposal summary cannot be empty",
 		},
+		"title != metadata.title": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal2",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata title 'Proposal' must equal proposal title 'Proposal2",
+		},
+		"summary != metadata.summary": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
+					"Proposal",
+					"description",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "metadata summary '' must equal proposal summary 'description'",
+		},
 		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
@@ -124,6 +147,21 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "metadata too long",
 		},
+		"summary too long": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					strings.Repeat("1", 300*40),
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "summary too long",
+		},
 		"many signers": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
@@ -137,7 +175,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"signer isn't gov account": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -152,7 +190,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"invalid msg handler": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -240,8 +278,6 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun     func() uint64
@@ -337,9 +373,6 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		false,
 	)
 	suite.Require().NoError(err)
-
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -489,9 +522,6 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun    func() uint64
 		vote      *v1.MsgVote
@@ -531,8 +561,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -588,7 +618,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{ // weight sum <1
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -681,8 +711,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return res.ProposalId
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionAbstain, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:    proposer,
 			metadata: "",
@@ -734,8 +764,6 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun     func() uint64
@@ -795,8 +823,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 	initialDeposit := coins
 	params, _ := suite.govKeeper.Params.Get(suite.ctx)
 	minDeposit := params.MinDeposit
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun    func() (*v1beta1.MsgSubmitProposal, error)
@@ -931,9 +957,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun    func() uint64
 		expErr    bool
@@ -1067,9 +1090,6 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	suite.Require().NotNil(res.ProposalId)
 	proposalID := res.ProposalId
 
-	suite.acctKeeper.EXPECT().StringToBytes(longAddress).Return(nil, errors.New(longAddressError)).AnyTimes()
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
-
 	cases := map[string]struct {
 		preRun    func() uint64
 		vote      *v1beta1.MsgVote
@@ -1120,11 +1140,11 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1179,7 +1199,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.VoteOption(0x13),
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1194,7 +1214,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1320,8 +1340,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	pID := res.ProposalId
-
-	suite.acctKeeper.EXPECT().StringToBytes("").Return(nil, errors.New(emptyAddressError))
 
 	cases := map[string]struct {
 		preRun     func() uint64
@@ -1649,7 +1667,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins
-		minInitialDepositRatio sdk.Dec
+		minInitialDepositRatio sdkmath.LegacyDec
 		initialDeposit         sdk.Coins
 		accountBalance         sdk.Coins
 
@@ -1693,13 +1711,11 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			govKeeper, ctx := suite.govKeeper, suite.ctx
 			address := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0]
 
-			suite.acctKeeper.EXPECT().StringToBytes(address.String()).Return(address, nil).AnyTimes()
-			suite.acctKeeper.EXPECT().BytesToString(address).Return(address.String(), nil).AnyTimes()
-
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.Params.Set(ctx, params)
+			err := govKeeper.Params.Set(ctx, params)
+			suite.Require().NoError(err)
 
 			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)

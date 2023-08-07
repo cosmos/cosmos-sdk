@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -18,7 +20,7 @@ func TestGRPCParams(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -45,13 +47,13 @@ func TestGRPCParams(t *testing.T) {
 			name: "valid request",
 			malleate: func() {
 				params = types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(3, 1),
+					CommunityTax:        math.LegacyNewDecWithPrec(3, 1),
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 
-				assert.NilError(t, f.distrKeeper.SetParams(f.sdkCtx, params))
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 				expParams = params
 			},
 			msg: &types.QueryParamsRequest{},
@@ -77,10 +79,10 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
-	f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -92,18 +94,18 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 
 	// send funds to val addr
 	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	// set outstanding rewards
-	err := f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	err := f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
 	assert.NilError(t, err)
 
-	rewards, err := f.distrKeeper.GetValidatorOutstandingRewards(f.sdkCtx, f.valAddr)
+	rewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
 	assert.NilError(t, err)
 
 	testCases := []struct {
@@ -120,7 +122,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 		},
 		{
 			name:      "invalid address",
-			msg:       &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String()},
+			msg:       &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
 			expPass:   false,
 			expErrMsg: "validator does not exist",
 		},
@@ -154,25 +156,25 @@ func TestGRPCValidatorCommission(t *testing.T) {
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
-	f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	// send funds to val addr
 	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
-	f.distrKeeper.SetValidatorAccumulatedCommission(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission})
+	assert.NilError(t, f.distrKeeper.ValidatorsAccumulatedCommission.Set(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
 
 	testCases := []struct {
 		name      string
@@ -188,7 +190,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 		},
 		{
 			name:      "invalid validator",
-			msg:       &types.QueryValidatorCommissionRequest{ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String()},
+			msg:       &types.QueryValidatorCommissionRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
 			expPass:   false,
 			expErrMsg: "validator does not exist",
 		},
@@ -227,14 +229,19 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	valAddr2 := sdk.ValAddress(addr2)
 
 	slashes := []types.ValidatorSlashEvent{
-		types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(5, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(9, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(3, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(5, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(7, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(9, math.LegacyNewDecWithPrec(5, 1)),
 	}
 
 	for i, slash := range slashes {
-		f.distrKeeper.SetValidatorSlashEvent(f.sdkCtx, f.valAddr, uint64(i+2), 0, slash)
+		err := f.distrKeeper.ValidatorSlashEvents.Set(
+			f.sdkCtx,
+			collections.Join3(f.valAddr, uint64(i+2), uint64(0)),
+			slash,
+		)
+		assert.NilError(t, err)
 	}
 
 	var (
@@ -369,7 +376,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetParams(f.sdkCtx, types.DefaultParams())
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -418,9 +425,9 @@ func TestGRPCCommunityPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetFeePool(f.sdkCtx, types.FeePool{
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
-	})
+	}))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -474,16 +481,16 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	f.distrKeeper.SetFeePool(f.sdkCtx, types.FeePool{
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
 		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(1000)}),
-	})
+	}))
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
-	f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams())
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
@@ -494,12 +501,12 @@ func TestGRPCDelegationRewards(t *testing.T) {
 
 	// send funds to val addr
 	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
-	f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds)))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, sdk.NewInt(initialStake), true)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
 	assert.Assert(t, found)
@@ -507,18 +514,18 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	// setup delegation
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
-	delegation := stakingtypes.NewDelegation(delAddr, f.valAddr, issuedShares)
-	f.stakingKeeper.SetDelegation(f.sdkCtx, delegation)
-	f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20))
+	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
+	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
+	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
 
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards)
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards)
-	f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins})
+	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
 	expRes := &types.QueryDelegationRewardsResponse{
 		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},

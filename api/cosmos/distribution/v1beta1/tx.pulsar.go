@@ -6960,7 +6960,7 @@ func (*MsgCommunityPoolSpendResponse) Descriptor() ([]byte, []int) {
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgDepositValidatorRewardsPool struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7015,7 +7015,7 @@ func (x *MsgDepositValidatorRewardsPool) GetAmount() []*v1beta1.Coin {
 // MsgDepositValidatorRewardsPoolResponse defines the response to executing a
 // MsgDepositValidatorRewardsPool message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 type MsgDepositValidatorRewardsPoolResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

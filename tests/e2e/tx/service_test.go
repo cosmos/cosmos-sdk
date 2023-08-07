@@ -11,12 +11,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	errorsmod "cosmossdk.io/errors"
-
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -72,11 +73,12 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 		),
+		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -89,14 +91,15 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1)),
 		),
+		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s", flags.FlagOffline),
 		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -184,11 +187,11 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 				// Check the result and gas used are correct.
 				//
 				// The 12 events are:
-				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - Sending Fee to the pool: coin_spent, coin_received and transfer
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
-				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
-				s.Require().Equal(12, len(res.GetResult().GetEvents()))
+				// - Sending Amount to recipient: coin_spent, coin_received and transfer
+				// - Msg events: message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1> (in one message)
+				s.Require().Equal(10, len(res.GetResult().GetEvents()))
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -230,7 +233,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().Equal(12, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 12 events.
+				s.Require().Equal(10, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 10 events.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -597,9 +600,10 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		val1.Address,
 		addr,
 		sdk.NewCoins(coins),
+		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
@@ -617,9 +621,10 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
+		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -1097,7 +1102,9 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
-	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
+	signers, err := txBuilder.GetTx().GetSigners()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{val.Address}, signers)
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
@@ -1107,7 +1114,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	err = authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder

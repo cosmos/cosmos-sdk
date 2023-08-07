@@ -8,6 +8,11 @@ import (
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/golang/mock/gomock"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
+
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -16,12 +21,6 @@ import (
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	dbm "github.com/cosmos/cosmos-db"
-
-	"github.com/golang/mock/gomock"
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
-
 	_ "cosmossdk.io/orm" // required for ORM module registration
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"
@@ -259,7 +258,8 @@ func TestModuleDB(t *testing.T) {
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
-func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) { // nolint:revive // test function
+func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"

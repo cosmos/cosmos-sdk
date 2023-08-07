@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"cosmossdk.io/math"
 )
 
 //-----------------------------------------------------------------------------
@@ -14,7 +16,7 @@ import (
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative or if the denomination is invalid.
-func NewCoin(denom string, amount Int) Coin {
+func NewCoin(denom string, amount math.Int) Coin {
 	coin := Coin{
 		Denom:  denom,
 		Amount: amount,
@@ -30,7 +32,7 @@ func NewCoin(denom string, amount Int) Coin {
 // NewInt64Coin returns a new coin with a denomination and amount. It will panic
 // if the amount is negative.
 func NewInt64Coin(denom string, amount int64) Coin {
-	return NewCoin(denom, NewInt(amount))
+	return NewCoin(denom, math.NewInt(amount))
 }
 
 // String provides a human-readable representation of a coin
@@ -113,7 +115,7 @@ func (coin Coin) Add(coinB Coin) Coin {
 }
 
 // AddAmount adds an amount to the Coin.
-func (coin Coin) AddAmount(amount Int) Coin {
+func (coin Coin) AddAmount(amount math.Int) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(amount)}
 }
 
@@ -143,7 +145,7 @@ func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 }
 
 // SubAmount subtracts an amount from the Coin.
-func (coin Coin) SubAmount(amount Int) Coin {
+func (coin Coin) SubAmount(amount math.Int) Coin {
 	res := Coin{coin.Denom, coin.Amount.Sub(amount)}
 	if res.IsNegative() {
 		panic("negative coin amount")
@@ -328,25 +330,25 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
+	uniqCoins := make(map[string]Coin, len(coins)+len(coinsB))
 	// Traverse all the coins for each of the coins and coinsB.
 	for _, cL := range []Coins{coins, coinsB} {
 		for _, c := range cL {
-			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
+			if uc, ok := uniqCoins[c.Denom]; ok {
+				uniqCoins[c.Denom] = uc.Add(c)
+			} else {
+				uniqCoins[c.Denom] = c
+			}
 		}
 	}
 
-	for denom, cL := range uniqCoins { //#nosec
-		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
-		for _, c := range cL {
-			comboCoin = comboCoin.Add(c)
+	coalesced = make(Coins, 0, len(uniqCoins))
+	for denom, c := range uniqCoins { //#nosec
+		if c.IsZero() {
+			continue
 		}
-		if !comboCoin.IsZero() {
-			coalesced = append(coalesced, comboCoin)
-		}
-	}
-	if coalesced == nil {
-		return Coins{}
+		c.Denom = denom
+		coalesced = append(coalesced, c)
 	}
 	return coalesced.Sort()
 }
@@ -400,7 +402,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics
 // Note, if IsValid was true on Coins, IsValid stays true.
-func (coins Coins) MulInt(x Int) Coins {
+func (coins Coins) MulInt(x math.Int) Coins {
 	coins, ok := coins.SafeMulInt(x)
 	if !ok {
 		panic("multiplying by zero is an invalid operation on coins")
@@ -411,7 +413,7 @@ func (coins Coins) MulInt(x Int) Coins {
 
 // SafeMulInt performs the same arithmetic as MulInt but returns false
 // if the `multiplier` is zero because it makes IsValid return false.
-func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
+func (coins Coins) SafeMulInt(x math.Int) (Coins, bool) {
 	if x.IsZero() {
 		return nil, false
 	}
@@ -434,7 +436,7 @@ func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 // {2A} / 0 = panics
 // Note, if IsValid was true on Coins, IsValid stays true,
 // unless the `divisor` is greater than the smallest coin amount.
-func (coins Coins) QuoInt(x Int) Coins {
+func (coins Coins) QuoInt(x math.Int) Coins {
 	coins, ok := coins.SafeQuoInt(x)
 	if !ok {
 		panic("dividing by zero is an invalid operation on coins")
@@ -445,7 +447,7 @@ func (coins Coins) QuoInt(x Int) Coins {
 
 // SafeQuoInt performs the same arithmetic as QuoInt but returns an error
 // if the division cannot be done.
-func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
+func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
 	if x.IsZero() {
 		return nil, false
 	}
@@ -681,18 +683,18 @@ func (coins Coins) Empty() bool {
 }
 
 // AmountOf returns the amount of a denom from coins
-func (coins Coins) AmountOf(denom string) Int {
+func (coins Coins) AmountOf(denom string) math.Int {
 	mustValidateDenom(denom)
 	return coins.AmountOfNoDenomValidation(denom)
 }
 
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
-func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
+func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	if ok, c := coins.Find(denom); ok {
 		return c.Amount
 	}
-	return ZeroInt()
+	return math.ZeroInt()
 }
 
 // Find returns true and coin if the denom exists in coins. Otherwise it returns false

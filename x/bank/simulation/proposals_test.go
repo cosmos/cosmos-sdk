@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -37,8 +36,7 @@ func TestProposalMsgs(t *testing.T) {
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	fmt.Println(msgUpdateParams)
 	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
-	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing deprecated code here
+	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing the old way here
 	assert.Equal(t, true, msgUpdateParams.Params.DefaultSendEnabled)
 }

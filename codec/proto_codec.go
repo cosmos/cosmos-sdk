@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/signing/aminojson"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -192,11 +193,7 @@ func (pc *ProtoCodec) MarshalAminoJSON(msg gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	jsonBytes, err := encoder.Marshal(protoMsg)
-	if err != nil {
-		return nil, err
-	}
-	return jsonBytes, nil
+	return encoder.Marshal(protoMsg)
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,

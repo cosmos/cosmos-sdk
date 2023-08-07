@@ -26,10 +26,13 @@ import (
 // in the case of a lunatic attack.
 func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	logger := k.Logger(sdkCtx)
+	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 
-	validator := k.stakingKeeper.ValidatorByConsAddr(sdkCtx, consAddr)
+	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return err
+	}
 	if validator == nil || validator.IsUnbonded() {
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.
@@ -37,7 +40,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	}
 
 	if !validator.GetOperator().Empty() {
-		if _, err := k.slashingKeeper.GetPubkey(sdkCtx, consAddr.Bytes()); err != nil {
+		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
 			// Ignore evidence that cannot be handled.
 			//
 			// NOTE: We used to panic with:
@@ -76,12 +79,12 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		}
 	}
 
-	if ok := k.slashingKeeper.HasValidatorSigningInfo(sdkCtx, consAddr); !ok {
+	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
 		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
 	}
 
 	// ignore if the validator is already tombstoned
-	if k.slashingKeeper.IsTombstoned(sdkCtx, consAddr) {
+	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
 		logger.Info(
 			"ignored equivocation; validator already tombstoned",
 			"validator", consAddr,
@@ -110,21 +113,39 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// to/by CometBFT. This value is validator.Tokens as sent to CometBFT via
 	// ABCI, and now received as evidence. The fraction is passed in to separately
 	// to slash unbonding and rebonding delegations.
-	k.slashingKeeper.SlashWithInfractionReason(
-		sdkCtx,
+	slashFractionDoubleSign, err := k.slashingKeeper.SlashFractionDoubleSign(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = k.slashingKeeper.SlashWithInfractionReason(
+		ctx,
 		consAddr,
-		k.slashingKeeper.SlashFractionDoubleSign(sdkCtx),
+		slashFractionDoubleSign,
 		evidence.GetValidatorPower(), distributionHeight,
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
+	if err != nil {
+		return err
+	}
 
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).
 	if !validator.IsJailed() {
-		k.slashingKeeper.Jail(sdkCtx, consAddr)
+		err = k.slashingKeeper.Jail(ctx, consAddr)
+		if err != nil {
+			return err
+		}
 	}
 
-	k.slashingKeeper.JailUntil(sdkCtx, consAddr, types.DoubleSignJailEndTime)
-	k.slashingKeeper.Tombstone(sdkCtx, consAddr)
-	return k.SetEvidence(ctx, evidence)
+	err = k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	if err != nil {
+		return err
+	}
+
+	err = k.slashingKeeper.Tombstone(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }

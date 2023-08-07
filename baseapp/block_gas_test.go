@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -65,7 +64,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		{"less than block gas meter", 10, false, false},
 		{"more than block gas meter", blockMaxGas, false, true},
 		{"more than block gas meter", uint64(float64(blockMaxGas) * 1.2), false, true},
-		{"consume MaxUint64", math.MaxUint64, false, true},
+		{"consume MaxUint64", math.MaxUint64, true, true},
 		{"consume MaxGasWanted", txtypes.MaxGasWanted, false, true},
 		{"consume block gas when panicked", 10, true, true},
 	}
@@ -118,13 +117,14 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			bapp.InitChain(abci.RequestInitChain{
+			_, err = bapp.InitChain(&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 
-			ctx := bapp.NewContext(false, cmtproto.Header{})
+			require.NoError(t, err)
+			ctx := bapp.NewContext(false)
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
@@ -151,37 +151,37 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
-			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
+			txBuilder.SetGasLimit(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 
 			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			bapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
-			rsp := bapp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			require.NoError(t, err)
 
 			// check result
-			ctx = bapp.GetContextForDeliverTx(txBytes)
+			ctx = bapp.GetContextForFinalizeBlock(txBytes)
 			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {
 				if tc.panicTx {
-					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.Code)
+					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.TxResults[0].Code)
 				} else {
-					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.Code)
+					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.TxResults[0].Code)
 				}
 				require.Empty(t, okValue)
 			} else {
-				require.Equal(t, uint32(0), rsp.Code)
+				require.Equal(t, uint32(0), rsp.TxResults[0].Code)
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(50702) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(57504) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
-			if expGasConsumed > txtypes.MaxGasWanted {
+			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit
-				expGasConsumed = txtypes.MaxGasWanted
+				expGasConsumed = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 			}
 			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted

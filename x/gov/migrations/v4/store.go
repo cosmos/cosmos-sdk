@@ -112,7 +112,7 @@ func AddProposerAddressToProposal(ctx sdk.Context, storeService corestoretypes.K
 			return fmt.Errorf("invalid proposer address : %s", proposals[proposalID])
 		}
 
-		bz := store.Get(types.ProposalKey(proposalID))
+		bz := store.Get(append(types.ProposalsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...))
 		var proposal govv1.Proposal
 		if err := cdc.Unmarshal(bz, &proposal); err != nil {
 			panic(err)
@@ -131,7 +131,7 @@ func AddProposerAddressToProposal(ctx sdk.Context, storeService corestoretypes.K
 		if err != nil {
 			panic(err)
 		}
-		store.Set(types.ProposalKey(proposal.Id), bz)
+		store.Set(append(types.ProposalsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), bz)
 	}
 
 	return nil

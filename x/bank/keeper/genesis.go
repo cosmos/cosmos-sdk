@@ -26,9 +26,13 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()
+		bz, err := k.ak.AddressCodec().StringToBytes(addr)
+		if err != nil {
+			panic(err)
+		}
 
 		for _, coin := range balance.Coins {
-			err := k.Balances.Set(ctx, collections.Join(addr, coin.Denom), coin.Amount)
+			err := k.Balances.Set(ctx, collections.Join(sdk.AccAddress(bz), coin.Denom), coin.Amount)
 			if err != nil {
 				panic(err)
 			}

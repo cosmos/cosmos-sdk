@@ -8,8 +8,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/log"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -52,7 +54,7 @@ type testTx struct {
 	strAddress string
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -74,6 +76,8 @@ var (
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
+func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+
 func (tx testTx) ValidateBasic() error { return nil }
 
 func (tx testTx) String() string {
@@ -88,9 +92,11 @@ func (sigErrTx) Size() int64 { return 0 }
 
 func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
+func (sigErrTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+
 func (sigErrTx) ValidateBasic() error { return nil }
 
-func (sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+func (sigErrTx) GetSigners() ([][]byte, error) { return nil, nil }
 
 func (sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
 

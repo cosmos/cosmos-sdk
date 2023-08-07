@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -59,13 +60,13 @@ func (s *IntegrationTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
 
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, math.NewInt(30000000))
 
 	s.addressCodec = codecaddress.NewBech32Codec("cosmos")
 }
@@ -338,7 +339,8 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 
 			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
@@ -540,7 +542,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			spec := spec
 			pID := spec.preRun(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})
@@ -558,7 +561,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 	}
 }
 
-func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) { //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -577,7 +580,7 @@ func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Conte
 }
 
 func submitProposalAndVote(
-	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg,
 	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
 ) (uint64, error) {
 	myProposalID, err := submitProposal(s, app, ctx, msgs, proposers, groupPolicyAddr)

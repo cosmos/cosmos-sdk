@@ -4,21 +4,53 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"testing"
+
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
+type CLITestSuite struct {
+	suite.Suite
+
+	kr      keyring.Keyring
+	encCfg  testutilmod.TestEncodingConfig
+	baseCtx client.Context
+}
+
+func TestCLITestSuite(t *testing.T) {
+	suite.Run(t, new(CLITestSuite))
+}
+
+func (s *CLITestSuite) SetupSuite() {
+	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	s.kr = keyring.NewInMemory(s.encCfg.Codec)
+	s.baseCtx = client.Context{}.
+		WithKeyring(s.kr).
+		WithTxConfig(s.encCfg.TxConfig).
+		WithCodec(s.encCfg.Codec).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
+		WithAccountRetriever(client.MockAccountRetriever{}).
+		WithOutput(io.Discard)
+}
+
 func (s *CLITestSuite) TestSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewSendTxCmd()
+	cmd := cli.NewSendTxCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -104,7 +136,7 @@ func (s *CLITestSuite) TestSendTxCmd() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
-	cmd := cli.NewMultiSendTxCmd()
+	cmd := cli.NewMultiSendTxCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

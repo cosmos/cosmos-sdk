@@ -27,51 +27,50 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/depinject"
-
-	_ "cosmossdk.io/x/circuit"                        // import for side-effects
-	_ "cosmossdk.io/x/evidence"                       // import for side-effects
-	_ "cosmossdk.io/x/feegrant/module"                // import for side-effects
-	_ "cosmossdk.io/x/nft/module"                     // import for side-effects
-	_ "cosmossdk.io/x/upgrade"                        // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module"   // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/crisis"         // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"   // import for side-effects
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/params"       // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/slashing"     // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/staking"      // import for side-effects
-
 	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/depinject"
+	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
+	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
+	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
 	"cosmossdk.io/x/nft"
+	_ "cosmossdk.io/x/nft/module" // import for side-effects
+	_ "cosmossdk.io/x/upgrade"    // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import for side-effects
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import for side-effects
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	_ "github.com/cosmos/cosmos-sdk/x/params" // import for side-effects
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -186,8 +185,13 @@ var (
 				}),
 			},
 			{
-				Name:   stakingtypes.ModuleName,
-				Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
+				Name: stakingtypes.ModuleName,
+				Config: appconfig.WrapAny(&stakingmodulev1.Module{
+					// NOTE: specifying a prefix is only necessary when using bech32 addresses
+					// If not specfied, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
+					Bech32PrefixValidator: "cosmosvaloper",
+					Bech32PrefixConsensus: "cosmosvalcons",
+				}),
 			},
 			{
 				Name:   slashingtypes.ModuleName,

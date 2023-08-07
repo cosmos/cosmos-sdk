@@ -39,6 +39,11 @@ func (k Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 
 // GroupPolicyInfo queries info about a group policy.
 func (k Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
+	_, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
@@ -83,7 +88,7 @@ func (k Keeper) getGroupMembers(ctx sdk.Context, id uint64, pageRequest *query.P
 // GroupsByAdmin queries all groups where a given address is admin.
 func (k Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsByAdminRequest) (*group.QueryGroupsByAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.accKeeper.StringToBytes(request.Admin)
+	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +144,7 @@ func (k Keeper) getGroupPoliciesByGroup(ctx sdk.Context, id uint64, pageRequest 
 // admin.
 func (k Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.QueryGroupPoliciesByAdminRequest) (*group.QueryGroupPoliciesByAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.accKeeper.StringToBytes(request.Admin)
+	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +185,7 @@ func (k Keeper) Proposal(goCtx context.Context, request *group.QueryProposalRequ
 // ProposalsByGroupPolicy queries all proposals of a group policy.
 func (k Keeper) ProposalsByGroupPolicy(goCtx context.Context, request *group.QueryProposalsByGroupPolicyRequest) (*group.QueryProposalsByGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.accKeeper.StringToBytes(request.Address)
+	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +223,7 @@ func (k Keeper) getProposal(ctx sdk.Context, proposalID uint64) (group.Proposal,
 // VoteByProposalVoter queries a vote given a voter and a proposal ID.
 func (k Keeper) VoteByProposalVoter(goCtx context.Context, request *group.QueryVoteByProposalVoterRequest) (*group.QueryVoteByProposalVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.accKeeper.StringToBytes(request.Voter)
+	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +261,7 @@ func (k Keeper) VotesByProposal(goCtx context.Context, request *group.QueryVotes
 // VotesByVoter queries all votes of a voter.
 func (k Keeper) VotesByVoter(goCtx context.Context, request *group.QueryVotesByVoterRequest) (*group.QueryVotesByVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.accKeeper.StringToBytes(request.Voter)
+	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +289,7 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	member, err := k.accKeeper.StringToBytes(request.Address)
+	member, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
 	}

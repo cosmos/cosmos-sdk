@@ -3,11 +3,10 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
@@ -57,8 +56,7 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 // Proposals implements the Query/Proposals gRPC method
 func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	var filteredProposals []*v1.Proposal
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (bool, error) {
+	filteredProposals, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (include bool, err error) {
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied/valid)
@@ -68,7 +66,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
-			voter, err := q.k.authKeeper.StringToBytes(req.Voter)
+			voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 			if err != nil {
 				return false, err
 			}
@@ -80,7 +78,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
+			depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 			if err != nil {
 				return false, err
 			}
@@ -91,11 +89,14 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 
 		// if all match, append to results
 		if matchVoter && matchDepositor && matchStatus {
-			filteredProposals = append(filteredProposals, &p)
+			return true, nil
 		}
 		// continue to next item, do not include because we're appending results above.
 		return false, nil
+	}, func(_ uint64, value v1.Proposal) (*v1.Proposal, error) {
+		return &value, nil
 	})
+
 	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -117,7 +118,7 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
-	voter, err := q.k.authKeeper.StringToBytes(req.Voter)
+	voter, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +144,8 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	var votes v1.Votes
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (include bool, err error) {
-		votes = append(votes, &value)
-		return false, nil // not including results because they're being appended.
+	votes, pageRes, err := query.CollectionPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (vote *v1.Vote, err error) {
+		return &value, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -180,11 +179,10 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 	case v1.ParamTallying:
 		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 		response.TallyParams = &tallyParams
-
 	default:
-		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid parameter type", req.ParamsType)
-
+		if len(req.ParamsType) > 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "unknown params type: %s", req.ParamsType)
+		}
 	}
 	response.Params = &params
 
@@ -205,7 +203,7 @@ func (q queryServer) Deposit(ctx context.Context, req *v1.QueryDepositRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
-	depositor, err := q.k.authKeeper.StringToBytes(req.Depositor)
+	depositor, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Depositor)
 	if err != nil {
 		return nil, err
 	}
@@ -228,9 +226,8 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 	}
 
 	var deposits []*v1.Deposit
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (bool, error) {
-		deposits = append(deposits, &deposit)
-		return false, nil // we don't include results as they're being appended to the slice above.
+	deposits, pageRes, err := query.CollectionPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (*v1.Deposit, error) {
+		return &deposit, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -378,6 +375,10 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
+
+	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
+	}
 
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)

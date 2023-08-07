@@ -46,20 +46,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		minCommissionRate sdkmath.LegacyDec
 	)
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, unbondingTime, &unbondTime, simState.Rand,
-		func(r *rand.Rand) { unbondTime = genUnbondingTime(r) },
-	)
+	simState.AppParams.GetOrGenerate(unbondingTime, &unbondTime, simState.Rand, func(r *rand.Rand) { unbondTime = genUnbondingTime(r) })
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, maxValidators, &maxVals, simState.Rand,
-		func(r *rand.Rand) { maxVals = genMaxValidators(r) },
-	)
+	simState.AppParams.GetOrGenerate(maxValidators, &maxVals, simState.Rand, func(r *rand.Rand) { maxVals = genMaxValidators(r) })
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, historicalEntries, &histEntries, simState.Rand,
-		func(r *rand.Rand) { histEntries = getHistEntries(r) },
-	)
+	simState.AppParams.GetOrGenerate(historicalEntries, &histEntries, simState.Rand, func(r *rand.Rand) { histEntries = getHistEntries(r) })
 
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
@@ -85,7 +76,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator, err := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		validator, err := types.NewValidator(valAddr.String(), simState.Accounts[i].ConsKey.PubKey(), types.Description{})
 		if err != nil {
 			panic(err)
 		}
@@ -93,7 +84,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		validator.DelegatorShares = sdkmath.LegacyNewDecFromInt(simState.InitialStake)
 		validator.Commission = commission
 
-		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdkmath.LegacyNewDecFromInt(simState.InitialStake))
+		delegation := types.NewDelegation(simState.Accounts[i].Address.String(), valAddr.String(), sdkmath.LegacyNewDecFromInt(simState.InitialStake))
 
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)

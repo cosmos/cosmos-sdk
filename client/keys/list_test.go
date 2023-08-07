@@ -20,6 +20,7 @@ import (
 )
 
 func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
+	t.Helper()
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {
@@ -31,7 +32,7 @@ func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
 
 func Test_runListCmd(t *testing.T) {
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	kbHome1 := t.TempDir()
 	kbHome2 := t.TempDir()
@@ -62,7 +63,7 @@ func Test_runListCmd(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd.SetArgs([]string{
-				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
+				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, tt.kbDir),
 				fmt.Sprintf("--%s=false", flagListNames),
 			})
 
@@ -71,7 +72,7 @@ func Test_runListCmd(t *testing.T) {
 			}
 
 			cmd.SetArgs([]string{
-				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
+				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, tt.kbDir),
 				fmt.Sprintf("--%s=true", flagListNames),
 			})
 

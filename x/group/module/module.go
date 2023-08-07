@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -48,7 +47,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		bankKeeper:     bk,
 		accKeeper:      ak,
@@ -90,11 +89,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
 	}
 	return data.Validate()
-}
-
-// GetQueryCmd returns the cli query commands for the group module
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(a.Name())
 }
 
 // GetTxCmd returns the transaction commands for the group module

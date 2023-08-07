@@ -5,8 +5,18 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 )
+
+func getBlockHeight(ctx context.Context, clientCtx client.Context) (int64, error) {
+	status, err := getNodeStatus(ctx, clientCtx)
+	if err != nil {
+		return 0, err
+	}
+	height := status.SyncInfo.LatestBlockHeight
+	return height, nil
+}
 
 func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlock, error) {
 	// get the node

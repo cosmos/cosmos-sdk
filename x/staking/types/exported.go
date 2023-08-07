@@ -1,8 +1,9 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,9 +11,9 @@ import (
 
 // DelegationI delegation bond for a delegated proof of stake system
 type DelegationI interface {
-	GetDelegatorAddr() sdk.AccAddress // delegator sdk.AccAddress for the bond
-	GetValidatorAddr() sdk.ValAddress // validator operator address
-	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation
+	GetDelegatorAddr() string  // delegator string for the bond
+	GetValidatorAddr() string  // validator operator address
+	GetShares() math.LegacyDec // amount of validator's shares held in this delegation
 }
 
 // ValidatorI expected validator functions

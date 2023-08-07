@@ -10,7 +10,7 @@ import (
 
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
-	address.Codec
+	AddressCodec() address.Codec
 
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI

@@ -48,7 +48,7 @@ service Msg {
   // DepositValidatorRewardsPool defines a method to provide additional rewards
   // to delegators to a specific validator.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   rpc DepositValidatorRewardsPool(MsgDepositValidatorRewardsPool) returns (MsgDepositValidatorRewardsPoolResponse);
 }
 
@@ -190,7 +190,7 @@ message MsgCommunityPoolSpendResponse {}
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPool {
   option (amino.name) = "cosmos-sdk/distr/MsgDepositValRewards";
   option (cosmos.msg.v1.signer) = "depositor";
@@ -211,5 +211,5 @@ message MsgDepositValidatorRewardsPool {
 // MsgDepositValidatorRewardsPoolResponse defines the response to executing a
 // MsgDepositValidatorRewardsPool message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPoolResponse {}

@@ -3,19 +3,83 @@ package cli_test
 import (
 	"context"
 	"fmt"
+	"io"
+	"testing"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
+
+type CLITestSuite struct {
+	suite.Suite
+
+	kr        keyring.Keyring
+	encCfg    testutilmod.TestEncodingConfig
+	baseCtx   client.Context
+	clientCtx client.Context
+}
+
+func TestCLITestSuite(t *testing.T) {
+	suite.Run(t, new(CLITestSuite))
+}
+
+func (s *CLITestSuite) SetupSuite() {
+	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	s.kr = keyring.NewInMemory(s.encCfg.Codec)
+	s.baseCtx = client.Context{}.
+		WithKeyring(s.kr).
+		WithTxConfig(s.encCfg.TxConfig).
+		WithCodec(s.encCfg.Codec).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
+		WithAccountRetriever(client.MockAccountRetriever{}).
+		WithOutput(io.Discard).
+		WithChainID("test-chain")
+
+	ctxGen := func() client.Context {
+		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+			Value: bz,
+		})
+		return s.baseCtx.WithClient(c)
+	}
+	s.clientCtx = ctxGen()
+
+	cfg, err := network.DefaultConfigWithAppConfig(distrtestutil.AppConfig)
+	s.Require().NoError(err)
+
+	genesisState := cfg.GenesisState
+	var mintData minttypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+
+	inflation := sdkmath.LegacyMustNewDecFromStr("1.0")
+	mintData.Minter.Inflation = inflation
+	mintData.Params.InflationMin = inflation
+	mintData.Params.InflationMax = inflation
+
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
+	s.Require().NoError(err)
+	genesisState[minttypes.ModuleName] = mintDataBz
+	cfg.GenesisState = genesisState
+}
 
 func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
@@ -35,7 +99,7 @@ func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
-			"invalid Bech32 prefix",
+			"hrp does not match bech32 prefix",
 		},
 		{
 			"valid transaction",
@@ -69,7 +133,7 @@ func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 			args := append([]string{tc.valAddr.String()}, tc.args...)
 
 			ctx := svrcmd.CreateExecuteContext(context.Background())
-			cmd := cli.NewWithdrawRewardsCmd()
+			cmd := cli.NewWithdrawRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 			cmd.SetContext(ctx)
 			cmd.SetArgs(args)
 			s.Require().NoError(client.SetCmdClientContextHandler(s.clientCtx, cmd))
@@ -121,7 +185,7 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewWithdrawAllRewardsCmd()
+			cmd := cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -223,7 +287,7 @@ func (s *CLITestSuite) TestTxFundCommunityPoolCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewFundCommunityPoolCmd()
+			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {

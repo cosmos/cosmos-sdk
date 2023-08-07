@@ -80,9 +80,6 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
-
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -202,7 +199,7 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type ModuleOutputs struct {

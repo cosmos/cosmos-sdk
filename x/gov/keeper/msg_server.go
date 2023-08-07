@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/go-metrics"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +40,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
 	}
 
-	proposer, err := k.authKeeper.StringToBytes(msg.GetProposer())
+	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
@@ -47,9 +49,26 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	// Check that either metadata or Msgs length is non nil.
+	// check that either metadata or Msgs length is non nil.
 	if len(msg.Messages) == 0 && len(msg.Metadata) == 0 {
 		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
+
+	// verify that if present, the metadata title and summary equals the proposal title and summary
+	if len(msg.Metadata) != 0 {
+		proposalMetadata := govtypes.ProposalMetadata{}
+		if err := json.Unmarshal([]byte(msg.Metadata), &proposalMetadata); err == nil {
+			if proposalMetadata.Title != msg.Title {
+				return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "metadata title '%s' must equal proposal title '%s'", proposalMetadata.Title, msg.Title)
+			}
+
+			if proposalMetadata.Summary != msg.Summary {
+				return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "metadata summary '%s' must equal proposal summary '%s'", proposalMetadata.Summary, msg.Summary)
+			}
+		}
+
+		// if we can't unmarshal the metadata, this means the client didn't use the recommended metadata format
+		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
 	proposalMsgs, err := msg.GetMsgs()
@@ -100,9 +119,9 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}, nil
 }
 
-// CancelProposals implements the MsgServer.CancelProposal method.
+// CancelProposal implements the MsgServer.CancelProposal method.
 func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
-	_, err := k.authKeeper.StringToBytes(msg.Proposer)
+	_, err := k.authKeeper.AddressCodec().StringToBytes(msg.Proposer)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
@@ -156,7 +175,7 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegac
 
 // Vote implements the MsgServer.Vote method.
 func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse, error) {
-	accAddr, err := k.authKeeper.StringToBytes(msg.Voter)
+	accAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.Voter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
@@ -184,7 +203,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 
 // VoteWeighted implements the MsgServer.VoteWeighted method.
 func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) (*v1.MsgVoteWeightedResponse, error) {
-	accAddr, accErr := k.authKeeper.StringToBytes(msg.Voter)
+	accAddr, accErr := k.authKeeper.AddressCodec().StringToBytes(msg.Voter)
 	if accErr != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", accErr)
 	}
@@ -199,7 +218,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 		if !option.IsValid() {
 			return nil, errors.Wrap(govtypes.ErrInvalidVote, option.String())
 		}
-		weight, err := sdk.NewDecFromStr(option.Weight)
+		weight, err := math.LegacyNewDecFromStr(option.Weight)
 		if err != nil {
 			return nil, errors.Wrapf(govtypes.ErrInvalidVote, "invalid weight: %s", err)
 		}
@@ -237,7 +256,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 
 // Deposit implements the MsgServer.Deposit method.
 func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
-	accAddr, err := k.authKeeper.StringToBytes(msg.Depositor)
+	accAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}

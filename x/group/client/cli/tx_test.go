@@ -89,7 +89,7 @@ func (s *CLITestSuite) SetupSuite() {
 		s.clientCtx,
 		val.Address,
 		account,
-		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(2000))), address.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 	)

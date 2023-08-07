@@ -13,9 +13,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -32,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func init() {
@@ -64,11 +62,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetQueryCmd returns the CLI query commands for this module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the CLI transaction commands for this module
@@ -124,13 +117,21 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
 		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
-		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
+		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for name, version := range moduleVM {
 			if _, ok := versionMap[name]; !ok {
 				versionMap[name] = version
 			}
 		}
 
-		am.keeper.SetModuleVersionMap(ctx, versionMap)
+		err = am.keeper.SetModuleVersionMap(ctx, versionMap)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}
@@ -158,9 +159,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	BeginBlocker(am.keeper, c)
-	return nil
+	return BeginBlocker(ctx, am.keeper)
 }
 
 //
@@ -178,7 +177,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
-	Key          *store.KVStoreKey
+	StoreService store.KVStoreService
 	Cdc          codec.Codec
 	AddressCodec address.Codec
 
@@ -190,7 +189,6 @@ type ModuleOutputs struct {
 
 	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
-	GovHandler    govv1beta1.HandlerRoute
 	BaseAppOption runtime.BaseAppOption
 }
 
@@ -215,14 +213,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, nil, authority.String())
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}
 	m := NewAppModule(k, in.AddressCodec)
-	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return ModuleOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m, BaseAppOption: baseappOpt}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

@@ -5,10 +5,11 @@ import (
 	"sort"
 	"testing"
 
-	"cosmossdk.io/math"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -344,7 +345,8 @@ func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 
 // Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
-	v, err := types.NewValidator(operator, pubKey, types.Description{})
+	t.Helper()
+	v, err := types.NewValidator(operator.String(), pubKey, types.Description{})
 	require.NoError(t, err)
 	return v
 }

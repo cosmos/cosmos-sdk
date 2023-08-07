@@ -11,13 +11,10 @@ import (
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	address.Codec
-
+	AddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
-
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(context.Context, sdk.ModuleAccountI)
 }
@@ -37,27 +34,28 @@ type BankKeeper interface {
 
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
+	ValidatorAddressCodec() address.Codec
 	// iterate through validators by operator address, execute func for each validator
-	IterateValidators(sdk.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
+	IterateValidators(context.Context,
+		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error
 
-	Validator(sdk.Context, sdk.ValAddress) stakingtypes.ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI // get a particular validator by consensus address
+	Validator(context.Context, sdk.ValAddress) (stakingtypes.ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error) // get a particular validator by consensus address
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (stakingtypes.DelegationI, error)
 
-	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
+		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool)) error
 
-	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
-	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
-	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
+	GetAllSDKDelegations(ctx context.Context) ([]stakingtypes.Delegation, error)
+	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
+	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
-	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) // Must be called when a validator is created
-	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
+	AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error // Must be called when a validator is created
+	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 }

@@ -3,10 +3,10 @@ package gov_test
 import (
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -36,7 +36,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	assert.Assert(t, acc != nil)
 }

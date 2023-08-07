@@ -12,7 +12,7 @@ It is based on the [CometBFT RFC 019](https://github.com/cometbft/cometbft/blob/
 
 ### Add Config Command
 
-To add the confix tool, it's required to add the `ConfigCommand` to your application's root command file (e.g. `simd/cmd/root.go`).
+To add the confix tool, it's required to add the `ConfigCommand` to your application's root command file (e.g. `<appd>/cmd/root.go`).
 
 Import the `confixCmd` package:
 

@@ -61,7 +61,7 @@ func (a *addressValue) Set(s string) error {
 }
 
 func (a addressValue) Type() string {
-	return "bech32 account address key name"
+	return "bech32 account address"
 }
 
 type consensusAddressStringType struct{}

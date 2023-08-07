@@ -2,9 +2,7 @@ package consensus
 
 import (
 	"context"
-	"encoding/json"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
@@ -19,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
@@ -46,18 +43,6 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the consensus
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// nil is returned since default genesis of consensus params is handled by tendermint
-	return nil
-}
-
-// ValidateGenesis performs genesis state validation
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
@@ -107,18 +92,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 
 // Name returns the consensus module's name.
 func (AppModule) Name() string { return types.ModuleName }
-
-// InitGenesis is handled by for init genesis of consensus
-func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate {
-	// nil is returned since initgenesis of consensus params is handled by tendermint
-	return nil
-}
-
-// ExportGenesis is handled by CometBFT export of genesis
-func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage {
-	// nil is returned since ExportGenesis of consensus params is handled by CometBFT and baseapp
-	return nil
-}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

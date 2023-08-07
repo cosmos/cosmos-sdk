@@ -116,14 +116,12 @@ var (
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
-						genutiltypes.ModuleName,
 						authz.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
-						genutiltypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
 					},
@@ -154,7 +152,6 @@ var (
 						paramstypes.ModuleName,
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
-						consensustypes.ModuleName,
 						circuittypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order

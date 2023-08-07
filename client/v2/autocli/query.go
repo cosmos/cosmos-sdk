@@ -1,6 +1,8 @@
 package autocli
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -123,6 +125,10 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
 		}
 
+		if result, err := decodeBase64Fields(bz); err == nil {
+			bz = result
+		}
+
 		return b.outOrStdoutFormat(cmd, bz)
 	})
 	if err != nil {
@@ -134,4 +140,50 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	return cmd, nil
+}
+
+// wip, we probably do not want to use that, as this gives false positives (600s f.e is decoded while it shouldn't)
+func decodeBase64Fields(bz []byte) ([]byte, error) {
+	var result interface{}
+	if err := json.Unmarshal(bz, &result); err != nil {
+		return nil, fmt.Errorf("cannot unmarshal response %v: %w", bz, err)
+	}
+
+	decodeString := func(s string) (string, error) {
+		decoded, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			return "", fmt.Errorf("cannot decode base64 string %s: %w", s, err)
+		}
+		return string(decoded), nil
+	}
+
+	var decode func(interface{}) interface{}
+	decode = func(v interface{}) interface{} {
+		switch vv := v.(type) {
+		case string:
+			if decoded, err := decodeString(vv); err == nil {
+				return decoded
+			}
+		case []interface{}:
+			for i, u := range vv {
+				vv[i] = decode(u)
+			}
+			return vv
+		case map[string]interface{}:
+			for k, u := range vv {
+				vv[k] = decode(u)
+			}
+			return vv
+		}
+
+		return v
+	}
+
+	decoded := decode(result)
+	bz, err := json.Marshal(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("cannot marshal response %v: %w", decoded, err)
+	}
+
+	return bz, nil
 }

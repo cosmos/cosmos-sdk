@@ -171,7 +171,7 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 
 	err := schnorr.Verify(suite, keyPair.Public, msg, sig)
 	if err != nil {
-		fmt.Printf("[ERROR] while verifying signature: %e", err)
+		fmt.Println("[ERROR] while verifying signature -", err)
 	}
 	return err == nil
 }

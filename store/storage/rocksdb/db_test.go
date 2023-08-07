@@ -154,6 +154,29 @@ func TestDatabase_ResetBatch(t *testing.T) {
 	require.LessOrEqual(t, batch.Size(), 12)
 }
 
+func TestDatabase_IteratorEmptyDomain(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	iter, err := db.NewIterator(storeKey1, 1, []byte{}, []byte{})
+	require.Error(t, err)
+	require.Nil(t, iter)
+}
+
+func TestDatabase_IteratorClose(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	iter, err := db.NewIterator(storeKey1, 1, []byte("key000"), nil)
+	require.NoError(t, err)
+	iter.Close()
+
+	require.False(t, iter.Valid())
+	require.Panics(t, func() { iter.Close() })
+}
+
 func TestDatabase_IteratorDomain(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)
@@ -219,6 +242,11 @@ func TestDatabase_Iterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 100, count)
+	require.NoError(t, iter.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter.Next())
+	require.False(t, iter.Valid())
 
 	// iterator with with a start and end domain
 	iter2, err := db.NewIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
@@ -235,6 +263,11 @@ func TestDatabase_Iterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 9, count)
+	require.NoError(t, iter2.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter2.Next())
+	require.False(t, iter2.Valid())
 
 	// start must be <= end
 	iter3, err := db.NewIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
@@ -275,6 +308,11 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 100, count)
+	require.NoError(t, iter.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter.Next())
+	require.False(t, iter.Valid())
 
 	// reverse iterator with with a start and end domain
 	iter2, err := db.NewReverseIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
@@ -291,6 +329,11 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 		count++
 	}
 	require.Equal(t, 9, count)
+	require.NoError(t, iter2.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter2.Next())
+	require.False(t, iter2.Valid())
 
 	// start must be <= end
 	iter3, err := db.NewReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))

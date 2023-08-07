@@ -161,7 +161,19 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 }
 
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
+	prefix := storePrefix(storeKey, version)
+	start, end = util.IterateWithPrefix(prefix, start, end)
+
+	iter := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
+	return newPebbleDBIterator(iter, prefix, start, end, true), nil
 }
 
 func storePrefix(storeKey string, version uint64) []byte {

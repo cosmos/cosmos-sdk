@@ -121,7 +121,9 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr iterator) Next() bool {
-	itr.assertIsValid()
+	if itr.invalid {
+		return false
+	}
 
 	if itr.reverse {
 		itr.source.Prev()
@@ -139,10 +141,11 @@ func (itr *iterator) Error() error {
 func (itr *iterator) Close() {
 	itr.source.Close()
 	itr.source = nil
+	itr.invalid = true
 }
 
 func (itr *iterator) assertIsValid() {
-	if !itr.Valid() {
+	if itr.invalid {
 		panic("iterator is invalid")
 	}
 }

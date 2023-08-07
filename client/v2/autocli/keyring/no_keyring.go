@@ -6,6 +6,6 @@ var _ Keyring = NoKeyring{}
 
 type NoKeyring struct{}
 
-func (k NoKeyring) LookupKey(name string) (string, error) {
+func (k NoKeyring) LookupAddressByKeyName(name string) (string, error) {
 	return "", errors.New("no keyring configured")
 }

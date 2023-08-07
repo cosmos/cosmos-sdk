@@ -50,6 +50,10 @@ func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) *Dat
 
 func (db *Database) Close() error {
 	db.storage.Close()
+
+	db.storage = nil
+	db.cfHandle = nil
+
 	return nil
 }
 

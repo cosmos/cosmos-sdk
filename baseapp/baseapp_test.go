@@ -87,14 +87,16 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 }
 
 func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
+	t.Helper()
+
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	app.Commit()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2}})
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 	app.Commit()
 
 	return app
@@ -646,6 +648,7 @@ const (
 var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}
 
 func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
+	t.Helper()
 	if c == QueryCtx {
 		ctx, err := bapp.CreateQueryContext(1, false)
 		require.NoError(t, err)
@@ -654,7 +657,7 @@ func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
 		return getCheckStateCtx(bapp)
 	}
 	// TODO: Not supported yet
-	return getDeliverStateCtx(bapp)
+	return getFinalizeBlockStateCtx(bapp)
 }
 
 func TestQueryGasLimit(t *testing.T) {

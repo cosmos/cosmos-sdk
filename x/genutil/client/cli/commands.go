@@ -10,15 +10,12 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-<<<<<<< HEAD
 // GenesisCoreCommand adds core sdk's sub-commands into genesis command.
 // Deprecated: use Commands instead.
 func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return Commands(txConfig, moduleBasics, defaultNodeHome)
 }
 
-=======
->>>>>>> bdb7387fa (refactor: reword upgrading.md and verify match with repo (#17262))
 // Commands adds core sdk's sub-commands into genesis command.
 func Commands(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return CommandsWithCustomMigrationMap(txConfig, moduleBasics, defaultNodeHome, MigrationMap)

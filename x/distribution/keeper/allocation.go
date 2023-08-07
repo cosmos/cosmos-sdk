@@ -89,13 +89,18 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 
+	valStr, err := k.stakingKeeper.ValidatorAddressCodec().BytesToString(val.GetOperator())
+	if err != nil {
+		return err
+	}
+
 	// update current commission
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, valStr),
 		),
 	)
 	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, val.GetOperator())

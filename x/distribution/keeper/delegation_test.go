@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -72,13 +74,13 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// historical count should be 2 (once for validator init, once for delegation init)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// historical count should be 2 still
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// calculate delegation rewards
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -106,6 +108,22 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
+}
+
+func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
+	count := 0
+	err := k.ValidatorHistoricalRewards.Walk(
+		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards disttypes.ValidatorHistoricalRewards) (stop bool, err error) {
+			count += int(rewards.ReferenceCount)
+			return false, nil
+		},
+	)
+
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
+	}
+
+	return count
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
@@ -486,7 +504,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// historical count should be 2 (initial + latest for delegation)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// withdraw rewards (the bank keeper should be called with the right amount of tokens to transfer)
 	expRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
@@ -495,7 +513,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Nil(t, err)
 
 	// historical count should still be 2 (added one record, cleared one)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// withdraw commission (the bank keeper should be called with the right amount of tokens to transfer)
 	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
@@ -808,7 +826,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// historical count should be 2 (validator init, delegation init)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// second delegation
 	_, del2, err := distrtestutil.Delegate(
@@ -830,7 +848,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// historical count should be 3 (second delegation init)
-	require.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -851,7 +869,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// historical count should be 3 (validator init + two delegations)
-	require.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// validator withdraws commission
 	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(initial))}

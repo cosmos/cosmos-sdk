@@ -2,7 +2,7 @@ chains:
   - name: simapp
     type: simapp
     image: ghcr.io/cosmos/simapp:latest
-    numValidators: 2
+    numValidators: 4
     ports:
       rest: 1317
       rpc: 26657

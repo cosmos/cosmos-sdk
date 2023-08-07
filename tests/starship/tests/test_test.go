@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
@@ -44,7 +45,7 @@ func queryState(t *testing.T) {
 
 	// Create a connection to the gRPC server.
 	grpcConn, err := grpc.Dial(
-		"127.0.0.1:9091",    // your gRPC server address.
+		"0.0.0.0:9091",      // your gRPC server address.
 		grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
 		// This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
 		// if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
@@ -52,6 +53,12 @@ func queryState(t *testing.T) {
 	)
 	require.NoError(t, err)
 	defer grpcConn.Close()
+
+	rc := grpcreflect.NewClientAuto(context.Background(), grpcConn)
+
+	services, err := rc.ListServices()
+	require.NoError(t, err)
+	fmt.Printf("services found: %v\n", services)
 
 	// This creates a gRPC client to query the x/bank service.
 	bankClient := banktypes.NewQueryClient(grpcConn)

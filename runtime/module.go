@@ -96,33 +96,6 @@ func SetupAppBuilder(inputs AppInputs) {
 	}
 }
 
-<<<<<<< HEAD
-=======
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
-	signingOptions := signing.Options{
-		AddressCodec:          addressCodec,
-		ValidatorAddressCodec: validatorAddressCodec,
-	}
-	for _, signer := range customGetSigners {
-		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
-	}
-
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles:     proto.HybridResolver,
-		SigningOptions: signingOptions,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, err
-	}
-
-	return interfaceRegistry, nil
-}
-
->>>>>>> 60198f077 (fix(runtime): allow to properly register non app wiring modules (#17284))
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
 	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }

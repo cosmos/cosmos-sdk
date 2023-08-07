@@ -9,12 +9,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-<<<<<<< HEAD
-=======
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
->>>>>>> 60198f077 (fix(runtime): allow to properly register non app wiring modules (#17284))
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -81,9 +76,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		if module, ok := appModule.(module.HasServices); ok {
 			module.RegisterServices(a.configurator)
 		} else if module, ok := appModule.(appmodule.HasServices); ok {
-			if err := module.RegisterServices(a.configurator); err != nil {
-				return err
-			}
+			module.RegisterServices(a.configurator)
 		}
 	}
 

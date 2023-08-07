@@ -30,6 +30,10 @@ func TestCollectionsCorrectness(t *testing.T) {
 	t.Run("Time", func(t *testing.T) {
 		colltest.TestKeyCodec(t, TimeKey, time.Time{})
 	})
+
+	t.Run("BytesIndexingKey", func(t *testing.T) {
+		colltest.TestKeyCodec(t, LengthPrefixedBytesKey, []byte{})
+	})
 }
 
 func TestLEUint64Key(t *testing.T) {

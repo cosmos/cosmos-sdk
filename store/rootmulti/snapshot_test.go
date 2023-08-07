@@ -235,7 +235,6 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 
 func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 	b.Helper()
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
 
 	b.ReportAllocs()
 	b.StopTimer()
@@ -272,7 +271,6 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
 	b.Helper()
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
 
 	b.ReportAllocs()
 	b.StopTimer()

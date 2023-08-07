@@ -52,7 +52,7 @@ func TestMap_Clear(t *testing.T) {
 		ctx, m := makeTest()
 		err := m.Clear(ctx, nil)
 		require.NoError(t, err)
-		err = m.Walk(ctx, nil, func(key uint64, value uint64) (bool, error) {
+		err = m.Walk(ctx, nil, func(key, value uint64) (bool, error) {
 			return false, fmt.Errorf("should never be called")
 		})
 		require.NoError(t, err)

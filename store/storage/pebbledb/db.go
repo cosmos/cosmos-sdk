@@ -138,6 +138,10 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	return nil
 }
 
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	return NewBatch(db.storage, version)
+}
+
 func storePrefix(storeKey string, version uint64) []byte {
 	return []byte(fmt.Sprintf(StorePrefixTpl, version, storeKey))
 }

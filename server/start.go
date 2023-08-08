@@ -57,14 +57,14 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning              = "pruning"
-	FlagPruningKeepRecent    = "pruning-keep-recent"
-	FlagPruningInterval      = "pruning-interval"
-	FlagIndexEvents          = "index-events"
-	FlagMinRetainBlocks      = "min-retain-blocks"
-	FlagIAVLCacheSize        = "iavl-cache-size"
-	FlagDisableIAVLFastNode  = "iavl-disable-fastnode"
-	FlagShutdownGraceSeconds = "shutdown-grace-seconds"
+	FlagPruning             = "pruning"
+	FlagPruningKeepRecent   = "pruning-keep-recent"
+	FlagPruningInterval     = "pruning-interval"
+	FlagIndexEvents         = "index-events"
+	FlagMinRetainBlocks     = "min-retain-blocks"
+	FlagIAVLCacheSize       = "iavl-cache-size"
+	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -176,10 +176,10 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			serverCtx.Logger.Debug("received quit signal")
 
 			// wait for app.Close() and tmNode.Stop() to flush async db writes to disk
-			graceSeconds, _ := cmd.Flags().GetUint32(FlagShutdownGraceSeconds)
-			if graceSeconds > 0 {
-				serverCtx.Logger.Info("wait for database to flush", "graceseconds", graceSeconds)
-				<-time.After(time.Duration(graceSeconds) * time.Second)
+			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
+			if graceDuration > 0 {
+				serverCtx.Logger.Info("wait for database to flush", FlagShutdownGrace, graceDuration)
+				<-time.After(graceDuration)
 				serverCtx.Logger.Info("finished waiting for database to flush")
 			} else {
 				serverCtx.Logger.Info("do not wait for database to flush")
@@ -221,7 +221,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
-	cmd.Flags().Uint32(FlagShutdownGraceSeconds, 0, "On Shutdown, Seconds to wait for database to flush to disk")
+	cmd.Flags().Duration(FlagShutdownGrace, 0*time.Second, "On Shutdown, duration to wait for database to flush to disk")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

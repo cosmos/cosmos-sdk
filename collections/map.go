@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -149,8 +150,7 @@ func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key
 }
 
 // Clear clears the collection contained within the provided key range.
-// A nil ranger equals to clearing the whole collection. In case the collection
-// is empty no error will be returned.
+// A nil ranger equals to clearing the whole collection.
 // NOTE: this API needs to be used with care, considering that as of today
 // cosmos-sdk stores the deletion records to be committed in a memory cache,
 // clearing a lot of data might make the node go OOM.
@@ -216,6 +216,10 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 		prefixedEnd = append(m.prefix, end...)
 	}
 
+	if bytes.Compare(prefixedStart, prefixedEnd) == 1 {
+		return Iterator[K, V]{}, ErrInvalidIterator
+	}
+
 	s := m.sa(ctx)
 	var (
 		storeIter store.Iterator
@@ -233,9 +237,6 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 		return Iterator[K, V]{}, err
 	}
 
-	if !storeIter.Valid() {
-		return Iterator[K, V]{}, ErrInvalidIterator
-	}
 	return Iterator[K, V]{
 		kc:           m.kc,
 		vc:           m.vc,

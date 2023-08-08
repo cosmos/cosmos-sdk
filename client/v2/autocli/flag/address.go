@@ -17,7 +17,7 @@ import (
 
 type addressStringType struct{}
 
-func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
+func (a addressStringType) NewValue(_ context.Context, b *Builder) Value {
 	return &addressValue{addressCodec: b.AddressCodec}
 }
 
@@ -27,7 +27,7 @@ func (a addressStringType) DefaultValue() string {
 
 type validatorAddressStringType struct{}
 
-func (a validatorAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
+func (a validatorAddressStringType) NewValue(_ context.Context, b *Builder) Value {
 	return &addressValue{addressCodec: b.ValidatorAddressCodec}
 }
 
@@ -61,7 +61,7 @@ func (a *addressValue) Set(s string) error {
 }
 
 func (a addressValue) Type() string {
-	return "bech32 account address key name"
+	return "bech32 account address"
 }
 
 type consensusAddressStringType struct{}

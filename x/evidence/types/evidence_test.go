@@ -78,7 +78,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 		validator{address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, power: 100})
 
 	evidence := types.FromABCIEvidence(tmEvidence)
-	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("cosmosvalcons"))
+	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator().Address(), consAddr.Bytes())
 	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)

@@ -725,7 +725,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		}
 	}
 
-	beginBlock := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute

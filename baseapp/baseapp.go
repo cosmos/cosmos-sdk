@@ -659,7 +659,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -668,7 +668,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 	if app.beginBlocker != nil {
 		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return resp, err
 		}
 
 		// append BeginBlock attributes to all events in the EndBlock response
@@ -682,7 +682,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
-	return resp
+	return resp, nil
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
@@ -730,7 +730,7 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	if app.endBlocker != nil {
 		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return endblock, err
 		}
 
 		// append EndBlock attributes to all events in the EndBlock response
@@ -945,7 +945,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// create message events
-		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
+		}
 
 		// append message events and data
 		//
@@ -990,19 +993,19 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) (sdk.Events, error) {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
 	signers, err := cdc.GetMsgV2Signers(msgV2)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if len(signers) > 0 && signers[0] != nil {
 		addrStr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(signers[0])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, addrStr))
 	}
@@ -1014,7 +1017,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 		}
 	}
 
-	return sdk.Events{msgEvent}.AppendEvents(events)
+	return sdk.Events{msgEvent}.AppendEvents(events), nil
 }
 
 // PrepareProposalVerifyTx performs transaction verification when a proposer is

@@ -12,6 +12,7 @@ import (
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -54,7 +55,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
@@ -137,4 +138,8 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
 }

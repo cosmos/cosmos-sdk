@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -40,7 +41,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.LastTotalPowerKey, Value: oneIntBz},
-			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
+			{Key: append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(valAddr1)...), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
 			{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
 			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&ubd)},

@@ -22,12 +22,10 @@ import (
 
 // GetValidator gets a single validator
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	value, err := store.Get(types.GetValidatorKey(addr))
-	if err != nil {
+	value, err := k.Validators.Get(ctx, addr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return validator, err
 	}
-
 	if value == nil {
 		return validator, types.ErrNoValidatorFound
 	}
@@ -69,9 +67,8 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 
 // SetValidator sets the main record holding validator details
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
-	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalValidator(k.cdc, &validator)
-	return store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
+	return k.Validators.Set(ctx, validator.GetOperator(), bz)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address
@@ -216,7 +213,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 	// delete the old validator record
 	store := k.storeService.OpenKVStore(ctx)
-	if err = store.Delete(types.GetValidatorKey(address)); err != nil {
+	if err = k.Validators.Remove(ctx, address); err != nil {
 		return err
 	}
 

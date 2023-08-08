@@ -1,13 +1,16 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"time"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -43,9 +46,8 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	opAddr, err := store.Get(types.GetValidatorByConsAddrKey(consAddr))
-	if err != nil {
+	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return validator, err
 	}
 
@@ -78,8 +80,8 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 	if err != nil {
 		return err
 	}
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+
+	return k.ValidatorByConsensusAddress.Set(ctx, consPk, validator.GetOperator())
 }
 
 // SetValidatorByPowerIndex sets a validator by power index
@@ -218,7 +220,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorByConsAddrKey(valConsAddr)); err != nil {
+	if err = k.ValidatorByConsensusAddress.Remove(ctx, valConsAddr); err != nil {
 		return err
 	}
 
@@ -481,19 +483,19 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 
 	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
 	// format for normalization
-	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	deletingAddr, err := k.validatorAddressCodec.StringToBytes(val.OperatorAddress)
 	if err != nil {
 		return err
 	}
 
 	for _, addr := range addrs {
-		storedAddr, err := sdk.ValAddressFromBech32(addr)
+		storedAddr, err := k.validatorAddressCodec.StringToBytes(addr)
 		if err != nil {
 			// even if we don't error here, it will error in UnbondAllMatureValidators at unbond time
 			return err
 		}
-		if !storedAddr.Equals(deletingAddr) {
-			newAddrs = append(newAddrs, storedAddr.String())
+		if !bytes.Equal(storedAddr, deletingAddr) {
+			newAddrs = append(newAddrs, addr)
 		}
 	}
 
@@ -546,7 +548,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 			}
 
 			for _, valAddr := range addrs.Addresses {
-				addr, err := sdk.ValAddressFromBech32(valAddr)
+				addr, err := k.validatorAddressCodec.StringToBytes(valAddr)
 				if err != nil {
 					return err
 				}
@@ -599,4 +601,19 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 	}
 
 	return v.Jailed, nil
+}
+
+// BondedTokensAndPubKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
+func (k Keeper) BondedTokensAndPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error) {
+	v, err := k.GetValidatorByConsAddr(ctx, addr)
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	pubkey, err := v.CmtConsPublicKey()
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	return v.BondedTokens(), pubkey, nil
 }

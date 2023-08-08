@@ -3,9 +3,7 @@ package types_test
 import (
 	"bytes"
 	"encoding/hex"
-	math2 "math"
 	"math/big"
-	"strconv"
 	"testing"
 	"time"
 
@@ -131,22 +129,4 @@ func TestTestGetValidatorQueueKeyOrder(t *testing.T) {
 	require.Equal(t, -1, bytes.Compare(keyA, endKey)) // keyA <= endKey
 	require.Equal(t, -1, bytes.Compare(keyB, endKey)) // keyB <= endKey
 	require.Equal(t, 1, bytes.Compare(keyC, endKey))  // keyB >= endKey
-}
-
-func TestGetHistoricalInfoKey(t *testing.T) {
-	tests := []struct {
-		height int64
-		want   []byte
-	}{
-		{0, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 0}...)},
-		{1, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 1}...)},
-		{2, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 0, 2}...)},
-		{514, append(types.HistoricalInfoKey, []byte{0, 0, 0, 0, 0, 0, 2, 2}...)},
-		{math2.MaxInt64, append(types.HistoricalInfoKey, []byte{127, 255, 255, 255, 255, 255, 255, 255}...)},
-	}
-	for _, tt := range tests {
-		t.Run(strconv.FormatInt(tt.height, 10), func(t *testing.T) {
-			require.Equal(t, tt.want, types.GetHistoricalInfoKey(tt.height))
-		})
-	}
 }

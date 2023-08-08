@@ -138,15 +138,27 @@ func TestTripCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, allowed, "circuit breaker should be tripped")
 
+	// user with enough permissions tries to trip circuit breaker for two messages
+	url, url2 := "cosmos.gov.v1beta1.MsgDeposit", "cosmos.gov.v1beta1.MsgVote"
+	twomsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url, url2}}
+	msg := &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[3], Permissions: twomsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
+	require.NoError(t, err)
+
+	// try to trip two messages with enough permissions
+	twoMsgTrip := &types.MsgTripCircuitBreaker{Authority: addresses[3], MsgTypeUrls: []string{url, url2}}
+	_, err = srv.TripCircuitBreaker(ft.ctx, twoMsgTrip)
+	require.NoError(t, err)
+
 	// user with all messages trips circuit breaker
 	// add a super user
 	allmsgs := &types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{""}}
-	msg := &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[1], Permissions: allmsgs}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[1], Permissions: allmsgs}
 	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
 	require.NoError(t, err)
 
 	// try to trip the circuit breaker
-	url2 := "cosmos.staking.v1beta1.MsgDelegate"
+	url2 = "cosmos.staking.v1beta1.MsgDelegate"
 	superTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, superTrip)
 	require.NoError(t, err)

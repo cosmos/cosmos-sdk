@@ -576,7 +576,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	}, enhanceQuery)
+	})
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "query"})
 	assert.NilError(t, cmd.Execute())
@@ -591,7 +591,6 @@ func TestNotFoundErrors(t *testing.T) {
 
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd("query", "Querying subcommands")
-
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}

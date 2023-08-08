@@ -77,8 +77,8 @@ func SetCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
-	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
-	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to mutate unknown configurations)")
+	cmd.Flags().BoolVarP(&FlagVerbose, "verbose", "v", false, "log changes to stderr")
+	cmd.Flags().BoolVarP(&FlagSkipValidate, "skip-validate", "s", false, "skip configuration validation (allows to mutate unknown configurations)")
 
 	return cmd
 }

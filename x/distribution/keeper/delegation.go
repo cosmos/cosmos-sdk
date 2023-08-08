@@ -120,7 +120,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// for them for the stake sanity check below.
 	endingHeight := uint64(sdkCtx.BlockHeight())
 	if endingHeight > startingHeight {
-		k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
+		err = k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
@@ -138,6 +138,9 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 				return false
 			},
 		)
+		if err != nil {
+			return sdk.DecCoins{}, err
+		}
 	}
 
 	// A total stake sanity check; Recalculated final stake should be less than or

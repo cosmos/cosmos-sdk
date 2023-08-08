@@ -16,6 +16,7 @@ const (
 var (
 	ValidatorsKey = []byte{0x21} // prefix for each key to a validator
 	DelegationKey = []byte{0x31} // key for a delegation
+	ParamsKey     = []byte{0x51} // prefix for parameters for module x/staking
 )
 
 // GetValidatorKey creates the key for the validator with address

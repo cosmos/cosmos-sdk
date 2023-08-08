@@ -7,7 +7,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -62,7 +61,7 @@ func MigrateDelegations(ctx sdk.Context, k keeper) {
 
 // migrateUBDEntries will remove the ubdEntries with same creation_height
 // and create a new ubdEntry with updated balance and initial_balance
-func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
+func MigrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	iterator := sdk.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
 	defer iterator.Close()
 
@@ -123,7 +122,7 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 //   - Setting each validator's ValidatorBondShares and LiquidShares to 0
 //   - Setting each delegation's ValidatorBond field to false
 //   - Calculating the total liquid staked by summing the delegations from ICA accounts
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace, k keeper, paramstore subspace) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, k keeper, paramstore subspace) error {
 	store := ctx.KVStore(storeKey)
 
 	ctx.Logger().Info("Staking LSM Migration: Migrating param store")
@@ -136,8 +135,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	MigrateDelegations(ctx, k)
 
 	ctx.Logger().Info("Staking LSM Migration: Migrating UBD entries")
-	// migrate unbonding delegations
-	if err := migrateUBDEntries(ctx, store, cdc, legacySubspace); err != nil {
+	if err := MigrateUBDEntries(ctx, store, cdc); err != nil {
 		return err
 	}
 

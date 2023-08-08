@@ -10,77 +10,92 @@ import (
 // MVCCComparer returns a PebbleDB Comparer with encoding and decoding routines
 // for MVCC control, used to compare and store versioned data.
 var MVCCComparer = &pebble.Comparer{
-	Name:    "ss_pebbledb_comparator",
+	Name: "ss_pebbledb_comparator",
+
 	Compare: MVCCKeyCompare,
-	// Equal: func(a, b []byte) bool {
-	// 	return mvccCompare(a, b) == 0
-	// },
-	// AbbreviatedKey: func(k []byte) uint64 {
-	// 	key, _, ok := mvccSplitKey(k)
-	// 	if !ok {
-	// 		return 0
-	// 	}
-	// 	return pebble.DefaultComparer.AbbreviatedKey(key)
-	// },
 
-	// Separator: func(dst, a, b []byte) []byte {
-	// 	aKey, _, ok := mvccSplitKey(a)
-	// 	if !ok {
-	// 		return append(dst, a...)
-	// 	}
-	// 	bKey, _, ok := mvccSplitKey(b)
-	// 	if !ok {
-	// 		return append(dst, a...)
-	// 	}
-	// 	// If the keys are the same just return a.
-	// 	if bytes.Equal(aKey, bKey) {
-	// 		return append(dst, a...)
-	// 	}
-	// 	n := len(dst)
-	// 	// MVCC key comparison uses bytes.Compare on the roachpb.Key, which is the same semantics as
-	// 	// pebble.DefaultComparer, so reuse the latter's Separator implementation.
-	// 	dst = pebble.DefaultComparer.Separator(dst, aKey, bKey)
-	// 	// Did it pick a separator different than aKey -- if it did not we can't do better than a.
-	// 	buf := dst[n:]
-	// 	if bytes.Equal(aKey, buf) {
-	// 		return append(dst[:n], a...)
-	// 	}
-	// 	// The separator is > aKey, so we only need to add the timestamp sentinel.
-	// 	return append(dst, 0)
-	// },
+	Equal: func(a, b []byte) bool {
+		return MVCCKeyCompare(a, b) == 0
+	},
 
-	// Successor: func(dst, a []byte) []byte {
-	// 	aKey, _, ok := mvccSplitKey(a)
-	// 	if !ok {
-	// 		return append(dst, a...)
-	// 	}
-	// 	n := len(dst)
-	// 	// MVCC key comparison uses bytes.Compare on the roachpb.Key, which is the same semantics as
-	// 	// pebble.DefaultComparer, so reuse the latter's Successor implementation.
-	// 	dst = pebble.DefaultComparer.Successor(dst, aKey)
-	// 	// Did it pick a successor different than aKey -- if it did not we can't do better than a.
-	// 	buf := dst[n:]
-	// 	if bytes.Equal(aKey, buf) {
-	// 		return append(dst[:n], a...)
-	// 	}
-	// 	// The successor is > aKey, so we only need to add the timestamp sentinel.
-	// 	return append(dst, 0)
-	// },
+	AbbreviatedKey: func(k []byte) uint64 {
+		key, _, ok := SplitMVCCKey(k)
+		if !ok {
+			return 0
+		}
 
-	// Split: func(k []byte) int {
-	// 	key, _, ok := mvccSplitKey(k)
-	// 	if !ok {
-	// 		return len(k)
-	// 	}
-	// 	// This matches the behavior of libroach/KeyPrefix. RocksDB requires that
-	// 	// keys generated via a SliceTransform be comparable with normal encoded
-	// 	// MVCC keys. Encoded MVCC keys have a suffix indicating the number of
-	// 	// bytes of timestamp data. MVCC keys without a timestamp have a suffix of
-	// 	// 0. We're careful in EncodeKey to make sure that the user-key always has
-	// 	// a trailing 0. If there is no timestamp this falls out naturally. If
-	// 	// there is a timestamp we prepend a 0 to the encoded timestamp data.
-	// 	return len(key) + 1
-	// },
+		return pebble.DefaultComparer.AbbreviatedKey(key)
+	},
+
+	Separator: func(dst, a, b []byte) []byte {
+		aKey, _, ok := SplitMVCCKey(a)
+		if !ok {
+			return append(dst, a...)
+		}
+
+		bKey, _, ok := SplitMVCCKey(b)
+		if !ok {
+			return append(dst, a...)
+		}
+
+		// if the keys are the same just return key a
+		if bytes.Equal(aKey, bKey) {
+			return append(dst, a...)
+		}
+
+		n := len(dst)
+
+		// MVCC key comparison uses bytes.Compare on the roachpb.Key, which is the same semantics as
+		// pebble.DefaultComparer, so reuse the latter's Separator implementation.
+		dst = pebble.DefaultComparer.Separator(dst, aKey, bKey)
+
+		// Did it pick a separator different than aKey -- if it did not we can't do better than a.
+		buf := dst[n:]
+		if bytes.Equal(aKey, buf) {
+			return append(dst[:n], a...)
+		}
+
+		// The separator is > aKey, so we only need to add the timestamp sentinel.
+		return append(dst, 0)
+	},
+
+	Successor: func(dst, a []byte) []byte {
+		aKey, _, ok := SplitMVCCKey(a)
+		if !ok {
+			return append(dst, a...)
+		}
+
+		n := len(dst)
+
+		// MVCC key comparison uses bytes.Compare on the roachpb.Key, which is the same semantics as
+		// pebble.DefaultComparer, so reuse the latter's Successor implementation.
+		dst = pebble.DefaultComparer.Successor(dst, aKey)
+
+		// Did it pick a successor different than aKey -- if it did not we can't do better than a.
+		buf := dst[n:]
+		if bytes.Equal(aKey, buf) {
+			return append(dst[:n], a...)
+		}
+
+		// The successor is > aKey, so we only need to add the timestamp sentinel.
+		return append(dst, 0)
+	},
+
+	Split: func(k []byte) int {
+		key, _, ok := SplitMVCCKey(k)
+		if !ok {
+			return len(k)
+		}
+
+		// This matches the behavior of libroach/KeyPrefix. RocksDB requires that
+		// keys generated via a SliceTransform be comparable with normal encoded
+		// MVCC keys. Encoded MVCC keys have a suffix indicating the number of
+		// bytes of timestamp data. MVCC keys without a timestamp have a suffix of
+		// 0. We're careful in EncodeKey to make sure that the user-key always has
+		// a trailing 0. If there is no timestamp this falls out naturally. If
+		// there is a timestamp we prepend a 0 to the encoded timestamp data.
+		return len(key) + 1
+	},
 }
 
 // MVCCKeyCompare compares PebbleDB versioned store keys, which are MVCC timestamps.

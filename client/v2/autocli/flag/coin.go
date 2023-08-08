@@ -15,7 +15,7 @@ type coinValue struct {
 	value *basev1beta1.Coin
 }
 
-func (c coinType) NewValue(_ context.Context, _ *Builder) Value {
+func (c coinType) NewValue(context.Context, *Builder) Value {
 	return &coinValue{}
 }
 

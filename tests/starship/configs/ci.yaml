@@ -12,11 +12,12 @@ chains:
       cpu: "0.2"
       memory: "400M"
     faucet:
-      # use v0.31.0-alpha.2 cosmjs-faucet for compatibility with simapp v0.47.3
-      image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0-alpha.2
+      # use v0.31.0 cosmjs-faucet for compatibility with simapp v0.47.3
+      image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0
+      concurrency: 2
       resources:
-        cpu: "0.2"
-        memory: "400M"
+        cpu: "0.1"
+        memory: "200M"
 
 registry:
   enabled: true
@@ -27,6 +28,7 @@ registry:
     memory: "100M"
 
 exposer:
+  image: ghcr.io/cosmology-tech/starship/exposer:20230808-2333929
   resources:
     cpu: "0.1"
     memory: "100M"

@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/math"
 
@@ -32,14 +31,12 @@ func (s *TestSuite) TestChainTokenTransfer() {
 	s.Require().NoError(err)
 
 	s.T().Run("query balance for addr1", func(t *testing.T) {
-		t.Skip()
-		var header metadata.MD
 		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
 			Address: addr1.String(),
 			Denom:   denom,
-		}, grpc.Header(&header))
+		})
 		s.Require().NoError(err)
-		s.Require().Equal(int64(1000000000), balance.Balance.Amount.Int64())
+		s.Require().Equal(int64(10000000000), balance.Balance.Amount.Int64())
 	})
 
 	s.T().Run("send tokens from addr1 to addr2", func(t *testing.T) {
@@ -70,6 +67,7 @@ func (s *TestSuite) TestChainTokenTransfer() {
 	})
 
 	s.T().Run("query balance for addr2", func(t *testing.T) {
+		time.Sleep(1200 * time.Millisecond) // wait for tx to be processed
 		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
 			Address: addr2.String(),
 			Denom:   denom,

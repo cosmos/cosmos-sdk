@@ -8,7 +8,14 @@ import (
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/params"
+
+	dbm "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 var (
@@ -21,7 +28,7 @@ type TestSuite struct {
 	suite.Suite
 
 	config   *Config
-	cdc      Codec
+	cdc      params.EncodingConfig
 	grpcConn *grpc.ClientConn
 }
 
@@ -36,29 +43,15 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.config = config
 
-	//db := dbm.NewMemDB()
-	//logger := log.NewTestLogger(s.T())
-	//// todo: cannot use simapp, since it starts a server, will have to create txConfig manually
-	//app := simapp.NewSimappWithCustomOptions(s.T(), false, simapp.SetupOptions{
-	//	Logger:  logger.With("instance", "first"),
-	//	DB:      db,
-	//	AppOpts: simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()),
-	//})
-	//s.app = app
-	//s.txConfig = app.TxConfig()
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()))
+	encodingConfig := params.EncodingConfig{
+		InterfaceRegistry: tempApp.InterfaceRegistry(),
+		Codec:             tempApp.AppCodec(),
+		TxConfig:          tempApp.TxConfig(),
+		Amino:             tempApp.LegacyAmino(),
+	}
 
-	//tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(s.T().TempDir()))
-	//encodingConfig := params.EncodingConfig{
-	//	InterfaceRegistry: tempApp.InterfaceRegistry(),
-	//	Codec:             tempApp.AppCodec(),
-	//	TxConfig:          tempApp.TxConfig(),
-	//	Amino:             tempApp.LegacyAmino(),
-	//}
-	//
-	//s.encodingConfig = encodingConfig
-	//s.txConfig = encodingConfig.TxConfig
-
-	s.cdc = DefaultCodec()
+	s.cdc = encodingConfig
 
 	grpcConn, err := grpc.Dial(
 		fmt.Sprintf("0.0.0.0:%d", config.GetChain(chainID).Ports.Grpc),

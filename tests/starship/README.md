@@ -93,7 +93,7 @@ make stop
 
 ## Troubleshooting local setup
 
-Currently there seems to be some issues when running starship on a local system. This section will help clear out some of them
+Currently, there seems to be some issues when running starship on a local system. This section will help clear out some of them
 
 ### Not starting
 If all or some of the pods are in `Pending` state, then it means that resources for docker containers are not enough.
@@ -124,7 +124,7 @@ make install
 ### Dev-UX
 * We will get rid of the whole `scripts/` dir and replace it with a handy `starship` cli tool.
 * Local infra spinup, specially on a Mac takes alot of time, this is something we will speedup much more
-* We will have auto resource allocation, so manual trouble shooting is reduced
+* We will have auto resource allocation, so manual troubleshooting is reduced
 * Longer running pods or infra without issues.
 
 ### Testing/Infra

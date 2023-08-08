@@ -178,7 +178,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			// wait for app.Close() and tmNode.Stop() to flush async db writes to disk
 			graceSeconds, _ := cmd.Flags().GetUint32(FlagShutdownGraceSeconds)
 			if graceSeconds > 0 {
-				serverCtx.Logger.Info(fmt.Sprintf("allow %d seconds for database to flush", graceSeconds))
+				serverCtx.Logger.Info("wait for database to flush", "graceseconds", graceSeconds)
 				<-time.After(time.Duration(graceSeconds) * time.Second)
 				serverCtx.Logger.Info("finished waiting for database to flush")
 			} else {

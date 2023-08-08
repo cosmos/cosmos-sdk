@@ -85,6 +85,21 @@ func TestDatabase_VersionedKeys(t *testing.T) {
 	}
 }
 
+func TestDatabase_GetVersionedKey(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	// store a key at version 1
+	err = db.Set(storeKey1, 1, []byte("key"), []byte("value"))
+	require.NoError(t, err)
+
+	// assume chain progresses to version 10 w/o any changes to key
+	bz, err := db.Get(storeKey1, 10, []byte("key"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("value"), bz)
+}
+
 func TestDatabase_Batch(t *testing.T) {
 	db, err := New(t.TempDir())
 	require.NoError(t, err)

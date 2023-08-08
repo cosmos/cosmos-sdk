@@ -29,7 +29,9 @@ type Database struct {
 }
 
 func New(dataDir string) (*Database, error) {
-	opts := &pebble.Options{}
+	opts := &pebble.Options{
+		Comparer: MVCCComparer,
+	}
 	opts = opts.EnsureDefaults()
 
 	db, err := pebble.Open(dataDir, opts)

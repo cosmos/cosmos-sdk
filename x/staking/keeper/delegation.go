@@ -650,7 +650,6 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	bz := types.MustMarshalRED(k.cdc, red)
 	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
@@ -659,8 +658,8 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 	if err != nil {
 		return err
 	}
-	key := types.GetREDKey(delegatorAddress, valSrcAddr, valDestAddr)
-	if err = store.Set(key, bz); err != nil {
+
+	if err = k.Redelegations.Set(ctx, collections.Join3(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr), sdk.ValAddress(valDestAddr)), red); err != nil {
 		return err
 	}
 

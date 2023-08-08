@@ -41,6 +41,7 @@ type Keeper struct {
 	UnbondingID                 collections.Sequence
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	UnbondingType               collections.Map[uint64, uint64]
+	Redelegations               collections.Map[collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], types.Redelegation]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -98,6 +99,16 @@ func NewKeeper(
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		Redelegations: collections.NewMap(
+			sb, types.RedelegationKey,
+			"redelegations",
+			collections.TripleKeyCodec(
+				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			),
+			codec.CollValue[types.Redelegation](cdc),
+		),
 	}
 
 	schema, err := sb.Build()

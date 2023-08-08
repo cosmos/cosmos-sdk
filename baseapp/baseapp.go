@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -1057,9 +1058,13 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 
 // Close is called in start cmd to gracefully cleanup resources.
 func (app *BaseApp) Close() error {
+	var errs []error
+
 	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)
 	app.logger.Info("Closing application.db")
-	_ = app.db.Close()
+	if err := app.db.Close(); err != nil {
+		errs = append(errs, err)
+	}
 
 	// Close app.snapshotManager
 	// - opened when app chains use cosmos-sdk/server/util.go/DefaultBaseappOptions (boilerplate)
@@ -1068,7 +1073,13 @@ func (app *BaseApp) Close() error {
 	// - to set app.snapshotManager = snapshots.NewManager
 	if app.snapshotManager != nil {
 		app.logger.Info("Closing snapshots/metadata.db")
-		app.snapshotManager.Close()
+		if err := app.snapshotManager.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return goerrors.Join(errs...)
 	}
 	return nil
 }

@@ -75,8 +75,8 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	val2 := testutil.NewValidator(t, valAddrs[1], pks[1])
 	vals := []types.Validator{val1, val2}
 
-	assert.NilError(t, f.stakingKeeper.Validators.Set(f.sdkCtx, val1.GetOperator(), val1))
-	assert.NilError(t, f.stakingKeeper.Validators.Set(f.sdkCtx, val2.GetOperator(), val2))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val1))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, val2))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val1))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.sdkCtx, val2))
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.sdkCtx, val1))

@@ -156,7 +156,7 @@ func doValidatorUnbonding(
 	hookCalled *bool,
 ) (validator types.Validator) {
 	t.Helper()
-	validator, found := stakingKeeper.Validators.Get(ctx, addrVal)
+	validator, found := stakingKeeper.GetValidator(ctx, addrVal)
 	assert.Assert(t, found)
 	// Check that status is bonded
 	assert.Equal(t, types.BondStatus(3), validator.Status)
@@ -198,7 +198,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is not complete (is not mature yet)
-	validator, found := f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[0])
+	validator, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator.Status)
 	unbondingVals, err := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
@@ -212,7 +212,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is complete
-	validator, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[0])
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonded, validator.Status)
 	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
@@ -258,10 +258,10 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is not complete for both validators
-	validator1, found := f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[0])
+	validator1, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator1.Status)
-	validator2, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator2.Status)
 	unbondingVals, err := f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
@@ -278,10 +278,10 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator1, but not for validator2
-	validator1, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[0])
+	validator1, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonded, validator1.Status)
-	validator2, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonding, validator2.Status)
 	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)
@@ -297,7 +297,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is complete for validator2
-	validator2, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator2, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	assert.Equal(t, types.Unbonded, validator2.Status)
 	unbondingVals, err = f.stakingKeeper.GetUnbondingValidators(f.sdkCtx, completionTime, completionHeight)

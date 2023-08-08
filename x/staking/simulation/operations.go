@@ -120,7 +120,7 @@ func SimulateMsgCreateValidator(
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator doesn't exist already
-		_, err := k.Validators.Get(ctx, address)
+		_, err := k.GetValidator(ctx, address)
 		if err == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator already exists"), nil, nil
 		}

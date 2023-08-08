@@ -28,7 +28,7 @@ func BenchmarkGetValidator(b *testing.B) {
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		if err := f.stakingKeeper.Validators.Set(f.sdkCtx, validator.GetOperator(), validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
 			panic(err)
 		}
 	}
@@ -36,7 +36,7 @@ func BenchmarkGetValidator(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, addr := range valAddrs {
-			_, _ = f.stakingKeeper.Validators.Get(f.sdkCtx, addr)
+			_, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addr)
 		}
 	}
 }
@@ -53,7 +53,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 	for _, validator := range vals {
-		if err := f.stakingKeeper.Validators.Set(f.sdkCtx, validator.GetOperator(), validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
 			panic(err)
 		}
 	}
@@ -94,7 +94,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		if err := f.stakingKeeper.Validators.Set(f.sdkCtx, validator.GetOperator(), validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
 			panic(err)
 		}
 	}

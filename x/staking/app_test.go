@@ -82,7 +82,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	ctxCheck = app.BaseApp.NewContext(true)
-	validator, err := stakingKeeper.Validators.Get(ctxCheck, sdk.ValAddress(addr1))
+	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
 
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
@@ -101,7 +101,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	ctxCheck = app.BaseApp.NewContext(true)
-	validator, err = stakingKeeper.Validators.Get(ctxCheck, sdk.ValAddress(addr1))
+	validator, err = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
 	require.Equal(t, description, validator.Description)
 

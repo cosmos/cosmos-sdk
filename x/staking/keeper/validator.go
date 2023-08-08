@@ -17,8 +17,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// GetValidator gets a single validator
+func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	value, err := store.Get(types.GetValidatorKey(addr))
+	if err != nil {
+		return validator, err
+	}
+
+	if value == nil {
+		return validator, types.ErrNoValidatorFound
+	}
+
+	return types.UnmarshalValidator(k.cdc, value)
+}
+
 func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types.Validator {
-	validator, err := k.Validators.Get(ctx, addr)
+	validator, err := k.GetValidator(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", addr))
 	}
@@ -38,7 +53,7 @@ func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAdd
 		return validator, types.ErrNoValidatorFound
 	}
 
-	return k.Validators.Get(ctx, opAddr)
+	return k.GetValidator(ctx, opAddr)
 }
 
 func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) types.Validator {
@@ -48,6 +63,13 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 	}
 
 	return validator
+}
+
+// SetValidator sets the main record holding validator details
+func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz := types.MustMarshalValidator(k.cdc, &validator)
+	return store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address
@@ -93,7 +115,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types
 	}
 
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
-	err = k.Validators.Set(ctx, validator.GetOperator(), validator)
+	err = k.SetValidator(ctx, validator)
 	if err != nil {
 		return validator, addedShares, err
 	}
@@ -111,7 +133,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator ty
 		return valOut, removedTokens, err
 	}
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
-	err = k.Validators.Set(ctx, validator.GetOperator(), validator)
+	err = k.SetValidator(ctx, validator)
 	if err != nil {
 		return validator, removedTokens, err
 	}
@@ -129,7 +151,7 @@ func (k Keeper) RemoveValidatorTokens(ctx context.Context,
 	}
 
 	validator = validator.RemoveTokens(tokensToRemove)
-	if err := k.Validators.Set(ctx, validator.GetOperator(), validator); err != nil {
+	if err := k.SetValidator(ctx, validator); err != nil {
 		return validator, err
 	}
 
@@ -172,7 +194,7 @@ func (k Keeper) UpdateValidatorCommission(ctx context.Context,
 // except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
 func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) error {
 	// first retrieve the old validator record
-	validator, err := k.Validators.Get(ctx, address)
+	validator, err := k.GetValidator(ctx, address)
 	if errors.Is(err, types.ErrNoValidatorFound) {
 		return nil
 	}
@@ -192,7 +214,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 	// delete the old validator record
 	store := k.storeService.OpenKVStore(ctx)
-	if err = k.Validators.Remove(ctx, address); err != nil {
+	if err = store.Delete(types.GetValidatorKey(address)); err != nil {
 		return err
 	}
 
@@ -385,7 +407,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 		}
 
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		validator, err := k.Validators.Get(ctx, address)
+		validator, err := k.GetValidator(ctx, address)
 		if err != nil {
 			return nil, err
 		}
@@ -528,7 +550,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 				if err != nil {
 					return err
 				}
-				val, err := k.Validators.Get(ctx, addr)
+				val, err := k.GetValidator(ctx, addr)
 				if err != nil {
 					return errorsmod.Wrap(err, "validator in the unbonding queue was not found")
 				}

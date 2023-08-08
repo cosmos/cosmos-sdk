@@ -17,21 +17,21 @@ func (s *KeeperTestSuite) TestRevocation() {
 	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])
 
 	// initial state
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
-	val, err := keeper.Validators.Get(ctx, valAddr)
+	val, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.False(val.IsJailed())
 
 	// test jail
 	require.NoError(keeper.Jail(ctx, consAddr))
-	val, err = keeper.Validators.Get(ctx, valAddr)
+	val, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.True(val.IsJailed())
 
 	// test unjail
 	require.NoError(keeper.Unjail(ctx, consAddr))
-	val, err = keeper.Validators.Get(ctx, valAddr)
+	val, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.False(val.IsJailed())
 }
@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	validator := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
 
 	fraction := sdkmath.LegacyNewDecWithPrec(5, 1)

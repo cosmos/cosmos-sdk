@@ -306,7 +306,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	suite.Require().NoError(suite.stakingKeeper.Validators.Set(suite.ctx, validator.GetOperator(), validator))
+	suite.Require().NoError(suite.stakingKeeper.SetValidator(suite.ctx, validator))
 
 	return validator
 }

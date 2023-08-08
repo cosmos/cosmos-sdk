@@ -130,7 +130,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, del))
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
-	validator, found := f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator, found := f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	slashAmount, err := f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 1, fraction)
 	assert.NilError(t, err)
@@ -139,7 +139,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// after the expiration time, no longer eligible for slashing
 	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
-	validator, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
@@ -150,7 +150,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// test valid slash, before expiration timestamp and to which stake contributed
 	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(0, 0)})
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
-	validator, found = f.stakingKeeper.Validators.Get(f.sdkCtx, addrVals[1])
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
@@ -197,7 +197,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.Validators.Get(f.sdkCtx, validator.GetOperator())
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
@@ -235,7 +235,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.Validators.Get(f.sdkCtx, validator.GetOperator())
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))

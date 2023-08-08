@@ -669,7 +669,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			delegatorAddr := addrs[0]
 
 			_, valAddr := createValidator(t, ctx, bankKeeper, stakingKeeper, tc.tokenAmount*2)
-			validator, err := stakingKeeper.Validators.Get(ctx, valAddr)
+			validator, err := stakingKeeper.GetValidator(ctx, valAddr)
 			require.NoError(t, err)
 
 			tc.prepareFunc(ctx, validator, delegatorAddr)
@@ -779,7 +779,7 @@ func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper
 	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
-	require.NoError(t, stakingKeeper.Validators.Set(ctx, val1.GetOperator(), val1))
+	require.NoError(t, stakingKeeper.SetValidator(ctx, val1))
 	require.NoError(t, stakingKeeper.SetValidatorByConsAddr(ctx, val1))
 	require.NoError(t, stakingKeeper.SetNewValidatorByPowerIndex(ctx, val1))
 

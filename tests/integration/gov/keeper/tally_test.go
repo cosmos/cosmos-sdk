@@ -275,7 +275,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	addrs, valAddrs := createValidators(t, f, []int64{5, 6, 7})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 30)
-	val1, found := f.stakingKeeper.Validators.Get(ctx, valAddrs[0])
+	val1, found := f.stakingKeeper.GetValidator(ctx, valAddrs[0])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[4], delTokens, stakingtypes.Unbonded, val1, true)
@@ -314,7 +314,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	addrs, vals := createValidators(t, f, []int64{5, 6, 7})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 30)
-	val3, found := f.stakingKeeper.Validators.Get(ctx, vals[2])
+	val3, found := f.stakingKeeper.GetValidator(ctx, vals[2])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
@@ -352,9 +352,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	addrs, vals := createValidators(t, f, []int64{5, 6, 7})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	val1, found := f.stakingKeeper.Validators.Get(ctx, vals[0])
+	val1, found := f.stakingKeeper.GetValidator(ctx, vals[0])
 	assert.Assert(t, found)
-	val2, found := f.stakingKeeper.Validators.Get(ctx, vals[1])
+	val2, found := f.stakingKeeper.GetValidator(ctx, vals[1])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val1, true)
@@ -397,9 +397,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	addrs, vals := createValidators(t, f, []int64{5, 6, 7})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	val2, found := f.stakingKeeper.Validators.Get(ctx, vals[1])
+	val2, found := f.stakingKeeper.GetValidator(ctx, vals[1])
 	assert.Assert(t, found)
-	val3, found := f.stakingKeeper.Validators.Get(ctx, vals[2])
+	val3, found := f.stakingKeeper.GetValidator(ctx, vals[2])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
@@ -439,9 +439,9 @@ func TestTallyJailedValidator(t *testing.T) {
 	addrs, valAddrs := createValidators(t, f, []int64{25, 6, 7})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	val2, found := f.stakingKeeper.Validators.Get(ctx, valAddrs[1])
+	val2, found := f.stakingKeeper.GetValidator(ctx, valAddrs[1])
 	assert.Assert(t, found)
-	val3, found := f.stakingKeeper.Validators.Get(ctx, valAddrs[2])
+	val3, found := f.stakingKeeper.GetValidator(ctx, valAddrs[2])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
@@ -485,7 +485,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	addrs, valAddrs := createValidators(t, f, []int64{10, 10, 10})
 
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	val2, found := f.stakingKeeper.Validators.Get(ctx, valAddrs[1])
+	val2, found := f.stakingKeeper.GetValidator(ctx, valAddrs[1])
 	assert.Assert(t, found)
 
 	_, err := f.stakingKeeper.Delegate(ctx, addrs[0], delTokens, stakingtypes.Unbonded, val2, true)

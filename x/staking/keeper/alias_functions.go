@@ -82,7 +82,7 @@ func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, 
 	for ; iterator.Valid(); iterator.Next() {
 		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
 
-		validator, err := k.Validators.Get(ctx, address)
+		validator, err := k.GetValidator(ctx, address)
 		if err != nil {
 			return err
 		}
@@ -98,7 +98,7 @@ func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, 
 
 // Validator gets the Validator interface for a particular address
 func (k Keeper) Validator(ctx context.Context, address sdk.ValAddress) (types.ValidatorI, error) {
-	return k.Validators.Get(ctx, address)
+	return k.GetValidator(ctx, address)
 }
 
 // ValidatorByConsAddr gets the validator interface for a particular pubkey

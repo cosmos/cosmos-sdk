@@ -22,7 +22,7 @@ func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []by
 
 // TestingUpdateValidator updates a validator for testing
 func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
-	err := keeper.Validators.Set(ctx, validator.GetOperator(), validator)
+	err := keeper.SetValidator(ctx, validator)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 		panic(err)
 	}
 
-	validator, err = keeper.Validators.Get(ctx, validator.GetOperator())
+	validator, err = keeper.GetValidator(ctx, validator.GetOperator())
 	if err != nil {
 		panic(err)
 	}

@@ -1,13 +1,11 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,14 +37,14 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
 	require.Equal(valTokens, validator.DelegatorShares.RoundInt())
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.SetValidatorByPowerIndex(ctx, validator))
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validator))
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
-	validator, err := keeper.Validators.Get(ctx, valAddr)
+	validator, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 
@@ -110,8 +108,8 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require.Equal(keeper.TokensFromConsensusPower(ctx, 7), validators[2].Tokens)
 
 	// check the empty keeper first
-	_, err := keeper.Validators.Get(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
-	require.ErrorIs(err, collections.ErrNotFound)
+	_, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 	resVals, err := keeper.GetLastValidators(ctx)
 	require.NoError(err)
 	require.Zero(len(resVals))
@@ -124,7 +122,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[0]))
-	resVal, err := keeper.Validators.Get(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
+	resVal, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[0].MinEqual(&resVal))
 
@@ -148,7 +146,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	validators[0].Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	validators[0].DelegatorShares = math.LegacyNewDecFromInt(validators[0].Tokens)
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
-	resVal, err = keeper.Validators.Get(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
+	resVal, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[0].MinEqual(&resVal))
 
@@ -162,10 +160,10 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], true)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validators[2] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[2], true)
-	resVal, err = keeper.Validators.Get(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
+	resVal, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[1].MinEqual(&resVal))
-	resVal, err = keeper.Validators.Get(ctx, sdk.ValAddress(PKs[2].Address().Bytes()))
+	resVal, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[2].Address().Bytes()))
 	require.NoError(err)
 	require.True(validators[2].MinEqual(&resVal))
 
@@ -180,14 +178,14 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// shouldn't be able to remove if there are still tokens left
 	validators[1].Status = stakingtypes.Unbonded
-	require.NoError(keeper.Validators.Set(ctx, validators[1].GetOperator(), validators[1]))
+	require.NoError(keeper.SetValidator(ctx, validators[1]))
 	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "attempting to remove a validator which still contains tokens: failed to remove validator")
 
-	validators[1].Tokens = math.ZeroInt()                                                   // ...remove all tokens
-	require.NoError(keeper.Validators.Set(ctx, validators[1].GetOperator(), validators[1])) // ...set the validator
-	require.NoError(keeper.RemoveValidator(ctx, validators[1].GetOperator()))               // Now it can be removed.
-	_, err = keeper.Validators.Get(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
-	require.ErrorIs(err, collections.ErrNotFound)
+	validators[1].Tokens = math.ZeroInt()                                     // ...remove all tokens
+	require.NoError(keeper.SetValidator(ctx, validators[1]))                  // ...set the validator
+	require.NoError(keeper.RemoveValidator(ctx, validators[1].GetOperator())) // Now it can be removed.
+	_, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
 func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
@@ -206,7 +204,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
-	validator, err := keeper.Validators.Get(ctx, valAddr)
+	validator, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(valTokens, validator.Tokens)
 
@@ -220,7 +218,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
-	validator, err = keeper.Validators.Get(ctx, valAddr)
+	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 
 	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
@@ -299,8 +297,8 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	val1, _ = val1.SetInitialCommission(commission1)
 	val2, _ = val2.SetInitialCommission(commission2)
 
-	require.NoError(keeper.Validators.Set(ctx, val1.GetOperator(), val1))
-	require.NoError(keeper.Validators.Set(ctx, val2.GetOperator(), val2))
+	require.NoError(keeper.SetValidator(ctx, val1))
+	require.NoError(keeper.SetValidator(ctx, val2))
 
 	testCases := []struct {
 		validator   stakingtypes.Validator
@@ -326,10 +324,10 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 			)
 
 			tc.validator.Commission = commission
-			err = keeper.Validators.Set(ctx, tc.validator.GetOperator(), tc.validator)
+			err = keeper.SetValidator(ctx, tc.validator)
 			require.NoError(err)
 
-			val, err := keeper.Validators.Get(ctx, tc.validator.GetOperator())
+			val, err := keeper.GetValidator(ctx, tc.validator.GetOperator())
 			require.NoError(err,
 				"expected to find validator for test case #%d with rate: %s", i, tc.newRate,
 			)
@@ -357,18 +355,18 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	validator, _, err := keeper.AddValidatorTokensAndShares(ctx, validator, addTokens)
 	require.NoError(err)
 	require.Equal(addTokens, validator.Tokens)
-	validator, _ = keeper.Validators.Get(ctx, valAddr)
+	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.Equal(math.LegacyNewDecFromInt(addTokens), validator.DelegatorShares)
 
 	_, _, err = keeper.RemoveValidatorTokensAndShares(ctx, validator, math.LegacyNewDecFromInt(delTokens))
 	require.NoError(err)
-	validator, _ = keeper.Validators.Get(ctx, valAddr)
+	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.Equal(delTokens, validator.Tokens)
 	require.True(validator.DelegatorShares.Equal(math.LegacyNewDecFromInt(delTokens)))
 
 	_, err = keeper.RemoveValidatorTokens(ctx, validator, delTokens)
 	require.NoError(err)
-	validator, _ = keeper.Validators.Get(ctx, valAddr)
+	validator, _ = keeper.GetValidator(ctx, valAddr)
 	require.True(validator.Tokens.IsZero())
 }
 
@@ -412,27 +410,27 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	// check unbonding mature validators
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
 	err = keeper.UnbondAllMatureValidators(ctx)
-	require.ErrorContains(err, fmt.Sprintf("validator in the unbonding queue was not found: %v", collections.ErrNotFound))
+	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")
 
 	validator.Status = stakingtypes.Unbonding
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.UnbondAllMatureValidators(ctx))
-	validator, err = keeper.Validators.Get(ctx, valAddr)
-	require.ErrorIs(err, collections.ErrNotFound)
+	validator, err = keeper.GetValidator(ctx, valAddr)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 
 	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
 	validator = testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(addTokens)
 	validator.Status = stakingtypes.Unbonding
-	require.NoError(keeper.Validators.Set(ctx, validator.GetOperator(), validator))
+	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.UnbondAllMatureValidators(ctx))
-	validator, err = keeper.Validators.Get(ctx, valAddr)
+	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 }

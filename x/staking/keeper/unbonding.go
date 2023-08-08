@@ -216,7 +216,7 @@ func (k Keeper) SetRedelegationByUnbondingID(ctx context.Context, red types.Rede
 }
 
 // SetValidatorByUnbondingID sets an index to look up a Validator by the unbondingID corresponding to its current unbonding
-// Note, it does not set the validator itself, use Validators.Set(ctx, val.GetOperator(), val) for that
+// Note, it does not set the validator itself, use SetValidator(ctx, val) for that
 func (k Keeper) SetValidatorByUnbondingID(ctx context.Context, val types.Validator, id uint64) error {
 	store := k.storeService.OpenKVStore(ctx)
 
@@ -405,7 +405,7 @@ func (k Keeper) validatorUnbondingCanComplete(ctx context.Context, id uint64) er
 		)
 	}
 	val.UnbondingOnHoldRefCount--
-	return k.Validators.Set(ctx, val.GetOperator(), val)
+	return k.SetValidator(ctx, val)
 }
 
 // PutUnbondingOnHold allows an external module to stop an unbonding operation,
@@ -474,5 +474,5 @@ func (k Keeper) putValidatorOnHold(ctx context.Context, id uint64) error {
 	}
 
 	val.UnbondingOnHoldRefCount++
-	return k.Validators.Set(ctx, val.GetOperator(), val)
+	return k.SetValidator(ctx, val)
 }

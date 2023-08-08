@@ -1,9 +1,9 @@
-# RFC 002: Optimistic Execution
+# RFC 005: Optimistic Execution
 
 ## Changelog
 
-* 2023-06-07: Refactor for Cosmos SDK (@facundomedica)
-* 2022-08-16: Initial draft by Sei Network
+- 2023-06-07: Refactor for Cosmos SDK (@facundomedica)
+- 2022-08-16: Initial draft by Sei Network
 
 ## Background
 
@@ -19,13 +19,13 @@ Given that the application receives the block proposal in an earlier stage (`Pro
 
 The newly introduced ABCI method `ProcessProposal` is called after a node receives the full block proposal of the current height but before prevote starts. CometBFT states that preemptively executing the block proposal is a potential use case for it:
 
-> * **Usage**:
->     * Contains all information on the proposed block needed to fully execute it.
->         * The Application may fully execute the block as though it was handling
->          `RequestFinalizeBlock`.
->         * However, any resulting state changes must be kept as _candidate state_,
->           and the Application should be ready to discard it in case another block is decided.
->     * The Application MAY fully execute the block &mdash; immediate execution
+> - **Usage**:
+>   - Contains all information on the proposed block needed to fully execute it.
+>     - The Application may fully execute the block as though it was handling
+>       `RequestFinalizeBlock`.
+>     - However, any resulting state changes must be kept as _candidate state_,
+>       and the Application should be ready to discard it in case another block is decided.
+>   - The Application MAY fully execute the block &mdash; immediate execution
 
 Nevertheless, synchronously executing the proposal preemptively would not improve block time because it would just change the order of events (so the time we would like to save will be spent at `ProcessProposal` instead of `FinalizeBlock`).
 
@@ -63,12 +63,15 @@ Some considerations:
 ## Implementation
 
 The execution context needs to have the following information:
+
 - The block proposal (`abci.RequestFinalizeBlock`)
 - Termination and completion signal for the OE goroutine
 
 The OE goroutine would run on top of a cached branch of the root multi-store (which is the default behavior for `FinalizeBlock` as we only write to the underlying store once we've reached the end).
 
 The OE goroutine would periodically check if a termination signal has been sent to it, and stops if so. Once the OE goroutine finishes the execution it will set the completion signal.
+
+The application developers will have the option to enable or disable Optimistic Execution, being disabled by default. To enable it, the application will need to pass the `SetOptimisticExecution` option to `NewBaseApp`. This is because this feature will be considered experimental until it's proven to be stable. Note that individual nodes should not enable/disable this feature on their own, as it could lead to inconsistent behavior.
 
 Upon receiving a `ProcessProposal` call, the SDK would adopt the following procedure if OE is enabled:
 
@@ -92,6 +95,7 @@ if OE is enabled:
     if aborted:
         process the proposal synchronously
     else:
+        wait for the OE goroutine to finish
         respond to CometBFT
 ```
 

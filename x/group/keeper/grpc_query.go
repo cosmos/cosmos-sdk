@@ -39,6 +39,11 @@ func (k Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 
 // GroupPolicyInfo queries info about a group policy.
 func (k Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
+	_, err := k.accKeeper.AddressCodec().StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {

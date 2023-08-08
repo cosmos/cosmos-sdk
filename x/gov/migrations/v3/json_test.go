@@ -91,6 +91,7 @@ func TestMigrateJSON(t *testing.T) {
 		{
 			"deposit_end_time": "2001-09-09T01:46:40Z",
 			"expedited": false,
+			"failed_reason": "",
 			"final_tally_result": {
 				"abstain_count": "0",
 				"no_count": "0",

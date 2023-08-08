@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
 )
 
 // Builder manages options for building CLI commands.
@@ -32,12 +33,20 @@ func (b *Builder) Validate() error {
 		return errors.New("validator address codec is required in builder")
 	}
 
+	if b.ConsensusAddressCodec == nil {
+		return errors.New("consensus address codec is required in builder")
+	}
+
 	if b.TypeResolver == nil {
 		return errors.New("type resolver is required in builder")
 	}
 
 	if b.FileResolver == nil {
 		return errors.New("file resolver is required in builder")
+	}
+
+	if b.Keyring == nil {
+		b.Keyring = keyring.NoKeyring{}
 	}
 
 	return nil

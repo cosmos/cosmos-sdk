@@ -73,15 +73,16 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
 
-	initChainer        sdk.InitChainer                // ABCI InitChain handler
-	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	initChainer          sdk.InitChainer                // ABCI InitChain handler
+	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
+	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal      sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote           sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt        sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+	prepareCheckStater   sdk.PrepareCheckStater         // logic to run during commit using the checkState
+	precommiter          sdk.Precommiter                // logic to run during commit using the deliverState
+	preFinalizeBlockHook sdk.PreFinalizeBlockHook       // logic to run before FinalizeBlock
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -103,11 +104,6 @@ type BaseApp struct {
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
-	// - voteExtensionState: Used for ExtendVote and VerifyVoteExtension, which is
-	// set based on the previous block's state. This state is never committed. In
-	// case of multiple rounds, the state is always reset to the previous block's
-	// state.
-	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
 	// the previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
@@ -117,7 +113,6 @@ type BaseApp struct {
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state
-	voteExtensionState   *state
 	finalizeBlockState   *state
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -474,27 +469,12 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	case execModeProcessProposal:
 		app.processProposalState = baseState
 
-	case execModeVoteExtension:
-		app.voteExtensionState = baseState
-
 	case execModeFinalize:
 		app.finalizeBlockState = baseState
 
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
-}
-
-// GetFinalizeBlockStateCtx returns the Context associated with the FinalizeBlock
-// state. This Context can be used to write data derived from processing vote
-// extensions to application state during ProcessProposal.
-//
-// NOTE:
-// - Do NOT use or write to state using this Context unless you intend for
-// that state to be committed.
-// - Do NOT use or write to state using this Context on the first block.
-func (app *BaseApp) GetFinalizeBlockStateCtx() sdk.Context {
-	return app.finalizeBlockState.ctx
 }
 
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.

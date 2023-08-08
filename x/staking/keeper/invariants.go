@@ -189,7 +189,11 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 
 		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
-			validatorsDelegationShares[validator.GetOperator().String()] = math.LegacyZeroDec()
+			addrStr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
+			if err != nil {
+				panic(err)
+			}
+			validatorsDelegationShares[addrStr] = math.LegacyZeroDec()
 		}
 
 		// iterate through all the delegations to calculate the total delegation shares for each validator
@@ -199,7 +203,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		}
 
 		for _, delegation := range delegations {
-			delegationValidatorAddr := delegation.GetValidatorAddr().String()
+			delegationValidatorAddr := delegation.GetValidatorAddr()
 			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]
 			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
 		}
@@ -207,7 +211,11 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
 		for _, validator := range validators {
 			expValTotalDelShares := validator.GetDelegatorShares()
-			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator().String()]
+			addrStr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
+			if err != nil {
+				panic(err)
+			}
+			calculatedValTotalDelShares := validatorsDelegationShares[addrStr]
 			if !calculatedValTotalDelShares.Equal(expValTotalDelShares) {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+

@@ -62,8 +62,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		fieldEncoders: map[string]FieldEncoder{
-			"legacy_coins":     nullSliceAsEmptyEncoder,
-			"cosmos_dec_bytes": cosmosDecEncoder,
+			"legacy_coins": nullSliceAsEmptyEncoder,
 		},
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,

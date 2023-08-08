@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -206,17 +208,12 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("argument should be a block height")
 				}
 
-				var height *int64
-
 				// optional height
+				var height *int64
 				if len(args) > 0 {
-					h, err := strconv.Atoi(args[0])
+					height, err = parseOptionalHeight(args[0])
 					if err != nil {
 						return err
-					}
-					if h > 0 {
-						tmp := int64(h)
-						height = &tmp
 					}
 				}
 
@@ -259,6 +256,70 @@ $ %s query block --%s=%s <hash>
 	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
 
 	return cmd
+}
+
+// QueryBlockResultsCmd implements the default command for a BlockResults query.
+func QueryBlockResultsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "block-results [height]",
+		Short: "Query for a committed block's results by height",
+		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
+		Args:  cobra.RangeArgs(0, 1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			node, err := clientCtx.GetNode()
+			if err != nil {
+				return err
+			}
+
+			// optional height
+			var height *int64
+			if len(args) > 0 {
+				height, err = parseOptionalHeight(args[0])
+				if err != nil {
+					return err
+				}
+			}
+
+			blockRes, err := node.BlockResults(context.Background(), height)
+			if err != nil {
+				return err
+			}
+
+			// coretypes.ResultBlockResults doesn't implement proto.Message interface
+			// so we can't print it using clientCtx.PrintProto
+			// we choose to serialize it to json and print the json instead
+			blockResStr, err := json.Marshal(blockRes)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintRaw(blockResStr)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func parseOptionalHeight(heightStr string) (*int64, error) {
+	h, err := strconv.Atoi(heightStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if h == 0 {
+		return nil, nil
+	}
+
+	tmp := int64(h)
+
+	return &tmp, nil
 }
 
 func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {

@@ -55,7 +55,7 @@ func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error 
 	// that the validator was never bonded and must've been jailed due to falling
 	// below their minimum self-delegation. The validator can unjail at any point
 	// assuming they've now bonded above their minimum self-delegation.
-	info, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	info, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err == nil {
 		// cannot be unjailed if tombstoned
 		if info.Tombstoned {

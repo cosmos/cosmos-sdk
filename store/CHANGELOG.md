@@ -25,7 +25,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.1.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv0.1.0-alpha.2) - 2023-07-11
+### Features
+
+* [#17294](https://github.com/cosmos/cosmos-sdk/pull/17294) Add snapshot manager Close method.
+ 
+### Improvements
+
+* [#17158](https://github.com/cosmos/cosmos-sdk/pull/17158) Start the goroutine after need to create a snapshot.
+
+
+## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv1.0.0-alpha.1) - 2023-07-11
 
 ### Features
 

@@ -28,7 +28,11 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	// fetch all the bonded validators, insert them into currValidators
 	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		currValidators[validator.GetOperator().String()] = v1.NewValidatorGovInfo(
+		valStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(validator.GetOperator())
+		if err != nil {
+			return false
+		}
+		currValidators[valStr] = v1.NewValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
@@ -50,7 +54,10 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 			return false, err
 		}
 
-		valAddrStr := sdk.ValAddress(voter).String()
+		valAddrStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(voter)
+		if err != nil {
+			return false, err
+		}
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val
@@ -58,7 +65,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
 		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
-			valAddrStr := delegation.GetValidatorAddr().String()
+			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := currValidators[valAddrStr]; ok {
 				// There is no need to handle the special case that validator address equal to voter address.

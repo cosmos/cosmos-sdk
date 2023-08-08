@@ -18,6 +18,7 @@ type ParamSubspace interface {
 
 // StakingKeeper expected staking keeper (Validator and Delegator sets) (noalias)
 type StakingKeeper interface {
+	ValidatorAddressCodec() addresscodec.Codec
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
 		context.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),

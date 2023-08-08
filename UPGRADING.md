@@ -5,6 +5,12 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Migration to Collections
+
+Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
+Many functions have been removed due to this changes as the API can be smaller thanks to collections.
+For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
 ### Migration to CometBFT (Part 2)
@@ -20,14 +26,14 @@ Following an exhaustive list:
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
-However, these commands and flags is still supported for backward compatibility.
+However, these commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
 Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
-* The usage of CometBFT have been replaced to use the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
-* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` have been replaced by `[]byte`.
+* The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
 
 #### Enable Vote Extensions
 
@@ -81,11 +87,16 @@ to `BeginBlock` or `EndBlock`.
 
 ### Config files
 
-A new tool has been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+Confix is a new SDK tool for modifying and migrating configuration of the SDK.
+It is the replacement of the `config.Cmd` command from the `client/config` package.
+
+Use the following command to migrate your configuration:
 
 ```bash
 simd config migrate v0.50
 ```
+
+If you were using `<appd> config [key]` or `<appd> config [key] [value]` to set and get values from the `client.toml`, replace it with `<appd> config get client [key]` and `<appd> config set client [key] [value]`. The extra verbosity is due to the extra functionalities added in config.
 
 More information about [confix](https://docs.cosmos.network/main/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/tooling/confix).
 
@@ -97,15 +108,13 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 #### Database Support
 
-ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
-
-**TODO: talk about db migration tool.**
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use a database migration tool.
 
 ### Protobuf
 
-With the deprecation of the amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
+With the deprecation of the Amino JSON codec defined in [cosmos/gogoproto](https://github.com/cosmos/gogoproto) in favor of the protoreflect powered x/tx/aminojson codec, module developers are encouraged verify that their messages have the correct protobuf annotations to deterministically produce identical output from both codecs.
 
-For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/rapidgen/rapidgen.go#L106) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/76f0d101530ed78befc95506ab473c771d0d8a8c/tests/integration/aminojson/aminojson_test.go#L90).
+For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/rapidgen/rapidgen.go#L102) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/tx/aminojson/aminojson_test.go#L94).
 
 **TODO: summarize proto annotation requirements.**
 
@@ -117,7 +126,7 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
-These changes are directly applicable to your application wiring.
+**These changes are directly applicable to your application wiring.**
 
 #### Module Assertions
 
@@ -156,7 +165,9 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 
 #### Logger
 
-`depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+Replace all your CometBFT logger imports by `cosmossdk.io/log`.
+
+Additionally, `depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -198,6 +209,40 @@ depinject.Supply(
 
 Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
+#### AutoCLI
+
+[`AutoCLI`](https://docs.cosmos.network/main/building-modules/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
+
+```go
+if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+	panic(err)
+}
+```
+
+Where `autoCliOpts` is the autocli options of the app, containing all modules and codecs.
+That value can injected by depinject ([see root_v2.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/simd/cmd/root_v2.go#L49-L67)) or manually provided by the app ([see legacy app.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/simapp/app.go#L636-L655)).
+
+:::warning
+Not doing this will result in all core SDK modules queries not to be included in the binary.
+:::
+
+Additionally `AutoCLI` automatically adds the custom modules commands to the root command for all modules implementing the [`appmodule.AppModule`](https://pkg.go.dev/cosmossdk.io/core/appmodule#AppModule) interface.
+This means, after ensuring all the used modules implement this interface, the following can be removed from your `root.go`:
+
+```diff
+func txCommand() *cobra.Command {
+	....
+- appd.ModuleBasics.AddTxCommands(cmd)
+}
+```
+
+```diff
+func queryCommand() *cobra.Command {
+	....
+- appd.ModuleBasics.AddQueryCommands(cmd)
+}
+```
+
 ### Packages
 
 #### Math
@@ -214,6 +259,18 @@ References to `types/store.go` which contained aliases for store types have been
 The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
+##### Streaming
+
+[ADR-38](https://docs.cosmos.network/main/architecture/adr-038-state-listening) has been implemented in the SDK.
+
+To continue using state streaming, replace `streaming.LoadStreamingServices` by the following in your `app.go`:
+
+```go
+if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+	panic(err)
+}
+```
+
 #### Client
 
 The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
@@ -228,7 +285,7 @@ It is now recommended to validate message directly in the message server. When t
 
 * Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
 
-* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager registers detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
 * The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 
@@ -254,18 +311,18 @@ Capability has been moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC v8 
 
 ##### Expedited Proposals
 
-The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
+The `gov` v1 module now supports expedited governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
 
 ##### Cancelling Proposals
 
-The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+The `gov` module now supports cancelling governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
 
 ```text
-	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
-	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
 ```
 
-By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
+By default, the new `ProposalCancelRatio` parameter is set to `0.5` during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
 #### `x/evidence`
 
@@ -294,6 +351,14 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 
 The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
+
+### Tooling
+
+#### Rosetta
+
+Rosetta has moved to it's own [repo](https://github.com/cosmos/rosetta) and not imported by the Cosmos SDK SimApp by default.
+Any user who is interested on using the tool can connect it standalone to any node without the need to add it as part of the node binary.
+The rosetta tool also allows multi chain connections.  
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

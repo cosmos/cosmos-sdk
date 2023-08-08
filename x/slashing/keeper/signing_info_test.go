@@ -22,9 +22,9 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	)
 
 	// set the validator signing information
-	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo))
+	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo))
 	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
-	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	info, err := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
 	require.NoError(err)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
 	require.Equal(info.IndexOffset, int64(3))
@@ -33,9 +33,9 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	err = keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
 		signingInfos = append(signingInfos, info)
-		return false
+		return false, nil
 	})
 	require.NoError(err)
 	require.Equal(signingInfos[0].Address, signingInfo.Address)
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	// test JailUntil
 	jailTime := time.Now().Add(time.Hour).UTC()
 	require.NoError(keeper.JailUntil(ctx, consAddr, jailTime))
-	sInfo, _ := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	sInfo, _ := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
 	require.Equal(sInfo.JailedUntil, jailTime)
 }
 

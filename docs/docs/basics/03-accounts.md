@@ -8,9 +8,8 @@ sidebar_position: 1
 This document describes the in-built account and public key system of the Cosmos SDK.
 :::
 
-:::note
+:::note Pre-requisite Readings
 
-### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 

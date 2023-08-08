@@ -8,13 +8,14 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -39,8 +40,11 @@ type AppOptions struct {
 
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec stakingtypes.ValidatorAddressCodec
-	ConsensusAddressCodec stakingtypes.ConsensusAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
+
+	// Keyring is the keyring to use for client/v2.
+	Keyring keyring.Keyring `optional:"true"`
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -66,6 +70,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
+			Keyring:               appOptions.Keyring,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -102,11 +107,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.enhanceCommandCommon(queryCmd, appOptions, customQueryCmds, enhanceQuery); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customQueryCmds); err != nil {
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds, enhanceQuery)
+		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
@@ -115,11 +120,11 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	}
 
 	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
-		if err := builder.enhanceCommandCommon(msgCmd, appOptions, customMsgCmds, enhanceMsg); err != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customMsgCmds); err != nil {
 			return err
 		}
 	} else {
-		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds, enhanceMsg)
+		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
 		if err != nil {
 			return err
 		}

@@ -27,7 +27,7 @@ func (k Keeper) Hooks() Hooks {
 // AfterValidatorBonded updates the signing info start height or create a new signing info
 func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	signingInfo, err := h.k.GetValidatorSigningInfo(ctx, consAddr)
+	signingInfo, err := h.k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err == nil {
 		signingInfo.StartHeight = sdkCtx.BlockHeight()
 	} else {
@@ -41,7 +41,7 @@ func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddres
 		)
 	}
 
-	return h.k.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
+	return h.k.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo)
 }
 
 // AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,

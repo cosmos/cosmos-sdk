@@ -4,7 +4,10 @@ import (
 	"testing"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/collections/colltest"
 
@@ -19,6 +22,28 @@ func TestCollectionsCorrectness(t *testing.T) {
 		colltest.TestValueCodec(t, codec.CollValue[gogotypes.UInt64Value](cdc), gogotypes.UInt64Value{
 			Value: 500,
 		})
+	})
+
+	t.Run("CollValueV2", func(t *testing.T) {
+		// NOTE: we cannot use colltest.TestValueCodec because protov2 has different
+		// compare semantics than protov1. We need to use protocmp.Transform() alongside
+		// cmp to ensure equality.
+		encoder := codec.CollValueV2[wrapperspb.UInt64Value]()
+		value := &wrapperspb.UInt64Value{Value: 500}
+		encodedValue, err := encoder.Encode(value)
+		require.NoError(t, err)
+		decodedValue, err := encoder.Decode(encodedValue)
+		require.NoError(t, err)
+		require.True(t, cmp.Equal(value, decodedValue, protocmp.Transform()), "encoding and decoding produces different values")
+
+		encodedJSONValue, err := encoder.EncodeJSON(value)
+		require.NoError(t, err)
+		decodedJSONValue, err := encoder.DecodeJSON(encodedJSONValue)
+		require.NoError(t, err)
+		require.True(t, cmp.Equal(value, decodedJSONValue, protocmp.Transform()), "encoding and decoding produces different values")
+		require.NotEmpty(t, encoder.ValueType())
+
+		_ = encoder.Stringify(value)
 	})
 
 	t.Run("BoolValue", func(t *testing.T) {

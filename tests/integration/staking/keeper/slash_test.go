@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -156,7 +157,7 @@ func TestSlashRedelegation(t *testing.T) {
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, slashAmount.Equal(math.NewInt(5)))
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 
@@ -431,7 +432,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -468,7 +469,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -499,7 +500,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// apply TM updates
@@ -529,7 +530,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	assert.Assert(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -600,7 +601,7 @@ func TestSlashBoth(t *testing.T) {
 	assert.Assert(math.IntEq(t, oldNotBonded.Sub(burnedNotBondedAmount), notBondedPoolBalance))
 
 	// read updating redelegation
-	rdA, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rdA, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0], addrVals[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rdA.Entries) == 1)
 	// read updated validator

@@ -517,7 +517,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, err
 	}
 
-	redel, err := k.GetRedelegation(ctx, delAddr, srcValAddr, dstValAddr)
+	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(sdk.AccAddress(delAddr), sdk.ValAddress(srcValAddr), sdk.ValAddress(dstValAddr)))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,

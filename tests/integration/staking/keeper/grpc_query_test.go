@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -814,7 +815,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
-	redel, found := f.stakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
+	redel, found := f.stakingKeeper.Redelegations.Get(ctx, collections.Join3(addrAcc1, val1.GetOperator(), val2.GetOperator()))
 	assert.Assert(t, found)
 
 	var req *types.QueryRedelegationsRequest

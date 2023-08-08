@@ -639,7 +639,6 @@ func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) 
 	})
 
 	require.NoError(t, err)
-
 }
 
 func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
@@ -649,5 +648,4 @@ func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper
 	})
 
 	require.NoError(t, err)
-
 }

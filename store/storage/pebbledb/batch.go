@@ -43,12 +43,12 @@ func (b *Batch) Reset() {
 }
 
 func (b *Batch) Set(storeKey string, key, value []byte) error {
-	prefixedKey := prependStoreKey(storeKey, b.version, key)
+	prefixedKey := MVCCEncode(prependStoreKey(storeKey, key), b.version)
 	return b.batch.Set(prefixedKey, value, nil)
 }
 
 func (b *Batch) Delete(storeKey string, key []byte) error {
-	prefixedKey := prependStoreKey(storeKey, b.version, key)
+	prefixedKey := MVCCEncode(prependStoreKey(storeKey, key), b.version)
 	return b.batch.Delete(prefixedKey, nil)
 }
 

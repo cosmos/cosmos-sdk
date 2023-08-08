@@ -26,14 +26,14 @@ func TestDatabase_LatestVersion(t *testing.T) {
 	require.Error(t, err)
 	require.Zero(t, lv)
 
-	expected := uint64(1)
+	for i := uint64(1); i <= 1001; i++ {
+		err = db.SetLatestVersion(i)
+		require.NoError(t, err)
 
-	err = db.SetLatestVersion(expected)
-	require.NoError(t, err)
-
-	lv, err = db.GetLatestVersion()
-	require.NoError(t, err)
-	require.Equal(t, expected, lv)
+		lv, err = db.GetLatestVersion()
+		require.NoError(t, err)
+		require.Equal(t, i, lv)
+	}
 }
 
 func TestDatabase_CRUD(t *testing.T) {

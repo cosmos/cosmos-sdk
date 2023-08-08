@@ -14,7 +14,7 @@ import (
 const (
 	VersionSize = 8
 
-	StorePrefixTpl   = "s/k:%d/%s/" // s/k:<version>/<storeKey>/<key>
+	StorePrefixTpl   = "s/k:%s/" // s/k:<storeKey>
 	latestVersionKey = "s/latest"
 )
 
@@ -74,7 +74,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	_, closer, err := db.storage.Get(prependStoreKey(storeKey, version, key))
+	_, closer, err := db.storage.Get(MVCCEncode(prependStoreKey(storeKey, key), version))
 	if err != nil {
 		if errors.Is(err, pebble.ErrNotFound) {
 			return false, nil
@@ -87,7 +87,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	bz, closer, err := db.storage.Get(prependStoreKey(storeKey, version, key))
+	bz, closer, err := db.storage.Get(MVCCEncode(prependStoreKey(storeKey, key), version))
 	if err != nil {
 		if errors.Is(err, pebble.ErrNotFound) {
 			return nil, nil
@@ -111,7 +111,7 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
-	if err := batch.Set(prependStoreKey(storeKey, version, key), value, nil); err != nil {
+	if err := batch.Set(MVCCEncode(prependStoreKey(storeKey, key), version), value, nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
 
@@ -131,7 +131,7 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
-	if err := batch.Delete(prependStoreKey(storeKey, version, key), nil); err != nil {
+	if err := batch.Delete(MVCCEncode(prependStoreKey(storeKey, key), version), nil); err != nil {
 		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
 	}
 
@@ -146,6 +146,7 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+// TODO: MVCC
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
@@ -155,13 +156,14 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(storeKey, version)
+	prefix := storePrefix(storeKey)
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	iter := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
 	return newPebbleDBIterator(iter, prefix, start, end, false), nil
 }
 
+// TODO: MVCC
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
@@ -171,17 +173,17 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 		return nil, store.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(storeKey, version)
+	prefix := storePrefix(storeKey)
 	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	iter := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
 	return newPebbleDBIterator(iter, prefix, start, end, true), nil
 }
 
-func storePrefix(storeKey string, version uint64) []byte {
-	return []byte(fmt.Sprintf(StorePrefixTpl, version, storeKey))
+func storePrefix(storeKey string) []byte {
+	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }
 
-func prependStoreKey(storeKey string, version uint64, key []byte) []byte {
-	return append(storePrefix(storeKey, version), key...)
+func prependStoreKey(storeKey string, key []byte) []byte {
+	return append(storePrefix(storeKey), key...)
 }

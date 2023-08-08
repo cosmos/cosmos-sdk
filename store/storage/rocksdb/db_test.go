@@ -81,6 +81,10 @@ func TestDatabase_GetVersionedKey(t *testing.T) {
 	bz, err := db.Get(storeKey1, 10, []byte("key"))
 	require.NoError(t, err)
 	require.Equal(t, []byte("value"), bz)
+
+	ok, err := db.Has(storeKey1, 10, []byte("key"))
+	require.NoError(t, err)
+	require.True(t, ok)
 }
 
 func TestDatabase_VersionedKeys(t *testing.T) {

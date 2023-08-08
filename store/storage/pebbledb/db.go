@@ -75,21 +75,25 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	_, closer, err := db.storage.Get(MVCCEncode(prependStoreKey(storeKey, key), version))
+	_, err := getMVCCSlice(db.storage, storeKey, key, version)
 	if err != nil {
-		if errors.Is(err, pebble.ErrNotFound) {
+		if errors.Is(err, store.ErrRecordNotFound) {
 			return false, nil
 		}
 
 		return false, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
-	return true, closer.Close()
+	return true, nil
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
 	bz, err := getMVCCSlice(db.storage, storeKey, key, version)
 	if err != nil {
+		if errors.Is(err, store.ErrRecordNotFound) {
+			return nil, nil
+		}
+
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
@@ -182,7 +186,7 @@ func prependStoreKey(storeKey string, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey string, start []byte, version uint64) (bz []byte, err error) {
+func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (bz []byte, err error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++
@@ -192,8 +196,8 @@ func getMVCCSlice(db *pebble.DB, storeKey string, start []byte, version uint64) 
 	binary.LittleEndian.PutUint64(versionBz[:], version)
 
 	it := db.NewIter(&pebble.IterOptions{
-		LowerBound: MVCCEncode(prependStoreKey(storeKey, start), 0),
-		UpperBound: MVCCEncode(prependStoreKey(storeKey, start), version),
+		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
+		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
 	defer func() {
 		err = errors.Join(err, it.Close())
@@ -201,7 +205,7 @@ func getMVCCSlice(db *pebble.DB, storeKey string, start []byte, version uint64) 
 
 	ok := it.Last()
 	if !ok {
-		return nil, nil
+		return nil, store.ErrRecordNotFound
 	}
 
 	_, keyTS, ok := SplitMVCCKey(it.Key())

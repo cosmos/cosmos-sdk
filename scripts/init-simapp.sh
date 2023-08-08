@@ -7,6 +7,7 @@ echo "using $SIMD_BIN"
 if [ -d "$($SIMD_BIN config home)" ]; then rm -r $($SIMD_BIN config home); fi
 $SIMD_BIN config set client chain-id demo
 $SIMD_BIN config set client keyring-backend test
+$SIMD_BIN config set app api.enable true
 $SIMD_BIN keys add alice
 $SIMD_BIN keys add bob
 $SIMD_BIN init test --chain-id demo

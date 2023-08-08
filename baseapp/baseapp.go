@@ -223,7 +223,7 @@ func NewBaseApp(
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
-	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs base app will panic.
+	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	return app
@@ -508,7 +508,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 // It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
-		panic("cannot store consensus params with no params store set")
+		return errors.New("cannot store consensus params with no params store set")
 	}
 
 	return app.paramStore.Set(ctx, cp)

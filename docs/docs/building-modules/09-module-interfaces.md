@@ -159,6 +159,6 @@ Modules that want to expose REST queries should add `google.api.http` annotation
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
 ```
 
-gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml).
+gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).
 
-The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.
+The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) defines if swagger documentation should be automatically registered.

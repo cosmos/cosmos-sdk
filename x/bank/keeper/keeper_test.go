@@ -1369,20 +1369,10 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
-	event2 := sdk.Event{
-		Type:       sdk.EventTypeMessage,
-		Attributes: []abci.EventAttribute{},
-	}
-	event2.Attributes = append(
-		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
-	)
-
 	// events are shifted due to the funding account events
 	events := ctx.EventManager().ABCIEvents()
-	require.Equal(10, len(events))
-	require.Equal(abci.Event(event1), events[8])
-	require.Equal(abci.Event(event2), events[9])
+	require.Equal(8, len(events))
+	require.Equal(abci.Event(event1), events[7])
 }
 
 func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
@@ -1418,17 +1408,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	require.Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
-
-	event1 := sdk.Event{
-		Type:       sdk.EventTypeMessage,
-		Attributes: []abci.EventAttribute{},
-	}
-	event1.Attributes = append(
-		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
-	)
-	require.Equal(abci.Event(event1), events[7])
+	require.Equal(10, len(events)) // 10 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	// Set addr's coins and accAddrs[1]'s coins
 	suite.mockFundAccount(accAddrs[0])
@@ -1443,35 +1423,34 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	require.Equal(30, len(events)) // 27 due to account funding + coin_spent + coin_recv events
+	require.Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
+	event1 := sdk.Event{
+		Type:       banktypes.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
+	)
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event2 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
-	event3 := sdk.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
-	)
-	event3.Attributes = append(
-		event3.Attributes,
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
-	require.Equal(abci.Event(event1), events[25])
-	require.Equal(abci.Event(event2), events[27])
-	require.Equal(abci.Event(event3), events[29])
+	require.Equal(abci.Event(event1), events[22])
+	require.Equal(abci.Event(event2), events[24])
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {

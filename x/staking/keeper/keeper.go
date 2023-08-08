@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -32,11 +33,15 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 
-	Schema                 collections.Schema
-	HistoricalInfo         collections.Map[uint64, types.HistoricalInfo]
-	LastTotalPower         collections.Item[math.Int]
-	ValidatorUpdates       collections.Item[types.ValidatorUpdates]
-	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	Schema                      collections.Schema
+	HistoricalInfo              collections.Map[uint64, types.HistoricalInfo]
+	LastTotalPower              collections.Item[math.Int]
+	ValidatorUpdates            collections.Item[types.ValidatorUpdates]
+	DelegationsByValidator      collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingID                 collections.Sequence
+	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
+	UnbondingType               collections.Map[uint64, uint64]
+	UnbondingIndex              collections.Map[uint64, []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -86,6 +91,15 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
+		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
+		ValidatorByConsensusAddress: collections.NewMap(
+			sb, types.ValidatorsByConsAddrKey,
+			"validator_by_cons_addr",
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collcodec.KeyToValueCodec(sdk.ValAddressKey),
+		),
+		UnbondingType:  collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

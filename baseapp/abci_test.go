@@ -364,6 +364,63 @@ func TestABCI_ExtendVote(t *testing.T) {
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
 
+// TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
+// without having called ExtendVote before.
+func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		// do some kind of verification here
+		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 200,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Verify Vote Extensions
+	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	require.ErrorContains(t, err, "vote extensions are not enabled")
+
+	// First vote on the first enabled height
+	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+
+	// Reject because it's just some random bytes
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+
+	// Reject because the verification failed (no error)
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return nil, errors.New("some error")
+	})
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+}
+
 func TestABCI_GRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
@@ -1733,13 +1790,9 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 		},
 	}
 
-	val1 := mock.NewMockValidator(ctrl)
-	val1.EXPECT().BondedTokens().Return(math.NewInt(667))
-	val1.EXPECT().CmtConsPublicKey().Return(tmPk, nil).AnyTimes()
-
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().GetValidatorByConsAddr(gomock.Any(), consAddr.Bytes()).Return(val1, nil).AnyTimes()
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000)).AnyTimes()
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
+	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1827,7 +1880,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	val1.EXPECT().BondedTokens().Return(math.NewInt(666))
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))

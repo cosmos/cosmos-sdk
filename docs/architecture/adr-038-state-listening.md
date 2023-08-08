@@ -568,9 +568,12 @@ func registerABCIListenerPlugin(
     exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
     exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
     bApp.cms.AddListeners(exposedKeys)
-    bApp.SetStreamingService(abciListener)
-    bApp.stopNodeOnABCIListenerErr = stopNodeOnErr
-    bApp.abciListenersAsync = async
+    app.SetStreamingManager(
+		storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{abciListener},
+			StopNodeOnErr: stopNodeOnErr,
+		},
+	)
 }
 ```
 

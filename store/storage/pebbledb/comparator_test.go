@@ -11,10 +11,10 @@ func TestMVCCKey(t *testing.T) {
 	for i := uint64(1); i < 1001; i++ {
 		keyA := MVCCEncode([]byte("key001"), i)
 
-		splitKeyA, splitVersionA, ok := SplitMVCCKey(keyA)
+		splitKey, splitVersion, ok := SplitMVCCKey(keyA)
 		require.True(t, ok)
-		require.Equal(t, i, binary.LittleEndian.Uint64(splitVersionA))
-		require.Equal(t, []byte("key001"), splitKeyA)
+		require.Equal(t, i, binary.LittleEndian.Uint64(splitVersion))
+		require.Equal(t, []byte("key001"), splitKey)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage/util"
@@ -87,19 +88,12 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	bz, closer, err := db.storage.Get(MVCCEncode(prependStoreKey(storeKey, key), version))
+	bz, err := getMVCCSlice(db.storage, storeKey, key, version)
 	if err != nil {
-		if errors.Is(err, pebble.ErrNotFound) {
-			return nil, nil
-		}
-
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
-	bzCopy := make([]byte, len(bz))
-	copy(bzCopy, bz)
-
-	return bzCopy, closer.Close()
+	return bz, nil
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
@@ -186,4 +180,42 @@ func storePrefix(storeKey string) []byte {
 
 func prependStoreKey(storeKey string, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
+}
+
+func getMVCCSlice(db *pebble.DB, storeKey string, start []byte, version uint64) (bz []byte, err error) {
+	// end domain is exclusive, so we need to increment the version by 1
+	if version < math.MaxUint64 {
+		version++
+	}
+
+	var versionBz [VersionSize]byte
+	binary.LittleEndian.PutUint64(versionBz[:], version)
+
+	it := db.NewIter(&pebble.IterOptions{
+		LowerBound: MVCCEncode(prependStoreKey(storeKey, start), 0),
+		UpperBound: MVCCEncode(prependStoreKey(storeKey, start), version),
+	})
+	defer func() {
+		err = errors.Join(err, it.Close())
+	}()
+
+	ok := it.Last()
+	if !ok {
+		return nil, nil
+	}
+
+	_, keyTS, ok := SplitMVCCKey(it.Key())
+	if !ok {
+		return nil, fmt.Errorf("unexpected key format: %s", it.Key())
+	}
+
+	keyVersion := binary.LittleEndian.Uint64(keyTS)
+	if keyVersion > version {
+		return nil, fmt.Errorf("key version too large: %d", keyVersion)
+	}
+
+	bz = make([]byte, len(it.Value()))
+	copy(bz, it.Value())
+
+	return bz, nil
 }

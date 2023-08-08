@@ -8,10 +8,11 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
-	"github.com/google/gofuzz"
+	fuzz "github.com/google/gofuzz"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -87,6 +88,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		address.NewBech32Codec("cosmos"),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)

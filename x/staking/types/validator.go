@@ -10,6 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -63,10 +64,13 @@ func NewValidator(operator string, pubKey cryptotypes.PubKey, description Descri
 }
 
 // Validators is a collection of Validator
-type Validators []Validator
+type Validators struct {
+	Validators     []Validator
+	ValidatorCodec address.Codec
+}
 
 func (v Validators) String() (out string) {
-	for _, val := range v {
+	for _, val := range v.Validators {
 		out += val.String() + "\n"
 	}
 
@@ -75,7 +79,7 @@ func (v Validators) String() (out string) {
 
 // ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
 func (v Validators) ToSDKValidators() (validators []ValidatorI) {
-	for _, val := range v {
+	for _, val := range v.Validators {
 		validators = append(validators, val)
 	}
 
@@ -89,17 +93,26 @@ func (v Validators) Sort() {
 
 // Implements sort interface
 func (v Validators) Len() int {
-	return len(v)
+	return len(v.Validators)
 }
 
 // Implements sort interface
 func (v Validators) Less(i, j int) bool {
-	return strings.Compare(v[i].GetOperator(), v[j].GetOperator()) == -1
+	vi, err := v.ValidatorCodec.StringToBytes(v.Validators[i].GetOperator())
+	if err != nil {
+		panic(err)
+	}
+	vj, err := v.ValidatorCodec.StringToBytes(v.Validators[j].GetOperator())
+	if err != nil {
+		panic(err)
+	}
+
+	return bytes.Compare(vi, vj) == -1
 }
 
 // Implements sort interface
 func (v Validators) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
+	v.Validators[i], v.Validators[j] = v.Validators[j], v.Validators[i]
 }
 
 // ValidatorsByVotingPower implements sort.Interface for []Validator based on
@@ -129,8 +142,8 @@ func (valz ValidatorsByVotingPower) Swap(i, j int) {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
-	for i := range v {
-		if err := v[i].UnpackInterfaces(c); err != nil {
+	for i := range v.Validators {
+		if err := v.Validators[i].UnpackInterfaces(c); err != nil {
 			return err
 		}
 	}

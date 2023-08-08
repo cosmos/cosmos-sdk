@@ -28,7 +28,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
+	hi := types.NewHistoricalInfo(header, types.Validators{Validators: sortedVals}, f.stakingKeeper.PowerReduction(f.sdkCtx))
 	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
@@ -179,7 +179,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 				assert.NilError(t, err)
 				assert.Equal(t, 1, len(res.Validators))
 				assert.Assert(t, res.Pagination.NextKey != nil)
-				assert.Equal(t, uint64(len(delValidators)), res.Pagination.Total)
+				assert.Equal(t, uint64(len(delValidators.Validators)), res.Pagination.Total)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)

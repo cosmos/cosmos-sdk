@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
+	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), stakingtypes.Validators{Validators: validators}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(2))
@@ -73,8 +73,8 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
-	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
+	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
+	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(5), hi5))
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(4))

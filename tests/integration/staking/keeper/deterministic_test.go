@@ -663,15 +663,15 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
-		vals := make(stakingtypes.Validators, 0, numVals)
+		vals := stakingtypes.Validators{}
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
-			vals = append(vals, validator)
+			vals.Validators = append(vals.Validators, validator)
 		}
 
 		historicalInfo := stakingtypes.HistoricalInfo{
 			Header: cmtproto.Header{},
-			Valset: vals,
+			Valset: vals.Validators,
 		}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")

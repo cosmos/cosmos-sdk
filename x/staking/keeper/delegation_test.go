@@ -104,10 +104,10 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	resVals, err := keeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.NoError(err)
-	require.Equal(3, len(resVals))
+	require.Equal(3, len(resVals.Validators))
 	resVals, err = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.NoError(err)
-	require.Equal(3, len(resVals))
+	require.Equal(3, len(resVals.Validators))
 
 	for i := 0; i < 3; i++ {
 		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], valAddrs[i])

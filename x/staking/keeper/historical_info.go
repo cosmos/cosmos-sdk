@@ -51,7 +51,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return err
 	}
 
-	historicalEntry := types.NewHistoricalInfo(sdkCtx.BlockHeader(), lastVals, k.PowerReduction(ctx))
+	historicalEntry := types.NewHistoricalInfo(sdkCtx.BlockHeader(), types.Validators{Validators: lastVals, ValidatorCodec: k.validatorAddressCodec}, k.PowerReduction(ctx))
 
 	// Set latest HistoricalInfo at current height
 	return k.HistoricalInfo.Set(ctx, uint64(sdkCtx.BlockHeight()), historicalEntry)

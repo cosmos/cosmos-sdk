@@ -19,7 +19,7 @@ func (k Keeper) GetDelegatorValidators(
 
 	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
 	if err != nil {
-		return nil, err
+		return types.Validators{}, err
 	}
 	defer iterator.Close()
 
@@ -29,19 +29,19 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
-			return nil, err
+			return types.Validators{}, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			return nil, err
+			return types.Validators{}, err
 		}
 
 		validators[i] = validator
 		i++
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
 // GetDelegatorValidator returns a validator that a delegator is bonded to

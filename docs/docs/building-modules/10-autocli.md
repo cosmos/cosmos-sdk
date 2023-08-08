@@ -143,7 +143,7 @@ In order to enable this behavior, set in `AutoCLIOptions()` the `EnhanceCustomCo
 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/julien/custom-commands/x/gov/autocli.go#L98
+https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a9d/x/gov/autocli.go#L98
 ```
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).

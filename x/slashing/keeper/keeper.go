@@ -77,11 +77,6 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
-	return k.AddrPubkeyRelation.Set(ctx, pubkey.Address(), pubkey)
-}
-
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	return k.AddrPubkeyRelation.Get(ctx, a)

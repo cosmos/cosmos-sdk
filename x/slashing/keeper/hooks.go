@@ -51,7 +51,6 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddre
 
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
 func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validator, err := h.k.sk.Validator(ctx, valAddr)
 	if err != nil {
 		return err
@@ -62,7 +61,7 @@ func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress
 		return err
 	}
 
-	return h.k.AddPubkey(sdkCtx, consPk)
+	return h.k.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {

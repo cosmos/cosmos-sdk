@@ -2,15 +2,13 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/staking/legacy/v043"
 	v3 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
 )
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper         Keeper
-	legacySubspace exported.Subspace
+	keeper Keeper
 }
 
 // NewMigrator returns a new Migrator.

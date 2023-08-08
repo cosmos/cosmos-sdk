@@ -226,7 +226,9 @@ func SimulateMsgEditValidator(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "invalid commission rate"), nil, nil
 		}
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		bz, err := k.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(bz))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}

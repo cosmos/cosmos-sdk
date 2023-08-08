@@ -418,7 +418,7 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
 		redels, pageRes, err = queryRedelegationsFromSrcValidator(store, k, req)
 	default:
-		redels, pageRes, err = queryAllRedelegations(store, k, req)
+		redels, pageRes, err = queryAllRedelegations(ctx, store, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -551,21 +551,29 @@ func queryRedelegationsFromSrcValidator(store storetypes.KVStore, k Querier, req
 	return redels, res, err
 }
 
-func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-	res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
-		redelegation, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return err
-		}
-		redels = append(redels, redelegation)
-		return nil
-	})
+	// redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
+
+	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (types.Redelegation, error) {
+		return red, nil
+	}, query.WithCollectionPaginationTriplePrefix[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delAddr))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
+	// 	redelegation, err := types.UnmarshalRED(k.cdc, value)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	redels = append(redels, redelegation)
+	// 	return nil
+	// })
 
 	return redels, res, err
 }

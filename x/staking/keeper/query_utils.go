@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,40 +116,28 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
 
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
+	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
+	k.Redelegations.Walk(ctx, rng,
+		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorSrcAddress)
-		if err != nil {
-			return nil, err
-		}
-		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
-		if err != nil {
-			return nil, err
-		}
-		if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
-			continue
-		}
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
+				return false, nil
+			}
 
-		if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
-			continue
-		}
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
+				return false, nil
+			}
 
-		redelegations = append(redelegations, redelegation)
-	}
+			redelegations = append(redelegations, redelegation)
+			return false, nil
+		},
+	)
 
 	return redelegations, nil
 }

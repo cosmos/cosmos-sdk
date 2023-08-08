@@ -341,22 +341,15 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 
 // IterateDelegatorRedelegations iterates through one delegator's redelegations.
 func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) error {
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
-	if err != nil {
-		return err
-	}
-
-	for ; iterator.Valid(); iterator.Next() {
-		red, err := types.UnmarshalRED(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
+	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
+	k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (stop bool, err error) {
 		if cb(red) {
-			break
+			return true, nil
 		}
-	}
+
+		return false, nil
+	})
+
 	return nil
 }
 
@@ -548,22 +541,17 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time
 func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) (redelegations []types.Redelegation, err error) {
 	redelegations = make([]types.Redelegation, maxRetrieve)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
-	if err != nil {
-		return nil, err
-	}
-
 	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		redelegation, err := types.UnmarshalRED(k.cdc, iterator.Value())
-		if err != nil {
-			return nil, err
+	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
+	k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+		if i >= int(maxRetrieve) {
+			return true, nil
 		}
+
 		redelegations[i] = redelegation
 		i++
-	}
+		return false, nil
+	})
 
 	return redelegations[:i], nil // trim if the array length < maxRetrieve
 }

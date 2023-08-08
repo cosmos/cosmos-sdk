@@ -27,7 +27,7 @@ func (k Keeper) GetAllDelegations(ctx context.Context) ([]types.Delegation, erro
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -50,7 +50,7 @@ func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddr
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -73,7 +73,7 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -284,7 +284,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 

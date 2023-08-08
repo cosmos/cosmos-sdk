@@ -643,9 +643,8 @@ func TestSetMinGasPrices(t *testing.T) {
 type ctxType string
 
 const (
-	QueryCtx     ctxType = "query"
-	CheckTxCtx   ctxType = "checkTx"
-	DeliverTxCtx ctxType = "deliverTx"
+	QueryCtx   ctxType = "query"
+	CheckTxCtx ctxType = "checkTx"
 )
 
 var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}

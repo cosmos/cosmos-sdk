@@ -227,6 +227,9 @@ func SimulateMsgEditValidator(
 		}
 
 		bz, err := k.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator address bytes"), nil, err
+		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(bz))
 		if !found {

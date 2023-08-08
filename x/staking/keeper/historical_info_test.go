@@ -97,6 +97,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	val2.Tokens = keeper.TokensFromConsensusPower(ctx, 80)
 	require.NoError(keeper.SetValidator(ctx, val2))
 	valbz, err = keeper.ValidatorAddressCodec().StringToBytes(val2.GetOperator())
+	require.NoError(err)
 	require.NoError(keeper.SetLastValidatorPower(ctx, valbz, 80))
 
 	vals := []stakingtypes.Validator{val1, val2}

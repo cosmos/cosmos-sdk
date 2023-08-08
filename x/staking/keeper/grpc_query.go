@@ -187,7 +187,7 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 		ctx,
 		k.UnbondingDelegationByValIndex,
 		req.Pagination,
-		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (types.UnbondingDelegation, error) {
+		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ collections.NoValue) (types.UnbondingDelegation, error) {
 			valAddr := key.K1()
 			delAddr := key.K2()
 			delAddr = delAddr[1:] // remove prefix bytes

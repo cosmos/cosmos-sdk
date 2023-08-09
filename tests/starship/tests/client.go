@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"google.golang.org/grpc"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // CreditFromFaucet will request facuet of the chain for tokens to address
@@ -100,4 +103,13 @@ func CreateTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 	}
 
 	return txBuilder.GetTx(), txBytes, nil
+}
+
+// GetAccSeqNumber returns the account number and sequence number for the given address
+func GetAccSeqNumber(grpcConn *grpc.ClientConn, address string) (uint64, uint64, error) {
+	info, err := auth.NewQueryClient(grpcConn).AccountInfo(context.Background(), &auth.QueryAccountInfoRequest{Address: address})
+	if err != nil {
+		return 0, 0, err
+	}
+	return info.Info.GetAccountNumber(), info.Info.GetSequence(), nil
 }

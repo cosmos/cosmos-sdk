@@ -60,13 +60,13 @@ for i in $(seq 0 $num_chains); do
   locallcd=$(yq -r ".chains[$i].ports.rest" ${CONFIGFILE} )
   localexp=$(yq -r ".chains[$i].ports.exposer" ${CONFIGFILE})
   localfaucet=$(yq -r ".chains[$i].ports.faucet" ${CONFIGFILE})
-  [[ "$localrpc" != "null" ]] && kubectl port-forward pods/$chain-genesis-0 $localrpc:$CHAIN_RPC_PORT > /dev/null 2>&1 &
-  [[ "$localgrpc" != "null" ]] && kubectl port-forward pods/$chain-genesis-0 $localgrpc:$CHAIN_GRPC_PORT > /dev/null 2>&1 &
-  [[ "$locallcd" != "null" ]] && kubectl port-forward pods/$chain-genesis-0 $locallcd:$CHAIN_LCD_PORT > /dev/null 2>&1 &
-  [[ "$localexp" != "null" ]] && kubectl port-forward pods/$chain-genesis-0 $localexp:$CHAIN_EXPOSER_PORT > /dev/null 2>&1 &
-  [[ "$localfaucet" != "null" ]] && kubectl port-forward pods/$chain-genesis-0 $localfaucet:$CHAIN_FAUCET_PORT > /dev/null 2>&1 &
+  color yellow "chains: forwarded $chain"
+  [[ "$localrpc" != "null" ]] && color yellow "    rpc to http://localhost:$localrpc" && kubectl port-forward pods/$chain-genesis-0 $localrpc:$CHAIN_RPC_PORT > /dev/null 2>&1 &
+  [[ "$localgrpc" != "null" ]] && color yellow "    grpc to http://localhost:$localgrpc" && kubectl port-forward pods/$chain-genesis-0 $localgrpc:$CHAIN_GRPC_PORT > /dev/null 2>&1 &
+  [[ "$locallcd" != "null" ]] && color yellow "    lcd to http://localhost:$locallcd" && kubectl port-forward pods/$chain-genesis-0 $locallcd:$CHAIN_LCD_PORT > /dev/null 2>&1 &
+  [[ "$localexp" != "null" ]] && color yellow "    exposer to http://localhost:$localexp" && kubectl port-forward pods/$chain-genesis-0 $localexp:$CHAIN_EXPOSER_PORT > /dev/null 2>&1 &
+  [[ "$localfaucet" != "null" ]] && color yellow "    faucet to http://localhost:$localfaucet" && kubectl port-forward pods/$chain-genesis-0 $localfaucet:$CHAIN_FAUCET_PORT > /dev/null 2>&1 &
   sleep 1
-  color yellow "chains: forwarded $chain lcd to http://localhost:$locallcd, rpc to http://localhost:$localrpc, grpc to http://localhost:$localgrpc, faucet to http://localhost:$localfaucet"
 done
 
 echo "Port forward services"

@@ -16,7 +16,6 @@ import (
 
 var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command, error) {
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
-
 	err := b.AddMsgServiceCommands(cmd, testCmdMsgDesc)
 	return cmd, err
 }
@@ -258,7 +257,7 @@ func TestBuildMsgCommand(t *testing.T) {
 		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
 			customCommandCalled = true
 		}},
-	}, enhanceMsg)
+	})
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{"test", "tx"})
 	assert.NilError(t, cmd.Execute())
@@ -295,12 +294,12 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 		ValidatorAddressCodec: b.ValidatorAddressCodec,
 	}
 
-	_, err := b.BuildMsgCommand(appOptions, nil, enhanceMsg)
+	_, err := b.BuildMsgCommand(appOptions, nil)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
 	nonExistentService := &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
 	appOptions.ModuleOptions["test"].Tx = nonExistentService
-	_, err = b.BuildMsgCommand(appOptions, nil, enhanceMsg)
+	_, err = b.BuildMsgCommand(appOptions, nil)
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }
 
@@ -368,7 +367,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 		},
 	}
 
-	err := b.enhanceCommandCommon(cmd, appOptions, map[string]*cobra.Command{}, enhanceMsg)
+	err := b.enhanceCommandCommon(cmd, msgCmdType, appOptions, map[string]*cobra.Command{})
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -377,7 +376,7 @@ func TestEnhanceMessageCommand(t *testing.T) {
 	customCommands := map[string]*cobra.Command{
 		"test2": {Use: "test"},
 	}
-	err = b.enhanceCommandCommon(cmd, appOptions, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, msgCmdType, appOptions, customCommands)
 	assert.NilError(t, err)
 
 	cmd = &cobra.Command{Use: "test"}
@@ -387,6 +386,6 @@ func TestEnhanceMessageCommand(t *testing.T) {
 		},
 	}
 	customCommands = map[string]*cobra.Command{}
-	err = b.enhanceCommandCommon(cmd, appOptions, customCommands, enhanceMsg)
+	err = b.enhanceCommandCommon(cmd, msgCmdType, appOptions, customCommands)
 	assert.NilError(t, err)
 }

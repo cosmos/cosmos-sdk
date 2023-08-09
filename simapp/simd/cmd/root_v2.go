@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -157,7 +156,7 @@ func initAppConfig() (string, interface{}) {
 	}
 
 	type CustomAppConfig struct {
-		serverconfig.Config
+		serverconfig.Config `mapstructure:",squash"`
 
 		WASM WASMConfig `mapstructure:"wasm"`
 	}
@@ -210,15 +209,15 @@ func initRootCmd(
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(basicManager, simapp.DefaultNodeHome),
+		genutilcli.InitCmd(basicManager),
 		NewTestnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, simapp.DefaultNodeHome),
+		pruning.Cmd(newApp),
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, newApp, appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -226,11 +225,8 @@ func initRootCmd(
 		genesisCommand(txConfig, basicManager),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(simapp.DefaultNodeHome),
+		keys.Commands(),
 	)
-
-	// add rosetta
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(interfaceRegistry, appCodec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -239,7 +235,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, basicManager, simapp.DefaultNodeHome)
+	cmd := genutilcli.Commands(txConfig, basicManager)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)

@@ -8,9 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -47,7 +45,7 @@ func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +104,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +115,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	rewards, err := k.Keeper.ValidatorOutstandingRewards.Get(ctx, valAdr)
@@ -138,7 +136,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +147,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAdr.String())
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 	commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAdr)
 	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
@@ -173,33 +171,26 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, status.Errorf(codes.InvalidArgument, "starting height greater than ending height (%d > %d)", req.StartingHeight, req.EndingHeight)
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
-
-	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
-		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
-			return nil, nil
+	events, pageRes, err := query.CollectionFilteredPaginate(ctx, k.ValidatorSlashEvents, req.Pagination, func(key collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ValidatorSlashEvent) (include bool, err error) {
+		if ev.ValidatorPeriod < req.StartingHeight || ev.ValidatorPeriod > req.EndingHeight {
+			return false, nil
 		}
-
-		return result, nil
-	}, func() *types.ValidatorSlashEvent {
-		return &types.ValidatorSlashEvent{}
-	})
+		return true, nil
+	}, func(_ collections.Triple[sdk.ValAddress, uint64, uint64], value types.ValidatorSlashEvent) (types.ValidatorSlashEvent, error) {
+		return value, nil
+	},
+		query.WithCollectionPaginationTriplePrefix[sdk.ValAddress, uint64, uint64](valAddr),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	slashes := []types.ValidatorSlashEvent{}
-	for _, event := range events {
-		slashes = append(slashes, *event)
-	}
-
-	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation
@@ -216,7 +207,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAdr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}

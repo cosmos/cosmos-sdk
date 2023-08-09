@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -147,7 +146,7 @@ func initAppConfig() (string, interface{}) {
 	}
 
 	type CustomAppConfig struct {
-		serverconfig.Config
+		serverconfig.Config `mapstructure:",squash"`
 
 		WASM WASMConfig `mapstructure:"wasm"`
 	}
@@ -194,15 +193,15 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(basicManager, simapp.DefaultNodeHome),
+		genutilcli.InitCmd(basicManager),
 		NewTestnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, simapp.DefaultNodeHome),
+		pruning.Cmd(newApp),
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, newApp, appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -210,10 +209,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		genesisCommand(encodingConfig, basicManager),
 		txCommand(),
 		queryCommand(),
-		keys.Commands(simapp.DefaultNodeHome),
+		keys.Commands(),
 	)
-
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -222,7 +219,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(encodingConfig params.EncodingConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(encodingConfig.TxConfig, basicManager, simapp.DefaultNodeHome)
+	cmd := genutilcli.Commands(encodingConfig.TxConfig, basicManager)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)

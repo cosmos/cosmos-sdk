@@ -39,6 +39,10 @@ type BaseConfig struct {
 	// specified in this config (e.g. 0.25token1;0.0001token2).
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 
+	// The maximum amount of gas a grpc/Rest query may consume.
+	// If set to 0, it is unbounded.
+	QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
+
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
 	PruningInterval   string `mapstructure:"pruning-interval"`
@@ -225,6 +229,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
 			MinGasPrices:        defaultMinGasPrices,
+			QueryGasLimit:       0,
 			InterBlockCache:     true,
 			Pruning:             pruningtypes.PruningOptionDefault,
 			PruningKeepRecent:   "0",

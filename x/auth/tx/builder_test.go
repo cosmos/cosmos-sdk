@@ -307,7 +307,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	msgs := []sdk.Msg{msg1}
 
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)

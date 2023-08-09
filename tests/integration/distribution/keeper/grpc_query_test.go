@@ -236,7 +236,12 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	}
 
 	for i, slash := range slashes {
-		assert.NilError(t, f.distrKeeper.SetValidatorSlashEvent(f.sdkCtx, f.valAddr, uint64(i+2), 0, slash))
+		err := f.distrKeeper.ValidatorSlashEvents.Set(
+			f.sdkCtx,
+			collections.Join3(f.valAddr, uint64(i+2), uint64(0)),
+			slash,
+		)
+		assert.NilError(t, err)
 	}
 
 	var (
@@ -509,7 +514,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	// setup delegation
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
-	delegation := stakingtypes.NewDelegation(delAddr, f.valAddr, issuedShares)
+	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
 

@@ -34,7 +34,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	}
 
 	// fetch signing info
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return err
 	}
@@ -182,5 +182,5 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	}
 
 	// Set the updated signing info
-	return k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }

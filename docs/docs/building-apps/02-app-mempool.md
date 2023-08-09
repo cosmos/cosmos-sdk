@@ -13,9 +13,7 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 

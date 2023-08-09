@@ -19,6 +19,15 @@ func WithCollectionPaginationPairPrefix[K1, K2 any](prefix K1) func(o *Collectio
 	}
 }
 
+// WithCollectionPaginationTriplePrefix applies a prefix to a collection, whose key is a collection.Triple,
+// being paginated that needs prefixing.
+func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
+	return func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
+		prefix := collections.TriplePrefix[K1, K2, K3](prefix)
+		o.Prefix = &prefix
+	}
+}
+
 // CollectionsPaginateOptions provides extra options for pagination in collections.
 type CollectionsPaginateOptions[K any] struct {
 	// Prefix allows to optionally set a prefix for the pagination.

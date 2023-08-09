@@ -75,15 +75,19 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		var remaining sdk.DecCoins
 
-		valDelegationAddrs := make(map[string][]sdk.AccAddress)
+		valDelegationAddrs := make(map[string][][]byte)
 		allDelegations, err := k.stakingKeeper.GetAllSDKDelegations(ctx)
 		if err != nil {
 			panic(err)
 		}
 
 		for _, del := range allDelegations {
-			valAddr := del.GetValidatorAddr().String()
-			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
+			delAddr, err := k.authKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())
+			if err != nil {
+				panic(err)
+			}
+			valAddr := del.GetValidatorAddr()
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], delAddr)
 		}
 
 		// iterate over all validators
@@ -139,16 +143,34 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		}
 
 		slashCount := uint64(0)
-		k.IterateValidatorSlashEvents(ctx,
-			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
+		err = k.ValidatorSlashEvents.Walk(
+			ctx,
+			nil,
+			func(k collections.Triple[sdk.ValAddress, uint64, uint64], event types.ValidatorSlashEvent) (stop bool, err error) {
 				slashCount++
-				return false
-			})
+				return false, nil
+			},
+		)
+
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+			panic(err)
+		}
 
 		// one record per validator (last tracked period), one record per
 		// delegation (previous period), one record per slash (previous period)
 		expected := valCount + uint64(len(dels)) + slashCount
-		count := k.GetValidatorHistoricalReferenceCount(ctx)
+		count := uint64(0)
+		err = k.ValidatorHistoricalRewards.Walk(
+			ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
+				count += uint64(rewards.ReferenceCount)
+				return false, nil
+			},
+		)
+
+		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+			panic(err)
+		}
+
 		broken := count != expected
 
 		return sdk.FormatInvariant(types.ModuleName, "reference count",

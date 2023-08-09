@@ -15,11 +15,11 @@ import (
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command, enhanceQuery enhanceCommandFunc) (*cobra.Command, error) {
+func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
 
-	if err := b.enhanceCommandCommon(queryCmd, appOptions, customCmds, enhanceQuery); err != nil {
+	if err := b.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customCmds); err != nil {
 		return nil, err
 	}
 
@@ -80,6 +80,12 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			return err
 		}
 
+		if findSubCommand(cmd, methodCmd.Name()) != nil {
+			// do not overwrite existing commands
+			// @julienrbrt: should we display a warning?
+			continue
+		}
+
 		cmd.AddCommand(methodCmd)
 	}
 
@@ -108,9 +114,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		}
 
 		output := outputType.New()
-		ctx := cmd.Context()
-		err = clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
-		if err != nil {
+		if err := clientConn.Invoke(cmd.Context(), methodName, input.Interface(), output.Interface()); err != nil {
 			return err
 		}
 

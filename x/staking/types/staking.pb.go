@@ -633,9 +633,9 @@ func (m *DVVTriplets) GetTriplets() []DVVTriplet {
 // owned by one delegator, and is associated with the voting power of one
 // validator.
 type Delegation struct {
-	// delegator_address is the bech32-encoded address of the delegator.
+	// delegator_address is the encoded address of the delegator.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	// validator_address is the bech32-encoded address of the validator.
+	// validator_address is the encoded address of the validator.
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	// shares define the delegation shares received.
 	Shares cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=shares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"shares"`
@@ -677,9 +677,9 @@ var xxx_messageInfo_Delegation proto.InternalMessageInfo
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
 // for a single validator in an time-ordered list.
 type UnbondingDelegation struct {
-	// delegator_address is the bech32-encoded address of the delegator.
+	// delegator_address is the encoded address of the delegator.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	// validator_address is the bech32-encoded address of the validator.
+	// validator_address is the encoded address of the validator.
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	// entries are the unbonding delegation entries.
 	Entries []UnbondingDelegationEntry `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries"`

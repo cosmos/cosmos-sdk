@@ -8,9 +8,7 @@ sidebar_position: 1
 The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more.
 :::
 
-:::note
-
-### Pre-requisites Readings
+:::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md)
 * [Lifecycle of a Transaction](../basics/01-tx-lifecycle.md)
@@ -42,7 +40,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
 * **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
-<!-- TODO update with added values -->
+* **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to state changes emitted by the blockchain. The streaming manager is used by the state listening API, which is described in [ADR 038](https://docs.cosmos.network/main/architecture/adr-038-state-listening).
+* **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/comet/service.go#L14).
+* **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/header/service.go#L14).
 
 ## Go Context Package
 

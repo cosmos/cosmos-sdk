@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -45,19 +46,19 @@ func (s *KeeperTestSuite) TestDelegation() {
 	bond1to1 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[0].String(), math.LegacyNewDec(9))
 
 	// check the empty keeper first
-	_, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err := keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
+	require.ErrorIs(err, collections.ErrNotFound)
 
 	// set and retrieve a record
 	require.NoError(keeper.SetDelegation(ctx, bond1to1))
-	resBond, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, err := keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = math.LegacyNewDec(99)
 	require.NoError(keeper.SetDelegation(ctx, bond1to1))
-	resBond, err = keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
 
@@ -131,8 +132,8 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	// delete a record
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to3))
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[2]))
+	require.ErrorIs(err, collections.ErrNotFound)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.NoError(err)
 	require.Equal(2, len(resBonds))
@@ -146,10 +147,10 @@ func (s *KeeperTestSuite) TestDelegation() {
 	// delete all the records from delegator 2
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to1))
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to2))
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[0]))
+	require.ErrorIs(err, collections.ErrNotFound)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[1]))
+	require.ErrorIs(err, collections.ErrNotFound)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.NoError(err)
 	require.Equal(0, len(resBonds))
@@ -179,7 +180,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// delegate 2 tokens
 	//
 	// total delegations after delegating: del1 -> 2stake
-	_, err := s.msgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(addrDels[0], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
+	_, err := s.msgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(addrDels[0].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
 	require.NoError(err)
 
 	dels, err := s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -189,7 +190,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// delegate 4 tokens
 	//
 	// total delegations after delegating: del1 -> 2stake, del2 -> 4stake
-	_, err = s.msgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(addrDels[1], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(4))))
+	_, err = s.msgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(addrDels[1].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(4))))
 	require.NoError(err)
 
 	dels, err = s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -199,7 +200,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// undelegate 1 token from del1
 	//
 	// total delegations after undelegating: del1 -> 1stake, del2 -> 4stake
-	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[0], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))))
+	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[0].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))))
 	require.NoError(err)
 
 	dels, err = s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -209,7 +210,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// undelegate 1 token from del1
 	//
 	// total delegations after undelegating: del2 -> 4stake
-	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[0], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))))
+	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[0].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))))
 	require.NoError(err)
 
 	dels, err = s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -219,7 +220,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// undelegate 2 tokens from del2
 	//
 	// total delegations after undelegating: del2 -> 2stake
-	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[1], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
+	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[1].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
 	require.NoError(err)
 
 	dels, err = s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -229,7 +230,7 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	// undelegate 2 tokens from del2
 	//
 	// total delegations after undelegating: []
-	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[1], valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
+	_, err = s.msgServer.Undelegate(ctx, stakingtypes.NewMsgUndelegate(addrDels[1].String(), valAddrs[0].String(), sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2))))
 	require.NoError(err)
 
 	dels, err = s.stakingKeeper.GetValidatorDelegations(ctx, valAddrs[0])
@@ -253,6 +254,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 		time.Unix(0, 0).UTC(),
 		math.NewInt(5),
 		0,
+		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 
 	// set and retrieve a record
@@ -309,6 +311,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsFromValidator() {
 		time.Unix(0, 0).UTC(),
 		math.NewInt(5),
 		0,
+		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 
 	// set and retrieve a record
@@ -383,7 +386,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 	require.NoError(err)
 	require.Equal(bondTokens, amount) // shares to be added to an unbonding delegation
 
-	delegation, err = keeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
+	delegation, err = keeper.Delegations.Get(ctx, collections.Join(delAddrs[0], valAddrs[0]))
 	require.NoError(err)
 	validator, err = keeper.GetValidator(ctx, valAddrs[0])
 	require.NoError(err)
@@ -674,7 +677,7 @@ func (s *KeeperTestSuite) TestGetRedelegationsFromSrcValidator() {
 
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), math.NewInt(5),
-		math.LegacyNewDec(5), 0)
+		math.LegacyNewDec(5), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	// set and retrieve a record
 	err := keeper.SetRedelegation(ctx, rd)
@@ -704,7 +707,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0).UTC(), math.NewInt(5),
-		math.LegacyNewDec(5), 0)
+		math.LegacyNewDec(5), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	// test shouldn't have and redelegations
 	has, err := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -1066,6 +1069,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {
 		time.Unix(0, 0).UTC(),
 		math.NewInt(10),
 		0,
+		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 	var initialEntries []stakingtypes.UnbondingDelegationEntry
 	initialEntries = append(initialEntries, ubd.Entries...)
@@ -1107,6 +1111,7 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 		time.Unix(0, 0).UTC(),
 		math.NewInt(5),
 		0,
+		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 
 	// set and retrieve a record

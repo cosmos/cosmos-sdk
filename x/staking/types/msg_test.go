@@ -36,7 +36,7 @@ func TestMsgDecode(t *testing.T) {
 	// now let's try to serialize the whole message
 
 	commission1 := types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
-	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(valAddr1.String(), pk1, coinPos, types.Description{}, commission1, math.OneInt())
 	require.NoError(t, err)
 	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)

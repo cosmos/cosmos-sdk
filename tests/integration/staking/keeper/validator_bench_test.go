@@ -2,9 +2,11 @@ package keeper_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -150,34 +152,31 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 }
 
 func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValAddress) {
-	storeKey := f.keys[types.StoreKey]
-	cdc, k := f.cdc, f.stakingKeeper
+	k := f.stakingKeeper
 
-	store := f.sdkCtx.KVStore(storeKey)
+	rng := collections.NewPrefixedPairRange[sdk.ValAddress, sdk.AccAddress](existingValAddr)
+	err := k.DelegationsByValidator.Walk(f.sdkCtx, rng, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (stop bool, err error) {
+		valAddr, delAddr := key.K1(), key.K2()
 
-	itr := storetypes.KVStorePrefixIterator(store, types.GetDelegationsByValPrefixKey(existingValAddr))
-	defer itr.Close()
-
-	for ; itr.Valid(); itr.Next() {
-		key := itr.Key()
-		valAddr, delAddr, err := types.ParseDelegationsByValKey(key)
+		delegation, err := k.Delegations.Get(f.sdkCtx, collections.Join(delAddr, valAddr))
 		if err != nil {
-			panic(err)
+			return true, err
 		}
-
-		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
-		delegation := types.MustUnmarshalDelegation(cdc, bz)
 
 		// remove old operator addr from delegation
 		if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
-			panic(err)
+			return true, err
 		}
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr
 		if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
-			panic(err)
+			return true, err
 		}
 
+		return false, nil
+	})
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		panic(err)
 	}
 }

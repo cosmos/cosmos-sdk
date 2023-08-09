@@ -3,7 +3,7 @@ package errors
 import "cosmossdk.io/errors"
 
 // mathCodespace is the codespace for all errors defined in orm package
-const ormCodespace = "orm"
+const ormCodespace = "legacy_orm"
 
 var (
 	// ErrORMIteratorDone defines an error when an iterator is done

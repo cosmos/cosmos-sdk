@@ -294,13 +294,16 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 // IterateDelegatorRedelegations iterates through one delegator's redelegations.
 func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) error {
 	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
-	k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (stop bool, err error) {
+	err := k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (stop bool, err error) {
 		if cb(red) {
 			return true, nil
 		}
 
 		return false, nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -495,7 +498,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 
 	i := 0
 	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
-	k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+	err = k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
 		if i >= int(maxRetrieve) {
 			return true, nil
 		}
@@ -504,6 +507,10 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 		i++
 		return false, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	return redelegations[:i], nil // trim if the array length < maxRetrieve
 }

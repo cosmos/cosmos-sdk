@@ -110,7 +110,6 @@ func NewKeeper(
 			),
 			codec.CollValue[types.Redelegation](cdc),
 		),
-		UnbondingType:  collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 	}
 

@@ -110,7 +110,6 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {
-
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 

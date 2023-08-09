@@ -3,10 +3,6 @@ name: Starship E2E Tests
 on:
   schedule:
     - cron: "0 */2 * * *"
-  # temporary run on pull requests for debugging
-  pull_request:
-    branches:
-      - "anmol/starship-integration"
 
 permissions:
   contents: read

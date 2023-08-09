@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 
@@ -123,6 +124,9 @@ type BaseApp struct {
 	// application parameter store.
 	paramStore ParamStore
 
+	// queryGasLimit defines the maximum gas for queries; unbounded if 0.
+	queryGasLimit uint64
+
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. This is mainly used for DoS and spam prevention.
 	minGasPrices sdk.DecCoins
@@ -192,6 +196,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		queryGasLimit:    math.MaxUint64,
 	}
 
 	for _, option := range options {

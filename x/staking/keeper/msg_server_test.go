@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -568,7 +569,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr.String(), srcValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
-	_, err = keeper.GetDelegation(ctx, Addr, srcValAddr)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(Addr, srcValAddr))
 	require.NoError(err)
 
 	testCases := []struct {
@@ -722,7 +723,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr.String(), ValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
-	_, err = keeper.GetDelegation(ctx, Addr, ValAddr)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(Addr, ValAddr))
 	require.NoError(err)
 
 	testCases := []struct {
@@ -847,7 +848,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	shares := math.LegacyNewDec(100)
 	del := stakingtypes.NewDelegation(Addr.String(), ValAddr.String(), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
-	resDel, err := keeper.GetDelegation(ctx, Addr, ValAddr)
+	resDel, err := keeper.Delegations.Get(ctx, collections.Join(Addr, ValAddr))
 	require.NoError(err)
 	require.Equal(del, resDel)
 

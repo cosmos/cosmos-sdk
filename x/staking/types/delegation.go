@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -111,10 +112,19 @@ func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, id uint64,
+	valAc, delAc address.Codec,
 ) UnbondingDelegation {
+	valAddr, err := valAc.BytesToString(validatorAddr)
+	if err != nil {
+		panic(err)
+	}
+	delAddr, err := delAc.BytesToString(delegatorAddr)
+	if err != nil {
+		panic(err)
+	}
 	return UnbondingDelegation{
-		DelegatorAddress: delegatorAddr.String(),
-		ValidatorAddress: validatorAddr.String(),
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 		Entries: []UnbondingDelegationEntry{
 			NewUnbondingDelegationEntry(creationHeight, minTime, balance, id),
 		},
@@ -208,11 +218,25 @@ func (e RedelegationEntry) OnHold() bool {
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, sharesDst math.LegacyDec, id uint64,
+	valAc, delAc address.Codec,
 ) Redelegation {
+	valSrcAddr, err := valAc.BytesToString(validatorSrcAddr)
+	if err != nil {
+		panic(err)
+	}
+	valDstAddr, err := valAc.BytesToString(validatorDstAddr)
+	if err != nil {
+		panic(err)
+	}
+	delAddr, err := delAc.BytesToString(delegatorAddr)
+	if err != nil {
+		panic(err)
+	}
+
 	return Redelegation{
-		DelegatorAddress:    delegatorAddr.String(),
-		ValidatorSrcAddress: validatorSrcAddr.String(),
-		ValidatorDstAddress: validatorDstAddr.String(),
+		DelegatorAddress:    delAddr,
+		ValidatorSrcAddress: valSrcAddr,
+		ValidatorDstAddress: valDstAddr,
 		Entries: []RedelegationEntry{
 			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, id),
 		},
@@ -303,13 +327,13 @@ func (d DelegationResponses) String() (out string) {
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
 func NewRedelegationResponse(
-	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
+	delegatorAddr, validatorSrc, validatorDst string, entries []RedelegationEntryResponse,
 ) RedelegationResponse {
 	return RedelegationResponse{
 		Redelegation: Redelegation{
-			DelegatorAddress:    delegatorAddr.String(),
-			ValidatorSrcAddress: validatorSrc.String(),
-			ValidatorDstAddress: validatorDst.String(),
+			DelegatorAddress:    delegatorAddr,
+			ValidatorSrcAddress: validatorSrc,
+			ValidatorDstAddress: validatorDst,
 		},
 		Entries: entries,
 	}

@@ -3,7 +3,6 @@ package types
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,10 +19,4 @@ func NewValidatorSigningInfo(
 		Tombstoned:          tombstoned,
 		MissedBlocksCounter: missedBlocksCounter,
 	}
-}
-
-// UnmarshalValSigningInfo unmarshals a validator signing info from a store value
-func UnmarshalValSigningInfo(cdc codec.Codec, value []byte) (signingInfo ValidatorSigningInfo, err error) {
-	err = cdc.Unmarshal(value, &signingInfo)
-	return signingInfo, err
 }

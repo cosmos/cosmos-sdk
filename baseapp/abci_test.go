@@ -364,6 +364,63 @@ func TestABCI_ExtendVote(t *testing.T) {
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
 
+// TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
+// without having called ExtendVote before.
+func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		// do some kind of verification here
+		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 200,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Verify Vote Extensions
+	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	require.ErrorContains(t, err, "vote extensions are not enabled")
+
+	// First vote on the first enabled height
+	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+
+	// Reject because it's just some random bytes
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+
+	// Reject because the verification failed (no error)
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return nil, errors.New("some error")
+	})
+	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+}
+
 func TestABCI_GRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
@@ -1571,6 +1628,47 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
+}
+
+func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
+	pool := mempool.NewSenderNonceMempool()
+	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	// set max block gas limit to 99, this will allow 9 txs of 10 gas each.
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{MaxGas: 99},
+		},
+	})
+
+	require.NoError(t, err)
+	// insert 100 txs, each with a gas limit of 10
+	_, _, addr := testdata.KeyTestPubAddr()
+	for i := int64(0); i < 100; i++ {
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msgs := []sdk.Msg{msg}
+
+		builder := suite.txConfig.NewTxBuilder()
+		err = builder.SetMsgs(msgs...)
+		require.NoError(t, err)
+		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
+		builder.SetGasLimit(10)
+		setTxSignature(t, builder, uint64(i))
+
+		err := pool.Insert(sdk.Context{}, builder.GetTx())
+		require.NoError(t, err)
+	}
+
+	// ensure we only select transactions that fit within the block gas limit
+	res, err := suite.baseApp.PrepareProposal(&abci.RequestPrepareProposal{
+		MaxTxBytes: 1_000_000, // large enough to ignore restriction
+		Height:     1,
+	})
+	require.NoError(t, err)
+
+	// Should include 9 transactions
+	require.Len(t, res.Txs, 9, "invalid number of transactions returned")
 }
 
 func TestABCI_PrepareProposal_MaxGas(t *testing.T) {

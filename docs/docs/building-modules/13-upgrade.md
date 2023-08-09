@@ -8,9 +8,7 @@ sidebar_position: 1
 [In-Place Store Migrations](../core/15-upgrade.md) allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [In-Place Store Migration](../core/15-upgrade.md)
 

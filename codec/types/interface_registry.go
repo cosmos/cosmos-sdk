@@ -12,6 +12,8 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
+var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
+
 // AnyUnpacker is an interface which allows safely unpacking types packed
 // in Any's against a whitelist of registered types
 type AnyUnpacker interface {
@@ -305,11 +307,13 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
 
-	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto unmarshal %T", msg)
+	// Firstly check if the type implements proto.Message to avoid
+	// unnecessary invocations to reflect.New
+	if !typ.Implements(protoMessageType) {
+		return fmt.Errorf("can't proto unmarshal %T", typ)
 	}
 
+	msg := reflect.New(typ.Elem()).Interface().(proto.Message)
 	err := proto.Unmarshal(any.Value, msg)
 	if err != nil {
 		return err

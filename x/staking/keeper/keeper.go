@@ -42,6 +42,7 @@ type Keeper struct {
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	UnbondingType               collections.Map[uint64, uint64]
 	Redelegations               collections.Map[collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], types.Redelegation]
+	UnbondingIndex              collections.Map[uint64, []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -109,6 +110,8 @@ func NewKeeper(
 			),
 			codec.CollValue[types.Redelegation](cdc),
 		),
+		UnbondingType:  collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

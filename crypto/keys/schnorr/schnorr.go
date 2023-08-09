@@ -1,14 +1,13 @@
 package schnorr
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"fmt"
-	"go.dedis.ch/kyber/v3"
-
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"go.dedis.ch/kyber/v3/group/edwards25519"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/key"
 
 	errorsmod "cosmossdk.io/errors"
@@ -18,7 +17,6 @@ import (
 )
 
 // TODO -> Check error handling
-// TODO -> Verify: These values are the same as ed25519 to maintain compatibility
 const (
 	PubKeyName  = "tendermint/PubKeySchnorr"
 	PrivKeyName = "tendermint/PrivKeySchnorr"
@@ -30,13 +28,25 @@ const (
 	SignatureSize = 64
 
 	keyType = "schnorr"
+	curve   = "Ed25519"
 )
+
+type Suite interface {
+	kyber.Group
+	kyber.Encoding
+	kyber.XOFFactory
+}
+
+type basicSig struct {
+	C kyber.Scalar // challenge
+	R kyber.Scalar // response
+}
 
 // GenPrivKey generates a new Schnorr private key.
 func GenPrivKey() *PrivKey {
-	suite := edwards25519.NewBlakeSHA256Ed25519()
-	keyPair := key.NewKeyPair(suite)
-	binary, err := keyPair.Private.MarshalBinary()
+	suite := suites.MustFind(curve)
+	keyPair := suite.Scalar().Pick(suite.RandomStream())
+	binary, err := keyPair.MarshalBinary()
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating priv key: %e", err)
 	}
@@ -44,7 +54,7 @@ func GenPrivKey() *PrivKey {
 }
 
 func (privKey *PrivKey) GetKeyPair() *key.Pair {
-	suite := edwards25519.NewBlakeSHA256Ed25519()
+	suite := suites.MustFind(curve)
 	keyPair := key.NewKeyPair(suite)
 	_ = keyPair.Private.UnmarshalBinary(privKey.Key)
 
@@ -62,26 +72,55 @@ func (privKey *PrivKey) String() string {
 
 // Sign produces a signature on the provided message.
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
-	suite := edwards25519.NewBlakeSHA256Ed25519()
+	suite := suites.MustFind(curve)
+
 	keyPair := privKey.GetKeyPair()
-	signedMsg, err := schnorr.Sign(suite, keyPair.Private, msg)
+
+	// Create random secret v and public point commitment T
+	v := suite.Scalar().Pick(suite.RandomStream())
+	publicPoint := suite.Point().Mul(v, nil)
+
+	// Create challenge c based on message and T
+	c, err := hashSchnorr(suite, msg, publicPoint)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Signing message failed: %e", err)
+		return nil, fmt.Errorf("generating schnorr hash: %s", err.Error())
 	}
-	return signedMsg, err
+
+	// Compute response r = v - x*c
+	r := suite.Scalar()
+	r.Mul(keyPair.Private, c).Sub(v, r)
+
+	// Return verifiable signature {c, r}
+	// Verifier will be able to compute v = r + x*c
+	// And check that hashElgamal for T and the message == c
+	buf := bytes.Buffer{}
+	sig := basicSig{c, r}
+	err = suite.Write(&buf, &sig)
+	if err != nil {
+		return nil, fmt.Errorf("signing message failed %s", err.Error())
+	}
+
+	return buf.Bytes(), err
+}
+
+// Returns a secret that depends on a message msg and a point P
+func hashSchnorr(suite Suite, msg []byte, p kyber.Point) (kyber.Scalar, error) {
+	pb, _ := p.MarshalBinary()
+	c := suite.XOF(pb)
+	_, err := c.Write(msg)
+	return suite.Scalar().Pick(c), err
 }
 
 // PubKey gets the corresponding public key from the private key.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	suite := edwards25519.NewBlakeSHA256Ed25519()
+	suite := suites.MustFind(curve)
 	keyPair := privKey.GetKeyPair()
 
-	var g kyber.Group = suite
 	// Gets public key by y = g ^ x definition where x is the private key scalar
-	publicKey := g.Point().Mul(keyPair.Private, nil)
+	publicKey := suite.Point().Mul(keyPair.Private, nil)
 	binary, err := publicKey.MarshalBinary()
 	if err != nil {
-		fmt.Printf("[ERRPR] While generating pub key: %e", err)
+		fmt.Printf("while generating pub key: %s", err.Error())
 	}
 
 	return &PubKey{Key: binary}
@@ -154,7 +193,7 @@ func (pubKey *PubKey) Bytes() []byte {
 }
 
 func (pubKey *PubKey) GetKeyPair() *key.Pair {
-	suite := edwards25519.NewBlakeSHA256Ed25519()
+	suite := suites.MustFind(curve)
 	keyPair := key.NewKeyPair(suite)
 	_ = keyPair.Public.UnmarshalBinary(pubKey.Key)
 
@@ -166,14 +205,31 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 		return false
 	}
 
-	suite := edwards25519.NewBlakeSHA256Ed25519()
-	keyPair := pubKey.GetKeyPair()
+	suite := suites.MustFind(curve)
 
-	err := schnorr.Verify(suite, keyPair.Public, msg, sig)
-	if err != nil {
-		fmt.Println("[ERROR] while verifying signature -", err)
+	buf := bytes.NewBuffer(sig)
+	newBasicSig := basicSig{}
+	if err := suite.Read(buf, &newBasicSig); err != nil {
+		return false
 	}
-	return err == nil
+	r, c := newBasicSig.R, newBasicSig.C
+
+	// base**(r + x*c) == T
+	var P, T kyber.Point
+	P, T = suite.Point(), suite.Point()
+	T.Add(T.Mul(r, nil), P.Mul(c, pubKey.GetKeyPair().Public))
+
+	// Verify that the hash based on the message and T
+	// matches the challange c from the signature
+	c, err := hashSchnorr(suite, msg, T)
+	if err != nil {
+		return false
+	}
+
+	if !c.Equal(newBasicSig.C) {
+		return false
+	}
+	return true
 }
 
 // String returns Hex representation of a pub key with their type

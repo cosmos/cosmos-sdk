@@ -25,8 +25,13 @@ func TestSignAndValidateSchnorr(t *testing.T) {
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
 	// Mutate the signature
-	sig[1] ^= byte(0x01)
+	modifiedSig := sig
+	modifiedSig[1] ^= byte(0x01)
 	assert.False(t, pubKey.VerifySignature(msg, sig))
+
+	// Sign the message with a different pub key
+	newSig, err := schnorr.GenPrivKey().Sign(msg)
+	assert.False(t, pubKey.VerifySignature(msg, newSig))
 }
 
 func TestAddressSchnorr(t *testing.T) {

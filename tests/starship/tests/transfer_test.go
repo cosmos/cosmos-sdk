@@ -61,7 +61,8 @@ func (s *TestSuite) TestChainTokenTransfer() {
 		txClient := tx.NewServiceClient(s.grpcConn)
 		res, err := txClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: txBytes})
+			TxBytes: txBytes,
+		})
 		s.Require().NoError(err)
 		s.Require().Equal(uint32(0), res.TxResponse.Code)
 	})

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
@@ -11,8 +12,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -55,7 +54,7 @@ func (s *TestSuite) SetupTest() {
 
 	grpcConn, err := grpc.Dial(
 		fmt.Sprintf("0.0.0.0:%d", config.GetChain(chainID).Ports.Grpc),
-		grpc.WithInsecure(),
+		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cdc.InterfaceRegistry).GRPCCodec())))
 	s.Require().NoError(err)
 	s.grpcConn = grpcConn

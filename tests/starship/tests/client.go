@@ -32,15 +32,15 @@ func CreditFromFaucet(config *Config, address string) error {
 		return err
 	}
 
-	_, err = http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
+	_, err = http.Post(url, "application/json", bytes.NewBuffer(jsonBody)) //nolint // test url is dependent on the config file
 	if err != nil {
 		return err
 	}
 
 	// Check the response status code
-	// Note: ignore reponse error due to cosmjs error
+	// Note: ignore response error due to cosmjs error
 	// todo: add check for error
-	//if res.StatusCode != http.StatusOK {
+	// if res.StatusCode != http.StatusOK {
 	//	return fmt.Errorf("request failed with status code: %d", res.StatusCode)
 	//}
 

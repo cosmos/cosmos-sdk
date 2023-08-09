@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -318,7 +319,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			panic(err)
 		}
 
-		delegation, err := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+		delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDstAddr)))
 		if err != nil {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue

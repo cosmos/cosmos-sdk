@@ -255,7 +255,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "no delegation for (address, validator) tuple",
+			expErrMsg: "not found",
 		},
 		{
 			name: "validator with no delegations",

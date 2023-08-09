@@ -70,7 +70,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"DelegationKey",
 			v1.GetDelegationKey(addr4, valAddr1),
-			types.GetDelegationKey(addr4, valAddr1),
+			v2.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",

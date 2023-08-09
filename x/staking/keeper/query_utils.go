@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,31 +15,31 @@ func (k Keeper) GetDelegatorValidators(
 	ctx context.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) (types.Validators, error) {
 	validators := make([]types.Validator, maxRetrieve)
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
 
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
-		return types.Validators{}, err
-	}
-	defer iterator.Close()
+	var i uint32
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegatorAddr)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		if i >= maxRetrieve {
+			return true, nil
+		}
 
-	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-
-		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 		if err != nil {
-			return types.Validators{}, err
+			return false, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			return types.Validators{}, err
+			return false, err
 		}
 
 		validators[i] = validator
 		i++
+
+		return false, nil
+	})
+	if err != nil {
+		return types.Validators{}, err
 	}
 
 	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
@@ -48,7 +49,7 @@ func (k Keeper) GetDelegatorValidators(
 func (k Keeper) GetDelegatorValidator(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-	delegation, err := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	delegation, err := k.Delegations.Get(ctx, collections.Join(delegatorAddr, validatorAddr))
 	if err != nil {
 		return validator, err
 	}
@@ -65,22 +66,16 @@ func (k Keeper) GetDelegatorValidator(
 func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	var i int64
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		delegations = append(delegations, del)
+		i++
 
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
-	}
-	defer iterator.Close()
-
-	for i := 0; iterator.Valid(); iterator.Next() {
-		delegation, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-		delegations = append(delegations, delegation)
-		i++
 	}
 
 	return delegations, nil

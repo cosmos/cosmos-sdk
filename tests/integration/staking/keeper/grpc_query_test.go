@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -223,7 +224,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 				}
 			},
 			false,
-			"no delegation for (address, validator) tuple",
+			"not found",
 		},
 		{
 			"empty delegator address",
@@ -289,7 +290,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	addrVal := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 	var req *types.QueryDelegationRequest
 
@@ -358,7 +359,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	addrVal1 := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 	var req *types.QueryDelegatorDelegationsRequest
 
@@ -438,7 +439,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	addrVal2 := valAddrs[4]
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 
 	var req *types.QueryValidatorDelegationsRequest

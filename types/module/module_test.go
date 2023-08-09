@@ -527,7 +527,7 @@ func TestManager_BeginBlock_WithConsensusParamsGetter(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockUpgradeModule := mock.NewMockCoreAppModule(mockCtrl)
+	mockUpgradeModule := mock.NewMockUpgradeModule(mockCtrl)
 	mockParamsGetter := NewMockConsensusParamGetter(mockCtrl)
 
 	// Create a Manager with the mock consensusParamsGetter and an upgrade module

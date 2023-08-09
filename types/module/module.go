@@ -68,6 +68,11 @@ type HasName interface {
 	Name() string
 }
 
+// UpgradeModule is the extension interface that upgrade module
+type UpgradeModule interface {
+	IsUpgradeModule()
+}
+
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
 type HasGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
@@ -708,19 +713,30 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			err := module.BeginBlock(ctx)
-			if err != nil {
-				return sdk.BeginBlock{}, err
-			}
-			if m.consensusParamsGetter != nil {
-				cp := ctx.ConsensusParams()
-				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
-				// and consensus parameters should not be overwritten.
-				if cp.Block == nil {
-					cp = m.consensusParamsGetter.GetConsensusParams(ctx)
-					if cp.Block != nil {
-						ctx = ctx.WithConsensusParams(cp)
+			if _, ok := module.(UpgradeModule); ok {
+				if err := module.BeginBlock(ctx); err != nil {
+					return sdk.BeginBlock{}, err
+				}
+				if m.consensusParamsGetter != nil {
+					cp := ctx.ConsensusParams()
+					// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+					// and consensus parameters should not be overwritten.
+					if cp.Block == nil {
+						if cp = m.consensusParamsGetter.GetConsensusParams(ctx); cp.Block != nil {
+							ctx = ctx.WithConsensusParams(cp)
+						}
 					}
+				}
+				break
+			}
+		}
+	}
+
+	for _, moduleName := range m.OrderBeginBlockers {
+		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := module.(UpgradeModule); !ok {
+				if err := module.BeginBlock(ctx); err != nil {
+					return sdk.BeginBlock{}, err
 				}
 			}
 		}

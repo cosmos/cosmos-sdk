@@ -44,6 +44,7 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
+	RedelegationsByValDst       collections.Map[collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -120,6 +121,16 @@ func NewKeeper(
 			codec.CollValue[types.Redelegation](cdc),
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
+		RedelegationsByValDst: collections.NewMap(
+			sb, types.RedelegationByValSrcIndexKey,
+			"redelegations_by_val_dst",
+			collections.TripleKeyCodec(
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()

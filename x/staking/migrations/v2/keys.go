@@ -14,9 +14,12 @@ const (
 
 var (
 	ValidatorsByConsAddrKey = []byte{0x22} // prefix for validators by consensus address
-	RedelegationKey         = []byte{0x34} // key for a redelegation
-	DelegationKey           = []byte{0x31} // prefix for the delegation
-	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
+
+	DelegationKey                = []byte{0x31} // prefix for the delegation
+	RedelegationKey              = []byte{0x34} // key for a redelegation
+	RedelegationByValDstIndexKey = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
+
+	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 )
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
@@ -60,4 +63,27 @@ func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []
 // address.
 func GetREDsKey(delAddr sdk.AccAddress) []byte {
 	return append(RedelegationKey, address.MustLengthPrefix(delAddr)...)
+}
+
+// GetREDByValDstIndexKey creates the index-key for a redelegation, stored by destination-validator-index
+// VALUE: none (key rearrangement used)
+func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSToValsDstKey := GetREDsToValDstIndexKey(valDstAddr)
+	offset := len(REDSToValsDstKey)
+
+	// key is of the form REDSToValsDstKey || delAddrLen (1 byte) || delAddr || valSrcAddrLen (1 byte) || valSrcAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valSrcAddr))
+	copy(key[0:offset], REDSToValsDstKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valSrcAddr))
+	copy(key[offset+2+len(delAddr):], valSrcAddr.Bytes())
+
+	return key
+}
+
+// GetREDsToValDstIndexKey returns a key prefix for indexing a redelegation to a
+// destination (target) validator.
+func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
+	return append(RedelegationByValDstIndexKey, address.MustLengthPrefix(valDstAddr)...)
 }

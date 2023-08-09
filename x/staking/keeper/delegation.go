@@ -193,7 +193,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return ubds, err
 	}
 	return ubds, nil

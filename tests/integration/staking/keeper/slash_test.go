@@ -168,7 +168,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.DeepEqual(t, math.NewInt(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
-	del, found = f.stakingKeeper.GetDelegation(f.sdkCtx, addrDels[0], addrVals[1])
+	del, found = f.stakingKeeper.Delegations.Get(f.sdkCtx, collections.Join(addrDels[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Equal(t, int64(5), del.Shares.RoundInt64())
 

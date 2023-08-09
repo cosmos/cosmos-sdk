@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -115,7 +116,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	ctxCheck = app.BaseApp.NewContext(true)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
-	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
+	_, err = stakingKeeper.Delegations.Get(ctxCheck, collections.Join(addr2, sdk.ValAddress(addr1)))
 	require.NoError(t, err)
 
 	// begin unbonding
@@ -126,8 +127,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	// delegation should exist anymore
 	ctxCheck = app.BaseApp.NewContext(true)
-	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
-	require.ErrorIs(t, err, types.ErrNoDelegation)
+	_, err = stakingKeeper.Delegations.Get(ctxCheck, collections.Join(addr2, sdk.ValAddress(addr1)))
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	// balance should be the same because bonding not yet complete
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))

@@ -518,25 +518,20 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []types.Redelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
+	rng := collections.NewPrefixedTripleRange[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valAddr)
+	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetREDKeyFromValSrcIndexKey(iterator.Key())
-		value, err := store.Get(key)
+		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
-			return nil, err
-		}
-		red, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return nil, err
+			return true, err
 		}
 		reds = append(reds, red)
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return reds, nil

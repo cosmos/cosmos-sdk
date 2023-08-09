@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -32,7 +31,6 @@ func TestDecodeStore(t *testing.T) {
 
 	val, err := types.NewValidator(valAddr1.String(), delPk1, types.NewDescription("test", "test", "test", "test", "test"))
 	require.NoError(t, err)
-	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, math.OneInt(), 1, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, math.OneInt(), math.LegacyOneDec(), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	oneIntBz, err := math.OneInt().Marshal()
 	require.NoError(t, err)
@@ -42,7 +40,6 @@ func TestDecodeStore(t *testing.T) {
 			{Key: types.LastTotalPowerKey, Value: oneIntBz},
 			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr1)...), sdkaddress.MustLengthPrefix(valAddr1)...), Value: cdc.MustMarshal(&ubd)},
 			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshal(&red)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
@@ -55,7 +52,6 @@ func TestDecodeStore(t *testing.T) {
 		{"LastTotalPower", fmt.Sprintf("%v\n%v", math.OneInt(), math.OneInt())},
 		{"Validator", fmt.Sprintf("%v\n%v", val, val)},
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
-		{"UnbondingDelegation", fmt.Sprintf("%v\n%v", ubd, ubd)},
 		{"Redelegation", fmt.Sprintf("%v\n%v", red, red)},
 		{"other", ""},
 	}

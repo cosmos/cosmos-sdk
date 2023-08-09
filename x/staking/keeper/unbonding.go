@@ -45,8 +45,6 @@ func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType t
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint64) (ubd types.UnbondingDelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
 	ubdKey, err := k.UnbondingIndex.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -59,8 +57,11 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 		return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
 	}
 
-	value, err := store.Get(ubdKey)
-	if err != nil {
+	delAddr := ubdKey[2 : (len(ubdKey)/2)+1]
+	valAddr := ubdKey[2+len(ubdKey)/2:]
+
+	value, err := k.UnbondingDelegations.Get(ctx, collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr)))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return types.UnbondingDelegation{}, err
 	}
 

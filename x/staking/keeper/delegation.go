@@ -694,7 +694,7 @@ func (k Keeper) IterateRedelegations(ctx context.Context, fn func(index int64, r
 			return false, nil
 		},
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return err
 	}
 

@@ -2,7 +2,7 @@ name: Starship E2E Tests
 # E2E tests using Starship, run on a schedule and on every push to main
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "0 */2 * * *" # every 2 hours
 
 permissions:
   contents: read

@@ -120,11 +120,11 @@ func (k Keeper) GetAllRedelegations(
 		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
 			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
+			if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
 				return false, nil
 			}
 
-			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
+			if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
 				return false, nil
 			}
 

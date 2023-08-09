@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 
@@ -28,7 +29,7 @@ type (
 		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
 		Tombstone(context.Context, sdk.ConsAddress) error
 		Slash(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64) error
-		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, stakingtypes.Infraction) error
+		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, st.Infraction) error
 		SlashFractionDoubleSign(context.Context) (math.LegacyDec, error)
 		Jail(context.Context, sdk.ConsAddress) error
 		JailUntil(context.Context, sdk.ConsAddress, time.Time) error

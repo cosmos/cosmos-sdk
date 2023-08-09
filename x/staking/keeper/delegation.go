@@ -634,7 +634,7 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	if err = store.Set(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{}); err != nil {
+	if err = k.RedelegationsByValSrc.Set(ctx, collections.Join3(sdk.ValAddress(valSrcAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDestAddr)), []byte{}); err != nil {
 		return err
 	}
 
@@ -722,7 +722,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if err = store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
+	if err = k.RedelegationsByValSrc.Remove(ctx, collections.Join3(sdk.ValAddress(valSrcAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDestAddr))); err != nil {
 		return err
 	}
 

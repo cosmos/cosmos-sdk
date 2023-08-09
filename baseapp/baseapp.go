@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 
@@ -104,11 +105,6 @@ type BaseApp struct {
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
-	// - voteExtensionState: Used for ExtendVote and VerifyVoteExtension, which is
-	// set based on the previous block's state. This state is never committed. In
-	// case of multiple rounds, the state is always reset to the previous block's
-	// state.
-	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
 	// the previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
@@ -118,7 +114,6 @@ type BaseApp struct {
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state
-	voteExtensionState   *state
 	finalizeBlockState   *state
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -128,6 +123,9 @@ type BaseApp struct {
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
 	paramStore ParamStore
+
+	// queryGasLimit defines the maximum gas for queries; unbounded if 0.
+	queryGasLimit uint64
 
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. This is mainly used for DoS and spam prevention.
@@ -198,6 +196,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		queryGasLimit:    math.MaxUint64,
 	}
 
 	for _, option := range options {
@@ -474,9 +473,6 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 
 	case execModeProcessProposal:
 		app.processProposalState = baseState
-
-	case execModeVoteExtension:
-		app.voteExtensionState = baseState
 
 	case execModeFinalize:
 		app.finalizeBlockState = baseState

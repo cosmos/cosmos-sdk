@@ -59,7 +59,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsByConsAddrKey",
 			v1.GetValidatorByConsAddrKey(consAddr),
-			types.GetValidatorByConsAddrKey(consAddr),
+			v2.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",
@@ -69,7 +69,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"DelegationKey",
 			v1.GetDelegationKey(addr4, valAddr1),
-			types.GetDelegationKey(addr4, valAddr1),
+			v2.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",

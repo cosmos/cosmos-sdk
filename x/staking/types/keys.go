@@ -34,20 +34,20 @@ var (
 	LastValidatorPowerKey = []byte{0x11}              // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = collections.NewPrefix(18) // prefix for the total power
 
-	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
-	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
-	ValidatorsByPowerIndexKey = []byte{0x23} // prefix for each key to a validator index, sorted by power
+	ValidatorsKey             = []byte{0x21}              // prefix for each key to a validator
+	ValidatorsByConsAddrKey   = collections.NewPrefix(34) // prefix for each key to a validator index, by pubkey
+	ValidatorsByPowerIndexKey = []byte{0x23}              // prefix for each key to a validator index, sorted by power
 
-	DelegationKey                    = []byte{0x31} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x32} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x33} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x34} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
+	DelegationKey                    = collections.NewPrefix(49) // key for a delegation
+	UnbondingDelegationKey           = []byte{0x32}              // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x33}              // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x34}              // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x35}              // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x36}              // prefix for each key for an redelegation, by destination validator operator
 
-	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
-	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
-	UnbondingTypeKey  = []byte{0x39} // prefix for an index containing the type of unbonding operations
+	UnbondingIDKey    = collections.NewPrefix(55) // key for the counter for the incrementing id for UnbondingOperations
+	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
+	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -71,30 +71,10 @@ const (
 	UnbondingType_ValidatorUnbonding
 )
 
-// GetUnbondingTypeKey returns a key for an index containing the type of unbonding operations
-func GetUnbondingTypeKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(UnbondingTypeKey, bz...)
-}
-
-// GetUnbondingIndexKey returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
-func GetUnbondingIndexKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(UnbondingIndexKey, bz...)
-}
-
 // GetValidatorKey creates the key for the validator with address
 // VALUE: staking/Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
-}
-
-// GetValidatorByConsAddrKey creates the key for the validator with pubkey
-// VALUE: validator operator address ([]byte)
-func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
-	return append(ValidatorsByConsAddrKey, address.MustLengthPrefix(addr)...)
 }
 
 // AddressFromValidatorsKey creates the validator operator address from ValidatorsKey
@@ -207,17 +187,6 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 	height := sdk.BigEndianToUint64(bz[prefixL+8+int(timeBzL):])
 
 	return ts, int64(height), nil
-}
-
-// GetDelegationKey creates the key for delegator bond with validator
-// VALUE: staking/Delegation
-func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
-}
-
-// GetDelegationsKey creates the prefix for a delegator for all validators
-func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegationKey, address.MustLengthPrefix(delAddr)...)
 }
 
 // GetUBDKey creates the key for an unbonding delegation by delegator and validator addr

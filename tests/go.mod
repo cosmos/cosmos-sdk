@@ -4,11 +4,11 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.7.0
-	cosmossdk.io/collections v0.3.1-0.20230727092431-f0f777fa3cb7
+	cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/log v1.1.1-0.20230704160919-88f2c830b0ca
+	cosmossdk.io/log v1.2.0
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
@@ -29,7 +29,7 @@ require (
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
-	pgregory.net/rapid v1.0.0
+	pgregory.net/rapid v1.1.0
 )
 
 require (
@@ -168,14 +168,14 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/term v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.134.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

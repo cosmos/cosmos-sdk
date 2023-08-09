@@ -12,7 +12,8 @@ chains:
       cpu: "0.2"
       memory: "400M"
     faucet:
-      # use v0.31.0 cosmjs-faucet for compatibility with simapp v0.47.3
+      # use v0.31.0-alpha.2 cosmjs-faucet for compatibility with simapp v0.47+
+      # todo: faucet seems to throw error with sdk version 0.50, still seems to work
       image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0
       concurrency: 2
       resources:

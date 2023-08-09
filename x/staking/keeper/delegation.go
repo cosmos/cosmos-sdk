@@ -684,7 +684,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 // IterateRedelegations iterates through all redelegations.
 func (k Keeper) IterateRedelegations(ctx context.Context, fn func(index int64, red types.Redelegation) (stop bool)) error {
 	var i int64
-	k.Redelegations.Walk(ctx, nil,
+	err := k.Redelegations.Walk(ctx, nil,
 		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (bool, error) {
 			if stop := fn(i, red); stop {
 				return true, nil
@@ -694,6 +694,9 @@ func (k Keeper) IterateRedelegations(ctx context.Context, fn func(index int64, r
 			return false, nil
 		},
 	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -714,8 +717,8 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 	if err != nil {
 		return err
 	}
-	redKey := types.GetREDKey(delegatorAddress, valSrcAddr, valDestAddr)
-	if err = store.Delete(redKey); err != nil {
+
+	if err = k.Redelegations.Remove(ctx, collections.Join3(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr), sdk.ValAddress(valDestAddr))); err != nil {
 		return err
 	}
 

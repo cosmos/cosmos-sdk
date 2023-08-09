@@ -33,7 +33,6 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 	del := types.NewDelegation(delAddr1.String(), valAddr1.String(), math.LegacyOneDec())
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, math.OneInt(), 1, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
-	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, math.OneInt(), math.LegacyOneDec(), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	oneIntBz, err := math.OneInt().Marshal()
 	require.NoError(t, err)
 
@@ -44,7 +43,6 @@ func TestDecodeStore(t *testing.T) {
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
 			{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&del)},
 			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&ubd)},
-			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshal(&red)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -58,7 +56,6 @@ func TestDecodeStore(t *testing.T) {
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
 		{"Delegation", fmt.Sprintf("%v\n%v", del, del)},
 		{"UnbondingDelegation", fmt.Sprintf("%v\n%v", ubd, ubd)},
-		{"Redelegation", fmt.Sprintf("%v\n%v", red, red)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

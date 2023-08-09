@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DelegationI delegation bond for a delegated proof of stake system
@@ -27,7 +26,7 @@ type ValidatorI interface {
 	GetOperator() string                                            // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                        // validation consensus pubkey (cryptotypes.PubKey)
 	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)             // validation consensus pubkey (CometBFT)
-	GetConsAddr() (sdk.ConsAddress, error)                          // validation consensus address
+	GetConsAddr() ([]byte, error)                                   // validation consensus address
 	GetTokens() math.Int                                            // validation tokens
 	GetBondedTokens() math.Int                                      // validator bonded tokens
 	GetConsensusPower(math.Int) int64                               // validation power in CometBFT

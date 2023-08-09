@@ -494,13 +494,13 @@ func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
 }
 
 // GetConsAddr extracts Consensus key address
-func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
+func (v Validator) GetConsAddr() ([]byte, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	return sdk.ConsAddress(pk.Address()), nil
+	return pk.Address().Bytes(), nil
 }
 
 func (v Validator) GetTokens() math.Int       { return v.Tokens }

@@ -77,7 +77,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 	tmEvidence := NewCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
 		validator{address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, power: 100})
 
-	evidence := types.FromABCIEvidence(tmEvidence)
+	evidence := types.FromABCIEvidence(tmEvidence, address.NewBech32Codec("testcnclcons"))
 	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator().Address(), consAddr.Bytes())

@@ -50,6 +50,8 @@ func IsResolvedInGlobalScope(t *testing.T, pond Pond, typeName string) {
 }
 
 func IsResolvedModuleScope(t *testing.T, pond Pond, module, duckType string) {
+	t.Helper()
+
 	moduleFound := false
 	for _, dw := range pond.Ducks {
 		if dw.Module == module {

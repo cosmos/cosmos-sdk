@@ -116,7 +116,7 @@ func (k Keeper) GetAllRedelegations(
 
 	redelegations := []types.Redelegation{}
 	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
-	k.Redelegations.Walk(ctx, rng,
+	err := k.Redelegations.Walk(ctx, rng,
 		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
 			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
@@ -132,6 +132,9 @@ func (k Keeper) GetAllRedelegations(
 			return false, nil
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return redelegations, nil
 }

@@ -219,7 +219,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 	err = k.UnbondingDelegationByValIndex.Walk(
 		ctx,
 		rng,
-		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress]) (stop bool, err error) {
+		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (stop bool, err error) {
 			valAddr := key.K1()
 			delAddr := key.K2()
 			delAddr = delAddr[1:] // remove prefix bytes
@@ -380,14 +380,14 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz := types.MustMarshalUBD(k.cdc, ubd)
-
-	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
-	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+
+	store := k.storeService.OpenKVStore(ctx)
+	bz := types.MustMarshalUBD(k.cdc, ubd)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -397,18 +397,18 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 		return err
 	}
 
-	return k.UnbondingDelegationByValIndex.Set(ctx, collections.Join(valAddr, delAddr))
+	return store.Set(types.GetUBDByValIndexKey(delAddr, valAddr), []byte{}) // index, store empty bytes
 }
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	store := k.storeService.OpenKVStore(ctx)
-
-	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+
+	store := k.storeService.OpenKVStore(ctx)
+	addr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 		return err
 	}
 
-	return k.UnbondingDelegationByValIndex.Remove(ctx, collections.Join(addr, delegatorAddress))
+	return store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at

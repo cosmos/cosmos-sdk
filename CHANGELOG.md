@@ -152,7 +152,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Make `StartCmd` more customizable.
 * (types) [#16257](https://github.com/cosmos/cosmos-sdk/pull/16257) Allow setting the base denom in the denom registry.
 * (genutil) [#16046](https://github.com/cosmos/cosmos-sdk/pull/16046) Add "module-name" flag to genutil `add-genesis-account` to enable intializing module accounts at genesis.
-* (baseapp) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Wait shutdown-grace-seconds for databases to flush async writes to disk
+* (baseapp) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add duration `shutdown-grace` for resource clean up (closing database handles) before exit
 
 ### Improvements
 

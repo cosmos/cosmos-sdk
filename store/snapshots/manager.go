@@ -13,7 +13,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -112,10 +112,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return errorsmod.Wrap(storetypes.ErrLogic, "can't begin a none operation")
+		return errorsmod.Wrap(store.ErrLogic, "can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return errorsmod.Wrapf(storetypes.ErrConflict, "a %v operation is in progress", m.operation)
+		return errorsmod.Wrapf(store.ErrConflict, "a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -161,7 +161,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errorsmod.Wrap(storetypes.ErrLogic, "no snapshot store configured")
+		return nil, errorsmod.Wrap(store.ErrLogic, "no snapshot store configured")
 	}
 
 	defer m.multistore.PruneSnapshotHeight(int64(height))
@@ -177,7 +177,7 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, errorsmod.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, errorsmod.Wrapf(storetypes.ErrConflict,
+		return nil, errorsmod.Wrapf(store.ErrConflict,
 			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
@@ -279,7 +279,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return errorsmod.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
-		return errorsmod.Wrap(storetypes.ErrLogic, "cannot restore snapshot at height 0")
+		return errorsmod.Wrap(store.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if snapshot.Height > uint64(math.MaxInt64) {
 		return errorsmod.Wrapf(types.ErrInvalidMetadata,
@@ -375,11 +375,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		}
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
-			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown snapshot item %T", nextItem.Item)
+			return errorsmod.Wrapf(store.ErrLogic, "unknown snapshot item %T", nextItem.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
-			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+			return errorsmod.Wrapf(store.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
 		}
 		if !IsFormatSupported(extension, metadata.Format) {
 			return errorsmod.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
@@ -402,11 +402,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "no restore operation in progress")
+		return false, errorsmod.Wrap(store.ErrLogic, "no restore operation in progress")
 	}
 
 	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "received unexpected chunk")
+		return false, errorsmod.Wrap(store.ErrLogic, "received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -416,7 +416,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "restore ended unexpectedly")
+		return false, errorsmod.Wrap(store.ErrLogic, "restore ended unexpectedly")
 	default:
 	}
 
@@ -452,7 +452,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, errorsmod.Wrap(storetypes.ErrLogic, "restore ended prematurely")
+			return false, errorsmod.Wrap(store.ErrLogic, "restore ended prematurely")
 		}
 
 		return true, nil

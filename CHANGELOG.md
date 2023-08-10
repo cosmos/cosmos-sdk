@@ -66,6 +66,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [#17291](https://github.com/cosmos/cosmos-sdk/pull/17291) Use collections for `UnbondingDelegationByValIndex`:
     * remove from `types`: `GetUBDKeyFromValIndexKey`, `GetUBDsByValIndexKey`
+* (x/slashing) [17044](https://github.com/cosmos/cosmos-sdk/pull/17044) Use collections for `AddrPubkeyRelation`:
+    * remove from `types`: `AddrPubkeyRelationKey`
+    * remove from `Keeper`: `AddPubkey`
 * (x/staking) [#17260](https://github.com/cosmos/cosmos-sdk/pull/17260) Use collections for `DelegationKey`:
     * remove from `types`: `GetDelegationKey`, `GetDelegationsKey`
 * (x/staking) [#17288](https://github.com/cosmos/cosmos-sdk/pull/17288) Use collections for `UnbondingIndex`:

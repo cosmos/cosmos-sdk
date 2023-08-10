@@ -1,12 +1,8 @@
 name: Starship E2E Tests
-# E2E tests using Starship, run on a schedule and on every push to main
+# E2E tests using Starship, run on a schedule
 on:
   schedule:
     - cron: "0 */6 * * *" # every 6 hours
-  # debug ci in the PR
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read

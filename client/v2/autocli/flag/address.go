@@ -52,15 +52,15 @@ func (a addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue it only supports bech32 addresses.
 func (a *addressValue) Set(s string) error {
-	_, err := a.keyring.LookupAddressByKeyName(s)
+	addr, err := a.keyring.LookupAddressByKeyName(s)
 	if err == nil {
-		a.value = s
+		a.value = addr
 		return nil
 	}
 
 	_, err = a.addressCodec.StringToBytes(s)
 	if err != nil {
-		return fmt.Errorf("invalid bech32 account address: %w", err)
+		return fmt.Errorf("invalid bech32 account address or key name: %w", err)
 	}
 
 	a.value = s
@@ -95,9 +95,9 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	_, err := a.keyring.LookupAddressByKeyName(s)
+	addr, err := a.keyring.LookupAddressByKeyName(s)
 	if err == nil {
-		a.value = s
+		a.value = addr
 		return nil
 	}
 

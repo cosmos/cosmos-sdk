@@ -62,6 +62,10 @@ func NewRootCmd() *cobra.Command {
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
+	// Preload the default client config.
+	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	autoCliOpts.Keyring = initClientCtx.Keyring
+
 	rootCmd := &cobra.Command{
 		Use:           "simd",
 		Short:         "simulation app",

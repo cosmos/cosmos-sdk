@@ -24,7 +24,7 @@ clean: stop clean-kind
 
 .PHONY: test
 test:
-	cd tests/ && CGO_ENABLED=1 go test -count=1 -mod=readonly -v -race ./...
+	cd tests/ && CGO_ENABLED=1 go test -count=1 -v -race ./...
 
 ###############################################################################
 ###                          Dependency check                               ###

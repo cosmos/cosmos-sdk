@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -12,7 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -58,17 +57,17 @@ func (s *TestSuite) TestChainTokenTransfer() {
 		s.Require().NoError(err)
 
 		// broadcast tx
-		txClient := tx.NewServiceClient(s.grpcConn)
-		res, err := txClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{
-			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+		txClient := txtypes.NewServiceClient(s.grpcConn)
+		res, err := txClient.BroadcastTx(context.Background(), &txtypes.BroadcastTxRequest{
+			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
 		})
 		s.Require().NoError(err)
 		s.Require().Equal(uint32(0), res.TxResponse.Code)
+		s.WaitForTx(res.TxResponse.TxHash)
 	})
 
 	s.T().Run("query balance for addr2", func(t *testing.T) {
-		time.Sleep(1500 * time.Millisecond) // wait for tx to be processed
 		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
 			Address: addr2.String(),
 			Denom:   denom,

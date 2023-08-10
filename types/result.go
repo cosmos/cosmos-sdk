@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -193,30 +191,6 @@ func (r TxResponse) GetTx() HasMsgs {
 		return tx
 	}
 	return nil
-}
-
-// WrapServiceResult wraps a result from a protobuf RPC service method call (res proto.Message, err error)
-// in a Result object or error. This method takes care of marshaling the res param to
-// protobuf and attaching any events on the ctx.EventManager() to the Result.
-func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
-	if err != nil {
-		return nil, err
-	}
-
-	anyResp, err := codectypes.NewAnyWithValue(res)
-	if err != nil {
-		return nil, err
-	}
-
-	var events []abci.Event
-	if evtMgr := ctx.EventManager(); evtMgr != nil {
-		events = evtMgr.ABCIEvents()
-	}
-
-	return &Result{
-		Events:       events,
-		MsgResponses: []*codectypes.Any{anyResp},
-	}, nil
 }
 
 // calculate total pages in an overflow safe manner

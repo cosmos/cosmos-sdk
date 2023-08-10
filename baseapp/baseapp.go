@@ -930,7 +930,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 // Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
-	var msgResponses []*codectypes.Any
+	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -948,6 +948,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
+		msgResponses = append(msgResponses, msgResult.MsgResponses...)
 
 		// create message events
 		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
@@ -962,20 +963,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		events = events.AppendEvents(msgEvents)
-
-		// Each individual sdk.Result that went through the MsgServiceRouter
-		// (which should represent 99% of the Msgs now, since everyone should
-		// be using protobuf Msgs) has exactly one Msg response, set inside
-		// `WrapServiceResult`. We take that Msg response, and aggregate it
-		// into an array.
-		if len(msgResult.MsgResponses) > 0 {
-			msgResponse := msgResult.MsgResponses[0]
-			if msgResponse == nil {
-				return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
-			}
-			msgResponses = append(msgResponses, msgResponse)
-		}
-
 	}
 
 	data, err := makeABCIData(msgResponses)

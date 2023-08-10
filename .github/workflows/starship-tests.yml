@@ -10,9 +10,9 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.ref }}-starship-tests
-  cancel-in-progress: true
+#concurrency:
+#  group: ci-${{ github.ref }}-starship-tests
+#  cancel-in-progress: true
 
 jobs:
   e2e-test:

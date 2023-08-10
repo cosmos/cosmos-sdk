@@ -544,8 +544,7 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
-	rng := collections.NewPrefixedTripleRange[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valDstAddr)
-
+	rng := collections.NewSuperPrefixedTripleRange[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valDstAddr, delAddr)
 	hasAtleastOneEntry := false
 	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
 		hasAtleastOneEntry = true

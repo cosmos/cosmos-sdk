@@ -122,7 +122,7 @@ func NewKeeper(
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 		RedelegationsByValDst: collections.NewMap(
-			sb, types.RedelegationByValSrcIndexKey,
+			sb, types.RedelegationByValDstIndexKey,
 			"redelegations_by_val_dst",
 			collections.TripleKeyCodec(
 				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility

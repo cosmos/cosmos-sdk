@@ -34,7 +34,6 @@ func NewRootCmd() *cobra.Command {
 		interfaceRegistry  codectypes.InterfaceRegistry
 		appCodec           codec.Codec
 		txConfig           client.TxConfig
-		legacyAmino        *codec.LegacyAmino
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
 		initClientCtx      client.Context
@@ -54,7 +53,6 @@ func NewRootCmd() *cobra.Command {
 		&interfaceRegistry,
 		&appCodec,
 		&txConfig,
-		&legacyAmino,
 		&autoCliOpts,
 		&moduleBasicManager,
 		&initClientCtx,

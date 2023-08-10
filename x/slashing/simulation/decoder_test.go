@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -30,14 +29,11 @@ func TestDecodeStore(t *testing.T) {
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	missed := []byte{1} // we want to display the bytes for simulation diffs
-	bz, err := cdc.MarshalInterface(delPk1)
-	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshal(&info)},
 			{Key: types.ValidatorMissedBlockBitmapKey(consAddr1, 6), Value: missed},
-			{Key: append(types.AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(delAddr1)...), Value: bz},
 			{Key: []byte{0x99}, Value: []byte{0x99}}, // This test should panic
 		},
 	}
@@ -49,7 +45,6 @@ func TestDecodeStore(t *testing.T) {
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info), false},
 		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v\n", missed, missed), false},
-		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", delPk1, delPk1), false},
 		{"other", "", true},
 	}
 	for i, tt := range tests {

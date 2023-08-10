@@ -3,9 +3,9 @@ name: Starship E2E Tests
 on:
   schedule:
     - cron: "0 */6 * * *" # every 6 hours
-  push:
+  pull_request:
     branches:
-      - anmol/debug-starship-ci
+      - main
 
 permissions:
   contents: read

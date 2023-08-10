@@ -43,7 +43,7 @@ func (s *intTestSuite) TestFromUint64() {
 	}
 }
 
-func (s intTestSuite) TestNewIntFromBigInt() {
+func (s *intTestSuite) TestNewIntFromBigInt() {
 	i := math.NewIntFromBigInt(nil)
 	s.Require().True(i.IsNil())
 

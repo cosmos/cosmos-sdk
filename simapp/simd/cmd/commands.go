@@ -165,6 +165,7 @@ func queryCommand() *cobra.Command {
 		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
 		server.QueryBlockResultsCmd(),
+		authcmd.QueryEventForTxCmd(),
 	)
 
 	return cmd

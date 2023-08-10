@@ -11,7 +11,7 @@ import (
 	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmt "github.com/cometbft/cometbft/types"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	//nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -203,8 +203,6 @@ func TestWrapServiceResult(t *testing.T) {
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Len(t, res.Events, 1)
-	var spot2 testdata.Dog
-	err = proto.Unmarshal(res.Data, &spot2)
-	require.NoError(t, err)
-	require.Equal(t, spot, spot2)
+	require.Nil(t, res.Data)
+	require.Empty(t, res.Log)
 }

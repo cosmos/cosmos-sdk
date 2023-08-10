@@ -203,17 +203,9 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		return nil, err
 	}
 
-	any, err := codectypes.NewAnyWithValue(res)
+	anyResp, err := codectypes.NewAnyWithValue(res)
 	if err != nil {
 		return nil, err
-	}
-
-	var data []byte
-	if res != nil {
-		data, err = proto.Marshal(res)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	var events []abci.Event
@@ -222,9 +214,8 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 	}
 
 	return &Result{
-		Data:         data,
 		Events:       events,
-		MsgResponses: []*codectypes.Any{any},
+		MsgResponses: []*codectypes.Any{anyResp},
 	}, nil
 }
 

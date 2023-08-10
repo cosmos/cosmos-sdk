@@ -68,7 +68,9 @@ type HasName interface {
 	Name() string
 }
 
-// UpgradeModule is the extension interface that upgrade module
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
 type UpgradeModule interface {
 	IsUpgradeModule()
 }

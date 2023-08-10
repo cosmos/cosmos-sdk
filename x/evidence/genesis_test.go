@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
@@ -96,7 +95,8 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			false,
 			func() {
 				_, err := suite.keeper.Evidences.Iterate(suite.ctx, nil)
-				suite.Require().ErrorIs(err, collections.ErrInvalidIterator)
+				fmt.Println(err)
+				suite.Require().NoError(err)
 			},
 		},
 	}

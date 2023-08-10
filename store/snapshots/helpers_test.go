@@ -17,9 +17,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2/snapshots"
+	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 func checksums(slice [][]byte) [][]byte {
@@ -302,7 +301,7 @@ func (s *extSnapshotter) SupportedFormats() []uint32 {
 
 func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshottypes.ExtensionPayloadWriter) error {
 	for _, i := range s.state {
-		if err := payloadWriter(types.Uint64ToBigEndian(i)); err != nil {
+		if err := payloadWriter(snapshottypes.Uint64ToBigEndian(i)); err != nil {
 			return err
 		}
 	}
@@ -317,7 +316,7 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 		} else if err != nil {
 			return err
 		}
-		s.state = append(s.state, types.BigEndianToUint64(payload))
+		s.state = append(s.state, snapshottypes.BigEndianToUint64(payload))
 	}
 	// finalize restoration
 	return nil

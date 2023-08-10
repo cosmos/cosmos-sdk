@@ -99,7 +99,7 @@ type BaseApp struct {
 	snapshotManager *snapshots.Manager
 
 	// manages migrate module
-	MigrationModuleManager MigrationModuleManager
+	migrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -274,6 +274,11 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
+func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
+	app.migrationModuleManager = migrationModuleManager
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -681,7 +686,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 
 	if app.beginBlocker != nil {
 		ctx := app.finalizeBlockState.ctx
-		if app.MigrationModuleManager.RunMigrationBeginBlock(ctx) {
+		if app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
 			cp := ctx.ConsensusParams()
 			if cp.Block == nil {
 				if cp = app.GetConsensusParams(ctx); cp.Block != nil {

@@ -68,7 +68,7 @@ func (s *TestSuite) TestChainTokenTransfer() {
 	})
 
 	s.T().Run("query balance for addr2", func(t *testing.T) {
-		time.Sleep(1200 * time.Millisecond) // wait for tx to be processed
+		time.Sleep(1500 * time.Millisecond) // wait for tx to be processed
 		balance, err := banktypes.NewQueryClient(s.grpcConn).Balance(context.Background(), &banktypes.QueryBalanceRequest{
 			Address: addr2.String(),
 			Denom:   denom,

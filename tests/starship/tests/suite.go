@@ -14,10 +14,10 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var (
@@ -89,7 +89,7 @@ func (s *TestSuite) WaitForTx(txHex string) {
 		},
 		5*time.Second,
 		time.Second,
-		"waited for too long, still txn not successfull",
+		"waited for too long, still txn not successful",
 	)
 	s.Require().NotNil(resTx.TxResponse)
 }

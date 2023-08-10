@@ -29,6 +29,7 @@ type Keeper struct {
 	Schema               collections.Schema
 	Params               collections.Item[types.Params]
 	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
+	AddrPubkeyRelation   collections.Map[[]byte, cryptotypes.PubKey]
 }
 
 // NewKeeper creates a slashing keeper
@@ -47,6 +48,13 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			"validator_signing_info",
 			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorSigningInfo](cdc),
+		),
+		AddrPubkeyRelation: collections.NewMap(
+			sb,
+			types.AddrPubkeyRelationKeyPrefix,
+			"addr_pubkey_relation",
+			sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			codec.CollInterfaceValue[cryptotypes.PubKey](cdc),
 		),
 	}
 
@@ -69,29 +77,9 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
-	bz, err := k.cdc.MarshalInterface(pubkey)
-	if err != nil {
-		return err
-	}
-	store := k.storeService.OpenKVStore(ctx)
-	key := types.AddrPubkeyRelationKey(pubkey.Address())
-	return store.Set(key, bz)
-}
-
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.AddrPubkeyRelationKey(a))
-	if err != nil {
-		return nil, err
-	}
-	if bz == nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
-	}
-	var pk cryptotypes.PubKey
-	return pk, k.cdc.UnmarshalInterface(bz, &pk)
+	return k.AddrPubkeyRelation.Get(ctx, a)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -144,9 +132,4 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		),
 	)
 	return nil
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.AddrPubkeyRelationKey(addr))
 }

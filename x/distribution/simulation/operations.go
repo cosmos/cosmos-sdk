@@ -138,7 +138,11 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 
 		delegation := delegations[r.Intn(len(delegations))]
 
-		validator, err := sk.Validator(ctx, delegation.GetValidatorAddr())
+		delAddr, err := sk.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error converting validator address"), nil, err
+		}
+		validator, err := sk.Validator(ctx, delAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting validator"), nil, err
 		}
@@ -149,7 +153,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -203,7 +207,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -252,7 +256,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			}
 		}
 
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
+		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address.String())
 
 		txCtx := simulation.OperationInput{
 			R:             r,

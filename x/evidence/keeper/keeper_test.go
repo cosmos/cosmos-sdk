@@ -35,11 +35,7 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
 
-	valAddresses = []sdk.ValAddress{
-		sdk.ValAddress(pubkeys[0].Address()),
-		sdk.ValAddress(pubkeys[1].Address()),
-		sdk.ValAddress(pubkeys[2].Address()),
-	}
+	valAddress = sdk.ValAddress(pubkeys[0].Address())
 )
 
 func newPubKey(pk string) (res cryptotypes.PubKey) {

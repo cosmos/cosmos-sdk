@@ -222,7 +222,7 @@ func AppStateRandomizedFn(
   stake_per_account: "%d",
   initially_bonded_validators: "%d"
 }
-`, initialStake, numInitiallyBonded,
+`, initialStake.Uint64(), numInitiallyBonded,
 	)
 
 	simState := &module.SimulationState{

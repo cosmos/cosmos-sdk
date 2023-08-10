@@ -25,79 +25,104 @@ import (
 	"cosmossdk.io/depinject"
 )
 
-var beginBlockOrder = []string{
-	"upgrade",
-	"mint",
-	"distribution",
-	"slashing",
-	"evidence",
-	"staking",
-	"auth",
-	"bank",
-	"gov",
-	"crisis",
-	"genutil",
-	"authz",
-	"feegrant",
-	"nft",
-	"group",
-	"params",
-	"consensus",
-	"vesting",
-	"circuit",
-}
-
-var endBlockersOrder = []string{
-	"crisis",
-	"gov",
-	"staking",
-	"auth",
-	"bank",
-	"distribution",
-	"slashing",
-	"mint",
-	"genutil",
-	"evidence",
-	"authz",
-	"feegrant",
-	"nft",
-	"group",
-	"params",
-	"consensus",
-	"upgrade",
-	"vesting",
-	"circuit",
-}
-
-var initGenesisOrder = []string{
-	"auth",
-	"bank",
-	"distribution",
-	"staking",
-	"slashing",
-	"gov",
-	"mint",
-	"crisis",
-	"genutil",
-	"evidence",
-	"authz",
-	"feegrant",
-	"nft",
-	"group",
-	"params",
-	"consensus",
-	"upgrade",
-	"vesting",
-	"circuit",
-}
-
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
 type Config struct {
-	ModuleConfigs  map[string]*appv1alpha1.ModuleConfig
-	setInitGenesis bool
+	ModuleConfigs      map[string]*appv1alpha1.ModuleConfig
+	BeginBlockersOrder []string
+	EndBlockersOrder   []string
+	InitGenesisOrder   []string
+	setInitGenesis     bool
+}
+
+func defaultConfig() *Config {
+	return &Config{
+		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
+		BeginBlockersOrder: []string{
+			"upgrade",
+			"mint",
+			"distribution",
+			"slashing",
+			"evidence",
+			"staking",
+			"auth",
+			"bank",
+			"gov",
+			"crisis",
+			"genutil",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"vesting",
+			"circuit",
+		},
+		EndBlockersOrder: []string{
+			"crisis",
+			"gov",
+			"staking",
+			"auth",
+			"bank",
+			"distribution",
+			"slashing",
+			"mint",
+			"genutil",
+			"evidence",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"upgrade",
+			"vesting",
+			"circuit",
+		},
+		InitGenesisOrder: []string{
+			"auth",
+			"bank",
+			"distribution",
+			"staking",
+			"slashing",
+			"gov",
+			"mint",
+			"crisis",
+			"genutil",
+			"evidence",
+			"authz",
+			"feegrant",
+			"nft",
+			"group",
+			"params",
+			"consensus",
+			"upgrade",
+			"vesting",
+			"circuit",
+		},
+		setInitGenesis: true,
+	}
 }
 
 type ModuleOption func(config *Config)
+
+func WithCustomBeginBlockersOrder(beginBlockOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.BeginBlockersOrder = beginBlockOrder
+	}
+}
+
+func WithCustomEndBlockersOrder(endBlockersOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.EndBlockersOrder = endBlockersOrder
+	}
+}
+
+func WithCustomInitGenesisOrder(initGenesisOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.InitGenesisOrder = initGenesisOrder
+	}
+}
 
 func BankModule() ModuleOption {
 	return func(config *Config) {
@@ -285,10 +310,7 @@ func OmitInitGenesis() ModuleOption {
 }
 
 func NewAppConfig(opts ...ModuleOption) depinject.Config {
-	cfg := &Config{
-		ModuleConfigs:  make(map[string]*appv1alpha1.ModuleConfig),
-		setInitGenesis: true,
-	}
+	cfg := defaultConfig()
 	for _, opt := range opts {
 		opt(cfg)
 	}
@@ -298,19 +320,19 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	initGenesis := make([]string, 0)
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
 
-	for _, s := range beginBlockOrder {
+	for _, s := range cfg.BeginBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
 			beginBlockers = append(beginBlockers, s)
 		}
 	}
 
-	for _, s := range endBlockersOrder {
+	for _, s := range cfg.EndBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
 			endBlockers = append(endBlockers, s)
 		}
 	}
 
-	for _, s := range initGenesisOrder {
+	for _, s := range cfg.InitGenesisOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
 			initGenesis = append(initGenesis, s)
 		}

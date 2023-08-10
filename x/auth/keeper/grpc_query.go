@@ -47,15 +47,14 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var accounts []*codectypes.Any
-	_, pageRes, err := query.CollectionFilteredPaginate(ctx, s.k.Accounts, req.Pagination, func(_ sdk.AccAddress, value sdk.AccountI) (include bool, err error) {
-		accountAny, err := codectypes.NewAnyWithValue(value)
-		if err != nil {
-			return false, err
-		}
-		accounts = append(accounts, accountAny)
-		return false, nil // we don't include it since we're already appending the account
-	})
+	accounts, pageRes, err := query.CollectionPaginate(
+		ctx,
+		s.k.Accounts,
+		req.Pagination,
+		func(_ sdk.AccAddress, value sdk.AccountI) (*codectypes.Any, error) {
+			return codectypes.NewAnyWithValue(value)
+		},
+	)
 
 	return &types.QueryAccountsResponse{Accounts: accounts, Pagination: pageRes}, err
 }
@@ -162,6 +161,10 @@ func (s queryServer) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRe
 		return nil, err
 	}
 
+	if bech32Prefix == "" {
+		return &types.Bech32PrefixResponse{Bech32Prefix: "bech32 is not used on this chain"}, nil
+	}
+
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
@@ -223,9 +226,14 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
-	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+	// if there is no public key, avoid serializing the nil value
+	pubKey := account.GetPubKey()
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 
 	return &types.QueryAccountInfoResponse{

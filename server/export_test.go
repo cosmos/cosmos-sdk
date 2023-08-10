@@ -58,8 +58,8 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	sys := cmdtest.NewSystem()
 	sys.AddCommands(
-		server.ExportCmd(exporter, homeDir),
-		genutilcli.InitCmd(module.NewBasicManager(), homeDir),
+		server.ExportCmd(exporter),
+		genutilcli.InitCmd(module.NewBasicManager()),
 	)
 
 	tw := zerolog.NewTestWriter(t)
@@ -93,6 +93,7 @@ func (s *ExportSystem) Run(args ...string) cmdtest.RunResult {
 
 // MustRun wraps (*cmdtest.System).MustRunC, providing e's context.
 func (s *ExportSystem) MustRun(t *testing.T, args ...string) cmdtest.RunResult {
+	t.Helper()
 	return s.sys.MustRunC(t, s.Ctx, args...)
 }
 

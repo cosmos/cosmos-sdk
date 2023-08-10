@@ -49,10 +49,12 @@ func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx context.Contex
 
 func TestHooks(t *testing.T) {
 	minDeposit := v1.DefaultParams().MinDeposit
-	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, mocks, _, ctx := setupGovKeeper(t)
+	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, minDeposit[0].Amount)
 
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	govHooksReceiver := MockGovHooksReceiver{}
 
@@ -75,7 +77,8 @@ func TestHooks(t *testing.T) {
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, govKeeper)
+	err = gov.EndBlocker(ctx, govKeeper)
+	require.NoError(t, err)
 
 	require.True(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 
@@ -94,6 +97,7 @@ func TestHooks(t *testing.T) {
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, govKeeper)
+	err = gov.EndBlocker(ctx, govKeeper)
+	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 }

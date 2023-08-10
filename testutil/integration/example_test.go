@@ -7,9 +7,11 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +45,7 @@ func Example() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)
@@ -61,7 +64,10 @@ func Example() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule, mintModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+			minttypes.ModuleName: mintModule,
+		},
 	)
 
 	// register the message and query servers
@@ -128,6 +134,7 @@ func Example_oneModule() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)
@@ -141,7 +148,9 @@ func Example_oneModule() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+		},
 	)
 
 	// register the message and query servers

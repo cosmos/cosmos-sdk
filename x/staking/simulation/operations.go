@@ -163,14 +163,14 @@ func SimulateMsgCreateValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
+		maxCommission := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
 		commission := types.NewCommissionRates(
 			simtypes.RandomDecAmount(r, maxCommission),
 			maxCommission,
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
+		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to create CreateValidator message"), nil, err
 		}
@@ -241,7 +241,7 @@ func SimulateMsgEditValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address.String(), description, &newCommissionRate, nil)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -321,7 +321,7 @@ func SimulateMsgDelegate(
 			}
 		}
 
-		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
+		msg := types.NewMsgDelegate(simAccount.Address.String(), val.GetOperator().String(), bondAmt)
 
 		txCtx := simulation.OperationInput{
 			R:             r,
@@ -379,7 +379,12 @@ func SimulateMsgUndelegate(
 		delegation := delegations[r.Intn(len(delegations))]
 		delAddr := delegation.GetDelegatorAddr()
 
-		hasMaxUD, err := k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr)
+		delAddrBz, err := ak.AddressCodec().StringToBytes(delAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting delegator address bytes"), nil, err
+		}
+
+		hasMaxUD, err := k.HasMaxUnbondingDelegationEntries(ctx, delAddrBz, valAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting max unbonding delegation entries"), nil, err
 		}
@@ -408,14 +413,14 @@ func SimulateMsgUndelegate(
 		}
 
 		msg := types.NewMsgUndelegate(
-			delAddr, valAddr, sdk.NewCoin(bondDenom, unbondAmt),
+			delAddr, valAddr.String(), sdk.NewCoin(bondDenom, unbondAmt),
 		)
 
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
 		var simAccount simtypes.Account
 
 		for _, simAcc := range accs {
-			if simAcc.Address.Equals(delAddr) {
+			if simAcc.Address.Equals(sdk.AccAddress(delAddrBz)) {
 				simAccount = simAcc
 				break
 			}
@@ -425,7 +430,7 @@ func SimulateMsgUndelegate(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "account private key is nil"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, delAddr)
+		account := ak.GetAccount(ctx, delAddrBz)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		txCtx := simulation.OperationInput{
@@ -520,7 +525,7 @@ func SimulateMsgCancelUnbondingDelegate(
 		}
 
 		msg := types.NewMsgCancelUnbondingDelegation(
-			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
+			simAccount.Address.String(), valAddr.String(), unbondingDelegationEntry.CreationHeight, sdk.NewCoin(bondDenom, cancelBondAmt),
 		)
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)
@@ -583,7 +588,12 @@ func SimulateMsgBeginRedelegate(
 		delegation := delegations[r.Intn(len(delegations))]
 		delAddr := delegation.GetDelegatorAddr()
 
-		hasRecRedel, err := k.HasReceivingRedelegation(ctx, delAddr, srcAddr)
+		delAddrBz, err := ak.AddressCodec().StringToBytes(delAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting delegator address bytes"), nil, err
+		}
+
+		hasRecRedel, err := k.HasReceivingRedelegation(ctx, delAddrBz, srcAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting receiving redelegation"), nil, err
 		}
@@ -599,7 +609,7 @@ func SimulateMsgBeginRedelegate(
 		}
 
 		destAddr := destVal.GetOperator()
-		hasMaxRedel, err := k.HasMaxRedelegationEntries(ctx, delAddr, srcAddr, destAddr)
+		hasMaxRedel, err := k.HasMaxRedelegationEntries(ctx, delAddrBz, srcAddr, destAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting max redelegation entries"), nil, err
 		}
@@ -636,7 +646,7 @@ func SimulateMsgBeginRedelegate(
 		var simAccount simtypes.Account
 
 		for _, simAcc := range accs {
-			if simAcc.Address.Equals(delAddr) {
+			if simAcc.Address.Equals(sdk.AccAddress(delAddrBz)) {
 				simAccount = simAcc
 				break
 			}
@@ -647,7 +657,7 @@ func SimulateMsgBeginRedelegate(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
 		}
 
-		account := ak.GetAccount(ctx, delAddr)
+		account := ak.GetAccount(ctx, delAddrBz)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		bondDenom, err := k.BondDenom(ctx)
@@ -656,7 +666,7 @@ func SimulateMsgBeginRedelegate(
 		}
 
 		msg := types.NewMsgBeginRedelegate(
-			delAddr, srcAddr, destAddr,
+			delAddr, srcAddr.String(), destAddr.String(),
 			sdk.NewCoin(bondDenom, redAmt),
 		)
 

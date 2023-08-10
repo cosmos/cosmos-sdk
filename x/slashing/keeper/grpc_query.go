@@ -25,14 +25,13 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params returns parameters of x/slashing module
-func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.Keeper.Params.Get(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	params, err := k.GetParams(ctx)
-
-	return &types.QueryParamsResponse{Params: params}, err
+	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // SigningInfo returns signing-info of a specific validator.
@@ -50,7 +49,7 @@ func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequ
 		return nil, err
 	}
 
-	signingInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signingInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "SigningInfo not found for validator %s", req.ConsAddress)
 	}

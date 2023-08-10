@@ -81,7 +81,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	queryClient := authz.NewQueryClient(queryHelper)
 
 	checkGrants := func(ctx sdk.Context, expectedNum int) {
-		authzmodule.BeginBlocker(ctx, authzKeeper)
+		err := authzmodule.BeginBlocker(ctx, authzKeeper)
+		require.NoError(t, err)
 
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 			Granter: granter.String(),

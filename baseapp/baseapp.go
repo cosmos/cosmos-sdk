@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 
@@ -73,15 +74,16 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
 
-	initChainer        sdk.InitChainer                // ABCI InitChain handler
-	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	initChainer          sdk.InitChainer                // ABCI InitChain handler
+	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
+	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal      sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote           sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt        sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+	prepareCheckStater   sdk.PrepareCheckStater         // logic to run during commit using the checkState
+	precommiter          sdk.Precommiter                // logic to run during commit using the deliverState
+	preFinalizeBlockHook sdk.PreFinalizeBlockHook       // logic to run before FinalizeBlock
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -103,11 +105,6 @@ type BaseApp struct {
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
-	// - voteExtensionState: Used for ExtendVote and VerifyVoteExtension, which is
-	// set based on the previous block's state. This state is never committed. In
-	// case of multiple rounds, the state is always reset to the previous block's
-	// state.
-	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
 	// the previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
@@ -117,7 +114,6 @@ type BaseApp struct {
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state
-	voteExtensionState   *state
 	finalizeBlockState   *state
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -127,6 +123,9 @@ type BaseApp struct {
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
 	paramStore ParamStore
+
+	// queryGasLimit defines the maximum gas for queries; unbounded if 0.
+	queryGasLimit uint64
 
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. This is mainly used for DoS and spam prevention.
@@ -193,6 +192,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		queryGasLimit:    math.MaxUint64,
 	}
 
 	for _, option := range options {
@@ -224,7 +224,7 @@ func NewBaseApp(
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
-	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs base app will panic.
+	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	return app
@@ -481,27 +481,12 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	case execModeProcessProposal:
 		app.processProposalState = baseState
 
-	case execModeVoteExtension:
-		app.voteExtensionState = baseState
-
 	case execModeFinalize:
 		app.finalizeBlockState = baseState
 
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
-}
-
-// GetFinalizeBlockStateCtx returns the Context associated with the FinalizeBlock
-// state. This Context can be used to write data derived from processing vote
-// extensions to application state during ProcessProposal.
-//
-// NOTE:
-// - Do NOT use or write to state using this Context unless you intend for
-// that state to be committed.
-// - Do NOT use or write to state using this Context on the first block.
-func (app *BaseApp) GetFinalizeBlockStateCtx() sdk.Context {
-	return app.finalizeBlockState.ctx
 }
 
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
@@ -535,7 +520,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 // It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
-		panic("cannot store consensus params with no params store set")
+		return errors.New("cannot store consensus params with no params store set")
 	}
 
 	return app.paramStore.Set(ctx, cp)
@@ -686,7 +671,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -695,7 +680,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 	if app.beginBlocker != nil {
 		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return resp, err
 		}
 
 		// append BeginBlock attributes to all events in the EndBlock response
@@ -709,7 +694,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
-	return resp
+	return resp, nil
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
@@ -757,7 +742,7 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	if app.endBlocker != nil {
 		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return endblock, err
 		}
 
 		// append EndBlock attributes to all events in the EndBlock response
@@ -972,7 +957,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// create message events
-		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
+		}
 
 		// append message events and data
 		//
@@ -1017,19 +1005,19 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) (sdk.Events, error) {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
 	signers, err := cdc.GetMsgV2Signers(msgV2)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if len(signers) > 0 && signers[0] != nil {
 		addrStr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(signers[0])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, addrStr))
 	}
@@ -1041,7 +1029,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 		}
 	}
 
-	return sdk.Events{msgEvent}.AppendEvents(events)
+	return sdk.Events{msgEvent}.AppendEvents(events), nil
 }
 
 // PrepareProposalVerifyTx performs transaction verification when a proposer is

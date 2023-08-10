@@ -59,7 +59,7 @@ Authorize, is called by the module authority (default governance module account)
 
 ### Trip
 
-Trip, is called by an account to disable message execution for a specific msgURL. 
+Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, all the msgs will be disabled.
 
 ```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
@@ -68,7 +68,7 @@ Trip, is called by an account to disable message execution for a specific msgURL
 
 ### Reset
 
-Reset is called to enable execution of a previously disabled message. 
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
@@ -118,8 +118,8 @@ The circuit module emits the following events:
 
 | Type    | Attribute Key | Attribute Value           |
 |---------|---------------|---------------------------|
-| string  | granter       | {granteeAddress}          |
-| string  | grantee       | {granterAddress}          |
+| string  | granter       | {granterAddress}          |
+| string  | grantee       | {granteeAddress}          |
 | string  | permission    | {granteePermissions}      |
 | message | module        | circuit                   |
 | message | action        | authorize_circuit_breaker |

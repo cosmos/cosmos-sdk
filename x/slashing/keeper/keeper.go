@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -24,18 +25,45 @@ type Keeper struct {
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority string
+	authority            string
+	Schema               collections.Schema
+	Params               collections.Item[types.Params]
+	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
+	AddrPubkeyRelation   collections.Map[[]byte, cryptotypes.PubKey]
 }
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
-	return Keeper{
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		legacyAmino:  legacyAmino,
 		sk:           sk,
 		authority:    authority,
+		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		ValidatorSigningInfo: collections.NewMap(
+			sb,
+			types.ValidatorSigningInfoKeyPrefix,
+			"validator_signing_info",
+			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorSigningInfo](cdc),
+		),
+		AddrPubkeyRelation: collections.NewMap(
+			sb,
+			types.AddrPubkeyRelationKeyPrefix,
+			"addr_pubkey_relation",
+			sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			codec.CollInterfaceValue[cryptotypes.PubKey](cdc),
+		),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // GetAuthority returns the x/slashing module's authority.
@@ -49,29 +77,9 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error {
-	bz, err := k.cdc.MarshalInterface(pubkey)
-	if err != nil {
-		return err
-	}
-	store := k.storeService.OpenKVStore(ctx)
-	key := types.AddrPubkeyRelationKey(pubkey.Address())
-	return store.Set(key, bz)
-}
-
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.AddrPubkeyRelationKey(a))
-	if err != nil {
-		return nil, err
-	}
-	if bz == nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
-	}
-	var pk cryptotypes.PubKey
-	return pk, k.cdc.UnmarshalInterface(bz, &pk)
+	return k.AddrPubkeyRelation.Get(ctx, a)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -88,13 +96,21 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
+	reasonAttr := sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueUnspecified)
+	switch infraction {
+	case stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN:
+		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign)
+	case stakingtypes.Infraction_INFRACTION_DOWNTIME:
+		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature)
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
 			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
+			reasonAttr,
 			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 		),
 	)
@@ -105,7 +121,10 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.sk.Jail(sdkCtx, consAddr)
+	err := k.sk.Jail(sdkCtx, consAddr)
+	if err != nil {
+		return err
+	}
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
@@ -113,9 +132,4 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		),
 	)
 	return nil
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx context.Context, addr cryptotypes.Address) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.AddrPubkeyRelationKey(addr))
 }

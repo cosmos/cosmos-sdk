@@ -20,13 +20,11 @@ var commonArgs = []string{
 }
 
 // MsgSubmitLegacyProposal creates a tx for submit legacy proposal
-//
-//nolint:staticcheck // we are intentionally using a deprecated flag here.
 func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
-		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
-		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType),
+		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),   //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 

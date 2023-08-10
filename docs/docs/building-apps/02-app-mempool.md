@@ -13,9 +13,7 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 
@@ -50,7 +48,7 @@ selected DO NOT exceed the maximum block gas (if set) and the maximum bytes prov
 by `req.MaxBytes`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
@@ -81,7 +79,7 @@ proposal is proposed.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L927-L942
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L153-L159
 ```
 
 Like `PrepareProposal` this implementation is the default and can be modified by

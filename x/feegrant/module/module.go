@@ -98,11 +98,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)
 }
 
-// GetQueryCmd returns no root query command for the feegrant module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------

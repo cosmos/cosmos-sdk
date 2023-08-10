@@ -141,7 +141,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
 
-func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	if fraction.GT(math.LegacyOneDec()) || fraction.IsNegative() {
 		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
@@ -167,5 +167,13 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
 	height := uint64(sdkCtx.BlockHeight())
 
-	return k.SetValidatorSlashEvent(ctx, valAddr, height, newPeriod, slashEvent)
+	return k.ValidatorSlashEvents.Set(
+		ctx,
+		collections.Join3[sdk.ValAddress, uint64, uint64](
+			valAddr,
+			height,
+			newPeriod,
+		),
+		slashEvent,
+	)
 }

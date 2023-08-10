@@ -16,6 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
+type cmdType int
+
+const (
+	queryCmdType cmdType = iota
+	msgCmdType
+)
+
 func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions, exec func(cmd *cobra.Command, input protoreflect.Message) error) (*cobra.Command, error) {
 	if options == nil {
 		// use the defaults
@@ -36,14 +43,15 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 
 	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
+		SilenceUsage: true,
+		Use:          use,
+		Long:         long,
+		Short:        options.Short,
+		Example:      options.Example,
+		Aliases:      options.Alias,
+		SuggestFor:   options.SuggestFor,
+		Deprecated:   options.Deprecated,
+		Version:      options.Version,
 	}
 
 	cmd.SetContext(context.Background())
@@ -72,9 +80,9 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 // automatically fill in missing commands.
 func (b *Builder) enhanceCommandCommon(
 	cmd *cobra.Command,
+	cmdType cmdType,
 	appOptions AppOptions,
 	customCmds map[string]*cobra.Command,
-	buildModuleCommand enhanceCommandFunc,
 ) error {
 	moduleOptions := appOptions.ModuleOptions
 	if len(moduleOptions) == 0 {
@@ -88,38 +96,54 @@ func (b *Builder) enhanceCommandCommon(
 
 	modules := append(maps.Keys(appOptions.Modules), maps.Keys(moduleOptions)...)
 	for _, moduleName := range modules {
+		modOpts, hasModuleOptions := moduleOptions[moduleName]
+
 		// if we have an existing command skip adding one here
-		if findSubCommand(cmd, moduleName) != nil {
+		if subCmd := findSubCommand(cmd, moduleName); subCmd != nil {
+			if hasModuleOptions {
+				if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts); err != nil {
+					return err
+				}
+			}
+
 			continue
 		}
 
 		// if we have a custom command use that instead of generating one
-		if custom := customCmds[moduleName]; custom != nil {
-			// custom commands get added lower down
+		if custom, ok := customCmds[moduleName]; ok {
+			if hasModuleOptions {
+				if err := enhanceCustomCmd(b, custom, cmdType, modOpts); err != nil {
+					return err
+				}
+			}
+
 			cmd.AddCommand(custom)
 			continue
 		}
 
-		// check for autocli options
-		modOpts := moduleOptions[moduleName]
-		if modOpts == nil {
+		// if we don't have module options, skip adding a command as we don't have anything to add
+		if !hasModuleOptions {
 			continue
 		}
 
-		if err := buildModuleCommand(b, moduleName, cmd, modOpts); err != nil {
-			return err
+		switch cmdType {
+		case queryCmdType:
+			if err := enhanceQuery(b, moduleName, cmd, modOpts); err != nil {
+				return err
+			}
+		case msgCmdType:
+			if err := enhanceMsg(b, moduleName, cmd, modOpts); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-type enhanceCommandFunc func(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error
-
 // enhanceQuery enhances the provided query command with the autocli commands for a module.
 func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
-	queryCmdDesc := modOpts.Query
-	if queryCmdDesc != nil {
+	if queryCmdDesc := modOpts.Query; queryCmdDesc != nil {
 		subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 		if err := builder.AddQueryServiceCommands(subCmd, queryCmdDesc); err != nil {
 			return err
@@ -133,14 +157,33 @@ func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOp
 
 // enhanceMsg enhances the provided msg command with the autocli commands for a module.
 func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
-	txCmdDesc := modOpts.Tx
-	if txCmdDesc != nil {
+	if txCmdDesc := modOpts.Tx; txCmdDesc != nil {
 		subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 		if err := builder.AddMsgServiceCommands(subCmd, txCmdDesc); err != nil {
 			return err
 		}
 
 		cmd.AddCommand(subCmd)
+	}
+
+	return nil
+}
+
+// enhanceCustomCmd enhances the provided custom query or msg command autocli commands for a module.
+func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, modOpts *autocliv1.ModuleOptions) error {
+	switch cmdType {
+	case queryCmdType:
+		if modOpts.Query != nil && modOpts.Query.EnhanceCustomCommand {
+			if err := builder.AddQueryServiceCommands(cmd, modOpts.Query); err != nil {
+				return err
+			}
+		}
+	case msgCmdType:
+		if modOpts.Tx != nil && modOpts.Tx.EnhanceCustomCommand {
+			if err := builder.AddMsgServiceCommands(cmd, modOpts.Tx); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

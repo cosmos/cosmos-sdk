@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 		{
 			"success: revoke fee allowance",
@@ -237,11 +237,11 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
-				suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
+				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
-
+				suite.Require().Error(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -269,7 +269,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 	}
 

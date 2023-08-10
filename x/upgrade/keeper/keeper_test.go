@@ -116,11 +116,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+				err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
 					Name:   "alt-good",
 					Info:   "new text here",
 					Height: 543210000,
 				})
+				s.Require().NoError(err)
 			},
 			expPass: true,
 		},
@@ -153,11 +154,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+				err := s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,
 				})
+				s.Require().NoError(err)
 			},
 			expPass: false,
 		},
@@ -203,7 +205,8 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			name:   "success",
 			height: 10,
 			setup: func() {
-				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				err := s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				s.Require().NoError(err)
 			},
 			exists: true,
 		},
@@ -281,7 +284,8 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	err := s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	s.Require().NoError(err)
 	vmBefore, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().NoError(err)
 

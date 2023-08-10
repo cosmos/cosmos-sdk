@@ -95,7 +95,6 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			false,
 			func() {
 				_, err := suite.keeper.Evidences.Iterate(suite.ctx, nil)
-				fmt.Println(err)
 				suite.Require().NoError(err)
 			},
 		},

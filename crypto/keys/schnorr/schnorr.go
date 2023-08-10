@@ -45,7 +45,7 @@ type basicSig struct {
 // GenPrivKey generates a new Schnorr private key.
 func GenPrivKey() *PrivKey {
 	suite := suites.MustFind(curve)
-	keyPair := suite.Scalar().Pick(suite.RandomStream())
+	keyPair := suite.Scgit alar().Pick(suite.RandomStream())
 	binary, err := keyPair.MarshalBinary()
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating priv key: %e", err)
@@ -64,10 +64,6 @@ func (privKey *PrivKey) GetKeyPair() *key.Pair {
 // Bytes returns the private key byte format.
 func (privKey *PrivKey) Bytes() []byte {
 	return privKey.Key
-}
-
-func (privKey *PrivKey) String() string {
-	return fmt.Sprintf("PrivKeyShnorr{%X}", privKey.Key)
 }
 
 // Sign produces a signature on the provided message.
@@ -170,10 +166,6 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
 
-func (privKey *PrivKey) Reset() { *privKey = PrivKey{} }
-
-func (*PrivKey) ProtoMessage() {}
-
 //-------------------------------------
 
 // Address is the SHA256-20 of the raw pubkey bytes.
@@ -232,11 +224,6 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	return true
 }
 
-// String returns Hex representation of a pub key with their type
-func (pubKey *PubKey) String() string {
-	return fmt.Sprintf("PubKeyShnorr{%X}", pubKey.Key)
-}
-
 func (pubKey *PubKey) Type() string {
 	return keyType
 }
@@ -275,7 +262,3 @@ func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
 }
-
-func (pubKey *PubKey) Reset() { *pubKey = PubKey{} }
-
-func (*PubKey) ProtoMessage() {}

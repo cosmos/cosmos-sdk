@@ -545,23 +545,12 @@ func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Quer
 		return nil, nil, err
 	}
 
-	// redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-
 	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (types.Redelegation, error) {
 		return red, nil
 	}, query.WithCollectionPaginationTriplePrefix[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delAddr))
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
-	// 	redelegation, err := types.UnmarshalRED(k.cdc, value)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	redels = append(redels, redelegation)
-	// 	return nil
-	// })
 
 	return redels, res, err
 }

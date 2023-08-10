@@ -50,7 +50,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module/interfaces"
 )
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
@@ -284,7 +283,6 @@ type Manager struct {
 	OrderPrepareCheckStaters []string
 	OrderPrecommiters        []string
 	OrderMigrations          []string
-	consensusParamsGetter    interfaces.ConsensusParamsGetter
 }
 
 // NewManager creates a new Manager object.
@@ -329,12 +327,6 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		OrderPrecommiters:        modulesStr,
 		OrderPrepareCheckStaters: modulesStr,
 	}
-}
-
-// WithConsensusParamsGetter sets ConsensusParamsGetter for Manager.
-func (m *Manager) WithConsensusParamsGetter(g interfaces.ConsensusParamsGetter) *Manager {
-	m.consensusParamsGetter = g
-	return m
 }
 
 // SetOrderInitGenesis sets the order of init genesis calls
@@ -707,33 +699,22 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
+func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) bool {
+	for _, moduleName := range m.OrderBeginBlockers {
+		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := mod.(UpgradeModule); ok {
+				return mod.BeginBlock(ctx) == nil
+			}
+		}
+	}
+	return false
+}
+
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-	for _, moduleName := range m.OrderBeginBlockers {
-		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(UpgradeModule); ok {
-				if err := module.BeginBlock(ctx); err != nil {
-					return sdk.BeginBlock{}, err
-				}
-				if m.consensusParamsGetter != nil {
-					cp := ctx.ConsensusParams()
-					// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
-					// and consensus parameters should not be overwritten.
-					if cp.Block == nil {
-						if cp = m.consensusParamsGetter.GetConsensusParams(ctx); cp.Block != nil {
-							ctx = ctx.WithConsensusParams(cp)
-						}
-					}
-				}
-				break
-			}
-		}
-	}
-
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if _, ok := module.(UpgradeModule); !ok {

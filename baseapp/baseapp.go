@@ -43,6 +43,12 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
+// MigrationModuleManager is the interface that a migration module manager should implement to handle
+// the execution of migration logic during the beginning of a block.
+type MigrationModuleManager interface {
+	RunMigrationBeginBlock(ctx sdk.Context) bool
+}
+
 const (
 	execModeCheck           execMode = iota // Check a transaction
 	execModeReCheck                         // Recheck a (pending) transaction after a commit
@@ -91,6 +97,9 @@ type BaseApp struct {
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
+
+	// manages migrate module
+	MigrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -671,7 +680,16 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
+		ctx := app.finalizeBlockState.ctx
+		if app.MigrationModuleManager.RunMigrationBeginBlock(ctx) {
+			cp := ctx.ConsensusParams()
+			if cp.Block == nil {
+				if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+					ctx = ctx.WithConsensusParams(cp)
+				}
+			}
+		}
+		resp, err = app.beginBlocker(ctx)
 		if err != nil {
 			return resp, err
 		}

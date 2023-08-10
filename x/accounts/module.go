@@ -70,7 +70,7 @@ type Accounts[H header.Header] struct {
 
 func (a Accounts[H]) registerAccounts(constructors ...func(deps *sdk.BuildDependencies) (internalaccounts.Implementation, error)) error {
 	for _, constructor := range constructors {
-		deps := internalaccounts.MakeBuildDependencies(a.Execute)
+		deps := internalaccounts.MakeBuildDependencies(a.Execute, a.Query)
 		accountImpl, err := constructor(deps)
 		if err != nil {
 			return err

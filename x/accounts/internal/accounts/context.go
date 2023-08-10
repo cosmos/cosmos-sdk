@@ -16,13 +16,22 @@ type (
 	fromKey              struct{}
 )
 
-func MakeBuildDependencies(invoke func(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error)) *BuildDependencies {
+func MakeBuildDependencies(
+	invoke func(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error),
+	query func(ctx context.Context, from []byte, to []byte, msg proto.Message) (proto.Message, error),
+) *BuildDependencies {
 	return &BuildDependencies{
 		SchemaBuilder: collections.NewSchemaBuilder(StoreService()),
 		Execute: Invoker{
 			invoke: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
 				sender := Whoami(ctx)
 				return invoke(GetOriginalContext(ctx), sender[:], to[:], msg)
+			},
+		},
+		Query: Invoker{
+			invoke: func(ctx context.Context, to []byte, msg proto.Message) (proto.Message, error) {
+				sender := Whoami(ctx)
+				return query(GetOriginalContext(ctx), sender[:], to[:], msg)
 			},
 		},
 	}

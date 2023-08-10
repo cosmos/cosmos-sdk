@@ -43,7 +43,7 @@ type Invoker struct {
 type BuildDependencies struct {
 	SchemaBuilder *collections.SchemaBuilder
 	Execute       Invoker
-	Query         func(ctx context.Context, target []byte, msg proto.Message) (proto.Message, error)
+	Query         Invoker
 }
 
 type Msg[T any] interface {

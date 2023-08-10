@@ -143,7 +143,6 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
-	app.MigrationModuleManager = app.ModuleManager
 
 	for name, mod := range inputs.Modules {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {

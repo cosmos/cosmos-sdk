@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.7.0
 	cosmossdk.io/collections v0.3.1-0.20230727092431-f0f777fa3cb7
 	cosmossdk.io/core v0.9.0
-	cosmossdk.io/depinject v1.0.0-alpha.3
+	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.0
 	cosmossdk.io/math v1.0.1
@@ -65,7 +65,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/getsentry/sentry-go v0.22.0 // indirect
+	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

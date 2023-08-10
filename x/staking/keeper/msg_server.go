@@ -237,6 +237,15 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, err
 	}
 
+	// If the delegation is a validator bond, increment the validator bond shares
+	delegation, found := k.Keeper.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegation
+	}
+	if delegation.ValidatorBond {
+		k.IncreaseValidatorBondShares(ctx, validator, newShares)
+	}
+
 	if tokens.IsInt64() {
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "delegate")
@@ -300,12 +309,9 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
-	dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
-	if err != nil {
-		return nil, err
-	}
 
-	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
+	// If this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
+	// The delegation on the new validator will not a validator bond
 	if delegation.ValidatorBond {
 		if err := k.SafelyDecreaseValidatorBond(ctx, &srcValidator, srcShares); err != nil {
 			return nil, err
@@ -316,6 +322,11 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	// cannot exceed that validator's self-bond cap
 	// The liquid shares from the source validator should get moved to the destination validator
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
+		dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, &dstValidator, dstShares); err != nil {
 			return nil, err
 		}
@@ -509,11 +520,11 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	// if this undelegation was from a liquid staking provider (identified if the delegator
 	// is an ICA account), the global and validator liquid totals should be incremented
 	tokens := msg.Amount.Amount
-	shares, err := validator.SharesFromTokens(tokens)
-	if err != nil {
-		return nil, err
-	}
 	if k.DelegatorIsLiquidStaker(delegatorAddress) {
+		shares, err := validator.SharesFromTokens(tokens)
+		if err != nil {
+			return nil, err
+		}
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}

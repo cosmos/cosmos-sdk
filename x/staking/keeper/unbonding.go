@@ -201,7 +201,7 @@ func (k Keeper) SetValidatorByUnbondingID(ctx context.Context, val types.Validat
 	}
 
 	valKey := types.GetValidatorKey(valAddr)
-	valKey = valKey[2:] // leave prefix bytes
+	valKey = valKey[2:] // leave prefix bytes and address length
 	if err = k.UnbondingIndex.Set(ctx, id, valKey); err != nil {
 		return err
 	}

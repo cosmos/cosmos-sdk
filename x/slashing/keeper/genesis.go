@@ -20,7 +20,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 				panic(err)
 			}
 
-			err = keeper.AddPubkey(ctx, consPk)
+			err = keeper.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
 			if err != nil {
 				panic(err)
 			}

@@ -30,7 +30,7 @@ In practice, each module implements `Invariant`s in a `keeper/invariants.go` fil
 // Example for an Invariant that checks balance-related invariants
 
 func BalanceInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
+	return func(ctx context.Context) (string, bool) {
         // Implement checks for balance-related invariants
     }
 }
@@ -44,7 +44,7 @@ Additionally, module developers should generally implement an `AllInvariants` fu
 
 func AllInvariants(k Keeper) sdk.Invariant {
 
-	return func(ctx sdk.Context) (string, bool) {
+	return func(ctx context.Context) (string, bool) {
 		res, stop := BalanceInvariants(k)(ctx)
 		if stop {
 			return res, stop

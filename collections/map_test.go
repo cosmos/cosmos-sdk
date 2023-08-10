@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,8 +52,10 @@ func TestMap_Clear(t *testing.T) {
 		ctx, m := makeTest()
 		err := m.Clear(ctx, nil)
 		require.NoError(t, err)
-		_, err = m.Iterate(ctx, nil)
-		require.ErrorIs(t, err, ErrInvalidIterator)
+		err = m.Walk(ctx, nil, func(key, value uint64) (bool, error) {
+			return false, fmt.Errorf("should never be called")
+		})
+		require.NoError(t, err)
 	})
 
 	t.Run("custom ranger", func(t *testing.T) {
@@ -104,6 +107,15 @@ func TestMap_IterateRaw(t *testing.T) {
 	keys, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []uint64{2, 1, 0}, keys)
+
+	// test invalid iter
+	_, err = m.IterateRaw(ctx, []byte{0x2, 0x0}, []byte{0x0, 0x0}, OrderAscending)
+	require.ErrorIs(t, err, ErrInvalidIterator)
+
+	// test on empty collection iterating does not error
+	require.NoError(t, m.Clear(ctx, nil))
+	_, err = m.IterateRaw(ctx, nil, nil, OrderAscending)
+	require.NoError(t, err)
 }
 
 func Test_encodeKey(t *testing.T) {

@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -161,6 +162,9 @@ func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r R
 	} else {
 		endBytes = nextBytesPrefixKey(prefix)
 	}
+	if bytes.Compare(startBytes, endBytes) == 1 {
+		return nil, nil, 0, ErrInvalidIterator
+	}
 	return startBytes, endBytes, order, nil
 }
 
@@ -190,9 +194,6 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 	}
 	if err != nil {
 		return Iterator[K, V]{}, err
-	}
-	if !iter.Valid() {
-		return Iterator[K, V]{}, ErrInvalidIterator
 	}
 
 	return Iterator[K, V]{

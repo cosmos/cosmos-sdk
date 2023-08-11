@@ -15,11 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const ()
-
 // Simulation operation weights constants
 //
-//nolint:gosec // these are not hard-coded credentials
+
 const (
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"               //nolint:gosec
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"                 //nolint:gosec
@@ -786,7 +784,7 @@ func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k ke
 		params := k.GetParams(ctx)
 		totalStaked := k.TotalBondedTokens(ctx).ToDec()
 		if totalStaked.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "cannot happend - no validators bonded if stake is 0.0"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "cannot happened - no validators bonded if stake is 0.0"), nil, nil // skip
 		}
 		totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx).Add(tokenizeShareAmt).ToDec()
 		liquidStakedPercent := totalLiquidStaked.Quo(totalStaked)

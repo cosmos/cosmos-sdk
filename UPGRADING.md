@@ -130,7 +130,7 @@ In this section we describe the changes made in Cosmos SDK' SimApp.
 
 #### Module Assertions
 
-Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.HasBeginBlocker`, `module.HasEndBlocker` and `module.HasGenesis` interfaces.
 
 #### Module wiring
 

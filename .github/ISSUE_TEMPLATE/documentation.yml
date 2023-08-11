@@ -7,12 +7,12 @@ body:
     attributes:
       value: |
         ✰  Thanks for opening an issue! ✰    
-        Before smashing the submit button please review the template.
+        Tell us where what you would like to see get added to the documentation or if there is an error in the documentation?
 
   - type: textarea
     id: what-happened
     attributes:
       label: Summary
-      description: Tell us where what you would like to see get added to the documentation or if there is an error in the documentation?
+      placeholder: Description of what you would like to see
     validations:
       required: true

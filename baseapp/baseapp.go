@@ -46,7 +46,7 @@ type (
 // MigrationModuleManager is the interface that a migration module manager should implement to handle
 // the execution of migration logic during the beginning of a block.
 type MigrationModuleManager interface {
-	RunMigrationBeginBlock(ctx sdk.Context) bool
+	RunMigrationBeginBlock(ctx sdk.Context) (bool, error)
 }
 
 const (
@@ -686,14 +686,18 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 
 	if app.beginBlocker != nil {
 		ctx := app.finalizeBlockState.ctx
-		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
-			cp := ctx.ConsensusParams()
-			// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
-			// and consensus parameters should not be overwritten.
-			if cp.Block == nil {
-				if cp = app.GetConsensusParams(ctx); cp.Block != nil {
-					ctx = ctx.WithConsensusParams(cp)
+		if app.migrationModuleManager != nil {
+			if success, err := app.migrationModuleManager.RunMigrationBeginBlock(ctx); success {
+				cp := ctx.ConsensusParams()
+				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+				// and consensus parameters should not be overwritten.
+				if cp.Block == nil {
+					if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+						ctx = ctx.WithConsensusParams(cp)
+					}
 				}
+			} else if err != nil {
+				return sdk.BeginBlock{}, err
 			}
 		}
 		resp, err = app.beginBlocker(ctx)

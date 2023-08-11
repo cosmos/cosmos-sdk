@@ -7,7 +7,6 @@ body:
     attributes:
       value: |
        ✰  Thanks for opening an issue! ✰    
-       Before smashing the submit button please review the template.
   - type: textarea
     id: summary
     attributes:

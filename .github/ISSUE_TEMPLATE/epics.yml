@@ -8,17 +8,7 @@ body:
     attributes:
       value: |
         Thanks for opening this issue, this template is meant for long lived work scopes, if this is what you're looking for please continue
-        
-  - type: textarea
-    id: summary
-    attributes:
-      label: Summary
-      description: |
-        What are the user needs?
-        How could this solution fix the user facing problem? 
-      placeholder: Short, concise description of the proposed feature/changes to the repository
-    validations:
-      required: true
+
   - type: textarea
     id: summary
     attributes:

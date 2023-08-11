@@ -96,14 +96,7 @@ ctx.EventManager().EmitEvent(
 )
 ```
 
-Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
-
-```go
-func NewHandler(keeper Keeper) sdk.Handler {
-    return func(ctx context.Context, msg sdk.Msg) (*sdk.Result, error) {
-        ctx = ctx.WithEventManager(sdk.NewEventManager())
-        switch msg := msg.(type) {
-```
+Where the `EventManager` is accessed via the [`Context`](./02-context.md).
 
 See the [`Msg` services](../building-modules/03-msg-services.md) concept doc for a more detailed
 view on how to typically implement Events and use the `EventManager` in modules.

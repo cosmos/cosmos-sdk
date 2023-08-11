@@ -602,7 +602,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil &&  {
 		panic(err)
 	}
 	if len(proposals) == 0 {

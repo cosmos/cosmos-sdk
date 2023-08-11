@@ -477,16 +477,20 @@ func TestCoreAPIManager_RunMigrationBeginBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(0)
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	success := mm.RunMigrationBeginBlock(sdk.Context{})
+	success, err := mm.RunMigrationBeginBlock(sdk.Context{})
 	require.Equal(t, true, success)
+	require.NoError(t, err)
 
 	// test false
-	require.Equal(t, false, module.NewManager().RunMigrationBeginBlock(sdk.Context{}))
+	success, err = module.NewManager().RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, false, success)
+	require.NoError(t, err)
 
 	// test panic
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	success = mm.RunMigrationBeginBlock(sdk.Context{})
+	success, err = mm.RunMigrationBeginBlock(sdk.Context{})
 	require.Equal(t, false, success)
+	require.Error(t, err)
 }
 
 func TestCoreAPIManager_BeginBlock(t *testing.T) {

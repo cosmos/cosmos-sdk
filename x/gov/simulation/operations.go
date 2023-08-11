@@ -1,12 +1,10 @@
 package simulation
 
 import (
-	"errors"
 	"math"
 	"math/rand"
 	"time"
 
-	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -602,7 +600,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil &&  {
+	if err != nil {
 		panic(err)
 	}
 	if len(proposals) == 0 {

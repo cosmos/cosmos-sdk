@@ -43,6 +43,12 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
+// MigrationModuleManager is the interface that a migration module manager should implement to handle
+// the execution of migration logic during the beginning of a block.
+type MigrationModuleManager interface {
+	RunMigrationBeginBlock(ctx sdk.Context) bool
+}
+
 const (
 	execModeCheck           execMode = iota // Check a transaction
 	execModeReCheck                         // Recheck a (pending) transaction after a commit
@@ -91,6 +97,9 @@ type BaseApp struct {
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
+
+	// manages migrate module
+	migrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -265,6 +274,11 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
+func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
+	app.migrationModuleManager = migrationModuleManager
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -671,7 +685,18 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
+		ctx := app.finalizeBlockState.ctx
+		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
+			cp := ctx.ConsensusParams()
+			// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+			// and consensus parameters should not be overwritten.
+			if cp.Block == nil {
+				if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+					ctx = ctx.WithConsensusParams(cp)
+				}
+			}
+		}
+		resp, err = app.beginBlocker(ctx)
 		if err != nil {
 			return resp, err
 		}

@@ -65,6 +65,13 @@ type HasName interface {
 	Name() string
 }
 
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
+type UpgradeModule interface {
+	IsUpgradeModule()
+}
+
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
 type HasGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
@@ -550,16 +557,38 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	return updatedVM, nil
 }
 
-// BeginBlock performs begin block functionality for all modules. It creates a
-// child context with an event manager to aggregate events emitted from all
+// RunMigrationBeginBlock performs begin block functionality for upgrade module.
+// It takes the current context as a parameter and returns a boolean value
+// indicating whether the migration was successfully executed or not.
+func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) bool {
+	for _, moduleName := range m.OrderBeginBlockers {
+		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := mod.(UpgradeModule); ok {
+				return mod.BeginBlock(ctx) == nil
+			}
+		}
+	}
+	return false
+}
+
+// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
+// child context with an event manager to aggregate events emitted from non-upgrade
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-
 	for _, moduleName := range m.OrderBeginBlockers {
+<<<<<<< HEAD
 		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
 		if ok {
 			module.BeginBlock(ctx, req)
+=======
+		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := module.(UpgradeModule); !ok {
+				if err := module.BeginBlock(ctx); err != nil {
+					return sdk.BeginBlock{}, err
+				}
+			}
+>>>>>>> 0c1f6fc16 (fix: Add MigrationModuleManager to handle migration of upgrade module before other modules (#16583))
 		}
 	}
 

@@ -34,6 +34,12 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
+// MigrationModuleManager is the interface that a migration module manager should implement to handle
+// the execution of migration logic during the beginning of a block.
+type MigrationModuleManager interface {
+	RunMigrationBeginBlock(ctx sdk.Context) bool
+}
+
 const (
 	runTxModeCheck       runTxMode = iota // Check a transaction
 	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
@@ -74,6 +80,9 @@ type BaseApp struct { //nolint: maligned
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
+
+	// manages migrate module
+	migrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -226,6 +235,7 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 
+<<<<<<< HEAD
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
 func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
@@ -233,6 +243,11 @@ func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
 		panic("must be called after message server is set")
 	}
 	app.msgServiceRouter.SetCircuit(cb)
+=======
+// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
+func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
+	app.migrationModuleManager = migrationModuleManager
+>>>>>>> 0c1f6fc16 (fix: Add MigrationModuleManager to handle migration of upgrade module before other modules (#16583))
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -614,6 +629,109 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
+<<<<<<< HEAD
+=======
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+	var (
+		resp sdk.BeginBlock
+		err  error
+	)
+
+	if app.beginBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
+			cp := ctx.ConsensusParams()
+			// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+			// and consensus parameters should not be overwritten.
+			if cp.Block == nil {
+				if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+					ctx = ctx.WithConsensusParams(cp)
+				}
+			}
+		}
+		resp, err = app.beginBlocker(ctx)
+		if err != nil {
+			return resp, err
+		}
+
+		// append BeginBlock attributes to all events in the EndBlock response
+		for i, event := range resp.Events {
+			resp.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
+			)
+		}
+
+		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
+	}
+
+	return resp, nil
+}
+
+func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	var resp *abci.ExecTxResult
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
+
+	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
+	if err != nil {
+		resultStr = "failed"
+		resp = sdkerrors.ResponseExecTxResultWithEvents(
+			err,
+			gInfo.GasWanted,
+			gInfo.GasUsed,
+			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
+			app.trace,
+		)
+		return resp
+	}
+
+	resp = &abci.ExecTxResult{
+		GasWanted: int64(gInfo.GasWanted),
+		GasUsed:   int64(gInfo.GasUsed),
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
+
+	return resp
+}
+
+// endBlock is an application-defined function that is called after transactions
+// have been processed in FinalizeBlock.
+func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+	var endblock sdk.EndBlock
+
+	if app.endBlocker != nil {
+		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
+		if err != nil {
+			return endblock, err
+		}
+
+		// append EndBlock attributes to all events in the EndBlock response
+		for i, event := range eb.Events {
+			eb.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
+			)
+		}
+
+		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
+		endblock = eb
+	}
+
+	return endblock, nil
+}
+
+>>>>>>> 0c1f6fc16 (fix: Add MigrationModuleManager to handle migration of upgrade module before other modules (#16583))
 // runTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted

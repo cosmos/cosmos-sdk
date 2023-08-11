@@ -117,7 +117,6 @@ func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
 			return false, nil
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}

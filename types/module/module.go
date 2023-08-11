@@ -379,7 +379,6 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 
 			_, hasABCIEndBlock := module.(HasABCIEndblock)
 			return !hasABCIEndBlock
-
 		})
 	m.OrderEndBlockers = moduleNames
 }

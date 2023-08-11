@@ -10,9 +10,8 @@ done
 
 if ! command -v gomod2nix &> /dev/null
 then
-    echo "gomod2nix could not be found in PATH"
-    echo "run \"go install github.com/nix-community/gomod2nix@latest\" to install"
-    exit
+    echo "gomod2nix could not be found in PATH, installing..."
+    go install github.com/nix-community/gomod2nix@latest
 fi
 # update gomod2nix.toml for simapp
 cd simapp; gomod2nix

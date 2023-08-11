@@ -67,6 +67,13 @@ type HasName interface {
 	Name() string
 }
 
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
+type UpgradeModule interface {
+	IsUpgradeModule()
+}
+
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
 type HasGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
@@ -692,17 +699,32 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// BeginBlock performs begin block functionality for all modules. It creates a
-// child context with an event manager to aggregate events emitted from all
+// RunMigrationBeginBlock performs begin block functionality for upgrade module.
+// It takes the current context as a parameter and returns a boolean value
+// indicating whether the migration was executed or not and an error if fails.
+func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
+	for _, moduleName := range m.OrderBeginBlockers {
+		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := mod.(UpgradeModule); ok {
+				err := mod.BeginBlock(ctx)
+				return err == nil, err
+			}
+		}
+	}
+	return false, nil
+}
+
+// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
+// child context with an event manager to aggregate events emitted from non-upgrade
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			err := module.BeginBlock(ctx)
-			if err != nil {
-				return sdk.BeginBlock{}, err
+			if _, ok := module.(UpgradeModule); !ok {
+				if err := module.BeginBlock(ctx); err != nil {
+					return sdk.BeginBlock{}, err
+				}
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -68,7 +67,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 
@@ -219,7 +218,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 	return nil

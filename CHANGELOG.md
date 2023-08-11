@@ -51,7 +51,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (version) [#17096](https://github.com/cosmos/cosmos-sdk/pull/17096) Improve `getSDKVersion()` to handle module replacements
 * (x/staking) [#17164](https://github.com/cosmos/cosmos-sdk/pull/17164) Add `BondedTokensAndPubKeyByConsAddr` to the keeper to enable vote extension verification.
 * (x/genutil) [#17296](https://github.com/cosmos/cosmos-sdk/pull/17296) Add `MigrateHandler` to allow reuse migrate genesis related function.
-* (x/slashing) [#17359](https://github.com/cosmos/cosmos-sdk/pull/17359) perf: use store has instead of get in HasValidatorSigningInfo.
 
 ### Bug Fixes
 

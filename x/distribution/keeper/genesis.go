@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -212,7 +211,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -226,7 +225,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -239,7 +238,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -258,7 +257,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		},
 	)
 
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 

@@ -36,7 +36,7 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.
 		return false, nil
 	})
 
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 

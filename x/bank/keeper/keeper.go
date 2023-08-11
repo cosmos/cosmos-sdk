@@ -145,13 +145,17 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	}
 
 	balances := sdk.NewCoins()
+	// Funds in a vesting account can still be delegated. Funds locked by other means cannot. Or if they should
+	// be available, the author of that GetLockedCoinsFn can check the context against HasVestingLockedBypass too.
+	locked := k.LockedCoins(types.WithVestingLockedBypass(ctx), delegatorAddr)
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, delegatorAddr, coin.GetDenom())
-		if balance.IsLT(coin) {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
-			)
+		lockedAmt := locked.AmountOf(coin.GetDenom())
+		available := balance.Amount.Sub(lockedAmt)
+		if available.LT(coin.Amount) {
+			return sdkerrors.ErrInsufficientFunds.Wrapf("failed to delegate; amount available %s%s is less than %s",
+				math.MaxInt(available, math.ZeroInt()), coin.GetDenom(), coin)
 		}
 
 		balances = balances.Add(balance)

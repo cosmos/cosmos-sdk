@@ -58,7 +58,7 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-) (stopEarly bool, exportedParams Params, err error) {
+) (stopEarly bool, endTime time.Time, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
@@ -75,7 +75,7 @@ func SimulateFromSeed(
 	// TM 0.24) Initially this is the same as the initial validator set
 	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config, cdc)
 	if len(accs) == 0 {
-		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
+		return true, genesisTimestamp, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
 	config.ChainID = chainID
@@ -228,7 +228,7 @@ func SimulateFromSeed(
 			eventStats.Print(w)
 		}
 
-		return true, exportedParams, err
+		return true, header.Time, exportedParams, err
 	}
 
 	fmt.Fprintf(
@@ -244,7 +244,7 @@ func SimulateFromSeed(
 		eventStats.Print(w)
 	}
 
-	return false, exportedParams, nil
+	return false, header.Time, exportedParams, nil
 }
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,

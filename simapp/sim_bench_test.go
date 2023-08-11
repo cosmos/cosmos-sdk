@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -33,7 +34,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
@@ -80,7 +81,7 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
@@ -105,7 +106,7 @@ func BenchmarkInvariants(b *testing.B) {
 		PrintStats(db)
 	}
 
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
 
 	// 3. Benchmark each invariant separately
 	//

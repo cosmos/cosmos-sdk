@@ -84,7 +84,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -122,7 +122,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -176,8 +176,8 @@ func TestAppImportExport(t *testing.T) {
 		}
 	}()
 
-	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
+	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
@@ -233,7 +233,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -279,9 +279,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
+		Time:          lastBlockTime,
 	})
 
-	_, _, err = simulation.SimulateFromSeed(
+	FlagGenesisTimeValue = lastBlockTime.Unix()
+	_, _, _, err = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newApp.BaseApp,
@@ -343,7 +345,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, _, err := simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,

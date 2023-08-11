@@ -9,6 +9,7 @@ const (
 	EventTypeActiveProposal   = "active_proposal"
 	EventTypeSignalProposal   = "signal_proposal"
 
+<<<<<<< HEAD
 	AttributeKeyProposalResult     = "proposal_result"
 	AttributeKeyOption             = "option"
 	AttributeKeyProposalID         = "proposal_id"
@@ -21,4 +22,23 @@ const (
 	AttributeKeyProposalType       = "proposal_type"
 	AttributeSignalTitle           = "signal_title"
 	AttributeSignalDescription     = "signal_description"
+=======
+	AttributeKeyProposalResult              = "proposal_result"
+	AttributeKeyVoter                       = "voter"
+	AttributeKeyOption                      = "option"
+	AttributeKeyProposalID                  = "proposal_id"
+	AttributeKeyProposalMessages            = "proposal_messages" // Msg type_urls in the proposal
+	AttributeKeyVotingPeriodStart           = "voting_period_start"
+	AttributeKeyProposalLog                 = "proposal_log"                // log of proposal execution
+	AttributeValueProposalDropped           = "proposal_dropped"            // didn't meet min deposit
+	AttributeValueProposalPassed            = "proposal_passed"             // met vote quorum
+	AttributeValueProposalRejected          = "proposal_rejected"           // didn't meet vote quorum
+	AttributeValueExpeditedProposalRejected = "expedited_proposal_rejected" // didn't meet expedited vote quorum
+	AttributeValueProposalFailed            = "proposal_failed"             // error on proposal handler
+	AttributeValueProposalCanceled          = "proposal_canceled"           // error on proposal handler
+
+	AttributeKeyProposalType   = "proposal_type"
+	AttributeSignalTitle       = "signal_title"
+	AttributeSignalDescription = "signal_description"
+>>>>>>> 85d9791ed (feat(x/gov): Emit VoterAddr (#17354))
 )

@@ -1003,27 +1003,33 @@ func TestChangeValidatorBond(t *testing.T) {
 		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
 	}
 
-	// Create a delegator and 2 validators
-	addresses := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1_000_000))
-	pubKeys := simapp.CreateTestPubKeys(3)
+	// Create a delegator and 3 validators
+	addresses := simapp.AddTestAddrs(app, ctx, 4, sdk.NewInt(1_000_000))
+	pubKeys := simapp.CreateTestPubKeys(4)
 
 	validatorAPubKey := pubKeys[1]
 	validatorBPubKey := pubKeys[2]
+	validatorCPubKey := pubKeys[3]
 
 	delegatorAddress := addresses[0]
 	validatorAAddress := sdk.ValAddress(validatorAPubKey.Address())
 	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
+	validatorCAddress := sdk.ValAddress(validatorCPubKey.Address())
 
 	validatorA := teststaking.NewValidator(t, validatorAAddress, validatorAPubKey)
 	validatorB := teststaking.NewValidator(t, validatorBAddress, validatorBPubKey)
+	validatorC := teststaking.NewValidator(t, validatorCAddress, validatorCPubKey)
 
 	validatorA.Tokens = sdk.NewInt(1_000_000)
 	validatorB.Tokens = sdk.NewInt(1_000_000)
+	validatorC.Tokens = sdk.NewInt(1_000_000)
 	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
 	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
+	validatorC.DelegatorShares = sdk.NewDec(1_000_000)
 
 	app.StakingKeeper.SetValidator(ctx, validatorA)
 	app.StakingKeeper.SetValidator(ctx, validatorB)
+	app.StakingKeeper.SetValidator(ctx, validatorC)
 
 	// The test will go through Delegate/Redelegate/Undelegate messages with the following
 	delegation1Amount := sdk.NewInt(1000)
@@ -1036,7 +1042,7 @@ func TestChangeValidatorBond(t *testing.T) {
 	redelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), redelegateAmount)
 	undelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), undelegateAmount)
 
-	// Delegate to validator A - validator bond shares should not change
+	// Delegate to validator's A and C - validator bond shares should not change
 	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
@@ -1044,20 +1050,36 @@ func TestChangeValidatorBond(t *testing.T) {
 	})
 	require.NoError(t, err, "no error expected during first delegation")
 
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorCAddress.String(),
+		Amount:           delegate1Coin,
+	})
+	require.NoError(t, err, "no error expected during first delegation")
+
 	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
 	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, sdk.ZeroInt())
 
-	// Flag the delegation as a validator bond
+	// Flag the the delegations to validator A and C validator bond's
+	// Their bond shares should increase
 	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
 	})
 	require.NoError(t, err, "no error expected during validator bond")
 
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorCAddress.String(),
+	})
+	require.NoError(t, err, "no error expected during validator bond")
+
 	checkValidatorBondShares(validatorAAddress, delegation1Amount)
 	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
-	// Delegate more - it should increase the validator bond shares
+	// Delegate more to validator A - it should increase the validator bond shares
 	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
@@ -1067,8 +1089,10 @@ func TestChangeValidatorBond(t *testing.T) {
 
 	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
 	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
-	// Redelegate partially from A to B - it should remove the bond shares from the source validator
+	// Redelegate partially from A to B (where A is a validator bond and B is not)
+	// It should remove the bond shares from A, and B's validator bond shares should not change
 	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
 		DelegatorAddress:    delegatorAddress.String(),
 		ValidatorSrcAddress: validatorAAddress.String(),
@@ -1077,10 +1101,42 @@ func TestChangeValidatorBond(t *testing.T) {
 	})
 	require.NoError(t, err, "no error expected during redelegation")
 
-	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount))
+	expectedBondSharesA := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
 	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
 
-	// Undelegate from validator A - it should have removed the shares
+	// Now redelegate from B to C (where B is not a validator bond, but C is)
+	// Validator B's bond shares should remain at zero, but C's bond shares should increase
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorBAddress.String(),
+		ValidatorDstAddress: validatorCAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount.Add(redelegateAmount))
+
+	// Redelegate partially from A to C (where C is a validator bond delegation)
+	// It should remove the bond shares from A, and increase the bond shares on validator C
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorCAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	expectedBondSharesA = expectedBondSharesA.Sub(redelegateAmount)
+	expectedBondSharesC := delegation1Amount.Add(redelegateAmount).Add(redelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
+
+	// Undelegate from validator A - it should remove shares
 	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAAddress.String(),
@@ -1088,9 +1144,10 @@ func TestChangeValidatorBond(t *testing.T) {
 	})
 	require.NoError(t, err, "no error expected during undelegation")
 
-	expectedBondShares := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount).Sub(undelegateAmount)
-	checkValidatorBondShares(validatorAAddress, expectedBondShares)
+	expectedBondSharesA = expectedBondSharesA.Sub(undelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
 	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
 }
 
 func TestEnableDisableTokenizeShares(t *testing.T) {

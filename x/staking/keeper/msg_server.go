@@ -296,7 +296,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	srcDelegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -312,7 +312,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 
 	// If this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
 	// The delegation on the new validator will not a validator bond
-	if delegation.ValidatorBond {
+	if srcDelegation.ValidatorBond {
 		if err := k.SafelyDecreaseValidatorBond(ctx, srcValidator, srcShares); err != nil {
 			return nil, err
 		}
@@ -344,10 +344,6 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if !found {
 			return nil, types.ErrNoValidatorFound
 		}
-		dstValidator, found = k.GetValidator(ctx, valDstAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
-		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -362,6 +358,19 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// If the redelegation adds to a validator bond delegation, update the validator's bond shares
+	dstDelegation, found := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+	if !found {
+		return nil, types.ErrNoDelegation
+	}
+	if dstDelegation.ValidatorBond {
+		dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
+		if err != nil {
+			return nil, err
+		}
+		k.IncreaseValidatorBondShares(ctx, dstValidator, dstShares)
 	}
 
 	if msg.Amount.Amount.IsInt64() {

@@ -701,7 +701,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 
 // RunMigrationBeginBlock performs begin block functionality for upgrade module.
 // It takes the current context as a parameter and returns a boolean value
-// indicating whether the migration was successfully executed or not.
+// indicating whether the migration was executed or not and an error if fails.
 func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {

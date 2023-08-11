@@ -686,7 +686,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 
 	if app.beginBlocker != nil {
 		ctx := app.finalizeBlockState.ctx
-		if app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
+		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
 			cp := ctx.ConsensusParams()
 			if cp.Block == nil {
 				if cp = app.GetConsensusParams(ctx); cp.Block != nil {

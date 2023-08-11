@@ -31,8 +31,48 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
-	if err := k.assertMetadataLength(metadata); err != nil {
-		return err
+	vote := v1.NewVote(proposalID, voterAddr, options, metadata)
+	keeper.SetVote(ctx, vote)
+
+	// called after a vote on a proposal is cast
+	keeper.AfterProposalVote(ctx, proposalID, voterAddr)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeProposalVote,
+			sdk.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyOption, options.String()),
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		),
+	)
+
+	return nil
+}
+
+// GetAllVotes returns all the votes from the store
+func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1.Votes) {
+	keeper.IterateAllVotes(ctx, func(vote v1.Vote) bool {
+		votes = append(votes, &vote)
+		return false
+	})
+	return
+}
+
+// GetVotes returns all the votes from a proposal
+func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1.Votes) {
+	keeper.IterateVotes(ctx, proposalID, func(vote v1.Vote) bool {
+		votes = append(votes, &vote)
+		return false
+	})
+	return
+}
+
+// GetVote gets the vote from an address on a specific proposal
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(types.VoteKey(proposalID, voterAddr))
+	if bz == nil {
+		return vote, false
 	}
 
 	store := ctx.KVStore(keeper.storeKey)

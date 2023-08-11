@@ -1,0 +1,18 @@
+name: Documentation Request
+description: Create an issue for missing or incorrect documentation
+title: "[Documentation]: "
+labels: ["T:Docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ✰  Thanks for opening an issue! ✰    
+        Before smashing the submit button please review the template.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Summary
+      description: Tell us where what you would like to see get added to the documentation or if there is an error in the documentation?
+    validations:
+      required: true

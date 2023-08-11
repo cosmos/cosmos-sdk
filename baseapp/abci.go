@@ -193,7 +193,18 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		ctx := app.deliverState.ctx
+		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx, req) {
+			cp := ctx.ConsensusParams()
+			// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+			// and consensus parameters should not be overwritten.
+			if cp == nil || cp.Block == nil {
+				if cp = app.GetConsensusParams(ctx); cp != nil {
+					ctx = ctx.WithConsensusParams(cp)
+				}
+			}
+		}
+		res = app.beginBlocker(ctx, req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx

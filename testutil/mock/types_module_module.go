@@ -879,3 +879,40 @@ func (mr *MockEndBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 inter
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
+
+// MockUpgradeModule is a mock of UpgradeModule interface.
+type MockUpgradeModule struct {
+	*MockBeginBlockAppModule
+	recorder *MockUpgradeModuleMockRecorder
+}
+
+// MockUpgradeModuleMockRecorder is the mock recorder for MockUpgradeModule.
+type MockUpgradeModuleMockRecorder struct {
+	*MockBeginBlockAppModuleMockRecorder
+}
+
+// NewMockUpgradeModule creates a new mock instance.
+func NewMockUpgradeModule(ctrl *gomock.Controller) *MockUpgradeModule {
+	mock := &MockUpgradeModule{
+		MockBeginBlockAppModule: NewMockBeginBlockAppModule(ctrl),
+	}
+	mock.recorder = &MockUpgradeModuleMockRecorder{mock.MockBeginBlockAppModule.recorder}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUpgradeModule) EXPECT() *MockUpgradeModuleMockRecorder {
+	return m.recorder
+}
+
+// IsUpgradeModule mocks base method.
+func (m *MockUpgradeModule) IsUpgradeModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsUpgradeModule")
+}
+
+// IsUpgradeModule indicates an expected call of IsUpgradeModule.
+func (mr *MockUpgradeModuleMockRecorder) IsUpgradeModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUpgradeModule", reflect.TypeOf((*MockUpgradeModule)(nil).IsUpgradeModule))
+}

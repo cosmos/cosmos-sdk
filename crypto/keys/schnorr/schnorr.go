@@ -1,12 +1,12 @@
 package schnorr
 
 import (
-	"bytes"
 	"crypto/subtle"
 	"fmt"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/key"
 
@@ -37,26 +37,24 @@ type Suite interface {
 	kyber.XOFFactory
 }
 
-type basicSig struct {
-	C kyber.Scalar // challenge
-	R kyber.Scalar // response
-}
-
 // GenPrivKey generates a new Schnorr private key.
 func GenPrivKey() *PrivKey {
 	suite := suites.MustFind(curve)
-	keyPair := suite.Scgit alar().Pick(suite.RandomStream())
+	keyPair := suite.Scalar().Pick(suite.RandomStream())
 	binary, err := keyPair.MarshalBinary()
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating priv key: %e", err)
 	}
+
+	key.NewKeyPair(suite)
+
 	return &PrivKey{Key: binary}
 }
 
 func (privKey *PrivKey) GetKeyPair() *key.Pair {
 	suite := suites.MustFind(curve)
 	keyPair := key.NewKeyPair(suite)
-	_ = keyPair.Private.UnmarshalBinary(privKey.Key)
+	_ = keyPair.Private.UnmarshalBinary(privKey.Bytes())
 
 	return keyPair
 }
@@ -72,39 +70,12 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 	keyPair := privKey.GetKeyPair()
 
-	// Create random secret v and public point commitment T
-	v := suite.Scalar().Pick(suite.RandomStream())
-	publicPoint := suite.Point().Mul(v, nil)
-
-	// Create challenge c based on message and T
-	c, err := hashSchnorr(suite, msg, publicPoint)
-	if err != nil {
-		return nil, fmt.Errorf("generating schnorr hash: %s", err.Error())
-	}
-
-	// Compute response r = v - x*c
-	r := suite.Scalar()
-	r.Mul(keyPair.Private, c).Sub(v, r)
-
-	// Return verifiable signature {c, r}
-	// Verifier will be able to compute v = r + x*c
-	// And check that hashElgamal for T and the message == c
-	buf := bytes.Buffer{}
-	sig := basicSig{c, r}
-	err = suite.Write(&buf, &sig)
+	signedMsg, err := schnorr.Sign(suite, keyPair.Private, msg)
 	if err != nil {
 		return nil, fmt.Errorf("signing message failed %s", err.Error())
 	}
 
-	return buf.Bytes(), err
-}
-
-// Returns a secret that depends on a message msg and a point P
-func hashSchnorr(suite Suite, msg []byte, p kyber.Point) (kyber.Scalar, error) {
-	pb, _ := p.MarshalBinary()
-	c := suite.XOF(pb)
-	_, err := c.Write(msg)
-	return suite.Scalar().Pick(c), err
+	return signedMsg, err
 }
 
 // PubKey gets the corresponding public key from the private key.
@@ -139,12 +110,12 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (privKey PrivKey) MarshalAmino() ([]byte, error) {
-	return privKey.Key, nil
+func (privKey *PrivKey) MarshalAmino() ([]byte, error) {
+	return privKey.Bytes(), nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
+func (privKey *PrivKey) MarshalAminoJSON() ([]byte, error) {
 	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
 	// just its contents (i.e. the key bytes).
 	return privKey.MarshalAmino()
@@ -174,7 +145,8 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // in SDK except in a tendermint validator context.
 func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Bytes()) != PubKeySize {
-		panic("pubkey is incorrect size")
+		fmt.Println("pubkey is incorrect size")
+		return nil
 	}
 	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()))
 }
@@ -198,30 +170,14 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	}
 
 	suite := suites.MustFind(curve)
+	keyPair := pubKey.GetKeyPair()
 
-	buf := bytes.NewBuffer(sig)
-	newBasicSig := basicSig{}
-	if err := suite.Read(buf, &newBasicSig); err != nil {
-		return false
-	}
-	r, c := newBasicSig.R, newBasicSig.C
-
-	// base**(r + x*c) == T
-	var P, T kyber.Point
-	P, T = suite.Point(), suite.Point()
-	T.Add(T.Mul(r, nil), P.Mul(c, pubKey.GetKeyPair().Public))
-
-	// Verify that the hash based on the message and T
-	// matches the challange c from the signature
-	c, err := hashSchnorr(suite, msg, T)
+	err := schnorr.Verify(suite, keyPair.Public, msg, sig)
 	if err != nil {
-		return false
+		fmt.Println("Schnorr verification failed", err.Error())
 	}
 
-	if !c.Equal(newBasicSig.C) {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (pubKey *PubKey) Type() string {
@@ -238,12 +194,12 @@ func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (pubKey PubKey) MarshalAmino() ([]byte, error) {
+func (pubKey *PubKey) MarshalAmino() ([]byte, error) {
 	return pubKey.Key, nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
+func (pubKey *PubKey) MarshalAminoJSON() ([]byte, error) {
 	return pubKey.MarshalAmino()
 }
 

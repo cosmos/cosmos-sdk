@@ -15,7 +15,7 @@ message PubKey {
   option (amino.message_encoding)     = "key_field";
   option (gogoproto.goproto_stringer) = false;
 
-  bytes key = 1 [(gogoproto.customtype) = "schnorrPK"];
+  bytes key = 1 [(gogoproto.customtype) = "crypto/schnorr.PublicKey"];
 }
 
 // PrivKey defines a Schnorr private key.
@@ -23,5 +23,5 @@ message PrivKey {
   option (amino.name)             = "tendermint/PrivKeySchnorr";
   option (amino.message_encoding) = "key_field";
 
-  bytes secret = 1 [(gogoproto.customtype) = "schnorrSK"];
+  bytes key = 1 [(gogoproto.customtype) = "crypto/schnorr.PrivateKey"];
 }

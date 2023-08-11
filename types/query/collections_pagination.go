@@ -109,7 +109,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 		results, pageRes, err = collFilteredPaginateNoKey(ctx, coll, prefix, reverse, offset, limit, countTotal, predicateFunc, transformFunc)
 	}
 	// invalid iter error is ignored to retain Paginate behavior
-	if errors.Is(err, collections.ErrInvalidIterator) { // TODO verify this
+	if errors.Is(err, collections.ErrInvalidIterator) {
 		return results, new(PageResponse), nil
 	}
 	// strip the prefix from next key

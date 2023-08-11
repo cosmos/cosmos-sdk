@@ -688,6 +688,8 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 		ctx := app.finalizeBlockState.ctx
 		if app.migrationModuleManager != nil && app.migrationModuleManager.RunMigrationBeginBlock(ctx) {
 			cp := ctx.ConsensusParams()
+			// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+			// and consensus parameters should not be overwritten.
 			if cp.Block == nil {
 				if cp = app.GetConsensusParams(ctx); cp.Block != nil {
 					ctx = ctx.WithConsensusParams(cp)

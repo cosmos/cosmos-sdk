@@ -74,6 +74,11 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
+```diff
++ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+
 #### Events
 
 The log section of `abci.TxResult` is not populated in the case of successful

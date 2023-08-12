@@ -62,6 +62,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/group) [#17146](https://github.com/cosmos/cosmos-sdk/pull/17146) Rename x/group legacy ORM package's error codespace from "orm" to "legacy_orm", preventing collisions with ORM's error codespace "orm".
 * (x/bank) [#17170](https://github.com/cosmos/cosmos-sdk/pull/17170) Avoid empty spendable error message on send coins.
 * (x/distribution) [#17236](https://github.com/cosmos/cosmos-sdk/pull/17236) Using "validateCommunityTax" in "Params.ValidateBasic", preventing panic when field "CommunityTax" is nil.
+* (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
+* (baseapp) [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Stop state-machine when `RunMigrationBeginBlock` has error.
 
 ### API Breaking Changes
 

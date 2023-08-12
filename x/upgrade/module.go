@@ -74,6 +74,19 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
+// DefaultGenesis is an empty object
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
+	return []byte("{}")
+}
+
+// ValidateGenesis is always successful, as we ignore the value
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
+	return nil
+}
+
+// IsUpgradeModule implements the module.UpgradeModule interface.
+func (ab AppModuleBasic) IsUpgradeModule() {}
+
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
@@ -135,16 +148,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 	}
 
 	return []abci.ValidatorUpdate{}
-}
-
-// DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	return []byte("{}")
-}
-
-// ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
-	return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either

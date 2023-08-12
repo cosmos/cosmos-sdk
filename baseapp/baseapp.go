@@ -43,6 +43,12 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
+// MigrationModuleManager is the interface that a migration module manager should implement to handle
+// the execution of migration logic during the beginning of a block.
+type MigrationModuleManager interface {
+	RunMigrationBeginBlock(ctx sdk.Context) (bool, error)
+}
+
 const (
 	execModeCheck           execMode = iota // Check a transaction
 	execModeReCheck                         // Recheck a (pending) transaction after a commit
@@ -91,6 +97,9 @@ type BaseApp struct {
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
+
+	// manages migrate module
+	migrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -228,7 +237,7 @@ func NewBaseApp(
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
-	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs base app will panic.
+	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	return app
@@ -265,6 +274,11 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
+func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
+	app.migrationModuleManager = migrationModuleManager
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -513,7 +527,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 // It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
-		panic("cannot store consensus params with no params store set")
+		return errors.New("cannot store consensus params with no params store set")
 	}
 
 	return app.paramStore.Set(ctx, cp)
@@ -664,16 +678,31 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
+		ctx := app.finalizeBlockState.ctx
+		if app.migrationModuleManager != nil {
+			if success, err := app.migrationModuleManager.RunMigrationBeginBlock(ctx); success {
+				cp := ctx.ConsensusParams()
+				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+				// and consensus parameters should not be overwritten.
+				if cp.Block == nil {
+					if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+						ctx = ctx.WithConsensusParams(cp)
+					}
+				}
+			} else if err != nil {
+				return sdk.BeginBlock{}, err
+			}
+		}
+		resp, err = app.beginBlocker(ctx)
 		if err != nil {
-			panic(err)
+			return resp, err
 		}
 
 		// append BeginBlock attributes to all events in the EndBlock response
@@ -687,7 +716,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
-	return resp
+	return resp, nil
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
@@ -735,7 +764,7 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	if app.endBlocker != nil {
 		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return endblock, err
 		}
 
 		// append EndBlock attributes to all events in the EndBlock response
@@ -950,7 +979,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// create message events
-		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
+		}
 
 		// append message events and data
 		//
@@ -994,19 +1026,19 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) (sdk.Events, error) {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
 	signers, err := cdc.GetMsgV2Signers(msgV2)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if len(signers) > 0 && signers[0] != nil {
 		addrStr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(signers[0])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, addrStr))
 	}
@@ -1018,7 +1050,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 		}
 	}
 
-	return sdk.Events{msgEvent}.AppendEvents(events)
+	return sdk.Events{msgEvent}.AppendEvents(events), nil
 }
 
 // PrepareProposalVerifyTx performs transaction verification when a proposer is

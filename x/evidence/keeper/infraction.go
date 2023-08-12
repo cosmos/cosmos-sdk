@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
@@ -123,7 +123,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		consAddr,
 		slashFractionDoubleSign,
 		evidence.GetValidatorPower(), distributionHeight,
-		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
+		st.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 	if err != nil {
 		return err

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -118,8 +117,7 @@ func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
 			return false, nil
 		},
 	)
-
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 

@@ -74,6 +74,10 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
+
+#### Upgrade
+
+**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
 ```diff
 + app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
 ```

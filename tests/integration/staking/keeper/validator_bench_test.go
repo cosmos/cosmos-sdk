@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -176,7 +175,7 @@ func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValA
 
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

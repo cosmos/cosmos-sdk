@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -57,7 +56,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 			}
 			return false, nil
 		})
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding", err.Error()), true
 		}
 		broken := count != 0
@@ -156,7 +155,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 			},
 		)
 
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 
@@ -171,7 +170,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 			},
 		)
 
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 
@@ -193,7 +192,7 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			expectedCoins = expectedCoins.Add(rewards.Rewards...)
 			return false, nil
 		})
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "module account coins", err.Error()), true
 		}
 

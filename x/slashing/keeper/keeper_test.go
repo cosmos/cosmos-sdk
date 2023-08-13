@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -23,7 +24,6 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtestutil "github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		s.ctx.BlockHeight(),
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		slashFractionDoubleSign,
-		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
+		st.Infraction_INFRACTION_UNSPECIFIED,
 	).Return(sdkmath.NewInt(0), nil)
 
 	err = s.slashingKeeper.Slash(
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		s.ctx.BlockHeight(),
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		slashFractionDoubleSign,
-		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
+		st.Infraction_INFRACTION_DOUBLE_SIGN,
 	).Return(sdkmath.NewInt(0), nil)
 
 	err = s.slashingKeeper.SlashWithInfractionReason(
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		slashFractionDoubleSign,
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
-		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
+		st.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 	s.Require().NoError(err)
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)

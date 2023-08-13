@@ -32,6 +32,7 @@ func TestSignAndValidateSchnorr(t *testing.T) {
 
 	// Sign the message with a different pub key
 	newSig, err := schnorr.GenPrivKey().Sign(msg)
+	assert.NoError(t, err)
 	assert.False(t, pubKey.VerifySignature(msg, newSig))
 }
 

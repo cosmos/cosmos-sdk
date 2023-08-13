@@ -4,6 +4,17 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
+### BaseApp
+
+#### Upgrade
+
+**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+```diff
++ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+
+
 ### Migration to CometBFT (Part 1)
 
 The Cosmos SDK has migrated to CometBFT, as its default consensus engine.

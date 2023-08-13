@@ -52,6 +52,12 @@ be a matter of minutes and not even require them to be awake at that time.
 
 ## Integrating With An App
 
+After app initiation, call `SetMigrationModuleManager` with ModuleManager to give BaseApp access to `RunMigrationBeginBlock`:
+
+```go
+app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+
 Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade
 keeper's BeginBlocker method:
 

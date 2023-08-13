@@ -50,13 +50,19 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
-## Integrating With An App
+## Set Migration Module Manager
+
+:::tip
+Users using `depinject` / app v2 do not need any changes, this is abstracted for them.
+:::
 
 After app initiation, call `SetMigrationModuleManager` with ModuleManager to give BaseApp access to `RunMigrationBeginBlock`:
 
 ```go
 app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
 ```
+
+## Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade
 keeper's BeginBlocker method:

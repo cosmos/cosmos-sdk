@@ -3,11 +3,11 @@ package schnorr
 import (
 	"crypto/subtle"
 	"fmt"
+	"go.dedis.ch/kyber/v3/suites"
+
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/key"
 
 	errorsmod "cosmossdk.io/errors"
@@ -31,12 +31,6 @@ const (
 	curve   = "Ed25519"
 )
 
-type Suite interface {
-	kyber.Group
-	kyber.Encoding
-	kyber.XOFFactory
-}
-
 // GenPrivKey generates a new Schnorr private key.
 func GenPrivKey() *PrivKey {
 	suite := suites.MustFind(curve)
@@ -45,9 +39,6 @@ func GenPrivKey() *PrivKey {
 	if err != nil {
 		fmt.Printf("[ERRPR] While generating priv key: %e", err)
 	}
-
-	key.NewKeyPair(suite)
-
 	return &PrivKey{Key: binary}
 }
 
@@ -74,7 +65,6 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("signing message failed %s", err.Error())
 	}
-
 	return signedMsg, err
 }
 
@@ -110,12 +100,12 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (privKey *PrivKey) MarshalAmino() ([]byte, error) {
-	return privKey.Bytes(), nil
+func (privKey PrivKey) MarshalAmino() ([]byte, error) {
+	return privKey.Key, nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (privKey *PrivKey) MarshalAminoJSON() ([]byte, error) {
+func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
 	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
 	// just its contents (i.e. the key bytes).
 	return privKey.MarshalAmino()
@@ -176,7 +166,6 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	if err != nil {
 		fmt.Println("Schnorr verification failed", err.Error())
 	}
-
 	return err == nil
 }
 
@@ -194,12 +183,12 @@ func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 }
 
 // MarshalAmino overrides Amino binary marshaling.
-func (pubKey *PubKey) MarshalAmino() ([]byte, error) {
+func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 	return pubKey.Key, nil
 }
 
 // MarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey *PubKey) MarshalAminoJSON() ([]byte, error) {
+func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 	return pubKey.MarshalAmino()
 }
 

@@ -201,7 +201,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					panic(err)
+					return nil, err
 				}
 			} else {
 				var txGasLimit uint64

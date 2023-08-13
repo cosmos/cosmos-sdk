@@ -2,10 +2,11 @@ package schnorr_test
 
 import (
 	"encoding/base64"
+	"testing"
+
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/schnorr"

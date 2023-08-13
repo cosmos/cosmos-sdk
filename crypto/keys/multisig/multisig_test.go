@@ -1,6 +1,7 @@
 package multisig_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -379,6 +380,7 @@ func TestDisplay(t *testing.T) {
 		), &cdc)
 	require.NoError(err)
 	bz, err := cdc.MarshalInterfaceJSON(msig)
+	fmt.Println("msig", msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))

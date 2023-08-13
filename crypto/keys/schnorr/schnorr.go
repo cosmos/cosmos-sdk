@@ -3,11 +3,12 @@ package schnorr
 import (
 	"crypto/subtle"
 	"fmt"
-	"go.dedis.ch/kyber/v3/suites"
+
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/key"
 
 	errorsmod "cosmossdk.io/errors"
@@ -45,7 +46,11 @@ func GenPrivKey() *PrivKey {
 func (privKey *PrivKey) GetKeyPair() *key.Pair {
 	suite := suites.MustFind(curve)
 	keyPair := key.NewKeyPair(suite)
-	_ = keyPair.Private.UnmarshalBinary(privKey.Bytes())
+	err := keyPair.Private.UnmarshalBinary(privKey.Bytes())
+	if err != nil {
+		fmt.Println("failed to unmarshall binary on private key bytes")
+		return nil
+	}
 
 	return keyPair
 }

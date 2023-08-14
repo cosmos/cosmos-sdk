@@ -40,7 +40,7 @@ type Builder struct {
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
 
-	// Keyring
+	// Keyring implementation
 	Keyring keyring.Keyring
 }
 

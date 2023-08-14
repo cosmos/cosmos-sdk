@@ -17,6 +17,7 @@ docs/docs/rfc
 docs/docs/tooling/01-cosmovisor.md
 docs/docs/tooling/02-confix.md
 docs/docs/tooling/03-hubl.md
+docs/docs/core/17-autocli.md
 docs/docs/packages/01-depinject.md
 docs/docs/packages/02-collections.md
 docs/docs/packages/03-orm.md

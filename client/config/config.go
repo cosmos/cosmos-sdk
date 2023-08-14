@@ -78,7 +78,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get key ring: %w", err)
+		return ctx, fmt.Errorf("couldn't get keyring: %w", err)
 	}
 
 	ctx = ctx.WithKeyring(keyring)

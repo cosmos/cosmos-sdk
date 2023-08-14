@@ -9,12 +9,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-<<<<<<< HEAD
 	address "cosmossdk.io/core/address"
-||||||| 35d2e48aea
-=======
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
->>>>>>> main
 	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"

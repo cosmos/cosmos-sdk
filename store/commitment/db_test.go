@@ -78,4 +78,7 @@ func TestIavlTree(t *testing.T) {
 	err = tree.LoadVersion(1)
 	require.NoError(t, err)
 	require.Equal(t, version1Hash, tree.WorkingHash())
+
+	// close the db
+	require.NoError(t, tree.Close())
 }

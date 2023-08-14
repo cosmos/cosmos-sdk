@@ -15,7 +15,7 @@ type Batch struct {
 // NewBatch creates a new Batch instance.
 func NewBatch() *Batch {
 	return &Batch{
-		Pairs: []KVPair{},
+		Pairs: make([]KVPair, 0),
 	}
 }
 

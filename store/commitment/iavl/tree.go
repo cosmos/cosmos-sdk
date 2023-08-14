@@ -77,3 +77,8 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 func (t *IavlTree) GetLatestVersion() uint64 {
 	return uint64(t.tree.Version())
 }
+
+// Close closes the iavl tree.
+func (t *IavlTree) Close() error {
+	return nil
+}

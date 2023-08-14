@@ -12,4 +12,5 @@ type Tree interface {
 	LoadVersion(targetVersion uint64) error
 	Commit() ([]byte, error)
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
+	Close() error
 }

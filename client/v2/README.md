@@ -90,6 +90,10 @@ This provides a better UX as it allows to resolve key names directly from the ke
 The keyring to be provided to `client/v2` must match the `client/v2` keyring interface. The Cosmos SDK keyring and Hubl keyring both implement this interface.
 The keyring should be provided in the `appOptions` struct as follows, and can be gotten from the client context:
 
+:::warning
+When using AutoCLI the keyring will only be created once and before any command flag parsing.
+:::
+
 ```go
 // Get the keyring from the client context
 keyring := ctx.Keyring

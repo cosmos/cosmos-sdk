@@ -61,7 +61,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L
 ### Query Commands
 
 :::warning
-This section is being rewritten. Refer to [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli) while this section is being updated.
+This section is being rewritten. Refer to [AutoCLI](https://docs.cosmos.network/main/core/autocli) while this section is being updated.
 :::
 
 <!-- UPDATE THIS TO AUTOCLI

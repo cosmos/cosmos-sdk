@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,13 +111,16 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
-	delegation := stakingtypes.NewDelegation(delegator.Address.String(), validator0.GetOperator().String(), issuedShares)
+	delegation := stakingtypes.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
 	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
-	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(validator0.GetOperator(), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+	valBz, err := address.NewBech32Codec("cosmosvaloper").StringToBytes(validator0.GetOperator())
+	suite.Require().NoError(err)
 
-	suite.setupValidatorRewards(validator0.GetOperator())
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(sdk.ValAddress(valBz), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	suite.setupValidatorRewards(valBz)
+
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -168,15 +172,22 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		sdk.NewDecCoinFromDec(tokenName, math.LegacyNewDec(5).Quo(math.LegacyNewDec(2))),
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(1))),
 	)
+	valCodec := address.NewBech32Codec("cosmosvaloper")
 
-	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission}))
-	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	val0, err := valCodec.StringToBytes(validator0.GetOperator())
+	suite.Require().NoError(err)
+
+	genVal0, err := valCodec.StringToBytes(suite.genesisVals[0].GetOperator())
+	suite.Require().NoError(err)
+
+	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, val0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, genVal0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// setup validator accumulated commission
-	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission}))
-	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})

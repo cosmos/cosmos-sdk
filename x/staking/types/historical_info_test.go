@@ -30,8 +30,8 @@ func createValidators(t *testing.T) []types.Validator {
 
 func TestHistoricalInfo(t *testing.T) {
 	validators := createValidators(t)
-	hi := types.NewHistoricalInfo(header, validators, sdk.DefaultPowerReduction)
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
+	hi := types.NewHistoricalInfo(header, types.Validators{Validators: validators}, sdk.DefaultPowerReduction)
+	require.True(t, sort.IsSorted(types.Validators{Validators: validators}), "Validators are not sorted")
 
 	var value []byte
 	require.NotPanics(t, func() {
@@ -45,7 +45,7 @@ func TestHistoricalInfo(t *testing.T) {
 	for i := range hi.Valset {
 		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
 	}
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
+	require.True(t, sort.IsSorted(types.Validators{Validators: validators}), "Validators are not sorted")
 }
 
 func TestValidateBasic(t *testing.T) {

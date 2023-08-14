@@ -74,7 +74,10 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		return math.NewInt(0), fmt.Errorf("should not be slashing unbonded validator: %s", validator.GetOperator())
 	}
 
-	operatorAddress := validator.GetOperator()
+	operatorAddress, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.Int{}, err
+	}
 
 	// call the before-modification hook
 	if err := k.Hooks().BeforeValidatorModified(ctx, operatorAddress); err != nil {
@@ -177,13 +180,9 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		panic("invalid validator status")
 	}
 
-	valAddr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-	if err != nil {
-		panic(err)
-	}
 	logger.Info(
 		"validator slashed by slash factor",
-		"validator", valAddr,
+		"validator", validator.GetOperator(),
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)

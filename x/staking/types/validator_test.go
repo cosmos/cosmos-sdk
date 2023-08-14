@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -256,7 +257,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	}
 
 	// Save sorted copy
-	sort.Sort(types.Validators(vals))
+	sort.Sort(types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")})
 	copy(sortedVals, vals)
 
 	// Randomly shuffle validators, sort, and check it is equal to original sort
@@ -265,7 +266,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 			vals[i], vals[j] = vals[j], vals[i]
 		})
 
-		types.Validators(vals).Sort()
+		types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}.Sort()
 		require.Equal(t, sortedVals, vals, "Validator sort returned different slices")
 	}
 }
@@ -286,7 +287,7 @@ func TestValidatorsSortCometBFT(t *testing.T) {
 		vals[i].Tokens = math.NewInt(1000000)
 	}
 
-	valz := types.Validators(vals)
+	valz := types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}
 
 	// create expected CometBFT validators by converting to CometBFT then sorting
 	expectedVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
@@ -294,8 +295,8 @@ func TestValidatorsSortCometBFT(t *testing.T) {
 	sort.Sort(cmttypes.ValidatorsByVotingPower(expectedVals))
 
 	// sort in SDK and then convert to CometBFT
-	sort.SliceStable(valz, func(i, j int) bool {
-		return types.ValidatorsByVotingPower(valz).Less(i, j, sdk.DefaultPowerReduction)
+	sort.SliceStable(valz.Validators, func(i, j int) bool {
+		return types.ValidatorsByVotingPower(valz.Validators).Less(i, j, sdk.DefaultPowerReduction)
 	})
 	actualVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
@@ -304,15 +305,15 @@ func TestValidatorsSortCometBFT(t *testing.T) {
 }
 
 func TestValidatorToCmt(t *testing.T) {
-	vals := make(types.Validators, 10)
+	vals := types.Validators{}
 	expected := make([]*cmttypes.Validator, 10)
 
-	for i := range vals {
+	for i := 0; i < 10; i++ {
 		pk := ed25519.GenPrivKey().PubKey()
 		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
 		val.Status = types.Bonded
 		val.Tokens = math.NewInt(rand.Int63())
-		vals[i] = val
+		vals.Validators = append(vals.Validators, val)
 		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		require.NoError(t, err)
 		expected[i] = cmttypes.NewValidator(cmtPk, val.ConsensusPower(sdk.DefaultPowerReduction))

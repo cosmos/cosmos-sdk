@@ -38,6 +38,7 @@ type ParamSubspace interface {
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
+	ConsensusAddressCodec() address.Codec
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error

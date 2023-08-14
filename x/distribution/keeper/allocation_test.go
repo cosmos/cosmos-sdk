@@ -69,23 +69,15 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(5)},
 	}
 
-<<<<<<< HEAD
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-=======
 	valBz, err := valCodec.StringToBytes(val.GetOperator())
 	require.NoError(t, err)
 
-	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valBz)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, valCommission.Commission)
 
 	// check current rewards
-<<<<<<< HEAD
-	currentRewards, err := distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator())
-=======
-	currentRewards, err := distrKeeper.ValidatorCurrentRewards.Get(ctx, valBz)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	currentRewards, err := distrKeeper.GetValidatorCurrentRewards(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, currentRewards.Rewards)
 }

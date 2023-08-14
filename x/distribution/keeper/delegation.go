@@ -64,20 +64,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 	}
 
 	// return staking * (ending - starting)
-<<<<<<< HEAD
-	starting, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
-=======
-	starting, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(sdk.ValAddress(valBz), startingPeriod))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	starting, err := k.GetValidatorHistoricalRewards(ctx, valBz, startingPeriod)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-<<<<<<< HEAD
-	ending, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
-=======
-	ending, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(sdk.ValAddress(valBz), endingPeriod))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	ending, err := k.GetValidatorHistoricalRewards(ctx, valBz, endingPeriod)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}

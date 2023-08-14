@@ -18,41 +18,25 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 		return err
 	}
 	// set initial historical rewards (period 0) with reference count of 1
-<<<<<<< HEAD
-	err := k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-=======
-	err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valBz), uint64(0)), types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorHistoricalRewards(ctx, valBz, 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
 
 	// set current rewards (starting at period 1)
-<<<<<<< HEAD
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-=======
-	err = k.ValidatorCurrentRewards.Set(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorCurrentRewards(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
 
 	// set accumulated commission
-<<<<<<< HEAD
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
-=======
-	err = k.ValidatorsAccumulatedCommission.Set(ctx, valBz, types.InitialValidatorAccumulatedCommission())
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorAccumulatedCommission(ctx, valBz, types.InitialValidatorAccumulatedCommission())
 	if err != nil {
 		return err
 	}
 
 	// set outstanding rewards
-<<<<<<< HEAD
-	err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
-=======
-	err = k.ValidatorOutstandingRewards.Set(ctx, valBz, types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorOutstandingRewards(ctx, valBz, types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 	return err
 }
 
@@ -64,13 +48,8 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// fetch current rewards
-<<<<<<< HEAD
-	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	rewards, err := k.GetValidatorCurrentRewards(ctx, valBz)
 	if err != nil {
-=======
-	rewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		return 0, err
 	}
 
@@ -85,13 +64,8 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-<<<<<<< HEAD
-		outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+		outstanding, err := k.GetValidatorOutstandingRewards(ctx, valBz)
 		if err != nil {
-=======
-		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
-		if err != nil && !errors.Is(err, collections.ErrNotFound) {
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 			return 0, err
 		}
 
@@ -102,11 +76,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-<<<<<<< HEAD
-		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
-=======
-		err = k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+		err = k.SetValidatorOutstandingRewards(ctx, valBz, outstanding)
 		if err != nil {
 			return 0, err
 		}
@@ -118,11 +88,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// fetch historical rewards for last period
-<<<<<<< HEAD
-	historical, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
-=======
-	historical, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(sdk.ValAddress(valBz), rewards.Period-1))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	historical, err := k.GetValidatorHistoricalRewards(ctx, valBz, rewards.Period-1)
 	if err != nil {
 		return 0, err
 	}
@@ -136,21 +102,13 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// set new historical rewards with reference count of 1
-<<<<<<< HEAD
-	err = k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
-=======
-	err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valBz), rewards.Period), types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorHistoricalRewards(ctx, valBz, rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
 	if err != nil {
 		return 0, err
 	}
 
 	// set current rewards, incrementing period by 1
-<<<<<<< HEAD
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
-=======
-	err = k.ValidatorCurrentRewards.Set(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	err = k.SetValidatorCurrentRewards(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
 	if err != nil {
 		return 0, err
 	}

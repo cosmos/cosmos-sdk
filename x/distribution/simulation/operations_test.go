@@ -110,27 +110,16 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
-<<<<<<< HEAD
 
-	delegation := stakingtypes.NewDelegation(delegator.Address.String(), validator0.GetOperator().String(), issuedShares)
-	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
-	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
-=======
 	delegation := stakingtypes.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
 	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
 	valBz, err := address.NewBech32Codec("cosmosvaloper").StringToBytes(validator0.GetOperator())
 	suite.Require().NoError(err)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, valBz, delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
-	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(sdk.ValAddress(valBz), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
-
-<<<<<<< HEAD
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-=======
 	suite.setupValidatorRewards(valBz)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -183,31 +172,20 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	)
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
-<<<<<<< HEAD
-	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
-	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
-
-	// setup validator accumulated commission
-	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
-	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
-
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-=======
 	val0, err := valCodec.StringToBytes(validator0.GetOperator())
 	suite.Require().NoError(err)
 
 	genVal0, err := valCodec.StringToBytes(suite.genesisVals[0].GetOperator())
 	suite.Require().NoError(err)
 
-	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, val0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
-	suite.Require().NoError(suite.distrKeeper.ValidatorOutstandingRewards.Set(suite.ctx, genVal0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, val0, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, genVal0, types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	// setup validator accumulated commission
-	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
-	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
+	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission})
+	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission})
 
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})

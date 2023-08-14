@@ -199,13 +199,9 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
-=======
 	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
 	s.Require().NoError(err)
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(val0bz), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, val0bz)
 
@@ -299,13 +295,9 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	delegator := s.accounts[2]
 	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
-=======
 	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
 	s.Require().NoError(err)
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(val0bz), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, val0bz)
 
@@ -347,15 +339,11 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	delegator := s.accounts[3]
 	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
 	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
-<<<<<<< HEAD:x/staking/simulation/operations_test.go
-	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
-=======
 	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
 	s.Require().NoError(err)
 	val1bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator1.GetOperator())
 	s.Require().NoError(err)
-	s.Require().NoError(s.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(val0bz), delegator.Address), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157)):tests/integration/staking/simulation/operations_test.go
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	s.setupValidatorRewards(ctx, val0bz)
 	s.setupValidatorRewards(ctx, val1bz)

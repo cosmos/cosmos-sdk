@@ -9,11 +9,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-<<<<<<< HEAD
-=======
 	address "cosmossdk.io/core/address"
-	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"

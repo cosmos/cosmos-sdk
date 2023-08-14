@@ -452,7 +452,6 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return err
 		}
 
-<<<<<<< HEAD
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
 			return err
@@ -463,15 +462,9 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return err
 		}
 
-		validators = append(validators, validator)
+		validators.Validators = append(validators.Validators, validator)
 		return nil
 	})
-=======
-			validators.Validators = append(validators.Validators, validator)
-			return types.Delegation{}, nil
-		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
-	)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

@@ -27,13 +27,8 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-<<<<<<< HEAD
-	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi))
-=======
 	hi := types.NewHistoricalInfo(header, types.Validators{Validators: sortedVals}, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	assert.NilError(t, f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi))
 
 	return addrs, validators
 }

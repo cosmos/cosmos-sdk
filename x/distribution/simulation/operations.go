@@ -1,9 +1,11 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/collections"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -186,18 +188,14 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-<<<<<<< HEAD
-		commission, err := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
-		if err != nil {
-=======
 		valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error converting validator address"), nil, err
 		}
 
-		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
+		commission, err := k.GetValidatorAccumulatedCommission(ctx, valBz)
+
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
 

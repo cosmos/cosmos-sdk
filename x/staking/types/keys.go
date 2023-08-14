@@ -6,11 +6,7 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/collections"
 	addresscodec "cosmossdk.io/core/address"
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

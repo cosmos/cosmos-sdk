@@ -877,19 +877,11 @@ func (k Keeper) Delegate(
 	}
 
 	// Get or create the delegation object and call the appropriate hook if present
-<<<<<<< HEAD
-	delegation, err := k.GetDelegation(ctx, delAddr, validator.GetOperator())
-	if err == nil {
-		// found
-		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
-	} else if errors.Is(err, types.ErrNoDelegation) {
-=======
-	delegation, err := k.Delegations.Get(ctx, collections.Join(delAddr, sdk.ValAddress(valbz)))
+	delegation, err := k.GetDelegation(ctx, delAddr, valbz)
 	if err == nil {
 		// found
 		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, valbz)
-	} else if errors.Is(err, collections.ErrNotFound) {
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	} else if errors.Is(err, types.ErrNoDelegation) {
 		// not found
 		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
 		if err1 != nil {

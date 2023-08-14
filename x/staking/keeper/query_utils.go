@@ -19,7 +19,7 @@ func (k Keeper) GetDelegatorValidators(
 
 	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
 	if err != nil {
-		return nil, err
+		return types.Validators{}, err
 	}
 	defer iterator.Close()
 
@@ -29,32 +29,20 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
-<<<<<<< HEAD
-			return nil, err
-=======
-			return false, err
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+			return types.Validators{}, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-<<<<<<< HEAD
-			return nil, err
-=======
-			return false, err
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+			return types.Validators{}, err
 		}
 
 		validators[i] = validator
 		i++
-<<<<<<< HEAD
-=======
+	}
 
-		return false, nil
-	})
 	if err != nil {
 		return types.Validators{}, err
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	}
 
 	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim

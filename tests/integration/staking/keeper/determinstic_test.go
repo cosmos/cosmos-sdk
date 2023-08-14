@@ -656,13 +656,8 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
 		vals := stakingtypes.Validators{}
 		for i := 0; i < numVals; i++ {
-<<<<<<< HEAD:tests/integration/staking/keeper/determinstic_test.go
 			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
-			vals = append(vals, validator)
-=======
-			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
 			vals.Validators = append(vals.Validators, validator)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157)):tests/integration/staking/keeper/deterministic_test.go
 		}
 
 		historicalInfo := stakingtypes.HistoricalInfo{

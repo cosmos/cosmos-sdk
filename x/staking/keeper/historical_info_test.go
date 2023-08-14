@@ -32,13 +32,8 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-<<<<<<< HEAD
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
-	require.NoError(keeper.SetHistoricalInfo(ctx, 2, &hi))
-=======
 	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), stakingtypes.Validators{Validators: validators}, keeper.PowerReduction(ctx))
-	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	require.NoError(keeper.SetHistoricalInfo(ctx, 2, &hi))
 
 	recv, err := keeper.GetHistoricalInfo(ctx, 2)
 	require.NoError(err, "HistoricalInfo not found after set")
@@ -77,19 +72,11 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
-<<<<<<< HEAD
-	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
+	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
+	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.SetHistoricalInfo(ctx, 4, &hi4))
 	require.NoError(keeper.SetHistoricalInfo(ctx, 5, &hi5))
 	recv, err := keeper.GetHistoricalInfo(ctx, 4)
-=======
-	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
-	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
-	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(5), hi5))
-	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(4))
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	require.NoError(err)
 	require.Equal(hi4, recv)
 	recv, err = keeper.GetHistoricalInfo(ctx, 5)

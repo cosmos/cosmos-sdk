@@ -84,18 +84,14 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 	if err != nil {
 		return err
 	}
-<<<<<<< HEAD
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
-=======
 
 	bz, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 	if err != nil {
 		return err
 	}
 
-	return k.ValidatorByConsensusAddress.Set(ctx, consPk, bz)
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
+	return store.Set(types.GetValidatorByConsAddrKey(consPk), bz)
 }
 
 // SetValidatorByPowerIndex sets a validator by power index

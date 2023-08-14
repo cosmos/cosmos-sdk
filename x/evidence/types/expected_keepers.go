@@ -4,11 +4,7 @@ import (
 	"context"
 	"time"
 
-<<<<<<< HEAD
-=======
-	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
->>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 

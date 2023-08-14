@@ -17,26 +17,35 @@ Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-m
 ## Application Module Interfaces
 
 Application module interfaces exist to facilitate the composition of modules together to form a functional Cosmos SDK application.
+
+:::note
+
+It is recommended to implement interfaces from the [Core API](https://docs.cosmos.network/main/architecture/adr-063-core-module-api) `appmodule` package. This makes module less dependent on the SDK.
+For legacy reason modules can still implement interfaces from the SDK `module` package.
+
+:::
+
 There are 4 main application module interfaces:
 
-* [`AppModuleBasic`](#appmodulebasic) for independent module functionalities.
-* [`AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
-* [`AppModuleGenesis`](#appmodulegenesis) for inter-dependent genesis-related module functionalities.
-* `GenesisOnlyAppModule`: Defines an `AppModule` that only has import/export functionality
+* [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
+* (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
+* (legacy) [`module.AppModuleGenesis`](#appmodulegenesis) for inter-dependent genesis-related module functionalities.
+* (legacy) `module.GenesisOnlyAppModule`: Defines an `AppModule` that only has import/export functionality
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
-* `HasName`: Allows the module to provide its own name for legacy purposes.
-* [`HasGenesisBasics`](#hasgenesisbasics): The legacy interface for stateless genesis methods.
-* [`HasGenesis`](#hasgenesis): The extension interface for stateful genesis methods.
-* [`HasInvariants`](#hasinvariants): The extension interface for registering invariants.
-* [`HasServices`](#hasservices): The extension interface for modules to register services.
-* [`HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
-* [`HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
-* [`HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
-* [`HasABCIEndblock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
-* [`HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
-* [`HasPrepareCheckState`](#haspreparecheckstate): The extension interface that contains information about the `AppModule` and `PrepareCheckState`.
+* (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
+* (legacy) [`module.HasGenesisBasics`](#hasgenesisbasics): The legacy interface for stateless genesis methods.
+* [`appmodule.HasGenesis` / `module.HasGenesis`](#hasgenesis): The extension interface for stateful genesis methods.
+* [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
+* [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
+* [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
+* [`appmodule.HasPrepareCheckState`](#haspreparecheckstate): The extension interface that contains information about the `AppModule` and `PrepareCheckState`.
+* [`appmodule.UpgradeModule`]: The extension interface that signify if the `AppModule` if the module is an upgrade module.
+* [`appmodule.HasService` / `module.HasServices`](#hasservices): The extension interface for modules to register services.
+* [`module.HasABCIEndblock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
+* (legacy) [`module.HasInvariants`](#hasinvariants): The extension interface for registering invariants.
+* (legacy) [`module.HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
 
 The `AppModuleBasic` interface exists to define independent methods of the module, i.e. those that do not depend on other modules in the application. This allows for the construction of the basic application structure early in the application definition, generally in the `init()` function of the [main application file](../basics/00-app-anatomy.md#core-application-file).
 
@@ -45,6 +54,10 @@ The `AppModule` interface exists to define inter-dependent module methods. Many 
 The usage of extension interfaces allows modules to define only the functionalities they need. For example, a module that does not need an `EndBlock` does not need to define the `HasEndBlocker` interface and thus the `EndBlock` method. `AppModule` and `AppModuleGenesis` are voluntarily small interfaces, that can take advantage of the `Module` patterns without having to define many placeholder functions.
 
 ### `AppModuleBasic`
+
+:::note
+Use `module.CoreAppModuleBasicAdaptor` instead for creating an `AppModuleBasic` from an `appmodule.AppModule`.
+:::
 
 The `AppModuleBasic` interface defines the independent methods modules need to implement.
 
@@ -70,6 +83,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 ### `HasGenesisBasics`
 
+:::note
+Use `appmodule.HasGenesis` instead.
+:::
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L76-L79
 ```
@@ -80,6 +97,10 @@ Let us go through the methods:
 * `ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./08-genesis.md#validategenesis) function defined by the module developer.
 
 ### `AppModuleGenesis`
+
+:::note
+Use `appmodule.HasGenesis` instead.
+:::
 
 The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` and `HasGenesis` interfaces.
 
@@ -105,16 +126,23 @@ Let us go through the two added methods:
 ### `AppModule`
 
 The `AppModule` interface defines a module. Modules can declare their functionalities by implementing extensions interfaces.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L197-L99
-```
-
 `AppModule`s are managed by the [module manager](#manager), which checks which extension interfaces are implemented by the module.
 
+#### `appmodule.AppModule`
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/6afece6/core/appmodule/module.go#L11-L20
+```
+
+#### `module.AppModule`
+
 :::note 
-Previously the `AppModule` interface was containing all the methods that are defined in the extensions interfaces. This was leading to much boilerplate for modules that did not need all the functionalities.
+Previously the `module.AppModule` interface was containing all the methods that are defined in the extensions interfaces. This was leading to much boilerplate for modules that did not need all the functionalities.
 :::
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L195-L199
+```
 
 ### `HasInvariants`
 
@@ -129,6 +157,14 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 ### `HasServices`
 
 This interface defines one method. It allows to checks if a module can register invariants.
+
+#### `appmodule.HasService`
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/6afece6/core/appmodule/module.go#L22-L40
+```
+
+#### `module.HasServices`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L208-L211
@@ -148,7 +184,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 ### `HasBeginBlocker`
 
-The `HasBeginBlocker` is an extension interface from `AppModule`. All modules that have an `BeginBlock` method implement this interface.
+The `HasBeginBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `BeginBlock` method implement this interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L56-L63
@@ -158,7 +194,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 ### `HasEndBlocker`
 
-The `HasEndBlocker` is an extension interface from `AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndblock`
+The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndblock`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L66-L72
@@ -168,7 +204,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 ### `HasABCIEndblock`
 
-The `HasABCIEndblock` is an extension interface from `AppModule`. All modules that have an `EndBlock` which return validator set updates implement this interface.
+The `HasABCIEndblock` is an extension interface from `module.AppModule`. All modules that have an `EndBlock` which return validator set updates implement this interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L222-L225
@@ -178,7 +214,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 ### `HasPrecommit`
 
-`HasPrecommit` is an extension interface from `AppModule`. All modules that have a `Precommit` method implement this interface.
+`HasPrecommit` is an extension interface from `appmodule.AppModule`. All modules that have a `Precommit` method implement this interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L49-L52
@@ -188,7 +224,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 ### `HasPrepareCheckState`
 
-`HasPrepareCheckState` is an extension interface from `AppModule`. All modules that have a `PrepareCheckState` method implement this interface.
+`HasPrepareCheckState` is an extension interface from `appmodule.AppModule`. All modules that have a `PrepareCheckState` method implement this interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L49-L52
@@ -233,6 +269,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 It implements the following methods:
 
 * `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/00-app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/main/app/app.go#L59-L74) to see an example).
+* `NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic)`: Contructor function. It creates a new `BasicManager` from a `Manager`. The `BasicManager` will contain all `AppModuleBasic` from the `AppModule` manager using `CoreAppModuleBasicAdaptor` whenever possible. Module's `AppModuleBasic` can be overridden by passing a custom AppModuleBasic map
 * `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec.LegacyAmino`s](../core/05-encoding.md#amino) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/00-app-anatomy.md#constructor).
 * `RegisterInterfaces(registry codectypes.InterfaceRegistry)`: Registers interface types and implementations of each of the application's `AppModuleBasic`.
 * `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.

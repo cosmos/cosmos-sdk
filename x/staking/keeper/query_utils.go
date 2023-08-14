@@ -29,19 +29,35 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
+<<<<<<< HEAD
 			return nil, err
+=======
+			return false, err
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
+<<<<<<< HEAD
 			return nil, err
+=======
+			return false, err
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		}
 
 		validators[i] = validator
 		i++
+<<<<<<< HEAD
+=======
+
+		return false, nil
+	})
+	if err != nil {
+		return types.Validators{}, err
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
 // GetDelegatorValidator returns a validator that a delegator is bonded to

@@ -182,6 +182,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -283,6 +284,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -306,6 +308,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		math.LegacyNewDecWithPrec(2, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -390,7 +393,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	addr1 := sdk.AccAddress(valConsAddr1)
-	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil)
+	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil, stakingKeeper)
 	require.NoError(t, err)
 
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr1, valAddr).Return(del1, nil)
@@ -582,6 +585,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 
 	// slash the validator by 50% again
@@ -594,6 +598,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 
 	// increase block height
@@ -685,6 +690,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
@@ -699,6 +705,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&val,
 		sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		nil,
+		stakingKeeper,
 	)
 	require.NoError(t, err)
 
@@ -726,6 +733,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
@@ -818,6 +826,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		&val,
 		math.NewInt(100),
 		nil,
+		stakingKeeper,
 	)
 	require.NoError(t, err)
 

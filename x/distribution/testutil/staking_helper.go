@@ -49,13 +49,19 @@ func SlashValidator(
 	slashFactor math.LegacyDec,
 	validator *stakingtypes.Validator,
 	distrKeeper *keeper.Keeper,
+	sk *MockStakingKeeper,
 ) math.Int {
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
+	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+
 	// call the before-modification hook
-	err := distrKeeper.Hooks().BeforeValidatorModified(ctx, validator.GetOperator())
+	err = distrKeeper.Hooks().BeforeValidatorModified(ctx, valBz)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +89,14 @@ func SlashValidator(
 			effectiveFraction = math.LegacyOneDec()
 		}
 		// call the before-slashed hook
+<<<<<<< HEAD
 		distrKeeper.Hooks().BeforeValidatorSlashed(ctx, validator.GetOperator(), effectiveFraction)
+=======
+		err := distrKeeper.Hooks().BeforeValidatorSlashed(ctx, valBz, effectiveFraction)
+		if err != nil {
+			panic(err)
+		}
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	}
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
@@ -102,16 +115,21 @@ func Delegate(
 	validator *stakingtypes.Validator,
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
+	sk *MockStakingKeeper,
 ) (
 	newShares math.LegacyDec,
 	updatedDel stakingtypes.Delegation,
 	err error,
 ) {
+	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
+	}
 	if delegation != nil {
-		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator.GetOperator())
+		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, valBz)
 	} else {
-		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, validator.GetOperator())
-		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator().String(), math.LegacyZeroDec())
+		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, valBz)
+		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

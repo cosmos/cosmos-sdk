@@ -56,10 +56,10 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 
 	vals := types.Validators{}
 	for _, val := range validators {
-		vals = append(vals, *val)
+		vals.Validators = append(vals.Validators, *val)
 	}
 
-	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{Validators: vals.Validators, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator address
@@ -452,6 +452,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return err
 		}
 
+<<<<<<< HEAD
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
 			return err
@@ -465,11 +466,17 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		validators = append(validators, validator)
 		return nil
 	})
+=======
+			validators.Validators = append(validators.Validators, validator)
+			return types.Delegation{}, nil
+		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
+	)
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators.Validators, Pagination: pageRes}, nil
 }
 
 // Pool queries the pool info

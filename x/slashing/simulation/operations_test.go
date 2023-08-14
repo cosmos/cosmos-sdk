@@ -175,10 +175,16 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)
+<<<<<<< HEAD
 
 	selfDelegation := stakingtypes.NewDelegation(suite.accounts[0].Address.String(), validator0.GetOperator().String(), issuedShares)
 	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
 	suite.Require().NoError(suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+=======
+	selfDelegation := stakingtypes.NewDelegation(suite.accounts[0].Address.String(), validator0.GetOperator(), issuedShares)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(val0AccAddress, sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 
 	// begin a new block
 	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})

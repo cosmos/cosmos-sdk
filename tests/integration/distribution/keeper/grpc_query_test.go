@@ -510,12 +510,22 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
+<<<<<<< HEAD
 	assert.NilError(t, f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
+=======
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
+<<<<<<< HEAD
 	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards))
+=======
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), uint64(2)), historicalRewards))
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	assert.NilError(t, f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards))

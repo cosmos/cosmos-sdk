@@ -197,7 +197,10 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
@@ -235,7 +238,10 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))

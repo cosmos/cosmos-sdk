@@ -453,7 +453,11 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	consAddr, err := val2.GetConsAddr()
 	assert.NilError(t, err)
+<<<<<<< HEAD
 	f.stakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr.Bytes()))
+=======
+	assert.NilError(t, f.stakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr)))
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 
 	tp := TestProposal
 	proposal, err := f.govKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)

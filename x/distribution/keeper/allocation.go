@@ -87,7 +87,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 
-	valStr, err := k.stakingKeeper.ValidatorAddressCodec().BytesToString(val.GetOperator())
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
 		return err
 	}
@@ -98,28 +98,47 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valStr),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
+<<<<<<< HEAD
 	currentCommission, err := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
 	if err != nil {
+=======
+	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		return err
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
+<<<<<<< HEAD
 	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+=======
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, valBz, currentCommission)
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	if err != nil {
 		return err
 	}
 
 	// update current rewards
+<<<<<<< HEAD
 	currentRewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 	if err != nil {
+=======
+	currentRewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
+	// if the rewards do not exist it's fine, we will just add to zero.
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		return err
 	}
 
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
+<<<<<<< HEAD
 	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
+=======
+	err = k.ValidatorCurrentRewards.Set(ctx, valBz, currentRewards)
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	if err != nil {
 		return err
 	}
@@ -129,15 +148,24 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
 
+<<<<<<< HEAD
 	outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	if err != nil {
+=======
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 		return err
 	}
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
+<<<<<<< HEAD
 	return k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+=======
+	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 }

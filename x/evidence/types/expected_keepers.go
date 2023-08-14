@@ -4,6 +4,11 @@ import (
 	"context"
 	"time"
 
+<<<<<<< HEAD
+=======
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/core/address"
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 
@@ -16,6 +21,7 @@ type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
+		ConsensusAddressCodec() address.Codec
 		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
 		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}

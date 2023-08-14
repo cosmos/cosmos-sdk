@@ -8,8 +8,12 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+=======
+	"github.com/cosmos/cosmos-sdk/codec/address"
+>>>>>>> e60c583d2 (refactor: migrate away from using valBech32 globals (2/2) (#17157))
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -52,11 +56,12 @@ func TestValidateBasic(t *testing.T) {
 	hi := types.HistoricalInfo{
 		Header: header,
 	}
-	err := types.ValidateBasic(hi)
+	ac := address.NewBech32Codec("cosmosvaloper")
+	err := types.ValidateBasic(hi, ac)
 	require.Error(t, err, "ValidateBasic passed on nil ValSet")
 
 	// Ensure validators are not sorted
-	for sort.IsSorted(types.Validators(validators)) {
+	for sort.IsSorted(types.Validators{Validators: validators, ValidatorCodec: ac}) {
 		rand.Shuffle(len(validators), func(i, j int) {
 			validators[i], validators[j] = validators[j], validators[i]
 		})
@@ -65,10 +70,10 @@ func TestValidateBasic(t *testing.T) {
 		Header: header,
 		Valset: validators,
 	}
-	err = types.ValidateBasic(hi)
+	err = types.ValidateBasic(hi, ac)
 	require.Error(t, err, "ValidateBasic passed on unsorted ValSet")
 
-	hi = types.NewHistoricalInfo(header, validators, sdk.DefaultPowerReduction)
-	err = types.ValidateBasic(hi)
+	hi = types.NewHistoricalInfo(header, types.Validators{Validators: validators, ValidatorCodec: ac}, sdk.DefaultPowerReduction)
+	err = types.ValidateBasic(hi, ac)
 	require.NoError(t, err, "ValidateBasic failed on valid HistoricalInfo")
 }

@@ -610,9 +610,18 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	}
 
 	// delegate back the unbonding delegation amount to the validator
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
+	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
 	if err != nil {
 		return nil, err
+	}
+
+	// If the delegation is a validator bond, increment the validator bond shares
+	delegation, found := k.Keeper.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegation
+	}
+	if delegation.ValidatorBond {
+		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)

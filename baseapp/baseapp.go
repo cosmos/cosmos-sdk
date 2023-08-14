@@ -999,7 +999,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 
-	txSuccess := false
+	var txSuccess bool
 	msgCtx := ctx // This context may be replaced on each message for non-atomic execution.
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.

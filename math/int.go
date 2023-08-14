@@ -106,6 +106,7 @@ func NewIntFromUint64(n uint64) Int {
 
 // NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
+// Note, the caller can safely mutate the argument after this function returns.
 func NewIntFromBigInt(i *big.Int) Int {
 	if i == nil {
 		return Int{}
@@ -114,7 +115,8 @@ func NewIntFromBigInt(i *big.Int) Int {
 	if i.BitLen() > MaxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
-	return Int{i}
+
+	return Int{new(big.Int).Set(i)}
 }
 
 // NewIntFromString constructs Int from string

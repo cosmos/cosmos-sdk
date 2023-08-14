@@ -1,7 +1,6 @@
 package multisig_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -39,6 +38,7 @@ func TestNewMultiSig(t *testing.T) {
 
 func TestAddress(t *testing.T) {
 	pubKeys := generatePubKeys(5)
+	pubKeys[1] = schnorr.GenPrivKey().PubKey()
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
 	require.Len(t, multisigKey.Address().Bytes(), 20)
@@ -123,6 +123,7 @@ func TestVerifyMultisignature(t *testing.T) {
 			"wrong size for sig bit array",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(3)
+				pubKeys[1] = schnorr.GenPrivKey().PubKey()
 				pk = kmultisig.NewLegacyAminoPubKey(3, pubKeys)
 				sig = multisig.NewMultisig(1)
 			},
@@ -218,6 +219,7 @@ func TestVerifyMultisignature(t *testing.T) {
 			"unable to verify signature",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(2)
+				pubKeys[1] = schnorr.GenPrivKey().PubKey()
 				_, sigs := generatePubKeysAndSignatures(2, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 				sig = multisig.NewMultisig(2)
@@ -287,6 +289,7 @@ func TestMultiSigMigration(t *testing.T) {
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	pubkeys := generatePubKeys(5)
+	pubkeys[1] = schnorr.GenPrivKey().PubKey()
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
 	ab, err := legacy.Cdc.MarshalLengthPrefixed(multisigKey)
@@ -305,7 +308,6 @@ func generatePubKeys(n int) []cryptotypes.PubKey {
 	for i := 0; i < n; i++ {
 		pks[i] = secp256k1.GenPrivKey().PubKey()
 	}
-	pks[n-1] = schnorr.GenPrivKey().PubKey()
 	return pks
 }
 
@@ -380,7 +382,6 @@ func TestDisplay(t *testing.T) {
 		), &cdc)
 	require.NoError(err)
 	bz, err := cdc.MarshalInterfaceJSON(msig)
-	fmt.Println("msig", msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))
@@ -390,6 +391,8 @@ func TestDisplay(t *testing.T) {
 
 func TestAminoBinary(t *testing.T) {
 	pubkeys := generatePubKeys(2)
+	pubkeys[1] = schnorr.GenPrivKey().PubKey()
+
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
 	// Do a round-trip key->bytes->key.
@@ -403,6 +406,7 @@ func TestAminoBinary(t *testing.T) {
 
 func TestAminoMarshalJSON(t *testing.T) {
 	pubkeys := generatePubKeys(2)
+	pubkeys[1] = schnorr.GenPrivKey().PubKey()
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	bz, err := legacy.Cdc.MarshalJSON(multisigKey)
 	require.NoError(t, err)

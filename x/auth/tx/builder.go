@@ -214,12 +214,8 @@ func (w *wrapper) FeePayer() []byte {
 	return signers[0]
 }
 
-func (w *wrapper) FeeGranter() string {
-	feeGranter := w.tx.AuthInfo.Fee.Granter
-	if feeGranter != "" {
-		return feeGranter
-	}
-	return ""
+func (w *wrapper) FeeGranter() []byte {
+	return w.tx.FeeGranter(w.cdc)
 }
 
 func (w *wrapper) GetTip() *tx.Tip {

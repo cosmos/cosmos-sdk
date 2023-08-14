@@ -1,0 +1,26 @@
+go 1.20
+
+use (
+	.
+	./api
+	./client/v2
+	./collections
+	./core
+	./depinject
+	./errors
+	./log
+	./math
+	./orm
+	./simapp
+	./tests
+	./store
+	./tools/cosmovisor
+	./tools/confix
+	./tools/hubl
+	./x/tx
+	./x/nft
+	./x/circuit
+	./x/feegrant
+	./x/evidence
+	./x/upgrade
+)

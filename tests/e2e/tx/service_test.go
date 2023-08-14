@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	errorsmod "cosmossdk.io/errors"
-
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -73,12 +73,12 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -91,7 +91,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1)),
 		),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -99,7 +99,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
@@ -187,11 +187,11 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 				// Check the result and gas used are correct.
 				//
 				// The 12 events are:
-				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - Sending Fee to the pool: coin_spent, coin_received and transfer
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
-				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
-				s.Require().Equal(12, len(res.GetResult().GetEvents()))
+				// - Sending Amount to recipient: coin_spent, coin_received and transfer
+				// - Msg events: message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1> (in one message)
+				s.Require().Equal(10, len(res.GetResult().GetEvents()))
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -288,7 +288,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().Equal(12, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 12 events.
+				s.Require().Equal(10, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 10 events.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -658,7 +658,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
@@ -679,7 +679,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)

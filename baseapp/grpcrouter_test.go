@@ -5,11 +5,11 @@ import (
 	"sync"
 	"testing"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -118,6 +118,7 @@ func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
 }
 
 func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper) {
+	t.Helper()
 	t.Parallel()
 
 	qr := baseapp.NewGRPCQueryRouter()

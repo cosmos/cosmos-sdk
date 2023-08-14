@@ -3,13 +3,15 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"math"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -33,6 +35,15 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	}
 
 	return func(bapp *BaseApp) { bapp.setMinGasPrices(gasPrices) }
+}
+
+// SetQueryGasLimit returns an option that sets a gas limit for queries.
+func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
+	if queryGasLimit == 0 {
+		queryGasLimit = math.MaxUint64
+	}
+
+	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
@@ -70,11 +81,6 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
-}
-
-// SetIAVLLazyLoading enables/disables lazy loading of the IAVL store.
-func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -182,6 +188,14 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 	}
 
 	app.precommiter = precommiter
+}
+
+func (app *BaseApp) SetPreFinalizeBlockHook(hook sdk.PreFinalizeBlockHook) {
+	if app.sealed {
+		panic("SetPreFinalizeBlockHook() on sealed BaseApp")
+	}
+
+	app.preFinalizeBlockHook = hook
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {

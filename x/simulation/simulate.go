@@ -31,8 +31,12 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
+	blockMaxGas := int64(-1)
+	if config.BlockMaxGas > 0 {
+		blockMaxGas = config.BlockMaxGas
+	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
-	consensusParams := randomConsensusParams(r, appState, cdc)
+	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
@@ -61,6 +65,7 @@ func SimulateFromSeed(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
+	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
@@ -138,8 +143,8 @@ func SimulateFromSeed(
 	logWriter := NewLogWriter(testingMode)
 
 	blockSimulator := createBlockSimulator(
-		testingMode,
 		tb,
+		testingMode,
 		w,
 		params,
 		eventStats.Tally,
@@ -180,7 +185,7 @@ func SimulateFromSeed(
 			return true, params, err
 		}
 
-		ctx := app.NewContext(false, cmtproto.Header{
+		ctx := app.NewContextLegacy(false, cmtproto.Header{
 			Height:          blockHeight,
 			Time:            blockTime,
 			ProposerAddress: proposerAddress,
@@ -189,13 +194,13 @@ func SimulateFromSeed(
 
 		// run queued operations; ignores block size if block size is too small
 		numQueuedOpsRan, futureOps := runQueuedOperations(
-			operationQueue, int(blockHeight), tb, r, app, ctx, accs, logWriter,
+			tb, operationQueue, int(blockHeight), r, app, ctx, accs, logWriter,
 			eventStats.Tally, config.Lean, config.ChainID,
 		)
 
-		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(
+		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(tb,
 			timeOperationQueue, int(blockHeight), blockTime,
-			tb, r, app, ctx, accs, logWriter, eventStats.Tally,
+			r, app, ctx, accs, logWriter, eventStats.Tally,
 			config.Lean, config.ChainID,
 		)
 
@@ -220,7 +225,11 @@ func SimulateFromSeed(
 		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
 		if config.Commit {
-			app.Commit()
+			_, err := app.Commit()
+			if err != nil {
+				return true, params, err
+			}
+
 		}
 
 		if proposerAddress == nil {
@@ -281,11 +290,12 @@ type blockSimFn func(
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, tb testing.TB, w io.Writer, params Params,
+func createBlockSimulator(tb testing.TB, testingMode bool, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
 	logWriter LogWriter, config simulation.Config,
 ) blockSimFn {
+	tb.Helper()
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectOp := ops.getSelectOpFn()
@@ -348,11 +358,12 @@ Comment: %s`,
 	}
 }
 
-func runQueuedOperations(queueOps map[int][]simulation.Operation,
-	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
+func runQueuedOperations(tb testing.TB, queueOps map[int][]simulation.Operation,
+	height int, r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string,
 ) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
+	tb.Helper()
 	queuedOp, ok := queueOps[height]
 	if !ok {
 		return 0, nil
@@ -384,12 +395,13 @@ func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	return numOpsRan, allFutureOps
 }
 
-func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
-	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
+func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperation,
+	height int, currentTime time.Time, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string,
 ) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
+	tb.Helper()
 	// Keep all future operations
 	allFutureOps = make([]simulation.FutureOperation, 0)
 

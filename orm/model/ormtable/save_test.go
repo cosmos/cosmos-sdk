@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/regen-network/gocuke"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
-
-	"github.com/regen-network/gocuke"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testpb"

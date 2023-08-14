@@ -3,11 +3,11 @@ package decode
 import (
 	"fmt"
 
-	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
 
+	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
 

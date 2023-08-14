@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/x/upgrade/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -25,7 +26,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",
@@ -38,7 +39,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"invalid plan",
@@ -73,8 +74,8 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)
-				plan, found := s.upgradeKeeper.GetUpgradePlan(s.ctx)
-				s.Require().Equal(true, found)
+				plan, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.req.Plan, plan)
 			}
 		})
@@ -103,7 +104,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: "authority",
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"unauthorized authority address",
@@ -111,7 +112,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: s.addrs[0].String(),
 			},
 			true,
-			"expected gov account as only signer for proposal message",
+			"expected authority account as only signer for proposal message",
 		},
 		{
 			"upgrade canceled successfully",
@@ -130,8 +131,8 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
 				s.Require().NoError(err)
-				_, found := s.upgradeKeeper.GetUpgradePlan(s.ctx)
-				s.Require().Equal(false, found)
+				_, err := s.upgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().ErrorIs(err, types.ErrNoUpgradePlanFound)
 			}
 		})
 	}

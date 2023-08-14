@@ -18,13 +18,7 @@ func DefaultParams() Params {
 
 // ValidateBasic performs basic validation on distribution parameters.
 func (p Params) ValidateBasic() error {
-	if p.CommunityTax.IsNegative() || p.CommunityTax.GT(math.LegacyOneDec()) {
-		return fmt.Errorf(
-			"community tax should be non-negative and less than one: %s", p.CommunityTax,
-		)
-	}
-
-	return nil
+	return validateCommunityTax(p.CommunityTax)
 }
 
 func validateCommunityTax(i interface{}) error {

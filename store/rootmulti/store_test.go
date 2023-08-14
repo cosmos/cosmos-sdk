@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -456,41 +456,44 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, err)
 
 	// Test bad path.
-	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	query := types.RequestQuery{Path: "/key", Data: k, Height: ver}
+	_, err = multi.Query(&query)
+	codespace, code, _ := errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	_, err = multi.Query(&query)
+	codespace, code, _ = errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
+	_, err = multi.Query(&query)
+	codespace, code, _ = errors.ABCIInfo(err, false)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err := multi.Query(&query)
+	require.NoError(t, err)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err = multi.Query(&query)
+	require.NoError(t, err)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	// Since we are using the request as a reference, the path will be modified.
 	query.Data = k2
 	query.Path = "/store2/key"
-	qres = multi.Query(&query)
-	require.EqualValues(t, 0, qres.Code)
+	qres, err = multi.Query(&query)
+	require.NoError(t, err)
 	require.Equal(t, v2, qres.Value)
 }
 
@@ -541,11 +544,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		interval    uint64 = 10
 	)
 
-	expectedHeights := []int64{}
-	for i := int64(1); i < numVersions-int64(keepRecent); i++ {
-		expectedHeights = append(expectedHeights, i)
-	}
-
 	db := dbm.NewMemDB()
 
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(keepRecent, interval))
@@ -572,12 +570,8 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
 
-	// Ensure already pruned heights were loaded
-	heights, err := ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, expectedHeights, heights)
-
-	require.NoError(t, ms.pruningManager.LoadPruningHeights(db))
+	// Ensure already pruned snapshot heights were loaded
+	require.NoError(t, ms.pruningManager.LoadSnapshotHeights(db))
 
 	// Test pruning the same heights again
 	lastCommitInfo = ms.Commit()
@@ -591,7 +585,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
-	ms.SetSnapshotInterval(3)
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -600,37 +593,26 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 		ms.Commit()
 	}
 
-	pruneHeights := []int64{1, 2, 4, 5, 7}
-
-	// ensure we've persisted the current batch of heights to prune to the store's DB
-	err := ms.pruningManager.LoadPruningHeights(ms.db)
-	require.NoError(t, err)
-
-	actualHeightsToPrune, err := ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, len(pruneHeights), len(actualHeightsToPrune))
-	require.Equal(t, pruneHeights, actualHeightsToPrune)
+	actualHeightToPrune := ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(0), actualHeightToPrune)
 
 	// "restart"
 	ms = newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
-	ms.SetSnapshotInterval(3)
-	err = ms.LoadLatestVersion()
+	err := ms.LoadLatestVersion()
 	require.NoError(t, err)
 
-	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Equal(t, pruneHeights, actualHeightsToPrune)
+	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(0), actualHeightToPrune)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
 
-	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
-	require.NoError(t, err)
-	require.Empty(t, actualHeightsToPrune)
+	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+	require.Equal(t, int64(8), actualHeightToPrune)
 
-	for _, v := range pruneHeights {
+	for v := int64(1); v <= actualHeightToPrune; v++ {
 		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.NoError(t, err, "expected error when loading height: %d", v)
+		require.Error(t, err, "expected error when loading height: %d", v)
 	}
 }
 
@@ -666,7 +648,8 @@ func TestSetInitialVersion(t *testing.T) {
 
 	require.NoError(t, multi.LoadLatestVersion())
 
-	multi.SetInitialVersion(5)
+	err := multi.SetInitialVersion(5)
+	require.NoError(t, err)
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
@@ -838,26 +821,27 @@ func unmountStore(rootStore *Store, storeKeyName string) {
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
+	t.Helper()
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 }
 
-func checkContains(t testing.TB, info []types.StoreInfo, wanted []string) {
-	t.Helper()
+func checkContains(tb testing.TB, info []types.StoreInfo, wanted []string) {
+	tb.Helper()
 
 	for _, want := range wanted {
-		checkHas(t, info, want)
+		checkHas(tb, info, want)
 	}
 }
 
-func checkHas(t testing.TB, info []types.StoreInfo, want string) {
-	t.Helper()
+func checkHas(tb testing.TB, info []types.StoreInfo, want string) {
+	tb.Helper()
 	for _, i := range info {
 		if i.Name == want {
 			return
 		}
 	}
-	t.Fatalf("storeInfo doesn't contain %s", want)
+	tb.Fatalf("storeInfo doesn't contain %s", want)
 }
 
 func getExpectedCommitID(store *Store, ver int64) types.CommitID {
@@ -933,13 +917,15 @@ func (stub *commitKVStoreStub) Commit() types.CommitID {
 	return commitID
 }
 
-func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
+func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.LoadLatestVersion()
+	if err := store.LoadLatestVersion(); err != nil {
+		return nil, err
+	}
 	return map[types.StoreKey]types.CommitKVStore{
 		testStoreKey1: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
@@ -950,7 +936,7 @@ func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 		testStoreKey3: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
 		},
-	}
+	}, nil
 }
 
 func TestCommitStores(t *testing.T) {
@@ -977,7 +963,8 @@ func TestCommitStores(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			storeMap := prepareStoreMap()
+			storeMap, err := prepareStoreMap()
+			require.NoError(t, err)
 			store := storeMap[testStoreKey1].(*commitKVStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()

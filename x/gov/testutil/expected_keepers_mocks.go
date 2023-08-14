@@ -262,6 +262,21 @@ func (mr *MockBankKeeperMockRecorder) DenomMetadata(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadata", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadata), arg0, arg1)
 }
 
+// DenomMetadataByQueryString mocks base method.
+func (m *MockBankKeeper) DenomMetadataByQueryString(arg0 context.Context, arg1 *types0.QueryDenomMetadataByQueryStringRequest) (*types0.QueryDenomMetadataByQueryStringResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DenomMetadataByQueryString", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QueryDenomMetadataByQueryStringResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DenomMetadataByQueryString indicates an expected call of DenomMetadataByQueryString.
+func (mr *MockBankKeeperMockRecorder) DenomMetadataByQueryString(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadataByQueryString", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadataByQueryString), arg0, arg1)
+}
+
 // DenomOwners mocks base method.
 func (m *MockBankKeeper) DenomOwners(arg0 context.Context, arg1 *types0.QueryDenomOwnersRequest) (*types0.QueryDenomOwnersResponse, error) {
 	m.ctrl.T.Helper()
@@ -985,11 +1000,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondDenom mocks base method.
-func (m *MockStakingKeeper) BondDenom(ctx types.Context) string {
+func (m *MockStakingKeeper) BondDenom(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondDenom", ctx)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // BondDenom indicates an expected call of BondDenom.
@@ -999,9 +1015,11 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types1.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
+	ret := m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateBondedValidatorsByPower indicates an expected call of IterateBondedValidatorsByPower.
@@ -1011,9 +1029,11 @@ func (mr *MockStakingKeeperMockRecorder) IterateBondedValidatorsByPower(arg0, ar
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types1.DelegationI) bool) {
+func (m *MockStakingKeeper) IterateDelegations(ctx context.Context, delegator types.AccAddress, fn func(int64, types1.DelegationI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateDelegations indicates an expected call of IterateDelegations.
@@ -1023,7 +1043,7 @@ func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn i
 }
 
 // TokensFromConsensusPower mocks base method.
-func (m *MockStakingKeeper) TokensFromConsensusPower(ctx types.Context, power int64) math.Int {
+func (m *MockStakingKeeper) TokensFromConsensusPower(ctx context.Context, power int64) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TokensFromConsensusPower", ctx, power)
 	ret0, _ := ret[0].(math.Int)
@@ -1037,17 +1057,32 @@ func (mr *MockStakingKeeperMockRecorder) TokensFromConsensusPower(ctx, power int
 }
 
 // TotalBondedTokens mocks base method.
-func (m *MockStakingKeeper) TotalBondedTokens(arg0 types.Context) math.Int {
+func (m *MockStakingKeeper) TotalBondedTokens(arg0 context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TotalBondedTokens", arg0)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TotalBondedTokens indicates an expected call of TotalBondedTokens.
 func (mr *MockStakingKeeperMockRecorder) TotalBondedTokens(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockStakingKeeper)(nil).TotalBondedTokens), arg0)
+}
+
+// ValidatorAddressCodec mocks base method.
+func (m *MockStakingKeeper) ValidatorAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ValidatorAddressCodec indicates an expected call of ValidatorAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorAddressCodec))
 }
 
 // MockDistributionKeeper is a mock of DistributionKeeper interface.

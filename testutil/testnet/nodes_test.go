@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/node"
-	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 )
 
 // Nil entries in a Nodes slice don't fail Stop or Wait.

@@ -3,32 +3,13 @@ package rpc
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
-	"github.com/cometbft/cometbft/p2p"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
-
-// ValidatorInfo is info about the node's validator, same as CometBFT,
-// except that we use our own PubKey.
-type validatorInfo struct {
-	Address     []byte
-	PubKey      cryptotypes.PubKey
-	VotingPower int64
-}
-
-// ResultStatus is node's info, same as CometBFT, except that we use our own
-// PubKey.
-type resultStatus struct {
-	NodeInfo      p2p.DefaultNodeInfo
-	SyncInfo      coretypes.SyncInfo
-	ValidatorInfo validatorInfo
-}
 
 // StatusCommand returns the command to return the status of the network.
 func StatusCommand() *cobra.Command {
@@ -46,35 +27,23 @@ func StatusCommand() *cobra.Command {
 				return err
 			}
 
-			var pk cryptotypes.PubKey
-			// `status` has TM pubkeys, we need to convert them to our pubkeys.
-			if status.ValidatorInfo.PubKey != nil {
-				pk, err = cryptocodec.FromCmtPubKeyInterface(status.ValidatorInfo.PubKey)
-				if err != nil {
-					return err
-				}
-			}
-			statusWithPk := resultStatus{
-				NodeInfo: status.NodeInfo,
-				SyncInfo: status.SyncInfo,
-				ValidatorInfo: validatorInfo{
-					Address:     status.ValidatorInfo.Address,
-					PubKey:      pk,
-					VotingPower: status.ValidatorInfo.VotingPower,
-				},
-			}
-
-			output, err := clientCtx.LegacyAmino.MarshalJSON(statusWithPk)
+			output, err := cmtjson.Marshal(status)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(string(output))
-			return nil
+			// In order to maintain backwards compatibility, the default json format output
+			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
+			if outputFormat == flags.OutputFormatJSON {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
+			}
+
+			return clientCtx.PrintRaw(output)
 		},
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(flags.FlagOutput, "o", "json", "Output format (text|json)")
 
 	return cmd
 }

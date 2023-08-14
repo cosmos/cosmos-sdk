@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
@@ -93,13 +95,18 @@ func Example_basicUsage() {
 			dir,             // Where to put files on disk.
 		).Logger(logger.With("root_module", fmt.Sprintf("comet_%d", idx)))
 	})
-	// StopAndWait must be deferred before the error check,
-	// as the nodes value may contain some successfully started instances.
-	defer nodes.StopAndWait()
 	if err != nil {
 		panic(err)
 	}
 
+	// StopAndWait must be deferred before the error check,"os"
+	// as the nodes value may contain some successfully started instances.
+	defer func() {
+		err := nodes.StopAndWait()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	// Now you can begin interacting with the nodes.
 	// For the sake of this example, we'll just check
 	// a couple simple properties of one node.

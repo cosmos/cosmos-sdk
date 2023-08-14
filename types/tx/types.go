@@ -3,8 +3,9 @@ package tx
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
 	protov2 "google.golang.org/protobuf/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -165,10 +166,15 @@ func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	return signers[0]
 }
 
-func (t *Tx) FeeGranter() sdk.AccAddress {
-	feePayer := t.AuthInfo.Fee.Granter
-	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+func (t *Tx) FeeGranter(cdc codec.Codec) []byte {
+	feeGranter := t.AuthInfo.Fee.Granter
+	if feeGranter != "" {
+		feeGranterAddr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
+		if err != nil {
+			panic(err)
+		}
+
+		return feeGranterAddr
 	}
 	return nil
 }

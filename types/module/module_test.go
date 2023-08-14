@@ -7,14 +7,15 @@ import (
 	"io"
 	"testing"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,6 +26,12 @@ import (
 )
 
 var errFoo = errors.New("dummy")
+
+func (MockCoreAppModule) GetQueryCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "foo",
+	}
+}
 
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -51,8 +58,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
@@ -81,8 +86,8 @@ func TestBasicManager(t *testing.T) {
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
-
 	mm.AddQueryCommands(mockCmd)
+	require.Equal(t, 1, len(mockCmd.Commands()))
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
@@ -214,7 +219,12 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
+	require.NotPanics(t, func() {
+		err := mm.RegisterServices(cfg)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -457,6 +467,37 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
+func TestCoreAPIManager_RunMigrationBeginBlock(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockUpgradeModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(0)
+	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	success, err := mm.RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, true, success)
+	require.NoError(t, err)
+
+	// test false
+	success, err = module.NewManager().RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, false, success)
+	require.NoError(t, err)
+
+	// test panic
+	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
+	success, err = mm.RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, false, success)
+	require.Error(t, err)
+}
+
 func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -570,7 +611,10 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"someKey"`))
+	_, err = someFieldWriter.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return someFieldWriter.Close()
 }
 
@@ -597,7 +641,10 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"someKey"`))
+	_, err = wrt.Write([]byte(`"someKey"`))
+	if err != nil {
+		return err
+	}
 	return wrt.Close()
 }
 

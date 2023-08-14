@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,32 +43,24 @@ func WeightedOperations(
 	sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgSetWithdrawAddress int
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil, func(_ *rand.Rand) {
+		weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
+	})
 
 	var weightMsgWithdrawDelegationReward int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
+	})
 
 	var weightMsgWithdrawValidatorCommission int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
+	})
 
 	var weightMsgFundCommunityPool int
-	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
-		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil, func(_ *rand.Rand) {
+		weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -132,14 +128,24 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		delegations, err := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting delegations"), nil, err
+		}
 		if len(delegations) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "number of delegators equal 0"), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
-		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
+		delAddr, err := sk.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error converting validator address"), nil, err
+		}
+		validator, err := sk.Validator(ctx, delAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting validator"), nil, err
+		}
 		if validator == nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
@@ -147,7 +153,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -174,13 +180,18 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{})
 
-		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
+		allVals, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting all validators"), nil, err
+		}
+
+		validator, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission, err := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
-		if err != nil {
+		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, validator.GetOperator())
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
 
@@ -196,7 +207,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -245,7 +256,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			}
 		}
 
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
+		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address.String())
 
 		txCtx := simulation.OperationInput{
 			R:             r,

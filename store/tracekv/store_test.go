@@ -6,9 +6,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/internal/kv"

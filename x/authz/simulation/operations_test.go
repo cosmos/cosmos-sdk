@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,7 +60,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false)
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -122,11 +122,11 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
-
+	suite.Require().NoError(err)
 	granter := accounts[0]
 	grantee := accounts[1]
 
@@ -150,11 +150,11 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
-
+	suite.Require().NoError(err)
 	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
@@ -163,7 +163,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 	a := banktypes.NewSendAuthorization(initCoins, nil)
 	expire := time.Now().Add(30 * time.Hour)
 
-	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
+	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -187,8 +187,8 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
-
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.Require().NoError(err)
 	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
@@ -197,7 +197,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	a := banktypes.NewSendAuthorization(initCoins, nil)
 	expire := suite.ctx.BlockTime().Add(1 * time.Hour)
 
-	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
+	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation

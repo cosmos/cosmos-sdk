@@ -2,6 +2,7 @@ package depinject
 
 import (
 	"bytes"
+	stderrors "errors"
 	"fmt"
 	"reflect"
 
@@ -441,7 +442,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		Outputs: nil,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
 			if len(values) != len(outputs) {
-				return nil, fmt.Errorf("internal error, unexpected number of values")
+				return nil, stderrors.New("internal error, unexpected number of values")
 			}
 
 			for i, output := range outputs {

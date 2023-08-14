@@ -3,7 +3,6 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
-export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -47,6 +46,23 @@ ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
   build_tags += app_v1
 endif
 
+# DB backend selection
+ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += gcc
+endif
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += badgerdb
+endif
+# handle rocksdb
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  build_tags += rocksdb grocksdb_clean_link
+endif
+# handle boltdb
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += boltdb
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -58,25 +74,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
-
-# DB backend selection
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
-endif
-ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += badgerdb
-endif
-# handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
-  CGO_ENABLED=1
-  build_tags += rocksdb
-endif
-# handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += boltdb
-endif
+		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -w -s
@@ -126,16 +124,13 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-rosetta:
-	$(MAKE) -C tools/rosetta rosetta
-
 confix:
 	$(MAKE) -C tools/confix confix
 
 hubl:
 	$(MAKE) -C tools/hubl hubl
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
 
 mocks: $(MOCKS_DIR)
@@ -366,11 +361,6 @@ test-sim-profile-streaming:
 
 .PHONY: test-sim-profile test-sim-benchmark
 
-test-rosetta:
-	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
-	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
-.PHONY: test-rosetta
-
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
@@ -379,17 +369,20 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_lint_cmd=golangci-lint
-golangci_version=v1.51.2
+golangci_version=v1.53.3
+
+lint-install:
+	@echo "--> Installing golangci-lint $(golangci_version)"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 
 lint:
 	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
@@ -398,7 +391,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.13.1
+protoVer=0.13.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -486,15 +479,3 @@ localnet-start: localnet-stop localnet-build-env localnet-build-nodes
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
-
-###############################################################################
-###                                rosetta                                  ###
-###############################################################################
-# builds rosetta test data dir
-rosetta-data:
-	-docker container rm data_dir_build
-	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
-	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
-	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/rosetta-ci/data.tar.gz"
-	docker container rm data_dir_build
-.PHONY: rosetta-data

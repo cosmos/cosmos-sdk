@@ -59,7 +59,7 @@ message MsgCreateValidator {
   CommissionRates commission          = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string          min_self_delegation = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -91,9 +91,9 @@ message MsgEditValidator {
   // zero with no way to distinguish if an update was intended.
   // REF: #2373
   string commission_rate = 3
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
   string min_self_delegation = 4
-      [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+      [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.

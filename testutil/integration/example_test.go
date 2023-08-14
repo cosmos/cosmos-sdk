@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"io"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/google/go-cmp/cmp"
+
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	"github.com/google/go-cmp/cmp"
-
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,7 @@ func Example() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)
@@ -62,13 +64,16 @@ func Example() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule, mintModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+			minttypes.ModuleName: mintModule,
+		},
 	)
 
 	// register the message and query servers
 	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
 	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
-	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintKeeper)
+	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintkeeper.NewQueryServerImpl(mintKeeper))
 
 	params := minttypes.DefaultParams()
 	params.BlocksPerYear = 10000
@@ -98,7 +103,7 @@ func Example() {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// we should also check the state of the application
-	got, err := mintKeeper.GetParams(sdkCtx)
+	got, err := mintKeeper.Params.Get(sdkCtx)
 	if err != nil {
 		panic(err)
 	}
@@ -129,6 +134,7 @@ func Example_oneModule() {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
+		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authority,
 	)
@@ -142,7 +148,9 @@ func Example_oneModule() {
 		logger,
 		keys,
 		encodingCfg.Codec,
-		authModule,
+		map[string]appmodule.AppModule{
+			authtypes.ModuleName: authModule,
+		},
 	)
 
 	// register the message and query servers

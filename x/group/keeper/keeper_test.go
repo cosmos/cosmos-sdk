@@ -117,9 +117,11 @@ func (s *TestSuite) SetupTest() {
 	s.groupPolicyAddr = addrbz
 
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
-	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
+	err = s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
+	s.Require().NoError(err)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	s.Require().NoError(err)
 }
 
 func (s *TestSuite) setNextAccount() {
@@ -135,8 +137,7 @@ func (s *TestSuite) setNextAccount() {
 
 	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
-	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
-
+	err = groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 	s.Require().NoError(err)
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
@@ -268,10 +269,12 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})
+			s.Require().NoError(err)
 
 			if spec.expErrMsg != "" {
 				s.Require().Error(err)
@@ -452,7 +455,12 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() {
+		err := module.EndBlocker(ctx, s.groupKeeper)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 // TestTallyProposalsAtVPEnd_GroupMemberLeaving test that the node doesn't
@@ -514,7 +522,12 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 
 	// Tally the result. This saves the tally result to state.
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() {
+		err := module.EndBlocker(ctx, s.groupKeeper)
+		if err != nil {
+			panic(err)
+		}
+	})
 
 	// member 2 (high weight) leaves group.
 	_, err = s.groupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
@@ -524,5 +537,10 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() {
+		err := module.EndBlocker(ctx, s.groupKeeper)
+		if err != nil {
+			panic(err)
+		}
+	})
 }

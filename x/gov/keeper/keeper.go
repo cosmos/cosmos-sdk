@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,8 +103,8 @@ func NewKeeper(
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                 collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
-		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck // sdk.AddressKeyAsIndexKey is needed to retain state compatibility
-		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.AddressKeyAsIndexKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          // nolint: staticcheck // sdk.AddressKeyAsIndexKey is needed to retain state compatibility
+		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:             collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
 		Proposals:              collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
 		ActiveProposalsQueue:   collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility
@@ -180,6 +180,15 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 func (k Keeper) assertMetadataLength(metadata string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
+}
+
+// assertSummaryLength returns an error if given summary length
+// is greater than a pre-defined 40*MaxMetadataLen.
+func (keeper Keeper) assertSummaryLength(summary string) error {
+	if summary != "" && uint64(len(summary)) > 40*keeper.config.MaxMetadataLen {
+		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil
 }

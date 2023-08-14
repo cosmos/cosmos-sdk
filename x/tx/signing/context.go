@@ -14,6 +14,11 @@ import (
 	"cosmossdk.io/core/address"
 )
 
+type TypeResolver interface {
+	protoregistry.MessageTypeResolver
+	protoregistry.ExtensionTypeResolver
+}
+
 // Context is a context for retrieving the list of signers from a
 // message where signers are specified by the cosmos.msg.v1.signer protobuf
 // option. It also contains the ProtoFileResolver and address.Codec's used
@@ -23,7 +28,8 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
-	getSignersFuncs       map[protoreflect.FullName]getSignersFunc
+	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
+	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -33,13 +39,28 @@ type Options struct {
 	FileResolver ProtoFileResolver
 
 	// TypeResolver is the protobuf type resolver to use for resolving message types.
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver TypeResolver
 
 	// AddressCodec is the codec for converting addresses between strings and bytes.
 	AddressCodec address.Codec
 
 	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
 	ValidatorAddressCodec address.Codec
+
+	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
+}
+
+// DefineCustomGetSigners defines a custom GetSigners function for a given
+// message type.
+//
+// NOTE: if a custom signers function is defined, the message type used to
+// define this function MUST be the concrete type passed to GetSigners,
+// otherwise a runtime type error will occur.
+func (o *Options) DefineCustomGetSigners(typeName protoreflect.FullName, f GetSignersFunc) {
+	if o.CustomGetSigners == nil {
+		o.CustomGetSigners = map[protoreflect.FullName]GetSignersFunc{}
+	}
+	o.CustomGetSigners[typeName] = f
 }
 
 // ProtoFileResolver is a protodesc.Resolver that also allows iterating over all
@@ -69,23 +90,38 @@ func NewContext(options Options) (*Context, error) {
 		return nil, errors.New("validator address codec is required")
 	}
 
+	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
+	for k := range options.CustomGetSigners {
+		customGetSignerFuncs[k] = options.CustomGetSigners[k]
+	}
+
 	c := &Context{
 		fileResolver:          protoFiles,
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		getSignersFuncs:       map[protoreflect.FullName]getSignersFunc{},
+		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
+		customGetSignerFuncs:  customGetSignerFuncs,
 	}
 
 	return c, nil
 }
 
-type getSignersFunc func(proto.Message) ([][]byte, error)
+// GetSignersFunc returns the signers for a given message.
+type GetSignersFunc func(proto.Message) ([][]byte, error)
+
+// CustomGetSigner is a custom GetSignersFunc that is defined for a specific message type.
+type CustomGetSigner struct {
+	MsgType protoreflect.FullName
+	Fn      GetSignersFunc
+}
+
+func (c CustomGetSigner) IsManyPerContainerType() {}
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
 	if len(signersFields) == 0 {
-		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s", descriptor.FullName())
+		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s; use DefineCustomGetSigners to specify a custom getter", descriptor.FullName())
 	}
 
 	return signersFields, nil
@@ -109,6 +145,11 @@ func (c *Context) Validate() error {
 
 			for j := 0; j < sd.Methods().Len(); j++ {
 				md := sd.Methods().Get(j).Input()
+				_, hasCustomSigner := c.customGetSignerFuncs[md.FullName()]
+				if _, err := getSignersFieldNames(md); err == nil && hasCustomSigner {
+					errs = append(errs, fmt.Errorf("a custom signer function as been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
+					continue
+				}
 				_, err := c.getGetSignersFn(md)
 				if err != nil {
 					errs = append(errs, err)
@@ -122,7 +163,7 @@ func (c *Context) Validate() error {
 	return errors.Join(errs...)
 }
 
-func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
+func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
 	signersFields, err := getSignersFieldNames(descriptor)
 	if err != nil {
 		return nil, err
@@ -282,8 +323,12 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 	return addrCdc
 }
 
-func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (getSignersFunc, error) {
-	f, ok := c.getSignersFuncs[messageDescriptor.FullName()]
+func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
+	f, ok := c.customGetSignerFuncs[messageDescriptor.FullName()]
+	if ok {
+		return f, nil
+	}
+	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)
@@ -316,11 +361,12 @@ func (c *Context) ValidatorAddressCodec() address.Codec {
 	return c.validatorAddressCodec
 }
 
-// FileResolver returns the proto file resolver used by the context.
+// FileResolver returns the protobuf file resolver used by the context.
 func (c *Context) FileResolver() ProtoFileResolver {
 	return c.fileResolver
 }
 
+// TypeResolver returns the protobuf type resolver used by the context.
 func (c *Context) TypeResolver() protoregistry.MessageTypeResolver {
 	return c.typeResolver
 }

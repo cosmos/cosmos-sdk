@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -37,6 +38,18 @@ var (
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
 	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
+
+	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
+	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
+	// state backwards compatibility.
+	// Deprecated: use collections.Uint64Key instead.
+	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
+
+	// LengthPrefixedBytesKey is a collections KeyCodec to work with []byte.
+	// Deprecated: exists only for state compatibility reasons, should not be
+	// used for new storage keys using []byte. Please use the BytesKey provided
+	// in the collections package.
+	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
 type addressUnion interface {
@@ -94,26 +107,26 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
-// Deprecated: genericAddressIndexKey is a special key codec used to retain state backwards compatibility
+// Deprecated: lengthPrefixedAddressKey is a special key codec used to retain state backwards compatibility
 // when a generic address key (be: AccAddress, ValAddress, ConsAddress), is used as an index key.
-// More docs can be found in the AddressKeyAsIndexKey function.
-type genericAddressIndexKey[T addressUnion] struct {
+// More docs can be found in the LengthPrefixedAddressKey function.
+type lengthPrefixedAddressKey[T addressUnion] struct {
 	collcodec.KeyCodec[T]
 }
 
-func (g genericAddressIndexKey[T]) Encode(buffer []byte, key T) (int, error) {
+func (g lengthPrefixedAddressKey[T]) Encode(buffer []byte, key T) (int, error) {
 	return g.EncodeNonTerminal(buffer, key)
 }
 
-func (g genericAddressIndexKey[T]) Decode(buffer []byte) (int, T, error) {
+func (g lengthPrefixedAddressKey[T]) Decode(buffer []byte) (int, T, error) {
 	return g.DecodeNonTerminal(buffer)
 }
 
-func (g genericAddressIndexKey[T]) Size(key T) int { return g.SizeNonTerminal(key) }
+func (g lengthPrefixedAddressKey[T]) Size(key T) int { return g.SizeNonTerminal(key) }
 
-func (g genericAddressIndexKey[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
+func (g lengthPrefixedAddressKey[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
 
-// Deprecated: AddressKeyAsIndexKey implements an SDK backwards compatible indexing key encoder
+// Deprecated: LengthPrefixedAddressKey implements an SDK backwards compatible indexing key encoder
 // for addresses.
 // The status quo in the SDK is that address keys are length prefixed even when they're the
 // last part of a composite key. This should never be used unless to retain state compatibility.
@@ -122,10 +135,32 @@ func (g genericAddressIndexKey[T]) KeyType() string { return "index_key/" + g.Ke
 // byte to the string, then when you know when the string part finishes, it's logical that the
 // part which remains is the address key. In the SDK instead we prepend to the address key its
 // length too.
-func AddressKeyAsIndexKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
-	return genericAddressIndexKey[T]{
+func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
+	return lengthPrefixedAddressKey[T]{
 		keyCodec,
 	}
+}
+
+// Deprecated: lengthPrefixedBytesKey is a special key codec used to retain state backwards compatibility
+// when a bytes key is used as an index key.
+type lengthPrefixedBytesKey struct {
+	collcodec.KeyCodec[[]byte]
+}
+
+func (g lengthPrefixedBytesKey) Encode(buffer, key []byte) (int, error) {
+	return g.EncodeNonTerminal(buffer, key)
+}
+
+func (g lengthPrefixedBytesKey) Decode(buffer []byte) (int, []byte, error) {
+	return g.DecodeNonTerminal(buffer)
+}
+
+func (g lengthPrefixedBytesKey) Size(key []byte) int {
+	return g.SizeNonTerminal(key)
+}
+
+func (g lengthPrefixedBytesKey) KeyType() string {
+	return "index_key/" + g.KeyCodec.KeyType()
 }
 
 // Collection Codecs
@@ -137,10 +172,10 @@ func (i intValueCodec) Encode(value math.Int) ([]byte, error) {
 }
 
 func (i intValueCodec) Decode(b []byte) (math.Int, error) {
-	v := new(Int)
+	v := new(math.Int)
 	err := v.Unmarshal(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
@@ -149,16 +184,16 @@ func (i intValueCodec) EncodeJSON(value math.Int) ([]byte, error) {
 	return value.MarshalJSON()
 }
 
-func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
-	v := new(Int)
+func (i intValueCodec) DecodeJSON(b []byte) (math.Int, error) {
+	v := new(math.Int)
 	err := v.UnmarshalJSON(b)
 	if err != nil {
-		return Int{}, err
+		return math.Int{}, err
 	}
 	return *v, nil
 }
 
-func (i intValueCodec) Stringify(value Int) string {
+func (i intValueCodec) Stringify(value math.Int) string {
 	return value.String()
 }
 
@@ -208,3 +243,37 @@ func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	return t.Decode(buffer[:timeSize])
 }
 func (t timeKeyCodec) SizeNonTerminal(key time.Time) int { return t.Size(key) }
+
+type leUint64Key struct{}
+
+func (l leUint64Key) Encode(buffer []byte, key uint64) (int, error) {
+	binary.LittleEndian.PutUint64(buffer, key)
+	return 8, nil
+}
+
+func (l leUint64Key) Decode(buffer []byte) (int, uint64, error) {
+	if size := len(buffer); size < 8 {
+		return 0, 0, fmt.Errorf("invalid buffer size, wanted 8 at least got %d", size)
+	}
+	return 8, binary.LittleEndian.Uint64(buffer), nil
+}
+
+func (l leUint64Key) Size(_ uint64) int { return 8 }
+
+func (l leUint64Key) EncodeJSON(value uint64) ([]byte, error) {
+	return collections.Uint64Key.EncodeJSON(value)
+}
+
+func (l leUint64Key) DecodeJSON(b []byte) (uint64, error) { return collections.Uint64Key.DecodeJSON(b) }
+
+func (l leUint64Key) Stringify(key uint64) string { return collections.Uint64Key.Stringify(key) }
+
+func (l leUint64Key) KeyType() string { return "little-endian-uint64" }
+
+func (l leUint64Key) EncodeNonTerminal(buffer []byte, key uint64) (int, error) {
+	return l.Encode(buffer, key)
+}
+
+func (l leUint64Key) DecodeNonTerminal(buffer []byte) (int, uint64, error) { return l.Decode(buffer) }
+
+func (l leUint64Key) SizeNonTerminal(_ uint64) int { return 8 }

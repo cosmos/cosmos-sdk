@@ -1,94 +1,57 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/bits-and-blooms/bitset"
-	"github.com/cockroachdb/errors"
+
+	"cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
-// ConsAddress
-func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (types.ValidatorSigningInfo, bool) {
-	store := ctx.KVStore(k.storeKey)
-
-	var info types.ValidatorSigningInfo
-	bz := store.Get(types.ValidatorSigningInfoKey(address))
-	if bz == nil {
-		return info, false
-	}
-
-	k.cdc.MustUnmarshal(bz, &info)
-	return info, true
-}
-
 // HasValidatorSigningInfo returns if a given validator has signing information
 // persisted.
-func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
-	_, ok := k.GetValidatorSigningInfo(ctx, consAddr)
-	return ok
-}
-
-// SetValidatorSigningInfo sets the validator signing info to a consensus address key
-func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&info)
-	store.Set(types.ValidatorSigningInfoKey(address), bz)
-}
-
-// IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
-func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
-) {
-	store := ctx.KVStore(k.storeKey)
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		address := types.ValidatorSigningInfoAddress(iter.Key())
-		var info types.ValidatorSigningInfo
-		k.cdc.MustUnmarshal(iter.Value(), &info)
-		if handler(address, info) {
-			break
-		}
-	}
+func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAddress) bool {
+	has, err := k.ValidatorSigningInfo.Has(ctx, consAddr)
+	return err == nil && has
 }
 
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
-func (k Keeper) JailUntil(ctx sdk.Context, consAddr sdk.ConsAddress, jailTime time.Time) {
-	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !ok {
-		panic("cannot jail validator that does not have any signing information")
+func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+	if err != nil {
+		return errors.Wrap(err, "cannot jail validator that does not have any signing information")
 	}
 
 	signInfo.JailedUntil = jailTime
-	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // Tombstone attempts to tombstone a validator. It will panic if signing info for
 // the given validator does not exist.
-func (k Keeper) Tombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !ok {
-		panic("cannot tombstone validator that does not have any signing information")
+func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+	if err != nil {
+		return types.ErrNoSigningInfoFound.Wrap("cannot tombstone validator that does not have any signing information")
 	}
 
 	if signInfo.Tombstoned {
-		panic("cannot tombstone validator that is already tombstoned")
+		return types.ErrValidatorTombstoned.Wrap("cannot tombstone validator that is already tombstoned")
 	}
 
 	signInfo.Tombstoned = true
-	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // IsTombstoned returns if a given validator by consensus address is tombstoned.
-func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
-	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !ok {
+func (k Keeper) IsTombstoned(ctx context.Context, consAddr sdk.ConsAddress) bool {
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+	if err != nil {
 		return false
 	}
 
@@ -97,18 +60,18 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 
 // getMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
-func (k Keeper) getMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64) []byte {
-	store := ctx.KVStore(k.storeKey)
-	chunk := store.Get(types.ValidatorMissedBlockBitmapKey(addr, chunkIndex))
-	return chunk
+func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddress, chunkIndex int64) ([]byte, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	chunk, err := store.Get(types.ValidatorMissedBlockBitmapKey(addr, chunkIndex))
+	return chunk, err
 }
 
 // setMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
-func (k Keeper) setMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) {
-	store := ctx.KVStore(k.storeKey)
+func (k Keeper) setMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) error {
+	store := k.storeService.OpenKVStore(ctx)
 	key := types.ValidatorMissedBlockBitmapKey(addr, chunkIndex)
-	store.Set(key, chunk)
+	return store.Set(key, chunk)
 }
 
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block
@@ -117,12 +80,16 @@ func (k Keeper) setMissedBlockBitmapChunk(ctx sdk.Context, addr sdk.ConsAddress,
 // where each bit represents a height, and is determined by the validator's
 // IndexOffset modulo SignedBlocksWindow. This index is used to fetch the chunk
 // in the bitmap and the relative bit in that chunk.
-func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64) (bool, error) {
+func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
 	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
-	chunk := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	chunk, err := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to get bitmap chunk; index: %d", index)
+	}
+
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
 			return false, errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
@@ -142,12 +109,16 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 // determined by the validator's IndexOffset modulo SignedBlocksWindow. This
 // index is used to fetch the chunk in the bitmap and the relative bit in that
 // chunk.
-func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress, index int64, missed bool) error {
+func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
 	bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
-	chunk := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	chunk, err := k.getMissedBlockBitmapChunk(ctx, addr, chunkIndex)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get bitmap chunk; index: %d", index)
+	}
+
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
 			return errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)
@@ -167,20 +138,26 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx sdk.Context, addr sdk.ConsAddress,
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
-	return nil
+	return k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 }
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.
-func (k Keeper) DeleteMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorMissedBlockBitmapPrefixKey(addr))
+func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
+	store := k.storeService.OpenKVStore(ctx)
+	prefix := types.ValidatorMissedBlockBitmapPrefixKey(addr)
+	iter, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	if err != nil {
+		return err
+	}
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		err = store.Delete(iter.Key())
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // IterateMissedBlockBitmap iterates over a validator's signed blocks window
@@ -189,10 +166,13 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress) {
 //
 // Note: A callback will only be executed over all bitmap chunks that exist in
 // state.
-func (k Keeper) IterateMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress, cb func(index int64, missed bool) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-
-	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorMissedBlockBitmapPrefixKey(addr))
+func (k Keeper) IterateMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress, cb func(index int64, missed bool) (stop bool)) error {
+	store := k.storeService.OpenKVStore(ctx)
+	prefix := types.ValidatorMissedBlockBitmapPrefixKey(addr)
+	iter, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	if err != nil {
+		return err
+	}
 	defer iter.Close()
 
 	var index int64
@@ -200,7 +180,7 @@ func (k Keeper) IterateMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress, 
 		bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
 
 		if err := bs.UnmarshalBinary(iter.Value()); err != nil {
-			panic(errors.Wrapf(err, "failed to decode bitmap chunk; index: %v", string(iter.Key())))
+			return errors.Wrapf(err, "failed to decode bitmap chunk; index: %v", string(iter.Key()))
 		}
 
 		for i := uint(0); i < types.MissedBlockBitmapChunkSize; i++ {
@@ -212,12 +192,18 @@ func (k Keeper) IterateMissedBlockBitmap(ctx sdk.Context, addr sdk.ConsAddress, 
 			index++
 		}
 	}
+	return nil
 }
 
 // GetValidatorMissedBlocks returns array of missed blocks for given validator.
-func (k Keeper) GetValidatorMissedBlocks(ctx sdk.Context, addr sdk.ConsAddress) []types.MissedBlock {
-	missedBlocks := make([]types.MissedBlock, 0, k.SignedBlocksWindow(ctx))
-	k.IterateMissedBlockBitmap(ctx, addr, func(index int64, missed bool) (stop bool) {
+func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddress) ([]types.MissedBlock, error) {
+	signedBlocksWindow, err := k.SignedBlocksWindow(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	missedBlocks := make([]types.MissedBlock, 0, signedBlocksWindow)
+	err = k.IterateMissedBlockBitmap(ctx, addr, func(index int64, missed bool) (stop bool) {
 		if missed {
 			missedBlocks = append(missedBlocks, types.NewMissedBlock(index, missed))
 		}
@@ -225,5 +211,5 @@ func (k Keeper) GetValidatorMissedBlocks(ctx sdk.Context, addr sdk.ConsAddress) 
 		return false
 	})
 
-	return missedBlocks
+	return missedBlocks, err
 }

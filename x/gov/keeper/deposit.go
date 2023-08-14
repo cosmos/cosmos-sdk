@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -49,10 +49,10 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint6
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (bool, error)) error {
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
-	err := keeper.Deposits.Walk(ctx, rng, cb)
-	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
+	if err := keeper.Deposits.Walk(ctx, rng, cb); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -154,18 +154,18 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 
 		var remainingAmount sdk.Coins
 
-		for _, coins := range deposit.Amount {
-			burnAmount := sdk.NewDecFromInt(coins.Amount).Mul(rate).TruncateInt()
+		for _, coin := range deposit.Amount {
+			burnAmount := sdkmath.LegacyNewDecFromInt(coin.Amount).Mul(rate).TruncateInt()
 			// remaining amount = deposits amount - burn amount
 			remainingAmount = remainingAmount.Add(
 				sdk.NewCoin(
-					coins.Denom,
-					coins.Amount.Sub(burnAmount),
+					coin.Denom,
+					coin.Amount.Sub(burnAmount),
 				),
 			)
 			cancellationCharges = cancellationCharges.Add(
 				sdk.NewCoin(
-					coins.Denom,
+					coin.Denom,
 					burnAmount,
 				),
 			)
@@ -190,7 +190,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		// get the distribution module account address
 		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
 		switch {
-		case len(destAddress) == 0:
+		case destAddress == "":
 			// burn the cancellation charges from deposits
 			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
 			if err != nil {
@@ -240,7 +240,7 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 		return err
 	}
 
-	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 	}
 
 	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+		minDepositCoins[i].Amount = sdkmath.LegacyNewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)

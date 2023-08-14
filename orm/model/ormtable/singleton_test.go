@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/testing/protocmp"
-
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/internal/testkv"

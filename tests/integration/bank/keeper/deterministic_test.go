@@ -7,9 +7,12 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -18,15 +21,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -34,7 +36,7 @@ import (
 var (
 	denomRegex   = sdk.DefaultCoinDenomRegex()
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
-	coin1        = sdk.NewCoin("denom", sdk.NewInt(10))
+	coin1        = sdk.NewCoin("denom", math.NewInt(10))
 	metadataAtom = banktypes.Metadata{
 		Description: "The native staking token of the Cosmos Hub.",
 		DenomUnits: []*banktypes.DenomUnit{
@@ -61,6 +63,7 @@ type deterministicFixture struct {
 }
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
+	t.Helper()
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 
@@ -80,6 +83,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
 	)
@@ -99,7 +103,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, authModule, bankModule)
+	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName: authModule,
+		banktypes.ModuleName: bankModule,
+	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -127,7 +134,7 @@ func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin)
 func getCoin(rt *rapid.T) sdk.Coin {
 	return sdk.NewCoin(
 		rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-		sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+		math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 	)
 }
 
@@ -173,8 +180,8 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(10)),
-		sdk.NewCoin("denom", sdk.NewInt(100)),
+		sdk.NewCoin("stake", math.NewInt(10)),
+		sdk.NewCoin("denom", math.NewInt(100)),
 	)
 
 	fundAccount(f, addr1, coins...)
@@ -196,7 +203,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 		for _, denom := range denoms {
 			coin := sdk.NewCoin(
 				denom,
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			// NewCoins sorts the denoms
@@ -211,8 +218,8 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(10)),
-		sdk.NewCoin("denom", sdk.NewInt(100)),
+		sdk.NewCoin("stake", math.NewInt(10)),
+		sdk.NewCoin("denom", math.NewInt(100)),
 	)
 
 	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
@@ -237,7 +244,7 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
 				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			coins = coins.Add(coin)
@@ -257,8 +264,8 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 	f = initDeterministicFixture(t) // reset
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10)),
-		sdk.NewCoin("bar", sdk.NewInt(100)),
+		sdk.NewCoin("foo", math.NewInt(10)),
+		sdk.NewCoin("bar", math.NewInt(100)),
 	)
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
@@ -274,7 +281,7 @@ func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		coin := sdk.NewCoin(
 			rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-			sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 		)
 
 		assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
@@ -283,7 +290,7 @@ func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SupplyOf, 0, true)
 	})
 
-	coin := sdk.NewCoin("bar", sdk.NewInt(100))
+	coin := sdk.NewCoin("bar", math.NewInt(100))
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
@@ -305,7 +312,8 @@ func TestGRPCQueryParams(t *testing.T) {
 			DefaultSendEnabled: rapid.Bool().Draw(rt, "send"),
 		}
 
-		f.bankKeeper.SetParams(f.ctx, params)
+		err := f.bankKeeper.SetParams(f.ctx, params)
+		assert.NilError(t, err)
 
 		req := &banktypes.QueryParamsRequest{}
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 0, true)
@@ -321,8 +329,8 @@ func TestGRPCQueryParams(t *testing.T) {
 		DefaultSendEnabled: false,
 	}
 
-	f.bankKeeper.SetParams(f.ctx, params)
-
+	err := f.bankKeeper.SetParams(f.ctx, params)
+	assert.NilError(t, err)
 	req := &banktypes.QueryParamsRequest{}
 	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 1003, false)
 }
@@ -476,7 +484,7 @@ func TestGRPCDenomOwners(t *testing.T) {
 
 			coin := sdk.NewCoin(
 				denom,
-				sdk.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
 			)
 
 			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin))

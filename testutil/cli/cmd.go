@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/address"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
@@ -35,11 +35,4 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac add
 	args = append(args, extraArgs...)
 
 	return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)
-}
-
-func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, ac address.Codec, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
-	args = append(args, extraArgs...)
-
-	return ExecTestCLICmd(clientCtx, cli.GetBalancesCmd(ac), args)
 }

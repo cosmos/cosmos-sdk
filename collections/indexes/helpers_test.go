@@ -3,8 +3,9 @@ package indexes
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 )
 
 func TestHelpers(t *testing.T) {

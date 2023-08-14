@@ -3,21 +3,20 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
-
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -50,7 +49,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -66,6 +65,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)

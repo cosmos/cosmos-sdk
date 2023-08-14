@@ -9,10 +9,10 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/core/address"
-
 	"cosmossdk.io/x/tx/signing"
 )
+
+var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
 // in Any's against a whitelist of registered types
@@ -114,9 +114,11 @@ type interfaceMap = map[string]reflect.Type
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
-		ProtoFiles:            proto.HybridResolver,
-		AddressCodec:          failingAddressCodec{},
-		ValidatorAddressCodec: failingAddressCodec{},
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          failingAddressCodec{},
+			ValidatorAddressCodec: failingAddressCodec{},
+		},
 	})
 	if err != nil {
 		panic(err)
@@ -129,11 +131,8 @@ type InterfaceRegistryOptions struct {
 	// ProtoFiles is the set of files to use for the registry. It is required.
 	ProtoFiles signing.ProtoFileResolver
 
-	// AddressCodec is the address codec to use for the registry. It is required.
-	AddressCodec address.Codec
-
-	// ValidatorAddressCodec is the validator address codec to use for the registry. It is required.
-	ValidatorAddressCodec address.Codec
+	// SigningOptions are the signing options to use for the registry.
+	SigningOptions signing.Options
 }
 
 // NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
@@ -142,12 +141,8 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 		return nil, fmt.Errorf("proto files must be provided")
 	}
 
-	signingCtx, err := signing.NewContext(signing.Options{
-		FileResolver:          options.ProtoFiles,
-		TypeResolver:          nil,
-		AddressCodec:          options.AddressCodec,
-		ValidatorAddressCodec: options.ValidatorAddressCodec,
-	})
+	options.SigningOptions.FileResolver = options.ProtoFiles
+	signingCtx, err := signing.NewContext(options.SigningOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -312,11 +307,13 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
 
-	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto unmarshal %T", msg)
+	// Firstly check if the type implements proto.Message to avoid
+	// unnecessary invocations to reflect.New
+	if !typ.Implements(protoMessageType) {
+		return fmt.Errorf("can't proto unmarshal %T", typ)
 	}
 
+	msg := reflect.New(typ.Elem()).Interface().(proto.Message)
 	err := proto.Unmarshal(any.Value, msg)
 	if err != nil {
 		return err

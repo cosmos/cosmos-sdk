@@ -5,13 +5,12 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
@@ -62,7 +61,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false)
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -126,11 +125,11 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// begin new block
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
-
+	suite.Require().NoError(err)
 	// execute operation
 	registry := suite.interfaceRegistry
 	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)
@@ -138,7 +137,8 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().NoError(err)
 
 	var msg nft.MsgSend
-	suite.codec.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Len(futureOperations, 0)
 }

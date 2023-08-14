@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -280,10 +282,17 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
-		// TODO Remove this once SIGN_MODE_TEXTUAL is released
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
 		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
-			return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is currently not supported, please follow https://github.com/cosmos/cosmos-sdk/issues/11970")
+			textualEnabled := false
+			for _, v := range clientCtx.TxConfig.SignModeHandler().SupportedModes() {
+				if v == signingv1beta1.SignMode_SIGN_MODE_TEXTUAL {
+					textualEnabled = true
+					break
+				}
+			}
+			if !textualEnabled {
+				return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is not available")
+			}
 		}
 
 		// If the `from` signer account is a ledger key, we need to use

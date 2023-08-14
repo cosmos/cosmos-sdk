@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/depinject"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +35,7 @@ const DefaultGenTxGas = 10000000
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
-		MaxGas:   2000000,
+		MaxGas:   100_000_000,
 	},
 	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
@@ -222,7 +223,7 @@ func GenesisStateWithValSet(
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdkmath.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
 	}
 

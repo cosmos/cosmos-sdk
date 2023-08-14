@@ -15,22 +15,32 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalcul
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored minter & params
-	minter, err := k.GetMinter(ctx)
+	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	// recalculate inflation rate
-	totalStakingSupply := k.StakingTokenSupply(ctx)
-	bondedRatio := k.BondedRatio(ctx)
+	totalStakingSupply, err := k.StakingTokenSupply(ctx)
+	if err != nil {
+		return err
+	}
+
+	bondedRatio, err := k.BondedRatio(ctx)
+	if err != nil {
+		return err
+	}
+
 	minter.Inflation = ic(ctx, minter, params, bondedRatio)
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
-	k.SetMinter(ctx, minter)
+	if err = k.Minter.Set(ctx, minter); err != nil {
+		return err
+	}
 
 	// mint coins, update supply
 	mintedCoin := minter.BlockProvision(params)

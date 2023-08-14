@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,17 +25,17 @@ import (
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
-
+	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{mkTestLegacyContent(t)},
@@ -52,41 +52,41 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	err = gov.EndBlocker(ctx, suite.GovKeeper)
 	require.NoError(t, err)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
-
+	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{mkTestLegacyContent(t)},
@@ -103,13 +103,13 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newProposalMsg2, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{mkTestLegacyContent(t)},
@@ -131,30 +131,30 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
-
+	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
@@ -174,13 +174,13 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	proposalID := res.ProposalId
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
 
@@ -188,7 +188,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res1)
 
-	checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+	checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
@@ -209,21 +209,21 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+			ctx := app.BaseApp.NewContext(false)
 			depositMultiplier := getDepositMultiplier(tc.expedited)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
-			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
-
+			require.NoError(t, err)
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
 			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited)
@@ -255,8 +255,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposal, err := suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.NoError(t, err)
@@ -266,12 +266,12 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.NoError(t, err)
 
 			if !tc.expedited {
-				checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+				checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 				return
 			}
 
 			// If expedited, it should be converted to a regular proposal instead.
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
@@ -300,7 +300,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+			ctx := app.BaseApp.NewContext(false)
 			depositMultiplier := getDepositMultiplier(tc.expedited)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
@@ -309,17 +309,18 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
+			require.NoError(t, err)
 
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			suite.StakingKeeper.EndBlocker(ctx)
-
+			_, err = suite.StakingKeeper.EndBlocker(ctx)
+			require.NoError(t, err)
 			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
 			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
@@ -349,8 +350,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			gov.EndBlocker(ctx, suite.GovKeeper)
-
+			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
 			require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).Equal(initialModuleAccCoins))
@@ -361,25 +362,26 @@ func TestProposalPassedEndblocker(t *testing.T) {
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
+	require.NoError(t, err)
 
 	valAddr := sdk.ValAddress(addrs[0])
 	proposer := addrs[0]
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	suite.StakingKeeper.EndBlocker(ctx)
-
-	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+	_, err = suite.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
+	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
 	require.NoError(t, err)
 
@@ -400,8 +402,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	// validate that the proposal fails/has been rejected
-	gov.EndBlocker(ctx, suite.GovKeeper)
-
+	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	require.NoError(t, err)
 	// check proposal events
 	events := ctx.EventManager().Events()
 	attr, eventOk := events.GetAttributes(types.AttributeKeyProposalLog)
@@ -441,7 +443,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
-			ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+			ctx := app.BaseApp.NewContext(false)
 			depositMultiplier := getDepositMultiplier(true)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params, err := suite.GovKeeper.Params.Get(ctx)
@@ -452,20 +454,21 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
+			require.NoError(t, err)
 
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			suite.StakingKeeper.EndBlocker(ctx)
-
-			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+			_, err = suite.StakingKeeper.EndBlocker(ctx)
+			require.NoError(t, err)
+			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -498,8 +501,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposal, err := suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
@@ -512,10 +515,10 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here the expedited proposal is converted to regular after expiry.
-			gov.EndBlocker(ctx, suite.GovKeeper)
-
+			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			require.NoError(t, err)
 			if tc.expeditedPasses {
-				checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+				checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 				proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 				require.Nil(t, err)
@@ -536,7 +539,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Expedited proposal should be converted to a regular proposal instead.
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 			proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
@@ -557,8 +560,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper, true)
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, false)
+			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			if tc.regularEventuallyPassing {
 				// Validator votes YES, letting the converted regular proposal pass.
@@ -567,8 +570,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here we validate the converted regular proposal
-			gov.EndBlocker(ctx, suite.GovKeeper)
-
+			err = gov.EndBlocker(ctx, suite.GovKeeper)
+			require.NoError(t, err)
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
 			eventualModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
@@ -576,7 +579,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			submitterEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[0])
 			depositorEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
 
-			checkActiveProposalsQueue(t, ctx, suite.GovKeeper, true)
+			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
@@ -602,12 +605,13 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 }
 
 func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+	t.Helper()
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i], sdk.DefaultPowerReduction)
 		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
-			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			addrs[i].String(), pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, math.OneInt(),
 		)
 		require.NoError(t, err)
@@ -628,24 +632,20 @@ func getDepositMultiplier(expedited bool) int64 {
 	return 1
 }
 
-func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper, invalid bool) {
+func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+	t.Helper()
 	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
-	if invalid {
-		require.ErrorIs(t, err, collections.ErrInvalidIterator)
-	} else {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
 }
 
-func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper, invalid bool) {
+func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+	t.Helper()
 	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
-	if invalid {
-		require.ErrorIs(t, err, collections.ErrInvalidIterator)
-	} else {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
 }

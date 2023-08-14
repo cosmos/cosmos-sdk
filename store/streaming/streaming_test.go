@@ -8,16 +8,15 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type PluginTestSuite struct {

@@ -5,21 +5,17 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections/indexes"
-
 	"cosmossdk.io/collections"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -58,6 +54,7 @@ type AccountKeeperI interface {
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
 
+	// AddressCodec returns the account address codec.
 	AddressCodec() address.Codec
 }
 
@@ -117,7 +114,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
-	maccPerms map[string][]string, bech32Prefix, authority string,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -127,7 +124,7 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:  authcodec.NewBech32Codec(bech32Prefix),
+		addressCodec:  ac,
 		bech32Prefix:  bech32Prefix,
 		storeService:  storeService,
 		proto:         proto,
@@ -151,7 +148,7 @@ func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
 
-// AddressCodec returns the x/auth module's address.
+// AddressCodec returns the x/auth account address codec.
 // x/auth is tied to bech32 encoded user accounts
 func (ak AccountKeeper) AddressCodec() address.Codec {
 	return ak.addressCodec

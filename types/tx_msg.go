@@ -64,7 +64,7 @@ type (
 		GetGas() uint64
 		GetFee() Coins
 		FeePayer() []byte
-		FeeGranter() string
+		FeeGranter() []byte
 	}
 
 	// TxWithMemo must have GetMemo() method to use ValidateMemoDecorator

@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -87,9 +87,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 
 	grant.Authorization = any
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(skey, k.cdc.MustMarshal(&grant))
-
-	return nil
+	return store.Set(skey, k.cdc.MustMarshal(&grant))
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
@@ -118,7 +116,8 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
+				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
+					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), grantee, sdk.MsgTypeURL(msg))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
@@ -138,7 +137,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				err = k.update(ctx, grantee, granter, resp.Updated)
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

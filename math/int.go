@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"encoding/json"
 	"fmt"
+	stdmath "math"
 	"math/big"
 	"strings"
 	"sync"
@@ -105,6 +106,7 @@ func NewIntFromUint64(n uint64) Int {
 
 // NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
+// Note, the caller can safely mutate the argument after this function returns.
 func NewIntFromBigInt(i *big.Int) Int {
 	if i == nil {
 		return Int{}
@@ -113,7 +115,8 @@ func NewIntFromBigInt(i *big.Int) Int {
 	if i.BitLen() > MaxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
-	return Int{i}
+
+	return Int{new(big.Int).Set(i)}
 }
 
 // NewIntFromString constructs Int from string
@@ -152,6 +155,11 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
+
+// ToLegacyDec converts Int to LegacyDec
+func (i Int) ToLegacyDec() LegacyDec {
+	return LegacyNewDecFromInt(i)
+}
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -421,9 +429,89 @@ func (i *Int) Unmarshal(data []byte) error {
 }
 
 // Size implements the gogo proto custom type interface.
-func (i *Int) Size() int {
-	bz, _ := i.Marshal()
-	return len(bz)
+// Reduction power of 10 is the smallest power of 10, than 1<<64-1
+//
+//	18446744073709551615
+//
+// and the next value fitting with the digits of (1<<64)-1 is:
+//
+//	10000000000000000000
+var (
+	big10Pow19, _ = new(big.Int).SetString("1"+strings.Repeat("0", 19), 10)
+	log10Of2      = stdmath.Log10(2)
+)
+
+func (i *Int) Size() (size int) {
+	sign := i.Sign()
+	if sign == 0 { // It is zero.
+		// log*(0) is undefined hence return early.
+		return 1
+	}
+
+	ii := i.i
+	alreadyMadeCopy := false
+	if sign < 0 { // Negative sign encountered, so consider len("-")
+		// The reason that we make this comparison in here is to
+		// allow checking for negatives exactly once, to reduce
+		// on comparisons inside sizeBigInt, hence we make a copy
+		// of ii and make it absolute having taken note of the sign
+		// already.
+		size++
+		// We already accounted for the negative sign above, thus
+		// we can now compute the length of the absolute value.
+		ii = new(big.Int).Abs(ii)
+		alreadyMadeCopy = true
+	}
+
+	// From here on, we are now dealing with non-0, non-negative values.
+	return size + sizeBigInt(ii, alreadyMadeCopy)
+}
+
+func sizeBigInt(i *big.Int, alreadyMadeCopy bool) (size int) {
+	// This code assumes that non-0, non-negative values have been passed in.
+	bitLen := i.BitLen()
+
+	res := float64(bitLen) * log10Of2
+	ires := int(res)
+	if diff := res - float64(ires); diff == 0.0 {
+		return size + ires
+	} else if diff >= 0.3 { // There are other digits past the bitLen, this is a heuristic.
+		return size + ires + 1
+	}
+
+	// Use Log10(x) for values less than (1<<64)-1, given it is only defined for [1, (1<<64)-1]
+	if bitLen <= 64 {
+		return size + 1 + int(stdmath.Log10(float64(i.Uint64())))
+	}
+	// Past this point, the value is greater than (1<<64)-1 and 10^19.
+
+	// The prior above computation of i.BitLen() * log10Of2 is inaccurate for powers of 10
+	// and values like "9999999999999999999999999999"; that computation always overshoots by 1
+	// hence our next alternative is to just go old school and keep dividing the value by:
+	//   10^19 aka "10000000000000000000" while incrementing size += 19
+
+	// At this point we should just keep reducing by 10^19 as that's the smallest multiple
+	// of 10 that matches the digit length of (1<<64)-1
+	var ri *big.Int
+	if alreadyMadeCopy {
+		ri = i
+	} else {
+		ri = new(big.Int).Set(i)
+		alreadyMadeCopy = true
+	}
+
+	for ri.Cmp(big10Pow19) >= 0 { // Keep reducing the value by 10^19 and increment size by 19
+		ri = ri.Quo(ri, big10Pow19)
+		size += 19
+	}
+
+	if ri.Sign() == 0 { // if the value is zero, no need for the recursion, just return immediately
+		return size
+	}
+
+	// Otherwise we already know how many times we reduced the value, so its
+	// remnants less than 10^19 and those can be computed by again calling sizeBigInt.
+	return size + sizeBigInt(ri, alreadyMadeCopy)
 }
 
 // Override Amino binary serialization by proxying to protobuf.
@@ -432,6 +520,7 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
@@ -455,7 +544,7 @@ var stringsBuilderPool = &sync.Pool{
 
 // FormatInt formats an integer (encoded as in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the int or sdk.Int object).
+// (instead of manipulating the int or math.Int object).
 func FormatInt(v string) (string, error) {
 	if len(v) == 0 {
 		return "", fmt.Errorf("cannot format empty string")

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
@@ -16,6 +15,8 @@ import (
 	"github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"

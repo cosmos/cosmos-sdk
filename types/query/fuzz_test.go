@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	fuzz "github.com/google/gofuzz"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

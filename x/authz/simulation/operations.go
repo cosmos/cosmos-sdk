@@ -55,23 +55,17 @@ func WeightedOperations(
 		weightRevoke   int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgGrant, &weightMsgGrant, nil,
-		func(_ *rand.Rand) {
-			weightMsgGrant = WeightGrant
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgGrant, &weightMsgGrant, nil, func(_ *rand.Rand) {
+		weightMsgGrant = WeightGrant
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightExec, &weightExec, nil,
-		func(_ *rand.Rand) {
-			weightExec = WeightExec
-		},
-	)
+	appParams.GetOrGenerate(OpWeightExec, &weightExec, nil, func(_ *rand.Rand) {
+		weightExec = WeightExec
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightRevoke, &weightRevoke, nil,
-		func(_ *rand.Rand) {
-			weightRevoke = WeightRevoke
-		},
-	)
+	appParams.GetOrGenerate(OpWeightRevoke, &weightRevoke, nil, func(_ *rand.Rand) {
+		weightRevoke = WeightRevoke
+	})
 
 	pCdc := codec.NewProtoCodec(registry)
 

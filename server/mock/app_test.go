@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -41,11 +42,14 @@ func TestInitApp(t *testing.T) {
 	}
 	res, err := app.InitChain(&req)
 	require.NoError(t, err)
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Hash:   res.AppHash,
 		Height: 1,
 	})
-	app.Commit()
+	require.NoError(t, err)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	// make sure we can query these values
 	query := abci.RequestQuery{

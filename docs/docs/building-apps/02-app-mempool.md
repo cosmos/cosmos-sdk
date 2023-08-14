@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Application mempool
+# Application Mempool
 
 :::note Synopsis
 This sections describes how the app-side mempool can be used and replaced. 
@@ -13,9 +13,7 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [BaseApp](../core/00-baseapp.md)
 
@@ -43,10 +41,14 @@ all transactions, it can provide greater control over transaction ordering.
 Allowing the application to handle ordering enables the application to define how
 it would like the block constructed. 
 
-Currently, there is a default `PrepareProposal` implementation provided by the application.
+The Cosmos SDK defines the `DefaultProposalHandler` type, which provides applications with
+`PrepareProposal` and `ProcessProposal` handlers. If you decide to implement your
+own `PrepareProposal` handler, you must be sure to ensure that the transactions
+selected DO NOT exceed the maximum block gas (if set) and the maximum bytes provided
+by `req.MaxBytes`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
@@ -77,10 +79,13 @@ proposal is proposed.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L927-L942
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L153-L159
 ```
 
-Like `PrepareProposal` this implementation is the default and can be modified by the application developer in [`app.go`](./01-app-go-v2.md):
+Like `PrepareProposal` this implementation is the default and can be modified by
+the application developer in [`app.go`](./01-app-go-v2.md). If you decide to implement
+your own `ProcessProposal` handler, you must be sure to ensure that the transactions
+provided in the proposal DO NOT exceed the maximum block gas (if set).
 
 ```go
 processOpt := func(app *baseapp.BaseApp) {
@@ -115,6 +120,9 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
 When this mempool is used, it assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
 which is FIFO-ordered by default.
+
+> Note: If a NoOp mempool is used, PrepareProposal and ProcessProposal both should be aware of this as
+> PrepareProposal could include transactions that could fail verification in ProcessProposal.
 
 ### Sender Nonce Mempool
 

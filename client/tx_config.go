@@ -2,6 +2,7 @@ package client
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"

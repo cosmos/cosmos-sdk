@@ -4,16 +4,14 @@ import (
 	context "context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/authz"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // TODO: Revisit this once we have proper gas fee framework.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/9054
 // Ref: https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
-
-var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
 func NewSendAuthorization(spendLimit sdk.Coins, allowed []sdk.AccAddress) *SendAuthorization {

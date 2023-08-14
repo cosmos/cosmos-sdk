@@ -6,14 +6,14 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -190,8 +190,12 @@ func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt sd
 
 func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
+	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 
 	for _, addr := range testAddrs {
 		initAccountWithCoins(app, ctx, addr, initCoins)

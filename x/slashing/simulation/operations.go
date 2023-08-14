@@ -36,11 +36,9 @@ func WeightedOperations(
 	sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgUnjail int
-	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
-		func(_ *rand.Rand) {
-			weightMsgUnjail = DefaultWeightMsgUnjail
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgUnjail, &weightMsgUnjail, nil, func(_ *rand.Rand) {
+		weightMsgUnjail = DefaultWeightMsgUnjail
+	})
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -65,7 +63,12 @@ func SimulateMsgUnjail(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgUnjail{})
 
-		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
+		allVals, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get all validators"), nil, err
+		}
+
+		validator, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not ok"), nil, nil // skip
 		}
@@ -84,12 +87,16 @@ func SimulateMsgUnjail(
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, err
 		}
-		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
-		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, nil // skip
+		info, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}
 
-		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		selfDel, err := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, err
+		}
+
 		if selfDel == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}
@@ -102,7 +109,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}
 
-		msg := types.NewMsgUnjail(validator.GetOperator())
+		msg := types.NewMsgUnjail(validator.GetOperator().String())
 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

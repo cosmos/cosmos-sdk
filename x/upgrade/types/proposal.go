@@ -9,7 +9,9 @@ const (
 	ProposalTypeCancelSoftwareUpgrade string = "CancelSoftwareUpgrade"
 )
 
-// NewSoftwareUpgradeProposal creates a new SoftwareUpgradeProposal instance
+// NewSoftwareUpgradeProposal creates a new SoftwareUpgradeProposal instance.
+// Deprecated: this proposal is considered legacy and is deprecated in favor of
+// Msg-based gov proposals. See MsgSoftwareUpgrade.
 func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Content {
 	return &SoftwareUpgradeProposal{title, description, plan}
 }
@@ -42,7 +44,9 @@ func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(sup)
 }
 
-// NewCancelSoftwareUpgradeProposal creates a new CancelSoftwareUpgradeProposal instance
+// NewCancelSoftwareUpgradeProposal creates a new CancelSoftwareUpgradeProposal
+// instance. Deprecated: this proposal is considered legacy and is deprecated in
+// favor of Msg-based gov proposals. See MsgCancelUpgrade.
 func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 	return &CancelSoftwareUpgradeProposal{title, description}
 }

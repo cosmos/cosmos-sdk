@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/comet"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,22 +17,22 @@ type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
-		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
-		GetParams(ctx sdk.Context) (params stakingtypes.Params)
+		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
 	// evidence module.
 	SlashingKeeper interface {
-		GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
-		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
-		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
-		Tombstone(sdk.Context, sdk.ConsAddress)
-		Slash(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64)
-		SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, sdkmath.LegacyDec, int64, int64, stakingtypes.Infraction)
-		SlashFractionDoubleSign(sdk.Context) sdkmath.LegacyDec
-		Jail(sdk.Context, sdk.ConsAddress)
-		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
+		GetPubkey(context.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+		IsTombstoned(context.Context, sdk.ConsAddress) bool
+		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
+		Tombstone(context.Context, sdk.ConsAddress) error
+		Slash(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64) error
+		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, st.Infraction) error
+		SlashFractionDoubleSign(context.Context) (math.LegacyDec, error)
+		Jail(context.Context, sdk.ConsAddress) error
+		JailUntil(context.Context, sdk.ConsAddress, time.Time) error
 	}
 
 	// AccountKeeper define the account keeper interface contracted needed by the evidence module

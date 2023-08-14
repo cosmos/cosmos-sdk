@@ -11,9 +11,7 @@ Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-05
 
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
 * [Depinject Documentation](../packages/01-depinject.md)
@@ -30,29 +28,29 @@ The `app_config.go` file is the single place to configure all modules parameters
 1. Create the `AppConfig` variable:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L91-L93
+    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L103
     ```
 
 2. Configure the `runtime` module:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L94-L158
+    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L103-L167
     ```
 
 3. Configure the modules defined in the `BeginBlocker` and `EndBlocker` and the `tx` module:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L159-L177
+    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L112-L129
     ```
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L192-L194
+    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L200-L203
     ```
 
 ### Complete `app_config.go`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L52-L254
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go
 ```
 
 ### Alternative formats
@@ -103,7 +101,7 @@ A more complete example of `app.yaml` can be found [here](https://github.com/cos
 In short `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L158-L291
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go#L101-L245
 ```
 
 :::warning
@@ -117,8 +115,33 @@ In this case, use `depinject.Configs` for combining the extra configuration and 
 More information on how work `depinject.Configs` and `depinject.Supply` can be found in the [`depinject` documentation](https://pkg.go.dev/cosmossdk.io/depinject).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L186-L216
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go#L114-L146
 ```
+
+### Registering non app wiring modules
+
+It is possible to combine app wiring / depinject enabled modules with non app wiring modules.
+To do so, use the `app.RegisterModules` method to register the modules on your app, as well as `app.RegisterStores` for registering the extra stores needed.
+
+```go
+// ....
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+
+// register module manually
+app.RegisterStores(storetypes.NewKVStoreKey(example.ModuleName))
+app.ExampleKeeper = examplekeeper.NewKeeper(app.appCodec, app.AccountKeeper.AddressCodec(), runtime.NewKVStoreService(app.GetKey(example.ModuleName)), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+exampleAppModule := examplemodule.NewAppModule(app.ExampleKeeper)
+if err := app.RegisterModules(&exampleAppModule); err != nil {
+	panic(err)
+}
+
+// ....
+```
+
+:::warning
+When using AutoCLI and combining app wiring and non app wiring modules. The AutoCLI options should be manually constructed instead of injected.
+Otherwise it will miss the non depinject modules and not register their CLI.
+:::
 
 ### Complete `app_v2.go`
 
@@ -127,5 +150,5 @@ Note that in the complete `SimApp` `app_v2.go` file, testing utilities are also 
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L75-L395
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go
 ```

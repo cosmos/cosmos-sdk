@@ -1,34 +1,47 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
-	"cosmossdk.io/core/comet"
 	"github.com/cockroachdb/errors"
+
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/core/comet"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
-func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) {
+func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
-	height := ctx.BlockHeight()
+	height := sdkCtx.BlockHeight()
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
 
 	// don't update missed blocks when validator's jailed
-	if k.sk.IsValidatorJailed(ctx, consAddr) {
-		return
+	isJailed, err := k.sk.IsValidatorJailed(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+
+	if isJailed {
+		return nil
 	}
 
 	// fetch signing info
-	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+	if err != nil {
+		return err
+	}
+
+	signedBlocksWindow, err := k.SignedBlocksWindow(ctx)
+	if err != nil {
+		return err
 	}
 
 	// Compute the relative index, so we count the blocks the validator *should*
@@ -36,13 +49,13 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	// except for start height. The index is in the range [0, SignedBlocksWindow)
 	// and is used to see if a validator signed a block at the given height, which
 	// is represented by a bit in the bitmap.
-	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
+	index := signInfo.IndexOffset % signedBlocksWindow
 	signInfo.IndexOffset++
 
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
 	if err != nil {
-		panic(errors.Wrap(err, "failed to get the validator's bitmap value"))
+		return errors.Wrap(err, "failed to get the validator's bitmap value")
 	}
 
 	missed := signed == comet.BlockIDFlagAbsent
@@ -51,7 +64,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		// Bitmap value has changed from not missed to missed, so we flip the bit
 		// and increment the counter.
 		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, true); err != nil {
-			panic(err)
+			return err
 		}
 
 		signInfo.MissedBlocksCounter++
@@ -60,7 +73,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		// Bitmap value has changed from missed to not missed, so we flip the bit
 		// and decrement the counter.
 		if err := k.SetMissedBlockBitmapValue(ctx, consAddr, index, false); err != nil {
-			panic(err)
+			return err
 		}
 
 		signInfo.MissedBlocksCounter--
@@ -69,10 +82,13 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		// bitmap value at this index has not changed, no need to update counter
 	}
 
-	minSignedPerWindow := k.MinSignedPerWindow(ctx)
+	minSignedPerWindow, err := k.MinSignedPerWindow(ctx)
+	if err != nil {
+		return err
+	}
 
 	if missed {
-		ctx.EventManager().EmitEvent(
+		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeLiveness,
 				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
@@ -90,12 +106,15 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		)
 	}
 
-	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	maxMissed := k.SignedBlocksWindow(ctx) - minSignedPerWindow
+	minHeight := signInfo.StartHeight + signedBlocksWindow
+	maxMissed := signedBlocksWindow - minSignedPerWindow
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		if err != nil {
+			return err
+		}
 		if validator != nil && !validator.IsJailed() {
 			// Downtime confirmed: slash and jail the validator
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
@@ -105,8 +124,17 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx), stakingtypes.Infraction_INFRACTION_DOWNTIME)
-			ctx.EventManager().EmitEvent(
+			slashFractionDowntime, err := k.SlashFractionDowntime(ctx)
+			if err != nil {
+				return err
+			}
+
+			coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, slashFractionDowntime, st.Infraction_INFRACTION_DOWNTIME)
+			if err != nil {
+				return err
+			}
+
+			sdkCtx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,
 					sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
@@ -116,15 +144,24 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 				),
 			)
-			k.sk.Jail(ctx, consAddr)
-
-			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
+			err = k.sk.Jail(sdkCtx, consAddr)
+			if err != nil {
+				return err
+			}
+			downtimeJailDur, err := k.DowntimeJailDuration(ctx)
+			if err != nil {
+				return err
+			}
+			signInfo.JailedUntil = sdkCtx.BlockHeader().Time.Add(downtimeJailDur)
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.DeleteMissedBlockBitmap(ctx, consAddr)
+			err = k.DeleteMissedBlockBitmap(ctx, consAddr)
+			if err != nil {
+				return err
+			}
 
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",
@@ -132,7 +169,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 				"validator", consAddr.String(),
 				"min_height", minHeight,
 				"threshold", minSignedPerWindow,
-				"slashed", k.SlashFractionDowntime(ctx).String(),
+				"slashed", slashFractionDowntime.String(),
 				"jailed_until", signInfo.JailedUntil,
 			)
 		} else {
@@ -145,5 +182,5 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	}
 
 	// Set the updated signing info
-	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }

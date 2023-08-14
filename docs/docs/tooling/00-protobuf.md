@@ -4,20 +4,20 @@ sidebar_position: 1
 
 # Protocol Buffers
 
-It is known that Cosmos SDK uses protocol buffers extensively, this docuemnt is meant to provide a guide on how it is used in the cosmos-sdk. 
+It is known that Cosmos SDK uses protocol buffers extensively, this document is meant to provide a guide on how it is used in the cosmos-sdk.
 
 To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.12.x`
 
 Below is the example of the Cosmos SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/Makefile#L411-L432
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/Makefile#L411-L432
 ```
 
 The script used to generate the protobuf files can be found in the `scripts/` directory. 
 
 ```shell reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/scripts/protocgen.sh#L1-L37
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protocgen.sh
 ```
 
 ## Buf

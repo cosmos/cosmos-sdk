@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -48,6 +48,7 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalVote,
+			sdk.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyOption, options.String()),
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
@@ -56,8 +57,13 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	return nil
 }
 
-// deleteVotes deletes the all votes from a given proposalID.
+// deleteVotes deletes all the votes from a given proposalID.
 func (keeper Keeper) deleteVotes(ctx context.Context, proposalID uint64) error {
-	// TODO(tip): fix https://github.com/cosmos/cosmos-sdk/issues/16162
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
+	err := keeper.Votes.Clear(ctx, rng)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

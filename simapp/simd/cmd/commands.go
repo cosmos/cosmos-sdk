@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
+	txcmd "cosmossdk.io/x/tx/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -165,7 +166,7 @@ func queryCommand() *cobra.Command {
 		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
 		server.QueryBlockResultsCmd(),
-		authcmd.QueryEventForTxCmd(),
+		txcmd.QueryEventForTxCmd(),
 	)
 
 	return cmd

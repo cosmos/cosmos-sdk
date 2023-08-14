@@ -596,7 +596,7 @@ func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) 
 }
 
 // validate that the tx is not signed using SIGN_MODE_AMINO_JSON if the tx is nonAtomic
-func (app *BaseApp) validateNonAtomicSignMode(tx sdk.Tx) error {
+func validateNonAtomicSignMode(tx sdk.Tx) error {
 	if !tx.IsNonAtomic() {
 		return nil
 	}
@@ -937,7 +937,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			return gInfo, nil, anteEvents,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
-		err = app.validateNonAtomicSignMode(tx)
+		err = validateNonAtomicSignMode(tx)
 		if err != nil {
 			return gInfo, nil, anteEvents,
 				fmt.Errorf("invalid signature: %w", err)
@@ -1022,7 +1022,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		// ADR 031 request type routing
 		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
-			space, code, logInfo := errorsmod.ABCIInfo(err, mode != execModeFinalize)
+			space, code, logInfo := errorsmod.ABCIInfo(err, true)
 			safeErr := errorsmod.ABCIError(space, code, logInfo)
 			wrappedErr := errorsmod.Wrapf(safeErr, "failed to execute message; message index: %d", i)
 			if isNonAtomic {

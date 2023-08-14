@@ -3,6 +3,7 @@ package pebbledb
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 
 	"github.com/cockroachdb/pebble"
 )
@@ -96,6 +97,23 @@ var MVCCComparer = &pebble.Comparer{
 		// there is a timestamp we prepend a 0 to the encoded timestamp data.
 		return len(key) + 1
 	},
+
+	FormatKey: func(k []byte) fmt.Formatter {
+		return mvccKeyFormatter{key: k}
+	},
+}
+
+type mvccKeyFormatter struct {
+	key []byte
+}
+
+func (f mvccKeyFormatter) Format(s fmt.State, verb rune) {
+	k, ts, ok := SplitMVCCKey(f.key)
+	if ok {
+		fmt.Fprintf(s, "%s/%d", k, binary.LittleEndian.Uint64(ts))
+	} else {
+		fmt.Fprintf(s, "%s", f.key)
+	}
 }
 
 // MVCCKeyCompare compares PebbleDB versioned store keys, which are MVCC timestamps.

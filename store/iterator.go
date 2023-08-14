@@ -39,5 +39,10 @@ type IteratorCreator interface {
 
 type VersionedIteratorCreator interface {
 	NewIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+
+	// TODO(@bez): Consider removing this API and forcing all query handlers to use
+	// a forward (normal) iterator. A reverse iterator requires additional implementation
+	// burden on the SS backend and in some cases, may not even be possible to
+	// implement efficiently.
 	NewReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
 }

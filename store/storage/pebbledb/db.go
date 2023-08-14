@@ -8,15 +8,14 @@ import (
 	"math"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/storage/util"
 	"github.com/cockroachdb/pebble"
 )
 
 const (
 	VersionSize = 8
 
-	StorePrefixTpl   = "s/k:%s/" // s/k:<storeKey>
-	latestVersionKey = "s/latest"
+	StorePrefixTpl   = "s/k:%s/"   // s/k:<storeKey>
+	latestVersionKey = "s/_latest" // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
 )
 
 var (
@@ -144,9 +143,8 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
-// TODO: MVCC
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+	if (len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
 
@@ -154,28 +152,20 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrStartAfterEnd
 	}
 
-	prefix := storePrefix(storeKey)
-	start, end = util.IterateWithPrefix(prefix, start, end)
+	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), version)
 
-	iter := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
-	return newPebbleDBIterator(iter, prefix, start, end, false), nil
+	var upperBound []byte
+	if end != nil {
+		upperBound = MVCCEncode(prependStoreKey(storeKey, end), 0)
+	}
+
+	itr := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version), nil
 }
 
-// TODO: MVCC
+// TODO: MVCC-based iteration.
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, store.ErrKeyEmpty
-	}
-
-	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
-		return nil, store.ErrStartAfterEnd
-	}
-
-	prefix := storePrefix(storeKey)
-	start, end = util.IterateWithPrefix(prefix, start, end)
-
-	iter := db.storage.NewIter(&pebble.IterOptions{LowerBound: start, UpperBound: end})
-	return newPebbleDBIterator(iter, prefix, start, end, true), nil
+	panic("not implemented!")
 }
 
 func storePrefix(storeKey string) []byte {

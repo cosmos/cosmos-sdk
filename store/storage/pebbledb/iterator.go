@@ -2,6 +2,7 @@ package pebbledb
 
 import (
 	"bytes"
+	"fmt"
 
 	"cosmossdk.io/store/v2"
 	"github.com/cockroachdb/pebble"
@@ -9,111 +10,51 @@ import (
 
 var _ store.Iterator = (*iterator)(nil)
 
+// iterator implements the store.Iterator interface. It wraps a PebbleDB iterator
+// with added MVCC key handling logic. The iterator will iterate over the key space
+// in the provided domain for a given version. If a key has been written at the
+// provided version, that key/value pair will be iterated over. Otherwise, the
+// latest version for that key/value pair will be iterated over s.t. it's less
+// than the provided version. Note:
+//
+// - The start key must not be empty.
+// - Currently, reverse iteration is NOT supported.
 type iterator struct {
 	source             *pebble.Iterator
 	prefix, start, end []byte
-	reverse            bool
-	invalid            bool
+	version            uint64
+	valid              bool
 }
 
-func newPebbleDBIterator(src *pebble.Iterator, prefix, start, end []byte, reverse bool) *iterator {
-	if reverse {
-		if end == nil {
-			_ = src.Last()
-		} else {
-			_ = src.SeekGE(end)
-
-			if src.Valid() {
-				eoaKey := src.Key() // end or after key
-				if bytes.Compare(end, eoaKey) <= 0 {
-					src.Prev()
-				}
-
-			} else {
-				_ = src.Last()
-			}
-		}
-	} else {
-		if start == nil {
-			_ = src.First()
-		} else {
-			_ = src.SeekGE(start)
-		}
-	}
+func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte, version uint64) *iterator {
+	// move the underlying PebbleDB iterator to the first key
+	_ = src.First()
 
 	return &iterator{
 		source:  src,
 		prefix:  prefix,
-		start:   start,
-		end:     end,
-		reverse: reverse,
-		invalid: !src.Valid(),
+		start:   mvccStart,
+		end:     mvccEnd,
+		version: version,
+		valid:   src.Valid(),
 	}
 }
 
 // Domain returns the domain of the iterator. The caller must not modify the
 // return values.
 func (itr *iterator) Domain() ([]byte, []byte) {
-	start := itr.start
-	if start != nil {
-		start = start[len(itr.prefix):]
-		if len(start) == 0 {
-			start = nil
-		}
-	}
-
-	end := itr.end
-	if end != nil {
-		end = end[len(itr.prefix):]
-		if len(end) == 0 {
-			end = nil
-		}
-	}
-
-	return start, end
-}
-
-func (itr *iterator) Valid() bool {
-	// once invalid, forever invalid
-	if itr.invalid {
-		return false
-	}
-
-	// if source has error, consider it invalid
-	if err := itr.source.Error(); err != nil {
-		itr.invalid = true
-		return false
-	}
-
-	// if source is invalid, consider it invalid
-	if !itr.source.Valid() {
-		itr.invalid = true
-		return false
-	}
-
-	// if key is at the end or past it, consider it invalid
-	start := itr.start
-	end := itr.end
-	key := itr.source.Key()
-
-	if itr.reverse {
-		if start != nil && bytes.Compare(key, start) < 0 {
-			itr.invalid = true
-			return false
-		}
-	} else {
-		if end != nil && bytes.Compare(end, key) <= 0 {
-			itr.invalid = true
-			return false
-		}
-	}
-
-	return true
+	return itr.start, itr.end
 }
 
 func (itr *iterator) Key() []byte {
 	itr.assertIsValid()
-	key := itr.source.Key()
+
+	key, _, ok := SplitMVCCKey(itr.source.Key())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC key.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+	}
 
 	keyCopy := make([]byte, len(key))
 	_ = copy(keyCopy, key)
@@ -132,17 +73,49 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr iterator) Next() bool {
-	if itr.invalid {
-		return false
+	// First move the iterator to the next prefix, which may not correspond to the
+	// desired version for that key, e.g. if the key was written at a later version,
+	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
+	if itr.source.NextPrefix() {
+		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return itr.valid
+		}
+
+		// Move the iterator to the closest version to the desired version, so we
+		// append the current iterator key to the prefix and seek to that key.
+		itr.valid = itr.source.SeekGE(MVCCEncode(nextKey, itr.version))
 	}
 
-	if itr.reverse {
-		itr.source.Prev()
-	} else {
-		itr.source.Next()
+	itr.valid = false
+	return itr.valid
+}
+
+func (itr *iterator) Valid() bool {
+	// once invalid, forever invalid
+	if !itr.valid || !itr.source.Valid() {
+		itr.valid = false
+		return itr.valid
 	}
 
-	return itr.Valid()
+	// if source has error, consider it invalid
+	if err := itr.source.Error(); err != nil {
+		itr.valid = false
+		return itr.valid
+	}
+
+	// if key is at the end or past it, consider it invalid
+	if end := itr.end; end != nil {
+		if bytes.Compare(end, itr.Key()) <= 0 {
+			itr.valid = false
+			return itr.valid
+		}
+	}
+
+	return true
 }
 
 func (itr *iterator) Error() error {
@@ -152,11 +125,11 @@ func (itr *iterator) Error() error {
 func (itr *iterator) Close() {
 	_ = itr.source.Close()
 	itr.source = nil
-	itr.invalid = true
+	itr.valid = false
 }
 
 func (itr *iterator) assertIsValid() {
-	if itr.invalid {
+	if !itr.valid {
 		panic("iterator is invalid")
 	}
 }

@@ -10,7 +10,7 @@ func IterateWithPrefix(prefix, begin, end []byte) ([]byte, []byte) {
 	begin = cloneAppend(prefix, begin)
 
 	if end == nil {
-		end = copyIncr(prefix)
+		end = CopyIncr(prefix)
 	} else {
 		end = cloneAppend(prefix, end)
 	}
@@ -27,7 +27,7 @@ func cloneAppend(front []byte, tail []byte) (res []byte) {
 	return res
 }
 
-func copyIncr(bz []byte) []byte {
+func CopyIncr(bz []byte) []byte {
 	if len(bz) == 0 {
 		panic("copyIncr expects non-zero bz length")
 	}

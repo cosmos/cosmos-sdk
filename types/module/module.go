@@ -702,7 +702,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := mod.(UpgradeModule); ok {
+			if _, ok := mod.(appmodule.UpgradeModule); ok {
 				err := mod.BeginBlock(ctx)
 				return err == nil, err
 			}
@@ -718,7 +718,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(UpgradeModule); !ok {
+			if _, ok := module.(appmodule.UpgradeModule); !ok {
 				if err := module.BeginBlock(ctx); err != nil {
 					return sdk.BeginBlock{}, err
 				}

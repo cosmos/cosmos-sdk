@@ -31,5 +31,5 @@ type CoreAppModule interface {
 
 type CoreUpgradeAppModule interface {
 	CoreAppModule
-	module.UpgradeModule
+	appmodule.UpgradeModule
 }

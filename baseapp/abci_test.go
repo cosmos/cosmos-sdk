@@ -742,9 +742,10 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
@@ -803,7 +804,8 @@ func TestABCI_DeliverTx_NonAtomicMultiMsg(t *testing.T) {
 					extra++
 				}
 			}
-			builder.SetMsgs(msgs...)
+			err := builder.SetMsgs(msgs...)
+			require.NoError(t, err)
 			builder.SetMemo(tx.GetMemo())
 			builder.SetNonAtomic(true)
 			setTxSignature(t, builder, 0)

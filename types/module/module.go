@@ -373,8 +373,12 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasEndBlock := module.(HasABCIEndblock)
-			return !hasEndBlock
+			if _, hasEndBlock := module.(appmodule.HasEndBlocker); hasEndBlock {
+				return !hasEndBlock
+			}
+
+			_, hasABCIEndBlock := module.(HasABCIEndblock)
+			return !hasABCIEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
 }
@@ -565,9 +569,9 @@ func (m *Manager) checkModulesExists(moduleName []string) error {
 	return nil
 }
 
-// assertNoForgottenModules checks that we didn't forget any modules in the
-// SetOrder* functions.
-// `pass` is a closure which allows one to omit modules from `moduleNames`. If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
+// assertNoForgottenModules checks that we didn't forget any modules in the SetOrder* functions.
+// `pass` is a closure which allows one to omit modules from `moduleNames`.
+// If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
 func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {

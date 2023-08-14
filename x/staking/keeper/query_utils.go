@@ -25,12 +25,12 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validators[i] = validator
@@ -39,10 +39,10 @@ func (k Keeper) GetDelegatorValidators(
 		return false, nil
 	})
 	if err != nil {
-		return nil, err
+		return types.Validators{}, err
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
 // GetDelegatorValidator returns a validator that a delegator is bonded to

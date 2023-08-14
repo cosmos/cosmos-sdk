@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -98,7 +97,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -117,7 +116,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposalsDeposits = append(proposalsDeposits, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -127,7 +126,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposalsVotes = append(proposalsVotes, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 

@@ -78,11 +78,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
 	if err != nil {
-<<<<<<< HEAD
-		return ctx, fmt.Errorf("couldn't get key ring: %v", err)
-=======
 		return ctx, fmt.Errorf("couldn't get keyring: %w", err)
->>>>>>> bf92632a0 (feat(client,simapp): inject keyring in autocli opts (#17351))
 	}
 
 	ctx = ctx.WithKeyring(keyring)

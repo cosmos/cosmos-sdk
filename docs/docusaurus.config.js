@@ -412,6 +412,10 @@ const config = {
             from: ["/main/tooling/depinject"],
             to: "/main/packages/depinject",
           },
+          {
+            from: ["/main/building-modules/autocli"],
+            to: "/main/core/autocli",
+          },
         ],
       },
     ],

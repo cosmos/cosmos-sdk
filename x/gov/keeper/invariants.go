@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -26,7 +25,7 @@ func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 			expectedDeposits = expectedDeposits.Add(value.Amount...)
 			return false, nil
 		})
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 

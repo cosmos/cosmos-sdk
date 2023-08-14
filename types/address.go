@@ -491,6 +491,7 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 type ConsAddress []byte
 
 // ConsAddressFromHex creates a ConsAddress from a hex string.
+// Deprecated: use ConsensusAddressCodec from Staking keeper
 func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
 	return ConsAddress(bz), err

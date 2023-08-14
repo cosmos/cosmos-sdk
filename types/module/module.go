@@ -36,7 +36,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
@@ -57,7 +57,7 @@ type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(types.InterfaceRegistry)
-	RegisterGRPCGatewayRoutes(client.Context, *gwruntime.ServeMux)
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -157,7 +157,7 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *gwruntime.ServeMux) {
+func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
 		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
 	}

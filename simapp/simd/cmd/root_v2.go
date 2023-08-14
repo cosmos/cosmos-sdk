@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -132,10 +131,6 @@ func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.Int
 }
 
 func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	clientCtx = clientCtx.WithKeyringOptions(append(clientCtx.KeyringOptions, func(options *keyring.Options) {
-		options.AddressCodec = addressCodec
-	})...)
-
 	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
 	if err != nil {
 		return nil, err

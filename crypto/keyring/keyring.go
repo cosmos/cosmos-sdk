@@ -15,12 +15,10 @@ import (
 	"github.com/cosmos/go-bip39"
 	"golang.org/x/crypto/bcrypt"
 
-	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -104,7 +102,7 @@ type Keyring interface {
 	Migrator
 
 	// Implements client/v2 keyring interface
-	LookupAddressByKeyName(name string) (string, error)
+	LookupAddressByKeyName(name string) ([]byte, error)
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -160,8 +158,6 @@ type Options struct {
 	// indicate whether Ledger should skip DER Conversion on signature,
 	// depending on which format (DER or BER) the Ledger app returns signatures
 	LedgerSigSkipDERConv bool
-	// Address codecs
-	AddressCodec address.Codec
 }
 
 // NewInMemory creates a transient keyring useful for testing
@@ -245,11 +241,6 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 
 	if options.LedgerSigSkipDERConv {
 		ledger.SetSkipDERConversion()
-	}
-
-	if options.AddressCodec == nil {
-		// fallback to global sdk config
-		options.AddressCodec = addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return keystore{
@@ -606,23 +597,18 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 }
 
 // LookupAddressByKeyName returns the address of a key stored in the keyring
-func (ks keystore) LookupAddressByKeyName(name string) (string, error) {
+func (ks keystore) LookupAddressByKeyName(name string) ([]byte, error) {
 	record, err := ks.Key(name)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	addr, err := record.GetAddress()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	addrStr, err := ks.options.AddressCodec.BytesToString(addr)
-	if err != nil {
-		return "", err
-	}
-
-	return addrStr, nil
+	return addr, nil
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

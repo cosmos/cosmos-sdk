@@ -223,8 +223,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, err
 		}
+		str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+		if err != nil {
+			return nil, err
+		}
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		if err = k.DeleteLastValidatorPower(ctx, validator.GetOperator()); err != nil {
+		if err = k.DeleteLastValidatorPower(ctx, str); err != nil {
 			return nil, err
 		}
 
@@ -357,7 +361,12 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 
@@ -415,7 +424,12 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 

@@ -1,8 +1,11 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
+
+	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -149,7 +152,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator().String())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -186,8 +189,14 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission, err := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
+		valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error converting validator address"), nil, err
+		}
+
+		commission, err := k.GetValidatorAccumulatedCommission(ctx, valBz)
+
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
 
@@ -195,7 +204,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator commission is zero"), nil, nil
 		}
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(valBz))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
@@ -203,7 +212,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator().String())
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
 		txCtx := simulation.OperationInput{
 			R:               r,

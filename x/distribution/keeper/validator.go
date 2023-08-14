@@ -13,33 +13,42 @@ import (
 
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.ValidatorI) error {
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+	if err != nil {
+		return err
+	}
 	// set initial historical rewards (period 0) with reference count of 1
-	err := k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	err = k.SetValidatorHistoricalRewards(ctx, valBz, 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
 
 	// set current rewards (starting at period 1)
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	err = k.SetValidatorCurrentRewards(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
 
 	// set accumulated commission
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
+	err = k.SetValidatorAccumulatedCommission(ctx, valBz, types.InitialValidatorAccumulatedCommission())
 	if err != nil {
 		return err
 	}
 
 	// set outstanding rewards
-	err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	err = k.SetValidatorOutstandingRewards(ctx, valBz, types.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 	return err
 }
 
 // increment validator period, returning the period just ended
 func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+	if err != nil {
+		return 0, err
+	}
+
 	// fetch current rewards
-	rewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	rewards, err := k.GetValidatorCurrentRewards(ctx, valBz)
 	if err != nil {
 		return 0, err
 	}
@@ -55,7 +64,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+		outstanding, err := k.GetValidatorOutstandingRewards(ctx, valBz)
 		if err != nil {
 			return 0, err
 		}
@@ -67,7 +76,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		err = k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+		err = k.SetValidatorOutstandingRewards(ctx, valBz, outstanding)
 		if err != nil {
 			return 0, err
 		}
@@ -79,7 +88,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	}
 
 	// fetch historical rewards for last period
-	historical, err := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
+	historical, err := k.GetValidatorHistoricalRewards(ctx, valBz, rewards.Period-1)
 	if err != nil {
 		return 0, err
 	}
@@ -87,19 +96,19 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	cumRewardRatio := historical.CumulativeRewardRatio
 
 	// decrement reference count
-	err = k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
+	err = k.decrementReferenceCount(ctx, valBz, rewards.Period-1)
 	if err != nil {
 		return 0, err
 	}
 
 	// set new historical rewards with reference count of 1
-	err = k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
+	err = k.SetValidatorHistoricalRewards(ctx, valBz, rewards.Period, types.NewValidatorHistoricalRewards(cumRewardRatio.Add(current...), 1))
 	if err != nil {
 		return 0, err
 	}
 
 	// set current rewards, incrementing period by 1
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
+	err = k.SetValidatorCurrentRewards(ctx, valBz, types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
 	if err != nil {
 		return 0, err
 	}

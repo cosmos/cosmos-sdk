@@ -209,8 +209,8 @@ cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4 h1:9Kw1JCbbhXHPR91/
 cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:iP++FZ7DCHMYyo4T+q8fBy4X+ZDupUiBjTCpNTWsX18=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4 h1:DFqO5h83+PWFSSoY32sNCePkMjDIKuRnm9MbvFxgp/g=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:yoA/iygemjoFYdHQccJnTZ0RVkQu4JT+1bwTa4dCye4=
-cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4 h1:oDdr/qO3btc1rZNOccBVZWg4mYjwTJipW373j8daWno=
-cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:WszYbTCCseqXplYzulcTkGp2cr7FhUcRTfxRJ0gjXnQ=
+cosmossdk.io/x/evidence v0.0.0-20230814085951-3dca9f8a5a18 h1:iC10MPVmHaSurorensxOpow8HeAEYYPJubH64vnvZ3w=
+cosmossdk.io/x/evidence v0.0.0-20230814085951-3dca9f8a5a18/go.mod h1:oBbP42bB+PBJV386wYo25Dcc/9koUkrdxZDijeihT/Q=
 cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4 h1:2BqYUGgFqb+NZ2Uj4e4oxNKfO5OSkcXrvzHzjhPq5Ug=
 cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:C9Vckz/HoWunY0B6dQGTpYhheUz4Cd8YROCuLSJHQ1o=
 cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4 h1:O7/cr4RAbxkktsQWfWUo277FXz5lcoZqLFZ9hKTDJd0=
@@ -1692,8 +1692,8 @@ honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 nhooyr.io/websocket v1.8.6 h1:s+C3xAMLwGmlI31Nyn/eAehUlZPwfYZu2JXM621Q5/k=
 nhooyr.io/websocket v1.8.6/go.mod h1:B70DZP8IakI65RVQ51MsWP/8jndNma26DVA/nFSCgW0=
-pgregory.net/rapid v1.0.0 h1:iQaM2w5PZ6xvt6x7hbd7tiDS+nk7YPp5uCaEba+T/F4=
-pgregory.net/rapid v1.0.0/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
+pgregory.net/rapid v1.0.1 h1:4bhVd38cZJzEMeIzypWN2egQKA6t1BoqAPWZwiral0U=
+pgregory.net/rapid v1.0.1/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=

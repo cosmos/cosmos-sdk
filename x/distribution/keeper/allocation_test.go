@@ -37,8 +37,10 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
+	valCodec := address.NewBech32Codec("cosmosvaloper")
+
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -67,12 +69,15 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(5)},
 	}
 
-	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+	valBz, err := valCodec.StringToBytes(val.GetOperator())
+	require.NoError(t, err)
+
+	valCommission, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, valCommission.Commission)
 
 	// check current rewards
-	currentRewards, err := distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	currentRewards, err := distrKeeper.GetValidatorCurrentRewards(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, currentRewards.Rewards)
 }

@@ -38,7 +38,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var previousProposer sdk.ConsAddress
 	if data.PreviousProposer != "" {
 		var err error
-		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
+		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
 		if err != nil {
 			panic(err)
 		}

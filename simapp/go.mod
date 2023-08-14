@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
 	cosmossdk.io/tools/confix v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4
-	cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4
+	cosmossdk.io/x/evidence v0.0.0-20230814085951-3dca9f8a5a18
 	cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/x/tx v0.9.1
@@ -187,7 +187,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v1.0.0 // indirect
+	pgregory.net/rapid v1.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 

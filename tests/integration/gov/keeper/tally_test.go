@@ -453,7 +453,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	consAddr, err := val2.GetConsAddr()
 	assert.NilError(t, err)
-	f.stakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr.Bytes()))
+	f.stakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr))
 
 	tp := TestProposal
 	proposal, err := f.govKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0], false)

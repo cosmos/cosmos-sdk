@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -57,7 +56,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 			}
 			return false, nil
 		})
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding", err.Error()), true
 		}
 		broken := count != 0
@@ -92,19 +91,23 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		// iterate over all validators
 		err = k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
+			valBz, err1 := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+			if err != nil {
+				panic(err1)
+			}
+			_, _ = k.WithdrawValidatorCommission(ctx, valBz)
 
-			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
+			delegationAddrs, ok := valDelegationAddrs[val.GetOperator()]
 			if ok {
 				for _, delAddr := range delegationAddrs {
-					if _, err := k.WithdrawDelegationRewards(ctx, delAddr, val.GetOperator()); err != nil {
+					if _, err := k.WithdrawDelegationRewards(ctx, delAddr, valBz); err != nil {
 						panic(err)
 					}
 				}
 			}
 
 			var err error
-			remaining, err = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+			remaining, err = k.GetValidatorOutstandingRewardsCoins(ctx, valBz)
 			if err != nil {
 				panic(err)
 			}
@@ -152,7 +155,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 			},
 		)
 
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 
@@ -167,7 +170,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 			},
 		)
 
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 
@@ -189,7 +192,7 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			expectedCoins = expectedCoins.Add(rewards.Rewards...)
 			return false, nil
 		})
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "module account coins", err.Error()), true
 		}
 

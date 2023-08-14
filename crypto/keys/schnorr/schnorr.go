@@ -3,8 +3,6 @@ package schnorr
 import (
 	"crypto/subtle"
 	"fmt"
-
-
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"go.dedis.ch/kyber/v3/sign/schnorr"

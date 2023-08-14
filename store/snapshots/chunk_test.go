@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/v2/snapshots"
 )
 
 func TestChunkWriter(t *testing.T) {

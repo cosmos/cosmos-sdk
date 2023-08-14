@@ -72,7 +72,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v
 :::tip
 Use the `EnhanceRootCommand()` from the AutoCLI options to automatically add auto-generated commands from the modules to the root command.
 Additionnally it adds all manually defined modules commands (`tx` and `query`) as well.
-Read more about [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started) in its dedicated section.
+Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli#getting-started) in its dedicated section.
 :::
 
 `rootCmd` has a function called `initAppConfig()` which is useful for setting the application's custom configs.
@@ -103,7 +103,7 @@ This `txCommand` function adds all the transaction available to end-users for th
 
 * **Sign command** from the [`auth`](../modules/auth/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 * **Broadcast command** from the Cosmos SDK client tools, to broadcast transactions.
-* **All [module transaction commands](../building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started).
+* **All [module transaction commands](../building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/core/autocli#getting-started).
 
 Here is an example of a `txCommand` aggregating these subcommands from the `simapp` application:
 
@@ -113,7 +113,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v
 
 :::tip
 When using AutoCLI to generate module transaction commands, `EnhanceRootCommand()` automatically adds the module `tx` command to the root command.
-Read more about [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started) in its dedicated section.
+Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli#getting-started) in its dedicated section.
 :::
 
 ### Query Commands
@@ -130,7 +130,7 @@ This `queryCommand` function adds all the queries available to end-users for the
 * **Account command** from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
 * **Validator command** from the Cosmos SDK rpc client tools, which displays the validator set of a given height.
 * **Block command** from the Cosmos SDK RPC client tools, which displays the block data for a given height.
-* **All [module query commands](../building-modules/09-module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddQueryCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started).
+* **All [module query commands](../building-modules/09-module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddQueryCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/core/autocli#getting-started).
 
 Here is an example of a `queryCommand` aggregating subcommands from the `simapp` application:
 
@@ -140,7 +140,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v
 
 :::tip
 When using AutoCLI to generate module query commands, `EnhanceRootCommand()` automatically adds the module `query` command to the root command.
-Read more about [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli#getting-started) in its dedicated section.
+Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli#getting-started) in its dedicated section.
 :::
 
 ## Flags

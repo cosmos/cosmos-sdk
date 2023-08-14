@@ -2,7 +2,6 @@
 sidebar_position: 1
 ---
 
-
 # AutoCLI
 
 :::note Synopsis
@@ -11,7 +10,7 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 :::note Pre-requisite Readings
 
-* [Building Modules Intro](./01-intro.md)
+* [CLI](./07-cli.md)
 
 :::
 
@@ -22,7 +21,7 @@ The `autocli` package is a [Go library](https://pkg.go.dev/cosmossdk.io/client/v
 Here are the steps to use AutoCLI:
 
 1. Ensure your app's modules implements the `appmodule.AppModule` interface.
-2. (optional) Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module. Learn more [here](#advanced-usage).
+2. (optional) Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
 3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
 
@@ -148,7 +147,7 @@ https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).
 
-## Conclusion
+## Summary
 
 `autocli` let you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
 

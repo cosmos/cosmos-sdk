@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/store/v2"
 	"github.com/cockroachdb/pebble"
+
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Batch = (*Batch)(nil)
@@ -19,7 +20,7 @@ type Batch struct {
 
 func NewBatch(storage *pebble.DB, version uint64) (*Batch, error) {
 	var versionBz [VersionSize]byte
-	binary.LittleEndian.PutUint64(versionBz[:], uint64(version))
+	binary.LittleEndian.PutUint64(versionBz[:], version)
 
 	batch := storage.NewBatch()
 

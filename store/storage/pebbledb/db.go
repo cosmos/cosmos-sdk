@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"math"
 
-	"cosmossdk.io/store/v2"
 	"github.com/cockroachdb/pebble"
+
+	"cosmossdk.io/store/v2"
 )
 
 const (

@@ -18,7 +18,7 @@ func IterateWithPrefix(prefix, begin, end []byte) ([]byte, []byte) {
 	return begin, end
 }
 
-func cloneAppend(front []byte, tail []byte) (res []byte) {
+func cloneAppend(front, tail []byte) (res []byte) {
 	res = make([]byte, len(front)+len(tail))
 
 	n := copy(res, front)

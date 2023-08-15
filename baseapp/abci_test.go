@@ -1866,6 +1866,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 					},
 					VoteExtension:      ext,
 					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 				},
 			},
 		},

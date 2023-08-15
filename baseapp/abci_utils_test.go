@@ -1,20 +1,21 @@
 package baseapp_test
 
 import (
-	"testing"
-	"github.com/stretchr/testify/suite"
-	"github.com/cosmos/gogoproto/proto"
-	protoio "github.com/cosmos/gogoproto/io"
 	"bytes"
-	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/golang/mock/gomock"
 	"cosmossdk.io/math"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"testing"
+
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 )
 
 const (
@@ -23,8 +24,8 @@ const (
 
 type testValidator struct {
 	consAddr sdk.ConsAddress
-	tmPk cmtprotocrypto.PublicKey
-	privKey secp256k1.PrivKey
+	tmPk     cmtprotocrypto.PublicKey
+	privKey  secp256k1.PrivKey
 }
 
 func newTestValidator() testValidator {
@@ -38,15 +39,15 @@ func newTestValidator() testValidator {
 
 	return testValidator{
 		consAddr: sdk.ConsAddress(pubkey.Address()),
-		tmPk: tmPk,
-		privKey: privkey,
+		tmPk:     tmPk,
+		privKey:  privkey,
 	}
 }
 
 func (t testValidator) toValidator() abci.Validator {
 	return abci.Validator{
 		Address: t.consAddr.Bytes(),
-		Power: 0, // ignored for now
+		Power:   0, // ignored for now
 	}
 }
 
@@ -54,8 +55,8 @@ type ABCIUtilsTestSuite struct {
 	suite.Suite
 
 	valStore *mock.MockValidatorStore
-	vals    [3]testValidator
-	ctx    sdk.Context
+	vals     [3]testValidator
+	ctx      sdk.Context
 }
 
 func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
@@ -97,9 +98,9 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,
-		Height: 2,
-		Round: int64(0),
-		ChainId: chainID,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
 	}
 
 	bz, err := marshalDelimitedFn(&cve)
@@ -118,36 +119,37 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 		Round: 0,
 		Votes: []abci.ExtendedVoteInfo{
 			{
-				Validator: s.vals[0].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[0].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig0,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 			{
-				Validator: s.vals[1].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[1].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig1,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 			{
-				Validator: s.vals[2].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[2].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig2,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
 	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
+
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Absent
 func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,
-		Height: 2,
-		Round: int64(0),
-		ChainId: chainID,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
 	}
 
 	bz, err := marshalDelimitedFn(&cve)
@@ -163,35 +165,36 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 		Round: 0,
 		Votes: []abci.ExtendedVoteInfo{
 			{
-				Validator: s.vals[0].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[0].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig0,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 			// validator of power >1/3 is missing, so commit-info shld still be valid
 			{
-				Validator: s.vals[1].toValidator(),
+				Validator:   s.vals[1].toValidator(),
 				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
 			},
 			{
-				Validator: s.vals[2].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[2].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig2,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
 	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
+
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Nil
 func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,
-		Height: 2,
-		Round: int64(0),
-		ChainId: chainID,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
 	}
 
 	bz, err := marshalDelimitedFn(&cve)
@@ -207,21 +210,21 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 		Round: 0,
 		Votes: []abci.ExtendedVoteInfo{
 			{
-				Validator: s.vals[0].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[0].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig0,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 			// validator of power <1/3 is missing, so commit-info shld still be valid
 			{
-				Validator: s.vals[1].toValidator(),
+				Validator:   s.vals[1].toValidator(),
 				BlockIdFlag: cmtproto.BlockIDFlagNil,
 			},
 			{
-				Validator: s.vals[2].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[2].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig2,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
 		},
 	}
@@ -234,9 +237,9 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,
-		Height: 2,
-		Round: int64(0),
-		ChainId: chainID,
+		Height:    2,
+		Round:     int64(0),
+		ChainId:   chainID,
 	}
 
 	bz, err := marshalDelimitedFn(&cve)
@@ -250,18 +253,18 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 		Votes: []abci.ExtendedVoteInfo{
 			// validator of power >2/3 is missing, so commit-info shld still be valid
 			{
-				Validator: s.vals[0].toValidator(),
+				Validator:   s.vals[0].toValidator(),
 				BlockIdFlag: cmtproto.BlockIDFlagCommit,
 			},
 			{
-				Validator: s.vals[1].toValidator(),
+				Validator:   s.vals[1].toValidator(),
 				BlockIdFlag: cmtproto.BlockIDFlagNil,
 			},
 			{
-				Validator: s.vals[2].toValidator(),
-				VoteExtension: ext,
+				Validator:          s.vals[2].toValidator(),
+				VoteExtension:      ext,
 				ExtensionSignature: extSig2,
-				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
+				BlockIdFlag:        cmtproto.BlockIDFlagAbsent,
 			},
 		},
 	}
@@ -269,8 +272,6 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 	// expect-pass (votes of height 2 are included in next block)
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
-
-
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

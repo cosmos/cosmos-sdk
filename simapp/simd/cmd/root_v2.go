@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
-	clientrpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -107,10 +106,6 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
-
-	// I consider this a hack, I'll think about a better API.
-	cometCMDs := clientrpc.NewCometBFTCommands()
-	autoCliOpts.Modules[cometCMDs.Name()] = cometCMDs
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

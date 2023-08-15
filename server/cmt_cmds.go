@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/light"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
@@ -33,6 +35,43 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
+
+// StatusCommand returns the command to return the status of the network.
+func StatusCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "status",
+		Short: "Query remote node for status",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			status, err := cmtservice.GetNodeStatus(context.Background(), clientCtx)
+			if err != nil {
+				return err
+			}
+
+			output, err := cmtjson.Marshal(status)
+			if err != nil {
+				return err
+			}
+
+			// In order to maintain backwards compatibility, the default json format output
+			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
+			if outputFormat == flags.OutputFormatJSON {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
+			}
+
+			return clientCtx.PrintRaw(output)
+		},
+	}
+
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(flags.FlagOutput, "o", "json", "Output format (text|json)")
+
+	return cmd
+}
 
 // ShowNodeIDCmd - ported from CometBFT, dump node ID to stdout
 func ShowNodeIDCmd() *cobra.Command {

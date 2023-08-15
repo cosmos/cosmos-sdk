@@ -4,7 +4,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 
-	clientrpc "github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -20,7 +20,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"comet": clientrpc.CometBFTAutoCLIDescriptor,
+				"comet": cmtservice.CometBFTAutoCLIDescriptor,
 			},
 		},
 		// Tx is purposely left empty, as the only tx is MsgUpdateParams which is gov gated.

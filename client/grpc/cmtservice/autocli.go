@@ -1,4 +1,4 @@
-package rpc
+package cmtservice
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -44,7 +44,14 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 		{
 			RpcMethod: "ABCIQuery",
-			Skip:      true,
+			Use:       "abci-query [path] [data] [height] <prove>",
+			Short:     "Query the ABCI application for data",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{ProtoField: "path"},
+				{ProtoField: "data"},
+				{ProtoField: "height"},
+				{ProtoField: "prove", Optional: true},
+			},
 		},
 	},
 }

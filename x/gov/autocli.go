@@ -93,7 +93,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 			// map v1beta1 as a sub-command
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"v1beta1": {Service: govv1beta1.Query_ServiceDesc.ServiceName},
+				"v1beta1": {
+					Service: govv1beta1.Query_ServiceDesc.ServiceName,
+				},
 			},
 			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},
@@ -101,7 +103,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: govv1.Msg_ServiceDesc.ServiceName,
 			// map v1beta1 as a sub-command
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"v1beta1": {Service: govv1beta1.Msg_ServiceDesc.ServiceName},
+				"v1beta1": {
+					Service: govv1beta1.Msg_ServiceDesc.ServiceName,
+				},
 			},
 		},
 	}

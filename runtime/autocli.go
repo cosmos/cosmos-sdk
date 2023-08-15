@@ -13,7 +13,7 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Config",
-					Short:     "Queries the current app config",
+					Short:     "Query the current app config",
 				},
 			},
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
@@ -22,7 +22,7 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 						{
 							RpcMethod: "AppOptions",
-							Short:     "Queries custom autocli options",
+							Short:     "Query the custom autocli options",
 						},
 					},
 				},
@@ -31,7 +31,7 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 						{
 							RpcMethod: "FileDescriptors",
-							Short:     "Queries the app's protobuf file descriptors",
+							Short:     "Query the app's protobuf file descriptors",
 						},
 					},
 				},

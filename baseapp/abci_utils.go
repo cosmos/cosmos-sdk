@@ -64,8 +64,8 @@ func ValidateVoteExtensions(
 
 	sumVP := math.NewInt(0)
 	for _, vote := range extCommit.Votes {
-		// only check + include power if the vote is a commit vote. There must be super-majority otherwise the prev. block (block vote is for)
-		// could not have been committed
+		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
+		// previous block (the block vote is for) could not have been committed.
 		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
 			continue
 		}

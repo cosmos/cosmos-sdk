@@ -5,8 +5,8 @@ import (
 	"math"
 
 	"cosmossdk.io/errors"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
+	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 // ChunkWriter reads an input stream, splits it into fixed-size chunks, and writes them to a
@@ -72,7 +72,7 @@ func (w *ChunkWriter) CloseWithError(err error) {
 // Write implements io.Writer.
 func (w *ChunkWriter) Write(data []byte) (int, error) {
 	if w.closed {
-		return 0, errors.Wrap(storetypes.ErrLogic, "cannot write to closed ChunkWriter")
+		return 0, errors.Wrap(store.ErrLogic, "cannot write to closed ChunkWriter")
 	}
 	nTotal := 0
 	for len(data) > 0 {
@@ -174,7 +174,7 @@ func ValidRestoreHeight(format uint32, height uint64) error {
 	}
 
 	if height == 0 {
-		return errors.Wrap(storetypes.ErrLogic, "cannot restore snapshot at height 0")
+		return errors.Wrap(store.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if height > uint64(math.MaxInt64) {
 		return errors.Wrapf(snapshottypes.ErrInvalidMetadata,

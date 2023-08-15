@@ -108,6 +108,7 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
 
+	// I consider this a hack, I'll think about a better API.
 	cometCMDs := clientrpc.NewCometBFTCommands()
 	autoCliOpts.Modules[cometCMDs.Name()] = cometCMDs
 

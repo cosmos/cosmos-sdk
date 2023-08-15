@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	clientrpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -92,6 +93,10 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
+
+	// I consider this a hack, I'll think about a better API.
+	cometCMDs := clientrpc.NewCometBFTCommands()
+	autoCliOpts.Modules[cometCMDs.Name()] = cometCMDs
 
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()

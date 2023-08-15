@@ -126,6 +126,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (comet) []() CometBFT commands queries are now namespaced under `<appd> q consensus comet` instead of being at the root of `<appd> q` and are using AutoCLI.
+    * `<appd> q comet-validator-set` is now `<appd> q consensus comet validator-set`
 * (server) [#17177](https://github.com/cosmos/cosmos-sdk/pull/17177) Remove `iavl-lazy-loading` configuration.
 * (rosetta) [#16276](https://github.com/cosmos/cosmos-sdk/issues/16276) Rosetta migration to standalone repo.
 * (cli) [#17184](https://github.com/cosmos/cosmos-sdk/pull/17184) All json keys returned by the `status` command are now snake case instead of pascal case.

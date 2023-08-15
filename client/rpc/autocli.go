@@ -32,7 +32,8 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 		{
 			RpcMethod: "GetLatestValidatorSet",
-			Use:       "validator-set-latest",
+			Use:       "validator-set",
+			Alias:     []string{"validator-set-latest", "comet-validator-set", "cometbft-validator-set", "tendermint-validator-set"},
 			Short:     "Query for the latest validator set",
 		},
 		{
@@ -43,14 +44,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 		{
 			RpcMethod: "ABCIQuery",
-			Use:       "abci-query [path] [data] [height] <prove>",
-			Short:     "Query the ABCI application for data",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-				{ProtoField: "path"},
-				{ProtoField: "data"},
-				{ProtoField: "height"},
-				{ProtoField: "prove", Optional: true},
-			},
+			Skip:      true,
 		},
 	},
 }

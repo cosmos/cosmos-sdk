@@ -163,7 +163,6 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version), nil
 }
 
-// TODO: MVCC-based iteration.
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	panic("not implemented!")
 }

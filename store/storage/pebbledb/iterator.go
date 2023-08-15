@@ -2,6 +2,7 @@ package pebbledb
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 
 	"cosmossdk.io/store/v2"
@@ -72,7 +73,7 @@ func (itr *iterator) Value() []byte {
 	return valCopy
 }
 
-func (itr iterator) Next() bool {
+func (itr *iterator) Next() bool {
 	// First move the iterator to the next prefix, which may not correspond to the
 	// desired version for that key, e.g. if the key was written at a later version,
 	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
@@ -88,6 +89,7 @@ func (itr iterator) Next() bool {
 		// Move the iterator to the closest version to the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
 		itr.valid = itr.source.SeekGE(MVCCEncode(nextKey, itr.version))
+		return itr.valid
 	}
 
 	itr.valid = false
@@ -131,5 +133,28 @@ func (itr *iterator) Close() {
 func (itr *iterator) assertIsValid() {
 	if !itr.valid {
 		panic("iterator is invalid")
+	}
+}
+
+func (itr *iterator) debugRawIterate() {
+	valid := itr.source.Valid()
+	for valid {
+		key, ts, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+		}
+
+		fmt.Printf("KEY: %s, VERSION: %d\n", string(key), binary.LittleEndian.Uint64(ts))
+
+		if itr.source.NextPrefix() {
+			nextKey, _, ok := SplitMVCCKey(itr.source.Key())
+			if !ok {
+				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+			}
+
+			valid = itr.source.SeekGE(MVCCEncode(nextKey, itr.version))
+		} else {
+			valid = false
+		}
 	}
 }

@@ -5,10 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -66,7 +65,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	require.NoError(t, err)
 	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
@@ -94,8 +94,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUnjail
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgUnjail, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)

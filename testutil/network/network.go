@@ -316,7 +316,6 @@ func New(t *testing.T, cfg Config) *Network {
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
 		)
 		require.NoError(t, err)
 

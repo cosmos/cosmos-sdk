@@ -35,7 +35,6 @@ The staking module emits the following events:
 | Type           | Attribute Key       | Attribute Value     |
 | -------------- | ------------------- | ------------------- |
 | edit_validator | commission_rate     | {commissionRate}    |
-| edit_validator | min_self_delegation | {minSelfDelegation} |
 | message        | module              | staking             |
 | message        | action              | edit_validator      |
 | message        | sender              | {senderAddress}     |

@@ -21,3 +21,10 @@ func TestParamsEqual(t *testing.T) {
 	ok = p1.Equal(p2)
 	require.False(t, ok)
 }
+
+func Test_validateParams(t *testing.T) {
+	params := types.DefaultParams()
+
+	// default params have no error
+	require.NoError(t, params.Validate())
+}

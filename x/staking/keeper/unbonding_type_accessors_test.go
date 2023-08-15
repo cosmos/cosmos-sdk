@@ -217,6 +217,7 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 
 	newVal := func(valAddr sdk.ValAddress, pk cryptotypes.PubKey) types.Validator {
 		val, err := types.NewValidator(valAddr, pk, types.Description{})
+		val.MinSelfDelegation = sdk.ZeroInt()
 		s.Require().NoError(err)
 		return val
 	}

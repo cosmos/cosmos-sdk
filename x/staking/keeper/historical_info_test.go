@@ -99,7 +99,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
 	vals := []types.Validator{val1, val2}
-	IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx))
+	require.True(t, IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{

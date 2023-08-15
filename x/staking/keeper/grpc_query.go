@@ -537,3 +537,168 @@ func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedeleg
 
 	return redels, res, err
 }
+
+// Query for individual tokenize share record information by share by id
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecord(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByIdResponse{
+		Record: record,
+	}, nil
+}
+
+// Query for individual tokenize share record information by share denom
+func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryTokenizeShareRecordByDenomRequest) (*types.QueryTokenizeShareRecordByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByDenomResponse{
+		Record: record,
+	}, nil
+}
+
+// Query tokenize share records by address
+func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTokenizeShareRecordsOwnedRequest) (*types.QueryTokenizeShareRecordsOwnedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	records := k.GetTokenizeShareRecordsByOwner(ctx, owner)
+
+	return &types.QueryTokenizeShareRecordsOwnedResponse{
+		Records: records,
+	}, nil
+}
+
+// Query for all tokenize share records
+func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllTokenizeShareRecordsRequest) (*types.QueryAllTokenizeShareRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var records []types.TokenizeShareRecord
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.TokenizeShareRecordPrefix)
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var tokenizeShareRecord types.TokenizeShareRecord
+		if err := k.cdc.Unmarshal(value, &tokenizeShareRecord); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			records = append(records, tokenizeShareRecord)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllTokenizeShareRecordsResponse{
+		Records:    records,
+		Pagination: pageRes,
+	}, nil
+}
+
+// Query for last tokenize share record id
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryLastTokenizeShareRecordIdResponse{
+		Id: k.GetLastTokenizeShareRecordID(ctx),
+	}, nil
+}
+
+// Query for total tokenized staked assets
+func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTotalTokenizeSharedAssetsRequest) (*types.QueryTotalTokenizeSharedAssetsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
+	totalTokenizeShared := sdk.ZeroInt()
+
+	for _, record := range records {
+		moduleAcc := record.GetModuleAddress()
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		validator, found := k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
+
+		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
+		if !found {
+			return nil, types.ErrNoDelegation
+		}
+
+		tokens := validator.TokensFromShares(delegation.Shares)
+		totalTokenizeShared = totalTokenizeShared.Add(tokens.RoundInt())
+	}
+	return &types.QueryTotalTokenizeSharedAssetsResponse{
+		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
+	}, nil
+}
+
+// Query for total tokenized staked tokens
+// Liquid staked tokens are either tokenized delegations or delegations
+// owned by a module account
+func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiquidStaked) (*types.QueryTotalLiquidStakedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx).String()
+	return &types.QueryTotalLiquidStakedResponse{
+		Tokens: totalLiquidStaked,
+	}, nil
+}
+
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	address := sdk.MustAccAddressFromBech32(req.Address)
+	status, completionTime := k.GetTokenizeSharesLock(ctx, address)
+
+	timeString := ""
+	if !completionTime.IsZero() {
+		timeString = completionTime.String()
+	}
+
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         status.String(),
+		ExpirationTime: timeString,
+	}, nil
+}

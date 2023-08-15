@@ -35,6 +35,7 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, s
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
+		ValidatorBond:    false,
 	}
 }
 
@@ -158,8 +159,27 @@ func NewUnbondingDelegation(
 
 // AddEntry - append entry to the unbonding delegation
 func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, id uint64) {
-	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, id)
-	ubd.Entries = append(ubd.Entries, entry)
+	// Check the entries exists with creation_height and complete_time
+	entryIndex := -1
+	for index, ubdEntry := range ubd.Entries {
+		if ubdEntry.CreationHeight == creationHeight && ubdEntry.CompletionTime.Equal(minTime) {
+			entryIndex = index
+			break
+		}
+	}
+	// entryIndex exists
+	if entryIndex != -1 {
+		ubdEntry := ubd.Entries[entryIndex]
+		ubdEntry.Balance = ubdEntry.Balance.Add(balance)
+		ubdEntry.InitialBalance = ubdEntry.InitialBalance.Add(balance)
+
+		// update the entry
+		ubd.Entries[entryIndex] = ubdEntry
+	} else {
+		// append the new unbond delegation entry
+		entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, id)
+		ubd.Entries = append(ubd.Entries, entry)
+	}
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
@@ -330,11 +350,16 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, validatorBond bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
-		Balance:    balance,
+		Delegation: Delegation{
+			DelegatorAddress: delegatorAddr.String(),
+			ValidatorAddress: validatorAddr.String(),
+			Shares:           shares,
+			ValidatorBond:    validatorBond,
+		},
+		Balance: balance,
 	}
 }
 
@@ -387,7 +412,8 @@ func NewRedelegationResponse(
 
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
-	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int, id uint64) RedelegationEntryResponse {
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int, id uint64,
+) RedelegationEntryResponse {
 	return RedelegationEntryResponse{
 		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst, id),
 		Balance:           balance,

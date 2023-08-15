@@ -243,7 +243,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount.MulRaw(2), validator.BondedTokens())
 
-	// unbond validator total self-delegations (which should jail the validator)
+	// unbond validator total self-delegations
 	res := tstaking.Undelegate(sdk.AccAddress(valAddr), valAddr, bondAmount, true)
 
 	var resData types.MsgUndelegateResponse
@@ -253,6 +253,9 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	tstaking.Ctx = ctx
 	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// jail the validator
+	app.StakingKeeper.Jail(ctx, valConsAddr)
 
 	// verify the validator record still exists, is jailed, and has correct tokens
 	validator = tstaking.CheckValidator(valAddr, -1, true)
@@ -349,68 +352,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
 	}
-}
-
-func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
-	initPower := int64(100)
-	initBond := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 1, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-
-	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-
-	// create validator
-	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond)
-	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
-	tstaking.Handle(msgCreateValidator, true)
-
-	// must end-block
-	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// verify the self-delegation exists
-	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
-	require.Equal(t, initBond, gotBond,
-		"initBond: %v\ngotBond: %v\nbond: %v\n",
-		initBond, gotBond, bond)
-
-	newMinSelfDelegation := sdk.OneInt()
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
-	tstaking.Handle(msgEditValidator, false)
-}
-
-func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
-	initPower := int64(100)
-	initBond := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-
-	// create validator
-	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond)
-	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
-	tstaking.Handle(msgCreateValidator, true)
-
-	// must end-block
-	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// verify the self-delegation exists
-	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
-	require.Equal(t, initBond, gotBond,
-		"initBond: %v\ngotBond: %v\nbond: %v\n",
-		initBond, gotBond, bond)
-
-	newMinSelfDelegation := initBond.Add(sdk.OneInt())
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
-	tstaking.Handle(msgEditValidator, false)
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {
@@ -629,6 +570,9 @@ func TestJailValidator(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	tstaking.Ctx = ctx
 
+	// jail the validator
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
+
 	tstaking.CheckValidator(validatorAddr, -1, true)
 
 	// test that the delegator can still withdraw their bonds
@@ -661,8 +605,9 @@ func TestValidatorQueue(t *testing.T) {
 	tstaking.Delegate(delegatorAddr, validatorAddr, amt)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
-	// unbond the all self-delegation to put validator in unbonding state
+	// unbond the and jail the validator to put it in an unbonding state
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, amt, true)
+	app.StakingKeeper.Jail(ctx, sdk.GetConsAddress(PKs[0]))
 
 	var resData types.MsgUndelegateResponse
 	err := proto.Unmarshal(res.Data, &resData)
@@ -958,23 +903,26 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// begin an unbonding delegation
+	unbondAmount := valTokens.QuoRaw(2)
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	tstaking.Undelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2), true)
+	tstaking.Undelegate(selfDelAddr, valAddr, unbondAmount, true)
 
 	// there should only be one entry in the ubd object
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, ubd.Entries[0].Balance, unbondAmount, "unbonding delegation balance")
 
 	// start a second ubd at this same time as the first
-	tstaking.Undelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2), true)
+	tstaking.Undelegate(selfDelAddr, valAddr, unbondAmount, true)
 
-	// now there should be two entries
+	// the second ubd should have modified the first one
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.True(t, found)
-	require.Len(t, ubd.Entries, 2)
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, ubd.Entries[0].Balance, valTokens, "unbonding delegation balance")
 
-	// move forwaubd in time, should complete both ubds
+	// move forward in time, should complete the ubds
 	ctx = tstaking.TurnBlockTimeDiff(1 * time.Second)
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.False(t, found)
@@ -1185,15 +1133,15 @@ func TestInvalidCoinDenom(t *testing.T) {
 	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 
 	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
-	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, false)
 
-	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 
-	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 
@@ -1214,4 +1162,219 @@ func TestInvalidCoinDenom(t *testing.T) {
 
 	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
 	tstaking.Handle(msgRedelegate, true)
+}
+
+func TestTokenizeShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		delIndex  int64
+		valIndex  int64
+		amount    sdk.Int
+		isSuccess bool
+		expStatus types.BondStatus
+		expJailed bool
+	}{
+		{
+			"tokenize shares for less than self delegation",
+			0, 0,
+			sdk.NewInt(10000),
+			true,
+			types.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(initPower+1, sdk.DefaultPowerReduction),
+			false,
+			types.Bonded,
+			false,
+		},
+		{
+			"tokenize share for full self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
+			true,
+			types.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for less than delegation",
+			1, 0,
+			sdk.NewInt(1000),
+			true,
+			types.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than delegation",
+			1, 0,
+			sdk.NewInt(20000),
+			false,
+			types.Bonded,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			del := delAddrs[tc.delIndex]
+			val := valAddrs[tc.valIndex]
+
+			tstaking.TokenizeShares(del, val, sdk.NewCoin(sdk.DefaultBondDenom, tc.amount), del, tc.isSuccess)
+
+			if tc.isSuccess {
+				// call it to update validator status automatically
+				_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+				require.NoError(t, err)
+
+				tstaking.CheckValidator(val, tc.expStatus, tc.expJailed)
+			}
+		})
+	}
+}
+
+func TestRedeemTokensforShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		amount    sdk.Int
+		isSuccess bool
+	}{
+		{
+			"redeem full shares",
+			sdk.NewInt(10000),
+			true,
+		},
+		{
+			"redeem partial shares",
+			sdk.NewInt(1000),
+			true,
+		},
+		{
+			"redeem zero shares",
+			sdk.NewInt(0),
+			false,
+		},
+		{
+			"redeem more than shares",
+			sdk.NewInt(20000),
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// get tokenize share record
+			record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
+			require.NoError(t, err)
+
+			// redeem share
+			tstaking.RedeemTokensForShares(del2, sdk.NewCoin(record.GetShareTokenDenom(), tc.amount), tc.isSuccess)
+		})
+	}
+}
+
+func TransferTokenizeShareRecord(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		recordID  uint64
+		oldOwner  int64
+		newOwner  int64
+		isSuccess bool
+	}{
+		{
+			"transfer to other",
+			1,
+			2, 1,
+			true,
+		},
+		{
+			"self transfer",
+			1,
+			2, 2,
+			true,
+		},
+		{
+			"transfer non-existent",
+			2,
+			2, 2,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// redeem share
+			tstaking.TranserTokenizeShareRecord(tc.recordID, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
+		})
+	}
 }

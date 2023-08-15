@@ -47,37 +47,6 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }
 
-func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
-	// initial setup
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	pks := simapp.CreateTestPubKeys(1)
-	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
-
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-	slh := slashing.NewHandler(app.SlashingKeeper)
-	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
-	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt)
-	msg.MinSelfDelegation = amt
-	tstaking.Handle(msg, true)
-
-	staking.EndBlocker(ctx, app.StakingKeeper)
-	require.Equal(
-		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))},
-	)
-
-	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.OneInt(), true)
-	require.True(t, app.StakingKeeper.Validator(ctx, addr).IsJailed())
-
-	// assert non-jailed validator can't be unjailed
-	res, err := slh(ctx, types.NewMsgUnjail(addr))
-	require.Error(t, err)
-	require.Nil(t, res)
-	require.True(t, errors.Is(types.ErrSelfDelegationTooLowToUnjail, err))
-}
-
 func TestJailedValidatorDelegations(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
@@ -90,7 +59,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	stakingParams := app.StakingKeeper.GetParams(ctx)
 	app.StakingKeeper.SetParams(ctx, stakingParams)
-	valAddr, consAddr := sdk.ValAddress(pks[1].Address()), sdk.ConsAddress(pks[0].Address())
+	valAddr, consAddr := sdk.ValAddress(pks[1].Address()), sdk.ConsAddress(pks[1].Address())
 
 	amt := tstaking.CreateValidatorWithValPower(valAddr, pks[1], 10, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -103,11 +72,14 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	delAddr := sdk.AccAddress(pks[2].Address())
 	tstaking.Delegate(delAddr, valAddr, amt)
 
-	// unbond validator total self-delegations (which should jail the validator)
+	// unbond validator total self-delegations
 	valAcc := sdk.AccAddress(valAddr)
 	tstaking.Undelegate(valAcc, valAddr, amt, true)
 	_, err := app.StakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
 	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
+
+	// jail the validator
+	app.StakingKeeper.Jail(ctx, consAddr)
 
 	// verify validator still exists and is jailed
 	validator, found := app.StakingKeeper.GetValidator(ctx, valAddr)

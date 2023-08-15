@@ -358,6 +358,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	someFieldWriter.Write([]byte(`"someValue"`))
 	return someFieldWriter.Close()
 }
+
 func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
 	rdr, err := src("someField")
 	if err != nil {

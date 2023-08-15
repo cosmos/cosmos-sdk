@@ -3,12 +3,12 @@ package commitment
 import (
 	"testing"
 
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/commitment/types"
-
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/types"
 )
 
 func generateTree(treeType string) types.Tree {

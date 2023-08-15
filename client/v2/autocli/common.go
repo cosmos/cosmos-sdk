@@ -84,13 +84,15 @@ func (b *Builder) enhanceCommandCommon(
 	customCmds map[string]*cobra.Command,
 ) error {
 	moduleOptions := appOptions.ModuleOptions
-	if moduleOptions == nil {
+	if len(moduleOptions) == 0 {
 		moduleOptions = make(map[string]*autocliv1.ModuleOptions)
 	}
 	for name, module := range appOptions.Modules {
 		if _, ok := moduleOptions[name]; !ok {
 			if module, ok := module.(HasAutoCLIConfig); ok {
 				moduleOptions[name] = module.AutoCLIOptions()
+			} else {
+				moduleOptions[name] = nil
 			}
 		}
 	}

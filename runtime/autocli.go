@@ -36,5 +36,6 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 			},
-		}}
+		},
+	}
 }

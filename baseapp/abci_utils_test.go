@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"cosmossdk.io/math"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -13,9 +12,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -60,6 +62,7 @@ type ABCIUtilsTestSuite struct {
 }
 
 func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
+	t.Helper()
 	// create 3 validators
 	s := &ABCIUtilsTestSuite{
 		vals: [3]testValidator{
@@ -272,6 +275,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 	// expect-pass (votes of height 2 are included in next block)
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
+
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

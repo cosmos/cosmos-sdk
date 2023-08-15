@@ -211,10 +211,25 @@ func MVCCEncode(key []byte, version uint64) (dst []byte) {
 	return dst
 }
 
-func encodeUint64Ascending(b []byte, v uint64) []byte {
+// encodeUint64Ascending encodes the uint64 value using a big-endian 8 byte
+// representation. The bytes are appended to the supplied buffer and
+// the final buffer is returned.
+func encodeUint64Ascending(dst []byte, v uint64) []byte {
 	return append(
-		b,
+		dst,
 		byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32),
 		byte(v>>24), byte(v>>16), byte(v>>8), byte(v),
 	)
+}
+
+// decodeUint64Ascending decodes a uint64 from the input buffer, treating
+// the input as a big-endian 8 byte uint64 representation. The remainder
+// of the input buffer and the decoded uint64 are returned.
+func decodeUint64Ascending(b []byte) ([]byte, uint64, error) {
+	if len(b) < 8 {
+		return nil, 0, fmt.Errorf("insufficient bytes to decode uint64 int value; expected 8; got %d", len(b))
+	}
+
+	v := binary.BigEndian.Uint64(b)
+	return b[8:], v, nil
 }

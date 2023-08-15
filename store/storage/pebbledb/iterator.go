@@ -2,7 +2,6 @@ package pebbledb
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 
 	"cosmossdk.io/store/v2"
@@ -139,12 +138,17 @@ func (itr *iterator) assertIsValid() {
 func (itr *iterator) debugRawIterate() {
 	valid := itr.source.Valid()
 	for valid {
-		key, ts, ok := SplitMVCCKey(itr.source.Key())
+		key, vBz, ok := SplitMVCCKey(itr.source.Key())
 		if !ok {
 			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 		}
 
-		fmt.Printf("KEY: %s, VERSION: %d\n", string(key), binary.LittleEndian.Uint64(ts))
+		_, version, err := decodeUint64Ascending(vBz)
+		if err != nil {
+			panic(fmt.Errorf("failed to decode version from MVCC key: %w", err))
+		}
+
+		fmt.Printf("KEY: %s, VALUE: %s, VERSION: %d\n", key, itr.source.Value(), version)
 
 		if itr.source.NextPrefix() {
 			nextKey, _, ok := SplitMVCCKey(itr.source.Key())

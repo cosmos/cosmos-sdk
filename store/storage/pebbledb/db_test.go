@@ -292,3 +292,73 @@ func TestDatabase_Iterator(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, iter3)
 }
+
+func TestDatabase_IteratorMultiVersion(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	// for versions 1-49, set all 10 keys
+	for v := uint64(1); v < 50; v++ {
+		b, err := db.NewBatch(v)
+		require.NoError(t, err)
+
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			require.NoError(t, b.Set(storeKey1, []byte(key), []byte(val)))
+		}
+
+		require.NoError(t, b.Write())
+	}
+
+	// for versions 50-100, only update even keys
+	for v := uint64(50); v <= 100; v++ {
+		b, err := db.NewBatch(v)
+		require.NoError(t, err)
+
+		for i := 0; i < 10; i++ {
+			if i%2 == 0 {
+				key := fmt.Sprintf("key%03d", i)
+				val := fmt.Sprintf("val%03d-%03d", i, v)
+
+				require.NoError(t, b.Set(storeKey1, []byte(key), []byte(val)))
+			}
+		}
+
+		require.NoError(t, b.Write())
+	}
+
+	itr, err := db.NewIterator(storeKey1, 69, []byte("key000"), nil)
+	require.NoError(t, err)
+
+	defer itr.Close()
+
+	// All keys should be present; All odd keys should have a value that reflects
+	// version 49, and all even keys should have a value that reflects the desired
+	// version, 69.
+	var i, count int
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, []byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+
+		if i%2 == 0 {
+			require.Equal(t, []byte(fmt.Sprintf("val%03d-%03d", i, 69)), itr.Value())
+		} else {
+			require.Equal(t, []byte(fmt.Sprintf("val%03d-%03d", i, 49)), itr.Value())
+		}
+
+		i = (i + 1) % 10
+		count++
+	}
+	require.Equal(t, 10, count)
+	require.NoError(t, itr.Error())
+}
+
+func TestDatabase_ReverseIterator(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	require.Panics(t, func() { _, _ = db.NewReverseIterator(storeKey1, 1, []byte("key000"), nil) })
+}

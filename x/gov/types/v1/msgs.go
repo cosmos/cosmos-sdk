@@ -58,6 +58,41 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
+// Route implements Msg
+func (m MsgSubmitProposal) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
+
+// ValidateBasic implements Msg
+func (m MsgSubmitProposal) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
+	}
+
+	deposit := sdk.NewCoins(m.InitialDeposit...)
+	if !deposit.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	if deposit.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
+		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
+
+	msgs, err := m.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	m.Messages = anys
+	return nil
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)

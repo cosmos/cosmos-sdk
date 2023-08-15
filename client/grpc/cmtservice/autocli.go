@@ -49,6 +49,8 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
+// NewCometBFTCommands is a fake `appmodule.Module` to be considered as a module
+// and be added in AutoCLI.
 func NewCometBFTCommands() *cometModule {
 	return &cometModule{}
 }

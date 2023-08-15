@@ -40,7 +40,23 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
+<<<<<<< HEAD
 // Route implements Msg
+=======
+// SetMsgs packs sdk.Msg's into m.Messages Any's
+// NOTE: this will overwrite any existing messages
+func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
+	anys, err := sdktx.SetMsgs(msgs)
+	if err != nil {
+		return err
+	}
+
+	m.Messages = anys
+	return nil
+}
+
+// Route implements the sdk.Msg interface.
+>>>>>>> ded6b47ae (feat(x/gov): add MsgSubmitProposal SetMsgs method (#17387))
 func (m MsgSubmitProposal) Route() string { return types.RouterKey }
 
 // Type implements Msg

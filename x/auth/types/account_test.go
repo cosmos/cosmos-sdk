@@ -209,3 +209,8 @@ func TestGenesisAccountsContains(t *testing.T) {
 	genAccounts = append(genAccounts, acc)
 	require.True(t, genAccounts.Contains(acc.GetAddress()))
 }
+
+func TestModuleAccountValidateNilBaseAccount(t *testing.T) {
+	ma := &types.ModuleAccount{Name: "foo"}
+	_ = ma.Validate()
+}

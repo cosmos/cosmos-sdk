@@ -158,6 +158,38 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
+type mockErrorSnapshotter struct{}
+
+var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
+
+func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return errors.New("mock snapshot error")
+}
+
+func (m *mockErrorSnapshotter) Restore(
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
+	return snapshottypes.SnapshotItem{}, errors.New("mock restore error")
+}
+
+func (m *mockErrorSnapshotter) SnapshotFormat() uint32 {
+	return snapshottypes.CurrentFormat
+}
+
+func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
+	return []uint32{snapshottypes.CurrentFormat}
+}
+
+func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
+}
+
+func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {
+	return 0
+}
+
+func (m *mockErrorSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+}
+
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {

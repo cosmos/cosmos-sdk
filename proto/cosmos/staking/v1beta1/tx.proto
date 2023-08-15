@@ -62,9 +62,6 @@ message MsgCreateValidator {
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
-  // This is a hex encoded 0x EVM public key that will be used by this
-  // validator on the target EVM chain.
-  string evm_address = 8;
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
@@ -88,7 +85,6 @@ message MsgEditValidator {
       [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
   string min_self_delegation = 4
       [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
-  string evm_address = 5;
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.
@@ -151,10 +147,10 @@ message MsgCancelUnbondingDelegation {
   option (cosmos.msg.v1.signer) = "delegator_address";
   option (gogoproto.equal)      = false;
 
-  string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is always less than or equal to unbonding delegation entry balance
-  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
   // creation_height is the height which the unbonding took place.
   int64 creation_height = 4;
 }

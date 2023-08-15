@@ -3,8 +3,6 @@ package staking_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -17,9 +15,7 @@ import (
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
-	evmAddress, err := teststaking.RandomEVMAddress()
-	require.NoError(t, err)
-	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk, *evmAddress)
+	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk)
 	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 

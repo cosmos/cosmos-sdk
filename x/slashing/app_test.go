@@ -4,8 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -65,11 +63,8 @@ func TestSlashingMsgs(t *testing.T) {
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	randomEVMAddress, err := teststaking.RandomEVMAddress()
-	require.NoError(t, err)
 	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commission, sdk.OneInt(),
-		*randomEVMAddress,
 	)
 	require.NoError(t, err)
 

@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // query endpoints supported by the staking Querier
@@ -15,7 +14,6 @@ const (
 	QueryValidatorDelegations          = "validatorDelegations"
 	QueryValidatorRedelegations        = "validatorRedelegations"
 	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
-	QueryValidatorByEVMAddress         = "validatorByEVMAddress"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
 	QueryDelegatorValidators           = "delegatorValidators"
@@ -36,18 +34,6 @@ type QueryDelegatorParams struct {
 func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
 	return QueryDelegatorParams{
 		DelegatorAddr: delegatorAddr,
-	}
-}
-
-// defines the params for the following query:
-// - 'custom/staking/validatorByEVMAddress'
-type QueryValidatorByEVMAddressParams struct {
-	EVMAddress string
-}
-
-func NewQueryValidatorByEVMAddressParams(evmAddress common.Address) QueryValidatorByEVMAddressParams {
-	return QueryValidatorByEVMAddressParams{
-		EVMAddress: evmAddress.Hex(),
 	}
 }
 

@@ -16,8 +16,6 @@ must be registered in the app's `MsgServiceRouter`. Each of these messages must
 have one signer, namely the gov module account. And finally, the metadata length
 must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 
-NOTE DIFF FROM UPSTREAM: All proposals must have at least one `sdk.Msg` in the `messages` field.
-
 **State modifications:**
 
 * Generate new `proposalID`

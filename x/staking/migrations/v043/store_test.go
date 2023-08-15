@@ -24,9 +24,7 @@ func TestStoreMigration(t *testing.T) {
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)
-	randomEVMAddress, err := teststaking.RandomEVMAddress()
-	require.NoError(t, err)
-	val := teststaking.NewValidator(t, valAddr1, pk1, *randomEVMAddress)
+	val := teststaking.NewValidator(t, valAddr1, pk1)
 	_, pk1, addr2 := testdata.KeyTestPubAddr()
 	valAddr2 := sdk.ValAddress(addr2)
 	_, _, addr3 := testdata.KeyTestPubAddr()
@@ -124,7 +122,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err = v043staking.MigrateStore(ctx, stakingKey)
+	err := v043staking.MigrateStore(ctx, stakingKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

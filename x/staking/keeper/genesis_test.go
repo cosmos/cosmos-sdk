@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -171,15 +169,14 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
 
+	var err error
+
 	bondedPoolAmt := sdk.ZeroInt()
 	for i := range validators {
-		randomEVMAddress, err := teststaking.RandomEVMAddress()
-		require.NoError(t, err)
 		validators[i], err = types.NewValidator(
 			sdk.ValAddress(addrs[i]),
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
-			*randomEVMAddress,
 		)
 		require.NoError(t, err)
 		validators[i].Status = types.Bonded

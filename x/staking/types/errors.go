@@ -50,7 +50,4 @@ var (
 	ErrNoHistoricalInfo                = sdkerrors.Register(ModuleName, 38, "no historical info found")
 	ErrEmptyValidatorPubKey            = sdkerrors.Register(ModuleName, 39, "empty validator public key")
 	ErrCommissionLTMinRate             = sdkerrors.Register(ModuleName, 40, "commission cannot be less than min rate")
-	ErrValidatorEVMAddressExists       = sdkerrors.Register(ModuleName, 41, "validator already exist for this EVM address; must use new validator EVM address")
-	ErrValidatorEVMZeroAddress         = sdkerrors.Register(ModuleName, 42, "cannot use zero address for EVM address; must use a non zero validator EVM address")
-	ErrEVMAddressNotHex                = sdkerrors.Register(ModuleName, 43, "the provided eth address is not a valid hex address")
 )

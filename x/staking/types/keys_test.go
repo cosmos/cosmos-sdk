@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -27,11 +25,7 @@ var (
 
 func TestGetValidatorPowerRank(t *testing.T) {
 	valAddr1 := sdk.ValAddress(keysAddr1)
-
-	randomEVMAddress, err := teststaking.RandomEVMAddress()
-	require.NoError(t, err)
-
-	val1 := newValidator(t, valAddr1, keysPK1, *randomEVMAddress)
+	val1 := newValidator(t, valAddr1, keysPK1)
 	val1.Tokens = sdk.ZeroInt()
 	val2, val3, val4 := val1, val1, val1
 	val2.Tokens = sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)

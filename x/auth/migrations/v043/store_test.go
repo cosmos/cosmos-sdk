@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -654,9 +652,6 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 	pks := simapp.CreateTestPubKeys(1)
 	cdc := simapp.MakeTestEncodingConfig().Codec
 
-	evmAddr, err := teststaking.RandomEVMAddress()
-	require.NoError(t, err)
-
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		cdc,
 		app.GetKey(stakingtypes.StoreKey),
@@ -665,7 +660,7 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, *evmAddr)
+	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
 	require.NoError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)

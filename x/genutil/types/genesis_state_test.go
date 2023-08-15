@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -19,11 +17,8 @@ import (
 )
 
 var (
-	pk1         = ed25519.GenPrivKey().PubKey()
-	evmAddr1, _ = teststaking.RandomEVMAddress()
-
-	pk2         = ed25519.GenPrivKey().PubKey()
-	evmAddr2, _ = teststaking.RandomEVMAddress()
+	pk1 = ed25519.GenPrivKey().PubKey()
+	pk2 = ed25519.GenPrivKey().PubKey()
 )
 
 func TestNetGenesisState(t *testing.T) {
@@ -43,15 +38,11 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	comm := stakingtypes.CommissionRates{}
 
 	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
-		*evmAddr1,
-	)
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 	require.NoError(t, err)
 
 	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
-		*evmAddr2,
-	)
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 	require.NoError(t, err)
 
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
@@ -68,7 +59,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 func TestValidateGenesisBadMessage(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 
-	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil, nil)
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()

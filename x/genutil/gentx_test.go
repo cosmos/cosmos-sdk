@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -31,12 +29,8 @@ var (
 	pk2   = priv2.PubKey()
 	addr1 = sdk.AccAddress(pk1.Address())
 	addr2 = sdk.AccAddress(pk2.Address())
-
-	evmAddr1, _ = teststaking.RandomEVMAddress()
-	evmAddr2, _ = teststaking.RandomEVMAddress()
-
-	desc = stakingtypes.NewDescription("testname", "", "", "", "")
-	comm = stakingtypes.CommissionRates{}
+	desc  = stakingtypes.NewDescription("testname", "", "", "", "")
+	comm  = stakingtypes.CommissionRates{}
 )
 
 // GenTxTestSuite is a test suite to be used with gentx tests.
@@ -61,14 +55,10 @@ func (suite *GenTxTestSuite) SetupTest() {
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
 	one := sdk.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one,
-		*evmAddr1,
-	)
+		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one,
-		*evmAddr2,
-	)
+		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one)
 	suite.NoError(err)
 }
 

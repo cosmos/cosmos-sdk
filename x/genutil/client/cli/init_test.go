@@ -14,7 +14,6 @@ import (
 	abci_server "github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
-	coretypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -282,43 +281,6 @@ func TestInitConfig(t *testing.T) {
 	out := <-outC
 
 	require.Contains(t, out, "\"chain_id\": \"foo\"")
-}
-
-func TestInitWithConsensusParams(t *testing.T) {
-	home := t.TempDir()
-	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
-	require.NoError(t, err)
-
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
-
-	// set new default consensus params
-	cps := coretypes.DefaultConsensusParams()
-	cps.Block.MaxBytes = 100000000
-	cps.Block.MaxGas = 420420420
-	serverCtx.DefaultConsensusParams = cps
-
-	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	clientCtx := client.Context{}.
-		WithCodec(marshaler).
-		WithLegacyAmino(makeCodec()).
-		WithHomeDir(home)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
-
-	cmd := genutilcli.InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"testnode"})
-
-	err = cmd.ExecuteContext(ctx)
-	require.NoError(t, err)
-
-	genDoc, err := coretypes.GenesisDocFromFile(cfg.GenesisFile())
-	require.NoError(t, err)
-
-	require.Equal(t, genDoc.ConsensusParams, cps)
 }
 
 // custom tx codec

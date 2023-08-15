@@ -6,7 +6,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // staking message types
@@ -34,9 +33,7 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description,
-	commission CommissionRates, minSelfDelegation math.Int,
-	eth common.Address,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -53,7 +50,6 @@ func NewMsgCreateValidator(
 		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
-		EvmAddress:        eth.Hex(),
 	}, nil
 }
 
@@ -145,25 +141,12 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //
 //nolint:interfacer
-func NewMsgEditValidator(
-	valAddr sdk.ValAddress, description Description,
-	newRate *sdk.Dec, newMinSelfDelegation *math.Int,
-	newEVMAddress *common.Address,
-) *MsgEditValidator {
-	// TODO add test for EVM addresses edit
-	var evmStringAddress string
-	if newEVMAddress != nil {
-		evmStringAddress = newEVMAddress.Hex()
-	} else {
-		evmStringAddress = ""
-	}
-
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
 		ValidatorAddress:  valAddr.String(),
 		MinSelfDelegation: newMinSelfDelegation,
-		EvmAddress:        evmStringAddress,
 	}
 }
 

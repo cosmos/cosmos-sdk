@@ -20,7 +20,6 @@ require (
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.19.6
 	github.com/cosmos/ledger-cosmos-go v0.12.2
-	github.com/ethereum/go-ethereum v1.10.17
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.6.0

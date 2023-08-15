@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type msgServer struct {
@@ -86,12 +85,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		}
 	}
 
-	evmAddr, err := k.validateEVMAddress(ctx, msg.EvmAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	validator, err := types.NewValidator(valAddr, pk, msg.Description, evmAddr)
+	validator, err := types.NewValidator(valAddr, pk, msg.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -191,14 +185,6 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
-	if msg.EvmAddress != "" {
-		_, err := k.validateEVMAddress(ctx, msg.EvmAddress)
-		if err != nil {
-			return nil, err
-		}
-		validator.EvmAddress = msg.EvmAddress
 	}
 
 	k.SetValidator(ctx, validator)
@@ -405,17 +391,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
-}
-
-func (k msgServer) validateEVMAddress(ctx sdk.Context, evmAddrHex string) (common.Address, error) {
-	if !common.IsHexAddress(evmAddrHex) {
-		return common.Address{}, types.ErrEVMAddressNotHex
-	}
-	evmAddr := common.HexToAddress(evmAddrHex)
-	if _, found := k.GetValidatorByEVMAddress(ctx, evmAddr); found {
-		return common.Address{}, types.ErrValidatorEVMAddressExists
-	}
-	return evmAddr, nil
 }
 
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation

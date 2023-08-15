@@ -10,6 +10,7 @@ const (
 	EventTypeSignalProposal   = "signal_proposal"
 
 	AttributeKeyProposalResult     = "proposal_result"
+	AttributeKeyVoter              = "voter"
 	AttributeKeyOption             = "option"
 	AttributeKeyProposalID         = "proposal_id"
 	AttributeKeyProposalMessages   = "proposal_messages" // Msg type_urls in the proposal

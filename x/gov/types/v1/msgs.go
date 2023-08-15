@@ -61,9 +61,9 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
-	// Check if no Messages are proposed
-	if len(m.Messages) == 0 {
-		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "Msgs length must be non-zero")
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
+		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
 	msgs, err := m.GetMsgs()

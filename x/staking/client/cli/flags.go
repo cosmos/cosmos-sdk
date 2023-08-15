@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -78,13 +77,6 @@ func FlagSetAmount() *flag.FlagSet {
 func FlagSetPublicKey() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagPubKey, "", "The validator's Protobuf JSON encoded public key")
-	return fs
-}
-
-// FlagSetEVMAddress Returns the flagset for EVM address related operations.
-func FlagSetEVMAddress() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(flags.FlagEVMAddress, "", "The 0x EVM address of the orchestrator")
 	return fs
 }
 

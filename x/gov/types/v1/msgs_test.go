@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -151,7 +151,7 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, true},
 		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, "", true},
 		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, true},
-		{"invalid with no Msg", addrs[0].String(), coinsPos, nil, metadata, true},
+		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, false},
 		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", false},
 		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
 	}

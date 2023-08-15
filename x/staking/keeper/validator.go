@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // get a single validator
@@ -53,19 +52,6 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 	}
 
 	return validator
-}
-
-func (k Keeper) GetValidatorByEVMAddress(ctx sdk.Context, evm common.Address) (types.Validator, bool) {
-	// TODO optimise these queries and even add grpc queries for them.
-	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
-	validators := k.GetAllValidators(ctx)
-	for _, val := range validators {
-		if val.EvmAddress == evm.Hex() {
-			return val, true
-		}
-	}
-
-	return types.Validator{}, false
 }
 
 // set the main record holding validator details

@@ -6,14 +6,19 @@ require (
 	cosmossdk.io/api v0.7.0
 	cosmossdk.io/core v0.9.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/log v1.2.0
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
+<<<<<<< HEAD
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	google.golang.org/grpc v1.56.2
+=======
+	google.golang.org/grpc v1.57.0
+>>>>>>> dded2e992 (fix(client/v2): fix duplicate modules addition and add logger (#17390))
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
 	sigs.k8s.io/yaml v1.3.0
@@ -22,7 +27,6 @@ require (
 require (
 	cosmossdk.io/collections v0.3.0 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
-	cosmossdk.io/log v1.2.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/store v1.0.0-alpha.1 // indirect
 	cosmossdk.io/x/tx v0.9.1 // indirect
@@ -136,7 +140,12 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.11.0 // indirect
+=======
+	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+>>>>>>> dded2e992 (fix(client/v2): fix duplicate modules addition and add logger (#17390))
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect

@@ -5,7 +5,7 @@ import (
 	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 )
 
-func NewCometModule() *cometModule {
+func NewCometBFTCommands() *cometModule {
 	return &cometModule{}
 }
 
@@ -30,6 +30,10 @@ func (m cometModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "GetBlockByHeight",
+					Use:   "block-by-height [height]",
+					Short: "Query for a committed block by height",
+					Long:  "Query for a specific committed block using the CometBFT RPC `block_by_height` method",		
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
 				},
 				{
 					RpcMethod: "GetLatestValidatorSet",

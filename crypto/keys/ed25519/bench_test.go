@@ -12,7 +12,7 @@ func BenchmarkKeyGeneration(b *testing.B) {
 	b.ReportAllocs()
 	benchmarkKeygenWrapper := func(reader io.Reader) types.PrivKey {
 		return genPrivKey(reader)
-	}k
+	}
 	benchmarking.BenchmarkKeyGeneration(b, benchmarkKeygenWrapper)
 }
 

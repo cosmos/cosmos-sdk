@@ -20,7 +20,7 @@ Application module interfaces exist to facilitate the composition of modules tog
 
 :::note
 
-It is recommended to implement interfaces from the [Core API](https://docs.cosmos.network/main/architecture/adr-063-core-module-api) `appmodule` package. This makes module less dependent on the SDK.
+It is recommended to implement interfaces from the [Core API](https://docs.cosmos.network/main/architecture/adr-063-core-module-api) `appmodule` package. This makes modules less dependent on the SDK.
 For legacy reason modules can still implement interfaces from the SDK `module` package.
 
 :::

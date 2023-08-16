@@ -16,11 +16,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/client/v2/autocli/flag"
 
-<<<<<<< HEAD
-=======
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
->>>>>>> 208219a42 (feat: use autocli for comet commands (#17389))
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 

@@ -4,21 +4,14 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.7.0
-<<<<<<< HEAD
-	cosmossdk.io/client/v2 v2.0.0-20230719143845-dff6b0e26aa4
+	cosmossdk.io/client/v2 v2.0.0-20230816105025-72e7026da7fb
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
-=======
-	cosmossdk.io/client/v2 v2.0.0-20230815130322-dded2e9921f0
-	cosmossdk.io/errors v1.0.0
-	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230815152400-f42d52f7e531
->>>>>>> 208219a42 (feat: use autocli for comet commands (#17389))
+	github.com/cosmos/cosmos-sdk v0.50.0-beta.0.0.20230816105025-72e7026da7fb
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -152,12 +145,12 @@ require (
 	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230726155614-23370e0ffb3e // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-	pgregory.net/rapid v1.0.0 // indirect
+	pgregory.net/rapid v1.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

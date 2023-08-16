@@ -144,7 +144,7 @@ func (itr *iterator) debugRawIterate() {
 			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 		}
 
-		_, version, err := decodeUint64Ascending(vBz)
+		version, err := decodeUint64Ascending(vBz)
 		if err != nil {
 			panic(fmt.Errorf("failed to decode version from MVCC key: %w", err))
 		}

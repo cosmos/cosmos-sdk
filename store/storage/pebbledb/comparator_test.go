@@ -12,7 +12,7 @@ func TestMVCCKey(t *testing.T) {
 
 		key, vBz, ok := SplitMVCCKey(keyA)
 
-		_, version, err := decodeUint64Ascending(vBz)
+		version, err := decodeUint64Ascending(vBz)
 		require.NoError(t, err)
 		require.True(t, ok)
 		require.Equal(t, i, version)

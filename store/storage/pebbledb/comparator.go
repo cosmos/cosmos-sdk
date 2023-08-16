@@ -126,9 +126,10 @@ type mvccKeyFormatter struct {
 }
 
 func (f mvccKeyFormatter) Format(s fmt.State, verb rune) {
-	k, ts, ok := SplitMVCCKey(f.key)
+	k, vBz, ok := SplitMVCCKey(f.key)
 	if ok {
-		fmt.Fprintf(s, "%s/%d", k, binary.LittleEndian.Uint64(ts))
+		v, _ := decodeUint64Ascending(vBz)
+		fmt.Fprintf(s, "%s/%d", k, v)
 	} else {
 		fmt.Fprintf(s, "%s", f.key)
 	}
@@ -222,13 +223,13 @@ func encodeUint64Ascending(dst []byte, v uint64) []byte {
 }
 
 // decodeUint64Ascending decodes a uint64 from the input buffer, treating
-// the input as a big-endian 8 byte uint64 representation. The remainder
-// of the input buffer and the decoded uint64 are returned.
-func decodeUint64Ascending(b []byte) ([]byte, uint64, error) {
+// the input as a big-endian 8 byte uint64 representation. The decoded uint64 is
+// returned.
+func decodeUint64Ascending(b []byte) (uint64, error) {
 	if len(b) < 8 {
-		return nil, 0, fmt.Errorf("insufficient bytes to decode uint64 int value; expected 8; got %d", len(b))
+		return 0, fmt.Errorf("insufficient bytes to decode uint64 int value; expected 8; got %d", len(b))
 	}
 
 	v := binary.BigEndian.Uint64(b)
-	return b[8:], v, nil
+	return v, nil
 }

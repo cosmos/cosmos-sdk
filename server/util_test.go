@@ -10,12 +10,8 @@ import (
 	"strings"
 	"testing"
 
-<<<<<<< HEAD
+	db "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
-=======
-	cmtcfg "github.com/cometbft/cometbft/config"
-	db "github.com/cosmos/cosmos-db"
->>>>>>> 6b0f8add4 (fix: use correct config key for db_backend (#17406))
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"

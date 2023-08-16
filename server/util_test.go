@@ -10,15 +10,8 @@ import (
 	"strings"
 	"testing"
 
-<<<<<<< HEAD
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-=======
-	cmtcfg "github.com/cometbft/cometbft/config"
-	db "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
->>>>>>> 6b0f8add4 (fix: use correct config key for db_backend (#17406))
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	dbm "github.com/tendermint/tm-db"
@@ -45,15 +38,6 @@ func preRunETestImpl(cmd *cobra.Command, args []string) error {
 	}
 
 	return cancelledInPreRun
-}
-
-func TestGetAppDBBackend(t *testing.T) {
-	v := viper.New()
-	require.Equal(t, server.GetAppDBBackend(v), db.GoLevelDBBackend)
-	v.Set("db_backend", "dbtype1") // value from CometBFT config
-	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype1"))
-	v.Set("app-db-backend", "dbtype2") // value from app.toml
-	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype2"))
 }
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {
@@ -486,10 +470,10 @@ func TestGetAppDBBackend(t *testing.T) {
 		},
 
 		{
-			name:   "only db-backend set",
+			name:   "only db_backend set",
 			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 1"},
-			exp:    dbm.BackendType("db-backend value 1"),
+			opts:   mapGetter{"db_backend": "db_backend value 1"},
+			exp:    dbm.BackendType("db_backend value 1"),
 		},
 		{
 			name:   "only DBBackend set",
@@ -507,7 +491,7 @@ func TestGetAppDBBackend(t *testing.T) {
 		{
 			name:   "app-db-backend and db-backend set",
 			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 4", "app-db-backend": "app-db-backend value 5"},
+			opts:   mapGetter{"db_backend": "db_backend value 4", "app-db-backend": "app-db-backend value 5"},
 			exp:    dbm.BackendType("app-db-backend value 5"),
 		},
 		{
@@ -517,16 +501,16 @@ func TestGetAppDBBackend(t *testing.T) {
 			exp:    dbm.BackendType("app-db-backend value 7"),
 		},
 		{
-			name:   "db-backend and DBBackend set",
+			name:   "db_backend and DBBackend set",
 			dbBack: "DBBackend value 8",
-			opts:   mapGetter{"db-backend": "db-backend value 9"},
+			opts:   mapGetter{"db_backend": "db_backend value 9"},
 			exp:    dbm.BackendType("DBBackend value 8"),
 		},
 
 		{
 			name:   "all of app-db-backend db-backend DBBackend set",
 			dbBack: "DBBackend value 10",
-			opts:   mapGetter{"db-backend": "db-backend value 11", "app-db-backend": "app-db-backend value 12"},
+			opts:   mapGetter{"db_backend": "db_backend value 11", "app-db-backend": "app-db-backend value 12"},
 			exp:    dbm.BackendType("app-db-backend value 12"),
 		},
 	}

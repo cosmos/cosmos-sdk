@@ -68,7 +68,11 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 // SetValidator sets the main record holding validator details
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
 	bz := types.MustMarshalValidator(k.cdc, &validator)
-	return k.Validators.Set(ctx, validator.GetOperator(), bz)
+	valBz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+	return k.Validators.Set(ctx, sdk.ValAddress(valBz), bz)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address
@@ -78,7 +82,12 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 		return err
 	}
 
-	return k.ValidatorByConsensusAddress.Set(ctx, consPk, validator.GetOperator())
+	bz, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+
+	return k.ValidatorByConsensusAddress.Set(ctx, consPk, bz)
 }
 
 // SetValidatorByPowerIndex sets a validator by power index
@@ -89,19 +98,27 @@ func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Va
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec), str)
 }
 
 // DeleteValidatorByPowerIndex deletes a record by power index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec))
 }
 
 // SetNewValidatorByPowerIndex adds new entry by power index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec), str)
 }
 
 // AddValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
@@ -221,11 +238,16 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))); err != nil {
+	if err = store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec)); err != nil {
 		return err
 	}
 
-	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+
+	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, str); err != nil {
 		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
 	}
 
@@ -571,7 +593,11 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 					}
 
 					if val.GetDelegatorShares().IsZero() {
-						if err = k.RemoveValidator(ctx, val.GetOperator()); err != nil {
+						str, err := k.validatorAddressCodec.StringToBytes(val.GetOperator())
+						if err != nil {
+							return err
+						}
+						if err = k.RemoveValidator(ctx, str); err != nil {
 							return err
 						}
 					} else {

@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	address "cosmossdk.io/core/address"
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+	address "cosmossdk.io/core/address"
 	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"

@@ -2,8 +2,10 @@ package hash
 
 import (
 	"crypto/sha256"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
+
 	"github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 var addressSize = 20

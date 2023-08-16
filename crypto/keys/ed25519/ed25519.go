@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"crypto/subtle"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/hash"
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -13,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/hash"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )

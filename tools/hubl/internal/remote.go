@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/client/v2/autocli/flag"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
@@ -88,10 +87,6 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			commands = append(commands, RemoteErrorCommand(config, configDir, chain, chainConfig, err))
 			continue
 		}
-
-		// add comet commands
-		cometCmds := cmtservice.NewCometBFTCommands()
-		chainInfo.ModuleOptions[cometCmds.Name()] = cometCmds.AutoCLIOptions()
 
 		appOpts := autocli.AppOptions{
 			ModuleOptions: chainInfo.ModuleOptions,

@@ -46,9 +46,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+<<<<<<< HEAD
 * (cli) [#17187](https://github.com/cosmos/cosmos-sdk/pull/17187) Do not use `ctx.PrintObjectLegacy` in commands anymore.
     * `<appd> q gov proposer [proposal-id]` now returns a proposal id as int instead of string.
 * (testutil) [#17216](https://github.com/cosmos/cosmos-sdk/issues/17216) Add `DefaultContextWithKeys` to `testutil` package.
+=======
+* (cli) [#17389](https://github.com/cosmos/cosmos-sdk/pull/17389) gRPC CometBFT commands have been added under `<aapd> q consensus comet`. Duplicate commands have been removed. CometBFT commands placement in the SDK has been simplified. See the exhaustive list below.
+    * `<appd> q comet-validator-set` is now `<appd> q consensus comet validator-set`
+    * `client/rpc.StatusCommand()` is now at `server.StatusCommand()`
+>>>>>>> 208219a42 (feat: use autocli for comet commands (#17389))
 * (x/group, x/gov) [#17220](https://github.com/cosmos/cosmos-sdk/pull/17220) Add `--skip-metadata` flag in `draft-proposal` to skip metadata prompt.
 * (x/group, x/gov) [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Let proposal summary be 40x longer than metadata limit.
 * (version) [#17096](https://github.com/cosmos/cosmos-sdk/pull/17096) Improve `getSDKVersion()` to handle module replacements.

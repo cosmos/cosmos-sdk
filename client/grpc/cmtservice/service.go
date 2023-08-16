@@ -49,7 +49,7 @@ func NewQueryServer(
 
 // GetSyncing implements ServiceServer.GetSyncing
 func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
-	status, err := getNodeStatus(ctx, s.clientCtx)
+	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
-	status, err := getNodeStatus(ctx, s.clientCtx)
+	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}

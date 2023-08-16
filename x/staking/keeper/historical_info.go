@@ -2,9 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
-
-	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -28,12 +25,12 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
 	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
-		_, err := k.HistoricalInfo.Get(ctx, uint64(i))
+		has, err := k.HistoricalInfo.Has(ctx, uint64(i))
 		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
-				break
-			}
 			return err
+		}
+		if !has {
+			break
 		}
 		if err = k.HistoricalInfo.Remove(ctx, uint64(i)); err != nil {
 			return err

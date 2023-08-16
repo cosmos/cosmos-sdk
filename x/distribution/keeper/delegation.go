@@ -60,13 +60,18 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 		panic("stake should not be negative")
 	}
 
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+
 	// return staking * (ending - starting)
-	starting, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(val.GetOperator(), startingPeriod))
+	starting, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(sdk.ValAddress(valBz), startingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-	ending, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(val.GetOperator(), endingPeriod))
+	ending, err := k.ValidatorHistoricalRewards.Get(ctx, collections.Join(sdk.ValAddress(valBz), endingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -237,7 +242,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		logger.Info(
 			"rounding error withdrawing rewards from validator",
 			"delegator", del.GetDelegatorAddr(),
-			"validator", val.GetOperator().String(),
+			"validator", val.GetOperator(),
 			"got", rewards.String(),
 			"expected", rewardsRaw.String(),
 		)
@@ -311,7 +316,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 			sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
 		),
 	)

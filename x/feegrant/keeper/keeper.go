@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -208,8 +207,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 	err := k.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (stop bool, err error) {
 		return cb(grant), nil
 	})
-
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 
@@ -315,8 +313,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 
 		return false, nil
 	})
-
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 

@@ -378,7 +378,10 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// validator 3 enters bonded validator set
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(40)
 
-	validators[3], err = f.stakingKeeper.GetValidator(f.sdkCtx, validators[3].GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[3].GetOperator())
+	assert.NilError(t, err)
+
+	validators[3], err = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.NilError(t, err)
 	assert.NilError(t, f.stakingKeeper.DeleteValidatorByPowerIndex(f.sdkCtx, validators[3]))
 	validators[3], _ = validators[3].AddTokensFromDel(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1))
@@ -425,7 +428,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	assert.Equal(t, nMax, uint32(len(resValidators)))
 	assert.Assert(ValEq(t, validators[0], resValidators[0]))
 	assert.Assert(ValEq(t, validators[2], resValidators[1]))
-	_, exists := f.stakingKeeper.GetValidator(f.sdkCtx, validators[3].GetOperator())
+	_, exists := f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.Assert(t, exists)
 }
 
@@ -496,7 +499,10 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 		keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[i], true)
 	}
 	for i := range powers {
-		validators[i], err = f.stakingKeeper.GetValidator(f.sdkCtx, validators[i].GetOperator())
+		valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[i].GetOperator())
+		assert.NilError(t, err)
+
+		validators[i], err = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 		assert.NilError(t, err)
 	}
 	assert.Equal(t, types.Unbonded, validators[0].Status)
@@ -545,8 +551,12 @@ func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[1]))
 
 	updates := applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 2)
-	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[0].GetOperator())
-	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[1].GetOperator())
+	val0bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+	assert.NilError(t, err)
+	val1bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[1].GetOperator())
+	assert.NilError(t, err)
+	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val0bz)
+	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.DeepEqual(t, validators[0].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[1])
 	assert.DeepEqual(t, validators[1].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 }
@@ -636,7 +646,9 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[2]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[2]))
 	updates := applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
-	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[2].GetOperator())
+	val2bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[2].GetOperator())
+	assert.NilError(t, err)
+	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val2bz)
 	assert.DeepEqual(t, validators[2].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 
 	// test validtor added at the beginning
@@ -644,7 +656,9 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[3]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[3]))
 	updates = applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
-	validators[3], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[3].GetOperator())
+	val3bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[3].GetOperator())
+	assert.NilError(t, err)
+	validators[3], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val3bz)
 	assert.DeepEqual(t, validators[3].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 
 	// test validtor added at the end
@@ -652,7 +666,9 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[4]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[4]))
 	updates = applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
-	validators[4], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[4].GetOperator())
+	val4bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[4].GetOperator())
+	assert.NilError(t, err)
+	validators[4], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val4bz)
 	assert.DeepEqual(t, validators[4].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 }
 
@@ -687,7 +703,9 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[2]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[2]))
 	updates := applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 2)
-	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[2].GetOperator())
+	val2bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[2].GetOperator())
+	assert.NilError(t, err)
+	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val2bz)
 	assert.DeepEqual(t, validators[0].ABCIValidatorUpdateZero(), updates[1])
 	assert.DeepEqual(t, validators[2].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 }
@@ -718,8 +736,13 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 	// verify initial CometBFT updates are correct
 	updates := applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, len(validators))
-	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[0].GetOperator())
-	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[1].GetOperator())
+
+	val0bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+	assert.NilError(t, err)
+	val1bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[1].GetOperator())
+	assert.NilError(t, err)
+	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val0bz)
+	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.DeepEqual(t, validators[0].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 	assert.DeepEqual(t, validators[1].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[1])
 
@@ -763,9 +786,11 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 	// verify initial CometBFT updates are correct
 	updates = applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, len(validators)+1)
-	validator, _ = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
-	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[0].GetOperator())
-	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[1].GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+	validator, _ = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
+	validators[0], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val0bz)
+	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.DeepEqual(t, validator.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 	assert.DeepEqual(t, validators[0].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[1])
 	assert.DeepEqual(t, validators[1].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[2])
@@ -797,8 +822,12 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 
 	// verify initial CometBFT updates are correct
 	updates := applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 2)
-	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[2].GetOperator())
-	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, validators[1].GetOperator())
+	val1bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[1].GetOperator())
+	assert.NilError(t, err)
+	val2bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[2].GetOperator())
+	assert.NilError(t, err)
+	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val2bz)
+	validators[1], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.DeepEqual(t, validators[2].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 	assert.DeepEqual(t, validators[1].ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[1])
 
@@ -807,7 +836,9 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	// delegate to validator with lowest power but not enough to bond
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(1)
 
-	validators[0], err = f.stakingKeeper.GetValidator(f.sdkCtx, validators[0].GetOperator())
+	val0bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+	assert.NilError(t, err)
+	validators[0], err = f.stakingKeeper.GetValidator(f.sdkCtx, val0bz)
 	assert.NilError(t, err)
 
 	assert.NilError(t, f.stakingKeeper.DeleteValidatorByPowerIndex(f.sdkCtx, validators[0]))
@@ -823,7 +854,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	// lowest power in a single block context (height)
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(2)
 
-	validators[1], err = f.stakingKeeper.GetValidator(f.sdkCtx, validators[1].GetOperator())
+	validators[1], err = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.NilError(t, err)
 
 	assert.NilError(t, f.stakingKeeper.DeleteValidatorByPowerIndex(f.sdkCtx, validators[0]))

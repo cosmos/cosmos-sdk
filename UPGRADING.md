@@ -74,6 +74,15 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
+
+#### Upgrade
+
+**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+```diff
++ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+
 #### Events
 
 The log section of `abci.TxResult` is not populated in the case of successful
@@ -130,7 +139,7 @@ In this section we describe the changes made in Cosmos SDK' SimApp.
 
 #### Module Assertions
 
-Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `appmodule.HasBeginBlocker`, `appmodule.HasEndBlocker` and `appmodule.HasGenesis` / `module.HasGenesis` interfaces.
 
 #### Module wiring
 
@@ -211,7 +220,7 @@ Users manually wiring their chain need to use the new `module.NewBasicManagerFro
 
 #### AutoCLI
 
-[`AutoCLI`](https://docs.cosmos.network/main/building-modules/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
+[`AutoCLI`](https://docs.cosmos.network/main/core/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
 
 ```go
 if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {

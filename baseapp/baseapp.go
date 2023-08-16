@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 
@@ -41,6 +42,12 @@ type (
 	// between two versions of the software.
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
+
+// MigrationModuleManager is the interface that a migration module manager should implement to handle
+// the execution of migration logic during the beginning of a block.
+type MigrationModuleManager interface {
+	RunMigrationBeginBlock(ctx sdk.Context) (bool, error)
+}
 
 const (
 	execModeCheck           execMode = iota // Check a transaction
@@ -91,6 +98,9 @@ type BaseApp struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
 
+	// manages migrate module
+	migrationModuleManager MigrationModuleManager
+
 	// volatile states:
 	//
 	// - checkState is set on InitChain and reset on Commit
@@ -104,11 +114,6 @@ type BaseApp struct {
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
-	// - voteExtensionState: Used for ExtendVote and VerifyVoteExtension, which is
-	// set based on the previous block's state. This state is never committed. In
-	// case of multiple rounds, the state is always reset to the previous block's
-	// state.
-	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
 	// the previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
@@ -118,7 +123,6 @@ type BaseApp struct {
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state
-	voteExtensionState   *state
 	finalizeBlockState   *state
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -128,6 +132,9 @@ type BaseApp struct {
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
 	paramStore ParamStore
+
+	// queryGasLimit defines the maximum gas for queries; unbounded if 0.
+	queryGasLimit uint64
 
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. This is mainly used for DoS and spam prevention.
@@ -198,6 +205,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		queryGasLimit:    math.MaxUint64,
 	}
 
 	for _, option := range options {
@@ -229,7 +237,7 @@ func NewBaseApp(
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
-	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs base app will panic.
+	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	return app
@@ -266,6 +274,11 @@ func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgService
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
+func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
+	app.migrationModuleManager = migrationModuleManager
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -475,9 +488,6 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	case execModeProcessProposal:
 		app.processProposalState = baseState
 
-	case execModeVoteExtension:
-		app.voteExtensionState = baseState
-
 	case execModeFinalize:
 		app.finalizeBlockState = baseState
 
@@ -517,7 +527,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 // It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
-		panic("cannot store consensus params with no params store set")
+		return errors.New("cannot store consensus params with no params store set")
 	}
 
 	return app.paramStore.Set(ctx, cp)
@@ -668,16 +678,31 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
+func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
+		ctx := app.finalizeBlockState.ctx
+		if app.migrationModuleManager != nil {
+			if success, err := app.migrationModuleManager.RunMigrationBeginBlock(ctx); success {
+				cp := ctx.ConsensusParams()
+				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
+				// and consensus parameters should not be overwritten.
+				if cp.Block == nil {
+					if cp = app.GetConsensusParams(ctx); cp.Block != nil {
+						ctx = ctx.WithConsensusParams(cp)
+					}
+				}
+			} else if err != nil {
+				return sdk.BeginBlock{}, err
+			}
+		}
+		resp, err = app.beginBlocker(ctx)
 		if err != nil {
-			panic(err)
+			return resp, err
 		}
 
 		// append BeginBlock attributes to all events in the EndBlock response
@@ -691,7 +716,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) sdk.BeginBlock {
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
-	return resp
+	return resp, nil
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
@@ -739,7 +764,7 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	if app.endBlocker != nil {
 		eb, err := app.endBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
-			panic(err)
+			return endblock, err
 		}
 
 		// append EndBlock attributes to all events in the EndBlock response
@@ -954,7 +979,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		}
 
 		// create message events
-		msgEvents := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
+		}
 
 		// append message events and data
 		//
@@ -999,19 +1027,19 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) sdk.Events {
+func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2.Message) (sdk.Events, error) {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
 	// we set the signer attribute as the sender
 	signers, err := cdc.GetMsgV2Signers(msgV2)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if len(signers) > 0 && signers[0] != nil {
 		addrStr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(signers[0])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, addrStr))
 	}
@@ -1023,7 +1051,7 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 		}
 	}
 
-	return sdk.Events{msgEvent}.AppendEvents(events)
+	return sdk.Events{msgEvent}.AppendEvents(events), nil
 }
 
 // PrepareProposalVerifyTx performs transaction verification when a proposer is

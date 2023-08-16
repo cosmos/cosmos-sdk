@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -41,13 +40,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var previousProposer sdk.ConsAddress
 	if data.PreviousProposer != "" {
 		var err error
-		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
+		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	if err = k.SetPreviousProposerConsAddr(ctx, previousProposer); err != nil {
+	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
 		panic(err)
 	}
 
@@ -112,7 +111,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+
+		err = k.ValidatorSlashEvents.Set(
+			ctx,
+			collections.Join3(
+				sdk.ValAddress(valAddr),
+				evt.Height,
+				evt.Period,
+			),
+			evt.ValidatorSlashEvent,
+		)
+
 		if err != nil {
 			panic(err)
 		}
@@ -156,11 +165,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
-	pp, err := k.GetPreviousProposerConsAddr(ctx)
+	pp, err := k.PreviousProposer.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -175,7 +184,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false, nil
 	},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -187,7 +196,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -202,7 +211,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -216,7 +225,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -229,22 +238,28 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
-	k.IterateValidatorSlashEvents(ctx,
-		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
+	err = k.ValidatorSlashEvents.Walk(
+		ctx,
+		nil,
+		func(k collections.Triple[sdk.ValAddress, uint64, uint64], event types.ValidatorSlashEvent) (stop bool, err error) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
-				ValidatorAddress:    val.String(),
-				Height:              height,
+				ValidatorAddress:    k.K1().String(),
+				Height:              k.K2(),
 				Period:              event.ValidatorPeriod,
 				ValidatorSlashEvent: event,
 			})
-			return false
+			return false, nil
 		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

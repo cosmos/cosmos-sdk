@@ -236,7 +236,12 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	}
 
 	for i, slash := range slashes {
-		assert.NilError(t, f.distrKeeper.SetValidatorSlashEvent(f.sdkCtx, f.valAddr, uint64(i+2), 0, slash))
+		err := f.distrKeeper.ValidatorSlashEvents.Set(
+			f.sdkCtx,
+			collections.Join3(f.valAddr, uint64(i+2), uint64(0)),
+			slash,
+		)
+		assert.NilError(t, err)
 	}
 
 	var (
@@ -511,12 +516,14 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	validator, issuedShares := val.AddTokensFromDel(delTokens)
 	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
-	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
 
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), uint64(2)), historicalRewards))
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))

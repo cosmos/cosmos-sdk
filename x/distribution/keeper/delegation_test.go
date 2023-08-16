@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -72,13 +73,13 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// historical count should be 2 (once for validator init, once for delegation init)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// historical count should be 2 still
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// calculate delegation rewards
 	rewards, err := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -106,6 +107,21 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr)
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
+}
+
+func getValHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
+	count := 0
+	err := k.ValidatorHistoricalRewards.Walk(
+		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards disttypes.ValidatorHistoricalRewards) (stop bool, err error) {
+			count += int(rewards.ReferenceCount)
+			return false, nil
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return count
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
@@ -182,6 +198,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -283,6 +300,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -306,6 +324,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		math.LegacyNewDecWithPrec(2, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
@@ -390,7 +409,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	addr1 := sdk.AccAddress(valConsAddr1)
-	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil)
+	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil, stakingKeeper)
 	require.NoError(t, err)
 
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr1, valAddr).Return(del1, nil)
@@ -486,7 +505,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// historical count should be 2 (initial + latest for delegation)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// withdraw rewards (the bank keeper should be called with the right amount of tokens to transfer)
 	expRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
@@ -495,7 +514,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Nil(t, err)
 
 	// historical count should still be 2 (added one record, cleared one)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// withdraw commission (the bank keeper should be called with the right amount of tokens to transfer)
 	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
@@ -582,6 +601,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 
 	// slash the validator by 50% again
@@ -594,6 +614,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 
 	// increase block height
@@ -685,6 +706,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
@@ -699,6 +721,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&val,
 		sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		nil,
+		stakingKeeper,
 	)
 	require.NoError(t, err)
 
@@ -726,6 +749,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
 		&distrKeeper,
+		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
@@ -808,7 +832,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// historical count should be 2 (validator init, delegation init)
-	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// second delegation
 	_, del2, err := distrtestutil.Delegate(
@@ -818,6 +842,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		&val,
 		math.NewInt(100),
 		nil,
+		stakingKeeper,
 	)
 	require.NoError(t, err)
 
@@ -830,7 +855,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// historical count should be 3 (second delegation init)
-	require.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -851,7 +876,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	// historical count should be 3 (validator init + two delegations)
-	require.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// validator withdraws commission
 	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(initial))}

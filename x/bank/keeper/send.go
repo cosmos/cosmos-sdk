@@ -136,12 +136,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, input.Address),
-		),
-	)
 
 	for _, out := range outputs {
 		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
@@ -201,18 +195,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	// bech32 encoding is expensive! Only do it once for fromAddr
 	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-		),
-	})
+	)
 
 	return nil
 }
@@ -382,7 +372,7 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(d
 	err := k.SendEnabled.Walk(ctx, nil, func(key string, value bool) (stop bool, err error) {
 		return cb(key, value), nil
 	})
-	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

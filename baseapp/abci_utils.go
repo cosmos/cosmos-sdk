@@ -2,11 +2,11 @@ package baseapp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -15,7 +15,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -26,20 +25,12 @@ import (
 var VoteExtensionThreshold = math.LegacyNewDecWithPrec(667, 3)
 
 type (
-	// Validator defines the interface contract require for verifying vote extension
-	// signatures. Typically, this will be implemented by the x/staking module,
-	// which has knowledge of the CometBFT public key.
-	Validator interface {
-		CmtConsPublicKey() (cmtprotocrypto.PublicKey, error)
-		BondedTokens() math.Int
-	}
-
 	// ValidatorStore defines the interface contract require for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (Validator, error)
-		TotalBondedTokens(ctx sdk.Context) math.Int
+		TotalBondedTokens(ctx context.Context) (math.Int, error)
+		BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -62,7 +53,6 @@ func ValidateVoteExtensions(
 ) error {
 	cp := ctx.ConsensusParams()
 	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
-
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
@@ -74,6 +64,12 @@ func ValidateVoteExtensions(
 
 	sumVP := math.NewInt(0)
 	for _, vote := range extCommit.Votes {
+		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
+		// previous block (the block vote is for) could not have been committed.
+		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+			continue
+		}
+
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
 				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
@@ -89,19 +85,10 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("vote extensions enabled; received empty vote extension signature at height %d", currentHeight)
 		}
 
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := valStore.GetValidatorByConsAddr(ctx, valConsAddr)
+		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		bondedTokens, cmtPubKeyProto, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get validator %X: %w", valConsAddr, err)
-		}
-		if validator == nil {
-			return fmt.Errorf("validator %X not found", valConsAddr)
-		}
-
-		cmtPubKeyProto, err := validator.CmtConsPublicKey()
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
+			return fmt.Errorf("failed to get validator %X info (bonded tokens and public key): %w", valConsAddr, err)
 		}
 
 		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtPubKeyProto)
@@ -125,12 +112,16 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
 
-		sumVP = sumVP.Add(validator.BondedTokens())
+		sumVP = sumVP.Add(bondedTokens)
 	}
 
 	// Ensure we have at least 2/3 voting power that submitted valid vote
 	// extensions.
-	totalVP := valStore.TotalBondedTokens(ctx)
+	totalVP, err := valStore.TotalBondedTokens(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get total bonded tokens: %w", err)
+	}
+
 	percentSubmitted := math.LegacyNewDecFromInt(sumVP).Quo(math.LegacyNewDecFromInt(totalVP))
 	if percentSubmitted.LT(VoteExtensionThreshold) {
 		return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
@@ -216,7 +207,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					panic(err)
+					return nil, err
 				}
 			} else {
 				var txGasLimit uint64

@@ -442,7 +442,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 
 	resp, err = app.prepareProposal(app.prepareProposalState.ctx, req)
 	if err != nil {
-		app.logger.Error("failed to prepare proposal", "height", req.Height, "error", err)
+		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{}, nil
 	}
 
@@ -528,7 +528,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	resp, err = app.processProposal(app.processProposalState.ctx, req)
 	if err != nil {
-		app.logger.Error("failed to process proposal", "height", req.Height, "error", err)
+		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
@@ -548,7 +548,8 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
 	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-	app.setState(execModeVoteExtension, emptyHeader)
+	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -556,14 +557,14 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	cp := app.GetConsensusParams(ctx)
 
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
-	app.voteExtensionState.ctx = app.voteExtensionState.ctx.
+	ctx = ctx.
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
@@ -588,9 +589,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		}
 	}()
 
-	resp, err = app.extendVote(app.voteExtensionState.ctx, req)
+	resp, err = app.extendVote(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to extend vote", "height", req.Height, "error", err)
+		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
@@ -608,9 +609,13 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
+	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
+	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp := app.GetConsensusParams(app.voteExtensionState.ctx)
+	cp := app.GetConsensusParams(ctx)
 
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
@@ -631,9 +636,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		}
 	}()
 
-	resp, err = app.verifyVoteExt(app.voteExtensionState.ctx, req)
+	resp, err = app.verifyVoteExt(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to verify vote extension", "height", req.Height, "error", err)
+		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
@@ -720,7 +725,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		}
 	}
 
-	beginBlock := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
@@ -840,7 +849,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.prepareCheckStater(app.checkState.ctx)
 	}
 
-	go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
+	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
 }
@@ -1110,7 +1120,8 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	// branch the commit multi-store for safety
 	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithBlockHeight(height)
+		WithBlockHeight(height).
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

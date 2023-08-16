@@ -11,9 +11,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -48,7 +49,7 @@ func NewQueryServer(
 
 // GetSyncing implements ServiceServer.GetSyncing
 func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
-	status, err := getNodeStatus(ctx, s.clientCtx)
+	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +81,12 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
 func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Height > chainHeight {
+	if req.Height > blockHeight {
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
@@ -108,7 +109,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 		return nil, err
 	}
 
-	return validatorsOutput(ctx, s.clientCtx, nil, page, limit)
+	return ValidatorsOutput(ctx, s.clientCtx, nil, page, limit)
 }
 
 func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
@@ -130,16 +131,16 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, err
 	}
 
-	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to parse chain height")
 	}
 
-	if req.Height > chainHeight {
+	if req.Height > blockHeight {
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	r, err := validatorsOutput(ctx, s.clientCtx, &req.Height, page, limit)
+	r, err := ValidatorsOutput(ctx, s.clientCtx, &req.Height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +152,8 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	}, nil
 }
 
-func validatorsOutput(ctx context.Context, cctx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
-	vs, err := rpc.GetValidators(ctx, cctx, height, &page, &limit)
+func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
+	vs, err := getValidators(ctx, clientCtx, height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -161,18 +162,22 @@ func validatorsOutput(ctx context.Context, cctx client.Context, height *int64, p
 		BlockHeight: vs.BlockHeight,
 		Validators:  make([]*Validator, len(vs.Validators)),
 		Pagination: &qtypes.PageResponse{
-			Total: vs.Total,
+			Total: uint64(vs.Total),
 		},
 	}
 
 	for i, v := range vs.Validators {
-		anyPub, err := codectypes.NewAnyWithValue(v.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(v.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		anyPub, err := codectypes.NewAnyWithValue(pk)
 		if err != nil {
 			return nil, err
 		}
 
 		resp.Validators[i] = &Validator{
-			Address:          v.Address.String(),
+			Address:          sdk.ConsAddress(v.Address).String(),
 			ProposerPriority: v.ProposerPriority,
 			PubKey:           anyPub,
 			VotingPower:      v.VotingPower,
@@ -184,7 +189,7 @@ func validatorsOutput(ctx context.Context, cctx client.Context, height *int64, p
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
-	status, err := getNodeStatus(ctx, s.clientCtx)
+	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}

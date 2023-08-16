@@ -115,7 +115,7 @@ func NewKeeper(
 			collections.TripleKeyCodec(
 				collections.BytesKey,
 				collections.BytesKey,
-				sdk.LengthPrefixedBytesKey, // nolint: staticcheck // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			),
 			codec.CollValue[types.Redelegation](cdc),
 		),

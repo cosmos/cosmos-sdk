@@ -9,6 +9,10 @@ import (
 	reflect "reflect"
 	time "time"
 
+<<<<<<< HEAD
+=======
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+>>>>>>> e3a3df2a8 (refactor: move `UpgradeModule` interface to appmodule and fix mocks (#17383))
 	address "cosmossdk.io/core/address"
 	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"

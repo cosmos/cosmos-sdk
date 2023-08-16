@@ -182,9 +182,6 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		version++
 	}
 
-	var versionBz [VersionSize]byte
-	binary.LittleEndian.PutUint64(versionBz[:], version)
-
 	it := db.NewIter(&pebble.IterOptions{
 		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
@@ -193,17 +190,19 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		err = errors.Join(err, it.Close())
 	}()
 
-	ok := it.Last()
-	if !ok {
+	if !it.Last() {
 		return nil, store.ErrRecordNotFound
 	}
 
-	_, keyTS, ok := SplitMVCCKey(it.Key())
+	_, vBz, ok := SplitMVCCKey(it.Key())
 	if !ok {
 		return nil, fmt.Errorf("unexpected key format: %s", it.Key())
 	}
 
-	keyVersion := binary.LittleEndian.Uint64(keyTS)
+	_, keyVersion, err := decodeUint64Ascending(vBz)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode key version: %w", err)
+	}
 	if keyVersion > version {
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
 	}

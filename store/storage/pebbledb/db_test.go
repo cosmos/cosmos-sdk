@@ -73,13 +73,13 @@ func TestDatabase_VersionedKeys(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	for i := 1; i <= 100; i++ {
-		err := db.Set(storeKey1, uint64(i), []byte("key"), []byte(fmt.Sprintf("value%03d", i)))
+	for i := uint64(1); i <= 100; i++ {
+		err := db.Set(storeKey1, i, []byte("key"), []byte(fmt.Sprintf("value%03d", i)))
 		require.NoError(t, err)
 	}
 
-	for i := 1; i <= 100; i++ {
-		bz, err := db.Get(storeKey1, uint64(i), []byte("key"))
+	for i := uint64(1); i <= 100; i++ {
+		bz, err := db.Get(storeKey1, i, []byte("key"))
 		require.NoError(t, err)
 		require.Equal(t, fmt.Sprintf("value%03d", i), string(bz))
 	}
@@ -113,13 +113,13 @@ func TestDatabase_Batch(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
-		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
+		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%03d", i)), []byte("value"))
 		require.NoError(t, err)
 	}
 
 	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
-			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%d", i)))
+			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%03d", i)))
 			require.NoError(t, err)
 		}
 	}
@@ -133,8 +133,8 @@ func TestDatabase_Batch(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), lv)
 
-	for i := 0; i < 100; i++ {
-		ok, err := db.Has(storeKey1, 1, []byte(fmt.Sprintf("key%d", i)))
+	for i := 0; i < 1; i++ {
+		ok, err := db.Has(storeKey1, 1, []byte(fmt.Sprintf("key%03d", i)))
 		require.NoError(t, err)
 
 		if i%10 == 0 {

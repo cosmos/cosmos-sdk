@@ -1,7 +1,6 @@
 package pebbledb
 
 import (
-	"encoding/binary"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,10 +10,13 @@ func TestMVCCKey(t *testing.T) {
 	for i := uint64(1); i < 1001; i++ {
 		keyA := MVCCEncode([]byte("key001"), i)
 
-		splitKey, splitVersion, ok := SplitMVCCKey(keyA)
+		key, vBz, ok := SplitMVCCKey(keyA)
+
+		_, version, err := decodeUint64Ascending(vBz)
+		require.NoError(t, err)
 		require.True(t, ok)
-		require.Equal(t, i, binary.LittleEndian.Uint64(splitVersion))
-		require.Equal(t, []byte("key001"), splitKey)
+		require.Equal(t, i, version)
+		require.Equal(t, []byte("key001"), key)
 	}
 }
 

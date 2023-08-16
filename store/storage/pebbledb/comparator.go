@@ -155,8 +155,7 @@ func SplitMVCCKey(mvccKey []byte) (key, version []byte, ok bool) {
 	return key, version, true
 }
 
-// MVCCKeyCompare compares two MVCC keys. The result will be 0 if a == b,
-// -1 if a < b, and +1 if a > b.
+// MVCCKeyCompare compares two MVCC keys.
 func MVCCKeyCompare(a, b []byte) int {
 	aEnd := len(a) - 1
 	bEnd := len(b) - 1
@@ -194,7 +193,7 @@ func MVCCKeyCompare(a, b []byte) int {
 		return 1
 	}
 
-	return bytes.Compare(bTS, aTS)
+	return bytes.Compare(aTS, bTS)
 }
 
 // <key>\x00[<version>]<#version-bytes>

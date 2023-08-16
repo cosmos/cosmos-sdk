@@ -88,7 +88,7 @@ func (itr *iterator) Next() bool {
 
 		// Move the iterator to the closest version to the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
-		itr.valid = itr.source.SeekGE(MVCCEncode(nextKey, itr.version))
+		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
 		return itr.valid
 	}
 
@@ -157,7 +157,7 @@ func (itr *iterator) debugRawIterate() {
 				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 			}
 
-			valid = itr.source.SeekGE(MVCCEncode(nextKey, itr.version))
+			valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
 		} else {
 			valid = false
 		}

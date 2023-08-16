@@ -470,10 +470,10 @@ func TestGetAppDBBackend(t *testing.T) {
 		},
 
 		{
-			name:   "only db-backend set",
+			name:   "only db_backend set",
 			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 1"},
-			exp:    dbm.BackendType("db-backend value 1"),
+			opts:   mapGetter{"db_backend": "db_backend value 1"},
+			exp:    dbm.BackendType("db_backend value 1"),
 		},
 		{
 			name:   "only DBBackend set",
@@ -491,7 +491,7 @@ func TestGetAppDBBackend(t *testing.T) {
 		{
 			name:   "app-db-backend and db-backend set",
 			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 4", "app-db-backend": "app-db-backend value 5"},
+			opts:   mapGetter{"db_backend": "db_backend value 4", "app-db-backend": "app-db-backend value 5"},
 			exp:    dbm.BackendType("app-db-backend value 5"),
 		},
 		{
@@ -501,16 +501,16 @@ func TestGetAppDBBackend(t *testing.T) {
 			exp:    dbm.BackendType("app-db-backend value 7"),
 		},
 		{
-			name:   "db-backend and DBBackend set",
+			name:   "db_backend and DBBackend set",
 			dbBack: "DBBackend value 8",
-			opts:   mapGetter{"db-backend": "db-backend value 9"},
+			opts:   mapGetter{"db_backend": "db_backend value 9"},
 			exp:    dbm.BackendType("DBBackend value 8"),
 		},
 
 		{
 			name:   "all of app-db-backend db-backend DBBackend set",
 			dbBack: "DBBackend value 10",
-			opts:   mapGetter{"db-backend": "db-backend value 11", "app-db-backend": "app-db-backend value 12"},
+			opts:   mapGetter{"db_backend": "db_backend value 11", "app-db-backend": "app-db-backend value 12"},
 			exp:    dbm.BackendType("app-db-backend value 12"),
 		},
 	}

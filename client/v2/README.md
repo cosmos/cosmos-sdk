@@ -177,6 +177,16 @@ https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetTxCmd()` are defined).
 
+### Use AutoCLI for non module commands
+
+It is possible to use `AutoCLI` for non module commands. The trick is still to implement the `appmodule.Module` interface and append it to the `appOptions.ModuleOptions` map.
+
+For example, here is how the SDK does it for `cometbft` gRPC commands:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/julien/autocli-comet/client/grpc/cmtservice/autocli.go#L52-L71
+```
+
 ## Summary
 
 `autocli` let you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.

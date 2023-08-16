@@ -129,7 +129,7 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
-			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))
+			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.ValidatorAddressCodec())
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				broken = true
@@ -199,11 +199,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 
 		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
-			addrStr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-			if err != nil {
-				panic(err)
-			}
-			validatorsDelegationShares[addrStr] = math.LegacyZeroDec()
+			validatorsDelegationShares[validator.GetOperator()] = math.LegacyZeroDec()
 		}
 
 		// iterate through all the delegations to calculate the total delegation shares for each validator
@@ -221,11 +217,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
 		for _, validator := range validators {
 			expValTotalDelShares := validator.GetDelegatorShares()
-			addrStr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-			if err != nil {
-				panic(err)
-			}
-			calculatedValTotalDelShares := validatorsDelegationShares[addrStr]
+			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator()]
 			if !calculatedValTotalDelShares.Equal(expValTotalDelShares) {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+

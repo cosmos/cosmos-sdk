@@ -56,7 +56,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+			valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+			if err != nil {
+				panic(err)
+			}
+			if err := k.Hooks().AfterValidatorCreated(ctx, valbz); err != nil {
 				panic(err)
 			}
 		}

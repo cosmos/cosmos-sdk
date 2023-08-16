@@ -58,10 +58,10 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 
 	vals := types.Validators{}
 	for _, val := range validators {
-		vals = append(vals, *val)
+		vals.Validators = append(vals.Validators, *val)
 	}
 
-	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{Validators: vals.Validators, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator address
@@ -456,7 +456,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 				return types.Delegation{}, err
 			}
 
-			validators = append(validators, validator)
+			validators.Validators = append(validators.Validators, validator)
 			return types.Delegation{}, nil
 		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
 	)
@@ -464,7 +464,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators.Validators, Pagination: pageRes}, nil
 }
 
 // Pool queries the pool info

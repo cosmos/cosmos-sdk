@@ -114,16 +114,16 @@ func (k Keeper) GetAllRedelegations(
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
-	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
 	err := k.Redelegations.Walk(ctx, rng,
-		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+		func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
 			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-			if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
 				return false, nil
 			}
 
-			if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
 				return false, nil
 			}
 

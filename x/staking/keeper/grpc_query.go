@@ -505,7 +505,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, err
 	}
 
-	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(sdk.AccAddress(delAddr), sdk.ValAddress(srcValAddr), sdk.ValAddress(dstValAddr)))
+	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr, srcValAddr, dstValAddr))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -545,9 +545,9 @@ func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Quer
 		return nil, nil, err
 	}
 
-	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (types.Redelegation, error) {
+	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[[]byte, []byte, []byte], red types.Redelegation) (types.Redelegation, error) {
 		return red, nil
-	}, query.WithCollectionPaginationTriplePrefix[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delAddr))
+	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](delAddr))
 	if err != nil {
 		return nil, nil, err
 	}

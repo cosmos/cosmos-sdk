@@ -10,8 +10,14 @@ import (
 	"strings"
 	"testing"
 
+<<<<<<< HEAD
 	tmcfg "github.com/cometbft/cometbft/config"
+=======
+	cmtcfg "github.com/cometbft/cometbft/config"
+	db "github.com/cosmos/cosmos-db"
+>>>>>>> 6b0f8add4 (fix: use correct config key for db_backend (#17406))
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,6 +42,15 @@ func preRunETestImpl(cmd *cobra.Command, args []string) error {
 	}
 
 	return cancelledInPreRun
+}
+
+func TestGetAppDBBackend(t *testing.T) {
+	v := viper.New()
+	require.Equal(t, server.GetAppDBBackend(v), db.GoLevelDBBackend)
+	v.Set("db_backend", "dbtype1") // value from CometBFT config
+	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype1"))
+	v.Set("app-db-backend", "dbtype2") // value from app.toml
+	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype2"))
 }
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {

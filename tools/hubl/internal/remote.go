@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/tools/hubl/internal/flags"
 	"cosmossdk.io/tools/hubl/internal/keyring"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )

@@ -106,18 +106,10 @@ Where proposal.json contains:
   ],
   // metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
   // see below for example metadata
-<<<<<<< HEAD
-  "metadata: "4pIMOgIGx1vZGU=",
-  "deposit": "10stake"
-  "title: "My proposal"
-  "summary": "A short summary of my proposal"
-=======
   "metadata": "4pIMOgIGx1vZGU=",
   "deposit": "10stake",
   "title": "My proposal",
-  "summary": "A short summary of my proposal",
-  "expedited": false
->>>>>>> 2d32576c8 (chore(x/gov): update proposal.json go doc (#17397))
+  "summary": "A short summary of my proposal"
 }
 
 metadata example: 

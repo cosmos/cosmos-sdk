@@ -128,7 +128,7 @@ func QueryEventForTxCmd() *cobra.Command {
 					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 				}
 			case <-ctx.Done():
-				return errors.ErrLogic.Wrapf("the transaction could have already been included or wasn't yet included")
+				return errors.ErrLogic.Wrapf("timed out waiting for event, the transaction could have already been included or wasn't yet included")
 			}
 			return nil
 		},

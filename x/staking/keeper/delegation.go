@@ -795,11 +795,16 @@ func (k Keeper) Delegate(
 		return math.LegacyZeroDec(), types.ErrDelegatorShareExRateInvalid
 	}
 
+	valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.LegacyZeroDec(), err
+	}
+
 	// Get or create the delegation object and call the appropriate hook if present
-	delegation, err := k.Delegations.Get(ctx, collections.Join(delAddr, validator.GetOperator()))
+	delegation, err := k.Delegations.Get(ctx, collections.Join(delAddr, sdk.ValAddress(valbz)))
 	if err == nil {
 		// found
-		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, valbz)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		// not found
 		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
@@ -807,13 +812,8 @@ func (k Keeper) Delegate(
 			return math.LegacyDec{}, err1
 		}
 
-		valAddrStr, err1 := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-		if err1 != nil {
-			return math.LegacyDec{}, err1
-		}
-
-		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
-		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+		delegation = types.NewDelegation(delAddrStr, validator.GetOperator(), math.LegacyZeroDec())
+		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, valbz)
 	} else {
 		return math.LegacyZeroDec(), err
 	}
@@ -886,7 +886,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Call the after-modification hook
-	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, valbz); err != nil {
 		return newShares, err
 	}
 
@@ -929,7 +929,12 @@ func (k Keeper) Unbond(
 		return amount, err
 	}
 
-	isValidatorOperator := bytes.Equal(delegatorAddress, validator.GetOperator())
+	valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return amount, err
+	}
+
+	isValidatorOperator := bytes.Equal(delegatorAddress, valbz)
 
 	// If the delegation is the operator of the validator and undelegating will decrease the validator's
 	// self-delegation below their minimum, we jail the validator.
@@ -939,7 +944,7 @@ func (k Keeper) Unbond(
 		if err != nil {
 			return amount, err
 		}
-		validator = k.mustGetValidator(ctx, validator.GetOperator())
+		validator = k.mustGetValidator(ctx, valbz)
 	}
 
 	if delegation.Shares.IsZero() {
@@ -971,7 +976,7 @@ func (k Keeper) Unbond(
 
 	if validator.DelegatorShares.IsZero() && validator.IsUnbonded() {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
-		if err = k.RemoveValidator(ctx, validator.GetOperator()); err != nil {
+		if err = k.RemoveValidator(ctx, valbz); err != nil {
 			return amount, err
 		}
 	}

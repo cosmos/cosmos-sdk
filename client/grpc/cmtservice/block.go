@@ -10,7 +10,7 @@ import (
 )
 
 func getBlockHeight(ctx context.Context, clientCtx client.Context) (int64, error) {
-	status, err := getNodeStatus(ctx, clientCtx)
+	status, err := GetNodeStatus(ctx, clientCtx)
 	if err != nil {
 		return 0, err
 	}

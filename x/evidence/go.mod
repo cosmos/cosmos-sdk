@@ -4,13 +4,8 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.7.0
-<<<<<<< HEAD
 	cosmossdk.io/collections v0.3.0
-	cosmossdk.io/core v0.9.0
-=======
-	cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68
 	cosmossdk.io/core v0.9.1-0.20230814191920-98b67a87e5c9
->>>>>>> e3a3df2a8 (refactor: move `UpgradeModule` interface to appmodule and fix mocks (#17383))
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.0
@@ -26,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -149,7 +144,7 @@ require (
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230726155614-23370e0ffb3e // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

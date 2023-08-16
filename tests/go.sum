@@ -189,8 +189,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.0 h1:QsEMIWuv9xWDbF2HZnW4Lpu1/SejCztPu0LQx7t6MN4=
 cosmossdk.io/api v0.7.0/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
-cosmossdk.io/client/v2 v2.0.0-20230814141159-7b791eefdcdc h1:Uvy/KLgvEnLaFtI21c9q6ojXnq4tSBq2scO8h0Pw0GU=
-cosmossdk.io/client/v2 v2.0.0-20230814141159-7b791eefdcdc/go.mod h1:E+EMapyhYZdkr00uStWnN39RWsw7d/F8QY3C/eBQrZk=
+cosmossdk.io/client/v2 v2.0.0-20230815132412-bc2d6742a8d9 h1:JcvL6Km0atzOBmBJ1GH3MXPT8dfXawGShcMjafbxAc4=
+cosmossdk.io/client/v2 v2.0.0-20230815132412-bc2d6742a8d9/go.mod h1:yEMp1yf2FQYPpNH/QTjLkCB1O9x3jXshV5UQU9bLOKA=
 cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68 h1:aFHpJtJgdqBH8kRvD86Rl92rvd1+JFpaUpj+5NZNodg=
 cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68/go.mod h1:OK08xZu8fxXLoQcFIfkBDayo2aRokLfC3vVcXX0MB8E=
 cosmossdk.io/core v0.9.0 h1:30ScAOHDIUOCg1DKAwqkho9wuQJnu7GUrMcg0XLioic=
@@ -207,8 +207,8 @@ cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 h1:61YFeW2AhwwPf
 cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982/go.mod h1:QAF9zeRa/9ghuv7E8NS9SzWqRbgVNwH/dZwGhYDHUjI=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4 h1:DFqO5h83+PWFSSoY32sNCePkMjDIKuRnm9MbvFxgp/g=
 cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:yoA/iygemjoFYdHQccJnTZ0RVkQu4JT+1bwTa4dCye4=
-cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4 h1:oDdr/qO3btc1rZNOccBVZWg4mYjwTJipW373j8daWno=
-cosmossdk.io/x/evidence v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:WszYbTCCseqXplYzulcTkGp2cr7FhUcRTfxRJ0gjXnQ=
+cosmossdk.io/x/evidence v0.0.0-20230814085951-3dca9f8a5a18 h1:iC10MPVmHaSurorensxOpow8HeAEYYPJubH64vnvZ3w=
+cosmossdk.io/x/evidence v0.0.0-20230814085951-3dca9f8a5a18/go.mod h1:oBbP42bB+PBJV386wYo25Dcc/9koUkrdxZDijeihT/Q=
 cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4 h1:2BqYUGgFqb+NZ2Uj4e4oxNKfO5OSkcXrvzHzjhPq5Ug=
 cosmossdk.io/x/feegrant v0.0.0-20230719143845-dff6b0e26aa4/go.mod h1:C9Vckz/HoWunY0B6dQGTpYhheUz4Cd8YROCuLSJHQ1o=
 cosmossdk.io/x/nft v0.0.0-20230719143845-dff6b0e26aa4 h1:O7/cr4RAbxkktsQWfWUo277FXz5lcoZqLFZ9hKTDJd0=

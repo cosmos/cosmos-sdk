@@ -232,13 +232,16 @@ func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator))
-	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
 
-	delegatorAddress := sdk.AccAddress(validator.GetOperator())
+	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, valbz))
+
+	delegatorAddress := sdk.AccAddress(valbz)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
 	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins))
 
-	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
+	_, err = f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
 }
 
@@ -426,8 +429,9 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
-
-			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+			assert.NilError(t, err)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, valbz, shares)
 			assert.NilError(t, err)
 		}
 
@@ -503,7 +507,9 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
-		_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+		valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		assert.NilError(t, err)
+		_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, valbz, shares)
 		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryUnbondingDelegationRequest{
@@ -612,8 +618,9 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
-
-			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+			assert.NilError(t, err)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, valbz, shares)
 			assert.NilError(t, err)
 		}
 
@@ -647,15 +654,15 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
-		vals := make(stakingtypes.Validators, 0, numVals)
+		vals := stakingtypes.Validators{}
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
-			vals = append(vals, validator)
+			vals.Validators = append(vals.Validators, validator)
 		}
 
 		historicalInfo := stakingtypes.HistoricalInfo{
 			Header: cmtproto.Header{},
-			Valset: vals,
+			Valset: vals.Validators,
 		}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")

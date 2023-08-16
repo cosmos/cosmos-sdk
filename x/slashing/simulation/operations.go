@@ -73,7 +73,12 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not ok"), nil, nil // skip
 		}
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		bz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to convert validator address to bytes"), nil, err
+		}
+
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(bz))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, nil // skip
 		}
@@ -92,7 +97,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
 		}
 
-		selfDel, err := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		selfDel, err := sk.Delegation(ctx, simAccount.Address, bz)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, err
 		}
@@ -101,7 +106,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}
 
-		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
+		account := ak.GetAccount(ctx, sdk.AccAddress(bz))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
@@ -109,7 +114,7 @@ func SimulateMsgUnjail(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}
 
-		msg := types.NewMsgUnjail(validator.GetOperator().String())
+		msg := types.NewMsgUnjail(validator.GetOperator())
 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

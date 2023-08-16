@@ -195,13 +195,15 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
 
-	delegation := stakingtypes.NewDelegation(delAddr.String(), validator.GetOperator().String(), issuedShares)
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	require.NoError(t, err)
+	delegation := stakingtypes.NewDelegation(delAddr.String(), validator.GetOperator(), issuedShares)
 	require.NoError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
-	require.NoError(t, f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, validator.GetOperator(), delAddr, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20)))
+	require.NoError(t, f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, valBz, delAddr, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20)))
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	err = f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, validator.GetOperator(), 2, historicalRewards)
+	err = f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, valBz, 2, historicalRewards)
 	require.NoError(t, err)
 	// setup current rewards and outstanding rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)

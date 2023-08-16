@@ -87,7 +87,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 
-	valStr, err := k.stakingKeeper.ValidatorAddressCodec().BytesToString(val.GetOperator())
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
 		return err
 	}
@@ -98,28 +98,28 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valStr),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
-	currentCommission, err := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+	currentCommission, err := k.GetValidatorAccumulatedCommission(ctx, valBz)
 	if err != nil {
 		return err
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
-	err = k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	err = k.SetValidatorAccumulatedCommission(ctx, valBz, currentCommission)
 	if err != nil {
 		return err
 	}
 
 	// update current rewards
-	currentRewards, err := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	currentRewards, err := k.GetValidatorCurrentRewards(ctx, valBz)
 	if err != nil {
 		return err
 	}
 
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	err = k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
+	err = k.SetValidatorCurrentRewards(ctx, valBz, currentRewards)
 	if err != nil {
 		return err
 	}
@@ -129,15 +129,15 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
 
-	outstanding, err := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valBz)
 	if err != nil {
 		return err
 	}
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	return k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+	return k.SetValidatorOutstandingRewards(ctx, valBz, outstanding)
 }

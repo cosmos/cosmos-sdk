@@ -32,6 +32,7 @@ Flags:
       --map-string-coin map[string]cosmos.base.v1beta1.Coin                  some map of string to coin
       --map-string-string stringToString                                     some map of string to string (default [])
       --map-string-uint32 stringToUint32                                     some map of string to int32
+      --no-indent                                                            Do not indent JSON output
       --node string                                                          <host>:<port> to CometBFT RPC interface for this chain (default "tcp://localhost:26657")
   -o, --output string                                                        Output format (text|json) (default "text")
       --page-count-total                                                     

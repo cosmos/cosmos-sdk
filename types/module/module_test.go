@@ -472,7 +472,7 @@ func TestCoreAPIManager_RunMigrationBeginBlock(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 
 	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockUpgradeModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreUpgradeAppModule(mockCtrl)
 	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
 		"module1": mockAppModule1,
 		"module2": mockAppModule2,

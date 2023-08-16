@@ -294,11 +294,8 @@ func TestValidatorsSortCometBFT(t *testing.T) {
 	require.NoError(t, err)
 	sort.Sort(cmttypes.ValidatorsByVotingPower(expectedVals))
 
-	// sort in SDK and then convert to CometBFT
-	sort.SliceStable(valz.Validators, func(i, j int) bool {
-		return types.ValidatorsByVotingPower(valz.Validators).Less(i, j, sdk.DefaultPowerReduction)
-	})
 	actualVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
+	sort.Sort(cmttypes.ValidatorsByVotingPower(actualVals))
 	require.NoError(t, err)
 
 	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in CometBFT")

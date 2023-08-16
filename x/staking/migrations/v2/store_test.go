@@ -13,7 +13,7 @@ import (
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -142,5 +142,5 @@ func TestStoreMigration(t *testing.T) {
 }
 
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	return append(types.ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
 }

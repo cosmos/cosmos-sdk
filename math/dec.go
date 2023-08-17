@@ -937,7 +937,7 @@ func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, s
 
 // FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the sdkmath.LegacyDec object).
+// (instead of manipulating the sdk.Dec object).
 func FormatDec(v string) (string, error) {
 	parts := strings.Split(v, ".")
 	if len(parts) > 2 {

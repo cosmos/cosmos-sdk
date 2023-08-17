@@ -336,12 +336,9 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-<<<<<<< HEAD
-func (ks keystore) ImportPubKey(uid string, armor string) error {
-=======
 func (ks keystore) ImportPrivKeyHex(uid, privKey, algoStr string) error {
 	if _, err := ks.Key(uid); err == nil {
-		return errorsmod.Wrap(ErrOverwriteKey, uid)
+		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 	if privKey[:2] == hexPrefix {
 		privKey = privKey[2:]
@@ -363,7 +360,6 @@ func (ks keystore) ImportPrivKeyHex(uid, privKey, algoStr string) error {
 }
 
 func (ks keystore) ImportPubKey(uid, armor string) error {
->>>>>>> 0e057851c (feat: import hex keys (#17424))
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}

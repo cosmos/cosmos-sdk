@@ -238,6 +238,10 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
+		validator, found = k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
 		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 
@@ -366,6 +370,11 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, types.ErrNoDelegation
 	}
 	if dstDelegation.ValidatorBond {
+		// Note: the validator must be re-read from the store since it was modified in BeginRedelegate
+		dstValidator, found := k.GetValidator(ctx, valDstAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
 		dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
 		if err != nil {
 			return nil, err
@@ -621,6 +630,11 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
+		// Note: the validator must be re-read from the store since it was modified in BeginRedelegate
+		validator, found := k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
 		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 

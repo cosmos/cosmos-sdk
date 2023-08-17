@@ -501,11 +501,11 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []types.Redelegation, err error) {
-	rng := collections.NewPrefixedTripleRange[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valAddr)
-	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](valAddr)
+	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
 		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
-		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr.Bytes(), valSrcAddr.Bytes(), valDstAddr.Bytes()))
+		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
 			return true, err
 		}
@@ -571,7 +571,7 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	if err = k.RedelegationsByValSrc.Set(ctx, collections.Join3(sdk.ValAddress(valSrcAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDestAddr)), []byte{}); err != nil {
+	if err = k.RedelegationsByValSrc.Set(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr), []byte{}); err != nil {
 		return err
 	}
 
@@ -659,7 +659,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if err = k.RedelegationsByValSrc.Remove(ctx, collections.Join3(sdk.ValAddress(valSrcAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDestAddr))); err != nil {
+	if err = k.RedelegationsByValSrc.Remove(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr)); err != nil {
 		return err
 	}
 

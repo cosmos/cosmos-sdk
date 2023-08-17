@@ -523,14 +523,14 @@ func queryRedelegationsFromSrcValidator(ctx context.Context, store storetypes.KV
 		return nil, nil, err
 	}
 
-	return query.CollectionPaginate(ctx, k.RedelegationsByValSrc, req.Pagination, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], val []byte) (types.Redelegation, error) {
+	return query.CollectionPaginate(ctx, k.RedelegationsByValSrc, req.Pagination, func(key collections.Triple[[]byte, []byte, []byte], val []byte) (types.Redelegation, error) {
 		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
-		red, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr.Bytes(), valSrcAddr.Bytes(), valDstAddr.Bytes()))
+		red, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
 			return types.Redelegation{}, err
 		}
 		return red, nil
-	}, query.WithCollectionPaginationTriplePrefix[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valAddr))
+	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](valAddr))
 }
 
 func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {

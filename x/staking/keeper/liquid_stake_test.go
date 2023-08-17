@@ -758,7 +758,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 	// from (100 * 10 = 1000) to (100 * 5 = 500)
 	// Since this is still above the initial liquid shares of 200, this will succeed
 	decreaseAmount, expectedBondShares := sdk.NewDec(5), sdk.NewDec(5)
-	err := app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, initialValidator, decreaseAmount)
+	err := app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, valAddress, decreaseAmount)
 	require.NoError(t, err)
 
 	actualValidator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
@@ -769,7 +769,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 	// This time, the cap will be reduced to (factor * shares) = (100 * 1) = 100
 	// However, the liquid shares are currently 200, so this should fail
 	decreaseAmount, expectedBondShares = sdk.NewDec(4), sdk.NewDec(1)
-	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, actualValidator, decreaseAmount)
+	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, valAddress, decreaseAmount)
 	require.ErrorIs(t, err, types.ErrInsufficientValidatorBondShares)
 
 	// Finally, disable the cap and attempt to decrease again
@@ -777,7 +777,7 @@ func TestSafelyDecreaseValidatorBond(t *testing.T) {
 	params.ValidatorBondFactor = types.ValidatorBondCapDisabled
 	app.StakingKeeper.SetParams(ctx, params)
 
-	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, actualValidator, decreaseAmount)
+	err = app.StakingKeeper.SafelyDecreaseValidatorBond(ctx, valAddress, decreaseAmount)
 	require.NoError(t, err)
 
 	actualValidator, found = app.StakingKeeper.GetValidator(ctx, valAddress)

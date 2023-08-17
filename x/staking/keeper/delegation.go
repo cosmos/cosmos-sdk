@@ -291,23 +291,6 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 	return nil
 }
 
-// IterateDelegatorRedelegations iterates through one delegator's redelegations.
-func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) error {
-	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
-	err := k.Redelegations.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], red types.Redelegation) (stop bool, err error) {
-		if cb(red) {
-			return true, nil
-		}
-
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // HasMaxUnbondingDelegationEntries checks if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)

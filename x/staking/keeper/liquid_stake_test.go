@@ -639,7 +639,7 @@ func TestSafelyIncreaseValidatorLiquidShares(t *testing.T) {
 	validatorTotalShares := sdk.NewDec(75)
 
 	firstIncreaseAmount := sdk.NewDec(20)
-	secondIncreaseAmount := sdk.NewDec(40)
+	secondIncreaseAmount := sdk.NewDec(10) // total increase of 30
 
 	initialBondFactor := sdk.NewDec(1)
 	finalBondFactor := sdk.NewDec(10)
@@ -689,7 +689,7 @@ func TestSafelyIncreaseValidatorLiquidShares(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// Finally confirm that the increase succeeded this time
-	expectedLiquidSharesAfterSecondStake := initialLiquidShares.Add(secondIncreaseAmount)
+	expectedLiquidSharesAfterSecondStake := expectedLiquidSharesAfterFirstStake.Add(secondIncreaseAmount)
 	_, err = app.StakingKeeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, secondIncreaseAmount)
 	require.NoError(t, err, "no error expected after increasing liquid staking cap")
 	checkValidatorLiquidShares(expectedLiquidSharesAfterSecondStake, "shares after loose liquid stake cap")

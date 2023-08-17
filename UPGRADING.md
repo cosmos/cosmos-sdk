@@ -220,7 +220,7 @@ Users manually wiring their chain need to use the new `module.NewBasicManagerFro
 
 #### AutoCLI
 
-[`AutoCLI`](https://docs.cosmos.network/main/building-modules/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
+[`AutoCLI`](https://docs.cosmos.network/main/core/autocli) has been implemented by the SDK for all its module CLI queries. This means chains must add the following in their `root.go` to enable `AutoCLI` in their application:
 
 ```go
 if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {

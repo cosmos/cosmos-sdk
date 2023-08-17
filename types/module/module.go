@@ -36,7 +36,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
@@ -57,7 +57,7 @@ type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(types.InterfaceRegistry)
-	RegisterGRPCGatewayRoutes(client.Context, *gwruntime.ServeMux)
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
 // HasName allows the module to provide its own name for legacy purposes.
@@ -65,13 +65,6 @@ type AppModuleBasic interface {
 // using NewManagerFromMap.
 type HasName interface {
 	Name() string
-}
-
-// UpgradeModule is the extension interface that upgrade module should implement to differentiate
-// it from other modules, migration handler need ensure the upgrade module's migration is executed
-// before the rest of the modules.
-type UpgradeModule interface {
-	IsUpgradeModule()
 }
 
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
@@ -157,7 +150,7 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *gwruntime.ServeMux) {
+func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
 		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
 	}
@@ -709,7 +702,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := mod.(UpgradeModule); ok {
+			if _, ok := mod.(appmodule.UpgradeModule); ok {
 				err := mod.BeginBlock(ctx)
 				return err == nil, err
 			}
@@ -725,7 +718,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(UpgradeModule); !ok {
+			if _, ok := module.(appmodule.UpgradeModule); !ok {
 				if err := module.BeginBlock(ctx); err != nil {
 					return sdk.BeginBlock{}, err
 				}

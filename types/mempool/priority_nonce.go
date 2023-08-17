@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/huandu/skiplist"
 
@@ -49,6 +50,7 @@ type (
 	// priority to other sender txs and must be partially ordered by both sender-nonce
 	// and priority.
 	PriorityNonceMempool[C comparable] struct {
+		mtx            sync.Mutex
 		priorityIndex  *skiplist.SkipList
 		priorityCounts map[C]int
 		senderIndices  map[string]*skiplist.SkipList
@@ -194,7 +196,9 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
 func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error {
-	if mp.cfg.MaxTx > 0 && mp.CountTx() >= mp.cfg.MaxTx {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
+	if mp.cfg.MaxTx > 0 && mp.priorityIndex.Len() >= mp.cfg.MaxTx {
 		return ErrMempoolTxMaxCapacity
 	} else if mp.cfg.MaxTx < 0 {
 		return nil
@@ -341,6 +345,8 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
 func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterator {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -409,12 +415,16 @@ func senderWeight[C comparable](txPriority TxPriority[C], senderCursor *skiplist
 
 // CountTx returns the number of transactions in the mempool.
 func (mp *PriorityNonceMempool[C]) CountTx() int {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	return mp.priorityIndex.Len()
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

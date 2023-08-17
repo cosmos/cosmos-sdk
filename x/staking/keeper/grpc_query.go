@@ -58,10 +58,10 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 
 	vals := types.Validators{}
 	for _, val := range validators {
-		vals = append(vals, *val)
+		vals.Validators = append(vals.Validators, *val)
 	}
 
-	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{Validators: vals.Validators, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator address
@@ -452,7 +452,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 				return types.Delegation{}, err
 			}
 
-			validators = append(validators, validator)
+			validators.Validators = append(validators.Validators, validator)
 			return types.Delegation{}, nil
 		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
 	)
@@ -460,7 +460,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators.Validators, Pagination: pageRes}, nil
 }
 
 // Pool queries the pool info
@@ -505,7 +505,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, err
 	}
 
-	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(sdk.AccAddress(delAddr), sdk.ValAddress(srcValAddr), sdk.ValAddress(dstValAddr)))
+	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr, srcValAddr, dstValAddr))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -545,23 +545,12 @@ func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Quer
 		return nil, nil, err
 	}
 
-	// redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-
-	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (types.Redelegation, error) {
+	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[[]byte, []byte, []byte], red types.Redelegation) (types.Redelegation, error) {
 		return red, nil
-	}, query.WithCollectionPaginationTriplePrefix[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delAddr))
+	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](delAddr))
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
-	// 	redelegation, err := types.UnmarshalRED(k.cdc, value)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	redels = append(redels, redelegation)
-	// 	return nil
-	// })
 
 	return redels, res, err
 }

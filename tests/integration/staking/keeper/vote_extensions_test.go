@@ -70,9 +70,11 @@ func TestValidateVoteExtensions(t *testing.T) {
 		sig, err := privKeys[i].Sign(extSignBytes)
 		assert.NilError(t, err)
 
+		valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(v.GetOperator())
+		assert.NilError(t, err)
 		ve := abci.ExtendedVoteInfo{
 			Validator: abci.Validator{
-				Address: v.GetOperator(),
+				Address: valbz,
 				Power:   v.ConsensusPower(sdk.DefaultPowerReduction),
 			},
 			VoteExtension:      voteExt,

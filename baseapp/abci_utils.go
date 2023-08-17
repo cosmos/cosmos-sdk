@@ -64,6 +64,12 @@ func ValidateVoteExtensions(
 
 	sumVP := math.NewInt(0)
 	for _, vote := range extCommit.Votes {
+		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
+		// previous block (the block vote is for) could not have been committed.
+		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+			continue
+		}
+
 		if !extsEnabled {
 			if len(vote.VoteExtension) > 0 {
 				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
@@ -201,7 +207,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					panic(err)
+					return nil, err
 				}
 			} else {
 				var txGasLimit uint64

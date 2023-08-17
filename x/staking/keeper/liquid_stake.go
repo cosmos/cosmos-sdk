@@ -138,7 +138,12 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 // and the total liquid staked shares cannot exceed the validator bond cap
 // 1) (TotalLiquidStakedTokens / TotalStakedTokens) <= ValidatorLiquidStakingCap
 // 2) LiquidShares <= (ValidatorBondShares * ValidatorBondFactor)
-func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) (types.Validator, error) {
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) (types.Validator, error) {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return validator, types.ErrNoValidatorFound
+	}
+
 	// Confirm the validator bond factor and validator liquid staking cap will not be exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
 		return validator, types.ErrInsufficientValidatorBondShares
@@ -155,12 +160,19 @@ func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator t
 }
 
 // DecreaseValidatorLiquidShares decrements the liquid shares on a validator
-func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) (types.Validator, error) {
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) (types.Validator, error) {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return validator, types.ErrNoValidatorFound
+	}
+
 	if shares.GT(validator.LiquidShares) {
 		return validator, types.ErrValidatorLiquidSharesUnderflow
 	}
+
 	validator.LiquidShares = validator.LiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
+
 	return validator, nil
 }
 

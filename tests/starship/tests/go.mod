@@ -50,7 +50,7 @@ require (
 	cosmossdk.io/api v0.7.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68 // indirect
-	cosmossdk.io/core v0.9.1-0.20230814191920-98b67a87e5c9 // indirect
+	cosmossdk.io/core v0.10.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 // indirect

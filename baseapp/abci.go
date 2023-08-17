@@ -551,7 +551,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// and be called again in a subsequent round.
 	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContextWithHeader(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -613,7 +613,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContextWithHeader(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
@@ -1120,7 +1120,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit multi-store for safety
-	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+	ctx := sdk.NewContextWithHeader(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))

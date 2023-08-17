@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
@@ -38,7 +37,7 @@ func Example() {
 	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger, "")
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -127,7 +126,7 @@ func Example_oneModule() {
 	logger := log.NewLogger(io.Discard)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger, "")
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,

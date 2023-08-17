@@ -121,14 +121,21 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger, chainID string) Context {
 	// https://github.com/gogo/protobuf/issues/519
-	header.Time = header.Time.UTC()
+
+	return NewContextWithHeader(ms, cmtproto.Header{ChainID: chainID}, isCheckTx, logger)
+}
+
+// create a new context
+func NewContextWithHeader(ms storetypes.MultiStore, h cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
+	// https://github.com/gogo/protobuf/issues/519
+	h.Time = h.Time.UTC()
 	return Context{
 		baseCtx:              context.Background(),
 		ms:                   ms,
-		header:               header,
-		chainID:              header.ChainID,
+		header:               h,
+		chainID:              h.ChainID,
 		checkTx:              isCheckTx,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
@@ -136,6 +143,9 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		headerInfo: header.Info{
+			Time: h.Time.UTC(),
+		},
 	}
 }
 
@@ -303,7 +313,7 @@ func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 
 // WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
-	// Settime to UTC
+	// Set time to UTC
 	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
 	return c

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
@@ -44,7 +43,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.amino = encodingConfig.Amino
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms, cmtproto.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, false, log.NewNopLogger(), "")
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

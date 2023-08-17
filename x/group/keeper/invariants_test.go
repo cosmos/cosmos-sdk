@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
@@ -42,7 +41,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	sdkCtx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	sdkCtx := sdk.NewContext(cms, false, log.NewNopLogger(), "")
 
 	s.ctx = sdkCtx
 	s.cdc = cdc

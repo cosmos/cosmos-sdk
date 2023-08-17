@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -70,7 +69,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger, "")
 
 	authority := authtypes.NewModuleAddress("gov")
 

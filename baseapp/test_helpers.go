@@ -53,11 +53,11 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 // NewContextLegacy returns a new sdk.Context with the provided header
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
+		return sdk.NewContextWithHeader(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}
 
-	return sdk.NewContext(app.finalizeBlockState.ms, header, false, app.logger)
+	return sdk.NewContextWithHeader(app.finalizeBlockState.ms, header, false, app.logger)
 }
 
 // NewContext returns a new sdk.Context with a empty header
@@ -66,7 +66,7 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+	return sdk.NewContextWithHeader(app.cms, header, isCheckTx, app.logger)
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

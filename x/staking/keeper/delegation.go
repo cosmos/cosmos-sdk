@@ -505,7 +505,7 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
 		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
-		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
+		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr.Bytes(), valSrcAddr.Bytes(), valDstAddr.Bytes()))
 		if err != nil {
 			return true, err
 		}

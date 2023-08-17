@@ -37,6 +37,7 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#hasgenesisbasics): The legacy interface for stateless genesis methods.
 * [`appmodule.HasGenesis` / `module.HasGenesis`](#hasgenesis): The extension interface for stateful genesis methods.
+* [`appmodule.HasPreBlocker`](#haspreblocker): The extension interface that contains information about the `AppModule` and `PreBlock`.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
 * [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
@@ -181,6 +182,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 ```
 
 * `ConsensusVersion() uint64`: Returns the consensus version of the module.
+
+### `HasPreBlocker`
+
+The `HasPreBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `PreBlock` method implement this interface.
 
 ### `HasBeginBlocker`
 

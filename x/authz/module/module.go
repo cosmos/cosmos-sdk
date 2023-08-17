@@ -12,10 +12,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-
-	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -90,11 +88,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetQueryCmd returns the cli query commands for the authz module
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
 }
 
 // GetTxCmd returns the transaction commands for the authz module

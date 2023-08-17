@@ -4,92 +4,38 @@ import (
 	"context"
 	"time"
 
+	"github.com/bits-and-blooms/bitset"
+
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/bits-and-blooms/bitset"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
-// ConsAddress. If not found it returns ErrNoSigningInfoFound, but other errors
-// may be returned if there is an error reading from the store.
-func (k Keeper) GetValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress) (types.ValidatorSigningInfo, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	var info types.ValidatorSigningInfo
-	bz, err := store.Get(types.ValidatorSigningInfoKey(address))
-	if err != nil {
-		return info, err
-	}
-
-	if bz == nil {
-		return info, types.ErrNoSigningInfoFound
-	}
-
-	err = k.cdc.Unmarshal(bz, &info)
-	return info, err
-}
-
 // HasValidatorSigningInfo returns if a given validator has signing information
 // persisted.
 func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAddress) bool {
-	_, err := k.GetValidatorSigningInfo(ctx, consAddr)
-	return err == nil
-}
-
-// SetValidatorSigningInfo sets the validator signing info to a consensus address key
-func (k Keeper) SetValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&info)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(types.ValidatorSigningInfoKey(address), bz)
-}
-
-// IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
-func (k Keeper) IterateValidatorSigningInfos(ctx context.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
-) error {
-	store := k.storeService.OpenKVStore(ctx)
-	iter, err := store.Iterator(types.ValidatorSigningInfoKeyPrefix, storetypes.PrefixEndBytes(types.ValidatorSigningInfoKeyPrefix))
-	if err != nil {
-		return err
-	}
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		address := types.ValidatorSigningInfoAddress(iter.Key())
-		var info types.ValidatorSigningInfo
-		err = k.cdc.Unmarshal(iter.Value(), &info)
-		if err != nil {
-			return err
-		}
-
-		if handler(address, info) {
-			break
-		}
-	}
-	return nil
+	has, err := k.ValidatorSigningInfo.Has(ctx, consAddr)
+	return err == nil && has
 }
 
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return errors.Wrap(err, "cannot jail validator that does not have any signing information")
 	}
 
 	signInfo.JailedUntil = jailTime
-	return k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // Tombstone attempts to tombstone a validator. It will panic if signing info for
 // the given validator does not exist.
 func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return types.ErrNoSigningInfoFound.Wrap("cannot tombstone validator that does not have any signing information")
 	}
@@ -99,12 +45,12 @@ func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	}
 
 	signInfo.Tombstoned = true
-	return k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
 // IsTombstoned returns if a given validator by consensus address is tombstoned.
 func (k Keeper) IsTombstoned(ctx context.Context, consAddr sdk.ConsAddress) bool {
-	signInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return false
 	}
@@ -192,8 +138,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
-	return nil
+	return k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 }
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.

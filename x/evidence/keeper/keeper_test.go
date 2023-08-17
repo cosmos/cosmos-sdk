@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetestutil "cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -35,11 +35,7 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
 
-	valAddresses = []sdk.ValAddress{
-		sdk.ValAddress(pubkeys[0].Address()),
-		sdk.ValAddress(pubkeys[1].Address()),
-		sdk.ValAddress(pubkeys[2].Address()),
-	}
+	valAddress = sdk.ValAddress(pubkeys[0].Address())
 )
 
 func newPubKey(pk string) (res cryptotypes.PubKey) {

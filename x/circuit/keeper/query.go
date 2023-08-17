@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +15,7 @@ type QueryServer struct {
 	keeper Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the circuit MsgServer interface
+// NewQueryServer returns an implementation of the circuit QueryServer interface
 // for the provided Keeper.
 func NewQueryServer(keeper Keeper) types.QueryServer {
 	return &QueryServer{keeper: keeper}
@@ -42,26 +40,26 @@ func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest)
 
 // Account returns account permissions.
 func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	var accounts []*types.GenesisAccountPermissions
-	results, pageRes, err := query.CollectionPaginate[[]byte, types.Permissions](ctx, qs.keeper.Permissions, req.Pagination)
+	results, pageRes, err := query.CollectionPaginate(
+		ctx,
+		qs.keeper.Permissions,
+		req.Pagination,
+		func(key []byte, value types.Permissions) (*types.GenesisAccountPermissions, error) {
+			addrStr, err := qs.keeper.addressCodec.BytesToString(key)
+			if err != nil {
+				return nil, err
+			}
+			return &types.GenesisAccountPermissions{
+				Address:     addrStr,
+				Permissions: &value,
+			}, nil
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, result := range results {
-		result := result
-		address, err := qs.keeper.addressCodec.BytesToString(result.Key)
-		if err != nil {
-			return nil, err
-		}
-
-		accounts = append(accounts, &types.GenesisAccountPermissions{
-			Address:     address,
-			Permissions: &result.Value,
-		})
-	}
-
-	return &types.AccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
+	return &types.AccountsResponse{Accounts: results, Pagination: pageRes}, nil
 }
 
 // DisabledList returns a list of disabled message urls
@@ -72,7 +70,7 @@ func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabled
 		msgs = append(msgs, msgUrl)
 		return false, nil
 	})
-	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 

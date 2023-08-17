@@ -7,6 +7,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,12 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
@@ -41,7 +41,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
@@ -54,7 +54,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"keyname2",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
@@ -68,7 +68,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"keyname4",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
@@ -79,7 +79,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"keyname5",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
@@ -186,7 +186,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
-			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -232,7 +232,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 
 func TestAddRecoverFileBackend(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -243,7 +243,7 @@ func TestAddRecoverFileBackend(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendFile),

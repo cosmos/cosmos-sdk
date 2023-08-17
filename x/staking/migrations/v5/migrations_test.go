@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -89,8 +90,8 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	var addedDels []stakingtypes.Delegation
 
 	for i := 1; i < 11; i++ {
-		del1 := stakingtypes.NewDelegation(accAddrs[i], valAddrs[0], sdkmath.LegacyNewDec(100))
-		store.Set(stakingtypes.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
+		del1 := stakingtypes.NewDelegation(accAddrs[i].String(), valAddrs[0].String(), sdkmath.LegacyNewDec(100))
+		store.Set(v5.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
 		addedDels = append(addedDels, del1)
 	}
 
@@ -111,15 +112,15 @@ func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.Sto
 	var delegations []stakingtypes.Delegation
 
 	store := ctx.KVStore(storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, stakingtypes.GetDelegationsByValPrefixKey(valAddr))
+	iterator := storetypes.KVStorePrefixIterator(store, v5.GetDelegationsByValPrefixKey(valAddr))
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation stakingtypes.Delegation
-		valAddr, delAddr, err := stakingtypes.ParseDelegationsByValKey(iterator.Key())
+		valAddr, delAddr, err := v5.ParseDelegationsByValKey(iterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		bz := store.Get(stakingtypes.GetDelegationKey(delAddr, valAddr))
+		bz := store.Get(v5.GetDelegationKey(delAddr, valAddr))
 
 		cdc.MustUnmarshal(bz, &delegation)
 

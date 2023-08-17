@@ -9,8 +9,6 @@ import (
 	"os"
 	"runtime/pprof"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -21,14 +19,16 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -49,6 +49,7 @@ const (
 	flagTraceStore         = "trace-store"
 	flagCPUProfile         = "cpu-profile"
 	FlagMinGasPrices       = "minimum-gas-prices"
+	FlagQueryGasLimit      = "query-gas-limit"
 	FlagHaltHeight         = "halt-height"
 	FlagHaltTime           = "halt-time"
 	FlagInterBlockCache    = "inter-block-cache"
@@ -102,13 +103,13 @@ type StartCmdOptions struct {
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // CometBFT.
-func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
-	return StartCmdWithOptions(appCreator, defaultNodeHome, StartCmdOptions{})
+func StartCmd(appCreator types.AppCreator) *cobra.Command {
+	return StartCmdWithOptions(appCreator, StartCmdOptions{})
 }
 
 // StartCmdWithOptions runs the service passed in, either stand-alone or in-process with
 // CometBFT.
-func StartCmdWithOptions(appCreator types.AppCreator, defaultNodeHome string, opts StartCmdOptions) *cobra.Command {
+func StartCmdWithOptions(appCreator types.AppCreator, opts StartCmdOptions) *cobra.Command {
 	if opts.DBOpener == nil {
 		opts.DBOpener = openDB
 	}
@@ -173,12 +174,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	cmd.Flags().Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
@@ -257,7 +258,7 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	cmtApp := NewCometABCIWrapper(app)
 	svr, err := server.NewServer(addr, transport, cmtApp)
 	if err != nil {
-		return fmt.Errorf("error creating listener: %v", err)
+		return fmt.Errorf("error creating listener: %w", err)
 	}
 
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
@@ -288,13 +289,15 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
+	g, ctx := getCtx(svrCtx, true)
+
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, cleanupFn, err := startCmtNode(cmtCfg, app, svrCtx)
+		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
 		if err != nil {
 			return err
 		}
@@ -313,8 +316,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
 	}
-
-	g, ctx := getCtx(svrCtx, true)
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
@@ -339,6 +340,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 // TODO: Move nodeKey into being created within the function.
 func startCmtNode(
+	ctx context.Context,
 	cfg *cmtcfg.Config,
 	app types.Application,
 	svrCtx *Context,
@@ -349,7 +351,8 @@ func startCmtNode(
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNode(
+	tmNode, err = node.NewNodeWithContext(
+		ctx,
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,

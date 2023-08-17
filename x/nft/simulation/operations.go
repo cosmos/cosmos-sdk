@@ -3,6 +3,9 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,9 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
 )
 
 const (

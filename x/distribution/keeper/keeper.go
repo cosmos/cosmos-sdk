@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"github.com/cockroachdb/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,6 +37,9 @@ type Keeper struct {
 	DelegatorStartingInfo           collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
 	ValidatorOutstandingRewards     collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
+	ValidatorHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
+	PreviousProposer                collections.Item[sdk.ConsAddress]
+	ValidatorSlashEvents            collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent] // key is valAddr, height, period
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -96,6 +100,22 @@ func NewKeeper(
 			"validator_outstanding_rewards",
 			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorOutstandingRewards](cdc),
+		),
+
+		ValidatorHistoricalRewards: collections.NewMap(
+			sb,
+			types.ValidatorHistoricalRewardsPrefix,
+			"validator_historical_rewards",
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
+		),
+		PreviousProposer: collections.NewItem(sb, types.ProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey)),
+		ValidatorSlashEvents: collections.NewMap(
+			sb,
+			types.ValidatorSlashEventPrefix,
+			"validator_slash_events",
+			collections.TripleKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), collections.Uint64Key, collections.Uint64Key), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			codec.CollValue[types.ValidatorSlashEvent](cdc),
 		),
 	}
 
@@ -237,7 +257,7 @@ func (k Keeper) GetTotalRewards(ctx context.Context) (totalRewards sdk.DecCoins)
 		return false, nil
 	},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 

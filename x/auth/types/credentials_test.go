@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewModuleCrendentials(t *testing.T) {

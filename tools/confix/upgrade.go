@@ -35,24 +35,24 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 
 	doc, err := LoadConfig(configPath)
 	if err != nil {
-		return fmt.Errorf("loading config: %v", err)
+		return fmt.Errorf("loading config: %w", err)
 	}
 
 	// transforms doc and reports whether it succeeded.
 	if err := plan.Apply(ctx, doc); err != nil {
-		return fmt.Errorf("updating %q: %v", configPath, err)
+		return fmt.Errorf("updating %q: %w", configPath, err)
 	}
 
 	var buf bytes.Buffer
 	if err := tomledit.Format(&buf, doc); err != nil {
-		return fmt.Errorf("formatting config: %v", err)
+		return fmt.Errorf("formatting config: %w", err)
 	}
 
 	// allow to skip validation
 	if !skipValidate {
 		// verify that file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
-			return fmt.Errorf("updated config is invalid: %v", err)
+			return fmt.Errorf("updated config is invalid: %w", err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func CheckValid(fileName string, data []byte) error {
 		}
 
 		if err := cfg.ValidateBasic(); err != nil {
-			return fmt.Errorf("server config invalid : %w", err)
+			return fmt.Errorf("server config invalid: %w", err)
 		}
 	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig

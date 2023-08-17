@@ -68,7 +68,7 @@ func ParseInfo(infoStr string, opts ...ParseOption) (*Info, error) {
 	// Now, try to parse it into the expected structure.
 	var planInfo Info
 	if err := json.Unmarshal(conv.UnsafeStrToBytes(infoStr), &planInfo); err != nil {
-		return nil, fmt.Errorf("could not parse plan info: %v", err)
+		return nil, fmt.Errorf("could not parse plan info: %w", err)
 	}
 
 	planInfo.parseConfig = *parseConfig

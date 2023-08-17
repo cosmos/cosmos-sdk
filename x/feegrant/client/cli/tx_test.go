@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
@@ -15,6 +14,7 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"

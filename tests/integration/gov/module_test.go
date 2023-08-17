@@ -3,9 +3,10 @@ package gov_test
 import (
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	storetypes "cosmossdk.io/store/types"
-
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -24,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -227,7 +226,9 @@ func TestSigVerification(t *testing.T) {
 						},
 						Sequence: tc.accSeqs[0],
 					}
-					suite.txBuilder.SetSignatures(txSigs...)
+					err := suite.txBuilder.SetSignatures(txSigs...)
+					require.NoError(t, err)
+
 					tx = suite.txBuilder.GetTx()
 				}
 
@@ -266,6 +267,7 @@ func TestSigIntegration(t *testing.T) {
 }
 
 func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
+	t.Helper()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

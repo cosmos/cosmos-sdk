@@ -2,25 +2,21 @@ package consensus
 
 import (
 	"context"
-	"encoding/json"
+
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/depinject"
-	abci "github.com/cometbft/cometbft/abci/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-
 	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
@@ -35,29 +31,17 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-// AppModuleBasic defines the basic application module used by the consensus_param module.
+// AppModuleBasic defines the basic application module used by the consensus module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the consensus_param module's name.
+// Name returns the consensus module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the consensus_param module's types on the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the consensus_param
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// nil is returned since default genesis of consensus params is handled by tendermint
-	return nil
-}
-
-// ValidateGenesis performs genesis state validation
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
@@ -65,16 +49,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the root tx command
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-// GetQueryCmd returns no root query command
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
@@ -115,20 +89,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the consensus_param module's name.
+// Name returns the consensus module's name.
 func (AppModule) Name() string { return types.ModuleName }
-
-// InitGenesis is handled by for init genesis of consensus_param
-func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate {
-	// nil is returned since initgenesis of consensus params is handled by tendermint
-	return nil
-}
-
-// ExportGenesis is handled by CometBFT export of genesis
-func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage {
-	// nil is returned since ExportGenesis of consensus params is handled by CometBFT and baseapp
-	return nil
-}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

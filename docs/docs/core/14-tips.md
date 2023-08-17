@@ -29,19 +29,19 @@ The transaction tips flow happens in multiple steps.
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
 	```protobuf reference
-	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L237-L256
+	https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L231-L244
 	```
 
 	where we have defined `SignDocDirectAux` as:
 
 	```protobuf reference
-	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L97
+	https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L68-L98
 	```
 
 	where `Tip` is defined as
 
 	```protobuf reference
-	https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L226-L235
+	https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L233-L244
 	```
 
 	Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
@@ -160,7 +160,7 @@ For both commands, the flag `--sign-mode=amino-json` is still available for hard
 
 ## Programmatic Usage
 
-For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/aux_builder.go#L16), and can be used as follows:
+For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx/aux_builder.go#L22), and can be used as follows:
 
 ```go
 // Note: there's no need to use clientCtx.TxConfig anymore.

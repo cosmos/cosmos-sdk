@@ -5,7 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
@@ -13,9 +16,6 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -95,7 +95,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			false,
 			func() {
 				_, err := suite.keeper.Evidences.Iterate(suite.ctx, nil)
-				suite.Require().ErrorIs(err, collections.ErrInvalidIterator)
+				suite.Require().NoError(err)
 			},
 		},
 	}

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
 	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/pkg/errors"
 )
 
 // Simulation operation weights constants
@@ -136,7 +138,11 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 
 		delegation := delegations[r.Intn(len(delegations))]
 
-		validator, err := sk.Validator(ctx, delegation.GetValidatorAddr())
+		delAddr, err := sk.ValidatorAddressCodec().StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error converting validator address"), nil, err
+		}
+		validator, err := sk.Validator(ctx, delAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting validator"), nil, err
 		}
@@ -147,7 +153,7 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address.String(), validator.GetOperator())
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -184,7 +190,12 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
-		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, validator.GetOperator())
+		valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error converting validator address"), nil, err
+		}
+
+		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator commission"), nil, err
 		}
@@ -193,7 +204,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator commission is zero"), nil, nil
 		}
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(valBz))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
@@ -250,7 +261,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			}
 		}
 
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
+		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address.String())
 
 		txCtx := simulation.OperationInput{
 			R:             r,

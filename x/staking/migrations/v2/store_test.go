@@ -9,6 +9,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,17 +60,17 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsByConsAddrKey",
 			v1.GetValidatorByConsAddrKey(consAddr),
-			types.GetValidatorByConsAddrKey(consAddr),
+			v2.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",
 			v1.GetValidatorsByPowerIndexKey(val),
-			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction),
+			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction, address.NewBech32Codec("cosmosvaloper")),
 		},
 		{
 			"DelegationKey",
 			v1.GetDelegationKey(addr4, valAddr1),
-			types.GetDelegationKey(addr4, valAddr1),
+			v2.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",
@@ -84,7 +85,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationKey",
 			v1.GetREDKey(addr4, valAddr1, valAddr2),
-			types.GetREDKey(addr4, valAddr1, valAddr2),
+			v2.GetREDKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValSrcIndexKey",

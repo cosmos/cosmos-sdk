@@ -7,15 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testnet"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 // Use a limited set of available ports to ensure that
@@ -123,7 +125,12 @@ func TestCometStarter_PortContention(t *testing.T) {
 
 			// Ensure nodes are stopped completely,
 			// so that we don't get t.Cleanup errors around directories not being empty.
-			defer nodes.StopAndWait()
+			defer func() {
+				err := nodes.StopAndWait()
+				if err != nil {
+					panic(err)
+				}
+			}()
 			require.NoError(t, err)
 
 			// Ensure that the height advances.

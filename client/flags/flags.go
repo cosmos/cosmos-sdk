@@ -76,6 +76,7 @@ const (
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
+	FlagKeyAlgorithm     = "algo"
 	FlagKeyType          = "key-type"
 	FlagFeePayer         = "fee-payer"
 	FlagFeeGranter       = "fee-granter"

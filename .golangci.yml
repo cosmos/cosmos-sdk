@@ -1,20 +1,25 @@
 run:
   tests: true
-  timeout: 10m
+  timeout: 15m
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
   skip-files:
     - server/grpc/gogoreflection/fix_registration.go
+    - "fix_registration.go"
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.gw\\.go$"
+    - ".*\\.pulsar\\.go$"
 
 linters:
   disable-all: true
   enable:
-    - depguard
+    - errcheck
     - dogsled
     - exportloopref
     - goconst
     - gocritic
+    - gci
     - gofumpt
     - gosec
     - gosimple
@@ -27,6 +32,7 @@ linters:
     - revive
     - stylecheck
     - typecheck
+    - thelper
     - unconvert
     - unused
 
@@ -50,14 +56,37 @@ issues:
     - text: "SA1019: codec.NewAminoCodec is deprecated" # TODO remove once migration path is set out
       linters:
         - staticcheck
+    - text: "SA1019: legacybech32.MustMarshalPubKey" # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
+    - text: "SA1019: legacybech32.MarshalPubKey" # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
+    - text: "SA1019: legacybech32.UnmarshalPubKey" # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
+    - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
+      linters:
+        - staticcheck
     - text: "leading space"
       linters:
         - nolintlint
-
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
 linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(cosmossdk.io)
+      - prefix(github.com/cosmos/cosmos-sdk)
+  revive:
+    rules:
+      - name: redefines-builtin-id
+        disabled: true
+
   gosec:
     # To select a subset of rules to run.
     # Available rules: https://github.com/securego/gosec#available-rules
@@ -102,7 +131,7 @@ linters-settings:
   gofumpt:
     extra-rules: true
   dogsled:
-    max-blank-identifiers: 5
+    max-blank-identifiers: 6
   maligned:
     suggest-new: true
   nolintlint:
@@ -112,7 +141,6 @@ linters-settings:
     require-specific: false
   gosimple:
     checks: ["all"]
-
   gocritic:
     disabled-checks:
       - regexpMust

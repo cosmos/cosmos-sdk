@@ -43,35 +43,21 @@ const (
 //
 // - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
-// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height><period>: ValidatorSlashEvent
 //
 // - 0x09: Params
 var (
 	FeePoolKey                           = collections.NewPrefix(0) // key for global distribution state
-	ProposerKey                          = []byte{0x01}             // key for the proposer operator address
+	ProposerKey                          = collections.NewPrefix(1) // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix    = collections.NewPrefix(2) // key for outstanding rewards
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = collections.NewPrefix(4) // key for delegator starting info
-	ValidatorHistoricalRewardsPrefix     = []byte{0x05}             // key for historical validators rewards / stake
+	ValidatorHistoricalRewardsPrefix     = collections.NewPrefix(5) // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = collections.NewPrefix(6) // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
-	ValidatorSlashEventPrefix            = []byte{0x08}             // key for validator slash fraction
+	ValidatorSlashEventPrefix            = collections.NewPrefix(8) // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
 )
-
-// GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
-func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
-	// key is in the format:
-	// 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
-	kv.AssertKeyAtLeastLength(key, 2)
-	valAddrLen := int(key[1])
-	kv.AssertKeyAtLeastLength(key, 3+valAddrLen)
-	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	b := key[2+valAddrLen:]
-	kv.AssertKeyLength(b, 8)
-	period = binary.LittleEndian.Uint64(b)
-	return
-}
 
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
@@ -86,18 +72,6 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
-}
-
-// GetValidatorHistoricalRewardsPrefix creates the prefix key for a validator's historical rewards.
-func GetValidatorHistoricalRewardsPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
-}
-
-// GetValidatorHistoricalRewardsKey creates the key for a validator's historical rewards.
-func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, k)
-	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
 }
 
 // GetValidatorSlashEventPrefix creates the prefix key for a validator's slash fractions.

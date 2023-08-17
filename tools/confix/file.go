@@ -26,7 +26,7 @@ func LoadLocalConfig(name string) (*tomledit.Document, error) {
 func LoadConfig(path string) (*tomledit.Document, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %q: %v", path, err)
+		return nil, fmt.Errorf("failed to open %q: %w", path, err)
 	}
 	defer f.Close()
 

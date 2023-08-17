@@ -35,7 +35,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +46,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
+	valAddr, err := k.sk.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddr)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("validator input address: %s", err)
 	}

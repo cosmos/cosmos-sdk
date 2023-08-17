@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -40,16 +40,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var previousProposer sdk.ConsAddress
 	if data.PreviousProposer != "" {
 		var err error
-		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
+		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, previousProposer)
+	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
+		panic(err)
+	}
 
 	for _, rew := range data.OutstandingRewards {
-		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -60,7 +62,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		valAddr, err := sdk.ValAddressFromBech32(acc.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(acc.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -70,17 +72,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +92,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -99,17 +101,27 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(valAddr, sdk.AccAddress(delegatorAddress)), del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
 		if err != nil {
 			panic(err)
 		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+
+		err = k.ValidatorSlashEvents.Set(
+			ctx,
+			collections.Join3(
+				sdk.ValAddress(valAddr),
+				evt.Height,
+				evt.Period,
+			),
+			evt.ValidatorSlashEvent,
+		)
+
 		if err != nil {
 			panic(err)
 		}
@@ -153,11 +165,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
-	pp, err := k.GetPreviousProposerConsAddr(ctx)
+	pp, err := k.PreviousProposer.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -172,7 +184,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false, nil
 	},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -184,21 +196,24 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
-	k.IterateValidatorHistoricalRewards(ctx,
-		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
+	err = k.ValidatorHistoricalRewards.Walk(ctx, nil,
+		func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
-				ValidatorAddress: val.String(),
-				Period:           period,
+				ValidatorAddress: key.K1().String(),
+				Period:           key.K2(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
 	err = k.ValidatorCurrentRewards.Walk(ctx, nil,
@@ -210,7 +225,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -223,22 +238,28 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
-	k.IterateValidatorSlashEvents(ctx,
-		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
+	err = k.ValidatorSlashEvents.Walk(
+		ctx,
+		nil,
+		func(k collections.Triple[sdk.ValAddress, uint64, uint64], event types.ValidatorSlashEvent) (stop bool, err error) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
-				ValidatorAddress:    val.String(),
-				Height:              height,
+				ValidatorAddress:    k.K1().String(),
+				Height:              k.K2(),
 				Period:              event.ValidatorPeriod,
 				ValidatorSlashEvent: event,
 			})
-			return false
+			return false, nil
 		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

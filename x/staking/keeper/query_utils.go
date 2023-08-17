@@ -3,80 +3,85 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
+// GetDelegatorValidators returns all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(
 	ctx context.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) (types.Validators, error) {
 	validators := make([]types.Validator, maxRetrieve)
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
 
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
+	var i uint32
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegatorAddr)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		if i >= maxRetrieve {
+			return true, nil
+		}
 
-	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-
-		validator, err := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 		if err != nil {
-			return nil, err
+			return false, err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return false, err
 		}
 
 		validators[i] = validator
 		i++
+
+		return false, nil
+	})
+	if err != nil {
+		return types.Validators{}, err
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
-// return a validator that a delegator is bonded to
+// GetDelegatorValidator returns a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-	delegation, err := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	delegation, err := k.Delegations.Get(ctx, collections.Join(delegatorAddr, validatorAddr))
 	if err != nil {
 		return validator, err
 	}
 
-	return k.GetValidator(ctx, delegation.GetValidatorAddr())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return validator, err
+	}
+
+	return k.GetValidator(ctx, valAddr)
 }
 
-// return all delegations for a delegator
+// GetAllDelegatorDelegations returns all delegations of a delegator
 func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	var i int64
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		delegations = append(delegations, del)
+		i++
 
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
-	}
-	defer iterator.Close()
-
-	for i := 0; iterator.Valid(); iterator.Next() {
-		delegation, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-		delegations = append(delegations, delegation)
-		i++
 	}
 
 	return delegations, nil
 }
 
-// return all unbonding-delegations for a delegator
+// GetAllUnbondingDelegations returns all unbonding-delegations of a delegator
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
@@ -101,43 +106,33 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 	return unbondingDelegations, nil
 }
 
-// return all redelegations for a delegator
+// GetAllRedelegations returns all redelegations of a delegator
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
+	err := k.Redelegations.Walk(ctx, rng,
+		func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
+			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorSrcAddress)
-		if err != nil {
-			return nil, err
-		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
-		if err != nil {
-			return nil, err
-		}
-		if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
-			continue
-		}
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
+				return false, nil
+			}
 
-		if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
-			continue
-		}
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
+				return false, nil
+			}
 
-		redelegations = append(redelegations, redelegation)
+			redelegations = append(redelegations, redelegation)
+			return false, nil
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	return redelegations, nil

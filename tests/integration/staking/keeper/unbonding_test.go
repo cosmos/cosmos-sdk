@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +19,7 @@ import (
 
 // SetupUnbondingTests creates two validators and setup mocked staking hooks for testing unbonding
 func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uint64) (bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
+	t.Helper()
 	// setup hooks
 	mockCtrl := gomock.NewController(t)
 	mockStackingHooks := testutil.NewMockStakingHooks(mockCtrl)
@@ -66,7 +68,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	assert.Assert(t, validator1.IsBonded())
 
 	// Create a delegator
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
+	delegation := types.NewDelegation(addrDels[0].String(), addrVals[0].String(), issuedShares1)
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
 
 	// Create a validator to redelegate to
@@ -91,6 +93,7 @@ func doUnbondingDelegation(
 	addrVals []sdk.ValAddress,
 	hookCalled *bool,
 ) (completionTime time.Time, bondedAmt, notBondedAmt math.Int) {
+	t.Helper()
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -128,6 +131,7 @@ func doRedelegation(
 	addrVals []sdk.ValAddress,
 	hookCalled *bool,
 ) (completionTime time.Time) {
+	t.Helper()
 	var err error
 	completionTime, err = stakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], math.LegacyNewDec(1))
 	assert.NilError(t, err)
@@ -151,6 +155,7 @@ func doValidatorUnbonding(
 	addrVal sdk.ValAddress,
 	hookCalled *bool,
 ) (validator types.Validator) {
+	t.Helper()
 	validator, found := stakingKeeper.GetValidator(ctx, addrVal)
 	assert.Assert(t, found)
 	// Check that status is bonded

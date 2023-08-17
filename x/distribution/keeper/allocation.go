@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -88,35 +89,40 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 
+	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+	if err != nil {
+		return err
+	}
+
 	// update current commission
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
-	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, val.GetOperator())
+	currentCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
-	err = k.ValidatorsAccumulatedCommission.Set(ctx, val.GetOperator(), currentCommission)
+	err = k.ValidatorsAccumulatedCommission.Set(ctx, valBz, currentCommission)
 	if err != nil {
 		return err
 	}
 
 	// update current rewards
-	currentRewards, err := k.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
+	currentRewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
 	// if the rewards do not exist it's fine, we will just add to zero.
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	err = k.ValidatorCurrentRewards.Set(ctx, val.GetOperator(), currentRewards)
+	err = k.ValidatorCurrentRewards.Set(ctx, valBz, currentRewards)
 	if err != nil {
 		return err
 	}
@@ -126,15 +132,15 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 		sdk.NewEvent(
 			types.EventTypeRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
 		),
 	)
 
-	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, val.GetOperator())
+	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	return k.ValidatorOutstandingRewards.Set(ctx, val.GetOperator(), outstanding)
+	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// does a certain by-power index record exist
+// ValidatorByPowerIndexExists does a certain by-power index record exist
 func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []byte) bool {
 	store := keeper.storeService.OpenKVStore(ctx)
 	has, err := store.Has(power)
@@ -20,7 +20,7 @@ func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []by
 	return has
 }
 
-// update validator for testing
+// TestingUpdateValidator updates a validator for testing
 func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	err := keeper.SetValidator(ctx, validator)
 	if err != nil {
@@ -37,9 +37,14 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	}
 	defer iterator.Close()
 
+	bz, err := keeper.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+
 	for ; iterator.Valid(); iterator.Next() {
 		valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
-		if bytes.Equal(valAddr, validator.GetOperator()) {
+		if bytes.Equal(valAddr, bz) {
 			if deleted {
 				panic("found duplicate power index key")
 			} else {
@@ -64,7 +69,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 		panic(err)
 	}
 
-	validator, err = keeper.GetValidator(ctx, validator.GetOperator())
+	validator, err = keeper.GetValidator(ctx, sdk.ValAddress(bz))
 	if err != nil {
 		panic(err)
 	}

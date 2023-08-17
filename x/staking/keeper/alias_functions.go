@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 
 // Validator Set
 
-// iterate through the validator set and perform the provided function
+// IterateValidators iterates through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
@@ -38,7 +39,7 @@ func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, vali
 	return nil
 }
 
-// iterate through the bonded validator set and perform the provided function
+// IterateBondedValidatorsByPower iterates through the bonded validator set and perform the provided function
 func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	maxValidators, err := k.MaxValidators(ctx)
@@ -69,7 +70,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 	return nil
 }
 
-// iterate through the active validator set and perform the provided function
+// IterateLastValidators iterates through the active validator set and perform the provided function
 func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
 	iterator, err := k.LastValidatorsIterator(ctx)
 	if err != nil {
@@ -108,14 +109,14 @@ func (k Keeper) ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (
 
 // Delegation Set
 
-// Returns self as it is both a validatorset and delegationset
+// GetValidatorSet returns self as it is both a validatorset and delegationset
 func (k Keeper) GetValidatorSet() types.ValidatorSet {
 	return k
 }
 
-// Delegation get the delegation interface for a particular set of delegator and validator addresses
+// Delegation gets the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
-	bond, err := k.GetDelegation(ctx, addrDel, addrVal)
+	bond, err := k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
 	if err != nil {
 		return nil, err
 	}
@@ -123,35 +124,29 @@ func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal 
 	return bond, nil
 }
 
-// iterate through all of the delegations from a delegator
+// IterateDelegations iterates through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
 ) error {
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	for i := int64(0); iterator.Valid(); iterator.Next() {
-		del, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
-
-		stop := fn(i, del)
+	var i int64
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delAddr)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		stop = fn(i, del)
 		if stop {
-			break
+			return true, nil
 		}
 		i++
+
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// return all delegations used during genesis dump
+// GetAllSDKDelegations returns all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
 func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.Delegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)

@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"cosmossdk.io/errors"
-
 	"cosmossdk.io/store/types"
 )
 
@@ -196,5 +195,8 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
-	io.WriteString(w, "\n")
+	_, err = io.WriteString(w, "\n")
+	if err != nil {
+		panic(err)
+	}
 }

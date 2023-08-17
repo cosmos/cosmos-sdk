@@ -1,8 +1,5 @@
 package types
 
-// Handler defines the core of the state transition function of an application.
-type Handler func(ctx Context, msg Msg) (*Result, error)
-
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
@@ -100,6 +97,8 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 //	      \ '\ /     \  |     |  _/       /
 //	       \  \       \ |     | /        /
 //	 snd    \  \      \        /
+//
+// Deprecated: Terminator is retired (ref https://github.com/cosmos/cosmos-sdk/pull/16076).
 type Terminator struct{}
 
 // AnteHandle returns the provided Context and nil error

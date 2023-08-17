@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"
@@ -190,6 +189,7 @@ func TestImportExportQueues(t *testing.T) {
 }
 
 func clearDB(t *testing.T, db *dbm.MemDB) {
+	t.Helper()
 	iter, err := db.Iterator(nil, nil)
 	assert.NilError(t, err)
 	defer iter.Close()

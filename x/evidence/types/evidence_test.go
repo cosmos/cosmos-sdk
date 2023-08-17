@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/x/evidence/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/x/evidence/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,7 +29,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.GetTotalPower(), int64(0))
 	require.Equal(t, e.GetValidatorPower(), e.Power)
 	require.Equal(t, e.GetTime(), e.Time)
-	require.Equal(t, e.GetConsensusAddress().String(), e.ConsensusAddress)
+	require.Equal(t, e.GetConsensusAddress(address.NewBech32Codec("cosmosvalcons")).String(), e.ConsensusAddress)
 	require.Equal(t, e.GetHeight(), e.Height)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
 	require.Equal(t, strings.ToUpper(hex.EncodeToString(e.Hash())), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
@@ -37,7 +39,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, int64(0), e.GetTotalPower())
 	require.Equal(t, e.Power, e.GetValidatorPower())
 	require.Equal(t, e.Time, e.GetTime())
-	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress().String())
+	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress(address.NewBech32Codec("cosmosvalcons")).String())
 	require.Equal(t, e.Height, e.GetHeight())
 	require.Equal(t, types.RouteEquivocation, e.Route())
 	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", strings.ToUpper(hex.EncodeToString(e.Hash())))
@@ -75,8 +77,8 @@ func TestEvidenceAddressConversion(t *testing.T) {
 	tmEvidence := NewCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
 		validator{address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, power: 100})
 
-	evidence := types.FromABCIEvidence(tmEvidence)
-	consAddr := evidence.GetConsensusAddress()
+	evidence := types.FromABCIEvidence(tmEvidence, address.NewBech32Codec("testcnclcons"))
+	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator().Address(), consAddr.Bytes())
 	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)

@@ -3,14 +3,15 @@ package module_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -47,7 +48,7 @@ func TestFeegrantPruning(t *testing.T) {
 
 	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
-	feegrantKeeper.GrantAllowance(
+	err := feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter1,
 		grantee,
@@ -55,7 +56,9 @@ func TestFeegrantPruning(t *testing.T) {
 			Expiration: &now,
 		},
 	)
-	feegrantKeeper.GrantAllowance(
+	require.NoError(t, err)
+
+	err = feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter2,
 		grantee,
@@ -63,7 +66,9 @@ func TestFeegrantPruning(t *testing.T) {
 			SpendLimit: spendLimit,
 		},
 	)
-	feegrantKeeper.GrantAllowance(
+	require.NoError(t, err)
+
+	err = feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter3,
 		grantee,
@@ -71,6 +76,7 @@ func TestFeegrantPruning(t *testing.T) {
 			Expiration: &oneDay,
 		},
 	)
+	require.NoError(t, err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
@@ -83,7 +89,7 @@ func TestFeegrantPruning(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Len(t, res.Allowances, 3)
+	require.Len(t, res.Allowances, 2)
 
 	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
 	module.EndBlocker(testCtx.Ctx, feegrantKeeper)

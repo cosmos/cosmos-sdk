@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -180,6 +180,15 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 func (k Keeper) assertMetadataLength(metadata string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
+}
+
+// assertSummaryLength returns an error if given summary length
+// is greater than a pre-defined 40*MaxMetadataLen.
+func (keeper Keeper) assertSummaryLength(summary string) error {
+	if summary != "" && uint64(len(summary)) > 40*keeper.config.MaxMetadataLen {
+		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil
 }

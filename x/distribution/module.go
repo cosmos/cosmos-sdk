@@ -10,12 +10,10 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
-	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +31,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.
-const ConsensusVersion = 3
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
@@ -81,12 +79,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(ab.ac)
-}
-
-// GetQueryCmd returns the root query command for the distribution module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd(ab.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(), ab.cdc.InterfaceRegistry().SigningContext().AddressCodec())
 }
 
 // RegisterInterfaces implements InterfaceModule
@@ -155,6 +148,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
 }
 

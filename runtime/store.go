@@ -4,11 +4,10 @@ import (
 	"context"
 	"io"
 
-	"cosmossdk.io/core/store"
-
-	storetypes "cosmossdk.io/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

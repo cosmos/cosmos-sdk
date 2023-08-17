@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -23,7 +23,7 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the bank MsgServer interface
+// NewMsgServerImpl returns an implementation of the staking MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
@@ -33,12 +33,12 @@ var _ types.MsgServer = msgServer{}
 
 // CreateValidator defines a method for creating a new validator
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if err := msg.Validate(); err != nil {
+	if err := msg.Validate(k.validatorAddressCodec); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +99,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		}
 	}
 
-	validator, err := types.NewValidator(valAddr, pk, msg.Description)
+	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	}
 
 	// call the after-creation hook
-	if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
 		return nil, err
 	}
 
@@ -157,7 +157,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 // EditValidator defines a method for editing an existing validator
 func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -176,6 +176,15 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
 			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
+		}
+
+		minCommissionRate, err := k.MinCommissionRate(ctx)
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())
+		}
+
+		if msg.CommissionRate.LT(minCommissionRate) {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "commission rate cannot be less than the min commission rate %s", minCommissionRate.String())
 		}
 	}
 
@@ -238,7 +247,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 
 // Delegate defines a method for performing a delegation of coins from a delegator to a validator
 func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
-	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, valErr := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if valErr != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", valErr)
 	}
@@ -301,14 +310,14 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 	return &types.MsgDelegateResponse{}, nil
 }
 
-// BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator
+// BeginRedelegate defines a method for performing a redelegation of coins from a source validator to a destination validator of given delegator
 func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
-	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
+	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorSrcAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid source validator address: %s", err)
 	}
 
-	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
+	valDstAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorDstAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid destination validator address: %s", err)
 	}
@@ -379,7 +388,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 
 // Undelegate defines a method for performing an undelegation from a delegate and a validator
 func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
-	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	addr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -451,7 +460,7 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation
 // and delegate back to the validator.
 func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -576,6 +585,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
+// UpdateParams defines a method to perform updation of params exist in x/staking module.
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)

@@ -12,9 +12,7 @@ This document describes how to upgrade your application. If you are looking spec
 This section is currently incomplete. Track the progress of this document [here](https://github.com/cosmos/cosmos-sdk/issues/11504).
 :::
 
-:::note
-
-### Pre-requisite Reading
+:::note Pre-requisite Readings
 
 * [`x/upgrade` Documentation](https://docs.cosmos.network/main/modules/upgrade)
 
@@ -52,6 +50,18 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
+## Set Migration Module Manager
+
+:::tip
+Users using `depinject` / app v2 do not need any changes, this is abstracted for them.
+:::
+
+After app initiation, call `SetMigrationModuleManager` with ModuleManager to give BaseApp access to `RunMigrationBeginBlock`:
+
+```go
+app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+
 ## Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade
@@ -76,7 +86,7 @@ module to know that the upgrade has been safely applied, a handler with the name
 Here is an example handler for an upgrade named "my-fancy-upgrade":
 
 ```go
-app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx sdk.Context, plan upgrade.Plan) {
+app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx context.Context, plan upgrade.Plan) {
  // Perform any migrations of the state store needed for this upgrade
 })
 ```
@@ -90,7 +100,7 @@ Here is a sample code to set store migrations with an upgrade:
 
 ```go
 // this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
-app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx sdk.Context, plan upgrade.Plan) {
+app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx context.Context, plan upgrade.Plan) {
  // upgrade changes here
 })
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

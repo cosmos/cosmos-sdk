@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

@@ -3919,6 +3919,141 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/bank/v1beta1/denoms_metadata_by_query_string:
+    get:
+      summary: DenomsMetadata queries the client metadata of a given coin denomination.
+      operationId: DenomMetadataByQueryString
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              metadata:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  denom_units:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          description: >-
+                            denom represents the string name of the given denom
+                            unit (e.g uatom).
+                        exponent:
+                          type: integer
+                          format: int64
+                          description: >-
+                            exponent represents power of 10 exponent that one
+                            must
+
+                            raise the base_denom to in order to equal the given
+                            DenomUnit's denom
+
+                            1 denom = 10^exponent base_denom
+
+                            (e.g. with a base_denom of uatom, one can create a
+                            DenomUnit of 'atom' with
+
+                            exponent = 6, thus: 1 atom = 10^6 uatom).
+                        aliases:
+                          type: array
+                          items:
+                            type: string
+                          title: >-
+                            aliases is a list of string aliases for the given
+                            denom
+                      description: |-
+                        DenomUnit represents a struct that describes a given
+                        denomination unit of the basic token.
+                    title: >-
+                      denom_units represents the list of DenomUnit's for a given
+                      coin
+                  base:
+                    type: string
+                    description: >-
+                      base represents the base denom (should be the DenomUnit
+                      with exponent = 0).
+                  display:
+                    type: string
+                    description: |-
+                      display indicates the suggested denom that should be
+                      displayed in clients.
+                  name:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.43'
+                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                  symbol:
+                    type: string
+                    description: >-
+                      symbol is the token symbol usually shown on exchanges (eg:
+                      ATOM). This can
+
+                      be the same as the display.
+
+
+                      Since: cosmos-sdk 0.43
+                  uri:
+                    type: string
+                    description: >-
+                      URI to a document (on or off-chain) that contains
+                      additional information. Optional.
+
+
+                      Since: cosmos-sdk 0.46
+                  uri_hash:
+                    type: string
+                    description: >-
+                      URIHash is a sha256 hash of a document pointed by URI.
+                      It's used to verify that
+
+                      the document didn't change. Optional.
+
+
+                      Since: cosmos-sdk 0.46
+                description: |-
+                  Metadata represents a struct that describes
+                  a basic token.
+            description: >-
+              QueryDenomMetadataByQueryStringResponse is the response type for
+              the Query/DenomMetadata RPC
+
+              method. Identical with QueryDenomMetadataResponse but receives
+              denom as query string in request.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: denom is the coin denom to query the metadata for.
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /cosmos/bank/v1beta1/params:
     get:
       summary: Params queries the parameters of x/bank module.
@@ -3930,6 +4065,7 @@ paths:
             type: object
             properties:
               params:
+                description: params provides the parameters of the bank module.
                 type: object
                 properties:
                   send_enabled:
@@ -3960,7 +4096,6 @@ paths:
                       compatibility of genesis files.
                   default_send_enabled:
                     type: boolean
-                description: Params defines the parameters for the bank module.
             description: >-
               QueryParamsResponse defines the response type for querying x/bank
               parameters.
@@ -9157,6 +9292,102 @@ paths:
           type: boolean
       tags:
         - Service
+  /cosmos/base/node/v1beta1/config:
+    get:
+      summary: Config queries for the operator configuration.
+      operationId: Config
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              minimum_gas_price:
+                type: string
+              pruning_keep_recent:
+                type: string
+                title: pruning settings
+              pruning_interval:
+                type: string
+            description: >-
+              ConfigResponse defines the response structure for the Config gRPC
+              query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
+  /cosmos/base/node/v1beta1/status:
+    get:
+      summary: Status queries for the node status.
+      operationId: Status
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              earliest_store_height:
+                type: string
+                format: uint64
+              height:
+                type: string
+                format: uint64
+              timestamp:
+                type: string
+                format: date-time
+              app_hash:
+                type: string
+                format: byte
+              validator_hash:
+                type: string
+                format: byte
+            description: >-
+              StateResponse defines the response structure for the status of a
+              node.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Service
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
@@ -12465,8 +12696,8 @@ paths:
   /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
-        depositAddr.
+        Deposit queries single deposit information based on proposalID,
+        depositor address.
       operationId: Deposit
       responses:
         '200':
@@ -14519,6 +14750,10 @@ paths:
                       type: boolean
                       description: 'Since: cosmos-sdk 0.50'
                       title: expedited defines if the proposal is expedited
+                    failed_reason:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.50'
+                      title: failed_reason defines the reason why the proposal failed
                   description: >-
                     Proposal defines the core field members of a governance
                     proposal.
@@ -15139,6 +15374,10 @@ paths:
                     type: boolean
                     description: 'Since: cosmos-sdk 0.50'
                     title: expedited defines if the proposal is expedited
+                  failed_reason:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.50'
+                    title: failed_reason defines the reason why the proposal failed
                 description: >-
                   Proposal defines the core field members of a governance
                   proposal.
@@ -15681,7 +15920,7 @@ paths:
   /cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
+        Deposit queries single deposit information based on proposalID,
         depositAddr.
       operationId: GovV1Deposit
       responses:
@@ -16223,8 +16462,7 @@ paths:
                     metadata:
                       type: string
                       title: >-
-                        metadata is any arbitrary metadata to attached to the
-                        vote.
+                        metadata is any arbitrary metadata attached to the vote.
 
                         the recommended format of the metadata is to be found
                         here:
@@ -16565,8 +16803,7 @@ paths:
                   metadata:
                     type: string
                     title: >-
-                      metadata is any arbitrary metadata to attached to the
-                      vote.
+                      metadata is any arbitrary metadata attached to the vote.
 
                       the recommended format of the metadata is to be found
                       here: https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -17420,13 +17657,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -18213,12 +18450,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -22023,13 +22260,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -22361,12 +22598,12 @@ paths:
                       delegator_address:
                         type: string
                         description: >-
-                          delegator_address is the bech32-encoded address of the
+                          delegator_address is the encoded address of the
                           delegator.
                       validator_address:
                         type: string
                         description: >-
-                          validator_address is the bech32-encoded address of the
+                          validator_address is the encoded address of the
                           validator.
                       shares:
                         type: string
@@ -22627,14 +22864,10 @@ paths:
                 properties:
                   delegator_address:
                     type: string
-                    description: >-
-                      delegator_address is the bech32-encoded address of the
-                      delegator.
+                    description: delegator_address is the encoded address of the delegator.
                   validator_address:
                     type: string
-                    description: >-
-                      validator_address is the bech32-encoded address of the
-                      validator.
+                    description: validator_address is the encoded address of the validator.
                   entries:
                     type: array
                     items:
@@ -22916,12 +23149,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -28847,7 +29080,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
     get:
-      summary: Allowance returns fee granted to the grantee by the granter.
+      summary: Allowance returns granted allwance to the grantee by the granter.
       operationId: Allowance
       responses:
         '200':
@@ -29158,7 +29391,7 @@ paths:
         - Query
   /cosmos/feegrant/v1beta1/allowances/{grantee}:
     get:
-      summary: Allowances returns all the grants for address.
+      summary: Allowances returns all the grants for the given grantee address.
       operationId: Allowances
       responses:
         '200':
@@ -33070,6 +33303,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                     version:
                       type: string
@@ -33586,6 +33820,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                     version:
                       type: string
@@ -34103,6 +34338,7 @@ paths:
 
                       the recommended format of the metadata is to be found
                       here:
+
                       https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
                   version:
                     type: string
@@ -35551,6 +35787,7 @@ paths:
 
                       the recommended format of the metadata is to be found
                       here:
+
                       https://docs.cosmos.network/v0.47/modules/group#proposal-4
                   proposers:
                     type: array
@@ -36324,6 +36561,7 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/group#proposal-4
                     proposers:
                       type: array
@@ -37821,6 +38059,425 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  /cosmos/circuit/v1/accounts:
+    get:
+      summary: Account returns account permissions.
+      operationId: CircuitAccounts
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              accounts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    permissions:
+                      type: object
+                      properties:
+                        level:
+                          description: >-
+                            level is the level of permissions granted to this
+                            account.
+                          type: string
+                          enum:
+                            - LEVEL_NONE_UNSPECIFIED
+                            - LEVEL_SOME_MSGS
+                            - LEVEL_ALL_MSGS
+                            - LEVEL_SUPER_ADMIN
+                          default: LEVEL_NONE_UNSPECIFIED
+                        limit_type_urls:
+                          type: array
+                          items:
+                            type: string
+                          description: >-
+                            limit_type_urls is used with LEVEL_SOME_MSGS to
+                            limit the lists of Msg type
+
+                            URLs that the account can trip. It is an error to
+                            use limit_type_urls with
+
+                            a level other than LEVEL_SOME_MSGS.
+                      description: >-
+                        Permissions are the permissions that an account has to
+                        trip
+
+                        or reset the circuit breaker.
+                  title: >-
+                    GenesisAccountPermissions is the account permissions for the
+                    circuit breaker in genesis
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              AccountsResponse is the response type for the Query/Accounts RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/circuit/v1/accounts/{address}:
+    get:
+      summary: Account returns account permissions.
+      operationId: CircuitAccount
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              permission:
+                type: object
+                properties:
+                  level:
+                    description: level is the level of permissions granted to this account.
+                    type: string
+                    enum:
+                      - LEVEL_NONE_UNSPECIFIED
+                      - LEVEL_SOME_MSGS
+                      - LEVEL_ALL_MSGS
+                      - LEVEL_SUPER_ADMIN
+                    default: LEVEL_NONE_UNSPECIFIED
+                  limit_type_urls:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      limit_type_urls is used with LEVEL_SOME_MSGS to limit the
+                      lists of Msg type
+
+                      URLs that the account can trip. It is an error to use
+                      limit_type_urls with
+
+                      a level other than LEVEL_SOME_MSGS.
+                description: |-
+                  Permissions are the permissions that an account has to trip
+                  or reset the circuit breaker.
+            description: >-
+              AccountResponse is the response type for the Query/Account RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /cosmos/circuit/v1/disable_list:
+    get:
+      summary: DisabledList returns a list of disabled message urls
+      operationId: DisabledList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              disabled_list:
+                type: array
+                items:
+                  type: string
+            description: >-
+              DisabledListResponse is the response type for the
+              Query/DisabledList RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /cosmos/consensus/v1/params:
+    get:
+      summary: Params queries the parameters of x/consensus module.
+      operationId: ConsensusParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: >-
+                  params are the tendermint consensus params stored in the
+                  consensus module.
+
+                  Please note that `params.version` is not populated in this
+                  response, it is
+
+                  tracked separately in the x/upgrade module.
+                type: object
+                properties:
+                  block:
+                    type: object
+                    properties:
+                      max_bytes:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max block size, in bytes.
+                          Note: must be greater than 0
+                      max_gas:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max gas per block.
+                          Note: must be greater or equal to -1
+                    description: BlockParams contains limits on the block size.
+                  evidence:
+                    type: object
+                    properties:
+                      max_age_num_blocks:
+                        type: string
+                        format: int64
+                        description: >-
+                          Max age of evidence, in blocks.
+
+
+                          The basic formula for calculating this is:
+                          MaxAgeDuration / {average block
+
+                          time}.
+                      max_age_duration:
+                        type: string
+                        description: >-
+                          Max age of evidence, in time.
+
+
+                          It should correspond with an app's "unbonding period"
+                          or other similar
+
+                          mechanism for handling [Nothing-At-Stake
+
+                          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+                      max_bytes:
+                        type: string
+                        format: int64
+                        title: >-
+                          This sets the maximum size of total evidence in bytes
+                          that can be committed in a single block.
+
+                          and should fall comfortably under the max block bytes.
+
+                          Default is 1048576 or 1MB
+                    description: >-
+                      EvidenceParams determine how we handle evidence of
+                      malfeasance.
+                  validator:
+                    type: object
+                    properties:
+                      pub_key_types:
+                        type: array
+                        items:
+                          type: string
+                    description: >-
+                      ValidatorParams restrict the public key types validators
+                      can use.
+
+                      NOTE: uses ABCI pubkey naming, not Amino names.
+                  version:
+                    type: object
+                    properties:
+                      app:
+                        type: string
+                        format: uint64
+                    description: VersionParams contains the ABCI application version.
+                  abci:
+                    type: object
+                    properties:
+                      vote_extensions_enable_height:
+                        type: string
+                        format: int64
+                        description: >-
+                          vote_extensions_enable_height configures the first
+                          height during which
+
+                          vote extensions will be enabled. During this specified
+                          height, and for all
+
+                          subsequent heights, precommit messages that do not
+                          contain valid extension data
+
+                          will be considered invalid. Prior to this height, vote
+                          extensions will not
+
+                          be used or accepted by validators on the network.
+
+
+                          Once enabled, vote extensions will be created by the
+                          application in ExtendVote,
+
+                          passed to the application for validation in
+                          VerifyVoteExtension and given
+
+                          to the application to use when proposing a block
+                          during PrepareProposal.
+                    description: >-
+                      ABCIParams configure functionality specific to the
+                      Application Blockchain Interface.
+            description: >-
+              QueryParamsResponse defines the response type for querying
+              x/consensus parameters.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
       tags:
         - Query
 definitions:
@@ -39639,6 +40296,99 @@ definitions:
     description: >-
       QueryBalanceResponse is the response type for the Query/Balance RPC
       method.
+  cosmos.bank.v1beta1.QueryDenomMetadataByQueryStringResponse:
+    type: object
+    properties:
+      metadata:
+        type: object
+        properties:
+          description:
+            type: string
+          denom_units:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                  description: >-
+                    denom represents the string name of the given denom unit
+                    (e.g uatom).
+                exponent:
+                  type: integer
+                  format: int64
+                  description: >-
+                    exponent represents power of 10 exponent that one must
+
+                    raise the base_denom to in order to equal the given
+                    DenomUnit's denom
+
+                    1 denom = 10^exponent base_denom
+
+                    (e.g. with a base_denom of uatom, one can create a DenomUnit
+                    of 'atom' with
+
+                    exponent = 6, thus: 1 atom = 10^6 uatom).
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                  title: aliases is a list of string aliases for the given denom
+              description: |-
+                DenomUnit represents a struct that describes a given
+                denomination unit of the basic token.
+            title: denom_units represents the list of DenomUnit's for a given coin
+          base:
+            type: string
+            description: >-
+              base represents the base denom (should be the DenomUnit with
+              exponent = 0).
+          display:
+            type: string
+            description: |-
+              display indicates the suggested denom that should be
+              displayed in clients.
+          name:
+            type: string
+            description: 'Since: cosmos-sdk 0.43'
+            title: 'name defines the name of the token (eg: Cosmos Atom)'
+          symbol:
+            type: string
+            description: >-
+              symbol is the token symbol usually shown on exchanges (eg: ATOM).
+              This can
+
+              be the same as the display.
+
+
+              Since: cosmos-sdk 0.43
+          uri:
+            type: string
+            description: >-
+              URI to a document (on or off-chain) that contains additional
+              information. Optional.
+
+
+              Since: cosmos-sdk 0.46
+          uri_hash:
+            type: string
+            description: >-
+              URIHash is a sha256 hash of a document pointed by URI. It's used
+              to verify that
+
+              the document didn't change. Optional.
+
+
+              Since: cosmos-sdk 0.46
+        description: |-
+          Metadata represents a struct that describes
+          a basic token.
+    description: >-
+      QueryDenomMetadataByQueryStringResponse is the response type for the
+      Query/DenomMetadata RPC
+
+      method. Identical with QueryDenomMetadataResponse but receives denom as
+      query string in request.
   cosmos.bank.v1beta1.QueryDenomMetadataResponse:
     type: object
     properties:
@@ -39913,6 +40663,7 @@ definitions:
     type: object
     properties:
       params:
+        description: params provides the parameters of the bank module.
         type: object
         properties:
           send_enabled:
@@ -39943,7 +40694,6 @@ definitions:
               compatibility of genesis files.
           default_send_enabled:
             type: boolean
-        description: Params defines the parameters for the bank module.
     description: >-
       QueryParamsResponse defines the response type for querying x/bank
       parameters.
@@ -46593,6 +47343,36 @@ definitions:
       application's
 
       state transition machine.
+  cosmos.base.node.v1beta1.ConfigResponse:
+    type: object
+    properties:
+      minimum_gas_price:
+        type: string
+      pruning_keep_recent:
+        type: string
+        title: pruning settings
+      pruning_interval:
+        type: string
+    description: ConfigResponse defines the response structure for the Config gRPC query.
+  cosmos.base.node.v1beta1.StatusResponse:
+    type: object
+    properties:
+      earliest_store_height:
+        type: string
+        format: uint64
+      height:
+        type: string
+        format: uint64
+      timestamp:
+        type: string
+        format: date-time
+      app_hash:
+        type: string
+        format: byte
+      validator_hash:
+        type: string
+        format: byte
+    description: StateResponse defines the response structure for the status of a node.
   cosmos.base.v1beta1.DecCoin:
     type: object
     properties:
@@ -49096,6 +49876,10 @@ definitions:
         type: boolean
         description: 'Since: cosmos-sdk 0.50'
         title: expedited defines if the proposal is expedited
+      failed_reason:
+        type: string
+        description: 'Since: cosmos-sdk 0.50'
+        title: failed_reason defines the reason why the proposal failed
     description: Proposal defines the core field members of a governance proposal.
   cosmos.gov.v1.ProposalStatus:
     type: string
@@ -49694,6 +50478,10 @@ definitions:
             type: boolean
             description: 'Since: cosmos-sdk 0.50'
             title: expedited defines if the proposal is expedited
+          failed_reason:
+            type: string
+            description: 'Since: cosmos-sdk 0.50'
+            title: failed_reason defines the reason why the proposal failed
         description: Proposal defines the core field members of a governance proposal.
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
@@ -49984,6 +50772,10 @@ definitions:
               type: boolean
               description: 'Since: cosmos-sdk 0.50'
               title: expedited defines if the proposal is expedited
+            failed_reason:
+              type: string
+              description: 'Since: cosmos-sdk 0.50'
+              title: failed_reason defines the reason why the proposal failed
           description: Proposal defines the core field members of a governance proposal.
         description: proposals defines all the requested governance proposals.
       pagination:
@@ -50070,7 +50862,7 @@ definitions:
           metadata:
             type: string
             title: >-
-              metadata is any arbitrary metadata to attached to the vote.
+              metadata is any arbitrary metadata attached to the vote.
 
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -50118,7 +50910,7 @@ definitions:
             metadata:
               type: string
               title: >-
-                metadata is any arbitrary metadata to attached to the vote.
+                metadata is any arbitrary metadata attached to the vote.
 
                 the recommended format of the metadata is to be found here:
                 https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -50216,7 +51008,7 @@ definitions:
       metadata:
         type: string
         title: >-
-          metadata is any arbitrary metadata to attached to the vote.
+          metadata is any arbitrary metadata attached to the vote.
 
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/gov#vote-5
@@ -50705,10 +51497,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       shares:
         type: string
         description: shares define the delegation shares received.
@@ -50724,10 +51516,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           shares:
             type: string
             description: shares define the delegation shares received.
@@ -51226,14 +52018,10 @@ definitions:
             properties:
               delegator_address:
                 type: string
-                description: >-
-                  delegator_address is the bech32-encoded address of the
-                  delegator.
+                description: delegator_address is the encoded address of the delegator.
               validator_address:
                 type: string
-                description: >-
-                  validator_address is the bech32-encoded address of the
-                  validator.
+                description: validator_address is the encoded address of the validator.
               shares:
                 type: string
                 description: shares define the delegation shares received.
@@ -51282,14 +52070,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -51355,14 +52139,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -52704,10 +53484,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           entries:
             type: array
             items:
@@ -52764,14 +53544,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -53147,14 +53923,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -53831,10 +54603,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       entries:
         type: array
         items:
@@ -61916,9 +62688,8 @@ definitions:
         description: admin is the account address of the group admin.
       metadata:
         type: string
-        title: >-
+        title: |-
           metadata is any arbitrary metadata attached to the group policy.
-
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
       version:
@@ -62131,9 +62902,8 @@ definitions:
         description: group_policy_address is the account address of group policy.
       metadata:
         type: string
-        title: >-
+        title: |-
           metadata is any arbitrary metadata attached to the proposal.
-
           the recommended format of the metadata is to be found here:
           https://docs.cosmos.network/v0.47/modules/group#proposal-4
       proposers:
@@ -62577,6 +63347,7 @@ definitions:
                 metadata is any arbitrary metadata attached to the group policy.
 
                 the recommended format of the metadata is to be found here:
+
                 https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
             version:
               type: string
@@ -62816,6 +63587,7 @@ definitions:
                 metadata is any arbitrary metadata attached to the group policy.
 
                 the recommended format of the metadata is to be found here:
+
                 https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
             version:
               type: string
@@ -63051,9 +63823,8 @@ definitions:
             description: admin is the account address of the group admin.
           metadata:
             type: string
-            title: >-
+            title: |-
               metadata is any arbitrary metadata attached to the group policy.
-
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/group#decision-policy-1
           version:
@@ -63466,9 +64237,8 @@ definitions:
             description: group_policy_address is the account address of group policy.
           metadata:
             type: string
-            title: >-
+            title: |-
               metadata is any arbitrary metadata attached to the proposal.
-
               the recommended format of the metadata is to be found here:
               https://docs.cosmos.network/v0.47/modules/group#proposal-4
           proposers:
@@ -63774,9 +64544,8 @@ definitions:
               description: group_policy_address is the account address of group policy.
             metadata:
               type: string
-              title: >-
+              title: |-
                 metadata is any arbitrary metadata attached to the proposal.
-
                 the recommended format of the metadata is to be found here:
                 https://docs.cosmos.network/v0.47/modules/group#proposal-4
             proposers:
@@ -64342,3 +65111,1003 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  cosmos.circuit.v1.AccountResponse:
+    type: object
+    properties:
+      permission:
+        type: object
+        properties:
+          level:
+            description: level is the level of permissions granted to this account.
+            type: string
+            enum:
+              - LEVEL_NONE_UNSPECIFIED
+              - LEVEL_SOME_MSGS
+              - LEVEL_ALL_MSGS
+              - LEVEL_SUPER_ADMIN
+            default: LEVEL_NONE_UNSPECIFIED
+          limit_type_urls:
+            type: array
+            items:
+              type: string
+            description: >-
+              limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of
+              Msg type
+
+              URLs that the account can trip. It is an error to use
+              limit_type_urls with
+
+              a level other than LEVEL_SOME_MSGS.
+        description: |-
+          Permissions are the permissions that an account has to trip
+          or reset the circuit breaker.
+    description: AccountResponse is the response type for the Query/Account RPC method.
+  cosmos.circuit.v1.AccountsResponse:
+    type: object
+    properties:
+      accounts:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            permissions:
+              type: object
+              properties:
+                level:
+                  description: level is the level of permissions granted to this account.
+                  type: string
+                  enum:
+                    - LEVEL_NONE_UNSPECIFIED
+                    - LEVEL_SOME_MSGS
+                    - LEVEL_ALL_MSGS
+                    - LEVEL_SUPER_ADMIN
+                  default: LEVEL_NONE_UNSPECIFIED
+                limit_type_urls:
+                  type: array
+                  items:
+                    type: string
+                  description: >-
+                    limit_type_urls is used with LEVEL_SOME_MSGS to limit the
+                    lists of Msg type
+
+                    URLs that the account can trip. It is an error to use
+                    limit_type_urls with
+
+                    a level other than LEVEL_SOME_MSGS.
+              description: |-
+                Permissions are the permissions that an account has to trip
+                or reset the circuit breaker.
+          title: >-
+            GenesisAccountPermissions is the account permissions for the circuit
+            breaker in genesis
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: AccountsResponse is the response type for the Query/Accounts RPC method.
+  cosmos.circuit.v1.DisabledListResponse:
+    type: object
+    properties:
+      disabled_list:
+        type: array
+        items:
+          type: string
+    description: >-
+      DisabledListResponse is the response type for the Query/DisabledList RPC
+      method.
+  cosmos.circuit.v1.GenesisAccountPermissions:
+    type: object
+    properties:
+      address:
+        type: string
+      permissions:
+        type: object
+        properties:
+          level:
+            description: level is the level of permissions granted to this account.
+            type: string
+            enum:
+              - LEVEL_NONE_UNSPECIFIED
+              - LEVEL_SOME_MSGS
+              - LEVEL_ALL_MSGS
+              - LEVEL_SUPER_ADMIN
+            default: LEVEL_NONE_UNSPECIFIED
+          limit_type_urls:
+            type: array
+            items:
+              type: string
+            description: >-
+              limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of
+              Msg type
+
+              URLs that the account can trip. It is an error to use
+              limit_type_urls with
+
+              a level other than LEVEL_SOME_MSGS.
+        description: |-
+          Permissions are the permissions that an account has to trip
+          or reset the circuit breaker.
+    title: >-
+      GenesisAccountPermissions is the account permissions for the circuit
+      breaker in genesis
+  cosmos.circuit.v1.Permissions:
+    type: object
+    properties:
+      level:
+        description: level is the level of permissions granted to this account.
+        type: string
+        enum:
+          - LEVEL_NONE_UNSPECIFIED
+          - LEVEL_SOME_MSGS
+          - LEVEL_ALL_MSGS
+          - LEVEL_SUPER_ADMIN
+        default: LEVEL_NONE_UNSPECIFIED
+      limit_type_urls:
+        type: array
+        items:
+          type: string
+        description: >-
+          limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of Msg
+          type
+
+          URLs that the account can trip. It is an error to use limit_type_urls
+          with
+
+          a level other than LEVEL_SOME_MSGS.
+    description: |-
+      Permissions are the permissions that an account has to trip
+      or reset the circuit breaker.
+  cosmos.circuit.v1.Permissions.Level:
+    type: string
+    enum:
+      - LEVEL_NONE_UNSPECIFIED
+      - LEVEL_SOME_MSGS
+      - LEVEL_ALL_MSGS
+      - LEVEL_SUPER_ADMIN
+    default: LEVEL_NONE_UNSPECIFIED
+    description: |-
+      Level is the permission level.
+
+       - LEVEL_NONE_UNSPECIFIED: LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
+      breaker permissions.
+       - LEVEL_SOME_MSGS: LEVEL_SOME_MSGS indicates that the account will have permission to
+      trip or reset the circuit breaker for some Msg type URLs. If this level
+      is chosen, a non-empty list of Msg type URLs must be provided in
+      limit_type_urls.
+       - LEVEL_ALL_MSGS: LEVEL_ALL_MSGS indicates that the account can trip or reset the circuit
+      breaker for Msg's of all type URLs.
+       - LEVEL_SUPER_ADMIN: LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
+      actions and can grant permissions to other accounts.
+  cosmos.consensus.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: >-
+          params are the tendermint consensus params stored in the consensus
+          module.
+
+          Please note that `params.version` is not populated in this response,
+          it is
+
+          tracked separately in the x/upgrade module.
+        type: object
+        properties:
+          block:
+            type: object
+            properties:
+              max_bytes:
+                type: string
+                format: int64
+                title: |-
+                  Max block size, in bytes.
+                  Note: must be greater than 0
+              max_gas:
+                type: string
+                format: int64
+                title: |-
+                  Max gas per block.
+                  Note: must be greater or equal to -1
+            description: BlockParams contains limits on the block size.
+          evidence:
+            type: object
+            properties:
+              max_age_num_blocks:
+                type: string
+                format: int64
+                description: >-
+                  Max age of evidence, in blocks.
+
+
+                  The basic formula for calculating this is: MaxAgeDuration /
+                  {average block
+
+                  time}.
+              max_age_duration:
+                type: string
+                description: >-
+                  Max age of evidence, in time.
+
+
+                  It should correspond with an app's "unbonding period" or other
+                  similar
+
+                  mechanism for handling [Nothing-At-Stake
+
+                  attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+              max_bytes:
+                type: string
+                format: int64
+                title: >-
+                  This sets the maximum size of total evidence in bytes that can
+                  be committed in a single block.
+
+                  and should fall comfortably under the max block bytes.
+
+                  Default is 1048576 or 1MB
+            description: EvidenceParams determine how we handle evidence of malfeasance.
+          validator:
+            type: object
+            properties:
+              pub_key_types:
+                type: array
+                items:
+                  type: string
+            description: |-
+              ValidatorParams restrict the public key types validators can use.
+              NOTE: uses ABCI pubkey naming, not Amino names.
+          version:
+            type: object
+            properties:
+              app:
+                type: string
+                format: uint64
+            description: VersionParams contains the ABCI application version.
+          abci:
+            type: object
+            properties:
+              vote_extensions_enable_height:
+                type: string
+                format: int64
+                description: >-
+                  vote_extensions_enable_height configures the first height
+                  during which
+
+                  vote extensions will be enabled. During this specified height,
+                  and for all
+
+                  subsequent heights, precommit messages that do not contain
+                  valid extension data
+
+                  will be considered invalid. Prior to this height, vote
+                  extensions will not
+
+                  be used or accepted by validators on the network.
+
+
+                  Once enabled, vote extensions will be created by the
+                  application in ExtendVote,
+
+                  passed to the application for validation in
+                  VerifyVoteExtension and given
+
+                  to the application to use when proposing a block during
+                  PrepareProposal.
+            description: >-
+              ABCIParams configure functionality specific to the Application
+              Blockchain Interface.
+    description: >-
+      QueryParamsResponse defines the response type for querying x/consensus
+      parameters.
+  tendermint.types.ABCIParams:
+    type: object
+    properties:
+      vote_extensions_enable_height:
+        type: string
+        format: int64
+        description: >-
+          vote_extensions_enable_height configures the first height during which
+
+          vote extensions will be enabled. During this specified height, and for
+          all
+
+          subsequent heights, precommit messages that do not contain valid
+          extension data
+
+          will be considered invalid. Prior to this height, vote extensions will
+          not
+
+          be used or accepted by validators on the network.
+
+
+          Once enabled, vote extensions will be created by the application in
+          ExtendVote,
+
+          passed to the application for validation in VerifyVoteExtension and
+          given
+
+          to the application to use when proposing a block during
+          PrepareProposal.
+    description: >-
+      ABCIParams configure functionality specific to the Application Blockchain
+      Interface.
+  tendermint.types.BlockParams:
+    type: object
+    properties:
+      max_bytes:
+        type: string
+        format: int64
+        title: |-
+          Max block size, in bytes.
+          Note: must be greater than 0
+      max_gas:
+        type: string
+        format: int64
+        title: |-
+          Max gas per block.
+          Note: must be greater or equal to -1
+    description: BlockParams contains limits on the block size.
+  tendermint.types.ConsensusParams:
+    type: object
+    properties:
+      block:
+        type: object
+        properties:
+          max_bytes:
+            type: string
+            format: int64
+            title: |-
+              Max block size, in bytes.
+              Note: must be greater than 0
+          max_gas:
+            type: string
+            format: int64
+            title: |-
+              Max gas per block.
+              Note: must be greater or equal to -1
+        description: BlockParams contains limits on the block size.
+      evidence:
+        type: object
+        properties:
+          max_age_num_blocks:
+            type: string
+            format: int64
+            description: >-
+              Max age of evidence, in blocks.
+
+
+              The basic formula for calculating this is: MaxAgeDuration /
+              {average block
+
+              time}.
+          max_age_duration:
+            type: string
+            description: >-
+              Max age of evidence, in time.
+
+
+              It should correspond with an app's "unbonding period" or other
+              similar
+
+              mechanism for handling [Nothing-At-Stake
+
+              attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+          max_bytes:
+            type: string
+            format: int64
+            title: >-
+              This sets the maximum size of total evidence in bytes that can be
+              committed in a single block.
+
+              and should fall comfortably under the max block bytes.
+
+              Default is 1048576 or 1MB
+        description: EvidenceParams determine how we handle evidence of malfeasance.
+      validator:
+        type: object
+        properties:
+          pub_key_types:
+            type: array
+            items:
+              type: string
+        description: |-
+          ValidatorParams restrict the public key types validators can use.
+          NOTE: uses ABCI pubkey naming, not Amino names.
+      version:
+        type: object
+        properties:
+          app:
+            type: string
+            format: uint64
+        description: VersionParams contains the ABCI application version.
+      abci:
+        type: object
+        properties:
+          vote_extensions_enable_height:
+            type: string
+            format: int64
+            description: >-
+              vote_extensions_enable_height configures the first height during
+              which
+
+              vote extensions will be enabled. During this specified height, and
+              for all
+
+              subsequent heights, precommit messages that do not contain valid
+              extension data
+
+              will be considered invalid. Prior to this height, vote extensions
+              will not
+
+              be used or accepted by validators on the network.
+
+
+              Once enabled, vote extensions will be created by the application
+              in ExtendVote,
+
+              passed to the application for validation in VerifyVoteExtension
+              and given
+
+              to the application to use when proposing a block during
+              PrepareProposal.
+        description: >-
+          ABCIParams configure functionality specific to the Application
+          Blockchain Interface.
+    description: |-
+      ConsensusParams contains consensus critical parameters that determine the
+      validity of blocks.
+  tendermint.types.EvidenceParams:
+    type: object
+    properties:
+      max_age_num_blocks:
+        type: string
+        format: int64
+        description: >-
+          Max age of evidence, in blocks.
+
+
+          The basic formula for calculating this is: MaxAgeDuration / {average
+          block
+
+          time}.
+      max_age_duration:
+        type: string
+        description: >-
+          Max age of evidence, in time.
+
+
+          It should correspond with an app's "unbonding period" or other similar
+
+          mechanism for handling [Nothing-At-Stake
+
+          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+      max_bytes:
+        type: string
+        format: int64
+        title: >-
+          This sets the maximum size of total evidence in bytes that can be
+          committed in a single block.
+
+          and should fall comfortably under the max block bytes.
+
+          Default is 1048576 or 1MB
+    description: EvidenceParams determine how we handle evidence of malfeasance.
+  tendermint.types.ValidatorParams:
+    type: object
+    properties:
+      pub_key_types:
+        type: array
+        items:
+          type: string
+    description: |-
+      ValidatorParams restrict the public key types validators can use.
+      NOTE: uses ABCI pubkey naming, not Amino names.
+  tendermint.types.VersionParams:
+    type: object
+    properties:
+      app:
+        type: string
+        format: uint64
+    description: VersionParams contains the ABCI application version.
+  cosmos.app.v1alpha1.Config:
+    type: object
+    properties:
+      modules:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: >-
+                name is the unique name of the module within the app. It should
+                be a name
+
+                that persists between different versions of a module so that
+                modules
+
+                can be smoothly upgraded to new versions.
+
+
+                For example, for the module cosmos.bank.module.v1.Module, we may
+                chose
+
+                to simply name the module "bank" in the app. When we upgrade to
+
+                cosmos.bank.module.v2.Module, the app-specific name "bank" stays
+                the same
+
+                and the framework knows that the v2 module should receive all
+                the same state
+
+                that the v1 module had. Note: modules should provide info on
+                which versions
+
+                they can migrate from in the ModuleDescriptor.can_migration_from
+                field.
+            config:
+              description: >-
+                config is the config object for the module. Module config
+                messages should
+
+                define a ModuleDescriptor using the
+                cosmos.app.v1alpha1.is_module extension.
+              type: object
+              properties:
+                type_url:
+                  type: string
+                  description: >-
+                    A URL/resource name that uniquely identifies the type of the
+                    serialized
+
+                    protocol buffer message. This string must contain at least
+
+                    one "/" character. The last segment of the URL's path must
+                    represent
+
+                    the fully qualified name of the type (as in
+
+                    `path/google.protobuf.Duration`). The name should be in a
+                    canonical form
+
+                    (e.g., leading "." is not accepted).
+
+
+                    In practice, teams usually precompile into the binary all
+                    types that they
+
+                    expect it to use in the context of Any. However, for URLs
+                    which use the
+
+                    scheme `http`, `https`, or no scheme, one can optionally set
+                    up a type
+
+                    server that maps type URLs to message definitions as
+                    follows:
+
+
+                    * If no scheme is provided, `https` is assumed.
+
+                    * An HTTP GET on the URL must yield a
+                    [google.protobuf.Type][]
+                      value in binary format, or produce an error.
+                    * Applications are allowed to cache lookup results based on
+                    the
+                      URL, or have them precompiled into a binary to avoid any
+                      lookup. Therefore, binary compatibility needs to be preserved
+                      on changes to types. (Use versioned type names to manage
+                      breaking changes.)
+
+                    Note: this functionality is not currently available in the
+                    official
+
+                    protobuf release, and it is not used for type URLs beginning
+                    with
+
+                    type.googleapis.com.
+
+
+                    Schemes other than `http`, `https` (or the empty scheme)
+                    might be
+
+                    used with implementation specific semantics.
+                value:
+                  type: string
+                  format: byte
+                  description: >-
+                    Must be a valid serialized protocol buffer of the above
+                    specified type.
+            golang_bindings:
+              type: array
+              items:
+                type: object
+                properties:
+                  interface_type:
+                    type: string
+                    title: >-
+                      interface_type is the interface type which will be bound
+                      to a specific implementation type
+                  implementation:
+                    type: string
+                    title: >-
+                      implementation is the implementing type which will be
+                      supplied when an input of type interface is requested
+                description: >-
+                  GolangBinding is an explicit interface type to implementing
+                  type binding for dependency injection.
+              description: >-
+                golang_bindings specifies explicit interface to implementation
+                type bindings which
+
+                depinject uses to resolve interface inputs to provider
+                functions.  The scope of this
+
+                field's configuration is module specific.
+          description: ModuleConfig is a module configuration for an app.
+        description: modules are the module configurations for the app.
+      golang_bindings:
+        type: array
+        items:
+          type: object
+          properties:
+            interface_type:
+              type: string
+              title: >-
+                interface_type is the interface type which will be bound to a
+                specific implementation type
+            implementation:
+              type: string
+              title: >-
+                implementation is the implementing type which will be supplied
+                when an input of type interface is requested
+          description: >-
+            GolangBinding is an explicit interface type to implementing type
+            binding for dependency injection.
+        description: >-
+          golang_bindings specifies explicit interface to implementation type
+          bindings which
+
+          depinject uses to resolve interface inputs to provider functions.  The
+          scope of this
+
+          field's configuration is global (not module specific).
+    description: >-
+      Config represents the configuration for a Cosmos SDK ABCI app.
+
+      It is intended that all state machine logic including the version of
+
+      baseapp and tx handlers (and possibly even Tendermint) that an app needs
+
+      can be described in a config object. For compatibility, the framework
+      should
+
+      allow a mixture of declarative and imperative app wiring, however, apps
+
+      that strive for the maximum ease of maintainability should be able to
+      describe
+
+      their state machine with a config object alone.
+  cosmos.app.v1alpha1.GolangBinding:
+    type: object
+    properties:
+      interface_type:
+        type: string
+        title: >-
+          interface_type is the interface type which will be bound to a specific
+          implementation type
+      implementation:
+        type: string
+        title: >-
+          implementation is the implementing type which will be supplied when an
+          input of type interface is requested
+    description: >-
+      GolangBinding is an explicit interface type to implementing type binding
+      for dependency injection.
+  cosmos.app.v1alpha1.ModuleConfig:
+    type: object
+    properties:
+      name:
+        type: string
+        description: >-
+          name is the unique name of the module within the app. It should be a
+          name
+
+          that persists between different versions of a module so that modules
+
+          can be smoothly upgraded to new versions.
+
+
+          For example, for the module cosmos.bank.module.v1.Module, we may chose
+
+          to simply name the module "bank" in the app. When we upgrade to
+
+          cosmos.bank.module.v2.Module, the app-specific name "bank" stays the
+          same
+
+          and the framework knows that the v2 module should receive all the same
+          state
+
+          that the v1 module had. Note: modules should provide info on which
+          versions
+
+          they can migrate from in the ModuleDescriptor.can_migration_from
+          field.
+      config:
+        description: >-
+          config is the config object for the module. Module config messages
+          should
+
+          define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module
+          extension.
+        type: object
+        properties:
+          type_url:
+            type: string
+            description: >-
+              A URL/resource name that uniquely identifies the type of the
+              serialized
+
+              protocol buffer message. This string must contain at least
+
+              one "/" character. The last segment of the URL's path must
+              represent
+
+              the fully qualified name of the type (as in
+
+              `path/google.protobuf.Duration`). The name should be in a
+              canonical form
+
+              (e.g., leading "." is not accepted).
+
+
+              In practice, teams usually precompile into the binary all types
+              that they
+
+              expect it to use in the context of Any. However, for URLs which
+              use the
+
+              scheme `http`, `https`, or no scheme, one can optionally set up a
+              type
+
+              server that maps type URLs to message definitions as follows:
+
+
+              * If no scheme is provided, `https` is assumed.
+
+              * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                value in binary format, or produce an error.
+              * Applications are allowed to cache lookup results based on the
+                URL, or have them precompiled into a binary to avoid any
+                lookup. Therefore, binary compatibility needs to be preserved
+                on changes to types. (Use versioned type names to manage
+                breaking changes.)
+
+              Note: this functionality is not currently available in the
+              official
+
+              protobuf release, and it is not used for type URLs beginning with
+
+              type.googleapis.com.
+
+
+              Schemes other than `http`, `https` (or the empty scheme) might be
+
+              used with implementation specific semantics.
+          value:
+            type: string
+            format: byte
+            description: >-
+              Must be a valid serialized protocol buffer of the above specified
+              type.
+      golang_bindings:
+        type: array
+        items:
+          type: object
+          properties:
+            interface_type:
+              type: string
+              title: >-
+                interface_type is the interface type which will be bound to a
+                specific implementation type
+            implementation:
+              type: string
+              title: >-
+                implementation is the implementing type which will be supplied
+                when an input of type interface is requested
+          description: >-
+            GolangBinding is an explicit interface type to implementing type
+            binding for dependency injection.
+        description: >-
+          golang_bindings specifies explicit interface to implementation type
+          bindings which
+
+          depinject uses to resolve interface inputs to provider functions.  The
+          scope of this
+
+          field's configuration is module specific.
+    description: ModuleConfig is a module configuration for an app.
+  cosmos.app.v1alpha1.QueryConfigResponse:
+    type: object
+    properties:
+      config:
+        description: config is the current app config.
+        type: object
+        properties:
+          modules:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: >-
+                    name is the unique name of the module within the app. It
+                    should be a name
+
+                    that persists between different versions of a module so that
+                    modules
+
+                    can be smoothly upgraded to new versions.
+
+
+                    For example, for the module cosmos.bank.module.v1.Module, we
+                    may chose
+
+                    to simply name the module "bank" in the app. When we upgrade
+                    to
+
+                    cosmos.bank.module.v2.Module, the app-specific name "bank"
+                    stays the same
+
+                    and the framework knows that the v2 module should receive
+                    all the same state
+
+                    that the v1 module had. Note: modules should provide info on
+                    which versions
+
+                    they can migrate from in the
+                    ModuleDescriptor.can_migration_from field.
+                config:
+                  description: >-
+                    config is the config object for the module. Module config
+                    messages should
+
+                    define a ModuleDescriptor using the
+                    cosmos.app.v1alpha1.is_module extension.
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                golang_bindings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      interface_type:
+                        type: string
+                        title: >-
+                          interface_type is the interface type which will be
+                          bound to a specific implementation type
+                      implementation:
+                        type: string
+                        title: >-
+                          implementation is the implementing type which will be
+                          supplied when an input of type interface is requested
+                    description: >-
+                      GolangBinding is an explicit interface type to
+                      implementing type binding for dependency injection.
+                  description: >-
+                    golang_bindings specifies explicit interface to
+                    implementation type bindings which
+
+                    depinject uses to resolve interface inputs to provider
+                    functions.  The scope of this
+
+                    field's configuration is module specific.
+              description: ModuleConfig is a module configuration for an app.
+            description: modules are the module configurations for the app.
+          golang_bindings:
+            type: array
+            items:
+              type: object
+              properties:
+                interface_type:
+                  type: string
+                  title: >-
+                    interface_type is the interface type which will be bound to
+                    a specific implementation type
+                implementation:
+                  type: string
+                  title: >-
+                    implementation is the implementing type which will be
+                    supplied when an input of type interface is requested
+              description: >-
+                GolangBinding is an explicit interface type to implementing type
+                binding for dependency injection.
+            description: >-
+              golang_bindings specifies explicit interface to implementation
+              type bindings which
+
+              depinject uses to resolve interface inputs to provider functions. 
+              The scope of this
+
+              field's configuration is global (not module specific).
+    description: QueryConfigRequest is the Query/Config response type.

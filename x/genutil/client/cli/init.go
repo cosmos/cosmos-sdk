@@ -8,11 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math/unsafe"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -67,7 +68,7 @@ func displayInfo(info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
+func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -79,7 +80,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {
@@ -172,7 +172,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")

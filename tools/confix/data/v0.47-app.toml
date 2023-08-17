@@ -59,8 +59,7 @@ inter-block-cache = true
 # ["message.sender", "message.recipient"]
 index-events = []
 
-# IavlCacheSize set the size of the iavl tree cache. 
-# Default cache size is 50mb.
+# IavlCacheSize set the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = 781250
 
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
@@ -73,8 +72,7 @@ iavl-lazy-loading = false
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
-# First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+# The fallback is the db_backend value set in Tendermint's config.toml.
 app-db-backend = ""
 
 ###############################################################################
@@ -108,8 +106,7 @@ prometheus-retention-time = 0
 #
 # Example:
 # [["chain_id", "cosmoshub-1"]]
-global-labels = [
-]
+global-labels = []
 
 ###############################################################################
 ###                           API Configuration                             ###
@@ -140,6 +137,42 @@ rpc-max-body-bytes = 1000000
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
 enabled-unsafe-cors = false
+
+###############################################################################
+###                           Rosetta Configuration                         ###
+###############################################################################
+
+[rosetta]
+
+# Enable defines if the Rosetta API server should be enabled.
+enable = false
+
+# Address defines the Rosetta API server to listen on.
+address = ":8080"
+
+# Network defines the name of the blockchain that will be returned by Rosetta.
+blockchain = "app"
+
+# Network defines the name of the network that will be returned by Rosetta.
+network = "network"
+
+# Retries defines the number of retries when connecting to the node before failing.
+retries = 3
+
+# Offline defines if Rosetta server should run in offline mode.
+offline = false
+
+# EnableDefaultSuggestedFee defines if the server should suggest fee by default.
+# If 'construction/medata' is called without gas limit and gas price,
+# suggested fee based on gas-to-suggest and denom-to-suggest will be given.
+enable-fee-suggestion = false
+
+# GasToSuggest defines gas limit when calculating the fee
+gas-to-suggest = 200000
+
+# DenomToSuggest defines the defult denom for fee suggestion.
+# Price must be in minimum-gas-prices.
+denom-to-suggest = "uatom"
 
 ###############################################################################
 ###                           gRPC Configuration                            ###
@@ -201,7 +234,7 @@ streamers = []
 
 [streamers]
 [streamers.file]
-keys = ["*", ]
+keys = ["*"]
 write_dir = ""
 prefix = ""
 

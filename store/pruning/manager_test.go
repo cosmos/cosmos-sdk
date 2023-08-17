@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/log"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"
 	"cosmossdk.io/store/pruning/types"
@@ -111,7 +111,7 @@ func TestStrategies(t *testing.T) {
 			for curHeight := int64(0); curHeight < 110000; curHeight++ {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
-						manager.HandleHeightSnapshot(curHeight - int64(tc.snapshotInterval) + 1)
+						manager.HandleSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
 						snHeight = curHeight
 					}
 				}
@@ -214,10 +214,10 @@ func TestHandleSnapshotHeight_DbErr_Panic(t *testing.T) {
 		}
 	}()
 
-	manager.HandleHeightSnapshot(10)
+	manager.HandleSnapshotHeight(10)
 }
 
-func TestHandleHeightSnapshot_LoadFromDisk(t *testing.T) {
+func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 	snapshotInterval := uint64(10)
 
 	// Setup
@@ -233,7 +233,7 @@ func TestHandleHeightSnapshot_LoadFromDisk(t *testing.T) {
 		snapshotHeightStr := fmt.Sprintf("snaphost height: %d", snapshotHeight)
 		if snapshotHeight > int64(snapshotInterval) && snapshotHeight%int64(snapshotInterval) == 1 {
 			// Test flush
-			manager.HandleHeightSnapshot(snapshotHeight - 1)
+			manager.HandleSnapshotHeight(snapshotHeight - 1)
 			expected = 1
 		}
 
@@ -249,27 +249,6 @@ func TestHandleHeightSnapshot_LoadFromDisk(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expected, len(loadedSnapshotHeights), snapshotHeightStr)
 	}
-}
-
-func TestHandleHeightSnapshot_DbErr_Panic(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	// Setup
-	dbMock := mock.NewMockDB(ctrl)
-
-	dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
-
-	manager := pruning.NewManager(dbMock, log.NewNopLogger())
-	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
-	require.NotNil(t, manager)
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fail()
-		}
-	}()
-
-	manager.HandleHeightSnapshot(10)
 }
 
 func TestLoadPruningSnapshotHeights(t *testing.T) {

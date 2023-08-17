@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
@@ -30,16 +31,19 @@ func TestRollback(t *testing.T) {
 			AppHash: app.LastCommitID().Hash,
 		}
 
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
+		assert.NilError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit()
+		assert.NilError(t, err)
+		_, err = app.Commit()
+		assert.NilError(t, err)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
@@ -62,14 +66,17 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+		assert.NilError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit()
+		assert.NilError(t, err)
+		_, err = app.Commit()
+		assert.NilError(t, err)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())

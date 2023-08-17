@@ -3,12 +3,12 @@ package keeper
 import (
 	context "context"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/circuit/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Keeper defines the circuit module's keeper.
@@ -69,6 +69,7 @@ func (k *Keeper) GetAuthority() []byte {
 	return k.authority
 }
 
+// IsAllowed returns true when msg URL is not found in the DisableList for given context, else false.
 func (k *Keeper) IsAllowed(ctx context.Context, msgURL string) (bool, error) {
 	has, err := k.DisableList.Has(ctx, msgURL)
 	return !has, err

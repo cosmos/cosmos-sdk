@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/errors"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,7 +29,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -36,7 +38,7 @@ func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalI
 		Short: "Generate a genesis tx carrying a self delegation",
 		Args:  cobra.ExactArgs(2),
 		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation,
-that is signed by the key in the Keyring referenced by a given name. A node ID and Bech32 consensus
+that is signed by the key in the Keyring referenced by a given name. A node ID and consensus
 pubkey may optionally be provided. If they are omitted, they will be retrieved from the priv_validator.json
 file. The following default parameters are included:
     %s
@@ -59,9 +61,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return err
 			}
 			cdc := clientCtx.Codec
-
 			config := serverCtx.Config
-			config.SetRoot(clientCtx.HomeDir)
 
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
 			if err != nil {
@@ -152,7 +152,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAdddressCodec)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
@@ -210,10 +210,10 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.Flags().MarkHidden(flags.FlagOutput) // signing makes sense to output only json
 
 	return cmd
 }

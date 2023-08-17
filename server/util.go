@@ -190,14 +190,12 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		}
 
 		opts = append(opts, log.FilterOption(filterFunc))
-
-	case ctx.Viper.GetBool("trace"): // cmtcli.TraceFlag
-		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
-		// Note it overrides log level passed in `log_levels`.
-		opts = append(opts, log.LevelOption(zerolog.TraceLevel))
 	default:
 		opts = append(opts, log.LevelOption(logLvl))
 	}
+
+	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
+	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
 
 	return log.NewLogger(out, opts...), nil
 }
@@ -313,7 +311,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -330,15 +328,15 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmd(appCreator, defaultNodeHome)
+	startCmd := StartCmd(appCreator)
 	addStartFlags(startCmd)
 
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
-		ExportCmd(appExport, defaultNodeHome),
+		ExportCmd(appExport),
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator, defaultNodeHome),
+		NewRollbackCmd(appCreator),
 	)
 }
 
@@ -405,7 +403,7 @@ func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.Cancel
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
 	if len(rv) == 0 {
-		rv = cast.ToString(opts.Get("db-backend"))
+		rv = cast.ToString(opts.Get("db_backend"))
 	}
 
 	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
@@ -518,6 +516,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		defaultMempool,
 		baseapp.SetChainID(chainID),
+		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
 }
 

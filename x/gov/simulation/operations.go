@@ -1,12 +1,9 @@
 package simulation
 
 import (
-	"errors"
 	"math"
 	"math/rand"
 	"time"
-
-	"cosmossdk.io/collections"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -603,7 +600,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 	if len(proposals) == 0 {
@@ -665,7 +662,7 @@ func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 	if w1 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionYes,
-			Weight: sdk.NewDecWithPrec(int64(w1), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w1), 2).String(),
 		})
 	}
 	if w2 > 0 {

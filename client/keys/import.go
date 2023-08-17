@@ -43,7 +43,7 @@ func ImportKeyHexCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "import-hex <name> <hex> <key-type>",
 		Short: "Import private keys into the local keybase",
-		Long:  "Import hex encoded private key into the local keybase.",
+		Long:  "Import hex encoded private key into the local keybase.\nSupported key-types can be obtained with:\n<appd> list-key-types",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

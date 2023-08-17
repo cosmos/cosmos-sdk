@@ -527,9 +527,9 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
-	rng := collections.NewSuperPrefixedTripleRange[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress](valDstAddr, delAddr)
+	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr)
 	hasAtleastOneEntry := false
-	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
+	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
 		hasAtleastOneEntry = true
 		return true, nil // returning true here to stop the iterations after 1st finding
 	})
@@ -583,7 +583,7 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	return k.RedelegationsByValDst.Set(ctx, collections.Join3(sdk.ValAddress(valDestAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr)), []byte{})
+	return k.RedelegationsByValDst.Set(ctx, collections.Join3(valDestAddr, delegatorAddress, valSrcAddr), []byte{})
 }
 
 // SetRedelegationEntry adds an entry to the unbonding delegation at the given
@@ -671,7 +671,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	return k.RedelegationsByValDst.Remove(ctx, collections.Join3(sdk.ValAddress(valDestAddr), sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr)))
+	return k.RedelegationsByValDst.Remove(ctx, collections.Join3(valDestAddr, delegatorAddress, valSrcAddr))
 }
 
 // redelegation queue timeslice operations

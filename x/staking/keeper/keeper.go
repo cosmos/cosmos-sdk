@@ -44,7 +44,7 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
-	RedelegationsByValDst       collections.Map[collections.Triple[sdk.ValAddress, sdk.AccAddress, sdk.ValAddress], []byte]
+	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -110,6 +110,7 @@ func NewKeeper(
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		// key format is 0x52 | len(AccAddr) | len(SrcValAddr) | len(DstValAddr)
 		Redelegations: collections.NewMap(
 			sb, types.RedelegationKey,
 			"redelegations",
@@ -125,9 +126,9 @@ func NewKeeper(
 			sb, types.RedelegationByValDstIndexKey,
 			"redelegations_by_val_dst",
 			collections.TripleKeyCodec(
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			),
 			collections.BytesValue,
 		),

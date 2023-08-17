@@ -147,7 +147,7 @@ func (a *App) Load(loadLatest bool) error {
 	return nil
 }
 
-// BeginBlocker application updates every begin block
+// PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
 	return a.ModuleManager.PreBlock(ctx)
 }

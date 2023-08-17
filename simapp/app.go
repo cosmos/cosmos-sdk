@@ -579,7 +579,7 @@ func (app *SimApp) setPostHandler() {
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
-// PreBlocker application updates every begin block
+// PreBlocker application updates every pre block
 func (app *SimApp) PreBlocker(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
 	return app.ModuleManager.PreBlock(ctx)
 }

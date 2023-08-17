@@ -119,12 +119,6 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 	return v
 }
 
-// CheckDelegator asserts that a delegator exists
-func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
-	_, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
-	require.Equal(sh.t, ok, found)
-}
-
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 	sh.Ctx = sh.Ctx.WithBlockTime(newTime)

@@ -467,6 +467,37 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
+func TestCoreAPIManager_RunMigrationBeginBlock(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreUpgradeAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(0)
+	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	success, err := mm.RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, true, success)
+	require.NoError(t, err)
+
+	// test false
+	success, err = module.NewManager().RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, false, success)
+	require.NoError(t, err)
+
+	// test panic
+	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
+	success, err = mm.RunMigrationBeginBlock(sdk.Context{})
+	require.Equal(t, false, success)
+	require.Error(t, err)
+}
+
 func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)

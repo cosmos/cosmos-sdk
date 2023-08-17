@@ -193,7 +193,12 @@ func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, valAddress sdk.ValA
 // SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
-func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) error {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
 	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)

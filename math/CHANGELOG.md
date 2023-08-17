@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+### Features
+
+* [#17427](https://github.com/cosmos/cosmos-sdk/pull/17427) Implement LegacyDec.MulRoundUp that rounds up at precision end.
+
 ## [math/v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.1) - 2023-05-15
 
 ### Improvements

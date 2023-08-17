@@ -166,9 +166,16 @@ func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.V
 
 // Increase validator bond shares increments the validator's self bond
 // in the event that the delegation amount on a validator bond delegation is increased
-func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, validatorAddress sdk.ValAddress, shares sdk.Dec) error {
+	validator, found := k.GetValidator(ctx, validatorAddress)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
 	validator.ValidatorBondShares = validator.ValidatorBondShares.Add(shares)
 	k.SetValidator(ctx, validator)
+
+	return nil
 }
 
 // SafelyDecreaseValidatorBond decrements the validator's self bond

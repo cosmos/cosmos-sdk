@@ -238,11 +238,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, newShares); err != nil {
+			return nil, err
 		}
-		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 
 	if tokens.IsInt64() {
@@ -370,16 +368,13 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, types.ErrNoDelegation
 	}
 	if dstDelegation.ValidatorBond {
-		// Note: the validator must be re-read from the store since it was modified in BeginRedelegate
-		dstValidator, found := k.GetValidator(ctx, valDstAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
-		}
 		dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
 		if err != nil {
 			return nil, err
 		}
-		k.IncreaseValidatorBondShares(ctx, dstValidator, dstShares)
+		if err := k.IncreaseValidatorBondShares(ctx, valDstAddr, dstShares); err != nil {
+			return nil, err
+		}
 	}
 
 	if msg.Amount.Amount.IsInt64() {
@@ -630,12 +625,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
-		// Note: the validator must be re-read from the store since it was modified in BeginRedelegate
-		validator, found := k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, newShares); err != nil {
+			return nil, err
 		}
-		k.IncreaseValidatorBondShares(ctx, validator, newShares)
 	}
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)

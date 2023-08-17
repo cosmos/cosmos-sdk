@@ -85,7 +85,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationKey",
 			v1.GetREDKey(addr4, valAddr1, valAddr2),
-			types.GetREDKey(addr4, valAddr1, valAddr2),
+			v2.GetREDKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValSrcIndexKey",

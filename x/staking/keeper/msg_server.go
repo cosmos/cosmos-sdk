@@ -329,7 +329,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err != nil {
 			return nil, err
 		}
-		if _, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valDstAddr, dstShares); err != nil {
+		if _, err := k.SafelyIncreaseValidatorLiquidShares(ctx, valDstAddr, dstShares); err != nil {
 			return nil, err
 		}
 		srcValidator, err = k.DecreaseValidatorLiquidShares(ctx, valSrcAddr, srcShares)

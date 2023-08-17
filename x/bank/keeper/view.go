@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cockroachdb/errors"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
@@ -158,7 +156,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.Acc
 	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
 		return cb(sdk.NewCoin(key.K2(), value)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }
@@ -170,7 +168,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx context.Context, cb func(sdk.AccA
 	err := k.Balances.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
 		return cb(key.K1(), sdk.NewCoin(key.K2(), value)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

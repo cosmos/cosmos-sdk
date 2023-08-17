@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.7.0
-	cosmossdk.io/collections v0.3.0 // indirect
 	cosmossdk.io/core v0.10.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
@@ -39,6 +38,7 @@ require (
 	cloud.google.com/go/iam v1.1.0 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230816141149-e3a3df2a824b // indirect
+	cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230719143845-dff6b0e26aa4 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

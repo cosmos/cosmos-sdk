@@ -122,14 +122,14 @@ func Test_runImportHexCmd(t *testing.T) {
 		name           string
 		keyringBackend string
 		hexKey         string
-		algo           string
+		keyType        string
 		expectError    bool
 	}{
 		{
 			name:           "test backend success",
 			keyringBackend: keyring.BackendTest,
 			hexKey:         "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
-			algo:           "secp256k1",
+			keyType:        "secp256k1",
 		},
 	}
 
@@ -158,7 +158,8 @@ func Test_runImportHexCmd(t *testing.T) {
 			}()
 
 			cmd.SetArgs([]string{
-				"keyname1", tc.hexKey, tc.algo,
+				"keyname1", tc.hexKey,
+				fmt.Sprintf("--%s=%s", flags.FlagKeyType, tc.keyType),
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, tc.keyringBackend),
 			})
 

@@ -2,6 +2,8 @@ package keys
 
 import (
 	"bufio"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -40,17 +42,20 @@ func ImportKeyCommand() *cobra.Command {
 }
 
 func ImportKeyHexCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "import-hex <name> <hex> <key-type>",
+	cmd := &cobra.Command{
+		Use:   "import-hex <name> <hex>",
 		Short: "Import private keys into the local keybase",
 		Long:  "Import hex encoded private key into the local keybase.\nSupported key-types can be obtained with:\n<appd> list-key-types",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			return clientCtx.Keyring.ImportPrivKeyHex(args[0], args[1], args[2])
+			keyType, _ := cmd.Flags().GetString(flags.FlagKeyType)
+			return clientCtx.Keyring.ImportPrivKeyHex(args[0], args[1], keyType)
 		},
 	}
+	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "private key signing algorithm kind")
+	return cmd
 }

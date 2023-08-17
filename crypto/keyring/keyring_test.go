@@ -257,7 +257,613 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 func TestExportImportKeyRing(t *testing.T) {
 	cdc := getCodec()
+<<<<<<< HEAD
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
+=======
+	tests := []struct {
+		name              string
+		uid               string
+		backend           string
+		encryptPassphrase string
+		createKey         func(keystore2 Keyring) (*Record, string, error)
+		expectedErr       error
+	}{
+		{
+			name:              "correct export",
+			uid:               "correctTest",
+			backend:           BackendTest,
+			encryptPassphrase: "myPassphrase",
+			createKey: func(keystore Keyring) (*Record, string, error) {
+				return keystore.NewMnemonic("correctTest", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase,
+					hd.Secp256k1)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:              "correct in memory export",
+			uid:               "inMemory",
+			backend:           BackendMemory,
+			encryptPassphrase: "myPassphrase",
+			createKey: func(keystore Keyring) (*Record, string, error) {
+				return keystore.NewMnemonic("inMemory", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase,
+					hd.Secp256k1)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:              "key is not created",
+			uid:               "noKeyTest",
+			backend:           BackendTest,
+			encryptPassphrase: "myPassphrase",
+			createKey: func(keystore Keyring) (*Record, string, error) {
+				return nil, "", nil
+			},
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("testExport", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			_, _, err = tt.createKey(kb)
+			require.NoError(t, err)
+			_, err = kb.ExportPrivKeyArmor(tt.uid, tt.encryptPassphrase)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestImportPrivKey(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name              string
+		uid               string
+		backend           string
+		encryptPassphrase string
+		armor             string
+		expectedErr       error
+	}{
+		{
+			name:              "correct import",
+			uid:               "testOne",
+			backend:           BackendTest,
+			encryptPassphrase: "this passphrase has been used for all test vectors",
+			armor:             "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 6BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----",
+			expectedErr:       nil,
+		},
+		{
+			name:              "correct import",
+			uid:               "inMemory",
+			backend:           BackendMemory,
+			encryptPassphrase: "this passphrase has been used for all test vectors",
+			armor:             "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 6BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----",
+			expectedErr:       nil,
+		},
+		{
+			name:              "wrong armor",
+			uid:               "testWrongArmor",
+			backend:           BackendTest,
+			encryptPassphrase: "this passphrase has been used for all test vectors",
+			armor:             "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 7BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----",
+			expectedErr:       sdkerrors.ErrWrongPassword,
+		},
+		{
+			name:              "incorrect passphrase",
+			uid:               "testIncorrectPassphrase",
+			backend:           BackendTest,
+			encryptPassphrase: "wrong passphrase",
+			armor:             "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 6BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----",
+			expectedErr:       sdkerrors.ErrWrongPassword,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("TestExport", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			err = kb.ImportPrivKey(tt.uid, tt.armor, tt.encryptPassphrase)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestImportPrivKeyHex(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name        string
+		uid         string
+		backend     string
+		hexKey      string
+		algo        string
+		expectedErr error
+	}{
+		{
+			name:        "correct import",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "correct import without prefix",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "a3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "wrong hex length",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xae57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: hex.ErrLength,
+		},
+		{
+			name:        "unsupported algo",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "notSupportedAlgo",
+			expectedErr: ErrUnsupportedSigningAlgo,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("TestExport", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			err = kb.ImportPrivKeyHex(tt.uid, tt.hexKey, tt.algo)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestExportImportPrivKeyArmor(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name              string
+		uid               string
+		backend           string
+		userInput         io.Reader
+		encryptPassphrase string
+		importUID         string
+		importPassphrase  string
+	}{
+		{
+			name:              "export import",
+			uid:               "testOne",
+			backend:           BackendTest,
+			userInput:         nil,
+			encryptPassphrase: "apassphrase",
+			importUID:         "importedKey",
+			importPassphrase:  "apassphrase",
+		},
+		{
+			name:              "memory export import",
+			uid:               "inMemory",
+			backend:           BackendMemory,
+			userInput:         nil,
+			encryptPassphrase: "apassphrase",
+			importUID:         "importedKey",
+			importPassphrase:  "apassphrase",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("TestExport", tt.backend, t.TempDir(), tt.userInput, cdc)
+			require.NoError(t, err)
+			k, _, err := kb.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+			require.NoError(t, err)
+			require.NotNil(t, k)
+			require.Equal(t, k.Name, tt.uid)
+
+			record, err := kb.Key(tt.uid)
+			require.NoError(t, err)
+			require.Equal(t, record.Name, tt.uid)
+			key, err := k.GetPubKey()
+			require.NoError(t, err)
+
+			armor, err := kb.ExportPrivKeyArmor(tt.uid, tt.encryptPassphrase)
+			require.NoError(t, err)
+
+			// Import while key has not been deleted
+			err = kb.ImportPrivKey(tt.uid, armor, tt.importPassphrase)
+			require.Error(t, err)
+			require.True(t, errors.Is(err, ErrOverwriteKey))
+
+			err = kb.Delete(tt.uid)
+			require.NoError(t, err)
+
+			err = kb.ImportPrivKey(tt.importUID, armor, tt.importPassphrase)
+			require.NoError(t, err)
+
+			importedRecord, err := kb.Key(tt.importUID)
+			require.NoError(t, err)
+			require.Equal(t, importedRecord.Name, tt.importUID)
+			importedKey, err := importedRecord.GetPubKey()
+			require.NoError(t, err)
+
+			require.Equal(t, key.Address(), importedKey.Address())
+
+			addr, err := record.GetAddress()
+			require.NoError(t, err)
+			importedAddr, err := importedRecord.GetAddress()
+			require.NoError(t, err)
+			require.True(t, addr.Equals(importedAddr))
+		})
+	}
+}
+
+func TestImportExportPrivKeyByAddress(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name             string
+		uid              string
+		backend          string
+		passphrase       string
+		importPassphrase string
+		expectedErr      error
+	}{
+		{
+			name:             "correct import export",
+			uid:              "okTest",
+			backend:          BackendTest,
+			passphrase:       "exportKey",
+			importPassphrase: "exportKey",
+			expectedErr:      nil,
+		},
+		{
+			name:             "correct in memory import export",
+			uid:              "inMemory",
+			backend:          BackendMemory,
+			passphrase:       "exportKey",
+			importPassphrase: "exportKey",
+			expectedErr:      nil,
+		},
+		{
+			name:             "wrong passphrase import",
+			uid:              "incorrectPass",
+			backend:          BackendTest,
+			passphrase:       "exportKey",
+			importPassphrase: "incorrectPassphrase",
+			expectedErr:      sdkerrors.ErrWrongPassword,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kr, err := New(t.Name(), tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+
+			mnemonic, _, err := kr.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+			require.NoError(t, err)
+
+			addr, err := mnemonic.GetAddress()
+			require.NoError(t, err)
+			armor, err := kr.ExportPrivKeyArmorByAddress(addr, tt.passphrase)
+			require.NoError(t, err)
+
+			// Should fail importing private key on existing key.
+			err = kr.ImportPrivKey(tt.uid, armor, tt.passphrase)
+			require.True(t, errors.Is(err, ErrOverwriteKey))
+
+			err = kr.Delete(tt.uid)
+			require.NoError(t, err)
+
+			err = kr.ImportPrivKey(tt.uid, armor, tt.importPassphrase)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestExportPubkey(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name        string
+		uid         string
+		backend     string
+		exportUID   string
+		getPubkey   func(r *Record) (types.PubKey, error)
+		codec       codec.Codec
+		expectedErr error
+	}{
+		{
+			name:      "correct export",
+			uid:       "correctExport",
+			backend:   BackendTest,
+			exportUID: "correctExport",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: nil,
+		},
+		{
+			name:      "wrong uid at export",
+			uid:       "wrongUID",
+			backend:   BackendTest,
+			exportUID: "notAValidUID",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+		{
+			name:      "previous space on export uid",
+			uid:       "prefixSpace",
+			backend:   BackendTest,
+			exportUID: " prefixSpace",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+		{
+			name:      "export uid with suffix space",
+			uid:       "suffixSpace",
+			backend:   BackendTest,
+			exportUID: "suffixSpace ",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+		{
+			name:      "correct in memory export",
+			uid:       "inMemory",
+			backend:   BackendMemory,
+			exportUID: "inMemory",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: nil,
+		},
+		{
+			name:      "in memory wrong uid at export",
+			uid:       "wrongUid",
+			backend:   BackendMemory,
+			exportUID: "notAValidUid",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+		{
+			name:      "in memory previous space on export uid",
+			uid:       "prefixSpace",
+			backend:   BackendMemory,
+			exportUID: " prefixSpace",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+		{
+			name:      "in memory export uid with suffix space",
+			uid:       "suffixSpace",
+			backend:   BackendMemory,
+			exportUID: "suffixSpace ",
+			getPubkey: func(r *Record) (types.PubKey, error) {
+				return r.GetPubKey()
+			},
+			codec:       cdc,
+			expectedErr: sdkerrors.ErrKeyNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("keybase", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			k, _, err := kb.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+			require.NoError(t, err)
+			require.NotNil(t, k)
+			_, err = tt.getPubkey(k)
+			require.NoError(t, err)
+			_, err = kb.ExportPubKeyArmor(tt.exportUID)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestImportPubKey(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name        string
+		uid         string
+		backend     string
+		armor       string
+		expectedErr string
+	}{
+		{
+			name:        "correct import",
+			uid:         "correctTest",
+			backend:     BackendTest,
+			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
+			expectedErr: "",
+		},
+		{
+			name:        "modified armor",
+			uid:         "modified",
+			backend:     BackendTest,
+			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
+			expectedErr: "couldn't unarmor bytes: openpgp: invalid data: armor invalid",
+		},
+		{
+			name:        "empty armor",
+			uid:         "empty",
+			backend:     BackendTest,
+			armor:       "",
+			expectedErr: "couldn't unarmor bytes: EOF",
+		},
+		{
+			name:        "correct in memory import",
+			uid:         "inMemory",
+			backend:     BackendMemory,
+			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
+			expectedErr: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("keybasename", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			err = kb.ImportPubKey(tt.uid, tt.armor)
+			if tt.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tt.expectedErr)
+			}
+		})
+	}
+}
+
+func TestExportImportPubKeyKey(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name      string
+		uid       string
+		backend   string
+		importUID string
+	}{
+		{
+			name:      "complete export import",
+			uid:       "testOne",
+			backend:   BackendTest,
+			importUID: "importedKey",
+		},
+		{
+			name:      "in memory export import",
+			uid:       "inMemory",
+			backend:   BackendMemory,
+			importUID: "importedKey",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("keybasename", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+
+			k, _, err := kb.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+			require.Nil(t, err)
+			require.NotNil(t, k)
+			require.Equal(t, k.Name, tt.uid)
+
+			key, err := k.GetPubKey()
+			require.NoError(t, err)
+
+			record, err := kb.Key(tt.uid)
+			require.NoError(t, err)
+			require.Equal(t, record.Name, tt.uid)
+
+			pk, err := record.GetPubKey()
+			require.NoError(t, err)
+			require.Equal(t, key.Address(), pk.Address())
+
+			// Export the public key only
+			armor, err := kb.ExportPubKeyArmor(tt.uid)
+			require.NoError(t, err)
+			err = kb.Delete(tt.uid)
+			require.NoError(t, err)
+
+			// Import it under a different name
+			err = kb.ImportPubKey(tt.importUID, armor)
+			require.NoError(t, err)
+
+			// Ensure consistency
+			record2, err := kb.Key(tt.importUID)
+			require.NoError(t, err)
+			key2, err := record2.GetPubKey()
+			require.NoError(t, err)
+
+			// Compare the public keys
+			require.True(t, key.Equals(key2))
+
+			// Ensure keys cannot be overwritten
+			err = kb.ImportPubKey(tt.importUID, armor)
+			require.NotNil(t, err)
+		})
+	}
+}
+
+func TestImportExportPubKeyByAddress(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name    string
+		backend string
+		uid     string
+	}{
+		{
+			name:    "import export",
+			backend: BackendTest,
+			uid:     "okTest",
+		},
+		{
+			name:    "in memory import export",
+			backend: BackendMemory,
+			uid:     "okTest",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kr, err := New(t.Name(), tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+
+			mnemonic, _, err := kr.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+			require.NoError(t, err)
+
+			addr, err := mnemonic.GetAddress()
+			require.NoError(t, err)
+			armor, err := kr.ExportPubKeyArmorByAddress(addr)
+			require.NoError(t, err)
+
+			// Should fail importing private key on existing key.
+			err = kr.ImportPubKey(tt.uid, armor)
+			require.True(t, errors.Is(err, ErrOverwriteKey))
+
+			err = kr.Delete(tt.uid)
+			require.NoError(t, err)
+
+			err = kr.ImportPubKey(tt.uid, armor)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
+	cdc := getCodec()
+	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
+>>>>>>> 0e057851c (feat: import hex keys (#17424))
 	require.NoError(t, err)
 
 	k, _, err := kb.NewMnemonic("john", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)

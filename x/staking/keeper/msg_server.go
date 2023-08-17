@@ -215,14 +215,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -334,7 +329,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, dstValidator, dstShares); err != nil {
+		if _, err = k.SafelyIncreaseValidatorLiquidShares(ctx, dstValidator, dstShares); err != nil {
 			return nil, err
 		}
 		if err := k.DecreaseValidatorLiquidShares(ctx, srcValidator, srcShares); err != nil {
@@ -578,14 +573,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -752,14 +742,9 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 

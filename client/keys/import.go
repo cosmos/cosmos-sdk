@@ -3,8 +3,8 @@ package keys
 import (
 	"bufio"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
 	"os"
+
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // ImportKeyCommand imports private keys from a keyfile.

@@ -117,7 +117,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 }
 
 func Test_runImportHexCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -136,7 +136,7 @@ func Test_runImportHexCmd(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := ImportKeyHexCommand()
-			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 			// Now add a temporary keybase

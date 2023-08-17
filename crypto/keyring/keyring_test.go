@@ -1490,7 +1490,7 @@ func TestImportPrivKeyHex(t *testing.T) {
 			backend:     BackendTest,
 			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
 			algo:        "notSupportedAlgo",
-			expectedErr: ErrUnsupportedSigningAlgo,
+			expectedErr: errors.New("provided algorithm \"notSupportedAlgo\" is not supported"),
 		},
 	}
 	for _, tt := range tests {
@@ -1502,7 +1502,7 @@ func TestImportPrivKeyHex(t *testing.T) {
 				require.NoError(t, err)
 			} else {
 				require.Error(t, err)
-				require.True(t, errors.Is(err, tt.expectedErr))
+				require.ErrorContains(t, err, tt.expectedErr.Error())
 			}
 		})
 	}

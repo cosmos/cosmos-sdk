@@ -22,7 +22,10 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeService corestore.KVStor
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}
-		store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
+		err = store.Set(accountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -33,4 +36,10 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeService corestore.KVStor
 // - Add an Account number as an index to get the account address
 func MigrateStore(ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.BinaryCodec) error {
 	return mapAccountAddressToAccountID(ctx, storeService, cdc)
+}
+
+// accountNumberStoreKey turn an account number to key used to get the account address from account store
+// NOTE(tip): exists for legacy compatibility
+func accountNumberStoreKey(accountNumber uint64) []byte {
+	return append(types.AccountNumberStoreKeyPrefix, sdk.Uint64ToBigEndian(accountNumber)...)
 }

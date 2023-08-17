@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/depinject"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +35,7 @@ const DefaultGenTxGas = 10000000
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
-		MaxGas:   2000000,
+		MaxGas:   100_000_000,
 	},
 	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
@@ -157,23 +158,24 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	_, err = app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to init chain: %w", err)
+	}
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
-			AppHash:            app.LastCommitID().Hash,
-			ValidatorsHash:     valSet.Hash(),
 			NextValidatorsHash: valSet.Hash(),
-		}})
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize block: %w", err)
+		}
 	}
 
 	return app, nil
@@ -221,7 +223,7 @@ func GenesisStateWithValSet(
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdkmath.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
 	}
 

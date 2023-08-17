@@ -15,9 +15,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -102,17 +101,18 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
 }
 
+// GetQueryCmd returns the custom query commands for the gov modules.
+// This command will be enhanced by AutoCLI as defined in the AutoCLIOptions() method.
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetCustomQueryCmd(ab.ac)
+}
+
 func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(handlers))
 	for _, proposalHandler := range handlers {
 		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler())
 	}
 	return proposalCLIHandlers
-}
-
-// GetQueryCmd returns the root query command for the gov module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
@@ -180,7 +180,7 @@ type ModuleInputs struct {
 	DistributionKeeper govtypes.DistributionKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace govtypes.ParamSubspace
+	LegacySubspace govtypes.ParamSubspace `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -359,7 +359,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig,
+		simState.AppParams, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 		simState.ProposalMsgs, simState.LegacyProposalContents,
 	)

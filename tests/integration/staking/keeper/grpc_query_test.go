@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +18,7 @@ import (
 )
 
 func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Validator) {
+	t.Helper()
 	addrs, _, validators := createValidators(&testing.T{}, f, []int64{9, 8, 7})
 	header := cmtproto.Header{
 		ChainID: "HelloChain",
@@ -26,8 +29,8 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, f.stakingKeeper.PowerReduction(f.sdkCtx))
-	f.stakingKeeper.SetHistoricalInfo(f.sdkCtx, 5, &hi)
+	hi := types.NewHistoricalInfo(header, types.Validators{Validators: sortedVals}, f.stakingKeeper.PowerReduction(f.sdkCtx))
+	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
 }
@@ -126,8 +129,10 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	params := f.stakingKeeper.GetParams(ctx)
-	delValidators := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	delValidators, err := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	assert.NilError(t, err)
 	var req *types.QueryDelegatorValidatorsRequest
 	testCases := []struct {
 		msg       string
@@ -175,7 +180,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 				assert.NilError(t, err)
 				assert.Equal(t, 1, len(res.Validators))
 				assert.Assert(t, res.Pagination.NextKey != nil)
-				assert.Equal(t, uint64(len(delValidators)), res.Pagination.Total)
+				assert.Equal(t, uint64(len(delValidators.Validators)), res.Pagination.Total)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
@@ -219,7 +224,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 				}
 			},
 			false,
-			"no delegation for (address, validator) tuple",
+			"not found",
 		},
 		{
 			"empty delegator address",
@@ -285,7 +290,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	addrVal := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 	var req *types.QueryDelegationRequest
 
@@ -354,7 +359,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	addrVal1 := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 	var req *types.QueryDelegatorDelegationsRequest
 
@@ -434,7 +439,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	addrVal2 := valAddrs[4]
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
 	assert.NilError(t, err)
-	delegation, found := f.stakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
 
 	var req *types.QueryValidatorDelegationsRequest
@@ -516,7 +521,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
 	assert.NilError(t, err1)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 
 	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, valAddr)
@@ -564,7 +569,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 				}
 			},
 			false,
-			"invalid Bech32",
+			"hrp does not match bech32 prefix",
 		},
 		{
 			"delegation not found for validator",
@@ -619,11 +624,11 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
 	assert.NilError(t, err1)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2)
 	assert.NilError(t, err1)
-	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, sdk.NewDecFromInt(unbondingTokens))
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
 
 	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc, valAddr1)
@@ -712,7 +717,9 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	assert.NilError(t, err)
-	assert.DeepEqual(t, f.stakingKeeper.GetParams(ctx), resp.Params)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, params, resp.Params)
 }
 
 func TestGRPCQueryHistoricalInfo(t *testing.T) {
@@ -725,7 +732,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	hi, found := f.stakingKeeper.GetHistoricalInfo(ctx, 5)
+	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, uint64(5))
 	assert.Assert(t, found)
 
 	var req *types.QueryHistoricalInfoRequest
@@ -804,11 +811,16 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
 	rdAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 1)
-	_, err = f.stakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
+	val1bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	assert.NilError(t, err)
+	val2bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val2.GetOperator())
+	assert.NilError(t, err)
+
+	_, err = f.stakingKeeper.BeginRedelegation(ctx, addrAcc1, val1bz, val2bz, math.LegacyNewDecFromInt(rdAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
-	redel, found := f.stakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
+	redel, found := f.stakingKeeper.GetRedelegation(ctx, addrAcc1, val1bz, val2bz)
 	assert.Assert(t, found)
 
 	var req *types.QueryRedelegationsRequest
@@ -869,7 +881,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 			"query redelegations with sourceValAddr only",
 			func() {
 				req = &types.QueryRedelegationsRequest{
-					SrcValidatorAddr: val1.GetOperator().String(),
+					SrcValidatorAddr: val1.GetOperator(),
 					Pagination:       &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},
@@ -917,7 +929,9 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 
 	// undelegate
 	undelAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
-	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	assert.NilError(t, err)
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc1, valbz, math.LegacyNewDecFromInt(undelAmount))
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
@@ -951,7 +965,7 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 			"valid request",
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{
-					ValidatorAddr: val1.GetOperator().String(),
+					ValidatorAddr: val1.GetOperator(),
 					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},

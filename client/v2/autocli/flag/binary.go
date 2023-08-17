@@ -14,7 +14,7 @@ type binaryType struct{}
 
 var _ Value = (*fileBinaryValue)(nil)
 
-func (f binaryType) NewValue(_ context.Context, _ *Builder) Value {
+func (f binaryType) NewValue(context.Context, *Builder) Value {
 	return &fileBinaryValue{}
 }
 

@@ -2,6 +2,7 @@ package cmtservice
 
 import (
 	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

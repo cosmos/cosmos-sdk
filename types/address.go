@@ -372,7 +372,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
-// Returns boolean for whether an AccAddress is empty
+// Returns boolean for whether an ValAddress is empty
 func (va ValAddress) Empty() bool {
 	return len(va) == 0
 }
@@ -491,6 +491,7 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 type ConsAddress []byte
 
 // ConsAddressFromHex creates a ConsAddress from a hex string.
+// Deprecated: use ConsensusAddressCodec from Staking keeper
 func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
 	return ConsAddress(bz), err

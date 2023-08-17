@@ -1117,3 +1117,82 @@ func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, 
     return k.Accounts.Get(ctx, addr)
 }
 ```
+
+## Triple key
+
+The `collections.Triple` is a special type of key composed of three keys, it's identical to `collections.Pair`.
+
+Let's see an example.
+
+```go
+package example
+
+import (
+ "context"
+
+ "cosmossdk.io/collections"
+ storetypes "cosmossdk.io/store/types"
+ "github.com/cosmos/cosmos-sdk/codec"
+)
+
+type AccAddress = string
+type ValAddress = string
+
+type Keeper struct {
+ // let's simulate we have redelegations which are stored as a triple key composed of
+ // the delegator, the source validator and the destination validator.
+ Redelegations collections.KeySet[collections.Triple[AccAddress, ValAddress, ValAddress]]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+ sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+ return Keeper{
+  Redelegations: collections.NewKeySet(sb, collections.NewPrefix(0), "redelegations", collections.TripleKeyCodec(collections.StringKey, collections.StringKey, collections.StringKey)
+ }
+}
+
+// RedelegationsByDelegator iterates over all the redelegations of a given delegator and calls onResult providing
+// each redelegation from source validator towards the destination validator.
+func (k Keeper) RedelegationsByDelegator(ctx context.Context, delegator AccAddress, onResult func(src, dst ValAddress) (stop bool, err error)) error {
+ rng := collections.NewPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator)
+ return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
+  return onResult(key.K2(), key.K3())
+ })
+}
+
+// RedelegationsByDelegatorAndValidator iterates over all the redelegations of a given delegator and its source validator and calls onResult for each
+// destination validator.
+func (k Keeper) RedelegationsByDelegatorAndValidator(ctx context.Context, delegator AccAddress, validator ValAddress, onResult func(dst ValAddress) (stop bool, err error)) error {
+ rng := collections.NewSuperPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator, validator)
+ return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
+  return onResult(key.K3())
+ })
+}
+```
+
+## Advanced Usages
+
+### Alternative Value Codec
+
+The `codec.AltValueCodec` allows a collection to decode values using a different codec than the one used to encode them.
+Basically it enables to decode two different byte representations of the same concrete value.
+It can be used to lazily migrate values from one bytes representation to another, as long as the new representation is
+not able to decode the old one.
+
+A concrete example can be found in `x/bank` where the balance was initially stored as `Coin` and then migrated to `Int`.
+
+```go
+
+var BankBalanceValueCodec = codec.NewAltValueCodec(sdk.IntValue, func(b []byte) (sdk.Int, error) {
+    coin := sdk.Coin{}
+    err := coin.Unmarshal(b)
+    if err != nil {
+        return sdk.Int{}, err
+    }
+    return coin.Amount, nil
+})
+```
+
+The above example shows how to create an `AltValueCodec` that can decode both `sdk.Int` and `sdk.Coin` values. The provided 
+decoder function will be used as a fallback in case the default decoder fails. When the value will be encoded back into state
+it will use the default encoder. This allows to lazily migrate values to a new bytes representation.

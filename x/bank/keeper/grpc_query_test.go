@@ -12,38 +12,87 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 
-	_, err := queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{})
-	suite.Require().Error(err)
-
-	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr.String()})
-	suite.Require().Error(err)
-
-	req := types.NewQueryBalanceRequest(addr, "0000")
-	_, err = queryClient.Balance(gocontext.Background(), req)
-	suite.Require().Error(err)
-
-	req = types.NewQueryBalanceRequest(addr, fooDenom)
-	res, err := queryClient.Balance(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(res)
-	suite.True(res.Balance.IsZero())
-
-	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
-
+	origCoins := sdk.NewCoins(newBarCoin(30))
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
-	res, err = queryClient.Balance(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(res)
-	suite.True(res.Balance.IsEqual(newFooCoin(50)))
+	testCases := []struct {
+		name         string
+		req          *types.QueryBalanceRequest
+		expectErrMsg string
+		postFn       func(res *types.QueryBalanceResponse)
+	}{
+		{
+			"empty request",
+			&types.QueryBalanceRequest{},
+			"invalid denom",
+			nil,
+		},
+		{
+			"invalid denom",
+			types.NewQueryBalanceRequest(addr, "0000"),
+			"invalid denom",
+			nil,
+		},
+		{
+			"empty address",
+			types.NewQueryBalanceRequest(sdk.AccAddress{}, barDenom),
+			"empty address string is not allowed",
+			nil,
+		},
+		{
+			"invalid address",
+			&types.QueryBalanceRequest{Address: "foo", Denom: barDenom},
+			"invalid address",
+			nil,
+		},
+		{
+			"query missing denom",
+			&types.QueryBalanceRequest{Address: addr.String()},
+			"invalid denom",
+			nil,
+		},
+		{
+			"valid query empty result",
+			types.NewQueryBalanceRequest(addr, fooDenom),
+			"",
+			func(res *types.QueryBalanceResponse) {
+				suite.True(res.Balance.IsZero())
+			},
+		},
+		{
+			"valid query",
+			types.NewQueryBalanceRequest(addr, barDenom),
+			"",
+			func(res *types.QueryBalanceResponse) {
+				suite.True(res.Balance.IsEqual(newBarCoin(30)))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			res, err := queryClient.Balance(gocontext.Background(), tc.req)
+			if tc.expectErrMsg == "" {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().ErrorContains(err, tc.expectErrMsg)
+			}
+
+			if tc.postFn != nil {
+				tc.postFn(res)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestQueryAllBalances() {
@@ -148,12 +197,13 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -195,12 +245,13 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc := vestingtypes.NewContinuousVestingAccount(
+	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
 		ctx.BlockTime().Unix(),
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
@@ -229,13 +280,12 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 	genesisSupply := res.Supply
 	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 
 	suite.mockMintCoins(mintAcc)
-	suite.
-		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -254,9 +304,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	expectedTotalSupply := sdk.NewCoins(test1Supply, test2Supply)
 
 	suite.mockMintCoins(mintAcc)
-	suite.
-		Require().
-		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -264,8 +312,13 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	res, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-
 	suite.Require().Equal(test1Supply, res.Amount)
+
+	// total supply bogus denom
+	res, err = queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: "bogus"})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().Equal(sdk.NewInt64Coin("bogus", 0), res.Amount)
 }
 
 func (suite *KeeperTestSuite) TestQueryParams() {
@@ -275,10 +328,10 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
-func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomsMetadata() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata{}
+		expMetadata = []types.Metadata(nil)
 	)
 
 	testCases := []struct {
@@ -377,7 +430,7 @@ func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
 	}
 }
 
-func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
+func (suite *KeeperTestSuite) TestQueryDenomMetadata() {
 	var (
 		req         *types.QueryDenomMetadataRequest
 		expMetadata = types.Metadata{}
@@ -407,7 +460,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 		{
 			"success",
 			func() {
-				expMetadata := types.Metadata{
+				expMetadata = types.Metadata{
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{
@@ -454,13 +507,90 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryDenomMetadataByQueryStringRequest() {
+	var (
+		req         *types.QueryDenomMetadataByQueryStringRequest
+		expMetadata = types.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty denom",
+			func() {
+				req = &types.QueryDenomMetadataByQueryStringRequest{}
+			},
+			false,
+		},
+		{
+			"not found denom",
+			func() {
+				req = &types.QueryDenomMetadataByQueryStringRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				expMetadata = types.Metadata{
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				}
+
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &types.QueryDenomMetadataByQueryStringRequest{
+					Denom: expMetadata.Base,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := suite.ctx
+
+			res, err := suite.queryClient.DenomMetadataByQueryString(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadata)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	ctx := suite.ctx
 
 	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
-	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
@@ -470,7 +600,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
 		))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, addr)
-		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, bal))
+		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, addr, bal))
 	}
 
 	testCases := map[string]struct {

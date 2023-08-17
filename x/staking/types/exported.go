@@ -1,18 +1,18 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
+	"cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DelegationI delegation bond for a delegated proof of stake system
 type DelegationI interface {
-	GetDelegatorAddr() sdk.AccAddress // delegator sdk.AccAddress for the bond
-	GetValidatorAddr() sdk.ValAddress // validator operator address
-	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation
+	GetDelegatorAddr() string  // delegator string for the bond
+	GetValidatorAddr() string  // validator operator address
+	GetShares() math.LegacyDec // amount of validator's shares held in this delegation
 }
 
 // ValidatorI expected validator functions
@@ -23,10 +23,10 @@ type ValidatorI interface {
 	IsBonded() bool                                                 // check if has a bonded status
 	IsUnbonded() bool                                               // check if has status unbonded
 	IsUnbonding() bool                                              // check if has status unbonding
-	GetOperator() sdk.ValAddress                                    // operator address to receive/return validators coins
+	GetOperator() string                                            // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                        // validation consensus pubkey (cryptotypes.PubKey)
 	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)             // validation consensus pubkey (CometBFT)
-	GetConsAddr() (sdk.ConsAddress, error)                          // validation consensus address
+	GetConsAddr() ([]byte, error)                                   // validation consensus address
 	GetTokens() math.Int                                            // validation tokens
 	GetBondedTokens() math.Int                                      // validator bonded tokens
 	GetConsensusPower(math.Int) int64                               // validation power in CometBFT

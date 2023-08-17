@@ -1,9 +1,10 @@
 package testutil
 
 import (
-	"cosmossdk.io/math"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	"cosmossdk.io/math"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -31,9 +32,9 @@ func ToCmtValidator(v types.Validator, r math.Int) (*cmttypes.Validator, error) 
 
 // ToCmtValidators casts all validators to the corresponding CometBFT type.
 func ToCmtValidators(v types.Validators, r math.Int) ([]*cmttypes.Validator, error) {
-	validators := make([]*cmttypes.Validator, len(v))
+	validators := make([]*cmttypes.Validator, len(v.Validators))
 	var err error
-	for i, val := range v {
+	for i, val := range v.Validators {
 		validators[i], err = ToCmtValidator(val, r)
 		if err != nil {
 			return nil, err

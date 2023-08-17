@@ -11,9 +11,8 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/log"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -515,7 +514,8 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 		m.logger.Debug("snapshot is skipped", "height", height)
 		return
 	}
-	m.snapshot(height)
+	// start the routine after need to create a snapshot
+	go m.snapshot(height)
 }
 
 // shouldTakeSnapshot returns true is snapshot should be taken at height.
@@ -550,4 +550,10 @@ func (m *Manager) snapshot(height int64) {
 
 		m.logger.Debug("pruned state snapshots", "pruned", pruned)
 	}
+}
+
+// Close the snapshot database.
+func (m *Manager) Close() error {
+	m.logger.Info("snapshotManager Close Database")
+	return m.store.db.Close()
 }

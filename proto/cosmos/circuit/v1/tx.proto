@@ -6,7 +6,7 @@ option go_package = "cosmossdk.io/x/circuit/types";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/circuit/v1/types.proto";
 
-// Msg defines the crisis Msg service.
+// Msg defines the circuit Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
@@ -39,7 +39,7 @@ message MsgAuthorizeCircuitBreaker {
   Permissions permissions = 3;
 }
 
-// MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
+// MsgAuthorizeCircuitBreakerResponse defines the Msg/AuthorizeCircuitBreaker response type.
 message MsgAuthorizeCircuitBreakerResponse {
   bool success = 1;
 }
@@ -59,7 +59,7 @@ message MsgTripCircuitBreaker {
   repeated string msg_type_urls = 2;
 }
 
-// MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
+// MsgTripCircuitBreakerResponse defines the Msg/TripCircuitBreaker response type.
 message MsgTripCircuitBreakerResponse {
   bool success = 1;
 }

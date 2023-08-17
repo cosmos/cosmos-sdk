@@ -1,17 +1,18 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -30,13 +31,13 @@ const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
 	storeService corestoretypes.KVStoreService
-	cdc          codec.BinaryCodec
+	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
@@ -86,9 +87,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 
 	grant.Authorization = any
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(skey, k.cdc.MustMarshal(&grant))
-
-	return nil
+	return store.Set(skey, k.cdc.MustMarshal(&grant))
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
@@ -99,7 +98,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	now := sdkCtx.BlockTime()
 
 	for i, msg := range msgs {
-		signers := msg.GetSigners()
+		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+
 		if len(signers) != 1 {
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
@@ -108,12 +111,13 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
-		if !granter.Equals(grantee) {
+		if !bytes.Equal(granter, grantee) {
 			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
 
 			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
+				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
+					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), grantee, sdk.MsgTypeURL(msg))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
@@ -133,7 +137,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				err = k.update(ctx, grantee, granter, resp.Updated)
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

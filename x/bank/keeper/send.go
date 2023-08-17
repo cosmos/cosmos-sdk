@@ -6,9 +6,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -73,7 +73,7 @@ func NewBaseSendKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseSendKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -106,8 +106,8 @@ func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) erro
 	// Normally SendEnabled is deprecated but we still support it for backwards
 	// compatibility. Using params.Validate() would fail due to the SendEnabled
 	// deprecation.
-	if len(params.SendEnabled) > 0 { //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
-		k.SetAllSendEnabled(ctx, params.SendEnabled) //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
+	if len(params.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, params.SendEnabled)
 
 		// override params without SendEnabled
 		params = types.NewParams(params.DefaultSendEnabled)
@@ -125,7 +125,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	inAddress, err := sdk.AccAddressFromBech32(input.Address)
+	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
@@ -136,15 +136,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, input.Address),
-		),
-	)
 
 	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -201,18 +195,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	// bech32 encoding is expensive! Only do it once for fromAddr
 	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-		),
-	})
+	)
 
 	return nil
 }
@@ -238,6 +228,9 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
+			if len(spendable) == 0 {
+				spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
+			}
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInsufficientFunds,
 				"spendable balance %s is smaller than %s",
@@ -379,7 +372,7 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(d
 	err := k.SendEnabled.Walk(ctx, nil, func(key string, value bool) (stop bool, err error) {
 		return cb(key, value), nil
 	})
-	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

@@ -6,6 +6,9 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -19,43 +22,45 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 	ctx := f.sdkCtx
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
-	bondDenom := f.stakingKeeper.BondDenom(ctx)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
+	assert.NilError(t, err)
 
 	// set the not bonded pool module account
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), startTokens))))
+	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), f.stakingKeeper.BondDenom(ctx))
+	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
 	assert.DeepEqual(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, sdk.NewInt(10000))
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, ctx, 2, math.NewInt(10000))
 	valAddr := sdk.ValAddress(addrs[0])
 	delegatorAddr := addrs[1]
 
 	// setup a new validator with bonded status
-	validator, err := types.NewValidator(valAddr, PKs[0], types.NewDescription("Validator", "", "", "", ""))
+	validator, err := types.NewValidator(valAddr.String(), PKs[0], types.NewDescription("Validator", "", "", "", ""))
 	validator.Status = types.Bonded
 	assert.NilError(t, err)
-	f.stakingKeeper.SetValidator(ctx, validator)
+	assert.NilError(t, f.stakingKeeper.SetValidator(ctx, validator))
 
 	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 	assert.NilError(t, err)
 
 	// setting the ubd entry
-	unbondingAmount := sdk.NewInt64Coin(f.stakingKeeper.BondDenom(ctx), 5)
+	unbondingAmount := sdk.NewInt64Coin(bondDenom, 5)
 	ubd := types.NewUnbondingDelegation(
 		delegatorAddr, validatorAddr, 10,
 		ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
 		0,
+		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 
 	// set and retrieve a record
-	f.stakingKeeper.SetUnbondingDelegation(ctx, ubd)
+	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, ubd, resUnbond)
@@ -72,7 +77,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(bondDenom, math.NewInt(4)),
 				CreationHeight:   11,
 			},
 			expErrMsg: "unbonding delegation entry is not found at block height",
@@ -83,7 +88,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(f.stakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(bondDenom, math.NewInt(4)),
 				CreationHeight:   0,
 			},
 			expErrMsg: "invalid height",
@@ -94,7 +99,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
+				Amount:           sdk.NewCoin("dump_coin", math.NewInt(4)),
 				CreationHeight:   10,
 			},
 			expErrMsg: "invalid coin denomination",

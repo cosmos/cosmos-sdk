@@ -21,6 +21,7 @@ jobs:
         with:
           base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
           head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          fail-on-severity: high # otherwise we fail on ourselves due to https://github.com/advisories/GHSA-qfc5-6r3j-jj22, https://github.com/advisories/GHSA-w44m-8mv2-v78h TODO(@julienrbrt) submit a PR to the action to ignore packages
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
       - name: "Go vulnerability check"

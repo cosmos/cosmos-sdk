@@ -44,9 +44,9 @@ var (
 func init() {
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
 	fsShares.String(FlagSharesFraction, "", "Fraction of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
-	fsValidator.String(FlagAddressValidator, "", "The Bech32 address of the validator")
-	fsRedelegation.String(FlagAddressValidatorSrc, "", "The Bech32 address of the source validator")
-	fsRedelegation.String(FlagAddressValidatorDst, "", "The Bech32 address of the destination validator")
+	fsValidator.String(FlagAddressValidator, "", "The address of the validator")
+	fsRedelegation.String(FlagAddressValidatorSrc, "", "The address of the source validator")
+	fsRedelegation.String(FlagAddressValidatorDst, "", "The address of the destination validator")
 }
 
 // FlagSetCommissionCreate Returns the FlagSet used for commission create.

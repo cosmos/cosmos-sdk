@@ -3,9 +3,10 @@ package v5
 import (
 	"context"
 
+	"github.com/cosmos/gogoproto/types"
+
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
-	"github.com/cosmos/gogoproto/types"
 )
 
 var LegacyGlobalAccountNumberKey = []byte("globalAccountNumber")

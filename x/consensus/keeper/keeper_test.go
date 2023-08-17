@@ -17,7 +17,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type KeeperTestSuite struct {
@@ -35,7 +34,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper
@@ -70,7 +69,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 				}
-				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{
@@ -78,6 +78,35 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
+				},
+			},
+			true,
+		},
+		{
+			"success with abci",
+			types.QueryParamsRequest{},
+			func() {
+				input := &types.MsgUpdateParams{
+					Authority: s.consensusParamsKeeper.GetAuthority(),
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Abci: &cmtproto.ABCIParams{
+						VoteExtensionsEnableHeight: 1234,
+					},
+				}
+				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				s.Require().NoError(err)
+			},
+			types.QueryParamsResponse{
+				Params: &cmtproto.ConsensusParams{
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
+					Version:   defaultConsensusParams.Version,
+					Abci: &cmtproto.ABCIParams{
+						VoteExtensionsEnableHeight: 1234,
+					},
 				},
 			},
 			true,
@@ -131,7 +160,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Evidence:  defaultConsensusParams.Evidence,
 			},
 			expErr:    true,
-			expErrMsg: "block.MaxBytes must be greater than 0. Got -10",
+			expErrMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
 		},
 		{
 			name: "invalid authority",
@@ -156,6 +185,14 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
+
+				res, err := s.consensusParamsKeeper.Params(s.ctx, &types.QueryParamsRequest{})
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				s.Require().Equal(tc.input.Block, res.Params.Block)
+				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
+				s.Require().Equal(tc.input.Validator, res.Params.Validator)
 			}
 		})
 	}

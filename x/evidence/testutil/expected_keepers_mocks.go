@@ -9,6 +9,8 @@ import (
 	reflect "reflect"
 	time "time"
 
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+	address "cosmossdk.io/core/address"
 	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -40,12 +42,27 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 	return m.recorder
 }
 
+// ConsensusAddressCodec mocks base method.
+func (m *MockStakingKeeper) ConsensusAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ConsensusAddressCodec indicates an expected call of ConsensusAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ConsensusAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ConsensusAddressCodec))
+}
+
 // GetParams mocks base method.
-func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
+func (m *MockStakingKeeper) GetParams(ctx context.Context) (types1.Params, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
 	ret0, _ := ret[0].(types1.Params)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetParams indicates an expected call of GetParams.
@@ -55,11 +72,12 @@ func (mr *MockStakingKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types1.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types1.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
 	ret0, _ := ret[0].(types1.ValidatorI)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ValidatorByConsAddr indicates an expected call of ValidatorByConsAddr.
@@ -92,7 +110,7 @@ func (m *MockSlashingKeeper) EXPECT() *MockSlashingKeeperMockRecorder {
 }
 
 // GetPubkey mocks base method.
-func (m *MockSlashingKeeper) GetPubkey(arg0 types0.Context, arg1 types.Address) (types.PubKey, error) {
+func (m *MockSlashingKeeper) GetPubkey(arg0 context.Context, arg1 types.Address) (types.PubKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubkey", arg0, arg1)
 	ret0, _ := ret[0].(types.PubKey)
@@ -107,7 +125,7 @@ func (mr *MockSlashingKeeperMockRecorder) GetPubkey(arg0, arg1 interface{}) *gom
 }
 
 // HasValidatorSigningInfo mocks base method.
-func (m *MockSlashingKeeper) HasValidatorSigningInfo(arg0 types0.Context, arg1 types0.ConsAddress) bool {
+func (m *MockSlashingKeeper) HasValidatorSigningInfo(arg0 context.Context, arg1 types0.ConsAddress) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasValidatorSigningInfo", arg0, arg1)
 	ret0, _ := ret[0].(bool)
@@ -121,7 +139,7 @@ func (mr *MockSlashingKeeperMockRecorder) HasValidatorSigningInfo(arg0, arg1 int
 }
 
 // IsTombstoned mocks base method.
-func (m *MockSlashingKeeper) IsTombstoned(arg0 types0.Context, arg1 types0.ConsAddress) bool {
+func (m *MockSlashingKeeper) IsTombstoned(arg0 context.Context, arg1 types0.ConsAddress) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsTombstoned", arg0, arg1)
 	ret0, _ := ret[0].(bool)
@@ -135,9 +153,11 @@ func (mr *MockSlashingKeeperMockRecorder) IsTombstoned(arg0, arg1 interface{}) *
 }
 
 // Jail mocks base method.
-func (m *MockSlashingKeeper) Jail(arg0 types0.Context, arg1 types0.ConsAddress) {
+func (m *MockSlashingKeeper) Jail(arg0 context.Context, arg1 types0.ConsAddress) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Jail", arg0, arg1)
+	ret := m.ctrl.Call(m, "Jail", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Jail indicates an expected call of Jail.
@@ -147,9 +167,11 @@ func (mr *MockSlashingKeeperMockRecorder) Jail(arg0, arg1 interface{}) *gomock.C
 }
 
 // JailUntil mocks base method.
-func (m *MockSlashingKeeper) JailUntil(arg0 types0.Context, arg1 types0.ConsAddress, arg2 time.Time) {
+func (m *MockSlashingKeeper) JailUntil(arg0 context.Context, arg1 types0.ConsAddress, arg2 time.Time) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "JailUntil", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "JailUntil", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // JailUntil indicates an expected call of JailUntil.
@@ -159,9 +181,11 @@ func (mr *MockSlashingKeeperMockRecorder) JailUntil(arg0, arg1, arg2 interface{}
 }
 
 // Slash mocks base method.
-func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64) {
+func (m *MockSlashingKeeper) Slash(arg0 context.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Slash indicates an expected call of Slash.
@@ -171,11 +195,12 @@ func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 int
 }
 
 // SlashFractionDoubleSign mocks base method.
-func (m *MockSlashingKeeper) SlashFractionDoubleSign(arg0 types0.Context) math.LegacyDec {
+func (m *MockSlashingKeeper) SlashFractionDoubleSign(arg0 context.Context) (math.LegacyDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashFractionDoubleSign", arg0)
 	ret0, _ := ret[0].(math.LegacyDec)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SlashFractionDoubleSign indicates an expected call of SlashFractionDoubleSign.
@@ -185,9 +210,11 @@ func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 interface
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64, arg5 types1.Infraction) {
+func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 context.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64, arg5 stakingv1beta1.Infraction) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SlashWithInfractionReason indicates an expected call of SlashWithInfractionReason.
@@ -197,9 +224,11 @@ func (mr *MockSlashingKeeperMockRecorder) SlashWithInfractionReason(arg0, arg1, 
 }
 
 // Tombstone mocks base method.
-func (m *MockSlashingKeeper) Tombstone(arg0 types0.Context, arg1 types0.ConsAddress) {
+func (m *MockSlashingKeeper) Tombstone(arg0 context.Context, arg1 types0.ConsAddress) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Tombstone", arg0, arg1)
+	ret := m.ctrl.Call(m, "Tombstone", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Tombstone indicates an expected call of Tombstone.

@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -58,11 +57,20 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case v1.StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
+			err := k.InactiveProposalsQueue.Set(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id), proposal.Id)
+			if err != nil {
+				panic(err)
+			}
 		case v1.StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+			err := k.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+			if err != nil {
+				panic(err)
+			}
 		}
-		k.SetProposal(ctx, *proposal)
+		err := k.SetProposal(ctx, *proposal)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// if account has zero balance it probably means it's not set, so we set it
@@ -89,7 +97,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -108,7 +116,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposalsDeposits = append(proposalsDeposits, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -118,7 +126,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		proposalsVotes = append(proposalsVotes, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 

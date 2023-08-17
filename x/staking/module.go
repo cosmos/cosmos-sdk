@@ -6,23 +6,24 @@ import (
 	"fmt"
 	"sort"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	store "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -89,13 +90,8 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 }
 
 // GetTxCmd returns the root tx command for the staking module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
-}
-
-// GetQueryCmd returns no root query command for the staking module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ak.AddressCodec())
+func (amb AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd(amb.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(), amb.cdc.InterfaceRegistry().SigningContext().AddressCodec())
 }
 
 // AppModule implements an application module for the staking module.
@@ -189,10 +185,7 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-
-	am.keeper.BeginBlocker(c)
-	return nil
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
@@ -212,14 +205,16 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	Cdc           codec.Codec
-	Key           *store.KVStoreKey
+	Config                *modulev1.Module
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
+	AccountKeeper         types.AccountKeeper
+	BankKeeper            types.BankKeeper
+	Cdc                   codec.Codec
+	StoreService          store.KVStoreService
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 // Dependency Injection Outputs
@@ -232,17 +227,19 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 		authority.String(),
+		in.ValidatorAddressCodec,
+		in.ConsensusAddressCodec,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	return ModuleOutputs{StakingKeeper: k, Module: m}

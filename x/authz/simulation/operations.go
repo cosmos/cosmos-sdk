@@ -55,23 +55,17 @@ func WeightedOperations(
 		weightRevoke   int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgGrant, &weightMsgGrant, nil,
-		func(_ *rand.Rand) {
-			weightMsgGrant = WeightGrant
-		},
-	)
+	appParams.GetOrGenerate(OpWeightMsgGrant, &weightMsgGrant, nil, func(_ *rand.Rand) {
+		weightMsgGrant = WeightGrant
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightExec, &weightExec, nil,
-		func(_ *rand.Rand) {
-			weightExec = WeightExec
-		},
-	)
+	appParams.GetOrGenerate(OpWeightExec, &weightExec, nil, func(_ *rand.Rand) {
+		weightExec = WeightExec
+	})
 
-	appParams.GetOrGenerate(cdc, OpWeightRevoke, &weightRevoke, nil,
-		func(_ *rand.Rand) {
-			weightRevoke = WeightRevoke
-		},
-	)
+	appParams.GetOrGenerate(OpWeightRevoke, &weightRevoke, nil, func(_ *rand.Rand) {
+		weightRevoke = WeightRevoke
+	})
 
 	pCdc := codec.NewProtoCodec(registry)
 
@@ -147,7 +141,7 @@ func SimulateMsgGrant(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
@@ -224,7 +218,7 @@ func SimulateMsgRevoke(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to execute tx: "+err.Error()), nil, err
 		}
@@ -324,7 +318,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}

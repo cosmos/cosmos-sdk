@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -23,11 +22,10 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	)
 
 	// set the validator signing information
-	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
-
+	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo))
 	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
-	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
-	require.True(found)
+	info, err := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
+	require.NoError(err)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
 	require.Equal(info.IndexOffset, int64(3))
 	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
@@ -35,21 +33,22 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
 		signingInfos = append(signingInfos, info)
-		return false
+		return false, nil
 	})
-
+	require.NoError(err)
 	require.Equal(signingInfos[0].Address, signingInfo.Address)
 
 	// test Tombstone
-	keeper.Tombstone(ctx, consAddr)
+	err = keeper.Tombstone(ctx, consAddr)
+	require.NoError(err)
 	require.True(keeper.IsTombstoned(ctx, consAddr))
 
 	// test JailUntil
 	jailTime := time.Now().Add(time.Hour).UTC()
-	keeper.JailUntil(ctx, consAddr, jailTime)
-	sInfo, _ := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.NoError(keeper.JailUntil(ctx, consAddr, jailTime))
+	sInfo, _ := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
 	require.Equal(sInfo.JailedUntil, jailTime)
 }
 
@@ -60,7 +59,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 	for _, window := range []int64{100, 32_000} {
 		params := testutil.TestParams()
 		params.SignedBlocksWindow = window
-		require.NoError(keeper.SetParams(ctx, params))
+		require.NoError(keeper.Params.Set(ctx, params))
 
 		// validator misses all blocks in the window
 		var valIdxOffset int64
@@ -77,12 +76,13 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		}
 
 		// validator should have missed all blocks
-		missedBlocks := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		missedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow))
 
 		// sign next block, which rolls the missed block bitmap
 		idx := valIdxOffset % params.SignedBlocksWindow
-		err := keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, false)
+		err = keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, false)
 		require.NoError(err)
 
 		missed, err := keeper.GetMissedBlockBitmapValue(ctx, consAddr, idx)
@@ -90,7 +90,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		require.False(missed)
 
 		// validator should have missed all blocks except the last one
-		missedBlocks = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}
 }

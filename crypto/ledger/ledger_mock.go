@@ -74,7 +74,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(pk)
 	if err != nil {
-		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, csecp256k1.PubKeySize)

@@ -36,6 +36,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.10.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.10.0)
+
+* [#17383](https://github.com/cosmos/cosmos-sdk/pull/17383) Add `appmoduke.UpgradeModule` interface.
+
+## [v0.9.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.9.0)
+
+* [#16739](https://github.com/cosmos/cosmos-sdk/pull/16739) Add `AppHash` to header.Info.
+
+## [v0.8.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.8.0)
+
+* [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519) Update `comet.VoteInfo` for CometBFT v0.38.
+* [#16310](https://github.com/cosmos/cosmos-sdk/pull/16310) Add `gas.Service` and `gas.GasMeter` interfaces.
+
 ## [v0.7.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.7.0)
 
 * [#15850](https://github.com/cosmos/cosmos-sdk/pull/15850) Add `comet` and `header` packages.

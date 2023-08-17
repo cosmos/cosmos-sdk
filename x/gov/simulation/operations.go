@@ -1,18 +1,14 @@
 package simulation
 
 import (
-	"errors"
 	"math"
 	"math/rand"
 	"time"
-
-	"cosmossdk.io/collections"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -50,7 +46,6 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -65,25 +60,25 @@ func WeightedOperations(
 		weightMsgCancelProposal int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeposit, &weightMsgDeposit, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeposit = DefaultWeightMsgDeposit
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgVote, &weightMsgVote, nil,
+	appParams.GetOrGenerate(OpWeightMsgVote, &weightMsgVote, nil,
 		func(_ *rand.Rand) {
 			weightMsgVote = DefaultWeightMsgVote
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgVoteWeighted, &weightMsgVoteWeighted, nil,
+	appParams.GetOrGenerate(OpWeightMsgVoteWeighted, &weightMsgVoteWeighted, nil,
 		func(_ *rand.Rand) {
 			weightMsgVoteWeighted = DefaultWeightMsgVoteWeighted
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
+	appParams.GetOrGenerate(OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelProposal = DefaultWeightMsgCancelProposal
 		},
@@ -94,7 +89,7 @@ func WeightedOperations(
 	for _, wMsg := range wMsgs {
 		wMsg := wMsg // pin variable
 		var weight int
-		appParams.GetOrGenerate(cdc, wMsg.AppParamsKey(), &weight, nil,
+		appParams.GetOrGenerate(wMsg.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wMsg.DefaultWeight() },
 		)
 
@@ -112,7 +107,7 @@ func WeightedOperations(
 	for _, wContent := range wContents {
 		wContent := wContent // pin variable
 		var weight int
-		appParams.GetOrGenerate(cdc, wContent.AppParamsKey(), &weight, nil,
+		appParams.GetOrGenerate(wContent.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wContent.DefaultWeight() },
 		)
 
@@ -605,7 +600,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 		proposals = append(proposals, &value)
 		return false, nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 	if len(proposals) == 0 {
@@ -667,7 +662,7 @@ func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 	if w1 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
 			Option: v1.OptionYes,
-			Weight: sdk.NewDecWithPrec(int64(w1), 2).String(),
+			Weight: sdkmath.LegacyNewDecWithPrec(int64(w1), 2).String(),
 		})
 	}
 	if w2 > 0 {

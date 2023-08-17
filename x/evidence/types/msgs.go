@@ -3,17 +3,16 @@ package types
 import (
 	"fmt"
 
-	"cosmossdk.io/x/evidence/exported"
 	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg                       = &MsgSubmitEvidence{}
-	_ legacytx.LegacyMsg            = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )
@@ -29,18 +28,6 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 		return nil, err
 	}
 	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
-}
-
-// GetSignBytes returns the raw bytes a signer is expected to sign when submitting
-// a MsgSubmitEvidence message.
-func (m MsgSubmitEvidence) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
-// GetSigners returns the single expected signer for a MsgSubmitEvidence.
-func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
-	submitter, _ := sdk.AccAddressFromBech32(m.Submitter)
-	return []sdk.AccAddress{submitter}
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {

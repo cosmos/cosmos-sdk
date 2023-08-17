@@ -31,21 +31,21 @@ message CommissionRates {
   // rate is the commission rate charged to delegators, as a fraction.
   string rate = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
   // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
   string max_rate = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
   // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
   string max_change_rate = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -102,13 +102,13 @@ message Validator {
   // tokens define the delegated tokens (incl. self-delegation).
   string tokens = 5 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   // delegator_shares defines total shares issued to a validator's delegators.
   string delegator_shares = 6 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   // description defines the description terms for the validator.
@@ -125,7 +125,7 @@ message Validator {
   // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
 
@@ -163,7 +163,7 @@ message DVPair {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // DVPairs defines an array of DVPair objects.
@@ -180,8 +180,8 @@ message DVVTriplet {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // DVVTriplets defines an array of DVVTriplet objects.
@@ -196,14 +196,14 @@ message Delegation {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // delegator_address is the bech32-encoded address of the delegator.
+  // delegator_address is the encoded address of the delegator.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // validator_address is the bech32-encoded address of the validator.
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // validator_address is the encoded address of the validator.
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // shares define the delegation shares received.
   string shares = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -214,13 +214,13 @@ message UnbondingDelegation {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // delegator_address is the bech32-encoded address of the delegator.
+  // delegator_address is the encoded address of the delegator.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // validator_address is the bech32-encoded address of the validator.
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // validator_address is the encoded address of the validator.
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -235,13 +235,13 @@ message UnbondingDelegationEntry {
   // initial_balance defines the tokens initially scheduled to receive at completion.
   string initial_balance = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   // balance defines the tokens to receive at completion.
   string balance = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   // Incrementing id that uniquely identifies this entry
@@ -263,13 +263,13 @@ message RedelegationEntry {
   // initial_balance defines the initial balance when redelegation started.
   string initial_balance = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   // shares_dst is the amount of destination-validator shares created by redelegation.
   string shares_dst = 4 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   // Incrementing id that uniquely identifies this entry
@@ -288,12 +288,12 @@ message Redelegation {
   // delegator_address is the bech32-encoded address of the delegator.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // validator_src_address is the validator redelegation source operator address.
-  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // validator_dst_address is the validator redelegation destination operator address.
-  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.
@@ -315,7 +315,7 @@ message Params {
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
   string min_commission_rate = 6 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
@@ -341,7 +341,7 @@ message RedelegationEntryResponse {
   RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string            balance            = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
 }
@@ -363,14 +363,14 @@ message Pool {
   option (gogoproto.equal)       = true;
   string not_bonded_tokens       = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "not_bonded_tokens",
     (amino.dont_omitempty) = true
   ];
   string bonded_tokens = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "bonded_tokens",
     (amino.dont_omitempty) = true

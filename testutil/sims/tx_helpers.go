@@ -10,6 +10,8 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -94,6 +96,7 @@ func SignCheckDeliver(
 	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header types.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
+	t.Helper()
 	tx, err := GenSignedMockTx(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
@@ -120,20 +123,33 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(types2.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	bz, err := txCfg.TxEncoder()(tx)
+	require.NoError(t, err)
 
+	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
+		Height: header.Height,
+		Txs:    [][]byte{bz},
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, 1, len(resBlock.TxResults))
+	txResult := resBlock.TxResults[0]
+	finalizeSuccess := txResult.Code == 0
 	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		require.True(t, finalizeSuccess)
 	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
+		require.False(t, finalizeSuccess)
 	}
 
-	app.EndBlock(types2.RequestEndBlock{})
-	app.Commit()
+	_, err = app.Commit()
+	require.NoError(t, err)
+	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
+	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
+	if finalizeSuccess {
+		err = nil
+	} else {
+		err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
+	}
 
-	return gInfo, res, err
+	return gInfo, &txRes, err
 }

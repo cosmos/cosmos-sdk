@@ -73,6 +73,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
+			cdc:                          cdc,
 		}, nil
 	}
 }
@@ -87,7 +88,8 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 		}
 
 		return &wrapper{
-			tx: &theTx,
+			tx:  &theTx,
+			cdc: cdc,
 		}, nil
 	}
 }

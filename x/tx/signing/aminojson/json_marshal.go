@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -22,8 +23,10 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
+	// DonotSortFields when set turns off sorting of field names.
+	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
 	FileResolver signing.ProtoFileResolver
 }
@@ -36,6 +39,7 @@ type Encoder struct {
 	fieldEncoders   map[string]FieldEncoder
 	fileResolver    signing.ProtoFileResolver
 	typeResolver    protoregistry.MessageTypeResolver
+	doNotSortFields bool
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -58,11 +62,11 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		fieldEncoders: map[string]FieldEncoder{
-			"legacy_coins":     nullSliceAsEmptyEncoder,
-			"cosmos_dec_bytes": cosmosDecEncoder,
+			"legacy_coins": nullSliceAsEmptyEncoder,
 		},
-		fileResolver: options.FileResolver,
-		typeResolver: options.TypeResolver,
+		fileResolver:    options.FileResolver,
+		typeResolver:    options.TypeResolver,
+		doNotSortFields: options.DoNotSortFields,
 	}
 	return enc
 }
@@ -115,7 +119,7 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
 	name, named := getMessageAminoName(msg.Descriptor().Options())
 	if named {
-		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+		_, err := fmt.Fprintf(writer, `{"type":"%s","value":`, name)
 		if err != nil {
 			return err
 		}
@@ -127,7 +131,7 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) erro
 	}
 
 	if named {
-		_, err = writer.Write([]byte("}"))
+		_, err = io.WriteString(writer, "}")
 		if err != nil {
 			return err
 		}
@@ -147,7 +151,7 @@ func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
 
 	case protoreflect.List:
 		if !val.IsValid() {
-			_, err := writer.Write([]byte("null"))
+			_, err := io.WriteString(writer, "null")
 			return err
 		}
 		return enc.marshalList(val, writer)
@@ -162,6 +166,11 @@ func (enc Encoder) marshal(value protoreflect.Value, writer io.Writer) error {
 	default:
 		return errors.Errorf("unknown type %T", val)
 	}
+}
+
+type nameAndIndex struct {
+	i    int
+	name string
 }
 
 func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
@@ -184,7 +193,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		return err
 	}
 
-	_, err := writer.Write([]byte("{"))
+	_, err := io.WriteString(writer, "{")
 	if err != nil {
 		return err
 	}
@@ -192,10 +201,27 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	fields := msg.Descriptor().Fields()
 	first := true
 	emptyOneOfWritten := map[string]bool{}
+
+	// 1. If permitted, ensure the names are sorted.
+	indices := make([]*nameAndIndex, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
-		v := msg.Get(f)
 		name := getAminoFieldName(f)
+		indices = append(indices, &nameAndIndex{i: i, name: name})
+	}
+
+	if shouldSortFields := !enc.doNotSortFields; shouldSortFields {
+		sort.Slice(indices, func(i, j int) bool {
+			ni, nj := indices[i], indices[j]
+			return ni.name < nj.name
+		})
+	}
+
+	for _, ni := range indices {
+		i := ni.i
+		name := ni.name
+		f := fields.Get(i)
+		v := msg.Get(f)
 		oneof := f.ContainingOneof()
 		isOneOf := oneof != nil
 		oneofFieldName, oneofTypeName, err := getOneOfNames(f)
@@ -222,15 +248,14 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		if !first {
-			_, err = writer.Write([]byte(","))
+			_, err = io.WriteString(writer, ",")
 			if err != nil {
 				return err
 			}
 		}
 
 		if isOneOf && !writeNil {
-			_, err = writer.Write([]byte(fmt.Sprintf(`"%s":{"type":"%s","value":{`,
-				oneofFieldName, oneofTypeName)))
+			_, err = fmt.Fprintf(writer, `"%s":{"type":"%s","value":{`, oneofFieldName, oneofTypeName)
 			if err != nil {
 				return err
 			}
@@ -241,7 +266,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 			return err
 		}
 
-		_, err = writer.Write([]byte(":"))
+		_, err = io.WriteString(writer, ":")
 		if err != nil {
 			return err
 		}
@@ -253,7 +278,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 				return err
 			}
 		} else if writeNil {
-			_, err = writer.Write([]byte("null"))
+			_, err = io.WriteString(writer, "null")
 			if err != nil {
 				return err
 			}
@@ -265,7 +290,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		if isOneOf && !writeNil {
-			_, err = writer.Write([]byte("}}"))
+			_, err = io.WriteString(writer, "}}")
 			if err != nil {
 				return err
 			}
@@ -274,7 +299,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		first = false
 	}
 
-	_, err = writer.Write([]byte("}"))
+	_, err = io.WriteString(writer, "}")
 	return err
 }
 
@@ -290,7 +315,7 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	n := list.Len()
 
-	_, err := writer.Write([]byte("["))
+	_, err := io.WriteString(writer, "[")
 	if err != nil {
 		return err
 	}
@@ -298,7 +323,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	first := true
 	for i := 0; i < n; i++ {
 		if !first {
-			_, err := writer.Write([]byte(","))
+			_, err := io.WriteString(writer, ",")
 			if err != nil {
 				return err
 			}
@@ -311,7 +336,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 		}
 	}
 
-	_, err = writer.Write([]byte("]"))
+	_, err = io.WriteString(writer, "]")
 	return err
 }
 

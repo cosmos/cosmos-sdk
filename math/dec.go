@@ -925,10 +925,12 @@ func LegacyMaxDec(d1, d2 LegacyDec) LegacyDec {
 
 // intended to be used with require/assert:  require.True(DecEq(...))
 func LegacyDecEq(t *testing.T, exp, got LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }

@@ -3,10 +3,10 @@ package distribution_test
 import (
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -26,7 +26,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		&accountKeeper)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	assert.Assert(t, acc != nil)
 }

@@ -12,12 +12,10 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/cockroachdb/errors"
-
 	"github.com/cosmos/go-bip39"
+	"golang.org/x/crypto/bcrypt"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -102,6 +100,9 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+
+	// Implements client/v2 keyring interface
+	LookupAddressByKeyName(name string) ([]byte, error)
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -595,6 +596,21 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 	return ks.options.SupportedAlgos, ks.options.SupportedAlgosLedger
 }
 
+// LookupAddressByKeyName returns the address of a key stored in the keyring
+func (ks keystore) LookupAddressByKeyName(name string) ([]byte, error) {
+	record, err := ks.Key(name)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := record.GetAddress()
+	if err != nil {
+		return nil, err
+	}
+
+	return addr, nil
+}
+
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
@@ -608,7 +624,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	switch signMode {

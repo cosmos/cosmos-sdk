@@ -100,8 +100,13 @@ message Proposal {
 
   // expedited defines if the proposal is expedited
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   bool expedited = 14;
+
+  // failed_reason defines the reason why the proposal failed
+  //
+  // Since: cosmos-sdk 0.50
+  string failed_reason = 15;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -151,7 +156,7 @@ message Vote {
   // options is the weighted vote options.
   repeated WeightedVoteOption options = 4;
 
-  // metadata is any arbitrary metadata to attached to the vote.
+  // metadata is any arbitrary metadata attached to the vote.
   // the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#vote-5
   string metadata = 5;
 }
@@ -224,23 +229,23 @@ message Params {
 
   // The cancel ratio which will not be returned back to the depositors when a proposal is cancelled.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   string proposal_cancel_ratio = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   // The address which will receive (proposal_cancel_ratio * deposit) proposal deposits.
   // If empty, the (proposal_cancel_ratio * deposit) proposal deposits will be burned.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   string proposal_cancel_dest = 9 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // Duration of the voting period of an expedited proposal.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   google.protobuf.Duration expedited_voting_period = 10 [(gogoproto.stdduration) = true];
 
   // Minimum proportion of Yes votes for proposal to pass. Default value: 0.67.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   string expedited_threshold = 11 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   //  Minimum expedited deposit for a proposal to enter voting period.

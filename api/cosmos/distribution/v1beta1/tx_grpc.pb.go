@@ -59,7 +59,7 @@ type MsgClient interface {
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error)
 }
 
@@ -165,7 +165,7 @@ type MsgServer interface {
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
 	//
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

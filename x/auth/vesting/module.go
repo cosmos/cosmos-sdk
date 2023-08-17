@@ -8,6 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,11 +18,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -70,11 +68,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.S
 // GetTxCmd returns the root tx command for the auth module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)
-}
-
-// GetQueryCmd returns the module's root query command. Currently, this is a no-op.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
 }
 
 // AppModule extends the AppModuleBasic implementation by implementing the

@@ -9,7 +9,7 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.48). The
+// MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.50). The
 // migration includes:
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
@@ -38,7 +38,5 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
-	store.Set(v4.ParamsKey, bz)
-
-	return nil
+	return store.Set(v4.ParamsKey, bz)
 }

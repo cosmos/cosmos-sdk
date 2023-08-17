@@ -147,6 +147,21 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "metadata too long",
 		},
+		"summary too long": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					strings.Repeat("1", 300*40),
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "summary too long",
+		},
 		"many signers": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
@@ -160,7 +175,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"signer isn't gov account": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -175,7 +190,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "expected gov account as only signer for proposal message",
+			expErrMsg: "expected authority account as only signer for proposal message",
 		},
 		"invalid msg handler": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -546,8 +561,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -603,7 +618,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return proposalID
 			},
 			option: v1.WeightedVoteOptions{ // weight sum <1
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:     proposer,
 			metadata:  "",
@@ -696,8 +711,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				return res.ProposalId
 			},
 			option: v1.WeightedVoteOptions{
-				v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
-				v1.NewWeightedVoteOption(v1.OptionAbstain, sdk.NewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(5, 1)),
+				v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 1)),
 			},
 			voter:    proposer,
 			metadata: "",
@@ -1125,11 +1140,11 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1184,7 +1199,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.VoteOption(0x13),
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1199,7 +1214,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			option: v1beta1.WeightedVoteOptions{
 				v1beta1.WeightedVoteOption{
 					Option: v1beta1.OptionYes,
-					Weight: sdk.NewDecWithPrec(5, 1),
+					Weight: sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			voter:     proposer,
@@ -1652,7 +1667,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins
-		minInitialDepositRatio sdk.Dec
+		minInitialDepositRatio sdkmath.LegacyDec
 		initialDeposit         sdk.Coins
 		accountBalance         sdk.Coins
 
@@ -1699,7 +1714,8 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.Params.Set(ctx, params)
+			err := govKeeper.Params.Set(ctx, params)
+			suite.Require().NoError(err)
 
 			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)

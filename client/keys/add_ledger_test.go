@@ -38,7 +38,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	// Prepare a keybase
 	kbHome := t.TempDir()
@@ -91,7 +91,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
@@ -166,7 +166,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
-			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)

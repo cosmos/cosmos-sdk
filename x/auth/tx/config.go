@@ -3,13 +3,12 @@ package tx
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,12 +17,13 @@ import (
 )
 
 type config struct {
-	handler     *txsigning.HandlerMap
-	decoder     sdk.TxDecoder
-	encoder     sdk.TxEncoder
-	jsonDecoder sdk.TxDecoder
-	jsonEncoder sdk.TxEncoder
-	protoCodec  codec.ProtoCodecMarshaler
+	handler        *txsigning.HandlerMap
+	decoder        sdk.TxDecoder
+	encoder        sdk.TxEncoder
+	jsonDecoder    sdk.TxDecoder
+	jsonEncoder    sdk.TxEncoder
+	protoCodec     codec.ProtoCodecMarshaler
+	signingContext *txsigning.Context
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -46,6 +46,14 @@ type ConfigOptions struct {
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
 	CustomSignModes []txsigning.SignModeHandler
+	// ProtoDecoder is the decoder that will be used to decode protobuf transactions.
+	ProtoDecoder sdk.TxDecoder
+	// ProtoEncoder is the encoder that will be used to encode protobuf transactions.
+	ProtoEncoder sdk.TxEncoder
+	// JSONDecoder is the decoder that will be used to decode json transactions.
+	JSONDecoder sdk.TxDecoder
+	// JSONEncoder is the encoder that will be used to encode json transactions.
+	JSONEncoder sdk.TxEncoder
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -53,82 +61,69 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// We currently don't add SIGN_MODE_TEXTUAL as part of the default sign
-	// modes, as it's not released yet (including the Ledger app). However,
-	// textual's sign mode handler is already available in this package. If you
-	// want to use textual for **TESTING** purposes, feel free to create a
-	// handler that includes SIGN_MODE_TEXTUAL.
-	// ref: Tracking issue for SIGN_MODE_TEXTUAL https://github.com/cosmos/cosmos-sdk/issues/11970
+	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 //
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL
-// (for testing purposes for now).
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
 //
-// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage.  Within the SDK,
+// We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
-	return NewTxConfigWithOptions(protoCodec, ConfigOptions{
+	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
 		CustomSignModes:  customSignModes,
 	})
+	if err != nil {
+		panic(err)
+	}
+	return txConfig
 }
 
-// NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
-// custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) client.TxConfig {
-	txConfig := &config{
-		decoder:     DefaultTxDecoder(protoCodec),
-		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
-		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
-		protoCodec:  protoCodec,
-	}
+// NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
+// validator address prefix enabled codecs.
+func NewDefaultSigningOptions() (*txsigning.Options, error) {
+	sdkConfig := sdk.GetConfig()
+	return &txsigning.Options{
+		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),
+	}, nil
+}
 
-	opts := &configOptions
-	if opts.SigningHandler != nil {
-		txConfig.handler = opts.SigningHandler
-		return txConfig
-	}
-
-	signingOpts := opts.SigningOptions
-	if signingOpts == nil {
-		signingOpts = &txsigning.Options{}
-	}
-	if signingOpts.TypeResolver == nil {
-		signingOpts.TypeResolver = protoregistry.GlobalTypes
-	}
-	if signingOpts.FileResolver == nil {
-		signingOpts.FileResolver = protoCodec.InterfaceRegistry()
-	}
-	if len(opts.EnabledSignModes) == 0 {
-		opts.EnabledSignModes = DefaultSignModes
-	}
-
-	if opts.SigningContext == nil {
-		sdkConfig := sdk.GetConfig()
-		if signingOpts.AddressCodec == nil {
-			signingOpts.AddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix())
-		}
-		if signingOpts.ValidatorAddressCodec == nil {
-			signingOpts.ValidatorAddressCodec = authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix())
-		}
-		var err error
-		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+// NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
+// It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
+// NewTxConfigWithOptions but this fn does not enforce it.
+func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, error) {
+	var err error
+	configOpts := &configOptions
+	if configOpts.SigningOptions == nil {
+		configOpts.SigningOptions, err = NewDefaultSigningOptions()
 		if err != nil {
-			panic(err)
+			return nil, err
+		}
+	}
+	if configOpts.SigningContext == nil {
+		configOpts.SigningContext, err = txsigning.NewContext(*configOpts.SigningOptions)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	lenSignModes := len(configOptions.EnabledSignModes)
-	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
-	for i, m := range configOptions.EnabledSignModes {
+	signingOpts := configOpts.SigningOptions
+
+	if len(configOpts.EnabledSignModes) == 0 {
+		configOpts.EnabledSignModes = DefaultSignModes
+	}
+
+	lenSignModes := len(configOpts.EnabledSignModes)
+	handlers := make([]txsigning.SignModeHandler, lenSignModes+len(configOpts.CustomSignModes))
+	for i, m := range configOpts.EnabledSignModes {
 		var err error
 		switch m {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
@@ -136,10 +131,10 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i], err = directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
 				TypeResolver:   signingOpts.TypeResolver,
-				SignersContext: opts.SigningContext,
+				SignersContext: configOpts.SigningContext,
 			})
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
@@ -148,24 +143,76 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 			})
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
-				CoinMetadataQuerier: opts.TextualCoinMetadataQueryFn,
+				CoinMetadataQuerier: configOpts.TextualCoinMetadataQueryFn,
 				FileResolver:        signingOpts.FileResolver,
 				TypeResolver:        signingOpts.TypeResolver,
 			})
-			if opts.TextualCoinMetadataQueryFn == nil {
-				panic("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+			if configOpts.TextualCoinMetadataQueryFn == nil {
+				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 	}
-	for i, m := range opts.CustomSignModes {
+	for i, m := range configOpts.CustomSignModes {
 		handlers[i+lenSignModes] = m
 	}
 
-	txConfig.handler = txsigning.NewHandlerMap(handlers...)
-	return txConfig
+	handler := txsigning.NewHandlerMap(handlers...)
+	return handler, nil
+}
+
+// NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
+// custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
+func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) (client.TxConfig, error) {
+	txConfig := &config{
+		protoCodec: protoCodec,
+	}
+	if configOptions.ProtoDecoder == nil {
+		txConfig.decoder = DefaultTxDecoder(protoCodec)
+	}
+	if configOptions.ProtoEncoder == nil {
+		txConfig.encoder = DefaultTxEncoder()
+	}
+	if configOptions.JSONDecoder == nil {
+		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
+	}
+	if configOptions.JSONEncoder == nil {
+		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
+	}
+
+	var err error
+	opts := &configOptions
+	if opts.SigningContext == nil {
+		signingOpts := configOptions.SigningOptions
+		if signingOpts == nil {
+			signingOpts, err = NewDefaultSigningOptions()
+			if err != nil {
+				return nil, err
+			}
+		}
+		if signingOpts.FileResolver == nil {
+			signingOpts.FileResolver = protoCodec.InterfaceRegistry()
+		}
+		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+		if err != nil {
+			return nil, err
+		}
+	}
+	txConfig.signingContext = opts.SigningContext
+
+	if opts.SigningHandler != nil {
+		txConfig.handler = opts.SigningHandler
+		return txConfig, nil
+	}
+
+	txConfig.handler, err = NewSigningHandlerMap(configOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return txConfig, nil
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
@@ -200,4 +247,8 @@ func (g config) TxJSONEncoder() sdk.TxEncoder {
 
 func (g config) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
+}
+
+func (g config) SigningContext() *txsigning.Context {
+	return g.signingContext
 }

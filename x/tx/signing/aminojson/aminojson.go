@@ -2,7 +2,6 @@ package aminojson
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -23,7 +22,7 @@ type SignModeHandler struct {
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
 	FileResolver signing.ProtoFileResolver
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver signing.TypeResolver
 	Encoder      *Encoder
 }
 
@@ -111,25 +110,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		Tip:           tip,
 	}
 
-	bz, err := h.encoder.Marshal(signDoc)
-	if err != nil {
-		return nil, err
-	}
-	return sortJSON(bz)
-}
-
-// sortJSON sorts the JSON keys of the given JSON encoded byte slice.
-func sortJSON(toSortJSON []byte) ([]byte, error) {
-	var c interface{}
-	err := json.Unmarshal(toSortJSON, &c)
-	if err != nil {
-		return nil, err
-	}
-	js, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return js, nil
+	return h.encoder.Marshal(signDoc)
 }
 
 var _ signing.SignModeHandler = (*SignModeHandler)(nil)

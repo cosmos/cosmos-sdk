@@ -2,16 +2,12 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-
 	"cosmossdk.io/core/store"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,13 +67,11 @@ type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
-	results, pageResp, err := query.CollectionPaginate[string, math.Int](ctx, k.Supply, pagination)
+	coins, pageResp, err := query.CollectionPaginate(ctx, k.Supply, pagination, func(key string, value math.Int) (sdk.Coin, error) {
+		return sdk.NewCoin(key, value), nil
+	})
 	if err != nil {
 		return nil, nil, err
-	}
-	coins := sdk.NewCoins()
-	for _, res := range results {
-		coins = coins.Add(sdk.NewCoin(res.Key, res.Value))
 	}
 
 	return coins, pageResp, nil
@@ -97,7 +91,7 @@ func NewBaseKeeper(
 	authority string,
 	logger log.Logger,
 ) BaseKeeper {
-	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
@@ -262,7 +256,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.M
 	err := k.BaseViewKeeper.DenomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
 		return cb(metadata), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }
@@ -483,7 +477,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin
 	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) (bool, error) {
 		return cb(sdk.NewCoin(s, m)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

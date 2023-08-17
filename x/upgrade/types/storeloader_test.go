@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -27,6 +26,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
@@ -44,6 +44,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
@@ -119,31 +120,41 @@ func TestSetLoader(t *testing.T) {
 
 			logger := log.NewTestLogger(t)
 
-			origapp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
-			origapp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
-			err := origapp.LoadLatestVersion()
+			oldApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
+			oldApp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
+
+			err := oldApp.LoadLatestVersion()
 			require.Nil(t, err)
+			require.Equal(t, int64(1), oldApp.LastBlockHeight())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				origapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
-				res := origapp.Commit()
-				require.NotNil(t, res.Data)
+				_, err := oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
+				require.NoError(t, err)
+				_, err = oldApp.Commit()
+				require.NoError(t, err)
 			}
+
+			require.Equal(t, upgradeHeight-1, oldApp.LastBlockHeight())
 
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
 
-			// load the new app with the original app db
-			app := baseapp.NewBaseApp(t.Name(), logger.With("instance", "new"), db, nil, opts...)
-			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
-			err = app.LoadLatestVersion()
+			// load the new newApp with the original newApp db
+			newApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "new"), db, nil, opts...)
+			newApp.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
+
+			err = newApp.LoadLatestVersion()
 			require.Nil(t, err)
 
+			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
+
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: upgradeHeight}})
-			res := app.Commit()
-			require.NotNil(t, res.Data)
+			_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
+			require.NoError(t, err)
+			_, err = newApp.Commit()
+			require.NoError(t, err)
+			require.Equal(t, upgradeHeight, newApp.LastBlockHeight())
 
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)

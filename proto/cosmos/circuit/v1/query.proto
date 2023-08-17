@@ -8,7 +8,7 @@ import "cosmos/circuit/v1/types.proto";
 import "google/api/annotations.proto";
 import "cosmos/query/v1/query.proto";
 
-// Msg defines the crisis Msg service.
+// Query defines the circuit gRPC querier service.
 service Query {
   // Account returns account permissions.
   rpc Account(QueryAccountRequest) returns (AccountResponse) {

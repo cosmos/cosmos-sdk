@@ -21,14 +21,13 @@ cat ../x/README.md | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-
 cp ../tools/cosmovisor/README.md ./docs/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/tooling/03-hubl.md
+wget -O docs/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
 
 ## Add package documentation
+cp ../client/v2/README.md ./docs/core/17-autocli.md
 cp ../depinject/README.md ./docs/packages/01-depinject.md
 cp ../collections/README.md ./docs/packages/02-collections.md
 cp ../orm/README.md ./docs/packages/03-orm.md
-
-## Add rosetta documentation
-cp ../tools/rosetta/README.md ./docs/run-node/04-rosetta.md
 
 ## Add architecture documentation
 cp -r ./architecture ./docs

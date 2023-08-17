@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -79,6 +78,8 @@ type Keeper struct {
 	router baseapp.MessageRouter
 
 	config group.Config
+
+	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
@@ -87,6 +88,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		key:       storeKey,
 		router:    router,
 		accKeeper: accKeeper,
+		cdc:       cdc,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
@@ -375,6 +377,15 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
+		// Emit event for proposal finalized with its result
+		if err := ctx.EventManager().EmitTypedEvent(
+			&group.EventProposalPruned{
+				ProposalId:  proposal.Id,
+				Status:      proposal.Status,
+				TallyResult: &proposal.FinalTallyResult,
+			}); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -406,6 +417,14 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
+				return err
+			}
+			// Emit event for proposal finalized with its result
+			if err := ctx.EventManager().EmitTypedEvent(
+				&group.EventProposalPruned{
+					ProposalId: proposal.Id,
+					Status:     proposal.Status,
+				}); err != nil {
 				return err
 			}
 		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {

@@ -9,12 +9,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -56,6 +58,7 @@ func (s *VestingTestSuite) SetupTest() {
 		storeService,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -94,7 +97,18 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 			expErr:    true,
 			expErrMsg: "invalid 'to' address",
 		},
-		"": {
+		"invalid coins": {
+			input: vestingtypes.NewMsgCreateVestingAccount(
+				fromAddr,
+				to1Addr,
+				sdk.Coins{sdk.Coin{Denom: "stake", Amount: math.NewInt(-1)}},
+				time.Now().Unix(),
+				true,
+			),
+			expErr:    true,
+			expErrMsg: "-1stake: invalid coins",
+		},
+		"invalid end time": {
 			input: vestingtypes.NewMsgCreateVestingAccount(
 				fromAddr,
 				to1Addr,
@@ -196,6 +210,15 @@ func (s *VestingTestSuite) TestCreatePermanentLockedAccount() {
 			),
 			expErr:    true,
 			expErrMsg: "invalid 'to' address",
+		},
+		"invalid coins": {
+			input: vestingtypes.NewMsgCreatePermanentLockedAccount(
+				fromAddr,
+				to1Addr,
+				sdk.Coins{sdk.Coin{Denom: "stake", Amount: math.NewInt(-1)}},
+			),
+			expErr:    true,
+			expErrMsg: "-1stake: invalid coins",
 		},
 		"create for existing account": {
 			preRun: func() {
@@ -316,6 +339,22 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 			),
 			expErr:    true,
 			expErrMsg: "invalid period",
+		},
+		{
+			name: "invalid coins",
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				fromAddr,
+				to1Addr,
+				time.Now().Unix(),
+				[]vestingtypes.Period{
+					{
+						Length: 1,
+						Amount: sdk.Coins{sdk.Coin{Denom: "stake", Amount: math.NewInt(-1)}},
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "-1stake: invalid coins",
 		},
 		{
 			name: "create for existing account",

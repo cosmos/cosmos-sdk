@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +26,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -53,7 +53,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 		), &accountKeeper)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	b.ResetTimer()
 

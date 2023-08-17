@@ -3,8 +3,9 @@ package appmodule
 import (
 	"context"
 
-	"cosmossdk.io/depinject"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/depinject"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -69,4 +70,11 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
+type UpgradeModule interface {
+	IsUpgradeModule()
 }

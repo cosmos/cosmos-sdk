@@ -1,9 +1,14 @@
 package tx
 
 import (
+	"bytes"
+	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,6 +37,9 @@ type wrapper struct {
 	authInfoBz []byte
 
 	txBodyHasUnknownNonCriticals bool
+
+	signers [][]byte
+	msgsV2  []protov2.Message
 }
 
 var (
@@ -52,7 +60,7 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func newBuilder(cdc codec.Codec) *wrapper {
-	return &wrapper{
+	w := &wrapper{
 		cdc: cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
@@ -61,14 +69,47 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
+	return w
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
+func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
+	if w.msgsV2 == nil {
+		err := w.initSignersAndMsgsV2()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return w.msgsV2, nil
+}
+
 func (w *wrapper) ValidateBasic() error {
-	return w.tx.ValidateBasic()
+	if w.tx == nil {
+		return fmt.Errorf("bad Tx")
+	}
+
+	if err := w.tx.ValidateBasic(); err != nil {
+		return err
+	}
+
+	sigs := w.tx.Signatures
+	signers, err := w.GetSigners()
+	if err != nil {
+		return err
+	}
+
+	if len(sigs) != len(signers) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"wrong number of signers; expected %d, got %d", len(signers), len(sigs),
+		)
+	}
+
+	return nil
 }
 
 func (w *wrapper) getBodyBytes() []byte {
@@ -103,8 +144,20 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
-func (w *wrapper) GetSigners() []sdk.AccAddress {
-	return w.tx.GetSigners()
+func (w *wrapper) initSignersAndMsgsV2() error {
+	var err error
+	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
+	return err
+}
+
+func (w *wrapper) GetSigners() ([][]byte, error) {
+	if w.signers == nil {
+		err := w.initSignersAndMsgsV2()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return w.signers, nil
 }
 
 func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
@@ -138,21 +191,27 @@ func (w *wrapper) GetFee() sdk.Coins {
 	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (w *wrapper) FeePayer() sdk.AccAddress {
+func (w *wrapper) FeePayer() []byte {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
+		feePayerAddr, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return feePayerAddr
 	}
+
 	// use first signer as default if no payer specified
-	return w.GetSigners()[0]
+	signers, err := w.GetSigners()
+	if err != nil {
+		return nil
+	}
+
+	return signers[0]
 }
 
-func (w *wrapper) FeeGranter() sdk.AccAddress {
-	feePayer := w.tx.AuthInfo.Fee.Granter
-	if feePayer != "" {
-		return sdk.MustAccAddressFromBech32(feePayer)
-	}
-	return nil
+func (w *wrapper) FeeGranter() []byte {
+	return w.tx.FeeGranter(w.cdc)
 }
 
 func (w *wrapper) GetTip() *tx.Tip {
@@ -214,6 +273,10 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
+
+	// reset signers and msgsV2
+	w.signers = nil
+	w.msgsV2 = nil
 
 	return nil
 }
@@ -292,12 +355,12 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	for i, sig := range signatures {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		any, err := codectypes.NewAnyWithValue(sig.PubKey)
+		pubKey, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
 		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: any,
+			PublicKey: pubKey,
 			ModeInfo:  modeInfo,
 			Sequence:  sig.Sequence,
 		}
@@ -316,8 +379,13 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 }
 
 func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
+	signers, err := w.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	if w.tx.AuthInfo.SignerInfos == nil {
-		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(w.GetSigners()))
+		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(signers))
 	}
 
 	w.tx.AuthInfo.SignerInfos[index] = info
@@ -330,8 +398,13 @@ func (w *wrapper) setSignatures(sigs [][]byte) {
 }
 
 func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
+	signers, err := w.GetSigners()
+	if err != nil {
+		panic(err)
+	}
+
 	if w.tx.Signatures == nil {
-		w.tx.Signatures = make([][]byte, len(w.GetSigners()))
+		w.tx.Signatures = make([][]byte, len(signers))
 	}
 
 	w.tx.Signatures[index] = sig
@@ -443,13 +516,25 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	for i, msgAny := range body.Messages {
 		msgs[i] = msgAny.GetCachedValue().(sdk.Msg)
 	}
-	w.SetMsgs(msgs...)
+	err = w.SetMsgs(msgs...)
+	if err != nil {
+		return err
+	}
 	w.SetTip(data.GetSignDoc().GetTip())
 
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
-	for i, signer := range w.GetSigners() {
-		if signer.String() == data.Address {
+	signers, err := w.GetSigners()
+	if err != nil {
+		return err
+	}
+
+	for i, signer := range signers {
+		addrBz, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(data.Address)
+		if err != nil {
+			return err
+		}
+		if bytes.Equal(signer, addrBz) {
 			signerIndex = i
 		}
 	}

@@ -8,7 +8,7 @@
     * Add `ListenCommit`, flatten the state writes in a block to a single batch.
     * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
     * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
-
+* 26/05/2023: Update with ABCI 2.0
 
 ## Status
 
@@ -223,14 +223,10 @@ so that the service can group the state changes with the ABCI requests.
 
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
-    // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-    ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
-    // ListenEndBlock updates the steaming service with the latest EndBlock messages
-    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
-    // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-    ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-    // ListenCommit updates the steaming service with the latest Commit messages and state changes
-    ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error
+	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
+	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
+	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
 }
 ```
 
@@ -267,85 +263,27 @@ type BaseApp struct {
 
 #### ABCI Event Hooks
 
-We will modify the `BeginBlock`, `EndBlock`, `DeliverTx` and `Commit` methods to pass ABCI requests and responses
+We will modify the `FinalizeBlock` and `Commit` methods to pass ABCI requests and responses
 to any streaming service hooks registered with the `BaseApp`.
 
 ```go
-func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
 
-    ...
-
-    // call the streaming service hook with the BeginBlock messages
-    for _, abciListener := range app.abciListeners {
-        ctx := app.deliverState.ctx
-        blockHeight := ctx.BlockHeight()
-        if app.abciListenersAsync {
-            go func(req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
-                if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-                    app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-                }
-            }(req, res)
-        } else {
-            if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-                app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-                if app.stopNodeOnABCIListenerErr {
-                    os.Exit(1)
-                }
-            }
-        }
-    }
-
-    return res
-}
-```
-
-```go
-func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-
-    ...
-
-    // call the streaming service hook with the EndBlock messages
-    for _, abciListener := range app.abciListeners {
-        ctx := app.deliverState.ctx
-        blockHeight := ctx.BlockHeight()
-        if app.abciListenersAsync {
-            go func(req abci.RequestEndBlock, res abci.ResponseEndBlock) {
-                if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
-                    app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-                }
-            }(req, res)
-        } else {
-            if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
-                app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-                if app.stopNodeOnABCIListenerErr {
-                    os.Exit(1)
-                }
-            }
-        }
-    }
-
-    return res
-}
-```
-
-```go
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-
-    var abciRes abci.ResponseDeliverTx
+    var abciRes abci.ResponseFinalizeBlock
     defer func() {
-        // call the streaming service hook with the EndBlock messages
+        // call the streaming service hook with the FinalizeBlock messages
         for _, abciListener := range app.abciListeners {
-            ctx := app.deliverState.ctx
+            ctx := app.finalizeState.ctx
             blockHeight := ctx.BlockHeight()
             if app.abciListenersAsync {
-                go func(req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
-                    if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
-                        app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+                go func(req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) {
+                    if err := app.abciListener.FinalizeBlock(blockHeight, req, res); err != nil {
+                        app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
                     }
                 }(req, abciRes)
             } else {
-                if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
-                    app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+                if err := app.abciListener.ListenFinalizeBlock(blockHeight, req, res); err != nil {
+                    app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
                     if app.stopNodeOnABCIListenerErr {
                         os.Exit(1)
                     }
@@ -455,18 +393,9 @@ syntax = "proto3";
 
 message Empty {}
 
-message ListenBeginBlockRequest {
-  RequestBeginBlock  req = 1;
-  ResponseBeginBlock res = 2;
-}
-message ListenEndBlockRequest {
-  RequestEndBlock  req = 1;
-  ResponseEndBlock res = 2;
-}
-message ListenDeliverTxRequest {
-  int64             block_height = 1;
-  RequestDeliverTx  req          = 2;
-  ResponseDeliverTx res          = 3;
+message ListenFinalizeBlockRequest {
+  RequestFinalizeBlock  req = 1;
+  ResponseFinalizeBlock res = 2;
 }
 message ListenCommitRequest {
   int64                block_height = 1;
@@ -476,9 +405,7 @@ message ListenCommitRequest {
 
 // plugin that listens to state changes
 service ABCIListenerService {
-  rpc ListenBeginBlock(ListenBeginBlockRequest) returns (Empty);
-  rpc ListenEndBlock(ListenEndBlockRequest) returns (Empty);
-  rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
+  rpc ListenFinalizeBlock(ListenFinalizeBlockRequest) returns (Empty);
   rpc ListenCommit(ListenCommitRequest) returns (Empty);
 }
 ```
@@ -487,9 +414,7 @@ service ABCIListenerService {
 ...
 // plugin that doesn't listen to state changes
 service ABCIListenerService {
-  rpc ListenBeginBlock(ListenBeginBlockRequest) returns (Empty);
-  rpc ListenEndBlock(ListenEndBlockRequest) returns (Empty);
-  rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
+  rpc ListenFinalizeBlock(ListenFinalizeBlockRequest) returns (Empty);
   rpc ListenCommit(ListenCommitRequest) returns (Empty);
 }
 ```
@@ -508,17 +433,7 @@ type GRPCClient struct {
     client ABCIListenerServiceClient
 }
 
-func (m *GRPCClient) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-    _, err := m.client.ListenBeginBlock(ctx, &ListenBeginBlockRequest{Req: req, Res: res})
-    return err
-}
-
-func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
-    _, err := m.client.ListenEndBlock(ctx, &ListenEndBlockRequest{Req: req, Res: res})
-    return err
-}
-
-func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: req, Res: res})
     return err
@@ -536,16 +451,8 @@ type GRPCServer struct {
     Impl baseapp.ABCIListener
 }
 
-func (m *GRPCServer) ListenBeginBlock(ctx context.Context, req *ListenBeginBlockRequest) (*Empty, error) {
-    return &Empty{}, m.Impl.ListenBeginBlock(ctx, req.Req, req.Res)
-}
-
-func (m *GRPCServer) ListenEndBlock(ctx context.Context, req *ListenEndBlockRequest) (*Empty, error) {
-    return &Empty{}, m.Impl.ListenEndBlock(ctx, req.Req, req.Res)
-}
-
-func (m *GRPCServer) ListenDeliverTx(ctx context.Context, req *ListenDeliverTxRequest) (*Empty, error) {
-    return &Empty{}, m.Impl.ListenDeliverTx(ctx, req.Req, req.Res)
+func (m *GRPCServer) ListenFinalizeBlock(ctx context.Context, req *ListenFinalizeBlockRequest) (*Empty, error) {
+    return &Empty{}, m.Impl.ListenFinalizeBlock(ctx, req.Req, req.Res)
 }
 
 func (m *GRPCServer) ListenCommit(ctx context.Context, req *ListenCommitRequest) (*Empty, error) {
@@ -564,15 +471,7 @@ And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are wr
 // ABCIListener is the implementation of the baseapp.ABCIListener interface
 type ABCIListener struct{}
 
-func (m *ABCIListenerPlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-    // send data to external system
-}
-
-func (m *ABCIListenerPlugin) ListenEndBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-    // send data to external system
-}
-
-func (m *ABCIListenerPlugin) ListenDeliverTxBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     // send data to external system
 }
 
@@ -669,9 +568,12 @@ func registerABCIListenerPlugin(
     exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
     exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
     bApp.cms.AddListeners(exposedKeys)
-    bApp.SetStreamingService(abciListener)
-    bApp.stopNodeOnABCIListenerErr = stopNodeOnErr
-    bApp.abciListenersAsync = async
+    app.SetStreamingManager(
+		storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{abciListener},
+			StopNodeOnErr: stopNodeOnErr,
+		},
+	)
 }
 ```
 

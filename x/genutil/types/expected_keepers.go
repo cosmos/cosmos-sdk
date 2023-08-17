@@ -13,7 +13,7 @@ import (
 
 // StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
-	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate, err error)
+	ApplyAndReturnValidatorSetUpdates(context.Context) (updates []abci.ValidatorUpdate, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)

@@ -11,8 +11,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -68,9 +68,20 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if err != nil {
 		return ctx, err
 	}
-	signers := sigTx.GetSigners()
 
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	signerStrs := make([]string, len(signers))
 	for i, pk := range pubkeys {
+		var err error
+		signerStrs[i], err = spkd.ak.AddressCodec().BytesToString(signers[i])
+		if err != nil {
+			return sdk.Context{}, err
+		}
+
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
 			if !simulate {
@@ -81,7 +92,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
@@ -111,7 +122,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	var events sdk.Events
 	for i, sig := range sigs {
 		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
 		))
 
 		sigBzs, err := signatureDataToBz(sig.Data)
@@ -164,10 +175,13 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
+		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -249,15 +263,18 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
+	if len(sigs) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	for i, sig := range sigs {
-		acc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -348,8 +365,13 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(ctx, addr)
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	for _, signer := range signers {
+		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)
 		}
@@ -515,10 +537,10 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 			sigs = append(sigs, nestedSigs...)
 		}
 
-		multisig := cryptotypes.MultiSignature{
+		multiSignature := cryptotypes.MultiSignature{
 			Signatures: sigs,
 		}
-		aggregatedSig, err := multisig.Marshal()
+		aggregatedSig, err := multiSignature.Marshal()
 		if err != nil {
 			return nil, err
 		}

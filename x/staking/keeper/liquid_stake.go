@@ -155,13 +155,13 @@ func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator t
 }
 
 // DecreaseValidatorLiquidShares decrements the liquid shares on a validator
-func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) (types.Validator, error) {
 	if shares.GT(validator.LiquidShares) {
-		return types.ErrValidatorLiquidSharesUnderflow
+		return validator, types.ErrValidatorLiquidSharesUnderflow
 	}
 	validator.LiquidShares = validator.LiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
-	return nil
+	return validator, nil
 }
 
 // Increase validator bond shares increments the validator's self bond

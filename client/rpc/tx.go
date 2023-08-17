@@ -55,20 +55,20 @@ func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxRespo
 		txHash = res.Hash.String()
 	}
 
-	parsedLogs, _ := sdk.ParseABCILogs(res.TxResult.Log)
+	parsedLogs, _ := sdk.ParseABCILogs(res.DeliverTx.Log)
 
 	return &sdk.TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
-		Codespace: res.TxResult.Codespace,
-		Code:      res.TxResult.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
-		RawLog:    res.TxResult.Log,
+		Codespace: res.DeliverTx.Codespace,
+		Code:      res.DeliverTx.Code,
+		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
+		RawLog:    res.DeliverTx.Log,
 		Logs:      parsedLogs,
-		Info:      res.TxResult.Info,
-		GasWanted: res.TxResult.GasWanted,
-		GasUsed:   res.TxResult.GasUsed,
-		Events:    res.TxResult.Events,
+		Info:      res.DeliverTx.Info,
+		GasWanted: res.DeliverTx.GasWanted,
+		GasUsed:   res.DeliverTx.GasUsed,
+		Events:    res.DeliverTx.Events,
 	}
 }
 
@@ -121,7 +121,7 @@ func QueryEventForTxCmd() *cobra.Command {
 			case evt := <-eventCh:
 				if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
 					res := &coretypes.ResultBroadcastTxCommit{
-						TxResult: txe.Result,
+						DeliverTx: txe.Result,
 						Hash:     tmtypes.Tx(txe.Tx).Hash(),
 						Height:   txe.Height,
 					}

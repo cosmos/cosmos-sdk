@@ -30,7 +30,6 @@ import (
 )
 
 type TestSuite struct {
-	module    appmodule.HasBeginBlocker
 	preModule appmodule.HasPreBlocker
 	keeper    *keeper.Keeper
 	ctx       sdk.Context

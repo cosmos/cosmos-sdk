@@ -283,7 +283,7 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
-	preBeginModulesStr := make([]string, 0, len(modules))
+	preBeginModulesStr := make([]string, 0)
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())
@@ -309,9 +309,13 @@ func NewManager(modules ...AppModule) *Manager {
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(simpleModuleMap))
+	preBeginModulesStr := make([]string, 0)
 	for name, module := range moduleMap {
 		simpleModuleMap[name] = module
 		modulesStr = append(modulesStr, name)
+		if _, ok := module.(appmodule.HasPreBlocker); ok {
+			preBeginModulesStr = append(preBeginModulesStr, name)
+		}
 	}
 
 	// Sort the modules by name. Given that we are using a map above we can't guarantee the order.
@@ -321,6 +325,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		Modules:                  simpleModuleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
+		PreBlockers:              preBeginModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderEndBlockers:         modulesStr,
 		OrderPrecommiters:        modulesStr,

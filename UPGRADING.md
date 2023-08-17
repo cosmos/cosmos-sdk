@@ -75,13 +75,20 @@ and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.co
 for more info.
 
 
-#### Upgrade
+#### Set PreBlocker
 
 **Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+
 ```diff
-+ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
++ app.SetPreBlocker(app.PreBlocker)
 ```
-BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+```diff
++func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.ResponsePreBlock, error) {
++	return app.ModuleManager.PreBlock(ctx, req)
++}
+```
+
+BaseApp added `SetPreBlocker` for apps. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
 
 #### Events
 

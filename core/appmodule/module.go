@@ -52,6 +52,15 @@ type HasPrecommit interface {
 	Precommit(context.Context) error
 }
 
+type ResponsePreBlock interface {
+	IsConsensusParamsChanged() bool
+}
+
+type HasPreBlocker interface {
+	AppModule
+	PreBlock(context.Context) (ResponsePreBlock, error)
+}
+
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
 type HasBeginBlocker interface {
@@ -70,11 +79,4 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
-}
-
-// UpgradeModule is the extension interface that upgrade module should implement to differentiate
-// it from other modules, migration handler need ensure the upgrade module's migration is executed
-// before the rest of the modules.
-type UpgradeModule interface {
-	IsUpgradeModule()
 }

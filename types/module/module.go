@@ -271,6 +271,7 @@ type Manager struct {
 	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
 	OrderInitGenesis         []string
 	OrderExportGenesis       []string
+	PreBlockers              []string
 	OrderBeginBlockers       []string
 	OrderEndBlockers         []string
 	OrderPrepareCheckStaters []string
@@ -282,15 +283,20 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
+	preBeginModulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())
+		if _, ok := module.(appmodule.HasPreBlocker); ok {
+			preBeginModulesStr = append(preBeginModulesStr, module.Name())
+		}
 	}
 
 	return &Manager{
 		Modules:                  moduleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
+		PreBlockers:              preBeginModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderPrepareCheckStaters: modulesStr,
 		OrderPrecommiters:        modulesStr,
@@ -696,32 +702,37 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// RunMigrationBeginBlock performs begin block functionality for upgrade module.
+// PreBlock performs begin block functionality for upgrade module.
 // It takes the current context as a parameter and returns a boolean value
-// indicating whether the migration was executed or not and an error if fails.
-func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
-	for _, moduleName := range m.OrderBeginBlockers {
-		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := mod.(appmodule.UpgradeModule); ok {
-				err := mod.BeginBlock(ctx)
-				return err == nil, err
+// indicating whether the migration was successfully executed or not.
+func (m *Manager) PreBlock(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	paramsChanged := false
+	for _, moduleName := range m.PreBlockers {
+		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
+			rsp, err := module.PreBlock(ctx)
+			if err != nil {
+				return sdk.ResponsePreBlock{}, err
+			}
+			if rsp.IsConsensusParamsChanged() {
+				paramsChanged = true
 			}
 		}
 	}
-	return false, nil
+	return sdk.ResponsePreBlock{
+		ConsensusParamsChanged: paramsChanged,
+	}, nil
 }
 
-// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
-// child context with an event manager to aggregate events emitted from non-upgrade
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(appmodule.UpgradeModule); !ok {
-				if err := module.BeginBlock(ctx); err != nil {
-					return sdk.BeginBlock{}, err
-				}
+			if err := module.BeginBlock(ctx); err != nil {
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}

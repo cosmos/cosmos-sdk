@@ -148,6 +148,11 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // BeginBlocker application updates every begin block
+func (a *App) PreBlocker(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
+	return a.ModuleManager.PreBlock(ctx)
+}
+
+// BeginBlocker application updates every begin block
 func (a *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	return a.ModuleManager.BeginBlock(ctx)
 }

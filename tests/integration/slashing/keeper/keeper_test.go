@@ -233,7 +233,7 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
 
-	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
+	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
@@ -287,7 +287,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	power := int64(100)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
-	err := f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	err := f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0])
 	assert.NilError(t, err)
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
@@ -362,7 +362,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	valAddr := sdk.ValAddress(addr)
 
-	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
+	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info))

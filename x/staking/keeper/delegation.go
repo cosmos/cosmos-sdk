@@ -291,23 +291,6 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 	return nil
 }
 
-// IterateDelegatorRedelegations iterates through one delegator's redelegations.
-func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) error {
-	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
-	err := k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (stop bool, err error) {
-		if cb(red) {
-			return true, nil
-		}
-
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // HasMaxUnbondingDelegationEntries checks if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
@@ -497,8 +480,8 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 	redelegations = make([]types.Redelegation, maxRetrieve)
 
 	i := 0
-	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
-	err = k.Redelegations.Walk(ctx, rng, func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
+	err = k.Redelegations.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
 		if i >= int(maxRetrieve) {
 			return true, nil
 		}
@@ -551,7 +534,7 @@ func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAdd
 
 // HasMaxRedelegationEntries checks if the redelegation entries reached maximum limit.
 func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (bool, error) {
-	red, err := k.Redelegations.Get(ctx, collections.Join3(delegatorAddr, validatorSrcAddr, validatorDstAddr))
+	red, err := k.Redelegations.Get(ctx, collections.Join3(delegatorAddr.Bytes(), validatorSrcAddr.Bytes(), validatorDstAddr.Bytes()))
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return false, nil
@@ -584,7 +567,7 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	if err = k.Redelegations.Set(ctx, collections.Join3(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr), sdk.ValAddress(valDestAddr)), red); err != nil {
+	if err = k.Redelegations.Set(ctx, collections.Join3(delegatorAddress, valSrcAddr, valDestAddr), red); err != nil {
 		return err
 	}
 
@@ -608,7 +591,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 		return types.Redelegation{}, err
 	}
 
-	red, err := k.Redelegations.Get(ctx, collections.Join3(delegatorAddr, validatorSrcAddr, validatorDstAddr))
+	red, err := k.Redelegations.Get(ctx, collections.Join3(delegatorAddr.Bytes(), validatorSrcAddr.Bytes(), validatorDstAddr.Bytes()))
 	if err == nil {
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else if errors.Is(err, collections.ErrNotFound) {
@@ -639,7 +622,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 func (k Keeper) IterateRedelegations(ctx context.Context, fn func(index int64, red types.Redelegation) (stop bool)) error {
 	var i int64
 	err := k.Redelegations.Walk(ctx, nil,
-		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], red types.Redelegation) (bool, error) {
+		func(key collections.Triple[[]byte, []byte, []byte], red types.Redelegation) (bool, error) {
 			if stop := fn(i, red); stop {
 				return true, nil
 			}
@@ -672,7 +655,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if err = k.Redelegations.Remove(ctx, collections.Join3(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valSrcAddr), sdk.ValAddress(valDestAddr))); err != nil {
+	if err = k.Redelegations.Remove(ctx, collections.Join3(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
 		return err
 	}
 
@@ -790,11 +773,16 @@ func (k Keeper) Delegate(
 		return math.LegacyZeroDec(), types.ErrDelegatorShareExRateInvalid
 	}
 
+	valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.LegacyZeroDec(), err
+	}
+
 	// Get or create the delegation object and call the appropriate hook if present
-	delegation, err := k.Delegations.Get(ctx, collections.Join(delAddr, validator.GetOperator()))
+	delegation, err := k.Delegations.Get(ctx, collections.Join(delAddr, sdk.ValAddress(valbz)))
 	if err == nil {
 		// found
-		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, valbz)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		// not found
 		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
@@ -802,13 +790,8 @@ func (k Keeper) Delegate(
 			return math.LegacyDec{}, err1
 		}
 
-		valAddrStr, err1 := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-		if err1 != nil {
-			return math.LegacyDec{}, err1
-		}
-
-		delegation = types.NewDelegation(delAddrStr, valAddrStr, math.LegacyZeroDec())
-		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+		delegation = types.NewDelegation(delAddrStr, validator.GetOperator(), math.LegacyZeroDec())
+		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, valbz)
 	} else {
 		return math.LegacyZeroDec(), err
 	}
@@ -881,7 +864,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Call the after-modification hook
-	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delAddr, valbz); err != nil {
 		return newShares, err
 	}
 
@@ -924,7 +907,12 @@ func (k Keeper) Unbond(
 		return amount, err
 	}
 
-	isValidatorOperator := bytes.Equal(delegatorAddress, validator.GetOperator())
+	valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return amount, err
+	}
+
+	isValidatorOperator := bytes.Equal(delegatorAddress, valbz)
 
 	// If the delegation is the operator of the validator and undelegating will decrease the validator's
 	// self-delegation below their minimum, we jail the validator.
@@ -934,7 +922,7 @@ func (k Keeper) Unbond(
 		if err != nil {
 			return amount, err
 		}
-		validator = k.mustGetValidator(ctx, validator.GetOperator())
+		validator = k.mustGetValidator(ctx, valbz)
 	}
 
 	if delegation.Shares.IsZero() {
@@ -966,7 +954,7 @@ func (k Keeper) Unbond(
 
 	if validator.DelegatorShares.IsZero() && validator.IsUnbonded() {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
-		if err = k.RemoveValidator(ctx, validator.GetOperator()); err != nil {
+		if err = k.RemoveValidator(ctx, valbz); err != nil {
 			return amount, err
 		}
 	}
@@ -1214,7 +1202,7 @@ func (k Keeper) BeginRedelegation(
 func (k Keeper) CompleteRedelegation(
 	ctx context.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
 ) (sdk.Coins, error) {
-	red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
+	red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr.Bytes(), valSrcAddr.Bytes(), valDstAddr.Bytes()))
 	if err != nil {
 		return nil, err
 	}

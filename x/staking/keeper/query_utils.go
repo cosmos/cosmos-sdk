@@ -25,12 +25,12 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validators[i] = validator
@@ -39,10 +39,10 @@ func (k Keeper) GetDelegatorValidators(
 		return false, nil
 	})
 	if err != nil {
-		return nil, err
+		return types.Validators{}, err
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
 // GetDelegatorValidator returns a validator that a delegator is bonded to
@@ -114,16 +114,16 @@ func (k Keeper) GetAllRedelegations(
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
-	rng := collections.NewPrefixedTripleRange[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress](delegator)
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
 	err := k.Redelegations.Walk(ctx, rng,
-		func(key collections.Triple[sdk.AccAddress, sdk.ValAddress, sdk.ValAddress], redelegation types.Redelegation) (stop bool, err error) {
+		func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
 			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-			if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
 				return false, nil
 			}
 
-			if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
 				return false, nil
 			}
 

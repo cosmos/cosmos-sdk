@@ -35,6 +35,7 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
 	bApp.MountStores(a.app.storeKeys...)
+	bApp.SetMigrationModuleManager(a.app.ModuleManager)
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())

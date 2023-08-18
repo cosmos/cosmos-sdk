@@ -694,6 +694,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 				if cp.Block == nil {
 					if cp = app.GetConsensusParams(ctx); cp.Block != nil {
 						ctx = ctx.WithConsensusParams(cp)
+						app.finalizeBlockState.ctx = ctx
 					}
 				}
 			} else if err != nil {

@@ -90,6 +90,7 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 
 var (
 	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasPreBlocker   = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
 )
 

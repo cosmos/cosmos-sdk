@@ -170,6 +170,9 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return nil
 }
 
+// IsUpgradeModule implements the module.UpgradeModule interface.
+func (am AppModuleBasic) IsUpgradeModule() {}
+
 //
 // App Wiring Setup
 //

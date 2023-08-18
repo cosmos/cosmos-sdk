@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* [#17421](https://github.com/cosmos/cosmos-sdk/pull/17421) Remove `appmodule.UpgradeModule` and add `appmodule.HasPreBlocker` interface.
+* [#17421](https://github.com/cosmos/cosmos-sdk/pull/17421) Add `appmodule.HasPreBlocker` interface.
 
 ## [v0.10.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.10.0)
 

@@ -65,14 +65,29 @@ func (b *Batch) Delete(storeKey string, key []byte) error {
 }
 
 func (b *Batch) Write() error {
-	// for _, op := range b.ops {
-	// 	switch op.action {
-	// 	case batchActionSet:
-	// 		 b.tx.
+	delStmt := "delete from state_storage where store_key = ? and key = ? and version = ?;"
+	upsertStmt := `
+	insert into state_storage(store_key, key, value, version)
+  	values(?, ?, ?, ?)
+  on conflict(store_key, key, version) do update set
+    value = ?;
+	`
 
-	// 	case batchActionDel:
-	// 	}
-	// }
+	for _, op := range b.ops {
+		switch op.action {
+		case batchActionSet:
+			_, err := b.tx.Exec(upsertStmt, op.storeKey, op.key, op.value, b.version, op.value)
+			if err != nil {
+				return fmt.Errorf("failed to exec SQL statement: %w", err)
+			}
+
+		case batchActionDel:
+			_, err := b.tx.Exec(delStmt, op.storeKey, op.key, b.version)
+			if err != nil {
+				return fmt.Errorf("failed to exec SQL statement: %w", err)
+			}
+		}
+	}
 
 	if err := b.tx.Commit(); err != nil {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)

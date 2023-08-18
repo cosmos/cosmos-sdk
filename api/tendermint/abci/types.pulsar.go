@@ -32681,7 +32681,8 @@ type ResponseFinalizeBlock struct {
 	ValidatorUpdates []*ValidatorUpdate `protobuf:"bytes,3,rep,name=validator_updates,json=validatorUpdates,proto3" json:"validator_updates,omitempty"`
 	// updates to the consensus params, if any.
 	ConsensusParamUpdates *types.ConsensusParams `protobuf:"bytes,4,opt,name=consensus_param_updates,json=consensusParamUpdates,proto3" json:"consensus_param_updates,omitempty"`
-	// app_hash is the hash of the applications' state which is used to confirm that execution of the transactions was deterministic. It is up to the application to decide which algorithm to use.
+	// app_hash is the hash of the applications' state which is used to confirm that execution of the transactions was
+	// deterministic. It is up to the application to decide which algorithm to use.
 	AppHash []byte `protobuf:"bytes,5,opt,name=app_hash,json=appHash,proto3" json:"app_hash,omitempty"`
 }
 

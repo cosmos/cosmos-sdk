@@ -564,7 +564,65 @@ func TestImportPrivKey(t *testing.T) {
 	}
 }
 
-func TestExportImportPrivKey(t *testing.T) {
+func TestImportPrivKeyHex(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name        string
+		uid         string
+		backend     string
+		hexKey      string
+		algo        string
+		expectedErr error
+	}{
+		{
+			name:        "correct import",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "correct import without prefix",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "a3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "wrong hex length",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xae57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: hex.ErrLength,
+		},
+		{
+			name:        "unsupported algo",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "notSupportedAlgo",
+			expectedErr: ErrUnsupportedSigningAlgo,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("TestExport", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			err = kb.ImportPrivKeyHex(tt.uid, tt.hexKey, tt.algo)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestExportImportPrivKeyArmor(t *testing.T) {
 	cdc := getCodec()
 	tests := []struct {
 		name              string

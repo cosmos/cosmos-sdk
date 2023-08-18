@@ -55,6 +55,13 @@ func TestDatabase_CRUD(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []byte("value"), val)
 
+	err = db.Set(storeKey1, 1, []byte("key"), []byte("new_value"))
+	require.NoError(t, err)
+
+	val, err = db.Get(storeKey1, 1, []byte("key"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("new_value"), val)
+
 	err = db.Delete(storeKey1, 1, []byte("key"))
 	require.NoError(t, err)
 

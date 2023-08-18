@@ -128,9 +128,14 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	stmt := "insert into state_storage(store_key, key, value, version) values(?, ?, ?, ?);"
+	stmt := `
+	insert into state_storage(store_key, key, value, version)
+  	values(?, ?, ?, ?)
+  on conflict(store_key, key, version) do update set
+    value = ?;
+	`
 
-	_, err := db.storage.Exec(stmt, storeKey, key, value, version)
+	_, err := db.storage.Exec(stmt, storeKey, key, value, version, value)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}

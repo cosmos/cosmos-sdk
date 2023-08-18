@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/rpc) [#17274](https://github.com/cosmos/cosmos-sdk/pull/17274) Add `QueryEventForTxCmd` cmd to subscribe and wait event for transaction by hash.
 * (baseapp) [#16239](https://github.com/cosmos/cosmos-sdk/pull/16239) Add Gas Limits to allow node operators to resource bound queries.
 * (baseapp) [#17393](https://github.com/cosmos/cosmos-sdk/pull/17394) Check BlockID Flag on Votes in `ValidateVoteExtensions`
+* (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
 
 ### Improvements
 

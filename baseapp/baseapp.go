@@ -243,7 +243,7 @@ func (app *BaseApp) AppVersion(ctx context.Context) (uint64, error) {
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("getting consensus params: %w", err)
+		return 0, fmt.Errorf("failed to get consensus params: %w", err)
 	}
 	if cp.Version == nil {
 		return 0, nil

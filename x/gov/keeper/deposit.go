@@ -50,7 +50,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint6
 func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (bool, error)) error {
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
 	err := keeper.Deposits.Walk(ctx, rng, cb)
-	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return err
 	}
 	return nil

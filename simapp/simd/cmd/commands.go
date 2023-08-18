@@ -126,7 +126,7 @@ func initRootCmd(
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		genesisCommand(txConfig, basicManager),
 		queryCommand(),
 		txCommand(),
@@ -159,7 +159,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		rpc.ValidatorCommand(),
+		rpc.QueryEventForTxCmd(),
 		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		server.QueryBlocksCmd(),

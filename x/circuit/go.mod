@@ -1,11 +1,11 @@
 module cosmossdk.io/x/circuit
 
-go 1.20
+go 1.21
 
 require (
 	cosmossdk.io/api v0.7.0
 	cosmossdk.io/collections v0.3.1-0.20230808102719-f04fefdc7a68
-	cosmossdk.io/core v0.9.0
+	cosmossdk.io/core v0.10.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.0.1

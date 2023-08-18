@@ -71,3 +71,10 @@ type HasEndBlocker interface {
 	// a block.
 	EndBlock(context.Context) error
 }
+
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
+type UpgradeModule interface {
+	IsUpgradeModule()
+}

@@ -3,13 +3,11 @@ package simulation_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -27,11 +25,9 @@ var (
 func TestDecodeStore(t *testing.T) {
 	cdc := testutil.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
-	bondTime := time.Now().UTC()
 
 	val, err := types.NewValidator(valAddr1.String(), delPk1, types.NewDescription("test", "test", "test", "test", "test"))
 	require.NoError(t, err)
-	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, math.OneInt(), math.LegacyOneDec(), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	oneIntBz, err := math.OneInt().Marshal()
 	require.NoError(t, err)
 
@@ -40,7 +36,6 @@ func TestDecodeStore(t *testing.T) {
 			{Key: types.LastTotalPowerKey, Value: oneIntBz},
 			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshal(&red)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -52,7 +47,6 @@ func TestDecodeStore(t *testing.T) {
 		{"LastTotalPower", fmt.Sprintf("%v\n%v", math.OneInt(), math.OneInt())},
 		{"Validator", fmt.Sprintf("%v\n%v", val, val)},
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
-		{"Redelegation", fmt.Sprintf("%v\n%v", red, red)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

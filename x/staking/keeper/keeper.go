@@ -41,6 +41,7 @@ type Keeper struct {
 	UnbondingID                 collections.Sequence
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	UnbondingType               collections.Map[uint64, uint64]
+	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
 	UnbondingDelegations        collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], []byte]
@@ -108,7 +109,17 @@ func NewKeeper(
 			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
-		UnbondingType:        collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		Redelegations: collections.NewMap(
+			sb, types.RedelegationKey,
+			"redelegations",
+			collections.TripleKeyCodec(
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			codec.CollValue[types.Redelegation](cdc),
+		),
 		UnbondingIndex:       collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.ValAddressKey), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 	}

@@ -15,6 +15,7 @@ type AppModuleWithAllExtensions interface {
 	module.HasInvariants
 	module.HasConsensusVersion
 	module.HasABCIEndblock
+	module.HasName
 }
 
 // CoreAppModule is solely here for the purpose of generating
@@ -26,4 +27,9 @@ type CoreAppModule interface {
 	appmodule.HasEndBlocker
 	appmodule.HasPrecommit
 	appmodule.HasPrepareCheckState
+}
+
+type CoreUpgradeAppModule interface {
+	CoreAppModule
+	appmodule.UpgradeModule
 }

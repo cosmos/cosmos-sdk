@@ -104,6 +104,10 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
+			jsonMarshalOptions.Indent = ""
+		}
+
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err
@@ -114,6 +118,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 	if b.AddTxConnFlags != nil {
 		b.AddTxConnFlags(cmd)
+
+		cmd.Flags().BoolP(flagNoIndent, "", false, "Do not indent JSON output")
 	}
 
 	return cmd, err

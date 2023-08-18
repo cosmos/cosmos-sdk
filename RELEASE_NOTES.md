@@ -1,6 +1,6 @@
 # Cosmos SDK v0.46.15 Release Notes
 
-This patch release introduces a few bug fixes and improvements to the v0.46.x line of the Cosmos SDK. Notably, <!-- TODO -->.
+This patch release introduces a few bug fixes and improvements to the v0.46.x line of the Cosmos SDK.
 
 Ensure you have the following replaces in the `go.mod` of your application:
 

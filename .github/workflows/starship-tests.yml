@@ -1,54 +1,56 @@
-name: Sims Nightly (Long)
-# Release Sims workflow runs long-lived (multi-seed & large block size) simulations
-# This workflow only runs mightly at 8am UTC and on releases
+name: Starship E2E Tests
+# E2E tests using Starship, run on a schedule
 on:
   schedule:
-    - cron: "0 8 * * *"
-  release:
-    types: [published]
+    - cron: "0 */6 * * *" # every 6 hours
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}-sims-nightly-long
+  group: ci-${{ github.ref }}-starship-tests
   cancel-in-progress: true
 
 jobs:
-  install-runsim:
-    permissions:
-      contents: none
+  e2e-test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-          check-latest: true
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-
-  test-sim-multi-seed-long:
-    runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
           check-latest: true
-      - uses: actions/cache@v3
+      # Starship Infra setup
+      # - Connects to k8s cluster with kubeconfig (digital ocean)
+      # - Creates a new namespace based on the name (deleted in next step)
+      # - Spins up the infra with the given config file
+      # - Waits till all nodes are running (timeout 30m)
+      # - Port forward all ports to localhost for next steps to connect
+      - name: Setup Test infra
+        id: starship-action
+        uses: cosmology-tech/starship-action@0.2.14
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-      - name: test-sim-multi-seed-long
+          values: tests/starship/configs/ci.yaml
+          port-forward: true
+          version: 0.1.42
+          timeout: 10m
+      - name: Run Tests
         run: |
-          make test-sim-multi-seed-long
+          cd tests/starship/
+          make test
+      # Starship resource cleanup on cluster
+      - name: Cleanup cluster
+        if: always()
+        run: |
+          helm delete $DEVNET_NAME --debug --namespace $DEVNET_NAMESPACE --wait || true
+          kubectl delete namespace $DEVNET_NAMESPACE --wait=true || true
+        env:
+          DEVNET_NAME: ${{ steps.starship-action.outputs.name }}
+          DEVNET_NAMESPACE: ${{ steps.starship-action.outputs.namespace }}
 
   sims-notify-success:
-    needs: [test-sim-multi-seed-long]
+    needs: [e2e-test]
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
@@ -69,13 +71,13 @@ jobs:
           SLACK_USERNAME: Sim Tests
           SLACK_ICON_EMOJI: ":white_check_mark:"
           SLACK_COLOR: good
-          SLACK_MESSAGE: Sims Nightly (Long) are passing
+          SLACK_MESSAGE: Starship tests are passing
           SLACK_FOOTER: ""
 
   sims-notify-failure:
     permissions:
       contents: none
-    needs: [test-sim-multi-seed-long]
+    needs: [e2e-test]
     runs-on: ubuntu-latest
     if: ${{ failure() }}
     steps:
@@ -87,5 +89,5 @@ jobs:
           SLACK_USERNAME: Sim Tests
           SLACK_ICON_EMOJI: ":skull:"
           SLACK_COLOR: danger
-          SLACK_MESSAGE: Sims Nightly (Long) are failing
+          SLACK_MESSAGE: Starship tests are failing
           SLACK_FOOTER: ""

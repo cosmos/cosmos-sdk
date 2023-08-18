@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -245,7 +243,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.M
 	err := k.BaseViewKeeper.DenomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
 		return cb(metadata), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }
@@ -466,7 +464,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin
 	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) (bool, error) {
 		return cb(sdk.NewCoin(s, m)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

@@ -25,12 +25,12 @@ func (k Keeper) GetDelegatorValidators(
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			return true, err
+			return false, err
 		}
 
 		validators[i] = validator
@@ -39,10 +39,10 @@ func (k Keeper) GetDelegatorValidators(
 		return false, nil
 	})
 	if err != nil {
-		return nil, err
+		return types.Validators{}, err
 	}
 
-	return validators[:i], nil // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
 // GetDelegatorValidator returns a validator that a delegator is bonded to
@@ -110,39 +110,29 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllRedelegations(
 	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) ([]types.Redelegation, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
+	err := k.Redelegations.Walk(ctx, rng,
+		func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
+			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorSrcAddress)
-		if err != nil {
-			return nil, err
-		}
-		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
-		if err != nil {
-			return nil, err
-		}
-		if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
-			continue
-		}
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
+				return false, nil
+			}
 
-		if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
-			continue
-		}
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
+				return false, nil
+			}
 
-		redelegations = append(redelegations, redelegation)
+			redelegations = append(redelegations, redelegation)
+			return false, nil
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	return redelegations, nil

@@ -70,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/distribution) [#17236](https://github.com/cosmos/cosmos-sdk/pull/17236) Using "validateCommunityTax" in "Params.ValidateBasic", preventing panic when field "CommunityTax" is nil.
 * (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
 * (baseapp) [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Stop state-machine when `RunMigrationBeginBlock` has error.
+* (baseapp) [#17449](https://github.com/cosmos/cosmos-sdk/pull/17449) Add missing update ConsensusParams of `finalizeBlockState.ctx` which is used in endBlock.
 
 ### API Breaking Changes
 

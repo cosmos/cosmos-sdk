@@ -38,8 +38,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- TODO(@julienrbrt) prepare patch version for all released modules, to be compatible with v0.50.6 due to prometheus bump -->
-
 ### Features
 
 * (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.

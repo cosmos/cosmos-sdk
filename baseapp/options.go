@@ -140,7 +140,7 @@ func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get consensus params: %w", err)
 	}
 	if cp.Version == nil {
 		return errors.New("version is not set in param store")

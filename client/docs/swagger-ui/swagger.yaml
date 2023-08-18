@@ -17657,13 +17657,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -18450,12 +18450,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -22260,13 +22260,13 @@ paths:
                         delegator_address:
                           type: string
                           description: >-
-                            delegator_address is the bech32-encoded address of
-                            the delegator.
+                            delegator_address is the encoded address of the
+                            delegator.
                         validator_address:
                           type: string
                           description: >-
-                            validator_address is the bech32-encoded address of
-                            the validator.
+                            validator_address is the encoded address of the
+                            validator.
                         shares:
                           type: string
                           description: shares define the delegation shares received.
@@ -22598,12 +22598,12 @@ paths:
                       delegator_address:
                         type: string
                         description: >-
-                          delegator_address is the bech32-encoded address of the
+                          delegator_address is the encoded address of the
                           delegator.
                       validator_address:
                         type: string
                         description: >-
-                          validator_address is the bech32-encoded address of the
+                          validator_address is the encoded address of the
                           validator.
                       shares:
                         type: string
@@ -22864,14 +22864,10 @@ paths:
                 properties:
                   delegator_address:
                     type: string
-                    description: >-
-                      delegator_address is the bech32-encoded address of the
-                      delegator.
+                    description: delegator_address is the encoded address of the delegator.
                   validator_address:
                     type: string
-                    description: >-
-                      validator_address is the bech32-encoded address of the
-                      validator.
+                    description: validator_address is the encoded address of the validator.
                   entries:
                     type: array
                     items:
@@ -23153,12 +23149,12 @@ paths:
                     delegator_address:
                       type: string
                       description: >-
-                        delegator_address is the bech32-encoded address of the
+                        delegator_address is the encoded address of the
                         delegator.
                     validator_address:
                       type: string
                       description: >-
-                        validator_address is the bech32-encoded address of the
+                        validator_address is the encoded address of the
                         validator.
                     entries:
                       type: array
@@ -51501,10 +51497,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       shares:
         type: string
         description: shares define the delegation shares received.
@@ -51520,10 +51516,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           shares:
             type: string
             description: shares define the delegation shares received.
@@ -52022,14 +52018,10 @@ definitions:
             properties:
               delegator_address:
                 type: string
-                description: >-
-                  delegator_address is the bech32-encoded address of the
-                  delegator.
+                description: delegator_address is the encoded address of the delegator.
               validator_address:
                 type: string
-                description: >-
-                  validator_address is the bech32-encoded address of the
-                  validator.
+                description: validator_address is the encoded address of the validator.
               shares:
                 type: string
                 description: shares define the delegation shares received.
@@ -52078,14 +52070,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -52151,14 +52139,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -53500,10 +53484,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
+            description: delegator_address is the encoded address of the delegator.
           validator_address:
             type: string
-            description: validator_address is the bech32-encoded address of the validator.
+            description: validator_address is the encoded address of the validator.
           entries:
             type: array
             items:
@@ -53560,14 +53544,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  description: >-
-                    delegator_address is the bech32-encoded address of the
-                    delegator.
+                  description: delegator_address is the encoded address of the delegator.
                 validator_address:
                   type: string
-                  description: >-
-                    validator_address is the bech32-encoded address of the
-                    validator.
+                  description: validator_address is the encoded address of the validator.
                 shares:
                   type: string
                   description: shares define the delegation shares received.
@@ -53943,14 +53923,10 @@ definitions:
           properties:
             delegator_address:
               type: string
-              description: >-
-                delegator_address is the bech32-encoded address of the
-                delegator.
+              description: delegator_address is the encoded address of the delegator.
             validator_address:
               type: string
-              description: >-
-                validator_address is the bech32-encoded address of the
-                validator.
+              description: validator_address is the encoded address of the validator.
             entries:
               type: array
               items:
@@ -54627,10 +54603,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
+        description: delegator_address is the encoded address of the delegator.
       validator_address:
         type: string
-        description: validator_address is the bech32-encoded address of the validator.
+        description: validator_address is the encoded address of the validator.
       entries:
         type: array
         items:

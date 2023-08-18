@@ -1,9 +1,9 @@
 module cosmossdk.io/collections
 
-go 1.20
+go 1.21
 
 require (
-	cosmossdk.io/core v0.9.0
+	cosmossdk.io/core v0.10.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/stretchr/testify v1.8.4
 	pgregory.net/rapid v1.1.0

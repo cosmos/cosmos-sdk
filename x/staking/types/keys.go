@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +42,7 @@ var (
 	DelegationKey                    = collections.NewPrefix(49) // key for a delegation
 	UnbondingDelegationKey           = []byte{0x32}              // key for an unbonding-delegation
 	UnbondingDelegationByValIndexKey = []byte{0x33}              // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x34}              // key for a redelegation
+	RedelegationKey                  = collections.NewPrefix(52) // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x35}              // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36}              // prefix for each key for an redelegation, by destination validator operator
 
@@ -93,7 +94,7 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
 // VALUE: validator operator address ([]byte)
-func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int) []byte {
+func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int, valAc addresscodec.Codec) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	// NOTE the larger values are of higher value
 
@@ -104,7 +105,7 @@ func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int) 
 	powerBytes := consensusPowerBytes
 	powerBytesLen := len(powerBytes) // 8
 
-	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	addr, err := valAc.StringToBytes(validator.OperatorAddress)
 	if err != nil {
 		panic(err)
 	}

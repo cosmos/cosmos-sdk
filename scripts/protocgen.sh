@@ -35,3 +35,6 @@ rm -rf github.com cosmossdk.io
 go mod tidy
 
 ./scripts/protocgen-pulsar.sh
+
+echo "Formatting protobuf files"
+find ./ -name "*.proto" -exec clang-format -i {} \;

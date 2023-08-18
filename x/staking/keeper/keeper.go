@@ -121,7 +121,7 @@ func NewKeeper(
 			codec.CollValue[types.Redelegation](cdc),
 		),
 		UnbondingIndex:       collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
-		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.ValAddressKey), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.AccAddressKey, sdk.LengthPrefixedAddressKey(sdk.ValAddressKey)), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 	}
 
 	schema, err := sb.Build()

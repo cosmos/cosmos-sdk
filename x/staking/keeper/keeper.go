@@ -121,7 +121,7 @@ func NewKeeper(
 			codec.CollValue[types.Redelegation](cdc),
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
-		Validators:     collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.ValAddressKey, collections.BytesValue),
+		Validators:     collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 	}
 
 	schema, err := sb.Build()

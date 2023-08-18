@@ -84,9 +84,6 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 	return nil
 }
 
-// IsUpgradeModule implements the module.UpgradeModule interface.
-func (ab AppModuleBasic) IsUpgradeModule() {}
-
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic

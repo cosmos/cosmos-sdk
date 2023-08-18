@@ -696,32 +696,16 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// RunMigrationBeginBlock performs begin block functionality for upgrade module.
-// It takes the current context as a parameter and returns a boolean value
-// indicating whether the migration was executed or not and an error if fails.
-func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
-	for _, moduleName := range m.OrderBeginBlockers {
-		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := mod.(appmodule.UpgradeModule); ok {
-				err := mod.BeginBlock(ctx)
-				return err == nil, err
-			}
-		}
-	}
-	return false, nil
-}
-
-// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
-// child context with an event manager to aggregate events emitted from non-upgrade
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(appmodule.UpgradeModule); !ok {
-				if err := module.BeginBlock(ctx); err != nil {
-					return sdk.BeginBlock{}, err
-				}
+			if err := module.BeginBlock(ctx); err != nil {
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}

@@ -72,12 +72,6 @@ const (
 	UnbondingType_ValidatorUnbonding
 )
 
-// GetValidatorKey creates the key for the validator with address
-// VALUE: staking/Validator
-func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
-}
-
 // AddressFromValidatorsKey creates the validator operator address from ValidatorsKey
 func AddressFromValidatorsKey(key []byte) []byte {
 	kv.AssertKeyAtLeastLength(key, 3)

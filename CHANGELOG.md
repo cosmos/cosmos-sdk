@@ -73,6 +73,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/staking) [#17123](https://github.com/cosmos/cosmos-sdk/pull/17123) Use collections for `Validators`: 
+    * remove from `types`: `GetValidatorKey`
 * (x/staking) [#17315](https://github.com/cosmos/cosmos-sdk/pull/17044) Use collections for `RedelegationKey`:
     * remove from `keeper`: `GetRedelegation`
 * (types) `module.BeginBlockAppModule` has been replaced by Core API `appmodule.HasBeginBlocker`.

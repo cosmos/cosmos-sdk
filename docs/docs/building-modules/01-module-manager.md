@@ -41,7 +41,6 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
 * [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
 * [`appmodule.HasPrepareCheckState`](#haspreparecheckstate): The extension interface that contains information about the `AppModule` and `PrepareCheckState`.
-* [`appmodule.UpgradeModule`]: The extension interface that signify if the `AppModule` if the module is an upgrade module.
 * [`appmodule.HasService` / `module.HasServices`](#hasservices): The extension interface for modules to register services.
 * [`module.HasABCIEndblock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
 * (legacy) [`module.HasInvariants`](#hasinvariants): The extension interface for registering invariants.

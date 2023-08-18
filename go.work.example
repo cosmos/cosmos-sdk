@@ -17,6 +17,7 @@ use (
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
+	./x/accounts
 	./x/tx
 	./x/nft
 	./x/circuit

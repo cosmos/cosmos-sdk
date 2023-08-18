@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -39,6 +40,7 @@ type KeeperTestSuite struct {
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
+	key           *storetypes.KVStoreKey
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -46,6 +48,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	s.key = key
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
@@ -107,6 +110,48 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	resTotalPower, err := keeper.LastTotalPower.Get(ctx)
 	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))
+}
+
+// GetREDByValDstIndexKey creates the index-key for a redelegation, stored by destination-validator-index
+// VALUE: none (key rearrangement used)
+func getREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSToValsDstKey := getREDsToValDstIndexKey(valDstAddr)
+	offset := len(REDSToValsDstKey)
+
+	// key is of the form REDSToValsDstKey || delAddrLen (1 byte) || delAddr || valSrcAddrLen (1 byte) || valSrcAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valSrcAddr))
+	copy(key[0:offset], REDSToValsDstKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valSrcAddr))
+	copy(key[offset+2+len(delAddr):], valSrcAddr.Bytes())
+
+	return key
+}
+
+// GetREDsToValDstIndexKey returns a key prefix for indexing a redelegation to a
+// destination (target) validator.
+func getREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
+	redelegationByValDstIndexKey := []byte{0x36}
+	return append(redelegationByValDstIndexKey, addresstypes.MustLengthPrefix(valDstAddr)...)
+}
+
+func (s *KeeperTestSuite) TestRedelegationsMigrationToColls() {
+	s.SetupTest()
+
+	addrs, valAddrs := createValAddrs(101)
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			s.ctx.KVStore(s.key).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+		},
+		"4beb77994beff3c8ad9cecca9ee3a74fb551356250f0b8bd3936c4e4f506443b", // this hash obtained when ran this test in main branch
+	)
+
+	s.Require().NoError(err)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

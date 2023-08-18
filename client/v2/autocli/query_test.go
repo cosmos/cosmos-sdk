@@ -496,14 +496,14 @@ func TestAddressValidation(t *testing.T) {
 		"1", "abc", "1foo",
 		"--an-address", "regen1y74p8wyy4enfhfn342njve6cjmj5c8dtlqj7ule2",
 	)
-	assert.ErrorContains(t, err, "invalid bech32 account address")
+	assert.ErrorContains(t, err, "invalid account address")
 
 	_, err = runCmd(fixture.conn, fixture.b, buildModuleQueryCommand,
 		"echo",
 		"1", "abc", "1foo",
 		"--an-address", "cosmps1BAD_ENCODING",
 	)
-	assert.ErrorContains(t, err, "invalid bech32 account address")
+	assert.ErrorContains(t, err, "invalid account address")
 }
 
 func TestOutputFormat(t *testing.T) {

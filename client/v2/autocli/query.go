@@ -31,9 +31,12 @@ func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
-		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
-		err := b.AddQueryServiceCommands(subCmd, subCmdDesc)
-		if err != nil {
+		subCmd := findSubCommand(cmd, cmdName)
+		if subCmd == nil {
+			subCmd = topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+		}
+
+		if err := b.AddQueryServiceCommands(subCmd, subCmdDesc); err != nil {
 			return err
 		}
 
@@ -63,8 +66,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		}
 	}
 
-	n := methods.Len()
-	for i := 0; i < n; i++ {
+	for i := 0; i < methods.Len(); i++ {
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
 		if !ok {
@@ -82,7 +84,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 		if findSubCommand(cmd, methodCmd.Name()) != nil {
 			// do not overwrite existing commands
-			// @julienrbrt: should we display a warning?
+			// we do not display a warning because you may want to overwrite an autocli command
 			continue
 		}
 
@@ -108,6 +110,10 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
+			jsonMarshalOptions.Indent = ""
+		}
+
 		clientConn, err := getClientConn(cmd)
 		if err != nil {
 			return err
@@ -131,6 +137,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 	if b.AddQueryConnFlags != nil {
 		b.AddQueryConnFlags(cmd)
+
+		cmd.Flags().BoolP(flagNoIndent, "", false, "Do not indent JSON output")
 	}
 
 	return cmd, nil

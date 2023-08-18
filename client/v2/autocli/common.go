@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"sigs.k8s.io/yaml"
 
@@ -43,7 +42,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 
 	cmd := &cobra.Command{
-		SilenceUsage: true,
+		SilenceUsage: false,
 		Use:          use,
 		Long:         long,
 		Short:        options.Short,
@@ -86,21 +85,24 @@ func (b *Builder) enhanceCommandCommon(
 ) error {
 	moduleOptions := appOptions.ModuleOptions
 	if len(moduleOptions) == 0 {
-		moduleOptions = map[string]*autocliv1.ModuleOptions{}
-		for name, module := range appOptions.Modules {
+		moduleOptions = make(map[string]*autocliv1.ModuleOptions)
+	}
+	for name, module := range appOptions.Modules {
+		if _, ok := moduleOptions[name]; !ok {
 			if module, ok := module.(HasAutoCLIConfig); ok {
 				moduleOptions[name] = module.AutoCLIOptions()
+			} else {
+				moduleOptions[name] = nil
 			}
 		}
 	}
 
-	modules := append(maps.Keys(appOptions.Modules), maps.Keys(moduleOptions)...)
-	for _, moduleName := range modules {
-		modOpts, hasModuleOptions := moduleOptions[moduleName]
+	for moduleName, modOpts := range moduleOptions {
+		hasModuleOptions := modOpts != nil
 
 		// if we have an existing command skip adding one here
 		if subCmd := findSubCommand(cmd, moduleName); subCmd != nil {
-			if hasModuleOptions {
+			if hasModuleOptions { // check if we need to enhance the existing command
 				if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts); err != nil {
 					return err
 				}
@@ -111,7 +113,7 @@ func (b *Builder) enhanceCommandCommon(
 
 		// if we have a custom command use that instead of generating one
 		if custom, ok := customCmds[moduleName]; ok {
-			if hasModuleOptions {
+			if hasModuleOptions { // check if we need to enhance the existing command
 				if err := enhanceCustomCmd(b, custom, cmdType, modOpts); err != nil {
 					return err
 				}

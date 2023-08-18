@@ -18,7 +18,7 @@ require (
 	cloud.google.com/go/storage v1.31.0 // indirect
 	cosmossdk.io/api v0.7.0 // indirect
 	cosmossdk.io/collections v0.3.0 // indirect
-	cosmossdk.io/core v0.9.0 // indirect
+	cosmossdk.io/core v0.10.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect

@@ -14,7 +14,7 @@ concurrency:
 jobs:
   e2e-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -29,11 +29,12 @@ jobs:
       # - Port forward all ports to localhost for next steps to connect
       - name: Setup Test infra
         id: starship-action
-        uses: cosmology-tech/starship-action@0.2.13
+        uses: cosmology-tech/starship-action@0.2.14
         with:
           values: tests/starship/configs/ci.yaml
           port-forward: true
           version: 0.1.42
+          timeout: 10m
       - name: Run Tests
         run: |
           cd tests/starship/

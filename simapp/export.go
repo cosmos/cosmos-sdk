@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 
@@ -211,7 +210,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			return false, err
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 	// Iterate through validators by power descending, reset bond heights, and

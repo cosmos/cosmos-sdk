@@ -40,12 +40,12 @@ message EchoRequest {
   string   positional2                                  = 28;
   repeated cosmos.base.v1beta1.Coin positional3_varargs = 29;
 
-  string deprecated_field           = 30;
-  string shorthand_deprecated_field = 31;
-  bool   hidden_bool                = 32;
-  map<string, string> map_string_string = 33;
-  map<string, uint32> map_string_uint32 = 34;
-  map<string, cosmos.base.v1beta1.Coin> map_string_coin = 35;
+  string                                deprecated_field           = 30;
+  string                                shorthand_deprecated_field = 31;
+  bool                                  hidden_bool                = 32;
+  map<string, string>                   map_string_string          = 33;
+  map<string, uint32>                   map_string_uint32          = 34;
+  map<string, cosmos.base.v1beta1.Coin> map_string_coin            = 35;
   string a_validator_address = 36 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   string a_consensus_address = 37 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
 }

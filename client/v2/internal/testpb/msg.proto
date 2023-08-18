@@ -44,7 +44,7 @@ message MsgRequest {
   string deprecated_field           = 30;
   string shorthand_deprecated_field = 31;
   bool   hidden_bool                = 32;
-  string a_validator_address = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string a_validator_address        = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 message MsgResponse {

@@ -38,6 +38,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## Improvements
 
+* [#17441](https://github.com/cosmos/cosmos-sdk/pull/17441) feat(math): Dec alias from LegacyDec
 * [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Add `.ToLegacyDec()` method on `math.Int` type for converting to `math.LegacyDec`.
 * [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved `math/Int.Size` by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
 

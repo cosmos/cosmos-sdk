@@ -1061,9 +1061,11 @@ func (app *BaseApp) Close() error {
 	var errs []error
 
 	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)
-	app.logger.Info("Closing application.db")
-	if err := app.db.Close(); err != nil {
-		errs = append(errs, err)
+	if app.db != nil {
+		app.logger.Info("Closing application.db")
+		if err := app.db.Close(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	// Close app.snapshotManager

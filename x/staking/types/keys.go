@@ -196,12 +196,6 @@ func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetUBDsKey(delAddr.Bytes()), address.MustLengthPrefix(valAddr)...)
 }
 
-// GetUBDByValIndexKey creates the index-key for an unbonding delegation, stored by validator-index
-// VALUE: none (key rearrangement used)
-func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...), address.MustLengthPrefix(delAddr)...)
-}
-
 // GetUBDsKey creates the prefix for all unbonding delegations from a delegator
 func GetUBDsKey(delAddr sdk.AccAddress) []byte {
 	return append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)

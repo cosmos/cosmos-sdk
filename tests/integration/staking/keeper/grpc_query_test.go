@@ -820,7 +820,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	assert.NilError(t, err)
 	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
-	redel, found := f.stakingKeeper.GetRedelegation(ctx, addrAcc1, val1bz, val2bz)
+	redel, found := f.stakingKeeper.Redelegations.Get(ctx, collections.Join3(addrAcc1.Bytes(), valAddrs[0].Bytes(), valAddrs[1].Bytes()))
 	assert.Assert(t, found)
 
 	var req *types.QueryRedelegationsRequest

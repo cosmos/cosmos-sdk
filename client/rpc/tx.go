@@ -122,8 +122,8 @@ func QueryEventForTxCmd() *cobra.Command {
 				if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
 					res := &coretypes.ResultBroadcastTxCommit{
 						DeliverTx: txe.Result,
-						Hash:     tmtypes.Tx(txe.Tx).Hash(),
-						Height:   txe.Height,
+						Hash:      tmtypes.Tx(txe.Tx).Hash(),
+						Height:    txe.Height,
 					}
 					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 				}

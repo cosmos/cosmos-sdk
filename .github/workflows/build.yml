@@ -46,7 +46,7 @@ jobs:
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make build
       - name: Build Legacy
-        if:env.GIT_DIFF
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
       - name: Build with rocksdb backend
         if: |

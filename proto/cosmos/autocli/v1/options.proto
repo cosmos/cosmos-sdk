@@ -30,14 +30,6 @@ message ServiceCommandDescriptor {
   // different protobuf services. The map key is used as the name of the
   // sub-command.
   map<string, ServiceCommandDescriptor> sub_commands = 3;
-<<<<<<< HEAD
-=======
-
-  // enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already
-  // exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
-  // gRPC. otherwise when a custom command exists, no commands will be generated for the service.
-  bool enhance_custom_command = 4;
->>>>>>> 066f8a7a5 (chore: format proto files (#17445))
 }
 
 // RpcCommandOptions specifies options for commands generated from protobuf
@@ -129,11 +121,4 @@ message PositionalArgDescriptor {
   // applied to last positional parameter and the proto_field must a repeated
   // field.
   bool varargs = 2;
-<<<<<<< HEAD
-=======
-
-  // optional makes the last positional parameter optional.
-  // Note: It is mutually exclusive with varargs.
-  bool optional = 3;
->>>>>>> 066f8a7a5 (chore: format proto files (#17445))
 }

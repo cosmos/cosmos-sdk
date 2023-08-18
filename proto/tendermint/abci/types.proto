@@ -25,8 +25,10 @@ service ABCI {
   rpc InitChain(RequestInitChain) returns (ResponseInitChain);
   rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
   rpc OfferSnapshot(RequestOfferSnapshot) returns (ResponseOfferSnapshot);
-  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
-  rpc ApplySnapshotChunk(RequestApplySnapshotChunk) returns (ResponseApplySnapshotChunk);
+  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk)
+      returns (ResponseLoadSnapshotChunk);
+  rpc ApplySnapshotChunk(RequestApplySnapshotChunk)
+      returns (ResponseApplySnapshotChunk);
   rpc PrepareProposal(RequestPrepareProposal) returns (ResponsePrepareProposal);
   rpc ProcessProposal(RequestProcessProposal) returns (ResponseProcessProposal);
   rpc ExtendVote(RequestExtendVote) returns (ResponseExtendVote);
@@ -56,7 +58,7 @@ message Request {
     RequestVerifyVoteExtension verify_vote_extension = 19;
     RequestFinalizeBlock       finalize_block        = 20;
   }
-  reserved 4, 7, 9, 10; // SetOption, BeginBlock, DeliverTx, EndBlock
+  reserved 4, 7, 9, 10;  // SetOption, BeginBlock, DeliverTx, EndBlock
 }
 
 message RequestEcho {
@@ -73,7 +75,8 @@ message RequestInfo {
 }
 
 message RequestInitChain {
-  google.protobuf.Timestamp        time             = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp time = 1
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   string                           chain_id         = 2;
   tendermint.types.ConsensusParams consensus_params = 3;
   repeated ValidatorUpdate         validators       = 4 [(gogoproto.nullable) = false];
@@ -105,8 +108,8 @@ message RequestListSnapshots {}
 
 // offers a snapshot to the application
 message RequestOfferSnapshot {
-  Snapshot snapshot = 1; // snapshot offered by peers
-  bytes    app_hash = 2; // light client-verified app hash for snapshot height
+  Snapshot snapshot = 1;  // snapshot offered by peers
+  bytes    app_hash = 2;  // light client-verified app hash for snapshot height
 }
 
 // loads a snapshot chunk
@@ -154,7 +157,7 @@ message RequestProcessProposal {
 // Extends a vote with application-injected data
 message RequestExtendVote {
   // the hash of the block  that this vote may be referring to
-  bytes hash = 1;
+  bytes hash   = 1;
   // the height of the extended vote
   int64 height = 2;
 }
@@ -162,7 +165,7 @@ message RequestExtendVote {
 // Verify the vote extension
 message RequestVerifyVoteExtension {
   // the hash of the block that this received vote corresponds to
-  bytes hash = 1;
+  bytes hash              = 1;
   // the validator that signed the vote extension
   bytes validator_address = 2;
   int64 height            = 3;
@@ -205,7 +208,7 @@ message Response {
     ResponseVerifyVoteExtension verify_vote_extension = 20;
     ResponseFinalizeBlock       finalize_block        = 21;
   }
-  reserved 5, 8, 10, 11; // SetOption, BeginBlock, DeliverTx, EndBlock
+  reserved 5, 8, 10, 11;  // SetOption, BeginBlock, DeliverTx, EndBlock
 }
 
 // nondeterministic
@@ -238,8 +241,8 @@ message ResponseInitChain {
 message ResponseQuery {
   uint32 code = 1;
   // bytes data = 2; // use "value" instead.
-  string                     log       = 3; // nondeterministic
-  string                     info      = 4; // nondeterministic
+  string                     log       = 3;  // nondeterministic
+  string                     info      = 4;  // nondeterministic
   int64                      index     = 5;
   bytes                      key       = 6;
   bytes                      value     = 7;
@@ -251,12 +254,13 @@ message ResponseQuery {
 message ResponseCheckTx {
   uint32         code       = 1;
   bytes          data       = 2;
-  string         log        = 3; // nondeterministic
-  string         info       = 4; // nondeterministic
+  string         log        = 3;  // nondeterministic
+  string         info       = 4;  // nondeterministic
   int64          gas_wanted = 5 [json_name = "gas_wanted"];
   int64          gas_used   = 6 [json_name = "gas_used"];
-  repeated Event events     = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
-  string         codespace  = 8;
+  repeated Event events     = 7
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+  string codespace = 8;
 
   // These reserved fields were used until v0.37 by the priority mempool (now
   // removed).
@@ -265,7 +269,7 @@ message ResponseCheckTx {
 }
 
 message ResponseCommit {
-  reserved 1, 2; // data was previously returned here
+  reserved 1, 2;  // data was previously returned here
   int64 retain_height = 3;
 }
 
@@ -277,12 +281,12 @@ message ResponseOfferSnapshot {
   Result result = 1;
 
   enum Result {
-    UNKNOWN       = 0; // Unknown result, abort all snapshot restoration
-    ACCEPT        = 1; // Snapshot accepted, apply chunks
-    ABORT         = 2; // Abort all snapshot restoration
-    REJECT        = 3; // Reject this specific snapshot, try others
-    REJECT_FORMAT = 4; // Reject all snapshots of this format, try others
-    REJECT_SENDER = 5; // Reject all snapshots from the sender(s), try others
+    UNKNOWN       = 0;  // Unknown result, abort all snapshot restoration
+    ACCEPT        = 1;  // Snapshot accepted, apply chunks
+    ABORT         = 2;  // Abort all snapshot restoration
+    REJECT        = 3;  // Reject this specific snapshot, try others
+    REJECT_FORMAT = 4;  // Reject all snapshots of this format, try others
+    REJECT_SENDER = 5;  // Reject all snapshots from the sender(s), try others
   }
 }
 
@@ -292,16 +296,16 @@ message ResponseLoadSnapshotChunk {
 
 message ResponseApplySnapshotChunk {
   Result          result         = 1;
-  repeated uint32 refetch_chunks = 2; // Chunks to refetch and reapply
-  repeated string reject_senders = 3; // Chunk senders to reject and ban
+  repeated uint32 refetch_chunks = 2;  // Chunks to refetch and reapply
+  repeated string reject_senders = 3;  // Chunk senders to reject and ban
 
   enum Result {
-    UNKNOWN         = 0; // Unknown result, abort all snapshot restoration
-    ACCEPT          = 1; // Chunk successfully accepted
-    ABORT           = 2; // Abort all snapshot restoration
-    RETRY           = 3; // Retry chunk (combine with refetch and reject)
-    RETRY_SNAPSHOT  = 4; // Retry snapshot (combine with refetch and reject)
-    REJECT_SNAPSHOT = 5; // Reject this snapshot, try others
+    UNKNOWN         = 0;  // Unknown result, abort all snapshot restoration
+    ACCEPT          = 1;  // Chunk successfully accepted
+    ABORT           = 2;  // Abort all snapshot restoration
+    RETRY           = 3;  // Retry chunk (combine with refetch and reject)
+    RETRY_SNAPSHOT  = 4;  // Retry snapshot (combine with refetch and reject)
+    REJECT_SNAPSHOT = 5;  // Reject this snapshot, try others
   }
 }
 
@@ -333,13 +337,14 @@ message ResponseVerifyVoteExtension {
     // Incorrectly implementing this thus has liveness implications as it may affect
     // CometBFT's ability to receive 2/3+ valid votes to finalize the block.
     // Honest nodes should never be rejected.
-    REJECT = 2;
+    REJECT  = 2;
   }
 }
 
 message ResponseFinalizeBlock {
   // set of block events emmitted as part of executing the block
-  repeated Event events = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+  repeated Event events = 1
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   // the result of executing each transaction including the events
   // the particular transction emitted. This should match the order
   // of the transactions delivered in the block itself
@@ -348,8 +353,7 @@ message ResponseFinalizeBlock {
   repeated ValidatorUpdate validator_updates = 3 [(gogoproto.nullable) = false];
   // updates to the consensus params, if any.
   tendermint.types.ConsensusParams consensus_param_updates = 4;
-  // app_hash is the hash of the applications' state which is used to confirm that execution of the transactions was
-  // deterministic. It is up to the application to decide which algorithm to use.
+  // app_hash is the hash of the applications' state which is used to confirm that execution of the transactions was deterministic. It is up to the application to decide which algorithm to use.
   bytes app_hash = 5;
 }
 
@@ -377,14 +381,17 @@ message ExtendedCommitInfo {
 // Later, transactions may be queried using these events.
 message Event {
   string                  type       = 1;
-  repeated EventAttribute attributes = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "attributes,omitempty"];
+  repeated EventAttribute attributes = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "attributes,omitempty"
+  ];
 }
 
 // EventAttribute is a single key-value pair, associated with an event.
 message EventAttribute {
   string key   = 1;
   string value = 2;
-  bool   index = 3; // nondeterministic
+  bool   index = 3;  // nondeterministic
 }
 
 // ExecTxResult contains results of executing one individual transaction.
@@ -393,12 +400,12 @@ message EventAttribute {
 message ExecTxResult {
   uint32         code       = 1;
   bytes          data       = 2;
-  string         log        = 3; // nondeterministic
-  string         info       = 4; // nondeterministic
+  string         log        = 3;  // nondeterministic
+  string         info       = 4;  // nondeterministic
   int64          gas_wanted = 5;
   int64          gas_used   = 6;
   repeated Event events     = 7
-      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"]; // nondeterministic
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];  // nondeterministic
   string codespace = 8;
 }
 
@@ -416,9 +423,9 @@ message TxResult {
 // Blockchain Types
 
 message Validator {
-  bytes address = 1; // The first 20 bytes of SHA256(public key)
+  bytes address = 1;  // The first 20 bytes of SHA256(public key)
   // PubKey pub_key = 2 [(gogoproto.nullable)=false];
-  int64 power = 3; // The voting power
+  int64 power = 3;  // The voting power
 }
 
 message ValidatorUpdate {
@@ -427,7 +434,7 @@ message ValidatorUpdate {
 }
 
 message VoteInfo {
-  Validator                    validator     = 1 [(gogoproto.nullable) = false];
+  Validator validator         = 1 [(gogoproto.nullable) = false];
   tendermint.types.BlockIDFlag block_id_flag = 3;
 
   reserved 2; // signed_last_block
@@ -459,7 +466,8 @@ message Misbehavior {
   // The height when the offense occurred
   int64 height = 3;
   // The corresponding time where the offense occurred
-  google.protobuf.Timestamp time = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp time = 4
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // Total voting power of the validator set in case the ABCI application does
   // not store historical validators.
   // https://github.com/tendermint/tendermint/issues/4581
@@ -470,9 +478,9 @@ message Misbehavior {
 // State Sync Types
 
 message Snapshot {
-  uint64 height   = 1; // The height at which the snapshot was taken
-  uint32 format   = 2; // The application-specific snapshot format
-  uint32 chunks   = 3; // Number of chunks in the snapshot
-  bytes  hash     = 4; // Arbitrary snapshot hash, equal only if identical
-  bytes  metadata = 5; // Arbitrary application metadata
+  uint64 height   = 1;  // The height at which the snapshot was taken
+  uint32 format   = 2;  // The application-specific snapshot format
+  uint32 chunks   = 3;  // Number of chunks in the snapshot
+  bytes  hash     = 4;  // Arbitrary snapshot hash, equal only if identical
+  bytes  metadata = 5;  // Arbitrary application metadata
 }

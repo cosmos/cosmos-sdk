@@ -4326,13 +4326,6 @@ type ServiceCommandDescriptor struct {
 	// different protobuf services. The map key is used as the name of the
 	// sub-command.
 	SubCommands map[string]*ServiceCommandDescriptor `protobuf:"bytes,3,rep,name=sub_commands,json=subCommands,proto3" json:"sub_commands,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-<<<<<<< HEAD
-=======
-	// enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already
-	// exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
-	// gRPC. otherwise when a custom command exists, no commands will be generated for the service.
-	EnhanceCustomCommand bool `protobuf:"varint,4,opt,name=enhance_custom_command,json=enhanceCustomCommand,proto3" json:"enhance_custom_command,omitempty"`
->>>>>>> 066f8a7a5 (chore: format proto files (#17445))
 }
 
 func (x *ServiceCommandDescriptor) Reset() {

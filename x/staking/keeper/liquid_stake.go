@@ -138,43 +138,67 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 // and the total liquid staked shares cannot exceed the validator bond cap
 // 1) (TotalLiquidStakedTokens / TotalStakedTokens) <= ValidatorLiquidStakingCap
 // 2) LiquidShares <= (ValidatorBondShares * ValidatorBondFactor)
-func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) (types.Validator, error) {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return validator, types.ErrNoValidatorFound
+	}
+
 	// Confirm the validator bond factor and validator liquid staking cap will not be exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
-		return types.ErrInsufficientValidatorBondShares
+		return validator, types.ErrInsufficientValidatorBondShares
 	}
 	if k.CheckExceedsValidatorLiquidStakingCap(ctx, validator, shares) {
-		return types.ErrValidatorLiquidStakingCapExceeded
+		return validator, types.ErrValidatorLiquidStakingCapExceeded
 	}
 
 	// Increment the validator's liquid shares
 	validator.LiquidShares = validator.LiquidShares.Add(shares)
 	k.SetValidator(ctx, validator)
 
-	return nil
+	return validator, nil
 }
 
 // DecreaseValidatorLiquidShares decrements the liquid shares on a validator
-func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
-	if shares.GT(validator.LiquidShares) {
-		return types.ErrValidatorLiquidSharesUnderflow
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) (types.Validator, error) {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return validator, types.ErrNoValidatorFound
 	}
+
+	if shares.GT(validator.LiquidShares) {
+		return validator, types.ErrValidatorLiquidSharesUnderflow
+	}
+
 	validator.LiquidShares = validator.LiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
-	return nil
+
+	return validator, nil
 }
 
 // Increase validator bond shares increments the validator's self bond
 // in the event that the delegation amount on a validator bond delegation is increased
-func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) error {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
 	validator.ValidatorBondShares = validator.ValidatorBondShares.Add(shares)
 	k.SetValidator(ctx, validator)
+
+	return nil
 }
 
 // SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
-func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, valAddress sdk.ValAddress, shares sdk.Dec) error {
+	validator, found := k.GetValidator(ctx, valAddress)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
 	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)

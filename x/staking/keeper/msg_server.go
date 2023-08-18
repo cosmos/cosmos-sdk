@@ -215,14 +215,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -238,7 +233,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
-		k.IncreaseValidatorBondShares(ctx, validator, newShares)
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, newShares); err != nil {
+			return nil, err
+		}
 	}
 
 	if tokens.IsInt64() {
@@ -282,7 +279,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
+	_, found := k.GetValidator(ctx, valSrcAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -313,14 +310,8 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	// If this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
 	// The delegation on the new validator will not a validator bond
 	if srcDelegation.ValidatorBond {
-		if err := k.SafelyDecreaseValidatorBond(ctx, srcValidator, srcShares); err != nil {
+		if err := k.SafelyDecreaseValidatorBond(ctx, valSrcAddr, srcShares); err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the srcValidator variable
-		// since the validator bond shares were updated above
-		srcValidator, found = k.GetValidator(ctx, valSrcAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -332,17 +323,11 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, dstValidator, dstShares); err != nil {
+		if _, err := k.SafelyIncreaseValidatorLiquidShares(ctx, valDstAddr, dstShares); err != nil {
 			return nil, err
 		}
-		if err := k.DecreaseValidatorLiquidShares(ctx, srcValidator, srcShares); err != nil {
+		if _, err := k.DecreaseValidatorLiquidShares(ctx, valSrcAddr, srcShares); err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of each validator variable
-		// since the liquid shares were updated above
-		srcValidator, found = k.GetValidator(ctx, valSrcAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -370,7 +355,9 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err != nil {
 			return nil, err
 		}
-		k.IncreaseValidatorBondShares(ctx, dstValidator, dstShares)
+		if err := k.IncreaseValidatorBondShares(ctx, valDstAddr, dstShares); err != nil {
+			return nil, err
+		}
 	}
 
 	if msg.Amount.Amount.IsInt64() {
@@ -425,7 +412,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	validator, found := k.GetValidator(ctx, addr)
+	_, found := k.GetValidator(ctx, addr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -441,14 +428,8 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 
 	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
 	if delegation.ValidatorBond {
-		if err := k.SafelyDecreaseValidatorBond(ctx, validator, shares); err != nil {
+		if err := k.SafelyDecreaseValidatorBond(ctx, addr, shares); err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator bond shares was updated above
-		validator, found = k.GetValidator(ctx, addr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -458,14 +439,8 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
 		}
-		if err := k.DecreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		if _, err := k.DecreaseValidatorLiquidShares(ctx, addr, shares); err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the liquid shares were updated above
-		validator, found = k.GetValidator(ctx, addr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -574,14 +549,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -621,7 +591,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, types.ErrNoDelegation
 	}
 	if delegation.ValidatorBond {
-		k.IncreaseValidatorBondShares(ctx, validator, newShares)
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, newShares); err != nil {
+			return nil, err
+		}
 	}
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
@@ -746,14 +718,9 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
-		if err := k.SafelyIncreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the validator's liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 
@@ -894,14 +861,9 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
 			return nil, err
 		}
-		if err := k.DecreaseValidatorLiquidShares(ctx, validator, shares); err != nil {
+		validator, err = k.DecreaseValidatorLiquidShares(ctx, valAddr, shares)
+		if err != nil {
 			return nil, err
-		}
-		// Note: this is required for downstream uses of the validator variable
-		// since the liquid shares were updated above
-		validator, found = k.GetValidator(ctx, valAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
 		}
 	}
 

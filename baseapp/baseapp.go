@@ -1080,8 +1080,5 @@ func (app *BaseApp) Close() error {
 		}
 	}
 
-	if len(errs) > 0 {
-		return goerrors.Join(errs...)
-	}
-	return nil
+	return goerrors.Join(errs...)
 }

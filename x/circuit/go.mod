@@ -9,10 +9,10 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.0.1
-	cosmossdk.io/store v1.0.0-alpha.1
+	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cometbft/cometbft v0.38.0-rc3
-	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

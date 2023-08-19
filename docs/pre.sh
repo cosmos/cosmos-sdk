@@ -18,6 +18,7 @@ cp ../x/auth/tx/README.md ./docs/integrate/modules/auth/2-tx.md
 cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/integrate/modules/README.md
 
 ## Add tooling documentation
+cp ../tools/proto/README.md ./docs/integrate/tooling/00-proto.md
 cp ../tools/cosmovisor/README.md ./docs/integrate/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/integrate/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/integrate/tooling/03-hubl.md

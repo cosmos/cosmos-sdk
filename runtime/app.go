@@ -114,6 +114,10 @@ func (a *App) Load(loadLatest bool) error {
 		a.ModuleManager.SetOrderExportGenesis(a.config.InitGenesis...)
 	}
 
+	if len(a.config.PreBlockers) != 0 {
+		a.SetPreBlocker(a.PreBlocker)
+	}
+
 	if len(a.config.BeginBlockers) != 0 {
 		a.ModuleManager.SetOrderBeginBlockers(a.config.BeginBlockers...)
 		a.SetBeginBlocker(a.BeginBlocker)

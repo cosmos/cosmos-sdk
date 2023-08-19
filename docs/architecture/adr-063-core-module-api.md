@@ -280,6 +280,17 @@ type HasGenesis interface {
 }
 ```
 
+#### Pre Blockers
+
+Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+
+```go
+type HasPreBlocker interface {
+  AppModule
+  PreBlock(context.Context) error
+}
+```
+
 #### Begin and End Blockers
 
 Modules that have functionality that runs before transactions (begin blockers) or after transactions

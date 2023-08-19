@@ -89,9 +89,8 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 }
 
 var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasPreBlocker   = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -161,13 +160,6 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // CONTRACT: this is called *before* all other modules' BeginBlock functions
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	return PreBlocker(ctx, am.keeper)
-}
-
-// BeginBlock calls the upgrade module hooks
-//
-// CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return nil
 }
 
 //

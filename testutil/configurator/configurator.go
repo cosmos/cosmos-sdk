@@ -38,8 +38,10 @@ type Config struct {
 func defaultConfig() *Config {
 	return &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
-		BeginBlockersOrder: []string{
+		PreBlockersOrder: []string{
 			"upgrade",
+		},
+		BeginBlockersOrder: []string{
 			"mint",
 			"distribution",
 			"slashing",

@@ -3,9 +3,9 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=docs/integrate/modules/$(echo $D | awk -F/ '{print $NF}')
+    MODDOC=docs/integrate/modules/$(basename "$D")
     rm -rf $MODDOC
-    mkdir -p $MODDOC && cp -r $D/README.md "$_"
+    mkdir -p $MODDOC && cp -r $D/README.md "$MODDOC/$(basename "$D").md"
   fi
 done
 

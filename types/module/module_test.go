@@ -156,6 +156,10 @@ func TestManagerOrderSetters(t *testing.T) {
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
+
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
@@ -450,6 +454,10 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
+
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
@@ -478,7 +486,7 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	})
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
-	require.Equal(t, 1, len(mm.PreBlockers))
+	require.Equal(t, 1, len(mm.OrderPreBlockers))
 
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(sdk.ResponsePreBlock{
 		ConsensusParamsChanged: true,

@@ -28,6 +28,7 @@ import (
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
 type Config struct {
 	ModuleConfigs      map[string]*appv1alpha1.ModuleConfig
+	PreBlockersOrder   []string
 	BeginBlockersOrder []string
 	EndBlockersOrder   []string
 	InitGenesisOrder   []string
@@ -37,6 +38,9 @@ type Config struct {
 func defaultConfig() *Config {
 	return &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
+		PreBlockersOrder: []string{
+			"upgrade",
+		},
 		BeginBlockersOrder: []string{
 			"upgrade",
 			"mint",
@@ -105,6 +109,12 @@ func defaultConfig() *Config {
 }
 
 type ModuleOption func(config *Config)
+
+func WithCustomPreBlockersOrder(preBlockOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.PreBlockersOrder = preBlockOrder
+	}
+}
 
 func WithCustomBeginBlockersOrder(beginBlockOrder ...string) ModuleOption {
 	return func(config *Config) {
@@ -315,10 +325,17 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		opt(cfg)
 	}
 
+	preBlockers := make([]string, 0)
 	beginBlockers := make([]string, 0)
 	endBlockers := make([]string, 0)
 	initGenesis := make([]string, 0)
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
+
+	for _, s := range cfg.PreBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			preBlockers = append(preBlockers, s)
+		}
+	}
 
 	for _, s := range cfg.BeginBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
@@ -344,6 +361,7 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 
 	runtimeConfig := &runtimev1alpha1.Module{
 		AppName:           "TestApp",
+		PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,

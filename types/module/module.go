@@ -271,7 +271,7 @@ type Manager struct {
 	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
 	OrderInitGenesis         []string
 	OrderExportGenesis       []string
-	PreBlockers              []string
+	OrderPreBlockers         []string
 	OrderBeginBlockers       []string
 	OrderEndBlockers         []string
 	OrderPrepareCheckStaters []string
@@ -283,12 +283,12 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
-	preBeginModulesStr := make([]string, 0)
+	preBlockModulesStr := make([]string, 0)
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())
 		if _, ok := module.(appmodule.HasPreBlocker); ok {
-			preBeginModulesStr = append(preBeginModulesStr, module.Name())
+			preBlockModulesStr = append(preBlockModulesStr, module.Name())
 		}
 	}
 
@@ -296,7 +296,7 @@ func NewManager(modules ...AppModule) *Manager {
 		Modules:                  moduleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
-		PreBlockers:              preBeginModulesStr,
+		OrderPreBlockers:         preBlockModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderPrepareCheckStaters: modulesStr,
 		OrderPrecommiters:        modulesStr,
@@ -309,12 +309,12 @@ func NewManager(modules ...AppModule) *Manager {
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(simpleModuleMap))
-	preBeginModulesStr := make([]string, 0)
+	preBlockModulesStr := make([]string, 0)
 	for name, module := range moduleMap {
 		simpleModuleMap[name] = module
 		modulesStr = append(modulesStr, name)
 		if _, ok := module.(appmodule.HasPreBlocker); ok {
-			preBeginModulesStr = append(preBeginModulesStr, name)
+			preBlockModulesStr = append(preBlockModulesStr, name)
 		}
 	}
 
@@ -325,7 +325,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		Modules:                  simpleModuleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
-		PreBlockers:              preBeginModulesStr,
+		OrderPreBlockers:         preBlockModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderEndBlockers:         modulesStr,
 		OrderPrecommiters:        modulesStr,
@@ -359,6 +359,17 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 		return !hasGenesis
 	})
 	m.OrderExportGenesis = moduleNames
+}
+
+// SetOrderPreBlockers sets the order of set pre-blocker calls
+func (m *Manager) SetOrderPreBlockers(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPreBlockers", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasBlock := module.(appmodule.HasPreBlocker)
+			return !hasBlock
+		})
+	m.OrderPreBlockers = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
@@ -713,7 +724,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 func (m *Manager) PreBlock(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	paramsChanged := false
-	for _, moduleName := range m.PreBlockers {
+	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			rsp, err := module.PreBlock(ctx)
 			if err != nil {

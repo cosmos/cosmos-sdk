@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -146,9 +147,22 @@ func (s *KeeperTestSuite) TestRedelegationsMigrationToColls() {
 		s.key,
 		100,
 		func(i int64) {
+			// legacy method to set in the state
 			s.ctx.KVStore(s.key).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
 		},
-		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9", // this hash obtained when ran this test in main branch
+		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			// using collections
+			s.stakingKeeper.RedelegationsByValSrc.Set(s.ctx, collections.Join3(addrs[i].Bytes(), valAddrs[i].Bytes(), valAddrs[i+1].Bytes()), []byte{})
+		},
+		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
 	)
 
 	s.Require().NoError(err)

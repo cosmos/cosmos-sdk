@@ -3,7 +3,7 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=docs/integrate/modules/$(echo $D | awk -F/ '{print $NF}')
+    MODDOC=docs/docs/integrate/modules/$(echo $D | awk -F/ '{print $NF}')
     rm -rf $MODDOC
     mkdir -p $MODDOC && cp -r $D/README.md "$_"
   fi
@@ -11,8 +11,8 @@ done
 
 ## Vesting is a submodule of auth, but we still want to display it in docs
 ## TODO to be removed in https://github.com/cosmos/cosmos-sdk/issues/9958
-cp ../x/auth/vesting/README.md ./docs/integrate/modules/auth/1-vesting.md
-cp ../x/auth/tx/README.md ./docs/integrate/modules/auth/2-tx.md
+cp ../x/auth/vesting/README.md ./docs/docs/integrate/modules/auth/1-vesting.md
+cp ../x/auth/tx/README.md ./docs/docs/integrate/modules/auth/2-tx.md
 
 ## Add modules page list
 cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/integrate/modules/README.md

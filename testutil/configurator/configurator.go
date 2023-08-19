@@ -38,9 +38,6 @@ type Config struct {
 func defaultConfig() *Config {
 	return &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
-		PreBlockersOrder: []string{
-			"upgrade",
-		},
 		BeginBlockersOrder: []string{
 			"upgrade",
 			"mint",

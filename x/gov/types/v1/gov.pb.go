@@ -264,7 +264,8 @@ type Proposal struct {
 	// voting_end_time is the end time of voting on a proposal.
 	VotingEndTime *time.Time `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
-	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/gov#proposal-3
+	// the recommended format of the metadata is to be found here:
+	// https://docs.cosmos.network/v0.47/modules/gov#proposal-3
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// title is the title of the proposal
 	//

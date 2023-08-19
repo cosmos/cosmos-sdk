@@ -160,7 +160,8 @@ func (s *KeeperTestSuite) TestRedelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			// using collections
-			s.stakingKeeper.RedelegationsByValSrc.Set(s.ctx, collections.Join3(valAddrs[i].Bytes(), addrs[i].Bytes(), valAddrs[i+1].Bytes()), []byte{})
+			err := s.stakingKeeper.RedelegationsByValSrc.Set(s.ctx, collections.Join3(valAddrs[i].Bytes(), addrs[i].Bytes(), valAddrs[i+1].Bytes()), []byte{})
+			s.Require().NoError(err)
 		},
 		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
 	)

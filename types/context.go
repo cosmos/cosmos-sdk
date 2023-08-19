@@ -121,13 +121,13 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger, chainID string) Context {
+func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 
-	return NewContextWithHeader(ms, cmtproto.Header{ChainID: chainID}, isCheckTx, logger)
+	return NewContextWithHeader(ms, cmtproto.Header{}, isCheckTx, logger)
 }
 
-// create a new context
+// create a new context with a given header
 func NewContextWithHeader(ms storetypes.MultiStore, h cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	h.Time = h.Time.UTC()

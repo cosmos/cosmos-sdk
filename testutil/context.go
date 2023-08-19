@@ -26,7 +26,7 @@ func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, false, log.NewNopLogger(), "")
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger())
 
 	return ctx
 }
@@ -58,7 +58,7 @@ func DefaultContextWithKeys(
 		panic(err)
 	}
 
-	return sdk.NewContext(cms, false, log.NewNopLogger(), "")
+	return sdk.NewContext(cms, false, log.NewNopLogger())
 }
 
 type TestContext struct {

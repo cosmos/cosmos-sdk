@@ -152,7 +152,7 @@ func (s *contextTestSuite) TestContextHeader() {
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
-	ctx = types.NewContext(nil, false, nil, "")
+	ctx = types.NewContext(nil, false, nil)
 
 	ctx = ctx.
 		WithBlockHeight(height).
@@ -166,7 +166,7 @@ func (s *contextTestSuite) TestContextHeader() {
 
 func (s *contextTestSuite) TestWithBlockTime() {
 	now := time.Now()
-	ctx := types.NewContext(nil, false, nil, "")
+	ctx := types.NewContext(nil, false, nil)
 	ctx = ctx.WithBlockTime(now)
 	cmttime2 := cmttime.Canonical(now)
 	s.Require().Equal(ctx.BlockTime(), cmttime2)
@@ -229,7 +229,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 }
 
 func (s *contextTestSuite) TestUnwrapSDKContext() {
-	sdkCtx := types.NewContext(nil, false, nil, "")
+	sdkCtx := types.NewContext(nil, false, nil)
 	ctx := types.WrapSDKContext(sdkCtx)
 	sdkCtx2 := types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)

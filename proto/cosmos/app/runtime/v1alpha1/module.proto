@@ -52,11 +52,6 @@ message Module {
   // to call in the order in which they should be called. If this is left empty
   // no preparecheckstate function will be registered.
   repeated string prepare_check_staters = 9;
-
-  // pre_blockers specifies the module names of pre blockers
-  // to call in the order in which they should be called. If this is left empty
-  // no pre blocker will be registered.
-  repeated string pre_blockers = 10;
 }
 
 // StoreKeyConfig may be supplied to override the default module store key, which

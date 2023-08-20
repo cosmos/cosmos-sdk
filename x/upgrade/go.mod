@@ -184,5 +184,6 @@ require (
 replace (
 	cosmossdk.io/api => github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c
 	cosmossdk.io/core => github.com/mmsqe/cosmos-sdk/core v0.0.0-20230820123929-018b874c372c
+	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

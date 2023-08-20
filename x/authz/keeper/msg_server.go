@@ -5,11 +5,14 @@ import (
 	"errors"
 	"strings"
 
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 var _ authz.MsgServer = Keeper{}
@@ -138,4 +141,41 @@ func validateMsgs(msgs []sdk.Msg) error {
 	}
 
 	return nil
+}
+
+// Exec implements the MsgServer.ExecCompat method.
+func (k Keeper) ExecCompat(goCtx context.Context, msg *authz.MsgExecCompat) (*authz.MsgExecCompatResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+	}
+
+	if len(msg.Msgs) == 0 {
+		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
+	}
+
+	subMsgs := make([]sdk.Msg, len(msg.Msgs))
+	for idx, m := range msg.Msgs {
+		var iMsg sdk.Msg
+		err := codec.GlobalCdc.UnmarshalInterfaceJSON([]byte(m), &iMsg)
+		if err != nil {
+			return nil, err
+		}
+
+		err = iMsg.ValidateBasic()
+		if err != nil {
+			return err
+		}
+
+		subMsgs[idx] = iMsg
+	}
+
+	results, err := k.DispatchActions(ctx, grantee, subMsgs)
+	if err != nil {
+		return nil, fmt.Errorf("dispatch err: %w", err)
+	}
+
+	return &authz.MsgExecCompatResponse{Results: results}, nil
 }

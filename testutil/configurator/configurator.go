@@ -360,7 +360,6 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 
 	runtimeConfig := &runtimev1alpha1.Module{
 		AppName:           "TestApp",
-		PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,

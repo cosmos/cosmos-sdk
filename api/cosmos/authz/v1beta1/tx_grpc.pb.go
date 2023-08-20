@@ -21,9 +21,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Grant_FullMethodName  = "/cosmos.authz.v1beta1.Msg/Grant"
-	Msg_Exec_FullMethodName   = "/cosmos.authz.v1beta1.Msg/Exec"
-	Msg_Revoke_FullMethodName = "/cosmos.authz.v1beta1.Msg/Revoke"
+	Msg_Grant_FullMethodName      = "/cosmos.authz.v1beta1.Msg/Grant"
+	Msg_Exec_FullMethodName       = "/cosmos.authz.v1beta1.Msg/Exec"
+	Msg_Revoke_FullMethodName     = "/cosmos.authz.v1beta1.Msg/Revoke"
+	Msg_ExecCompat_FullMethodName = "/cosmos.authz.v1beta1.Msg/ExecCompat"
 )
 
 // MsgClient is the client API for Msg service.
@@ -42,6 +43,7 @@ type MsgClient interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
+	ExecCompat(ctx context.Context, in *MsgExecCompat, opts ...grpc.CallOption) (*MsgExecCompatResponse, error)
 }
 
 type msgClient struct {
@@ -79,6 +81,15 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *msgClient) ExecCompat(ctx context.Context, in *MsgExecCompat, opts ...grpc.CallOption) (*MsgExecCompatResponse, error) {
+	out := new(MsgExecCompatResponse)
+	err := c.cc.Invoke(ctx, Msg_ExecCompat_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -95,6 +106,7 @@ type MsgServer interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	ExecCompat(context.Context, *MsgExecCompat) (*MsgExecCompatResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -110,6 +122,9 @@ func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse,
 }
 func (UnimplementedMsgServer) Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Revoke not implemented")
+}
+func (UnimplementedMsgServer) ExecCompat(context.Context, *MsgExecCompat) (*MsgExecCompatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecCompat not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -178,6 +193,24 @@ func _Msg_Revoke_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ExecCompat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecCompat)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecCompat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ExecCompat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecCompat(ctx, req.(*MsgExecCompat))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -196,6 +229,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Revoke",
 			Handler:    _Msg_Revoke_Handler,
+		},
+		{
+			MethodName: "ExecCompat",
+			Handler:    _Msg_ExecCompat_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

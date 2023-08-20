@@ -16,6 +16,20 @@ const (
 	dbName           = "ss.db"
 	reservedStoreKey = "RESERVED"
 	keyLatestHeight  = "latest_height"
+
+	latestVersionStmt = `
+	insert into state_storage(store_key, key, value, version)
+    values(?, ?, ?, ?)
+  on conflict(store_key, key, version) do update set
+    value = ?;
+	`
+	upsertStmt = `
+	insert into state_storage(store_key, key, value, version)
+    values(?, ?, ?, ?)
+  on conflict(store_key, key, version) do update set
+    value = ?;
+	`
+	delStmt = "delete from state_storage where store_key = ? and key = ? and version = ?;"
 )
 
 var _ store.VersionedDatabase = (*Database)(nil)
@@ -77,13 +91,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
-	stmt := `
-	insert into state_storage(store_key, key, value, version)
-  	values(?, ?, ?, ?)
-  on conflict(store_key, key, version) do update set
-    value = ?;
-	`
-	_, err := db.storage.Exec(stmt, reservedStoreKey, keyLatestHeight, version, 0, version)
+	_, err := db.storage.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -128,14 +136,7 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	stmt := `
-	insert into state_storage(store_key, key, value, version)
-  	values(?, ?, ?, ?)
-  on conflict(store_key, key, version) do update set
-    value = ?;
-	`
-
-	_, err := db.storage.Exec(stmt, storeKey, key, value, version, value)
+	_, err := db.storage.Exec(upsertStmt, storeKey, key, value, version, value)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -155,7 +156,7 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	panic("not implemented!")
+	return NewBatch(db.storage, version)
 }
 
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {

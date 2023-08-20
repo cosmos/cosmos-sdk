@@ -65,13 +65,10 @@ func (b *Batch) Delete(storeKey string, key []byte) error {
 }
 
 func (b *Batch) Write() error {
-	delStmt := "delete from state_storage where store_key = ? and key = ? and version = ?;"
-	upsertStmt := `
-	insert into state_storage(store_key, key, value, version)
-  	values(?, ?, ?, ?)
-  on conflict(store_key, key, version) do update set
-    value = ?;
-	`
+	_, err := b.tx.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
 
 	for _, op := range b.ops {
 		switch op.action {

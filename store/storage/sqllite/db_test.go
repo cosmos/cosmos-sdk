@@ -1,6 +1,7 @@
 package sqllite
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -75,4 +76,73 @@ func TestDatabase_CRUD(t *testing.T) {
 
 	err = db.Delete(storeKey1, 1, []byte("not_exists"))
 	require.NoError(t, err)
+}
+
+func TestDatabase_Batch(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
+
+	for i := 0; i < 100; i++ {
+		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
+		require.NoError(t, err)
+	}
+
+	for i := 0; i < 100; i++ {
+		if i%10 == 0 {
+			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%d", i)))
+			require.NoError(t, err)
+		}
+	}
+
+	require.NotZero(t, batch.Size())
+
+	err = batch.Write()
+	require.NoError(t, err)
+
+	lv, err := db.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), lv)
+
+	for i := 0; i < 100; i++ {
+		ok, err := db.Has(storeKey1, 1, []byte(fmt.Sprintf("key%d", i)))
+		require.NoError(t, err)
+
+		if i%10 == 0 {
+			require.False(t, ok)
+		} else {
+			require.True(t, ok)
+		}
+	}
+}
+
+func TestDatabase_ResetBatch(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
+
+	for i := 0; i < 100; i++ {
+		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
+		require.NoError(t, err)
+	}
+
+	for i := 0; i < 100; i++ {
+		if i%10 == 0 {
+			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%d", i)))
+			require.NoError(t, err)
+		}
+	}
+
+	require.NotZero(t, batch.Size())
+	batch.Reset()
+	require.NotPanics(t, func() { batch.Reset() })
+
+	// There is an initial cost of 12 bytes for the batch header
+	require.LessOrEqual(t, batch.Size(), 12)
 }

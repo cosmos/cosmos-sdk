@@ -343,6 +343,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713093628-90d9a75d4125 h1:2aGCqfxWf2AAvLOUHaRiByle6n0FPRdeOF/62JTldh0=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713093628-90d9a75d4125/go.mod h1:LME6v5XztqVK7/1uTQj/G6ZJdosJEz24rKaPYk+WbqI=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
@@ -782,6 +784,10 @@ github.com/mitchellh/mapstructure v0.0.0-20160808181253-ca63d7c062ee/go.mod h1:F
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
+github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c h1:+dqw4SEGBUu5Y7yB3KHZ3vgGafOZ19WjF52DiEglNlw=
+github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c/go.mod h1:h4YT2OHIBT/YIwWrc5L+4dY05ZIqvo89zs6m7j4/RSk=
+github.com/mmsqe/cosmos-sdk/core v0.0.0-20230820123929-018b874c372c h1:JRbjvCCCyjYShvt3BINjyiaZKnC0OpgvsLhqtB9v6UU=
+github.com/mmsqe/cosmos-sdk/core v0.0.0-20230820123929-018b874c372c/go.mod h1:BMyDfY2gM+BQVIf4V0cWjn6S7cY+1N7Pr8wWqZfHvKs=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

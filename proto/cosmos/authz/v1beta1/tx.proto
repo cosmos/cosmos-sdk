@@ -30,6 +30,8 @@ service Msg {
   // Revoke revokes any authorization corresponding to the provided method name on the
   // granter's account that has been granted to the grantee.
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
+
+  rpc ExecCompat(MsgExecCompat) returns (MsgExecCompatResponse);
 }
 
 // MsgGrant is a request type for Grant method. It declares authorization to the grantee
@@ -79,6 +81,11 @@ message MsgRevoke {
 
 // MsgRevokeResponse defines the Msg/MsgRevokeResponse response type.
 message MsgRevokeResponse {}
+
+// MsgExecCompatResponse defines the Msg/MsgExecCompatResponse response type.
+message MsgExecCompatResponse {
+  repeated bytes results = 1;
+}
 
 // MsgExecCompat supports legacy amino codec for frontend metamask signing
 // Functions are same as MsgExec, but input for msgs is array of strings

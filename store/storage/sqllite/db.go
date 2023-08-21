@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cosmossdk.io/store/v2"
 	_ "modernc.org/sqlite"
+
+	"cosmossdk.io/store/v2"
 )
 
 const (

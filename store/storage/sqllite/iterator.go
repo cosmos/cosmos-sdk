@@ -5,8 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"cosmossdk.io/store/v2"
 	_ "modernc.org/sqlite"
+
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Iterator = (*iterator)(nil)

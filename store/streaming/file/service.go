@@ -161,6 +161,8 @@ func (fss *StreamingService) doListenCommit(ctx context.Context, res abci.Respon
 		if err := writeLengthPrefixedFile(path.Join(fss.writeDir, metaFileName), bz, fss.fsync); err != nil {
 			return err
 		}
+		// reset block metadata for next block so that deliverTx does not accumulate between blocks
+		fss.blockMetadata = types.BlockMetadata{}
 	}
 
 	var buf bytes.Buffer

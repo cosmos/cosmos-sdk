@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:yihuang/nixpkgs/master-1";
+    nixpkgs.url = "github:NixOS/nixpkgs/master";
     flake-utils.url = "github:numtide/flake-utils";
     gomod2nix = {
       url = "github:nix-community/gomod2nix";

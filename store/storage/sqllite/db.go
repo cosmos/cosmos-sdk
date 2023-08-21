@@ -18,18 +18,18 @@ const (
 	keyLatestHeight  = "latest_height"
 
 	latestVersionStmt = `
-	insert into state_storage(store_key, key, value, version)
-    values(?, ?, ?, ?)
-  on conflict(store_key, key, version) do update set
+	INSERT INTO state_storage(store_key, key, value, version)
+    VALUES(?, ?, ?, ?)
+  ON CONFLICT(store_key, key, version) DO UPDATE SET
     value = ?;
 	`
 	upsertStmt = `
-	insert into state_storage(store_key, key, value, version)
-    values(?, ?, ?, ?)
-  on conflict(store_key, key, version) do update set
+	INSERT INTO state_storage(store_key, key, value, version)
+    VALUES(?, ?, ?, ?)
+  ON CONFLICT(store_key, key, version) DO UPDATE SET
     value = ?;
 	`
-	delStmt = "delete from state_storage where store_key = ? and key = ? and version = ?;"
+	delStmt = "DELETE FROM state_storage WHERE store_key = ? AND key = ? AND version = ?;"
 )
 
 var _ store.VersionedDatabase = (*Database)(nil)
@@ -45,7 +45,7 @@ func New(dataDir string) (*Database, error) {
 	}
 
 	stmt := `
-	create table if not exists state_storage (
+	CREATE TABLE IF NOT EXISTS state_storage (
 		id integer not null primary key, 
 		store_key varchar not null,
 		key varchar not null,
@@ -54,7 +54,7 @@ func New(dataDir string) (*Database, error) {
 		unique (store_key, key, version)
 	);
 
-	create unique index if not exists idx_store_key_height on state_storage (store_key, key, version);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_store_key_version ON state_storage (store_key, key, version);
 	`
 	_, err = db.Exec(stmt)
 	if err != nil {
@@ -71,7 +71,7 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {
-	stmt, err := db.storage.Prepare("select value from state_storage where store_key = ? and key = ?")
+	stmt, err := db.storage.Prepare("SELECT value FROM state_storage WHERE store_key = ? AND key = ?")
 	if err != nil {
 		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -100,7 +100,7 @@ func (db *Database) SetLatestVersion(version uint64) error {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	stmt, err := db.storage.Prepare("select exists(select 1 from state_storage where store_key = ? and key = ? and version = ?);")
+	stmt, err := db.storage.Prepare("SELECT EXISTS(SELECT 1 FROM state_storage WHERE store_key = ? AND key = ? AND version = ?);")
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -116,7 +116,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	stmt, err := db.storage.Prepare("select value from state_storage where store_key = ? and key = ? and version = ?;")
+	stmt, err := db.storage.Prepare("SELECT value FROM state_storage WHERE store_key = ? AND key = ? AND version = ?;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -145,9 +145,7 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 }
 
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	stmt := "delete from state_storage where store_key = ? and key = ? and version = ?;"
-
-	_, err := db.storage.Exec(stmt, storeKey, key, version)
+	_, err := db.storage.Exec(delStmt, storeKey, key, version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}

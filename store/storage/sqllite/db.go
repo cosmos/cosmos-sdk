@@ -1,6 +1,7 @@
 package sqllite
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 const (
 	driverName       = "sqlite"
 	dbName           = "ss.db"
-	reservedStoreKey = "RESERVED"
+	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 
 	latestVersionStmt = `
@@ -167,7 +168,15 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 }
 
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	panic("not implemented!")
+	if (len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
+	return newIterator(db.storage, storeKey, version, start, end)
 }
 
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
@@ -191,8 +200,8 @@ func (db *Database) printRowsDebug() {
 	for rows.Next() {
 		var (
 			storeKey string
-			key      string
-			value    string
+			key      []byte
+			value    []byte
 			version  uint64
 		)
 		if err := rows.Scan(&storeKey, &key, &value, &version); err != nil {

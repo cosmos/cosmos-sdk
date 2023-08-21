@@ -442,6 +442,10 @@ var (
 )
 
 func (i *Int) Size() (size int) {
+	if i == nil || i.i == nil {
+		return 0
+	}
+
 	sign := i.Sign()
 	if sign == 0 { // It is zero.
 		// log*(0) is undefined hence return early.

@@ -531,6 +531,7 @@ var sizeTests = []struct {
 	s    string
 	want int
 }{
+	{"", 0},
 	{"0", 1},
 	{"-0", 1},
 	{"-10", 3},

@@ -3,8 +3,9 @@ package storage
 import (
 	"fmt"
 
-	"cosmossdk.io/store/v2"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/store/v2"
 )
 
 const (

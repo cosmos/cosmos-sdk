@@ -91,15 +91,27 @@ func TestDatabase_GetVersionedKey(t *testing.T) {
 	defer db.Close()
 
 	// store a key at version 1
-	err = db.Set(storeKey1, 1, []byte("key"), []byte("value"))
+	err = db.Set(storeKey1, 1, []byte("key"), []byte("value001"))
 	require.NoError(t, err)
 
 	// assume chain progresses to version 10 w/o any changes to key
 	bz, err := db.Get(storeKey1, 10, []byte("key"))
 	require.NoError(t, err)
-	require.Equal(t, []byte("value"), bz)
+	require.Equal(t, []byte("value001"), bz)
 
 	ok, err := db.Has(storeKey1, 10, []byte("key"))
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	// chain progresses to version 11 with an update to key
+	err = db.Set(storeKey1, 11, []byte("key"), []byte("value011"))
+	require.NoError(t, err)
+
+	bz, err = db.Get(storeKey1, 10, []byte("key"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("value001"), bz)
+
+	ok, err = db.Has(storeKey1, 10, []byte("key"))
 	require.NoError(t, err)
 	require.True(t, ok)
 }

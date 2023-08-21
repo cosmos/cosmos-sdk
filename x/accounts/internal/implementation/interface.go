@@ -3,7 +3,7 @@ package implementation
 // Account defines a smart account interface.
 type Account interface {
 	// RegisterInitHandler allows the smart account to register an initialisation handler, using
-	// the provided InitBuilder. The handler will be called when the smart account is initialised
+	// the provided InitBuilder. The handler will be called when the smart account is initialized
 	// (deployed).
 	RegisterInitHandler(builder *InitBuilder)
 

@@ -21,13 +21,13 @@ func NewInitBuilder() *InitBuilder {
 
 // InitBuilder defines a smart account's initialisation handler builder.
 type InitBuilder struct {
-	// handler is the handler function that will be called when the smart account is initialised.
+	// handler is the handler function that will be called when the smart account is initialized.
 	// Although the function here is defined to take an interface{}, the smart account will work
 	// with a typed version of it.
 	handler func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error)
 }
 
-// makeHandler returns the handler function that will be called when the smart account is initialised.
+// makeHandler returns the handler function that will be called when the smart account is initialized.
 // It returns an error if no handler was registered.
 func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error), error) {
 	if i.handler == nil {
@@ -36,7 +36,7 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest inter
 	return i.handler, nil
 }
 
-// RegisterHandler registers a handler function that will be called when the smart account is initialised.
+// RegisterHandler registers a handler function that will be called when the smart account is initialized.
 func (i *InitBuilder) RegisterHandler(handler func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error)) {
 	i.handler = handler
 }

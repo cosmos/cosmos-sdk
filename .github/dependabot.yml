@@ -151,6 +151,15 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "x/accounts"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "02:35"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "/x/nft"
     schedule:
       interval: weekly

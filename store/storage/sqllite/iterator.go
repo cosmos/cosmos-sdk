@@ -86,6 +86,7 @@ func newIterator(storage *sql.DB, storeKey string, version uint64, start, end []
 
 func (itr *iterator) Close() {
 	_ = itr.statement.Close()
+	itr.valid = false
 	itr.statement = nil
 	itr.rows = nil
 }

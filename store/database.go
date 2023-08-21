@@ -72,8 +72,8 @@ type VersionedDatabase interface {
 	VersionedIteratorCreator
 	VersionedBatcher
 
-	// Close should not be idempotent. It should only be called once and any call
-	// after may panic.
+	// Close releases associated resources. It should NOT be idempotent. It must
+	// only be called once and any call after may panic.
 	io.Closer
 }
 

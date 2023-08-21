@@ -100,7 +100,7 @@ func initFixture(tb testing.TB) *fixture {
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(tb)
+	logger := log.NewNopLogger()
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, cmtprototypes.Header{}, true, logger)

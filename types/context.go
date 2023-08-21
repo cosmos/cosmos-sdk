@@ -159,6 +159,9 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
+
+	// when calling withBlockheader on a new context chainID in the struct is empty
+	c.chainID = header.ChainID
 	return c
 }
 

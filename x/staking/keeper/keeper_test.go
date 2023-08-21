@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -39,11 +40,13 @@ type KeeperTestSuite struct {
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
+	key           *storetypes.KVStoreKey
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	require := s.Require()
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
@@ -111,4 +114,34 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (s *KeeperTestSuite) TestDiffCollsMigration() {
+	s.SetupTest()
+
+	delAddrs, valAddrs := createValAddrs(100)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			ubd := stakingtypes.UnbondingDelegation{
+				DelegatorAddress: delAddrs[i].String(),
+				ValidatorAddress: valAddrs[i].String(),
+				Entries: []stakingtypes.UnbondingDelegationEntry{
+					{
+						CreationHeight: i,
+						CompletionTime: time.Unix(i, 0).UTC(),
+						Balance:        math.NewInt(i),
+						UnbondingId:    uint64(i),
+					},
+				},
+			}
+			err := s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
+			s.Require().NoError(err)
+		},
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+
+	s.Require().NoError(err)
 }

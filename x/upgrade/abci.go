@@ -76,8 +76,7 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 			logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
-			err = k.ClearUpgradePlan(ctx)
-			return rsp, err
+			return rsp, k.ClearUpgradePlan(ctx)
 		}
 
 		// Prepare shutdown if we don't have an upgrade handler for this upgrade name (meaning this software is out of date)

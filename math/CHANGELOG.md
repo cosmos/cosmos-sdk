@@ -34,6 +34,12 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 # Changelog
 
+## [math/v1.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.2) - 2023-08-21
+
+### Bug Fixes
+
+* [#]() Revert [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263).
+
 ## [math/v1.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.1) - 2023-08-21
 
 ### Bug Fixes

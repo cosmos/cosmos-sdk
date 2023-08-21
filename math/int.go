@@ -443,7 +443,7 @@ var (
 
 func (i *Int) Size() (size int) {
 	if i == nil || i.i == nil {
-		return 0
+		return 1
 	}
 
 	sign := i.Sign()

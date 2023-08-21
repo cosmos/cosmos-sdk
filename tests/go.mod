@@ -5,7 +5,7 @@ go 1.19
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/math v1.0.1
+	cosmossdk.io/math v1.1.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.7.0
@@ -154,7 +154,7 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect

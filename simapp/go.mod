@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.10.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.0
-	cosmossdk.io/math v1.0.1
+	cosmossdk.io/math v1.1.0
 	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982
 	cosmossdk.io/tools/confix v0.0.0-20230818115413-c402c51a1508
 	cosmossdk.io/x/circuit v0.0.0-20230818115413-c402c51a1508

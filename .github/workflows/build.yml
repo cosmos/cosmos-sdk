@@ -39,6 +39,9 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+            flake.lock
+            flake.nix
+            simapp/default.nix
         ###################
         #### Build App ####
         ###################

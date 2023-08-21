@@ -196,9 +196,9 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c
+	cosmossdk.io/api => github.com/cosmos/cosmos-sdk/api v0.0.0-20230820170544-1bd37053e0c0
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/core => github.com/mmsqe/cosmos-sdk/core v0.0.0-20230820123929-018b874c372c
+	cosmossdk.io/core => github.com/cosmos/cosmos-sdk/core v0.0.0-20230820170544-1bd37053e0c0
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

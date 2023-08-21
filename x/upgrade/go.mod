@@ -182,8 +182,8 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
-	cosmossdk.io/api => github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c
-	cosmossdk.io/core => github.com/mmsqe/cosmos-sdk/core v0.0.0-20230820123929-018b874c372c
+	cosmossdk.io/api => github.com/cosmos/cosmos-sdk/api v0.0.0-20230820170544-1bd37053e0c0
+	cosmossdk.io/core => github.com/cosmos/cosmos-sdk/core v0.0.0-20230820170544-1bd37053e0c0
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

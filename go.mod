@@ -169,7 +169,7 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/api => github.com/mmsqe/cosmos-sdk/api v0.0.0-20230820123929-018b874c372c
+	cosmossdk.io/api => github.com/cosmos/cosmos-sdk/api v0.0.0-20230820170544-1bd37053e0c0
 	cosmossdk.io/core => github.com/cosmos/cosmos-sdk/core v0.0.0-20230820170544-1bd37053e0c0
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

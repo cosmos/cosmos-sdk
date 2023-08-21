@@ -35,7 +35,7 @@ func NewImplementation(account Account) (Implementation, error) {
 }
 
 // Implementation wraps an Account implementer in order to provide a concrete
-// implementation of an account usable by the x/accounts module.
+// and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
 	Init func(ctx context.Context, msg interface{}) (resp interface{}, err error)

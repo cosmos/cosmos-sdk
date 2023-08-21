@@ -30,7 +30,7 @@ func RegisterInitHandler[
 // RegisterExecuteHandler registers an execution handler for a smart account that uses protobuf.
 func RegisterExecuteHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
-](router *ExecuteRouter, handler func(req ProtoReq) (ProtoResp, error)) {
+](router *ExecuteBuilder, handler func(req ProtoReq) (ProtoResp, error)) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
 	// check if not registered already
 	if _, ok := router.handlers[string(reqName)]; ok {
@@ -50,6 +50,6 @@ func RegisterExecuteHandler[
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
 func RegisterQueryHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
-](router *QueryRouter, handler func(req ProtoReq) (ProtoResp, error)) {
+](router *QueryBuilder, handler func(req ProtoReq) (ProtoResp, error)) {
 	RegisterExecuteHandler(router.er, handler)
 }

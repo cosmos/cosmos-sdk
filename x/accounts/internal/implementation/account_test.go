@@ -12,7 +12,7 @@ func (TestAccount) RegisterInitHandler(router *InitBuilder) {
 	})
 }
 
-func (TestAccount) RegisterExecuteHandlers(router *ExecuteRouter) {
+func (TestAccount) RegisterExecuteHandlers(router *ExecuteBuilder) {
 	RegisterExecuteHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "execute-echo"}, nil
 	})
@@ -22,7 +22,7 @@ func (TestAccount) RegisterExecuteHandlers(router *ExecuteRouter) {
 	})
 }
 
-func (TestAccount) RegisterQueryHandlers(router *QueryRouter) {
+func (TestAccount) RegisterQueryHandlers(router *QueryBuilder) {
 	RegisterQueryHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "query-echo"}, nil
 	})

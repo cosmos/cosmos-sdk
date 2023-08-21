@@ -41,16 +41,16 @@ func (i *InitBuilder) RegisterHandler(handler func(ctx context.Context, initRequ
 	i.handler = handler
 }
 
-// NewExecuteRouter creates a new ExecuteRouter instance.
-func NewExecuteRouter() *ExecuteRouter {
-	return &ExecuteRouter{
+// NewExecuteRouter creates a new ExecuteBuilder instance.
+func NewExecuteRouter() *ExecuteBuilder {
+	return &ExecuteBuilder{
 		handlers: make(map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)),
 	}
 }
 
-// ExecuteRouter defines a smart account's execution router, it will be used to map an execution message
+// ExecuteBuilder defines a smart account's execution router, it will be used to map an execution message
 // to a handler function for a specific account.
-type ExecuteRouter struct {
+type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
 	handlers map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)
 
@@ -58,7 +58,7 @@ type ExecuteRouter struct {
 	err error
 }
 
-func (r *ExecuteRouter) getMessageName(msg interface{}) (string, error) {
+func (r *ExecuteBuilder) getMessageName(msg interface{}) (string, error) {
 	protoMsg, ok := msg.(protoreflect.ProtoMessage)
 	if !ok {
 		return "", fmt.Errorf("%w: expected protoreflect.Message, got %T", ErrInvalidMessage, msg)
@@ -66,7 +66,7 @@ func (r *ExecuteRouter) getMessageName(msg interface{}) (string, error) {
 	return string(protoMsg.ProtoReflect().Descriptor().FullName()), nil
 }
 
-func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error), error) {
+func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error), error) {
 	// if no handler is registered it's fine, it means the account will not be accepting execution or query messages.
 	if len(r.handlers) == 0 {
 		return func(ctx context.Context, _ interface{}) (_ interface{}, err error) {
@@ -92,20 +92,20 @@ func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest 
 	}, nil
 }
 
-// NewQueryRouter creates a new QueryRouter instance.
-func NewQueryRouter() *QueryRouter {
-	return &QueryRouter{
+// NewQueryRouter creates a new QueryBuilder instance.
+func NewQueryRouter() *QueryBuilder {
+	return &QueryBuilder{
 		er: NewExecuteRouter(),
 	}
 }
 
-// QueryRouter defines a smart account's query router, it will be used to map a query message
+// QueryBuilder defines a smart account's query router, it will be used to map a query message
 // to a handler function for a specific account.
-type QueryRouter struct {
-	// er is the ExecuteRouter, since there's no difference between the execution and query handlers API.
-	er *ExecuteRouter
+type QueryBuilder struct {
+	// er is the ExecuteBuilder, since there's no difference between the execution and query handlers API.
+	er *ExecuteBuilder
 }
 
-func (r *QueryRouter) makeHandler() (func(ctx context.Context, queryRequest interface{}) (queryResponse interface{}, err error), error) {
+func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest interface{}) (queryResponse interface{}, err error), error) {
 	return r.er.makeHandler()
 }

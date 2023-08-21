@@ -9,9 +9,9 @@ type Account interface {
 
 	// RegisterExecuteHandlers allows the smart account to register execution handlers.
 	// The smart account might also decide to not register any execution handler.
-	RegisterExecuteHandlers(router *ExecuteRouter)
+	RegisterExecuteHandlers(router *ExecuteBuilder)
 
 	// RegisterQueryHandlers allows the smart account to register query handlers. The smart account
 	// might also decide to not register any query handler.
-	RegisterQueryHandlers(router *QueryRouter)
+	RegisterQueryHandlers(router *QueryBuilder)
 }

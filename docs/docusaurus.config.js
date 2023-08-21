@@ -227,7 +227,7 @@ const config = {
             existingPath.replace('/building-apps', '/integrate/building-apps'),
             existingPath.replace('/building-modules', '/integrate/building-modules'),
             existingPath.replace('/tooling', '/integrate/tooling'),
-            existingPath.replace('/migrations', '/integrate/libraries'),
+            existingPath.replace('/migrations', '/integrate/migrations'),
             existingPath.replace('/modules', '/integrate/modules'),
             existingPath.replace('/rfc', '/integrate/rfc'),
             existingPath.replace('/spec', '/integrate/spec'),

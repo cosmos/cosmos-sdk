@@ -124,11 +124,11 @@ func (s *KeeperTestSuite) TestDiffCollsMigration() {
 		s.key,
 		100,
 		func(i int64) {
-			date := time.Date(2023, 8, 21, 14, 33, 1, 0, time.Local)
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
 			err := s.stakingKeeper.SetUBDQueueTimeSlice(s.ctx, date, nil)
 			s.Require().NoError(err)
 		},
-		"ce076eb02a8f2035cf2e76f998efde9ceec6b621505557f79a02eb5530c198ed",
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
 	)
 	s.Require().NoError(err)
 }

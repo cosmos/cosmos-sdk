@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
-	cosmossdk.io/math v1.0.1 // indirect
+	cosmossdk.io/math v1.1.2 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -130,7 +130,7 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect

@@ -78,7 +78,6 @@ func newIterator(storage *sql.DB, storeKey string, version uint64, start, end []
 	// read the first row
 	itr.parseRow()
 	if !itr.valid {
-		itr.err = fmt.Errorf("iterator invalid: %w", itr.err)
 		return itr, nil
 	}
 

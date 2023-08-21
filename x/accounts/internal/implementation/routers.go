@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var (
@@ -52,11 +54,16 @@ type ExecuteRouter struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
 	handlers map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)
 
-	// getMessageName is a function that will be used to get the name of a message.
-	getMessageName func(msg interface{}) (string, error)
-
 	// err is the error that occurred before building the handler function.
 	err error
+}
+
+func (r *ExecuteRouter) getMessageName(msg interface{}) (string, error) {
+	protoMsg, ok := msg.(protoreflect.ProtoMessage)
+	if !ok {
+		return "", fmt.Errorf("%w: expected protoreflect.Message, got %T", ErrInvalidMessage, msg)
+	}
+	return string(protoMsg.ProtoReflect().Descriptor().FullName()), nil
 }
 
 func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error), error) {
@@ -67,10 +74,6 @@ func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest 
 		}, nil
 	}
 
-	if r.getMessageName == nil {
-		return nil, fmt.Errorf("no message name function")
-	}
-
 	// build the real execution handler
 	return func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error) {
 		messageName, err := r.getMessageName(executeRequest)
@@ -79,7 +82,7 @@ func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest 
 		}
 		handler, ok := r.handlers[messageName]
 		if !ok {
-			return nil, fmt.Errorf("no handler for message %s", messageName)
+			return nil, fmt.Errorf("%w: no handler for message %s", ErrInvalidMessage, messageName)
 		}
 		return handler(ctx, executeRequest)
 	}, nil

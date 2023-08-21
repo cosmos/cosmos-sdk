@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package cosmos.accounts.internal.testing.testaccount;
+option  go_package = "cosmossdk.io/x/accounts/internal/testing/testaccount";
+
+// MsgEcho is a test message.
+message MsgEcho {
+  string message = 1;
+}
+
+// MsgEchoResponse is a test message.
+message MsgEchoResponse {
+  string message = 1;
+}
+
+// QueryEchoRequest is a test message.
+message QueryEchoRequest {
+  string message = 1;
+}
+
+// QueryEchoResponse is a test message.
+message QueryEchoResponse {
+  string message = 1;
+}

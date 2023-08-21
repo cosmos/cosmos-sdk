@@ -5,7 +5,7 @@ import "context"
 // NewImplementation creates a new Implementation instance given an Account implementer.
 func NewImplementation(account Account) (Implementation, error) {
 	// make init handler
-	ir := NewInitRouter()
+	ir := NewInitBuilder()
 	account.RegisterInitHandler(ir)
 	initHandler, err := ir.makeHandler()
 	if err != nil {
@@ -13,7 +13,7 @@ func NewImplementation(account Account) (Implementation, error) {
 	}
 
 	// make execute handler
-	er := NewExecuteRouter()
+	er := NewExecuteBuilder()
 	account.RegisterExecuteHandlers(er)
 	executeHandler, err := er.makeHandler()
 	if err != nil {
@@ -21,7 +21,7 @@ func NewImplementation(account Account) (Implementation, error) {
 	}
 
 	// make query handler
-	qr := NewQueryRouter()
+	qr := NewQueryBuilder()
 	account.RegisterQueryHandlers(qr)
 	queryHandler, err := qr.makeHandler()
 	if err != nil {

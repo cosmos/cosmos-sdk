@@ -9,7 +9,7 @@ import (
 )
 
 func TestRouterDoubleRegistration(t *testing.T) {
-	router := NewExecuteRouter()
+	router := NewExecuteBuilder()
 	RegisterExecuteHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) { return nil, nil })
 	RegisterExecuteHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) { return nil, nil })
 
@@ -18,8 +18,8 @@ func TestRouterDoubleRegistration(t *testing.T) {
 }
 
 func TestEmptyQueryExecuteHandler(t *testing.T) {
-	qr := NewQueryRouter()
-	er := NewExecuteRouter()
+	qr := NewQueryBuilder()
+	er := NewExecuteBuilder()
 
 	qh, err := qr.makeHandler()
 	require.NoError(t, err)

@@ -14,8 +14,8 @@ var (
 	ErrInvalidMessage   = errors.New("invalid message")
 )
 
-// NewInitRouter creates a new InitBuilder instance.
-func NewInitRouter() *InitBuilder {
+// NewInitBuilder creates a new InitBuilder instance.
+func NewInitBuilder() *InitBuilder {
 	return &InitBuilder{}
 }
 
@@ -41,8 +41,8 @@ func (i *InitBuilder) RegisterHandler(handler func(ctx context.Context, initRequ
 	i.handler = handler
 }
 
-// NewExecuteRouter creates a new ExecuteBuilder instance.
-func NewExecuteRouter() *ExecuteBuilder {
+// NewExecuteBuilder creates a new ExecuteBuilder instance.
+func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{
 		handlers: make(map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)),
 	}
@@ -92,10 +92,10 @@ func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest
 	}, nil
 }
 
-// NewQueryRouter creates a new QueryBuilder instance.
-func NewQueryRouter() *QueryBuilder {
+// NewQueryBuilder creates a new QueryBuilder instance.
+func NewQueryBuilder() *QueryBuilder {
 	return &QueryBuilder{
-		er: NewExecuteRouter(),
+		er: NewExecuteBuilder(),
 	}
 }
 

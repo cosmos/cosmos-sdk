@@ -192,7 +192,7 @@ func (s *StorageTestSuite) TestDatabase_ResetBatch() {
 	batch.Reset()
 	s.Require().NotPanics(func() { batch.Reset() })
 
-	// There is an initial cost of 12 bytes for the batch header
+	// TODO: Make initial batch size configurable
 	s.Require().LessOrEqual(batch.Size(), 12)
 }
 

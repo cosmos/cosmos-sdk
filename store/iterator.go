@@ -21,8 +21,7 @@ type Iterator interface {
 	// Value returns the value of the current key/value pair, or nil if done.
 	Value() []byte
 
-	// Close releases associated resources. Release should always succeed and can
-	// be called multiple times without causing error.
+	// Close releases associated resources.
 	Close()
 }
 

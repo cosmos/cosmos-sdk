@@ -100,7 +100,12 @@ func (db *Database) SetLatestVersion(version uint64) error {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	stmt, err := db.storage.Prepare("SELECT EXISTS(SELECT 1 FROM state_storage WHERE store_key = ? AND key = ? AND version = ?);")
+	stmt, err := db.storage.Prepare(`
+	SELECT EXISTS(
+		SELECT 1 FROM state_storage WHERE store_key = ? AND key = ? AND version <= ?
+		ORDER BY version DESC LIMIT 1
+	);
+	`)
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -116,7 +121,11 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	stmt, err := db.storage.Prepare("SELECT value FROM state_storage WHERE store_key = ? AND key = ? AND version = ?;")
+	stmt, err := db.storage.Prepare(`
+	SELECT value FROM state_storage
+	WHERE store_key = ? AND key = ? AND version <= ?
+	ORDER BY version DESC LIMIT 1;
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}

@@ -53,3 +53,27 @@ func (itr *iterator) Close() {
 	itr.statement = nil
 	itr.rows = nil
 }
+
+func (itr *iterator) Domain() ([]byte, []byte) {
+	panic("not implemented!")
+}
+
+func (itr *iterator) Valid() bool {
+	panic("not implemented!")
+}
+
+func (itr *iterator) Key() []byte {
+	panic("not implemented!")
+}
+
+func (itr *iterator) Value() []byte {
+	panic("not implemented!")
+}
+
+func (itr *iterator) Next() bool {
+	panic("not implemented!")
+}
+
+func (itr *iterator) Error() error {
+	panic("not implemented!")
+}

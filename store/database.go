@@ -8,6 +8,7 @@ import (
 type VersionedReader interface {
 	Has(storeKey string, version uint64, key []byte) (bool, error)
 	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+	GetLatestVersion() (uint64, error)
 }
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -28,7 +29,7 @@ type Reader interface {
 type VersionedWriter interface {
 	Set(storeKey string, version uint64, key, value []byte) error
 	Delete(storeKey string, version uint64, key []byte) error
-	GetLatestVersion() (uint64, error)
+	SetLatestVersion(version uint64) error
 }
 
 // Writer wraps the Set method of a backing data store.

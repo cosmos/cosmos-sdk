@@ -3,12 +3,12 @@ package iavl
 import (
 	"fmt"
 
-	commitmenttypes "cosmossdk.io/store/v2/commitment/types"
-
-	log "cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
+
+	log "cosmossdk.io/log"
+	commitmenttypes "cosmossdk.io/store/v2/commitment/types"
 )
 
 var _ commitmenttypes.Tree = (*IavlTree)(nil)

@@ -39,6 +39,9 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+            flake.lock
+            flake.nix
+            simapp/default.nix
         ###################
         #### Build App ####
         ###################
@@ -48,6 +51,11 @@ jobs:
       - name: Build Legacy
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+      - name: Build with rocksdb backend
+        if: |
+          env.GIT_DIFF &&
+          matrix.go-arch == 'amd64'
+        run: nix run . -- version --long
         ###################
         ## Build Tooling ##
         ###################

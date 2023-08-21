@@ -226,12 +226,6 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
 }
 
-// // GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
-// func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-// 	bz := sdk.FormatTimeBytes(timestamp)
-// 	return append(UnbondingQueueKey, bz...)
-// }
-
 // GetREDKey returns a key prefix for indexing a redelegation from a delegator
 // and source validator to a destination validator.
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {

@@ -393,9 +393,6 @@ func (k Keeper) SetUnbondingDelegationEntry(
 // is a slice of DVPairs corresponding to unbonding delegations that expire at a
 // certain time.
 func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvPairs []types.DVPair, err error) {
-	// store := k.storeService.OpenKVStore(ctx)
-
-	// bz, err := store.Get(types.GetUnbondingDelegationTimeKey(timestamp))
 	bz, err := k.UnbondingQueue.Get(ctx, timestamp)
 	if bz == nil || err != nil {
 		return []types.DVPair{}, err
@@ -409,12 +406,10 @@ func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (
 
 // SetUBDQueueTimeSlice sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVPair) error {
-	// store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&types.DVPairs{Pairs: keys})
 	if err != nil {
 		return err
 	}
-	// return store.Set(types.GetUnbondingDelegationTimeKey(timestamp), bz)
 	return k.UnbondingQueue.Set(ctx, timestamp, bz)
 }
 
@@ -423,13 +418,9 @@ func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, k
 func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegation, completionTime time.Time) error {
 	dvPair := types.DVPair{DelegatorAddress: ubd.DelegatorAddress, ValidatorAddress: ubd.ValidatorAddress}
 
-	timeSlice, err := k.GetUBDQueueTimeSlice(ctx, completionTime)
-	// if err != nil {
-	// 	return err
-	// }
-
+	timeSlice, _ := k.GetUBDQueueTimeSlice(ctx, completionTime)
 	if len(timeSlice) == 0 {
-		if err = k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair}); err != nil {
+		if err := k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair}); err != nil {
 			return err
 		}
 		return nil
@@ -439,40 +430,9 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 	return k.SetUBDQueueTimeSlice(ctx, completionTime, timeSlice)
 }
 
-// // UBDQueueIterator returns all the unbonding queue timeslices from time 0 until endTime.
-// func (k Keeper) UBDQueueIterator(ctx context.Context, endTime time.Time) (corestore.Iterator, error) {
-// 	store := k.storeService.OpenKVStore(ctx)
-// 	return store.Iterator(types.UnbondingQueueKey,
-// 		storetypes.InclusiveEndBytes(types.GetUnbondingDelegationTimeKey(endTime)))
-// }
-
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time) (matureUnbonds []types.DVPair, err error) {
-	// store := k.storeService.OpenKVStore(ctx)
-
-	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	// unbondingTimesliceIterator, err := k.UBDQueueIterator(ctx, currTime)
-	// if err != nil {
-	// 	return matureUnbonds, err
-	// }
-	// defer unbondingTimesliceIterator.Close()
-
-	// for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
-	// 	timeslice := types.DVPairs{}
-	// 	value := unbondingTimesliceIterator.Value()
-	// 	if err = k.cdc.Unmarshal(value, &timeslice); err != nil {
-	// 		return matureUnbonds, err
-	// 	}
-
-	// 	matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
-
-	// 	if err = store.Delete(unbondingTimesliceIterator.Key()); err != nil {
-	// 		return matureUnbonds, err
-	// 	}
-
-	// }
-
 	err = k.UnbondingQueue.Walk(ctx, nil, func(key time.Time, _ []byte) (bool, error) {
 		timeslice := types.DVPairs{}
 		value, err := k.UnbondingQueue.Get(ctx, currTime)
@@ -490,6 +450,9 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time
 		}
 		return false, nil
 	})
+	if err != nil {
+		return matureUnbonds, err
+	}
 
 	return matureUnbonds, nil
 }

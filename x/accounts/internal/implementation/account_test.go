@@ -6,27 +6,27 @@ var _ Account = (*TestAccount)(nil)
 
 type TestAccount struct{}
 
-func (TestAccount) RegisterInitHandler(router *InitBuilder) {
-	RegisterInitHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
+func (TestAccount) RegisterInitHandler(builder *InitBuilder) {
+	RegisterInitHandler(builder, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "init-echo"}, nil
 	})
 }
 
-func (TestAccount) RegisterExecuteHandlers(router *ExecuteBuilder) {
-	RegisterExecuteHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
+func (TestAccount) RegisterExecuteHandlers(builder *ExecuteBuilder) {
+	RegisterExecuteHandler(builder, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "execute-echo"}, nil
 	})
 
-	RegisterExecuteHandler(router, func(req *wrapperspb.BytesValue) (*wrapperspb.BytesValue, error) {
+	RegisterExecuteHandler(builder, func(req *wrapperspb.BytesValue) (*wrapperspb.BytesValue, error) {
 		return &wrapperspb.BytesValue{Value: append(req.Value, "bytes-execute-echo"...)}, nil
 	})
 }
 
-func (TestAccount) RegisterQueryHandlers(router *QueryBuilder) {
-	RegisterQueryHandler(router, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
+func (TestAccount) RegisterQueryHandlers(builder *QueryBuilder) {
+	RegisterQueryHandler(builder, func(req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "query-echo"}, nil
 	})
-	RegisterQueryHandler(router, func(req *wrapperspb.BytesValue) (*wrapperspb.BytesValue, error) {
+	RegisterQueryHandler(builder, func(req *wrapperspb.BytesValue) (*wrapperspb.BytesValue, error) {
 		return &wrapperspb.BytesValue{Value: append(req.Value, "bytes-query-echo"...)}, nil
 	})
 }

@@ -485,8 +485,11 @@ func sizeBigInt(i *big.Int, alreadyMadeCopy bool) (size int) {
 
 	// Use Log10(x) for values less than (1<<64)-1, given it is only defined for [1, (1<<64)-1]
 	if bitLen <= 64 {
-		log10 := int(stdmath.Log10(float64(i.Uint64())))
-		return size + 1 + log10
+		// log10 := int(stdmath.Log10(float64(i.Uint64())))
+		// return size + 1 + log10
+
+		bz, _ := i.MarshalText()
+		return len(bz)
 	}
 
 	// Past this point, the value is greater than (1<<64)-1 and 10^19.

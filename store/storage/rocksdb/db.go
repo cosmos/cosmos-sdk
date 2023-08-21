@@ -10,6 +10,7 @@ import (
 	"math"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/util"
 	"github.com/linxGnu/grocksdb"
 )
 
@@ -156,7 +157,7 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 	}
 
 	prefix := storePrefix(storeKey)
-	start, end = iterateWithPrefix(prefix, start, end)
+	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
@@ -172,7 +173,7 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 	}
 
 	prefix := storePrefix(storeKey)
-	start, end = iterateWithPrefix(prefix, start, end)
+	start, end = util.IterateWithPrefix(prefix, start, end)
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
 	return newRocksDBIterator(itr, prefix, start, end, true), nil
@@ -225,54 +226,4 @@ func readOnlySlice(s *grocksdb.Slice) []byte {
 	}
 
 	return s.Data()
-}
-
-func cloneAppend(front []byte, tail []byte) (res []byte) {
-	res = make([]byte, len(front)+len(tail))
-
-	n := copy(res, front)
-	copy(res[n:], tail)
-
-	return res
-}
-
-func copyIncr(bz []byte) []byte {
-	if len(bz) == 0 {
-		panic("copyIncr expects non-zero bz length")
-	}
-
-	ret := make([]byte, len(bz))
-	copy(ret, bz)
-
-	for i := len(bz) - 1; i >= 0; i-- {
-		if ret[i] < byte(0xFF) {
-			ret[i]++
-			return ret
-		}
-
-		ret[i] = byte(0x00)
-
-		if i == 0 {
-			// overflow
-			return nil
-		}
-	}
-
-	return nil
-}
-
-func iterateWithPrefix(prefix, begin, end []byte) ([]byte, []byte) {
-	if len(prefix) == 0 {
-		return begin, end
-	}
-
-	begin = cloneAppend(prefix, begin)
-
-	if end == nil {
-		end = copyIncr(prefix)
-	} else {
-		end = cloneAppend(prefix, end)
-	}
-
-	return begin, end
 }

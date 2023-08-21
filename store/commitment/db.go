@@ -3,9 +3,9 @@ package commitment
 import (
 	"sync"
 
-	"cosmossdk.io/store/v2/commitment/types"
-
 	ics23 "github.com/cosmos/ics23/go"
+
+	"cosmossdk.io/store/v2/commitment/types"
 )
 
 // Database represents a state commitment store. It is designed to securely store

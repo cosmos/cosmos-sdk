@@ -49,12 +49,30 @@ func newRocksDBIterator(source *grocksdb.Iterator, prefix, start, end []byte, re
 		start:   start,
 		end:     end,
 		reverse: reverse,
-		invalid: false,
+		invalid: !source.Valid(),
 	}
 }
 
+// Domain returns the domain of the iterator. The caller must not modify the
+// return values.
 func (itr *iterator) Domain() ([]byte, []byte) {
-	return itr.start, itr.end
+	start := itr.start
+	if start != nil {
+		start = start[len(itr.prefix):]
+		if len(start) == 0 {
+			start = nil
+		}
+	}
+
+	end := itr.end
+	if end != nil {
+		end = end[len(itr.prefix):]
+		if len(end) == 0 {
+			end = nil
+		}
+	}
+
+	return start, end
 }
 
 func (itr *iterator) Valid() bool {
@@ -106,7 +124,9 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr iterator) Next() bool {
-	itr.assertIsValid()
+	if itr.invalid {
+		return false
+	}
 
 	if itr.reverse {
 		itr.source.Prev()
@@ -123,10 +143,12 @@ func (itr *iterator) Error() error {
 
 func (itr *iterator) Close() {
 	itr.source.Close()
+	itr.source = nil
+	itr.invalid = true
 }
 
 func (itr *iterator) assertIsValid() {
-	if !itr.Valid() {
+	if itr.invalid {
 		panic("iterator is invalid")
 	}
 }

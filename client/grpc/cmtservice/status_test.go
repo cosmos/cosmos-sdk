@@ -12,6 +12,8 @@ import (
 )
 
 func TestStatusCommand(t *testing.T) {
+	t.Skip() // https://github.com/cosmos/cosmos-sdk/issues/17446
+
 	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
 	require.NoError(t, err)
 

@@ -124,7 +124,7 @@ Example cmd:
 
 ### Granted Fee Deductions
 
-Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../auth/README.md#antehandlers).
+Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../auth/auth.md#antehandlers).
 
 ### Gas
 

@@ -260,7 +260,7 @@ var (
 		},
 	}),
 		depinject.Supply(
-			// supply custom module high-level-concepts
+			// supply custom module basics
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 				govtypes.ModuleName: gov.NewAppModuleBasic(

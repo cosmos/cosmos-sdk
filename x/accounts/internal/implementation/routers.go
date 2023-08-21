@@ -74,6 +74,10 @@ func (r *ExecuteRouter) makeHandler() (func(ctx context.Context, executeRequest 
 		}, nil
 	}
 
+	if r.err != nil {
+		return nil, r.err
+	}
+
 	// build the real execution handler
 	return func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error) {
 		messageName, err := r.getMessageName(executeRequest)

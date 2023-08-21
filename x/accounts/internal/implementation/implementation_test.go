@@ -55,4 +55,12 @@ func TestImplementation(t *testing.T) {
 		require.ErrorIs(t, err, ErrInvalidMessage)
 	})
 
+	t.Run("all - not a protobuf message", func(t *testing.T) {
+		_, err := impl.Execute(ctx, "test")
+		require.ErrorIs(t, err, ErrInvalidMessage)
+		_, err = impl.Query(ctx, "test")
+		require.ErrorIs(t, err, ErrInvalidMessage)
+		_, err = impl.Init(ctx, "test")
+		require.ErrorIs(t, err, ErrInvalidMessage)
+	})
 }

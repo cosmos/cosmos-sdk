@@ -74,6 +74,9 @@ func (s *StorageTestSuite) TestDatabase_CRUD() {
 	val, err = db.Get(storeKey1, 1, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Nil(val)
+
+	err = db.Delete(storeKey1, 1, []byte("not_exists"))
+	s.Require().NoError(err)
 }
 
 func (s *StorageTestSuite) TestDatabase_VersionedKeys() {

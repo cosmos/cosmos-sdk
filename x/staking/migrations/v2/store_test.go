@@ -105,7 +105,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationQueueKey",
 			v1.GetRedelegationTimeKey(now),
-			types.GetRedelegationTimeKey(now),
+			getRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
@@ -138,4 +138,9 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.RedelegationQueueKey, bz...)
 }

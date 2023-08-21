@@ -19,6 +19,7 @@ func TestStorageTestSuite(t *testing.T) {
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
 			return New(dir)
 		},
+		EmptyBatchSize: 12,
 	}
 	suite.Run(t, s)
 }

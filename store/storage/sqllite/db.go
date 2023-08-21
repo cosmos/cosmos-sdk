@@ -68,7 +68,9 @@ func New(dataDir string) (*Database, error) {
 }
 
 func (db *Database) Close() error {
-	return db.storage.Close()
+	err := db.storage.Close()
+	db.storage = nil
+	return err
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {

@@ -71,6 +71,9 @@ type VersionedDatabase interface {
 	VersionedReaderWriter
 	VersionedIteratorCreator
 	VersionedBatcher
+
+	// Close should not be idempotent. It should only be called once and any call
+	// after may panic.
 	io.Closer
 }
 

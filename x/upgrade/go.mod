@@ -3,8 +3,8 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.0
-	cosmossdk.io/core v0.10.0
+	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
+	cosmossdk.io/core v0.10.1-0.20230820170544-1bd37053e0c0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.0
@@ -182,8 +182,6 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
-	cosmossdk.io/api => github.com/cosmos/cosmos-sdk/api v0.0.0-20230820170544-1bd37053e0c0
-	cosmossdk.io/core => github.com/cosmos/cosmos-sdk/core v0.0.0-20230820170544-1bd37053e0c0
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

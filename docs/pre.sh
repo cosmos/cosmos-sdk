@@ -16,6 +16,7 @@ cp ../x/auth/tx/README.md ./docs/integrate/modules/auth/2-tx.md
 
 ## Add modules page list
 cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/integrate/modules/"$MODDOC/$(basename "$D").md"
+sed -i -e "s|(../core/|(../../develop/advanced-concepts/"./docs/integrate/building-modules/01-module-manager.md
 
 ## Add tooling documentation
 cp ../tools/proto/README.md ./docs/integrate/tooling/00-proto.md

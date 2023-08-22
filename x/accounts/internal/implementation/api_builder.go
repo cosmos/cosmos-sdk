@@ -36,11 +36,6 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest inter
 	return i.handler, nil
 }
 
-// RegisterHandler registers a handler function that will be called when the smart account is initialized.
-func (i *InitBuilder) RegisterHandler(handler func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error)) {
-	i.handler = handler
-}
-
 // NewExecuteBuilder creates a new ExecuteBuilder instance.
 func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{

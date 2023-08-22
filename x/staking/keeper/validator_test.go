@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -77,6 +78,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	// check the last validator power
 	power := int64(100)
 	require.NoError(keeper.SetLastValidatorPower(ctx, valAddr, power))
+	fmt.Printf("valAddr: %v\n", valAddr.String())
 	resPower, err := keeper.GetLastValidatorPower(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(power, resPower)

@@ -38,9 +38,9 @@ func NewImplementation(account Account) (Implementation, error) {
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg interface{}) (resp interface{}, err error)
+	Init func(ctx context.Context, msg any) (resp any, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg interface{}) (resp interface{}, err error)
+	Execute func(ctx context.Context, msg any) (resp any, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg interface{}) (resp interface{}, err error)
+	Query func(ctx context.Context, msg any) (resp any, err error)
 }

@@ -22,14 +22,14 @@ func NewInitBuilder() *InitBuilder {
 // InitBuilder defines a smart account's initialisation handler builder.
 type InitBuilder struct {
 	// handler is the handler function that will be called when the smart account is initialized.
-	// Although the function here is defined to take an interface{}, the smart account will work
+	// Although the function here is defined to take an any, the smart account will work
 	// with a typed version of it.
-	handler func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error)
+	handler func(ctx context.Context, initRequest any) (initResponse any, err error)
 }
 
 // makeHandler returns the handler function that will be called when the smart account is initialized.
 // It returns an error if no handler was registered.
-func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest interface{}) (initResponse interface{}, err error), error) {
+func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest any) (initResponse any, err error), error) {
 	if i.handler == nil {
 		return nil, errNoInitHandler
 	}
@@ -39,7 +39,7 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest inter
 // NewExecuteBuilder creates a new ExecuteBuilder instance.
 func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{
-		handlers: make(map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)),
+		handlers: make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
 	}
 }
 
@@ -47,13 +47,13 @@ func NewExecuteBuilder() *ExecuteBuilder {
 // to a handler function for a specific account.
 type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
-	handlers map[string]func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error)
+	handlers map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)
 
 	// err is the error that occurred before building the handler function.
 	err error
 }
 
-func (r *ExecuteBuilder) getMessageName(msg interface{}) (string, error) {
+func (r *ExecuteBuilder) getMessageName(msg any) (string, error) {
 	protoMsg, ok := msg.(protoreflect.ProtoMessage)
 	if !ok {
 		return "", fmt.Errorf("%w: expected protoreflect.Message, got %T", ErrInvalidMessage, msg)
@@ -61,10 +61,10 @@ func (r *ExecuteBuilder) getMessageName(msg interface{}) (string, error) {
 	return string(protoMsg.ProtoReflect().Descriptor().FullName()), nil
 }
 
-func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error), error) {
+func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest any) (executeResponse any, err error), error) {
 	// if no handler is registered it's fine, it means the account will not be accepting execution or query messages.
 	if len(r.handlers) == 0 {
-		return func(ctx context.Context, _ interface{}) (_ interface{}, err error) {
+		return func(ctx context.Context, _ any) (_ any, err error) {
 			return nil, errNoExecuteHandler
 		}, nil
 	}
@@ -74,7 +74,7 @@ func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest
 	}
 
 	// build the real execution handler
-	return func(ctx context.Context, executeRequest interface{}) (executeResponse interface{}, err error) {
+	return func(ctx context.Context, executeRequest any) (executeResponse any, err error) {
 		messageName, err := r.getMessageName(executeRequest)
 		if err != nil {
 			return nil, fmt.Errorf("%w: unable to get message name", err)
@@ -101,6 +101,6 @@ type QueryBuilder struct {
 	er *ExecuteBuilder
 }
 
-func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest interface{}) (queryResponse interface{}, err error), error) {
+func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest any) (queryResponse any, err error), error) {
 	return r.er.makeHandler()
 }

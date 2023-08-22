@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/feegrant"
@@ -99,7 +100,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 func (suite *SimTestSuite) TestWeightedOperations() {
 	require := suite.Require()
 
-	suite.ctx.WithChainID("test-chain")
+	suite.ctx.WithHeaderInfo(coreheader.Info{ChainID: "test-chain"})
 
 	appParams := make(simtypes.AppParams)
 

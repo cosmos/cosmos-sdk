@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -170,7 +171,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithHeaderInfo(coreheader.Info{Height: 1})
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -242,7 +243,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
 
 	// require we be able to unbond now
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 	del, _ := f.stakingKeeper.Delegations.Get(ctx, collections.Join(sdk.AccAddress(operatorAddr), operatorAddr))
 	validator, _ := f.stakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
@@ -262,7 +263,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithBlockTime(time.Now())
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithHeaderInfo(coreheader.Info{Height: 1, Time: time.Now()})
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -299,8 +300,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.BlockHeader().Height + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
 

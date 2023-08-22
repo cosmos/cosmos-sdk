@@ -7,6 +7,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -119,8 +120,8 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	}
 
 	// set context height to zero
-	height := ctx.BlockHeight()
-	ctx = ctx.WithBlockHeight(0)
+	height := ctx.HeaderInfo().Height
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 0})
 
 	// reinitialize all validators
 	err = app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
@@ -171,7 +172,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	}
 
 	// reset context height
-	ctx = ctx.WithBlockHeight(height)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height})
 
 	/* Handle staking state. */
 

@@ -12,7 +12,10 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -42,6 +45,7 @@ type KeeperTestSuite struct {
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
 	key           *storetypes.KVStoreKey
+	cdc           codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -52,6 +56,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
+	s.cdc = encCfg.Codec
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -135,6 +140,43 @@ func getREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	redelegationByValSrcIndexKey := []byte{0x35}
 	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
+}
+
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	lastValidatorPowerKey := []byte{0x11}
+	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
+}
+
+func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
+	s.SetupTest()
+
+	_, valAddrs := createValAddrs(101)
+
+	bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: 1})
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+		},
+		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			err := s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
+			s.Require().NoError(err)
+		},
+		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
+	)
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) TestRedelegationsMigrationToColls() {

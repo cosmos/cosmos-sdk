@@ -30,6 +30,8 @@ const (
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 300
+
+	maxBitLen = 256
 )
 
 var (
@@ -331,7 +333,7 @@ func (d Dec) MulInt(i Int) Dec {
 }
 
 func (d Dec) MulIntMut(i Int) Dec {
-	d.i.Mul(d.i, i.i)
+	d.i.Mul(d.i, i.BigInt())
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -415,7 +417,7 @@ func (d Dec) QuoInt(i Int) Dec {
 }
 
 func (d Dec) QuoIntMut(i Int) Dec {
-	d.i.Quo(d.i, i.i)
+	d.i.Quo(d.i, i.BigInt())
 	return d
 }
 

@@ -390,11 +390,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// set a redelegation
 	rdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, rdTokens.ToDec())
+		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec())
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -415,7 +415,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction) })
-	burnAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(fraction).TruncateInt()
+	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
@@ -481,7 +481,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
-	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(sdk.OneDec()).TruncateInt()
+	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(sdk.OneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt())
 
 	// read updated pool
@@ -544,11 +544,11 @@ func TestSlashBoth(t *testing.T) {
 	rdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		rdATokens.ToDec())
+		sdk.NewDecFromInt(rdATokens))
 	app.StakingKeeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec())
+	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
 	app.StakingKeeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
@@ -581,7 +581,7 @@ func TestSlashBoth(t *testing.T) {
 	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
-	burnedBondAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(fraction).TruncateInt()
+	burnedBondAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 	burnedBondAmount = burnedBondAmount.Sub(burnedNotBondedAmount)
 
 	// read updated pool

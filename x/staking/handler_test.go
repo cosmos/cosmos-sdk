@@ -136,7 +136,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, tmPk1, consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
-	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
+	assert.Equal(t, sdk.NewDecFromInt(valTokens), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
 
 	// two validators can't have the same operator address
@@ -161,7 +161,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, tmPk2, consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
-	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
+	assert.True(sdk.DecEq(t, sdk.NewDecFromInt(valTokens), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)
 }
 

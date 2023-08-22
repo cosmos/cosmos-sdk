@@ -185,7 +185,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// validator and next in line cliff validator
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
 	shares := app.StakingKeeper.TokensFromConsensusPower(ctx, 21)
-	nextCliffVal, _ = nextCliffVal.RemoveDelShares(shares.ToDec())
+	nextCliffVal, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
 	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
 
 	expectedValStatus := map[int]types.BondStatus{
@@ -289,7 +289,7 @@ func TestValidatorBasics(t *testing.T) {
 	// modify a records, save, and retrieve
 	validators[0].Status = types.Bonded
 	validators[0].Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	validators[0].DelegatorShares = validators[0].Tokens.ToDec()
+	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
 	resVal, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -870,8 +870,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	//  tendermintUpdate set: {c1, c3} -> {c1', c3'}
 	delTokens1 := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
 	delTokens2 := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
-	validators[0], _ = validators[0].RemoveDelShares(delTokens1.ToDec())
-	validators[1], _ = validators[1].RemoveDelShares(delTokens2.ToDec())
+	validators[0], _ = validators[0].RemoveDelShares(sdk.NewDecFromInt(delTokens1))
+	validators[1], _ = validators[1].RemoveDelShares(sdk.NewDecFromInt(delTokens2))
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], false)
 	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], false)
 
@@ -939,7 +939,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 	app.StakingKeeper.SetValidator(ctx, validator)
 
-	validator, _ = validator.RemoveDelShares(amt.ToDec())
+	validator, _ = validator.RemoveDelShares(sdk.NewDecFromInt(amt))
 	app.StakingKeeper.SetValidator(ctx, validator)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
 

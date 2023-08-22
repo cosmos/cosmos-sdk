@@ -349,7 +349,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonding delegation
 	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.GetOperator(), unbondingTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.GetOperator(), sdk.NewDecFromInt(unbondingTokens))
 	require.NoError(t, err)
 
 	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal1.String()}
@@ -403,7 +403,7 @@ func TestQueryDelegation(t *testing.T) {
 	// Query redelegation
 	redelegationTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(),
-		val2.GetOperator(), redelegationTokens.ToDec())
+		val2.GetOperator(), sdk.NewDecFromInt(redelegationTokens))
 	require.NoError(t, err)
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator())
 	require.True(t, found)
@@ -507,7 +507,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	// Undelegate
 	for _, addr := range addrs {
 		delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-		_, err := app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), delTokens.ToDec())
+		_, err := app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), sdk.NewDecFromInt(delTokens))
 		require.NoError(t, err)
 	}
 
@@ -557,7 +557,7 @@ func TestQueryRedelegations(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	rdAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
@@ -629,7 +629,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 	// undelegate
 	undelAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 

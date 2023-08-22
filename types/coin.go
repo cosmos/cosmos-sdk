@@ -146,7 +146,7 @@ func (coin Coin) IsNegative() bool {
 
 // IsNil returns true if the coin amount is nil and false otherwise.
 func (coin Coin) IsNil() bool {
-	return coin.Amount.i == nil
+	return coin.Amount.BigInt() == nil
 }
 
 //-----------------------------------------------------------------------------
@@ -395,10 +395,11 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.IsAllLTE(a.Max(b))
-//     b.IsAllLTE(a.Max(b))
-//     a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.IsAllLTE(a.Max(b))
+//	b.IsAllLTE(a.Max(b))
+//	a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
@@ -440,10 +441,11 @@ func (coins Coins) Max(coinsB Coins) Coins {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.Min(b).IsAllLTE(a)
-//     a.Min(b).IsAllLTE(b)
-//     c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.Min(b).IsAllLTE(a)
+//	a.Min(b).IsAllLTE(b)
+//	c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})

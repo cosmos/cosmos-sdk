@@ -113,7 +113,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
@@ -123,10 +123,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoRaw(2).ToDec()}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial.QuoRaw(2))}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoRaw(2).ToDec()}},
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial.QuoRaw(2))}},
 		app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
@@ -176,7 +176,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50% again
@@ -198,10 +198,10 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}},
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}},
 		app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
@@ -375,7 +375,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec()
+	initial := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -431,7 +431,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	del1 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// allocate some rewards
-	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 30).ToDec()
+	initial := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 30))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 

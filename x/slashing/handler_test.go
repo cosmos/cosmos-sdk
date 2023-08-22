@@ -214,7 +214,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
-	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt()
+	slashAmt := sdk.NewDecFromInt(amt).Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt()
 
 	// validator should have been slashed
 	require.True(t, amt.Sub(slashAmt).Equal(validator.GetTokens()))

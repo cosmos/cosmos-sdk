@@ -13,10 +13,11 @@ const (
 )
 
 var (
-	ValidatorsByConsAddrKey = []byte{0x22} // prefix for validators by consensus address
-	RedelegationKey         = []byte{0x34} // key for a redelegation
-	DelegationKey           = []byte{0x31} // prefix for the delegation
-	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
+	ValidatorsByConsAddrKey      = []byte{0x22} // prefix for validators by consensus address
+	DelegationKey                = []byte{0x31} // prefix for the delegation
+	RedelegationKey              = []byte{0x34} // key for a redelegation
+	RedelegationByValSrcIndexKey = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
+	HistoricalInfoKey            = []byte{0x50} // prefix for the historical info
 )
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
@@ -60,4 +61,27 @@ func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []
 // address.
 func GetREDsKey(delAddr sdk.AccAddress) []byte {
 	return append(RedelegationKey, address.MustLengthPrefix(delAddr)...)
+}
+
+// GetREDByValSrcIndexKey creates the index-key for a redelegation, stored by source-validator-index
+// VALUE: none (key rearrangement used)
+func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSFromValsSrcKey := GetREDsFromValSrcIndexKey(valSrcAddr)
+	offset := len(REDSFromValsSrcKey)
+
+	// key is of the form REDSFromValsSrcKey || delAddrLen (1 byte) || delAddr || valDstAddrLen (1 byte) || valDstAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valDstAddr))
+	copy(key[0:offset], REDSFromValsSrcKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valDstAddr))
+	copy(key[offset+2+len(delAddr):], valDstAddr.Bytes())
+
+	return key
+}
+
+// GetREDsFromValSrcIndexKey returns a key prefix for indexing a redelegation to
+// a source validator.
+func GetREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
+	return append(RedelegationByValSrcIndexKey, address.MustLengthPrefix(valSrcAddr)...)
 }

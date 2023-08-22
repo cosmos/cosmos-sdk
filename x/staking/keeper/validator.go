@@ -65,7 +65,7 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
 	valBz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	if err != nil {
-		panic(err)
+		return err
 	}
 	return k.Validators.Set(ctx, sdk.ValAddress(valBz), validator)
 }

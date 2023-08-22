@@ -58,7 +58,7 @@ func GetConfigDir() (string, error) {
 
 	configDir := path.Join(homeDir, DefaultConfigDirName)
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		return configDir, os.MkdirAll(configDir, 0o755)
+		return configDir, os.MkdirAll(configDir, 0o750)
 	}
 
 	return configDir, nil
@@ -91,7 +91,7 @@ func Save(configDir string, config *Config) error {
 		return err
 	}
 
-	if err := os.MkdirAll(configDir, 0o755); err != nil {
+	if err := os.MkdirAll(configDir, 0o750); err != nil {
 		return err
 	}
 

@@ -46,7 +46,7 @@ func NewChainInfo(configDir, chain string, config *config.ChainConfig) *ChainInf
 
 func (c *ChainInfo) getCacheDir() (string, error) {
 	cacheDir := path.Join(c.ConfigDir, "cache")
-	return cacheDir, os.MkdirAll(cacheDir, 0o755)
+	return cacheDir, os.MkdirAll(cacheDir, 0o750)
 }
 
 func (c *ChainInfo) fdsCacheFilename() (string, error) {

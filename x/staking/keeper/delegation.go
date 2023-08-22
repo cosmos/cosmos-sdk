@@ -501,25 +501,20 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []types.Redelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](valAddr)
+	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
+		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetREDKeyFromValSrcIndexKey(iterator.Key())
-		value, err := store.Get(key)
+		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
-			return nil, err
-		}
-		red, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return nil, err
+			return true, err
 		}
 		reds = append(reds, red)
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return reds, nil
@@ -579,7 +574,7 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	if err = store.Set(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{}); err != nil {
+	if err = k.RedelegationsByValSrc.Set(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr), []byte{}); err != nil {
 		return err
 	}
 
@@ -667,7 +662,7 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if err = store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
+	if err = k.RedelegationsByValSrc.Remove(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr)); err != nil {
 		return err
 	}
 

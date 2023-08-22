@@ -19,11 +19,7 @@ import (
 
 var (
 	keysPK1   = ed25519.GenPrivKeyFromSecret([]byte{1}).PubKey()
-	keysPK2   = ed25519.GenPrivKeyFromSecret([]byte{2}).PubKey()
-	keysPK3   = ed25519.GenPrivKeyFromSecret([]byte{3}).PubKey()
 	keysAddr1 = keysPK1.Address()
-	keysAddr2 = keysPK2.Address()
-	keysAddr3 = keysPK3.Address()
 )
 
 func TestGetValidatorPowerRank(t *testing.T) {
@@ -47,33 +43,6 @@ func TestGetValidatorPowerRank(t *testing.T) {
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(types.GetValidatorsByPowerIndexKey(tt.validator, sdk.DefaultPowerReduction, address.NewBech32Codec("cosmosvaloper")))
-
-		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
-	}
-}
-
-func TestGetREDByValSrcIndexKey(t *testing.T) {
-	tests := []struct {
-		delAddr    sdk.AccAddress
-		valSrcAddr sdk.ValAddress
-		valDstAddr sdk.ValAddress
-		wantHex    string
-	}{
-		{
-			sdk.AccAddress(keysAddr1), sdk.ValAddress(keysAddr1), sdk.ValAddress(keysAddr1),
-			"351463d771218209d8bd03c482f69dfba57310f086091463d771218209d8bd03c482f69dfba57310f086091463d771218209d8bd03c482f69dfba57310f08609",
-		},
-		{
-			sdk.AccAddress(keysAddr1), sdk.ValAddress(keysAddr2), sdk.ValAddress(keysAddr3),
-			"35145ef3b5f25c54946d4a89fc0d09d2f126614540f21463d771218209d8bd03c482f69dfba57310f08609143ab62f0d93849be495e21e3e9013a517038f45bd",
-		},
-		{
-			sdk.AccAddress(keysAddr2), sdk.ValAddress(keysAddr1), sdk.ValAddress(keysAddr3),
-			"351463d771218209d8bd03c482f69dfba57310f08609145ef3b5f25c54946d4a89fc0d09d2f126614540f2143ab62f0d93849be495e21e3e9013a517038f45bd",
-		},
-	}
-	for i, tt := range tests {
-		got := hex.EncodeToString(types.GetREDByValSrcIndexKey(tt.delAddr, tt.valSrcAddr, tt.valDstAddr))
 
 		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
 	}

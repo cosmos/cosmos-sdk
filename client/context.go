@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -65,6 +67,11 @@ type Context struct {
 
 	// CmdContext is the context.Context from the Cobra command.
 	CmdContext context.Context
+
+	// Address codecs
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
 }
 
 // WithCmdContext returns a copy of the context with an updated context.Context,
@@ -289,6 +296,24 @@ func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
 // enables chains to preprocess the transaction using the builder.
 func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	ctx.PreprocessTxHook = preprocessFn
+	return ctx
+}
+
+// WithAddressCodec returns the context with the provided address codec.
+func (ctx Context) WithAddressCodec(addressCodec address.Codec) Context {
+	ctx.AddressCodec = addressCodec
+	return ctx
+}
+
+// WithValidatorAddressCodec returns the context with the provided validator address codec.
+func (ctx Context) WithValidatorAddressCodec(validatorAddressCodec address.Codec) Context {
+	ctx.ValidatorAddressCodec = validatorAddressCodec
+	return ctx
+}
+
+// WithConsensusAddressCodec returns the context with the provided consensus address codec.
+func (ctx Context) WithConsensusAddressCodec(consensusAddressCodec address.Codec) Context {
+	ctx.ConsensusAddressCodec = consensusAddressCodec
 	return ctx
 }
 

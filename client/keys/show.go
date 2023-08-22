@@ -111,7 +111,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	bechPrefix, _ := cmd.Flags().GetString(FlagBechPrefix)
-	bechKeyOut, err := getBechKeyOut(bechPrefix)
+	ko, err := getKeyOutput(clientCtx, bechPrefix, k)
 	if err != nil {
 		return err
 	}
@@ -122,10 +122,6 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	switch {
 	case isShowAddr, isShowPubKey:
-		ko, err := bechKeyOut(k)
-		if err != nil {
-			return err
-		}
 		out := ko.Address
 		if isShowPubKey {
 			out = ko.PubKey
@@ -135,7 +131,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 	default:
-		if err := printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat); err != nil {
+		if err := printKeyringRecord(cmd.OutOrStdout(), ko, outputFormat); err != nil {
 			return err
 		}
 	}
@@ -199,15 +195,15 @@ func validateMultisigThreshold(k, nKeys int) error {
 	return nil
 }
 
-func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
+func getKeyOutput(clientCtx client.Context, bechPrefix string, k *keyring.Record) (KeyOutput, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return MkAccKeyOutput, nil
+		return MkAccKeyOutput(k, clientCtx.AddressCodec)
 	case sdk.PrefixValidator:
-		return MkValKeyOutput, nil
+		return MkValKeyOutput(k, clientCtx.ValidatorAddressCodec)
 	case sdk.PrefixConsensus:
-		return MkConsKeyOutput, nil
+		return MkConsKeyOutput(k, clientCtx.ConsensusAddressCodec)
 	}
 
-	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
+	return KeyOutput{}, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
 }

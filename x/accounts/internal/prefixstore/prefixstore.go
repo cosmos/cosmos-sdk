@@ -1,6 +1,6 @@
 // Package prefixstore provides a store that prefixes all keys with a given
 // prefix. It is used to isolate storage reads and writes for an account.
-// Implementation taken from cosmossdk.io/store/prefix, and adapted
+// Implementation taken from cosmossdk.io/store/prefix, and adapted to
 // the cosmossdk.io/core/store.KVStore interface.
 package prefixstore
 
@@ -13,8 +13,10 @@ import (
 
 // New creates a new prefix store using the provided bytes prefix.
 func New(store store.KVStore, prefix []byte) store.KVStore {
-	// TODO: implement
-	return store
+	return Store{
+		parent: store,
+		prefix: prefix,
+	}
 }
 
 var _ store.KVStore = Store{}
@@ -25,13 +27,6 @@ var _ store.KVStore = Store{}
 type Store struct {
 	parent store.KVStore
 	prefix []byte
-}
-
-func NewStore(parent store.KVStore, prefix []byte) Store {
-	return Store{
-		parent: parent,
-		prefix: prefix,
-	}
 }
 
 func cloneAppend(bz, tail []byte) (res []byte) {

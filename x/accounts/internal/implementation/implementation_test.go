@@ -26,7 +26,7 @@ func TestImplementation(t *testing.T) {
 
 	t.Run("execute - unknown message", func(t *testing.T) {
 		_, err := impl.Execute(ctx, &wrapperspb.Int32Value{Value: 1})
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 	})
 
 	t.Run("init ok", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestImplementation(t *testing.T) {
 
 	t.Run("init - unknown message", func(t *testing.T) {
 		_, err := impl.Init(ctx, &wrapperspb.Int32Value{Value: 1})
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 	})
 
 	t.Run("query ok", func(t *testing.T) {
@@ -52,15 +52,15 @@ func TestImplementation(t *testing.T) {
 
 	t.Run("query - unknown message", func(t *testing.T) {
 		_, err := impl.Query(ctx, &wrapperspb.Int32Value{Value: 1})
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 	})
 
 	t.Run("all - not a protobuf message", func(t *testing.T) {
 		_, err := impl.Execute(ctx, "test")
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 		_, err = impl.Query(ctx, "test")
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 		_, err = impl.Init(ctx, "test")
-		require.ErrorIs(t, err, ErrInvalidMessage)
+		require.ErrorIs(t, err, errInvalidMessage)
 	})
 }

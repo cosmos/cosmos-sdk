@@ -21,7 +21,7 @@ func RegisterInitHandler[
 	router.handler = func(ctx context.Context, initRequest any) (initResponse any, err error) {
 		concrete, ok := initRequest.(ProtoReq)
 		if !ok {
-			return nil, fmt.Errorf("%w: wanted %s, got %T", ErrInvalidMessage, reqName, initRequest)
+			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, initRequest)
 		}
 		return handler(ctx, concrete)
 	}
@@ -41,7 +41,7 @@ func RegisterExecuteHandler[
 	router.handlers[string(reqName)] = func(ctx context.Context, executeRequest any) (executeResponse any, err error) {
 		concrete, ok := executeRequest.(ProtoReq)
 		if !ok {
-			return nil, fmt.Errorf("%w: wanted %s, got %T", ErrInvalidMessage, reqName, executeRequest)
+			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, executeRequest)
 		}
 		return handler(ctx, concrete)
 	}

@@ -66,11 +66,11 @@ type Keyring interface {
 
 	// Key and KeyByAddress return keys by uid and address respectively.
 	Key(uid string) (*Record, error)
-	KeyByAddress(address sdk.Address) (*Record, error)
+	KeyByAddress(address []byte) (*Record, error)
 
 	// Delete and DeleteByAddress remove keys from the keyring.
 	Delete(uid string) error
-	DeleteByAddress(address sdk.Address) error
+	DeleteByAddress(address []byte) error
 
 	// Rename an existing key from the Keyring
 	Rename(from, to string) error
@@ -113,7 +113,7 @@ type Signer interface {
 	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
+	SignByAddress(address []byte, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -135,12 +135,12 @@ type Migrator interface {
 type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
-	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
+	ExportPubKeyArmorByAddress(address []byte) (string, error)
 
 	// ExportPrivKeyArmor returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
-	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
+	ExportPrivKeyArmorByAddress(address []byte, encryptPassphrase string) (armor string, err error)
 }
 
 // Option overrides keyring configuration options.
@@ -278,7 +278,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	return crypto.ArmorPubKeyBytes(bz, key.Type()), nil
 }
 
-func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
+func (ks keystore) ExportPubKeyArmorByAddress(address []byte) (string, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
@@ -312,7 +312,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	return priv, err
 }
 
-func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
+func (ks keystore) ExportPrivKeyArmorByAddress(address []byte, encryptPassphrase string) (armor string, err error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
@@ -420,7 +420,7 @@ func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]by
 	}
 }
 
-func (ks keystore) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
+func (ks keystore) SignByAddress(address []byte, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
@@ -461,7 +461,7 @@ func (ks keystore) SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, err
 	return ks.writeOfflineKey(uid, pubkey)
 }
 
-func (ks keystore) DeleteByAddress(address sdk.Address) error {
+func (ks keystore) DeleteByAddress(address []byte) error {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return err
@@ -523,14 +523,14 @@ func (ks keystore) Delete(uid string) error {
 	return nil
 }
 
-func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
+func (ks keystore) KeyByAddress(address []byte) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
+		return nil, wrapKeyNotFound(err, "key with given address not found") // we do not print the address for not needing an address codec
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
+		return nil, wrapKeyNotFound(err, "key with given address not found") // we do not print the address for not needing an address codec
 	}
 
 	return ks.Key(string(ik.Data))
@@ -867,7 +867,7 @@ func (ks keystore) writeRecord(k *Record) error {
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
 // On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
 // In case of inconsistent keyring, it recovers it automatically.
-func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
+func (ks keystore) existsInDb(addr []byte, name string) (bool, error) {
 	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
 	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
 		return false, errAddr
@@ -882,7 +882,7 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 
 	// looking for an issue, record with meta (getByAddress) exists, but record with public key itself does not
 	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyNotFound) {
-		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr.Bytes()))
+		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr))
 		fmt.Fprintln(os.Stderr, "recreating pubkey record")
 		err := ks.db.Remove(addrHexKeyAsString(addr))
 		if err != nil {
@@ -1055,6 +1055,6 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	}
 }
 
-func addrHexKeyAsString(address sdk.Address) string {
-	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
+func addrHexKeyAsString(address []byte) string {
+	return fmt.Sprintf("%s.%s", hex.EncodeToString(address), addressSuffix)
 }

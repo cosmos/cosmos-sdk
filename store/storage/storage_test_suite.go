@@ -10,7 +10,13 @@ import (
 
 const (
 	storeKey1 = "store1"
+	storeKey2 = "store2"
+	storeKey3 = "store3"
+	storeKey4 = "store4"
+	storeKey5 = "store5"
 )
+
+var storeKeys = []string{storeKey1, storeKey2, storeKey3, storeKey4, storeKey5}
 
 // StorageTestSuite defines a reusable test suite for all storage backends.
 type StorageTestSuite struct {

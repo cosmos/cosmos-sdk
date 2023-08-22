@@ -162,7 +162,11 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		upperBound = MVCCEncode(prependStoreKey(storeKey, end), 0)
 	}
 
-	itr := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+	}
+
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version), nil
 }
 
@@ -184,10 +188,13 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		version++
 	}
 
-	it := db.NewIter(&pebble.IterOptions{
+	it, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+	}
 	defer func() {
 		err = errors.Join(err, it.Close())
 	}()

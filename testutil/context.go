@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
@@ -26,7 +25,7 @@ func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger())
 
 	return ctx
 }
@@ -58,7 +57,7 @@ func DefaultContextWithKeys(
 		panic(err)
 	}
 
-	return sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	return sdk.NewContext(cms, false, log.NewNopLogger())
 }
 
 type TestContext struct {
@@ -76,7 +75,7 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithBlockTime(time.Now())
 
 	return TestContext{ctx, db, cms}
 }

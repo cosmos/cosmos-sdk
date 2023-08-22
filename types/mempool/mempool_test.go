@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
@@ -132,7 +131,7 @@ func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
 
 func (s *MempoolTestSuite) TestDefaultMempool() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	txCount := 1000
 	var txs []testTx
@@ -224,7 +223,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
-	ctxt := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	ctxt := sdk.NewContext(nil, false, log.NewNopLogger())
 	t := s.T()
 	s.resetMempool()
 	mp := s.mempool

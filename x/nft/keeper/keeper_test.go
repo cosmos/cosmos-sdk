@@ -2,9 +2,8 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -55,7 +54,7 @@ func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx := testCtx.Ctx.WithBlockTime(time.Now().Round(0).UTC())
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())

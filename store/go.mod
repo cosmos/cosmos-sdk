@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.0.0-beta.2
 	github.com/cosmos/ics23/go v0.10.0
-	github.com/linxGnu/grocksdb v1.7.15
+	github.com/linxGnu/grocksdb v1.8.0
 	github.com/stretchr/testify v1.8.4
 	modernc.org/sqlite v1.25.0
 )

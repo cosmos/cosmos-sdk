@@ -91,7 +91,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationByValSrcIndexKey",
 			v1.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValDstIndexKey",

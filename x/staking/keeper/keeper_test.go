@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -53,6 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	s.key = key
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	s.cdc = encCfg.Codec
@@ -115,6 +117,62 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 	resTotalPower, err := keeper.LastTotalPower.Get(ctx)
 	require.NoError(err)
 	require.True(expTotalPower.Equal(resTotalPower))
+}
+
+// GetREDByValSrcIndexKey creates the index-key for a redelegation, stored by source-validator-index
+// VALUE: none (key rearrangement used)
+func getREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSFromValsSrcKey := getREDsFromValSrcIndexKey(valSrcAddr)
+	offset := len(REDSFromValsSrcKey)
+
+	// key is of the form REDSFromValsSrcKey || delAddrLen (1 byte) || delAddr || valDstAddrLen (1 byte) || valDstAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valDstAddr))
+	copy(key[0:offset], REDSFromValsSrcKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valDstAddr))
+	copy(key[offset+2+len(delAddr):], valDstAddr.Bytes())
+
+	return key
+}
+
+// GetREDsFromValSrcIndexKey returns a key prefix for indexing a redelegation to
+// a source validator.
+func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
+	redelegationByValSrcIndexKey := []byte{0x35}
+	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
+}
+
+func (s *KeeperTestSuite) TestRedelegationsMigrationToColls() {
+	s.SetupTest()
+
+	addrs, valAddrs := createValAddrs(101)
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			// legacy method to set in the state
+			s.ctx.KVStore(s.key).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+		},
+		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			// using collections
+			err := s.stakingKeeper.RedelegationsByValSrc.Set(s.ctx, collections.Join3(valAddrs[i].Bytes(), addrs[i].Bytes(), valAddrs[i+1].Bytes()), []byte{})
+			s.Require().NoError(err)
+		},
+		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
+	)
+
+	s.Require().NoError(err)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

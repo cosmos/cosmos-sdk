@@ -196,7 +196,8 @@ type BaseApp struct {
 	disableBlockGasMeter bool
 
 	// StreamEvents
-	StreamEvents chan StreamEvents
+	EnableStreamer bool
+	StreamEvents   chan StreamEvents
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

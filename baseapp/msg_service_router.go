@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -157,7 +158,20 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 			}
 
-			return sdk.WrapServiceResult(ctx, resMsg, err)
+			anyResp, err := codectypes.NewAnyWithValue(resMsg)
+			if err != nil {
+				return nil, err
+			}
+
+			var events []abci.Event
+			if evtMgr := ctx.EventManager(); evtMgr != nil {
+				events = evtMgr.ABCIEvents()
+			}
+
+			return &sdk.Result{
+				Events:       events,
+				MsgResponses: []*codectypes.Any{anyResp},
+			}, nil
 		}
 	}
 }

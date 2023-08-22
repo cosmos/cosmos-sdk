@@ -1,3 +1,4 @@
+//nolint:staticcheck // legacy types used for migration
 package v3
 
 import (
@@ -163,7 +164,6 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 
 		case oldVote.Option != v1beta1.OptionEmpty:
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
-
 		default:
 			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}

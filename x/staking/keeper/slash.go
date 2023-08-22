@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +74,10 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		return math.NewInt(0), fmt.Errorf("should not be slashing unbonded validator: %s", validator.GetOperator())
 	}
 
-	operatorAddress := validator.GetOperator()
+	operatorAddress, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.Int{}, err
+	}
 
 	// call the before-modification hook
 	if err := k.Hooks().BeforeValidatorModified(ctx, operatorAddress); err != nil {
@@ -175,13 +180,9 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		panic("invalid validator status")
 	}
 
-	valAddr, err := k.validatorAddressCodec.BytesToString(validator.GetOperator())
-	if err != nil {
-		panic(err)
-	}
 	logger.Info(
 		"validator slashed by slash factor",
-		"validator", valAddr,
+		"validator", validator.GetOperator(),
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
@@ -189,7 +190,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 }
 
 // SlashWithInfractionReason implementation doesn't require the infraction (types.Infraction) to work but is required by Interchain Security.
-func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) (math.Int, error) {
+func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ st.Infraction) (math.Int, error) {
 	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
@@ -319,7 +320,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			panic(err)
 		}
 
-		delegation, err := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+		delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDstAddr)))
 		if err != nil {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue

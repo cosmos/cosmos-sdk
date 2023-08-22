@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -44,9 +46,8 @@ func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types
 
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	opAddr, err := store.Get(types.GetValidatorByConsAddrKey(consAddr))
-	if err != nil {
+	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return validator, err
 	}
 
@@ -70,7 +71,11 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := types.MustMarshalValidator(k.cdc, &validator)
-	return store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
+	str, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+	return store.Set(types.GetValidatorKey(str), bz)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address
@@ -79,8 +84,13 @@ func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Vali
 	if err != nil {
 		return err
 	}
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+
+	bz, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+
+	return k.ValidatorByConsensusAddress.Set(ctx, consPk, bz)
 }
 
 // SetValidatorByPowerIndex sets a validator by power index
@@ -91,19 +101,27 @@ func (k Keeper) SetValidatorByPowerIndex(ctx context.Context, validator types.Va
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec), str)
 }
 
 // DeleteValidatorByPowerIndex deletes a record by power index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	return store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec))
 }
 
 // SetNewValidatorByPowerIndex adds new entry by power index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types.Validator) error {
 	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec), str)
 }
 
 // AddValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
@@ -219,15 +237,20 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorByConsAddrKey(valConsAddr)); err != nil {
+	if err = k.ValidatorByConsensusAddress.Remove(ctx, valConsAddr); err != nil {
 		return err
 	}
 
-	if err = store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))); err != nil {
+	if err = store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec)); err != nil {
 		return err
 	}
 
-	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return err
+	}
+
+	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, str); err != nil {
 		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
 	}
 
@@ -573,7 +596,11 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 					}
 
 					if val.GetDelegatorShares().IsZero() {
-						if err = k.RemoveValidator(ctx, val.GetOperator()); err != nil {
+						str, err := k.validatorAddressCodec.StringToBytes(val.GetOperator())
+						if err != nil {
+							return err
+						}
+						if err = k.RemoveValidator(ctx, str); err != nil {
 							return err
 						}
 					} else {
@@ -600,4 +627,19 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 	}
 
 	return v.Jailed, nil
+}
+
+// BondedTokensAndPubKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
+func (k Keeper) BondedTokensAndPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error) {
+	v, err := k.GetValidatorByConsAddr(ctx, addr)
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	pubkey, err := v.CmtConsPublicKey()
+	if err != nil {
+		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+	}
+
+	return v.BondedTokens(), pubkey, nil
 }

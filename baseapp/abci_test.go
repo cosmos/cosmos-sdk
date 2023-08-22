@@ -1790,13 +1790,9 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 		},
 	}
 
-	val1 := mock.NewMockValidator(ctrl)
-	val1.EXPECT().BondedTokens().Return(math.NewInt(667))
-	val1.EXPECT().CmtConsPublicKey().Return(tmPk, nil).AnyTimes()
-
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().GetValidatorByConsAddr(gomock.Any(), consAddr.Bytes()).Return(val1, nil).AnyTimes()
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000)).AnyTimes()
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
+	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1875,6 +1871,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 					},
 					VoteExtension:      ext,
 					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 				},
 			},
 		},
@@ -1884,7 +1881,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	val1.EXPECT().BondedTokens().Return(math.NewInt(666))
+	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))

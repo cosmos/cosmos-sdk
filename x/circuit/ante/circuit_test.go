@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -47,7 +46,7 @@ func initFixture(t *testing.T) *fixture {
 		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
 
 	return &fixture{
-		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
+		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
 		mockStoreKey:  mockStoreKey,
 		mockMsgURL:    "test",
 		mockclientCtx: mockclientCtx,

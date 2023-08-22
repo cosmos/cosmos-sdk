@@ -8,9 +8,9 @@ Flags:
       --a-bool                                                               
       --a-coin cosmos.base.v1beta1.Coin                                      
       --a-message testpb.AMessage (json)                                     
-      --a-validator-address bech32 account address key name                  
+      --a-validator-address account address or key name                      
   -a, --account-number uint                                                  The account number of the signing account (offline mode only)
-      --an-address bech32 account address key name                           
+      --an-address account address or key name                               
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
       --aux                                                                  Generate aux signer data instead of sending a tx
       --bools bools                                                           (default [])
@@ -37,6 +37,7 @@ Flags:
       --keyring-backend string                                               Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
       --keyring-dir string                                                   The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                                                               Use a connected Ledger device
+      --no-indent                                                            Do not indent JSON output
       --node string                                                          <host>:<port> to CometBFT rpc interface for this chain (default "tcp://localhost:26657")
       --note string                                                          Note to add a description to the transaction (previously --memo)
       --offline                                                              Offline mode (does not allow any online functionality)

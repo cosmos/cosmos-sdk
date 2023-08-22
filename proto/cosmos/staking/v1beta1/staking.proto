@@ -220,7 +220,7 @@ message UnbondingDelegation {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // unbonding delegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -293,7 +293,7 @@ message Redelegation {
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // redelegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.

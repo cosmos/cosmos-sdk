@@ -16,8 +16,8 @@ import (
 // HasValidatorSigningInfo returns if a given validator has signing information
 // persisted.
 func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAddress) bool {
-	_, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
-	return err == nil
+	has, err := k.ValidatorSigningInfo.Has(ctx, consAddr)
+	return err == nil && has
 }
 
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing

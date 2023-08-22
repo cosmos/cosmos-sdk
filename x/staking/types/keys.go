@@ -127,11 +127,6 @@ func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int, 
 	return key
 }
 
-// // GetLastValidatorPowerKey creates the bonded validator index key for an operator address
-// func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
-// 	return append(LastValidatorPowerKey, address.MustLengthPrefix(operator)...)
-// }
-
 // ParseValidatorPowerRankKey parses the validators operator address from power rank key
 func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	powerBytesLen := 8

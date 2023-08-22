@@ -60,9 +60,10 @@ func BenchmarkSet(b *testing.B) {
 }
 
 func BenchmarkGet(b *testing.B) {
-	keys := make([][]byte, 50_000)
-	vals := make([][]byte, 50_000)
-	for i := 0; i < 50_000; i++ {
+	numKeyVals := 1_000_000
+	keys := make([][]byte, numKeyVals)
+	vals := make([][]byte, numKeyVals)
+	for i := 0; i < numKeyVals; i++ {
 		key := make([]byte, 128)
 		val := make([]byte, 128)
 
@@ -87,7 +88,7 @@ func BenchmarkGet(b *testing.B) {
 		batch, err := db.NewBatch(1)
 		require.NoError(b, err)
 
-		for i := 0; i < 50_000; i++ {
+		for i := 0; i < numKeyVals; i++ {
 			err = batch.Set(storeKey1, keys[i], vals[i])
 			require.NoError(b, err)
 		}

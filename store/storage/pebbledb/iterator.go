@@ -136,7 +136,7 @@ func (itr *iterator) assertIsValid() {
 	}
 }
 
-// nolint:unused
+// nolint:unused // used for debugging in tests only
 func (itr *iterator) debugRawIterate() {
 	valid := itr.source.Valid()
 	for valid {

@@ -186,7 +186,7 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 	panic("not implemented!")
 }
 
-// nolint:unused
+// nolint:unused // used for debugging in tests only
 func (db *Database) printRowsDebug() {
 	stmt, err := db.storage.Prepare("SELECT store_key, key, value, version FROM state_storage")
 	if err != nil {

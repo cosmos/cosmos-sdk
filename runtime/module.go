@@ -176,8 +176,7 @@ func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec 
 		return nil, err
 	}
 
-	err = interfaceRegistry.SigningContext().Validate()
-	if err != nil {
+	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
 		return nil, err
 	}
 

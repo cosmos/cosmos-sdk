@@ -27,10 +27,7 @@ message TxResponse {
   // non-deterministic.
   string raw_log = 6;
   // The output of the application's logger (typed). May be non-deterministic.
-  repeated ABCIMessageLog logs = 7 [
-    (gogoproto.castrepeated) = "ABCIMessageLogs",
-    (gogoproto.nullable)     = false
-  ];
+  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
@@ -61,8 +58,7 @@ message ABCIMessageLog {
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
-  repeated StringEvent events = 3
-      [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
+  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
 }
 
 // StringEvent defines en Event object wrapper where all the attributes

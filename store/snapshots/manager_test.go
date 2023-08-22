@@ -35,6 +35,8 @@ func TestManager_List(t *testing.T) {
 	list, err := manager.List()
 	require.NoError(t, err)
 	assert.Equal(t, []*types.Snapshot{}, list)
+
+	require.NoError(t, manager.Close())
 }
 
 func TestManager_LoadChunk(t *testing.T) {

@@ -418,7 +418,7 @@ func TestTally(t *testing.T) {
 			// Assert votes removal after tally
 			rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 			_, err = suite.keeper.Votes.Iterate(suite.ctx, rng)
-			assert.ErrorIs(t, err, collections.ErrInvalidIterator, "votes must be removed after tally")
+			assert.NoError(t, err)
 		})
 	}
 }

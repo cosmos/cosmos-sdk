@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -45,19 +46,19 @@ func (s *KeeperTestSuite) TestDelegation() {
 	bond1to1 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[0].String(), math.LegacyNewDec(9))
 
 	// check the empty keeper first
-	_, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err := keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
+	require.ErrorIs(err, collections.ErrNotFound)
 
 	// set and retrieve a record
 	require.NoError(keeper.SetDelegation(ctx, bond1to1))
-	resBond, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, err := keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = math.LegacyNewDec(99)
 	require.NoError(keeper.SetDelegation(ctx, bond1to1))
-	resBond, err = keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[0], valAddrs[0]))
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
 
@@ -104,19 +105,19 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	resVals, err := keeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.NoError(err)
-	require.Equal(3, len(resVals))
+	require.Equal(3, len(resVals.Validators))
 	resVals, err = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.NoError(err)
-	require.Equal(3, len(resVals))
+	require.Equal(3, len(resVals.Validators))
 
 	for i := 0; i < 3; i++ {
 		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], valAddrs[i])
 		require.Nil(err)
-		require.Equal(valAddrs[i], resVal.GetOperator())
+		require.Equal(valAddrs[i].String(), resVal.GetOperator())
 
 		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], valAddrs[i])
 		require.Nil(err)
-		require.Equal(valAddrs[i], resVal.GetOperator())
+		require.Equal(valAddrs[i].String(), resVal.GetOperator())
 
 		resDels, err := keeper.GetValidatorDelegations(ctx, valAddrs[i])
 		require.NoError(err)
@@ -131,8 +132,8 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	// delete a record
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to3))
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[2]))
+	require.ErrorIs(err, collections.ErrNotFound)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.NoError(err)
 	require.Equal(2, len(resBonds))
@@ -146,10 +147,10 @@ func (s *KeeperTestSuite) TestDelegation() {
 	// delete all the records from delegator 2
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to1))
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to2))
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
-	_, err = keeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
-	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[0]))
+	require.ErrorIs(err, collections.ErrNotFound)
+	_, err = keeper.Delegations.Get(ctx, collections.Join(addrDels[1], valAddrs[1]))
+	require.ErrorIs(err, collections.ErrNotFound)
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.NoError(err)
 	require.Equal(0, len(resBonds))
@@ -385,7 +386,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 	require.NoError(err)
 	require.Equal(bondTokens, amount) // shares to be added to an unbonding delegation
 
-	delegation, err = keeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
+	delegation, err = keeper.Delegations.Get(ctx, collections.Join(delAddrs[0], valAddrs[0]))
 	require.NoError(err)
 	validator, err = keeper.GetValidator(ctx, valAddrs[0])
 	require.NoError(err)
@@ -681,7 +682,7 @@ func (s *KeeperTestSuite) TestGetRedelegationsFromSrcValidator() {
 	// set and retrieve a record
 	err := keeper.SetRedelegation(ctx, rd)
 	require.NoError(err)
-	resBond, err := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	resBond, err := keeper.Redelegations.Get(ctx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	require.NoError(err)
 
 	// get the redelegations one time
@@ -716,7 +717,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	// set and retrieve a record
 	err = keeper.SetRedelegation(ctx, rd)
 	require.NoError(err)
-	resRed, err := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	resRed, err := keeper.Redelegations.Get(ctx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	require.NoError(err)
 
 	redelegations, err := keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
@@ -734,7 +735,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	require.Equal(1, len(redelegations))
 	require.Equal(redelegations[0], resRed)
 
-	// check if has the redelegation
+	// check if it has the redelegation
 	has, err = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
 	require.NoError(err)
 	require.True(has)
@@ -744,7 +745,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	err = keeper.SetRedelegation(ctx, rd)
 	require.NoError(err)
 
-	resRed, err = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	resRed, err = keeper.Redelegations.Get(ctx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	require.NoError(err)
 	require.Equal(rd, resRed)
 
@@ -761,8 +762,8 @@ func (s *KeeperTestSuite) TestRedelegation() {
 	// delete a record
 	err = keeper.RemoveRedelegation(ctx, rd)
 	require.NoError(err)
-	_, err = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	require.ErrorIs(err, stakingtypes.ErrNoRedelegation)
+	_, err = keeper.Redelegations.Get(ctx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
+	require.ErrorIs(err, collections.ErrNotFound)
 
 	redelegations, err = keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.NoError(err)
@@ -975,7 +976,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	require.NoError(err)
 
 	// retrieve the unbonding delegation
-	ubd, err := keeper.GetRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1])
+	ubd, err := keeper.Redelegations.Get(ctx, collections.Join3(addrDels[1].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	require.NoError(err)
 	require.Len(ubd.Entries, 1)
 	require.Equal(blockHeight, ubd.Entries[0].CreationHeight)
@@ -1049,8 +1050,8 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	require.NoError(err)
 
 	// no red should have been found
-	red, err := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	require.ErrorIs(err, stakingtypes.ErrNoRedelegation, "%v", red)
+	red, err := keeper.Redelegations.Get(ctx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
+	require.ErrorIs(err, collections.ErrNotFound, "%v", red)
 }
 
 func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {

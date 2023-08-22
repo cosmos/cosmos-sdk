@@ -39,7 +39,12 @@ func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAcc
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
-	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil
+	addr, err := s.k.addressCodec.BytesToString(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: addr}, nil
 }
 
 func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {

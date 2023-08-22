@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [#17468](https://github.com/cosmos/cosmos-sdk/pull/17468) Add `appmodule.HasPreBlocker` interface.
+
+## [v0.10.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.10.0)
+
+* [#17383](https://github.com/cosmos/cosmos-sdk/pull/17383) Add `appmoduke.UpgradeModule` interface.
+
 ## [v0.9.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.9.0)
 
 * [#16739](https://github.com/cosmos/cosmos-sdk/pull/16739) Add `AppHash` to header.Info.

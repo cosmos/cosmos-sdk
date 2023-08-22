@@ -18,9 +18,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "invariant_module_name"}, {ProtoField: "invariant_route"}},
 				},
 			},
-			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"v1beta1": {Service: crisisv1beta1.Msg_ServiceDesc.ServiceName},
-			},
 		},
 	}
 }

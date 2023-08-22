@@ -153,7 +153,7 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // PreBlocker application updates every pre block
-func (a *App) PreBlocker(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
+func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
 	return a.ModuleManager.PreBlock(ctx)
 }
 

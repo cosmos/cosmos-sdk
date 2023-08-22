@@ -730,13 +730,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			WithHeaderHash(req.Hash)
 	}
 
-	if app.preFinalizeBlockHook != nil {
-		if err := app.preFinalizeBlockHook(app.finalizeBlockState.ctx, req); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := app.preBlock(); err != nil {
+	if err := app.preBlock(req); err != nil {
 		return nil, err
 	}
 

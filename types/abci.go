@@ -31,7 +31,7 @@ type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExt
 type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
 
 // PreBlocker runs code before the `BeginBlocker`.
-type PreBlocker func(Context) (ResponsePreBlock, error)
+type PreBlocker func(Context, *abci.RequestFinalizeBlock) (ResponsePreBlock, error)
 
 // BeginBlocker defines a function type alias for executing application
 // business logic before transactions are executed.
@@ -50,14 +50,6 @@ type BeginBlocker func(Context) (BeginBlock, error)
 // compatibility with applications that still use the EndBlock ABCI method
 // and allows for existing EndBlock functionality within applications.
 type EndBlocker func(Context) (EndBlock, error)
-
-// PreFinalizeBlockHook defines a function type alias for executing logic right
-// before FinalizeBlock is called (but after its context has been set up). It is
-// intended to allow applications to perform computation on vote extensions and
-// persist their results in state.
-//
-// Note: returning an error will make FinalizeBlock fail.
-type PreFinalizeBlockHook func(Context, *abci.RequestFinalizeBlock) error
 
 // EndBlock defines a type which contains endblock events and validator set updates
 type EndBlock struct {

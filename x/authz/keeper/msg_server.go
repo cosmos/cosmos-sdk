@@ -161,12 +161,12 @@ func (k Keeper) ExecCompat(goCtx context.Context, msg *authz.MsgExecCompat) (*au
 		var iMsg sdk.Msg
 		err := codec.GlobalCdc.UnmarshalInterfaceJSON([]byte(m), &iMsg)
 		if err != nil {
-			return nil, err
+			return fmt.Errorf("parse message at index %d error: %w", idx, err)
 		}
 
 		err = iMsg.ValidateBasic()
 		if err != nil {
-			return err
+			return fmt.Errorf("validate message at index %d error: %w", idx, err)
 		}
 
 		subMsgs[idx] = iMsg

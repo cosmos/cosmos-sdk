@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -59,7 +61,11 @@ func Test_runShowCmd(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithCodec(cdc)
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
@@ -196,13 +202,22 @@ func Test_validateMultisigThreshold(t *testing.T) {
 }
 
 func Test_getBechKeyOut(t *testing.T) {
+	ctx := client.Context{}.
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
+	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
+	k, err := keyring.NewLocalRecord("foo", tmpKey1, tmpKey1.PubKey())
+	require.NoError(t, err)
+
 	type args struct {
 		bechPrefix string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    bechKeyOutFn
+		want    func(k *keyring.Record, addressCodec address.Codec) (KeyOutput, error)
 		wantErr bool
 	}{
 		{"empty", args{""}, nil, true},
@@ -214,12 +229,12 @@ func Test_getBechKeyOut(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getBechKeyOut(tt.args.bechPrefix)
+			output, err := getKeyOutput(ctx, tt.args.bechPrefix, k)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, got)
+				require.NotNil(t, output)
 			}
 		})
 	}

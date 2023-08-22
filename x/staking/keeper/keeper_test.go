@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -39,11 +41,13 @@ type KeeperTestSuite struct {
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
+	key           *storetypes.KVStoreKey
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	require := s.Require()
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
@@ -111,4 +115,38 @@ func (s *KeeperTestSuite) TestLastTotalPower() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (s *KeeperTestSuite) TestDiffCollsMigration() {
+	s.SetupTest()
+	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
+	s.Require().NoError(err)
+
+	_, valAddrs := createValAddrs(100)
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			val := stakingtypes.Validator{
+				OperatorAddress:   valAddrs[i].String(),
+				ConsensusPubkey:   pkAny,
+				Jailed:            false,
+				Status:            stakingtypes.Bonded,
+				Tokens:            sdk.DefaultPowerReduction,
+				DelegatorShares:   math.LegacyOneDec(),
+				Description:       stakingtypes.Description{},
+				UnbondingHeight:   int64(0),
+				UnbondingTime:     time.Unix(0, 0).UTC(),
+				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+				MinSelfDelegation: math.ZeroInt(),
+			}
+
+			err := s.stakingKeeper.SetValidator(s.ctx, val)
+			s.Require().NoError(err)
+		},
+		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+	)
+
+	s.Require().NoError(err)
 }

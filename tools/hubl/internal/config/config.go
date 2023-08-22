@@ -8,19 +8,23 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/tools/hubl/internal/flags"
 )
 
 const (
 	DefaultConfigDirName = ".hubl"
+	GlobalKeyringDirName = "global"
 )
 
 type Config struct {
-	Chains map[string]*ChainConfig `toml:"chains"`
+	Chains         map[string]*ChainConfig `toml:"chains"`
+	KeyringBackend string                  `toml:"keyring-backend"`
 }
 
 type ChainConfig struct {
-	GRPCEndpoints []GRPCEndpoint `toml:"trusted-grpc-endpoints"`
-	Bech32Prefix  string         `toml:"bech32-prefix"`
+	GRPCEndpoints  []GRPCEndpoint `toml:"trusted-grpc-endpoints"`
+	AddressPrefix  string         `toml:"address-prefix"`
+	KeyringBackend string         `toml:"keyring-backend"`
 }
 
 type GRPCEndpoint struct {
@@ -28,11 +32,43 @@ type GRPCEndpoint struct {
 	Insecure bool   `toml:"insecure"`
 }
 
+var EmptyConfig = &Config{
+	Chains:         map[string]*ChainConfig{},
+	KeyringBackend: flags.DefaultKeyringBackend,
+}
+
+func (cfg *Config) GetKeyringBackend(chainName string) (string, error) {
+	if chainName == GlobalKeyringDirName {
+		return cfg.KeyringBackend, nil
+	} else {
+		chainCfg, ok := cfg.Chains[chainName]
+		if ok {
+			return chainCfg.KeyringBackend, nil
+		}
+	}
+
+	return flags.DefaultKeyringBackend, nil
+}
+
+func GetConfigDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	configDir := path.Join(homeDir, DefaultConfigDirName)
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		return configDir, os.MkdirAll(configDir, 0o755)
+	}
+
+	return configDir, nil
+}
+
 func Load(configDir string) (*Config, error) {
 	configPath := configFilename(configDir)
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return &Config{Chains: map[string]*ChainConfig{}}, nil
+		return EmptyConfig, nil
 	}
 
 	bz, err := os.ReadFile(configPath)

@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"path"
@@ -11,43 +12,82 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256r1"
 	"cosmossdk.io/tools/hubl/internal/config"
+	"cosmossdk.io/tools/hubl/internal/flags"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func Cmd() *cobra.Command {
-	keys := keys.Commands()
+func Cmd(chainName string) *cobra.Command {
+	shortDesc := fmt.Sprintf("Keyring management for %s", chainName)
+	if chainName == "" {
+		chainName = config.GlobalKeyringDirName
+		shortDesc = "Global keyring management for Hubl"
+	}
 
 	keyringCmd := &cobra.Command{
 		Use:   "keys",
-		Short: "Global keyring management for Hubl",
+		Short: shortDesc,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SetContext(context.Background())
-			backend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			registry := codectypes.NewInterfaceRegistry()
+			cryptocodec.RegisterInterfaces(registry)
+			cdc := codec.NewProtoCodec(registry)
+
+			configDir, err := config.GetConfigDir()
 			if err != nil {
 				return err
 			}
 
-			registry := codectypes.NewInterfaceRegistry()
-			cdc := codec.NewProtoCodec(registry)
+			cfg, err := config.Load(configDir)
+			if err != nil {
+				return err
+			}
 
-			keyringDir := path.Join(config.DefaultConfigDirName, "keyring")
-			kr, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin(), cdc)
+			backend, err := cfg.GetKeyringBackend(chainName)
+			if err != nil {
+				return err
+			}
+
+			if changed := cmd.Flags().Changed(flags.FlagKeyringBackend); changed {
+				b, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+				if err != nil {
+					return err
+				}
+
+				backend = b
+			}
+
+			// set global bech32 prefix
+			// TODO remove bech32 prefix from client/keys
+			if chainName != config.GlobalKeyringDirName {
+				addressPrefix := cfg.Chains[chainName].AddressPrefix
+				sdk.GetConfig().SetBech32PrefixForAccount(addressPrefix, fmt.Sprintf("%spub", addressPrefix))
+				validatorAddressPrefix := fmt.Sprintf("%svaloper", addressPrefix)
+				sdk.GetConfig().SetBech32PrefixForValidator(validatorAddressPrefix, fmt.Sprintf("%spub", validatorAddressPrefix))
+				consensusAddressPrefix := fmt.Sprintf("%svalcons", addressPrefix)
+				sdk.GetConfig().SetBech32PrefixForConsensusNode(consensusAddressPrefix, fmt.Sprintf("%spub", consensusAddressPrefix))
+			}
+
+			keyringDir := path.Join(configDir, "keyring", chainName)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			kr, err := keyring.New(chainName, backend, keyringDir, inBuf, cdc)
 			if err != nil {
 				return err
 			}
 
 			clientCtx := client.Context{}.
 				WithKeyring(kr).
-				WithCodec(cdc)
+				WithCodec(cdc).
+				WithKeyringDir(keyringDir).
+				WithInput(inBuf)
 
-			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
+			if err := client.SetCmdClientContext(cmd, clientCtx); err != nil {
 				return err
 			}
 
@@ -56,52 +96,18 @@ func Cmd() *cobra.Command {
 	}
 
 	keyringCmd.AddCommand(
-		keys.Commands()...,
+		keys.AddKeyCommand(),
+		keys.DeleteKeyCommand(),
+		keys.ExportKeyCommand(),
+		keys.ImportKeyCommand(),
+		keys.ImportKeyHexCommand(),
+		keys.ListKeysCmd(),
+		keys.ParseKeyStringCommand(),
+		keys.RenameKeyCommand(),
+		keys.ShowKeysCmd(),
 	)
 	keyringCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
-
-	return keyringCmd
-}
-
-func ChainCmd(name string) *cobra.Command {
-	keys := keys.Commands()
-
-	keyringCmd := &cobra.Command{
-		Use:   "keys",
-		Short: fmt.Sprintf("Keyring management for %s chain", name),
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SetContext(context.Background())
-			backend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			if err != nil {
-				return err
-			}
-
-			registry := codectypes.NewInterfaceRegistry()
-			cdc := codec.NewProtoCodec(registry)
-
-			keyringDir := path.Join(config.DefaultConfigDirName, "keyring", name)
-			kr, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin(), cdc)
-			if err != nil {
-				return err
-			}
-
-			clientCtx := client.Context{}.
-				WithKeyring(kr).
-				WithCodec(cdc)
-
-			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-
-	keyringCmd.AddCommand(
-		keys.Commands()...,
-	)
-
-	keyringCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
+	keyringCmd.PersistentFlags().String(flags.FlagOutput, flags.OutputFormatText, "Output format (text|json)")
 
 	return keyringCmd
 }

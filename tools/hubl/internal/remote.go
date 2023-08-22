@@ -64,9 +64,9 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				AddressCodec:          addresscodec.NewBech32Codec(chainConfig.Bech32Prefix),
-				ValidatorAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svaloper", chainConfig.Bech32Prefix)),
-				ConsensusAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svalcons", chainConfig.Bech32Prefix)),
+				AddressCodec:          addresscodec.NewBech32Codec(chainConfig.AddressPrefix),
+				ValidatorAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svaloper", chainConfig.AddressPrefix)),
+				ConsensusAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svalcons", chainConfig.AddressPrefix)),
 				TypeResolver:          &dynamicTypeResolver{chainInfo},
 				FileResolver:          chainInfo.ProtoFiles,
 			},
@@ -104,7 +104,7 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 		chainCmd.PersistentFlags().StringVar(&output, flags.FlagOutput, flags.OutputFormatJSON, fmt.Sprintf("output format (%s|%s)", flags.OutputFormatText, flags.OutputFormatJSON))
 
 		// add chain specific keyring
-		chainCmd.AddCommand(keyring.ChainCmd(chainInfo.Chain))
+		chainCmd.AddCommand(keyring.Cmd(chainInfo.Chain))
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err
@@ -166,7 +166,8 @@ func reconfigure(cmd *cobra.Command, cfg *config.Config, configDir, chain string
 		return err
 	}
 
-	chainConfig.Bech32Prefix = addressPrefix
+	chainConfig.KeyringBackend = flags.DefaultKeyringBackend
+	chainConfig.AddressPrefix = addressPrefix
 	cfg.Chains[chain] = chainConfig
 
 	if err := config.Save(configDir, cfg); err != nil {

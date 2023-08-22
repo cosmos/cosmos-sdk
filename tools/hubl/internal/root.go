@@ -1,9 +1,6 @@
 package internal
 
 import (
-	"os"
-	"path"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/hubl/internal/config"
@@ -11,12 +8,11 @@ import (
 )
 
 func RootCommand() (*cobra.Command, error) {
-	homeDir, err := os.UserHomeDir()
+	configDir, err := config.GetConfigDir()
 	if err != nil {
 		return nil, err
 	}
 
-	configDir := path.Join(homeDir, config.DefaultConfigDirName)
 	cfg, err := config.Load(configDir)
 	if err != nil {
 		return nil, err
@@ -35,7 +31,7 @@ func RootCommand() (*cobra.Command, error) {
 	commands = append(
 		commands,
 		InitCmd(cfg, configDir),
-		keyring.Cmd(),
+		keyring.Cmd(""),
 		VersionCmd(),
 	)
 

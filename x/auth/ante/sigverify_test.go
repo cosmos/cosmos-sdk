@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -145,7 +146,7 @@ func TestSigVerification(t *testing.T) {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// make block height non-zero to ensure account numbers part of signBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -272,7 +273,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Make block-height non-zero to include accNum in SignBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: 1})
 	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	require.NoError(t, err)
 

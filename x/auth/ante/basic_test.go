@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -220,7 +221,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
-			ctx := suite.ctx.WithBlockHeight(tc.height)
+			ctx := suite.ctx.WithHeaderInfo(header.Info{Height: tc.height})
 			_, err = antehandler(ctx, tx, true)
 			require.ErrorIs(t, err, tc.expectedErr)
 		})

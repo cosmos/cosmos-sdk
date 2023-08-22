@@ -6,6 +6,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -38,7 +39,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	suite.ctx = suite.ctx.
-		WithBlockHeight(1).
+		WithHeaderInfo(header.Info{Height: 1}).
 		WithGasMeter(storetypes.NewGasMeter(0)).
 		WithConsensusParams(cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
@@ -73,7 +74,7 @@ func TestSetup(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
-	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(storetypes.NewGasMeter(0))
+	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: 1}).WithGasMeter(storetypes.NewGasMeter(0))
 
 	// Context GasMeter Limit not set
 	require.Equal(t, uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
@@ -108,7 +109,7 @@ func TestRecoverPanic(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	newCtx, err := antehandler(suite.ctx, tx, false)
 

@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -414,12 +415,13 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.Equal(valAddr.String(), resVals[0])
 
 	// check unbonding mature validators
-	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: endHeight, Time: endTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	require.NoError(keeper.SetValidator(ctx, validator))
-	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: endHeight, Time: endTime})
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")

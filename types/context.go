@@ -41,9 +41,7 @@ type Context struct {
 	baseCtx context.Context
 	ms      storetypes.MultiStore
 	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
-	header cmtproto.Header
-	// Deprecated: Use HeaderService for hash
-
+	header               cmtproto.Header
 	txBytes              []byte
 	logger               log.Logger
 	voteInfo             []abci.VoteInfo
@@ -69,10 +67,15 @@ type Request = Context
 // Read-only accessors
 func (c Context) Context() context.Context          { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore { return c.ms }
-func (c Context) BlockHeight() int64                { return c.header.Height }
+
+// Deprecated: Use HeaderInfo for block height and CometService for the rest
+func (c Context) BlockHeight() int64 { return c.headerInfo.Height }
 
 // Deprecated: Use HeaderInfo for block time and CometService for the rest
-func (c Context) BlockTime() time.Time                          { return c.header.Time }
+func (c Context) BlockTime() time.Time { return c.headerInfo.Time }
+
+// Deprecated: Use HeaderInfo for chainID and CometService for the rest
+func (c Context) ChainID() string                               { return c.headerInfo.ChainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
@@ -166,13 +169,6 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
 	newHeader.ProposerAddress = addr.Bytes()
-	return c.WithBlockHeader(newHeader)
-}
-
-// WithBlockHeight returns a Context with an updated block height.
-func (c Context) WithBlockHeight(height int64) Context {
-	newHeader := c.BlockHeader()
-	newHeader.Height = height
 	return c.WithBlockHeader(newHeader)
 }
 

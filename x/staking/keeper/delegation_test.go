@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -505,8 +506,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 
 	blockHeight2 := int64(20)
 	blockTime2 := time.Unix(444, 0).UTC()
-	ctx = ctx.WithBlockHeight(blockHeight2)
-	ctx = ctx.WithBlockTime(blockTime2)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: blockHeight2, Time: blockTime2})
 
 	// unbond some of the other delegation's shares
 	undelegateAmount := math.LegacyNewDec(6)
@@ -554,8 +554,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	delegation := stakingtypes.NewDelegation(addrDels[1].String(), addrVals[0].String(), issuedShares)
 	require.NoError(keeper.SetDelegation(ctx, delegation))
 
-	ctx = ctx.WithBlockHeight(10)
-	ctx = ctx.WithBlockTime(time.Unix(333, 0))
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: time.Unix(333, 0)})
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -635,8 +634,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	delegation := stakingtypes.NewDelegation(addrDels[1].String(), addrVals[0].String(), issuedShares)
 	require.NoError(keeper.SetDelegation(ctx, delegation))
 
-	ctx = ctx.WithBlockHeight(10)
-	ctx = ctx.WithBlockTime(time.Unix(333, 0))
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: time.Unix(333, 0)})
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -1019,8 +1017,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
 	require.Equal(stakingtypes.Bonded, validator2.Status)
 
-	ctx = ctx.WithBlockHeight(10)
-	ctx = ctx.WithBlockTime(time.Unix(333, 0))
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: time.Unix(333, 0)})
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())

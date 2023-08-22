@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
+	coreHeader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -473,8 +474,16 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
+		ms: ms,
+		ctx: sdk.NewContext(ms, false, app.logger).
+			WithStreamingManager(app.streamingManager).
+			WithBlockHeader(header).
+			WithHeaderInfo(coreHeader.Info{
+				ChainID: app.chainID,
+				Hash:    header.DataHash, //TODO FIX this
+				Height:  header.Height,
+				Time:    header.Time,
+			}),
 	}
 
 	switch mode {

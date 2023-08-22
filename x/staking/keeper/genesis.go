@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
+	sdkCtx = sdkCtx.WithHeaderInfo(coreheader.Info{Height: 1 - sdk.ValidatorUpdateDelay})
 	ctx = sdkCtx
 
 	if err := k.SetParams(ctx, data.Params); err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -70,7 +71,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// historical count should be 2 (once for validator init, once for delegation init)
 	require.Equal(t, 2, getValHistoricalReferenceCount(distrKeeper, ctx))
@@ -174,7 +175,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -187,7 +188,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
@@ -203,7 +204,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -276,7 +277,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -289,7 +290,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
 	slashedTokens := distrtestutil.SlashValidator(
@@ -308,7 +309,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(1)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -329,7 +330,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -400,7 +401,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -420,7 +421,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -496,7 +497,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -571,7 +572,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -584,7 +585,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// start out block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some rewards
 	initial := math.LegacyNewDecFromInt(sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
@@ -618,7 +619,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	)
 
 	// increase block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -689,7 +690,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := math.LegacyNewDecFromInt(sdk.TokensFromConsensusPower(30, sdk.DefaultPowerReduction))
@@ -697,7 +698,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// slash the validator
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 	distrtestutil.SlashValidator(
 		ctx,
 		valConsAddr0,
@@ -708,7 +709,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&distrKeeper,
 		stakingKeeper,
 	)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// update validator mock
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(1)
@@ -734,13 +735,13 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// slash the validator again
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 	distrtestutil.SlashValidator(
 		ctx,
 		valConsAddr0,
@@ -751,7 +752,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		&distrKeeper,
 		stakingKeeper,
 	)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 3})
 
 	// end period
 	endingPeriod, _ := distrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -824,7 +825,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -858,7 +859,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, 3, getValHistoricalReferenceCount(distrKeeper, ctx))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -907,7 +908,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.True(t, valCommission.Commission.IsZero())
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -941,7 +942,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, valCommission.Commission)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
@@ -1023,7 +1024,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(2)
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	initial := int64(20)
@@ -1031,19 +1032,19 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
 
 	// next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// allocate some more rewards
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))

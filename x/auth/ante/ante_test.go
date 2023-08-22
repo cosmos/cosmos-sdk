@@ -10,6 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -392,7 +393,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.desc), func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			suite.ctx = suite.ctx.WithBlockHeight(0)
+			suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: 0})
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 			args := tc.malleate(suite)

@@ -101,7 +101,6 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cmtproto.Header{}, ctx.BlockHeader())
 
 	ctx = ctx.
-		WithBlockHeight(height).
 		WithTxBytes(txbytes).
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
@@ -157,7 +156,6 @@ func (s *contextTestSuite) TestContextHeader() {
 	ctx = types.NewContext(nil, false, nil)
 
 	ctx = ctx.
-		WithBlockHeight(height).
 		WithBlockTime(time).
 		WithProposer(proposer)
 	s.Require().Equal(height, ctx.BlockHeight())
@@ -223,7 +221,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 
 			// update only changes one field
 			var newHeight int64 = 17
-			ctx = ctx.WithBlockHeight(newHeight)
+			ctx = ctx.WithHeaderInfo(header.Info{Height: newHeight})
 			s.Require().Equal(newHeight, ctx.BlockHeight())
 			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 		})

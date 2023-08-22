@@ -413,7 +413,6 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
-		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
@@ -499,7 +498,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
-		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
@@ -568,7 +566,6 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	ctx = ctx.
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
-		WithBlockHeight(req.Height).
 		WithExecMode(sdk.ExecModeVoteExtension).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
@@ -1117,8 +1114,14 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	// branch the commit multi-store for safety
 	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.ctx.BlockHeader())
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+		WithBlockHeader(app.checkState.ctx.BlockHeader()).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Hash:    app.checkState.ctx.BlockHeader().DataHash,
+			Height:  app.checkState.ctx.BlockHeight(),
+			Time:    app.checkState.ctx.BlockHeader().Time,
+		})
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

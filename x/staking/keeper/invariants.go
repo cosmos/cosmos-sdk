@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -88,7 +87,7 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 				return false, nil
 			},
 		)
-		if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+		if err != nil {
 			panic(err)
 		}
 

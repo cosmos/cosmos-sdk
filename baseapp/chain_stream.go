@@ -9,13 +9,11 @@ type StreamEvents struct {
 }
 
 func (app *BaseApp) AddStreamEvents(height int64, events []abci.Event, flush bool) {
-	go func() {
-		if app.EnableStreamer {
-			app.StreamEvents <- StreamEvents{
-				Events: events,
-				Height: uint64(height),
-				Flush:  flush,
-			}
+	if app.EnableStreamer {
+		app.StreamEvents <- StreamEvents{
+			Events: events,
+			Height: uint64(height),
+			Flush:  flush,
 		}
-	}()
+	}
 }

@@ -13,9 +13,15 @@ import (
 type (
 	Int  = sdkmath.Int
 	Uint = sdkmath.Uint
+	Dec  = sdkmath.LegacyDec
+)
+
+const (
+	Precision = sdkmath.LegacyPrecision
 )
 
 var (
+	// Int
 	NewIntFromBigInt = sdkmath.NewIntFromBigInt
 	OneInt           = sdkmath.OneInt
 	NewInt           = sdkmath.NewInt
@@ -27,7 +33,26 @@ var (
 	MaxInt           = sdkmath.MaxInt
 	MinInt           = sdkmath.MinInt
 
+	// Dec
 	ToDec = sdkmath.LegacyNewDecFromInt
+
+	NewDec                   = sdkmath.LegacyNewDec
+	NewDecWithPrec           = sdkmath.LegacyNewDecWithPrec
+	NewDecFromBigInt         = sdkmath.LegacyNewDecFromBigInt
+	NewDecFromBigIntWithPrec = sdkmath.LegacyNewDecFromBigIntWithPrec
+	NewDecFromInt            = sdkmath.LegacyNewDecFromInt
+	NewDecFromIntWithPrec    = sdkmath.LegacyNewDecFromIntWithPrec
+	NewDecFromStr            = sdkmath.LegacyNewDecFromStr
+	MustNewDecFromStr        = sdkmath.LegacyMustNewDecFromStr
+	MaxSortableDec           = sdkmath.LegacyMaxSortableDec
+	MaxDec                   = sdkmath.LegacyMaxDec
+	DecEq                    = sdkmath.LegacyDecEq
+	DecApproxEq              = sdkmath.LegacyDecApproxEq
+	FormatDec                = sdkmath.FormatDec
+	MinDec                   = sdkmath.LegacyMinDec
+	ZeroDec                  = sdkmath.LegacyZeroDec
+	OneDec                   = sdkmath.LegacyOneDec
+	SmallestDec              = sdkmath.LegacySmallestDec
 )
 
 const (
@@ -36,4 +61,8 @@ const (
 
 func (ip IntProto) String() string {
 	return ip.Int.String()
+}
+
+func (dp DecProto) String() string {
+	return dp.Dec.String()
 }

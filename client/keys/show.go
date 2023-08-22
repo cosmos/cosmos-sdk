@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -61,14 +62,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	outputFormat := clientCtx.OutputFormat
 
 	if len(args) == 1 {
-		k, err = fetchKey(clientCtx.Keyring, args[0])
+		k, err = fetchKey(clientCtx.Keyring, args[0], clientCtx.AddressCodec)
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %w", args[0], err)
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
-			k, err := fetchKey(clientCtx.Keyring, keyref)
+			k, err := fetchKey(clientCtx.Keyring, keyref, clientCtx.AddressCodec)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %w", keyref, err)
 			}
@@ -165,7 +166,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
+func fetchKey(kb keyring.Keyring, keyref string, addressCodec address.Codec) (*keyring.Record, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
 	k, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
@@ -175,7 +176,7 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 		return k, err
 	}
 
-	accAddr, err := sdk.AccAddressFromBech32(keyref)
+	accAddr, err := addressCodec.StringToBytes(keyref)
 	if err != nil {
 		return k, err
 	}

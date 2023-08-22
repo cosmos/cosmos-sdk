@@ -394,7 +394,7 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 	switch {
 	case clientCtx.Simulate:
 		if err != nil {
-			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
+			return nil, "", 0, fmt.Errorf("a valid address must be provided in simulation mode: %w", err)
 		}
 
 		return addr, "", 0, nil

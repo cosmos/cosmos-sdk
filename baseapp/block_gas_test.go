@@ -155,7 +155,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
-			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.HeaderInfo().ChainID)
 			require.NoError(t, err)
 
 			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})

@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -101,18 +102,20 @@ func (s *contextTestSuite) TestContextWithCustom() {
 
 	ctx = ctx.
 		WithBlockHeight(height).
-		WithChainID(chainid).
 		WithTxBytes(txbytes).
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
 		WithBlockGasMeter(blockGasMeter).
-		WithHeaderHash(headerHash).
 		WithKVGasConfig(zeroGasCfg).
-		WithTransientKVGasConfig(zeroGasCfg)
+		WithTransientKVGasConfig(zeroGasCfg).
+		WithHeaderInfo(header.Info{
+			ChainID: chainid,
+			Hash:    headerHash,
+		})
 
 	s.Require().Equal(height, ctx.BlockHeight())
-	s.Require().Equal(chainid, ctx.ChainID())
+	s.Require().Equal(chainid, ctx.HeaderInfo().ChainID)
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
 	s.Require().Equal(txbytes, ctx.TxBytes())
 	s.Require().Equal(logger, ctx.Logger())
@@ -120,7 +123,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(meter, ctx.GasMeter())
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
-	s.Require().Equal(headerHash, ctx.HeaderHash())
+	s.Require().Equal(headerHash, ctx.HeaderInfo().Hash)
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
 	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
 	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())

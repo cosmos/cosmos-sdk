@@ -133,10 +133,10 @@ func TestABCI_InitChain(t *testing.T) {
 	)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := getFinalizeBlockStateCtx(app).ChainID()
+	chainID := getFinalizeBlockStateCtx(app).HeaderInfo().ChainID
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
-	chainID = getCheckStateCtx(app).ChainID()
+	chainID = getCheckStateCtx(app).HeaderInfo().ChainID
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -599,7 +599,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
+	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderInfo().Hash)
 
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)

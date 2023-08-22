@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -91,7 +92,7 @@ func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent
 func TestWeightedOperations(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
-	ctx.WithChainID("test-chain")
+	ctx.WithHeaderInfo(header.Info{ChainID: "test-chain"})
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, suite.TxConfig, suite.AccountKeeper,
@@ -120,7 +121,7 @@ func TestWeightedOperations(t *testing.T) {
 
 	require.Equal(t, len(weightesOps), len(expected), "number of operations should be the same")
 	for i, w := range weightesOps {
-		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.HeaderInfo().ChainID)
 		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given

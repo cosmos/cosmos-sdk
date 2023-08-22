@@ -43,9 +43,7 @@ type Context struct {
 	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
 	header cmtproto.Header
 	// Deprecated: Use HeaderService for hash
-	headerHash []byte
-	// Deprecated: Use HeaderService for chainID and CometService for the rest
-	chainID              string
+
 	txBytes              []byte
 	logger               log.Logger
 	voteInfo             []abci.VoteInfo
@@ -69,11 +67,12 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context                      { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
-func (c Context) BlockHeight() int64                            { return c.header.Height }
+func (c Context) Context() context.Context          { return c.baseCtx }
+func (c Context) MultiStore() storetypes.MultiStore { return c.ms }
+func (c Context) BlockHeight() int64                { return c.header.Height }
+
+// Deprecated: Use HeaderInfo for block time and CometService for the rest
 func (c Context) BlockTime() time.Time                          { return c.header.Time }
-func (c Context) ChainID() string                               { return c.chainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
@@ -95,13 +94,6 @@ func (c Context) HeaderInfo() header.Info                       { return c.heade
 func (c Context) BlockHeader() cmtproto.Header {
 	msg := proto.Clone(&c.header).(*cmtproto.Header)
 	return *msg
-}
-
-// HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
-func (c Context) HeaderHash() []byte {
-	hash := make([]byte, len(c.headerHash))
-	copy(hash, c.headerHash)
-	return hash
 }
 
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
@@ -128,7 +120,6 @@ func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Con
 		baseCtx:              context.Background(),
 		ms:                   ms,
 		header:               h,
-		chainID:              h.ChainID,
 		checkTx:              isCheckTx,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
@@ -159,18 +150,6 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
-
-	// when calling withBlockheader on a new context chainID in the struct is empty
-	c.chainID = header.ChainID
-	return c
-}
-
-// WithHeaderHash returns a Context with an updated CometBFT block header hash.
-func (c Context) WithHeaderHash(hash []byte) Context {
-	temp := make([]byte, len(hash))
-	copy(temp, hash)
-
-	c.headerHash = temp
 	return c
 }
 
@@ -195,12 +174,6 @@ func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
 	return c.WithBlockHeader(newHeader)
-}
-
-// WithChainID returns a Context with an updated chain identifier.
-func (c Context) WithChainID(chainID string) Context {
-	c.chainID = chainID
-	return c
 }
 
 // WithTxBytes returns a Context with an updated txBytes.

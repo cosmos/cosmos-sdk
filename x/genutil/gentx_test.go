@@ -270,7 +270,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
 					simtestutil.DefaultGenTxGas,
-					suite.ctx.ChainID(),
+					suite.ctx.HeaderInfo().ChainID,
 					[]uint64{7},
 					[]uint64{0},
 					priv1,

@@ -53,7 +53,7 @@ func TestSetPubKey(t *testing.T) {
 	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
@@ -213,7 +213,7 @@ func TestSigVerification(t *testing.T) {
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
-				tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), signMode)
+				tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.HeaderInfo().ChainID, signMode)
 				require.NoError(t, err)
 				if tc.invalidSigs {
 					txSigs, _ := tx.GetSignaturesV2()
@@ -296,7 +296,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
@@ -335,7 +335,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	isd := ante.NewIncrementSequenceDecorator(suite.accountKeeper)

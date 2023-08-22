@@ -86,7 +86,7 @@ func TestSimulateGasCost(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 			suite.RunTestCase(t, tc, args)
 
 			// Gather info for the next test case
@@ -114,7 +114,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 				// Create tx manually to test the tx's signers
 				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
@@ -213,7 +213,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 			args.feeAmount = testdata.NewTestFeeAmount()
 			args.gasLimit = testdata.NewTestGasLimit()
 
@@ -301,7 +301,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 			args := tc.malleate(suite)
 			args.feeAmount = testdata.NewTestFeeAmount()
 			args.gasLimit = testdata.NewTestGasLimit()
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 
 			suite.RunTestCase(t, tc, args)
 		})
@@ -439,7 +439,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 				// Send the same tx before running the test case, to trigger replay protection.
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				return TestCaseArgs{
@@ -462,7 +462,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 				// Send the same tx before running the test case, then change the sequence to a valid one.
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				// +1 the account sequence
@@ -508,7 +508,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 				// Send the same tx before running the test case, to trigger replay protection.
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				return TestCaseArgs{
@@ -534,7 +534,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 				// Send the same tx before running the test case, to trigger replay protection.
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				// Send a message using the second signer, this will fail given that the second signer already sent a TX,
@@ -569,7 +569,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 				// Send the same tx before running the test case, to trigger replay protection.
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				// Send a message using the second signer, this will now pass given that the second signer already sent a TX
@@ -770,7 +770,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				msgs = []sdk.Msg{msg1}
@@ -802,7 +802,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				msgs = []sdk.Msg{msg3}
@@ -834,7 +834,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				for _, acc := range accs {
@@ -858,7 +858,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 			args := tc.malleate(suite)
 			args.feeAmount = feeAmount
 			args.gasLimit = gasLimit
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 
 			suite.RunTestCase(t, tc, args)
 		})
@@ -878,7 +878,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					feeAmount: feeAmount,
 					gasLimit:  gasLimit,
 					msgs:      []sdk.Msg{msg0},
@@ -915,7 +915,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				require.NoError(t, accs[0].acc.SetSequence(2)) // wrong accSeq
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					feeAmount: feeAmount,
 					gasLimit:  gasLimit,
 					msgs:      []sdk.Msg{msg0},
@@ -934,7 +934,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				require.NoError(t, accs[0].acc.SetAccountNumber(2)) // wrong accNum
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					feeAmount: feeAmount,
 					gasLimit:  gasLimit,
 					msgs:      []sdk.Msg{msg0},
@@ -951,7 +951,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					feeAmount: feeAmount,
 					gasLimit:  gasLimit,
 					msgs:      []sdk.Msg{testdata.NewTestMsg(accs[1].acc.GetAddress())}, // wrong account in the msg
@@ -969,7 +969,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					accNums:   []uint64{accs[0].acc.GetAccountNumber()},
 					accSeqs:   []uint64{accs[0].acc.GetSequence()},
 					feeAmount: feeAmount,
@@ -989,7 +989,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					chainID:   suite.ctx.ChainID(),
+					chainID:   suite.ctx.HeaderInfo().ChainID,
 					accNums:   []uint64{accs[1].acc.GetAccountNumber()},
 					accSeqs:   []uint64{accs[1].acc.GetSequence()},
 					feeAmount: feeAmount,
@@ -1043,7 +1043,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{accs[0].acc.GetAccountNumber()}, []uint64{accs[0].acc.GetSequence()}
 				msgs := []sdk.Msg{testdata.NewTestMsg(accs[0].acc.GetAddress())}
 				var err error
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.NoError(t, err)
 
 				// Make sure public key has been set from previous test.
@@ -1092,7 +1092,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 				require.NoError(t, err)
@@ -1139,7 +1139,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 				require.NoError(t, err)
@@ -1157,7 +1157,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				// Set incorrect accSeq, to generate incorrect signature.
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{1}
 
-				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
+				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, false)
 				require.Error(t, err)
 
 				// Make sure public key has been set, as SetPubKeyDecorator
@@ -1184,7 +1184,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 			args.feeAmount = feeAmount
 			args.gasLimit = gasLimit
 
@@ -1300,7 +1300,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 			args.feeAmount = testdata.NewTestFeeAmount()
 			args.gasLimit = testdata.NewTestGasLimit()
 
@@ -1357,7 +1357,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
-			args.chainID = suite.ctx.ChainID()
+			args.chainID = suite.ctx.HeaderInfo().ChainID
 			args.feeAmount = testdata.NewTestFeeAmount()
 			args.gasLimit = testdata.NewTestGasLimit()
 
@@ -1388,7 +1388,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
@@ -1400,7 +1400,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
-	tx, err = suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err = suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.HeaderInfo().ChainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 	txBytes, err := json.Marshal(tx)
 	require.Nil(t, err, "Error marshaling tx: %v", err)

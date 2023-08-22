@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -124,7 +125,7 @@ func TestSimTestSuite(t *testing.T) {
 
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
-	ctx := suite.ctx.WithChainID("test-chain")
+	ctx := suite.ctx.WithHeaderInfo(header.Info{ChainID: "test-chain"})
 	appParams := make(simtypes.AppParams)
 
 	expected := []struct {
@@ -137,7 +138,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 	weightedOps := simulation.WeightedOperations(suite.interfaceRegistry, appParams, suite.codec, suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(suite.r, suite.app.BaseApp, ctx, suite.accounts, ctx.ChainID())
+		operationMsg, _, err := w.Op()(suite.r, suite.app.BaseApp, ctx, suite.accounts, ctx.HeaderInfo().ChainID)
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given

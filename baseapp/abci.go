@@ -501,7 +501,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
 		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
 		WithExecMode(sdk.ExecModeProcessProposal).
@@ -509,6 +508,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Time:    req.Time,
+			Hash:    req.Hash,
 		})
 
 	app.processProposalState.ctx = app.processProposalState.ctx.
@@ -550,7 +550,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -569,7 +569,6 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
-		WithHeaderHash(req.Hash).
 		WithExecMode(sdk.ExecModeVoteExtension).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
@@ -611,7 +610,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	}
 
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithHeaderInfo(coreheader.Info{ChainID: app.chainID, Height: req.Height})
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
@@ -691,7 +690,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	// Context is now updated with Header information.
 	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
 		WithBlockHeader(header).
-		WithHeaderHash(req.Hash).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
@@ -715,8 +713,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
-			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
+			WithBlockGasMeter(gasMeter)
 	}
 
 	if app.preFinalizeBlockHook != nil {

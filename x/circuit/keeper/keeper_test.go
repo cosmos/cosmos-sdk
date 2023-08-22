@@ -5,7 +5,6 @@ import (
 	context "context"
 	"testing"
 
-	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
@@ -50,7 +49,7 @@ func initFixture(t *testing.T) *fixture {
 	require.NoError(t, err)
 
 	return &fixture{
-		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
+		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
 		keeper:   k,
 		mockAddr: bz,
 		mockPerms: types.Permissions{

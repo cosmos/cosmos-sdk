@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

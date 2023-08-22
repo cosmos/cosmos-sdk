@@ -113,7 +113,7 @@ type Signer interface {
 	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address []byte, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
+	SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -420,7 +420,7 @@ func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]by
 	}
 }
 
-func (ks keystore) SignByAddress(address []byte, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
+func (ks keystore) SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err

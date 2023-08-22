@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -101,7 +100,7 @@ func (s *CLITestSuite) TestNewUnjailTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewUnjailTxCmd(address.NewBech32Codec("cosmosvaloper"))
+			cmd := cli.NewUnjailTxCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

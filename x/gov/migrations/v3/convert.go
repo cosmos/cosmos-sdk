@@ -1,4 +1,3 @@
-//nolint:staticcheck // legacy types used for migration
 package v3
 
 import (

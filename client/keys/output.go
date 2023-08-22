@@ -2,6 +2,7 @@ package keys
 
 import (
 	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

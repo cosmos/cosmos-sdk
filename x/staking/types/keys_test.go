@@ -79,33 +79,6 @@ func TestGetREDByValDstIndexKey(t *testing.T) {
 	}
 }
 
-func TestGetREDByValSrcIndexKey(t *testing.T) {
-	tests := []struct {
-		delAddr    sdk.AccAddress
-		valSrcAddr sdk.ValAddress
-		valDstAddr sdk.ValAddress
-		wantHex    string
-	}{
-		{
-			sdk.AccAddress(keysAddr1), sdk.ValAddress(keysAddr1), sdk.ValAddress(keysAddr1),
-			"351463d771218209d8bd03c482f69dfba57310f086091463d771218209d8bd03c482f69dfba57310f086091463d771218209d8bd03c482f69dfba57310f08609",
-		},
-		{
-			sdk.AccAddress(keysAddr1), sdk.ValAddress(keysAddr2), sdk.ValAddress(keysAddr3),
-			"35145ef3b5f25c54946d4a89fc0d09d2f126614540f21463d771218209d8bd03c482f69dfba57310f08609143ab62f0d93849be495e21e3e9013a517038f45bd",
-		},
-		{
-			sdk.AccAddress(keysAddr2), sdk.ValAddress(keysAddr1), sdk.ValAddress(keysAddr3),
-			"351463d771218209d8bd03c482f69dfba57310f08609145ef3b5f25c54946d4a89fc0d09d2f126614540f2143ab62f0d93849be495e21e3e9013a517038f45bd",
-		},
-	}
-	for i, tt := range tests {
-		got := hex.EncodeToString(types.GetREDByValSrcIndexKey(tt.delAddr, tt.valSrcAddr, tt.valDstAddr))
-
-		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
-	}
-}
-
 func TestGetValidatorQueueKey(t *testing.T) {
 	ts := time.Now()
 	height := int64(1024)

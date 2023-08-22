@@ -390,7 +390,7 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		return nil, "", 0, nil
 	}
 
-	addr, err := sdk.AccAddressFromBech32(from)
+	addr, err := clientCtx.AddressCodec.StringToBytes(from)
 	switch {
 	case clientCtx.Simulate:
 		if err != nil {

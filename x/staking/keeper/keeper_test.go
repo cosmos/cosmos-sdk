@@ -13,12 +13,14 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -42,6 +44,7 @@ type KeeperTestSuite struct {
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
 	key           *storetypes.KVStoreKey
+	cdc           codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -52,6 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
+	s.cdc = encCfg.Codec
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -117,12 +121,44 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	validatorsKey := []byte{0x21}
+	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
+}
+
 func (s *KeeperTestSuite) TestDiffCollsMigration() {
 	s.SetupTest()
 	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
 	s.Require().NoError(err)
 
 	_, valAddrs := createValAddrs(100)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			val := stakingtypes.Validator{
+				OperatorAddress:   valAddrs[i].String(),
+				ConsensusPubkey:   pkAny,
+				Jailed:            false,
+				Status:            stakingtypes.Bonded,
+				Tokens:            sdk.DefaultPowerReduction,
+				DelegatorShares:   math.LegacyOneDec(),
+				Description:       stakingtypes.Description{},
+				UnbondingHeight:   int64(0),
+				UnbondingTime:     time.Unix(0, 0).UTC(),
+				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+				MinSelfDelegation: math.ZeroInt(),
+			}
+			valBz := stakingtypes.MustMarshalValidator(s.cdc, &val)
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
+		},
+		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+	)
+	s.Require().NoError(err)
+
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,
@@ -147,6 +183,5 @@ func (s *KeeperTestSuite) TestDiffCollsMigration() {
 		},
 		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
 	)
-
 	s.Require().NoError(err)
 }

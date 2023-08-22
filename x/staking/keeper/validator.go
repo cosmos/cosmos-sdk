@@ -22,15 +22,11 @@ import (
 
 // GetValidator gets a single validator
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
-	value, err := k.Validators.Get(ctx, addr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	validator, err = k.Validators.Get(ctx, addr)
+	if err != nil {
 		return validator, err
 	}
-	if value == nil {
-		return validator, types.ErrNoValidatorFound
-	}
-
-	return types.UnmarshalValidator(k.cdc, value)
+	return validator, nil
 }
 
 func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types.Validator {
@@ -67,12 +63,11 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 
 // SetValidator sets the main record holding validator details
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
-	bz := types.MustMarshalValidator(k.cdc, &validator)
 	valBz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	if err != nil {
 		panic(err)
 	}
-	return k.Validators.Set(ctx, sdk.ValAddress(valBz), bz)
+	return k.Validators.Set(ctx, sdk.ValAddress(valBz), validator)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address

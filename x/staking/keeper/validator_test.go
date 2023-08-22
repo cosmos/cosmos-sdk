@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -109,7 +111,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// check the empty keeper first
 	_, err := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
-	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+	require.ErrorIs(err, collections.ErrNotFound)
 	resVals, err := keeper.GetLastValidators(ctx)
 	require.NoError(err)
 	require.Zero(len(resVals))
@@ -188,7 +190,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require.NoError(keeper.SetValidator(ctx, validators[1])) // ...set the validator
 	require.NoError(keeper.RemoveValidator(ctx, bz))         // Now it can be removed.
 	_, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
-	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+	require.ErrorIs(err, collections.ErrNotFound)
 }
 
 func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
@@ -416,7 +418,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	// check unbonding mature validators
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
 	err = keeper.UnbondAllMatureValidators(ctx)
-	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
+	require.ErrorContains(err, fmt.Sprintf("validator in the unbonding queue was not found: %s", collections.ErrNotFound))
 
 	require.NoError(keeper.SetValidator(ctx, validator))
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
@@ -428,7 +430,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.NoError(keeper.SetValidator(ctx, validator))
 	require.NoError(keeper.UnbondAllMatureValidators(ctx))
 	validator, err = keeper.GetValidator(ctx, valAddr)
-	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+	require.ErrorIs(err, collections.ErrNotFound)
 
 	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()}))
 	validator = testutil.NewValidator(s.T(), valAddr, valPubKey)

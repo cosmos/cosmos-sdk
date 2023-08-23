@@ -46,6 +46,8 @@ type Keeper struct {
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
 	UnbondingQueue              collections.Map[time.Time, []byte]
+	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -111,6 +113,7 @@ func NewKeeper(
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		// key format is: 52 | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(DstValAddr)
 		Redelegations: collections.NewMap(
 			sb, types.RedelegationKey,
 			"redelegations",
@@ -123,6 +126,28 @@ func NewKeeper(
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 		UnbondingQueue: collections.NewMap(sb, types.UnbondingQueueKey, "unbonidng_queue", sdk.TimeKey, collections.BytesValue),
+		// key format is: 53 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)
+		RedelegationsByValSrc: collections.NewMap(
+			sb, types.RedelegationByValSrcIndexKey,
+			"redelegations_by_val_src",
+			collections.TripleKeyCodec(
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			collections.BytesValue,
+		),
+		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
+		RedelegationsByValDst: collections.NewMap(
+			sb, types.RedelegationByValDstIndexKey,
+			"redelegations_by_val_dst",
+			collections.TripleKeyCodec(
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()

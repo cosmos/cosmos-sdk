@@ -483,25 +483,20 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []types.Redelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](valAddr)
+	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
+		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetREDKeyFromValSrcIndexKey(iterator.Key())
-		value, err := store.Get(key)
+		red, err := k.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
-			return nil, err
-		}
-		red, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return nil, err
+			return true, err
 		}
 		reds = append(reds, red)
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return reds, nil
@@ -509,14 +504,17 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetREDsByDelToValDstIndexKey(delAddr, valDstAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr)
+	hasAtleastOneEntry := false
+	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
+		hasAtleastOneEntry = true
+		return true, nil // returning true here to stop the iterations after 1st finding
+	})
 	if err != nil {
 		return false, err
 	}
-	defer iterator.Close()
-	return iterator.Valid(), nil
+
+	return hasAtleastOneEntry, nil
 }
 
 // HasMaxRedelegationEntries checks if the redelegation entries reached maximum limit.
@@ -544,7 +542,6 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
 	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
@@ -558,11 +555,11 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 		return err
 	}
 
-	if err = store.Set(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{}); err != nil {
+	if err = k.RedelegationsByValSrc.Set(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr), []byte{}); err != nil {
 		return err
 	}
 
-	return store.Set(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
+	return k.RedelegationsByValDst.Set(ctx, collections.Join3(valDestAddr, delegatorAddress, valSrcAddr), []byte{})
 }
 
 // SetRedelegationEntry adds an entry to the unbonding delegation at the given
@@ -632,7 +629,6 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
 	valSrcAddr, err := k.validatorAddressCodec.StringToBytes(red.ValidatorSrcAddress)
 	if err != nil {
 		return err
@@ -646,11 +642,11 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 		return err
 	}
 
-	if err = store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr)); err != nil {
+	if err = k.RedelegationsByValSrc.Remove(ctx, collections.Join3(valSrcAddr, delegatorAddress, valDestAddr)); err != nil {
 		return err
 	}
 
-	return store.Delete(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
+	return k.RedelegationsByValDst.Remove(ctx, collections.Join3(valDestAddr, delegatorAddress, valSrcAddr))
 }
 
 // redelegation queue timeslice operations

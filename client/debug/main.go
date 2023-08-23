@@ -193,27 +193,26 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 func AddrCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "addr [address]",
-		Short: "Convert an address between hex and bech32",
-		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
-
-Example:
-$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Use:     "addr [address]",
+		Short:   "Convert an address between hex and bech32",
+		Example: fmt.Sprintf("%s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addrString := args[0]
-			var addr []byte
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
+			addrString := args[0]
 			// try hex, then bech32
-			var err error
+			var (
+				addr []byte
+				err  error
+			)
 			addr, err = hex.DecodeString(addrString)
 			if err != nil {
 				var err2 error
-				addr, err2 = sdk.AccAddressFromBech32(addrString)
+				addr, err2 = clientCtx.AddressCodec.StringToBytes(addrString)
 				if err2 != nil {
 					var err3 error
-					addr, err3 = sdk.ValAddressFromBech32(addrString)
+					addr, err3 = clientCtx.ValidatorAddressCodec.StringToBytes(addrString)
 
 					if err3 != nil {
 						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
@@ -264,7 +263,7 @@ func PrefixesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "prefixes",
 		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
-		Long:    "List prefixes used in Bech32 addresses.",
+		Long:    "List prefixes used in Bech32 addresses. NOTE, if the chain does not use the Cosmos SDK global config, this will not be accurate.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())

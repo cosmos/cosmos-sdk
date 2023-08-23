@@ -15,10 +15,8 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/tools/hubl/internal/config"
 	"cosmossdk.io/tools/hubl/internal/flags"
-	"cosmossdk.io/tools/hubl/internal/keyring"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 func InitCmd(config *config.Config, configDir string) *cobra.Command {
@@ -62,11 +60,16 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 			ModuleOptions: chainInfo.ModuleOptions,
 		}
 
+		addressCodec, validatorAddressCodec, consensusAddressCodec, err := getAddressCodecFromConfig(config, chain)
+		if err != nil {
+			return nil, err
+		}
+
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				AddressCodec:          addresscodec.NewBech32Codec(chainConfig.AddressPrefix),
-				ValidatorAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svaloper", chainConfig.AddressPrefix)),
-				ConsensusAddressCodec: addresscodec.NewBech32Codec(fmt.Sprintf("%svalcons", chainConfig.AddressPrefix)),
+				AddressCodec:          addressCodec,
+				ValidatorAddressCodec: validatorAddressCodec,
+				ConsensusAddressCodec: consensusAddressCodec,
 				TypeResolver:          &dynamicTypeResolver{chainInfo},
 				FileResolver:          chainInfo.ProtoFiles,
 			},
@@ -104,7 +107,7 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 		chainCmd.PersistentFlags().StringVar(&output, flags.FlagOutput, flags.OutputFormatJSON, fmt.Sprintf("output format (%s|%s)", flags.OutputFormatText, flags.OutputFormatJSON))
 
 		// add chain specific keyring
-		chainCmd.AddCommand(keyring.Cmd(chainInfo.Chain))
+		chainCmd.AddCommand(KeyringCmd(chainInfo.Chain))
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err

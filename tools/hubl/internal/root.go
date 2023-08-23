@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/hubl/internal/config"
-	"cosmossdk.io/tools/hubl/internal/keyring"
 )
 
 func RootCommand() (*cobra.Command, error) {
@@ -31,7 +30,7 @@ func RootCommand() (*cobra.Command, error) {
 	commands = append(
 		commands,
 		InitCmd(cfg, configDir),
-		keyring.Cmd(""),
+		KeyringCmd(""),
 		VersionCmd(),
 	)
 

@@ -1,4 +1,4 @@
-package keyring
+package internal
 
 import (
 	"bufio"
@@ -20,10 +20,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func Cmd(chainName string) *cobra.Command {
+func KeyringCmd(chainName string) *cobra.Command {
 	shortDesc := fmt.Sprintf("Keyring management for %s", chainName)
 	if chainName == "" {
 		chainName = config.GlobalKeyringDirName
@@ -62,20 +61,14 @@ func Cmd(chainName string) *cobra.Command {
 				backend = b
 			}
 
-			// set global bech32 prefix
-			// TODO remove bech32 prefix from client/keys
-			if chainName != config.GlobalKeyringDirName {
-				addressPrefix := cfg.Chains[chainName].AddressPrefix
-				sdk.GetConfig().SetBech32PrefixForAccount(addressPrefix, fmt.Sprintf("%spub", addressPrefix))
-				validatorAddressPrefix := fmt.Sprintf("%svaloper", addressPrefix)
-				sdk.GetConfig().SetBech32PrefixForValidator(validatorAddressPrefix, fmt.Sprintf("%spub", validatorAddressPrefix))
-				consensusAddressPrefix := fmt.Sprintf("%svalcons", addressPrefix)
-				sdk.GetConfig().SetBech32PrefixForConsensusNode(consensusAddressPrefix, fmt.Sprintf("%spub", consensusAddressPrefix))
-			}
-
 			keyringDir := path.Join(configDir, "keyring", chainName)
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			kr, err := keyring.New(chainName, backend, keyringDir, inBuf, cdc)
+			if err != nil {
+				return err
+			}
+
+			addressCodec, validatorAddressCodec, consensusAddressCodec, err := getAddressCodecFromConfig(cfg, chainName)
 			if err != nil {
 				return err
 			}
@@ -84,7 +77,10 @@ func Cmd(chainName string) *cobra.Command {
 				WithKeyring(kr).
 				WithCodec(cdc).
 				WithKeyringDir(keyringDir).
-				WithInput(inBuf)
+				WithInput(inBuf).
+				WithAddressCodec(addressCodec).
+				WithValidatorAddressCodec(validatorAddressCodec).
+				WithConsensusAddressCodec(consensusAddressCodec)
 
 			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
 			if err := client.SetCmdClientContext(cmd, clientCtx); err != nil {

@@ -5,14 +5,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// NewVote creates a new Vote instance.
-func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
-	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
-}
 
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {

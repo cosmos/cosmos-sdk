@@ -96,7 +96,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationByValDstIndexKey",
 			v1.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"UnbondingQueueKey",

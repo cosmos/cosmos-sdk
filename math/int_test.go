@@ -592,14 +592,16 @@ func TestNewIntFromString(t *testing.T) {
 }
 
 func BenchmarkIntSize(b *testing.B) {
+	var tests []math.Int
+	for _, st := range sizeTests {
+		ii, _ := math.NewIntFromString(st.s)
+		tests = append(tests, ii)
+	}
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		for _, st := range sizeTests {
-			ii, _ := math.NewIntFromString(st.s)
+		for _, ii := range tests {
 			got := ii.Size()
-			if got != st.want {
-				b.Errorf("%q:: got=%d, want=%d", st.s, got, st.want)
-			}
 			sink = got
 		}
 	}

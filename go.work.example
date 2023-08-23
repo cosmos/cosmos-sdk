@@ -1,4 +1,6 @@
-go 1.20
+go 1.21
+
+toolchain go1.21.0
 
 use (
 	.
@@ -17,6 +19,7 @@ use (
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
+	./x/accounts
 	./x/tx
 	./x/nft
 	./x/circuit

@@ -21,6 +21,10 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
+# The maximum gas a query coming over rest/grpc may consume.
+# If this is set to zero, the query can consume an unbounded amount of gas.
+query-gas-limit = "{{ .BaseConfig.QueryGasLimit }}"
+
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 # everything: 2 latest states will be kept; pruning at 10 block intervals.
@@ -79,8 +83,7 @@ iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
-# First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in CometBFT's config.toml.
+# The fallback is the db_backend value set in CometBFT's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################

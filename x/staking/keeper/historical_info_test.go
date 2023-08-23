@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
+	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), stakingtypes.Validators{Validators: validators}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(2))
@@ -73,8 +73,8 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
-	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
+	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
+	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(5), hi5))
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(4))
@@ -89,12 +89,16 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	val1.Status = stakingtypes.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	require.NoError(keeper.SetValidator(ctx, val1))
-	require.NoError(keeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10))
+	valbz, err := keeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	require.NoError(err)
+	require.NoError(keeper.SetLastValidatorPower(ctx, valbz, 10))
 	val2 := testutil.NewValidator(s.T(), addrVals[3], PKs[3])
 	val1.Status = stakingtypes.Bonded
 	val2.Tokens = keeper.TokensFromConsensusPower(ctx, 80)
 	require.NoError(keeper.SetValidator(ctx, val2))
-	require.NoError(keeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80))
+	valbz, err = keeper.ValidatorAddressCodec().StringToBytes(val2.GetOperator())
+	require.NoError(err)
+	require.NoError(keeper.SetLastValidatorPower(ctx, valbz, 80))
 
 	vals := []stakingtypes.Validator{val1, val2}
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))

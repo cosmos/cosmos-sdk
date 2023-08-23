@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli"
+	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -31,9 +34,9 @@ func NewRootCmd() *cobra.Command {
 		interfaceRegistry  codectypes.InterfaceRegistry
 		appCodec           codec.Codec
 		txConfig           client.TxConfig
-		legacyAmino        *codec.LegacyAmino
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
+		initClientCtx      client.Context
 	)
 
 	if err := depinject.Inject(
@@ -42,25 +45,20 @@ func NewRootCmd() *cobra.Command {
 				log.NewNopLogger(),
 				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 			),
+			depinject.Provide(
+				ProvideClientContext,
+				ProvideKeyring,
+			),
 		),
 		&interfaceRegistry,
 		&appCodec,
 		&txConfig,
-		&legacyAmino,
 		&autoCliOpts,
 		&moduleBasicManager,
+		&initClientCtx,
 	); err != nil {
 		panic(err)
 	}
-
-	initClientCtx := client.Context{}.
-		WithCodec(appCodec).
-		WithInterfaceRegistry(interfaceRegistry).
-		WithLegacyAmino(legacyAmino).
-		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
 		Use:           "simd",
@@ -115,4 +113,39 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	return rootCmd
+}
+
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	legacyAmino *codec.LegacyAmino,
+	addressCodec address.Codec,
+	validatorAddressCodec runtime.ValidatorAddressCodec,
+	consensusAddressCodec runtime.ConsensusAddressCodec,
+) client.Context {
+	initClientCtx := client.Context{}.
+		WithCodec(appCodec).
+		WithInterfaceRegistry(interfaceRegistry).
+		WithLegacyAmino(legacyAmino).
+		WithInput(os.Stdin).
+		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addressCodec).
+		WithValidatorAddressCodec(validatorAddressCodec).
+		WithConsensusAddressCodec(consensusAddressCodec).
+		WithHomeDir(simapp.DefaultNodeHome).
+		WithViper("") // In simapp, we don't use any prefix for env variables.
+
+	// Read the config again to overwrite the default values with the values from the config file
+	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+
+	return initClientCtx
+}
+
+func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
+	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
+	if err != nil {
+		return nil, err
+	}
+
+	return kb, nil
 }

@@ -8,9 +8,11 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -28,6 +30,9 @@ import (
 type AppOptions struct {
 	depinject.In
 
+	// Logger is the logger to use for client/v2.
+	Logger log.Logger
+
 	// Modules are the AppModule implementations for the modules in the app.
 	Modules map[string]appmodule.AppModule
 
@@ -41,6 +46,9 @@ type AppOptions struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec
+
+	// Keyring is the keyring to use for client/v2.
+	Keyring keyring.Keyring `optional:"true"`
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -60,12 +68,14 @@ type AppOptions struct {
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
+		Logger: appOptions.Logger,
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          proto.HybridResolver,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
+			Keyring:               appOptions.Keyring,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

@@ -50,6 +50,7 @@ const (
 	flagTraceStore         = "trace-store"
 	flagCPUProfile         = "cpu-profile"
 	FlagMinGasPrices       = "minimum-gas-prices"
+	FlagQueryGasLimit      = "query-gas-limit"
 	FlagHaltHeight         = "halt-height"
 	FlagHaltTime           = "halt-time"
 	FlagInterBlockCache    = "inter-block-cache"
@@ -188,10 +189,11 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	}
 
 	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
-	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	cmd.Flags().Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")

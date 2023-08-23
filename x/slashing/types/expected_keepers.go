@@ -3,6 +3,7 @@ package types
 import (
 	context "context"
 
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
@@ -37,6 +38,7 @@ type ParamSubspace interface {
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
+	ConsensusAddressCodec() address.Codec
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error
@@ -46,7 +48,7 @@ type StakingKeeper interface {
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
-	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, stakingtypes.Infraction) (math.Int, error)
+	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, st.Infraction) (math.Int, error)
 	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
 	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
 

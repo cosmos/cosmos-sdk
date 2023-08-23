@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +18,8 @@ import (
 
 type addressStringType struct{}
 
-func (a addressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.AddressCodec}
+func (a addressStringType) NewValue(_ context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.AddressCodec, keyring: b.Keyring}
 }
 
 func (a addressStringType) DefaultValue() string {
@@ -27,8 +28,8 @@ func (a addressStringType) DefaultValue() string {
 
 type validatorAddressStringType struct{}
 
-func (a validatorAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.ValidatorAddressCodec}
+func (a validatorAddressStringType) NewValue(_ context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.ValidatorAddressCodec, keyring: b.Keyring}
 }
 
 func (a validatorAddressStringType) DefaultValue() string {
@@ -38,6 +39,7 @@ func (a validatorAddressStringType) DefaultValue() string {
 type addressValue struct {
 	value        string
 	addressCodec address.Codec
+	keyring      keyring.Keyring
 }
 
 func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
@@ -48,11 +50,22 @@ func (a addressValue) String() string {
 	return a.value
 }
 
-// Set implements the flag.Value interface for addressValue it only supports bech32 addresses.
+// Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	addr, err := a.keyring.LookupAddressByKeyName(s)
+	if err == nil {
+		addrStr, err := a.addressCodec.BytesToString(addr)
+		if err != nil {
+			return fmt.Errorf("invalid account address got from keyring: %w", err)
+		}
+
+		a.value = addrStr
+		return nil
+	}
+
+	_, err = a.addressCodec.StringToBytes(s)
 	if err != nil {
-		return fmt.Errorf("invalid bech32 account address: %w", err)
+		return fmt.Errorf("invalid account address or key name: %w", err)
 	}
 
 	a.value = s
@@ -61,13 +74,13 @@ func (a *addressValue) Set(s string) error {
 }
 
 func (a addressValue) Type() string {
-	return "bech32 account address key name"
+	return "account address or key name"
 }
 
 type consensusAddressStringType struct{}
 
 func (a consensusAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	return &consensusAddressValue{addressValue: addressValue{addressCodec: b.ConsensusAddressCodec}}
+	return &consensusAddressValue{addressValue: addressValue{addressCodec: b.ConsensusAddressCodec, keyring: b.Keyring}}
 }
 
 func (a consensusAddressStringType) DefaultValue() string {
@@ -87,7 +100,18 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	addr, err := a.keyring.LookupAddressByKeyName(s)
+	if err == nil {
+		addrStr, err := a.addressCodec.BytesToString(addr)
+		if err != nil {
+			return fmt.Errorf("invalid consensus address got from keyring: %w", err)
+		}
+
+		a.value = addrStr
+		return nil
+	}
+
+	_, err = a.addressCodec.StringToBytes(s)
 	if err == nil {
 		a.value = s
 		return nil
@@ -101,7 +125,7 @@ func (a *consensusAddressValue) Set(s string) error {
 	var pk cryptotypes.PubKey
 	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
 	if err2 != nil {
-		return fmt.Errorf("input isn't a pubkey %w or is invalid bech32 account address: %w", err, err2)
+		return fmt.Errorf("input isn't a pubkey %w or is an invalid account address: %w", err, err2)
 	}
 
 	a.value = sdk.ConsAddress(pk.Address()).String()

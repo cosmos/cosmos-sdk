@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (client) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Add `client.Context{}.WithAddressCodec`, `WithValidatorAddressCodec`, `WithConsensusAddressCodec` to provide address codecs to the client context. See the [UPGRADING.md](./UPGRADING.md) for more details.
+* (crypto/keyring) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Simplify keyring interfaces to use `[]byte` instead of `sdk.Address` for addresses.
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 * (rpc) [#17470](https://github.com/cosmos/cosmos-sdk/pull/17470) Avoid open 0.0.0.0 to public by default and add `listen-ip-address` argument for `testnet init-files` cmd.
 
@@ -53,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (client/keys) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) `clientkeys.NewKeyOutput`, `MkConsKeyOutput`, `MkValKeyOutput`, `MkAccKeyOutput`, `MkAccKeysOutput` now take their corresponding address codec instead of using the global SDK config.
 * (x/staking) [#17336](https://github.com/cosmos/cosmos-sdk/pull/17336) Use collections for `RedelegationByValDstIndexKey`:
     * remove from `types`: `GetREDByValDstIndexKey`, `GetREDsToValDstIndexKey`
 * (x/staking) [#17332](https://github.com/cosmos/cosmos-sdk/pull/17332) Use collections for `RedelegationByValSrcIndexKey`:

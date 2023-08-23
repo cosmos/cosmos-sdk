@@ -24,6 +24,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -36,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -130,6 +132,11 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+
+	// Address codecs
+	AddressCodec          address.Codec                 // address codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec // validator address codec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec // consensus address codec
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -138,26 +145,29 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	fixture := factory()
 
 	return Config{
-		Codec:             fixture.EncodingConfig.Codec,
-		TxConfig:          fixture.EncodingConfig.TxConfig,
-		LegacyAmino:       fixture.EncodingConfig.Amino,
-		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    fixture.AppConstructor,
-		GenesisState:      fixture.GenesisState,
-		TimeoutCommit:     2 * time.Second,
-		ChainID:           "chain-" + unsafe.Str(6),
-		NumValidators:     4,
-		BondDenom:         sdk.DefaultBondDenom,
-		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
-		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
-		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
-		PruningStrategy:   pruningtypes.PruningOptionNothing,
-		CleanupDir:        true,
-		SigningAlgo:       string(hd.Secp256k1Type),
-		KeyringOptions:    []keyring.Option{},
-		PrintMnemonic:     false,
+		Codec:                 fixture.EncodingConfig.Codec,
+		TxConfig:              fixture.EncodingConfig.TxConfig,
+		LegacyAmino:           fixture.EncodingConfig.Amino,
+		InterfaceRegistry:     fixture.EncodingConfig.InterfaceRegistry,
+		AccountRetriever:      authtypes.AccountRetriever{},
+		AppConstructor:        fixture.AppConstructor,
+		GenesisState:          fixture.GenesisState,
+		TimeoutCommit:         2 * time.Second,
+		ChainID:               "chain-" + unsafe.Str(6),
+		NumValidators:         4,
+		BondDenom:             sdk.DefaultBondDenom,
+		MinGasPrices:          fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:         sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:         sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:          sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:       pruningtypes.PruningOptionNothing,
+		CleanupDir:            true,
+		SigningAlgo:           string(hd.Secp256k1Type),
+		KeyringOptions:        []keyring.Option{},
+		PrintMnemonic:         false,
+		AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+		ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
+		ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 	}
 }
 
@@ -176,11 +186,14 @@ func MinimumAppConfig() depinject.Config {
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
-		appBuilder        *runtime.AppBuilder
-		txConfig          client.TxConfig
-		legacyAmino       *codec.LegacyAmino
-		cdc               codec.Codec
-		interfaceRegistry codectypes.InterfaceRegistry
+		appBuilder            *runtime.AppBuilder
+		txConfig              client.TxConfig
+		legacyAmino           *codec.LegacyAmino
+		cdc                   codec.Codec
+		interfaceRegistry     codectypes.InterfaceRegistry
+		addressCodec          address.Codec
+		validatorAddressCodec runtime.ValidatorAddressCodec
+		consensusAddressCodec runtime.ConsensusAddressCodec
 	)
 
 	if err := depinject.Inject(
@@ -193,6 +206,9 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		&cdc,
 		&legacyAmino,
 		&interfaceRegistry,
+		&addressCodec,
+		&validatorAddressCodec,
+		&consensusAddressCodec,
 	); err != nil {
 		return Config{}, err
 	}
@@ -232,6 +248,10 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 
 		return app
 	}
+
+	cfg.AddressCodec = addressCodec
+	cfg.ValidatorAddressCodec = validatorAddressCodec
+	cfg.ConsensusAddressCodec = consensusAddressCodec
 
 	return cfg, nil
 }
@@ -579,7 +599,10 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithCodec(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever)
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithAddressCodec(cfg.AddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ValidatorAddressCodec)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)

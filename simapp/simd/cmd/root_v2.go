@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -114,13 +115,23 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) client.Context {
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	legacyAmino *codec.LegacyAmino,
+	addressCodec address.Codec,
+	validatorAddressCodec runtime.ValidatorAddressCodec,
+	consensusAddressCodec runtime.ConsensusAddressCodec,
+) client.Context {
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addressCodec).
+		WithValidatorAddressCodec(validatorAddressCodec).
+		WithConsensusAddressCodec(consensusAddressCodec).
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 

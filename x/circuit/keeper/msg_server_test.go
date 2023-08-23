@@ -194,7 +194,7 @@ func TestTripCircuitBreaker(t *testing.T) {
 	require.ErrorContains(t, err, "MsgEditValidator: unauthorized")
 
 	// user tries to trip an already tripped circuit breaker
-	alreadyTripped := "cosmos.bank.v1beta1.MsgSend"
+	alreadyTripped := msgSend
 	twoTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{alreadyTripped}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, twoTrip)
 	require.ErrorContains(t, err, "already disabled")
@@ -208,7 +208,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	srv := keeper.NewMsgServerImpl(ft.keeper)
 
 	// admin resets circuit breaker
-	url := "cosmos.bank.v1beta1.MsgSend"
+	url := msgSend
 	// admin trips circuit breaker
 	admintrip := &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
@@ -325,7 +325,7 @@ func TestResetCircuitBreakerSomeMsgs(t *testing.T) {
 	srv := keeper.NewMsgServerImpl(ft.keeper)
 
 	// admin resets circuit breaker
-	url := "cosmos.bank.v1beta1.MsgSend"
+	url := msgSend
 	url2 := "the_only_message_acc2_can_trip_and_reset"
 
 	// add acc2 as an authorized account for only url2

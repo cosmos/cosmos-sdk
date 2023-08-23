@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (client) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Add `client.Context{}.WithAddressCodec`, `WithValidatorAddressCodec`, `WithConsensusAddressCodec` to provide address codecs to the client context. See the [UPGRADING.md](./UPGRADING.md) for more details.
+* (crypto/keyring) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Simplify keyring interfaces to use `[]byte` instead of `sdk.Address` for addresses.
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 
 ### Bug Fixes
@@ -52,7 +54,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* (x/staking) [#17315](https://github.com/cosmos/cosmos-sdk/pull/17044) Use collections for `RedelegationKey`:
+* (client/keys) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) `clientkeys.NewKeyOutput`, `MkConsKeyOutput`, `MkValKeyOutput`, `MkAccKeyOutput`, `MkAccKeysOutput` now take their corresponding address codec instead of using the global SDK config.
+* (x/staking) [#17336](https://github.com/cosmos/cosmos-sdk/pull/17336) Use collections for `RedelegationByValDstIndexKey`:
+    * remove from `types`: `GetREDByValDstIndexKey`, `GetREDsToValDstIndexKey`
+* (x/staking) [#17332](https://github.com/cosmos/cosmos-sdk/pull/17332) Use collections for `RedelegationByValSrcIndexKey`:
+    * remove from `types`: `GetREDKeyFromValSrcIndexKey`, `GetREDsFromValSrcIndexKey`
+* (x/staking) [#17315](https://github.com/cosmos/cosmos-sdk/pull/17315) Use collections for `RedelegationKey`:
     * remove from `keeper`: `GetRedelegation`
 * (types) `module.BeginBlockAppModule` has been replaced by Core API `appmodule.HasBeginBlocker`.
 * (types) `module.EndBlockAppModule` has been replaced by Core API `appmodule.HasEndBlocker` or `module.HasABCIEndBlock` when needing validator updates.
@@ -99,6 +106,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#17348](https://github.com/cosmos/cosmos-sdk/pull/17348) Remove the `WrapServiceResult` function.
     * The `*sdk.Result` returned by the msg server router will not contain the `.Data` field.
 * (x/staking) [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"github.com/cosmos/cosmos-sdk/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
+* (x/gov) [#17496](https://github.com/cosmos/cosmos-sdk/pull/17469) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type
+* (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer. 
+    * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
 
 ### CLI Breaking Changes
 

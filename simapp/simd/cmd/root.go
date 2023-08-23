@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -41,6 +43,9 @@ func NewRootCmd() *cobra.Command {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix())).
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
@@ -93,10 +98,14 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
 
-	// add keyring to autocli opts
-	autoCliOpts := tempApp.AutoCliOpts()
+	// autocli opts
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+
+	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.Keyring = initClientCtx.Keyring
+	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
+	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
+	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

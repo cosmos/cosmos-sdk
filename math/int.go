@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"encoding/json"
 	"fmt"
+	stdmath "math"
 	"math/big"
 	"strings"
 	"sync"
@@ -429,6 +430,24 @@ func (i *Int) Unmarshal(data []byte) error {
 
 // Size implements the gogo proto custom type interface.
 func (i *Int) Size() int {
+	if i.i == nil {
+		return 1
+	}
+	// A float64 can store 52 bits exactly, which allows us to use
+	// math.Log10 to compute the size fast and garbage free.
+	if i.i.BitLen() <= 52 {
+		i64 := i.i.Int64()
+		if i64 == 0 {
+			return 1
+		}
+		size := 0
+		if i64 < 0 {
+			i64 = -i64
+			size++
+		}
+		return size + 1 + int(stdmath.Log10(float64(i64)))
+	}
+	// Slow path.
 	bz, _ := i.Marshal()
 	return len(bz)
 }

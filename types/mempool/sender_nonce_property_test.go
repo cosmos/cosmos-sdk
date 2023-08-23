@@ -3,7 +3,6 @@ package mempool_test
 import (
 	"sort"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
@@ -34,7 +33,7 @@ func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
 }
 
 func testMempoolProperties(t *rapid.T) {
-	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	mp := mempool.NewSenderNonceMempool()
 
 	genMultipleAddress := rapid.SliceOfNDistinct(AddressGenerator(t), 1, 10, func(acc sdk.AccAddress) string {

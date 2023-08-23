@@ -189,7 +189,10 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
-				WithCodec(cdc)
+				WithCodec(cdc).
+				WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+				WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 			b := bytes.NewBufferString("")
 			cmd.SetOut(b)

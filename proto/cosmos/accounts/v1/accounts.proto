@@ -1,4 +1,4 @@
-syntax="proto3";
+syntax = "proto3";
 
 package cosmos.accounts.v1;
-option go_package = "cosmossdk.io/x/accounts/v1";
+option  go_package = "cosmossdk.io/x/accounts/v1";

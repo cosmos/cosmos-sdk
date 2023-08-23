@@ -474,7 +474,7 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
+		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
 	}
 
 	switch mode {

@@ -47,7 +47,7 @@ func TestMigrateStore(t *testing.T) {
 		{Option: v1beta1.OptionNo, Weight: math.LegacyMustNewDecFromStr("0.3")},
 		{Option: v1beta1.OptionYes, Weight: math.LegacyMustNewDecFromStr("0.7")},
 	}
-	vote1 := v1beta1.NewVote(1, voter, options)
+	vote1 := v1beta1.Vote{ProposalId: 1, Voter: voter.String(), Options: options}
 	vote1Bz := cdc.MustMarshal(&vote1)
 	store.Set(v1gov.VoteKey(1, voter), vote1Bz)
 

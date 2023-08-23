@@ -12,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -273,6 +274,9 @@ func PrefixesCmd() *cobra.Command {
 			cons, _ := clientCtx.ConsensusAddressCodec.BytesToString([]byte{})
 
 			checksumLen := 7
+			if _, ok := clientCtx.AddressCodec.(addresscodec.Bech32Codec); !ok {
+				checksumLen = 0
+			}
 
 			cmd.Printf("Bech32 Acc: %s\n", acc[:len(acc)-checksumLen])
 			cmd.Printf("Bech32 Val: %s\n", val[:len(val)-checksumLen])

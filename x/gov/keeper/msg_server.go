@@ -150,7 +150,10 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelPropos
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	govAcct := k.GetGovernanceAccount(ctx).GetAddress().String()
+	govAcct, err := k.authKeeper.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress())
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid governance account address: %s", err)
+	}
 	if govAcct != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", govAcct, msg.Authority)
 	}

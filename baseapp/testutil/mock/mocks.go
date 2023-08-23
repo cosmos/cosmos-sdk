@@ -53,21 +53,6 @@ func (mr *MockValidatorStoreMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
 }
 
-// TotalBondedTokens mocks base method.
-func (m *MockValidatorStore) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalBondedTokens", ctx)
-	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// TotalBondedTokens indicates an expected call of TotalBondedTokens.
-func (mr *MockValidatorStoreMockRecorder) TotalBondedTokens(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockValidatorStore)(nil).TotalBondedTokens), ctx)
-}
-
 // MockGasTx is a mock of GasTx interface.
 type MockGasTx struct {
 	ctrl     *gomock.Controller
@@ -129,31 +114,31 @@ func (m *MockProposalTxVerifier) EXPECT() *MockProposalTxVerifierMockRecorder {
 }
 
 // PrepareProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, error) {
+func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(arg0 types.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", tx)
+	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", arg0)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PrepareProposalVerifyTx indicates an expected call of PrepareProposalVerifyTx.
-func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx interface{}) *gomock.Call {
+func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).PrepareProposalVerifyTx), tx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).PrepareProposalVerifyTx), arg0)
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(arg0 []byte) (types.Tx, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
+	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", arg0)
 	ret0, _ := ret[0].(types.Tx)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ProcessProposalVerifyTx indicates an expected call of ProcessProposalVerifyTx.
-func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(txBz interface{}) *gomock.Call {
+func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), txBz)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), arg0)
 }

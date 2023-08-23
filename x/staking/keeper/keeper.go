@@ -124,9 +124,9 @@ func NewKeeper(
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
 		// key format is: 54 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)
-		RedelegationsByValDst: collections.NewMap(
-			sb, types.RedelegationByValDstIndexKey,
-			"redelegations_by_val_dst",
+		RedelegationsByValSrc: collections.NewMap(
+			sb, types.RedelegationByValSrcIndexKey,
+			"redelegations_by_val_src",
 			collections.TripleKeyCodec(
 				collections.BytesKey,
 				collections.BytesKey,
@@ -135,9 +135,9 @@ func NewKeeper(
 			collections.BytesValue,
 		),
 		// key format is: 53 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
-		RedelegationsByValSrc: collections.NewMap(
-			sb, types.RedelegationByValSrcIndexKey,
-			"redelegations_by_val_src",
+		RedelegationsByValDst: collections.NewMap(
+			sb, types.RedelegationByValDstIndexKey,
+			"redelegations_by_val_dst",
 			collections.TripleKeyCodec(
 				collections.BytesKey,
 				collections.BytesKey,

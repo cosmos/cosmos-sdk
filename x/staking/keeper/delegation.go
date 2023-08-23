@@ -673,31 +673,23 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 // timeslice is a slice of DVVTriplets corresponding to redelegations that
 // expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet, err error) {
-	bz, err := k.RedelegationQueue.Get(ctx, timestamp)
+	dvvTriplet, err := k.RedelegationQueue.Get(ctx, timestamp)
 	if err != nil {
 		return nil, err
-	}
-
-	if bz == nil {
-		return []types.DVVTriplet{}, nil
 	}
 
 	triplets := types.DVVTriplets{}
-	err = k.cdc.Unmarshal(bz, &triplets)
-	if err != nil {
-		return nil, err
-	}
+	triplets.Triplets = append(triplets.Triplets, dvvTriplet)
 
 	return triplets.Triplets, nil
 }
 
 // SetRedelegationQueueTimeSlice sets a specific redelegation queue timeslice.
 func (k Keeper) SetRedelegationQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVVTriplet) error {
-	bz, err := k.cdc.Marshal(&types.DVVTriplets{Triplets: keys})
-	if err != nil {
-		return err
+	if len(keys) == 0 {
+		return k.RedelegationQueue.Set(ctx, timestamp, types.DVVTriplet{})
 	}
-	return k.RedelegationQueue.Set(ctx, timestamp, bz)
+	return k.RedelegationQueue.Set(ctx, timestamp, keys[0])
 }
 
 // InsertRedelegationQueue insert an redelegation delegation to the appropriate
@@ -724,17 +716,13 @@ func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegat
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err = k.RedelegationQueue.Walk(ctx, nil, func(key time.Time, _ []byte) (bool, error) {
-		timeslice := types.DVVTriplets{}
-		value, err := k.RedelegationQueue.Get(ctx, sdkCtx.HeaderInfo().Time)
+	err = k.RedelegationQueue.Walk(ctx, nil, func(key time.Time, _ types.DVVTriplet) (bool, error) {
+		timeslice, err := k.RedelegationQueue.Get(ctx, sdkCtx.HeaderInfo().Time)
 		if err != nil {
 			return true, err
 		}
-		if err = k.cdc.Unmarshal(value, &timeslice); err != nil {
-			return true, err
-		}
 
-		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
+		matureRedelegations = append(matureRedelegations, timeslice)
 
 		if err = k.RedelegationQueue.Remove(ctx, key); err != nil {
 			return true, err

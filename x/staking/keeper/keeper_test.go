@@ -163,6 +163,14 @@ func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
 }
 
+// getRedelegationTimeKey returns a key prefix for indexing an unbonding
+// redelegation based on a completion time.
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	redelegationQueueKey := []byte{0x42}
+	return append(redelegationQueueKey, bz...)
+}
+
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -227,14 +235,22 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (s *KeeperTestSuite) TestDiffCollsMigration() {
+func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 	s.SetupTest()
 
 	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), []byte{})
+		},
+		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,
 		100,
@@ -246,4 +262,8 @@ func (s *KeeperTestSuite) TestDiffCollsMigration() {
 		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
 	)
 	s.Require().NoError(err)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

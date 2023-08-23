@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -44,7 +45,13 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	kbHome := t.TempDir()
 
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(cdc)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
@@ -97,7 +104,13 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kbHome := t.TempDir()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(cdc)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
@@ -176,7 +189,10 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
-				WithCodec(cdc)
+				WithCodec(cdc).
+				WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+				WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 			b := bytes.NewBufferString("")
 			cmd.SetOut(b)

@@ -79,15 +79,13 @@ func ParseKeyStringCommand() *cobra.Command {
 hexadecimal into bech32 cosmos prefixed format and vice versa.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: parseKey,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, _ := sdk.GetSealedConfig(cmd.Context())
+			return doParseKey(cmd, config, args)
+		},
 	}
 
 	return cmd
-}
-
-func parseKey(cmd *cobra.Command, args []string) error {
-	config, _ := sdk.GetSealedConfig(cmd.Context())
-	return doParseKey(cmd, config, args)
 }
 
 func doParseKey(cmd *cobra.Command, config *sdk.Config, args []string) error {

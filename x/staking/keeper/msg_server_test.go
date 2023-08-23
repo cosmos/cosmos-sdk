@@ -898,7 +898,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 			expErrMsg: "invalid delegator address: decoding bech32 failed",
 		},
 		{
-			name: "entry validator does not exist at height",
+			name: "entry not found at height",
 			input: &stakingtypes.MsgCancelUnbondingDelegation{
 				DelegatorAddress: Addr.String(),
 				ValidatorAddress: ValAddr.String(),

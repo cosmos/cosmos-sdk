@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -417,7 +416,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	// check unbonding mature validators
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
 	err = keeper.UnbondAllMatureValidators(ctx)
-	require.ErrorContains(err, fmt.Sprintf("validator in the unbonding queue was not found: %s", stakingtypes.ErrNoValidatorFound))
+	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	require.NoError(keeper.SetValidator(ctx, validator))
 	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)

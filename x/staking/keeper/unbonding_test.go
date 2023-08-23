@@ -263,7 +263,7 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 				require.NoError(err)
 				require.Equal(tc.validator, val)
 			} else {
-				require.Error(err, types.ErrNoValidatorFound)
+				require.ErrorIs(err, types.ErrNoValidatorFound)
 			}
 		})
 	}

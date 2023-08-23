@@ -16,13 +16,17 @@ const (
 type StorageTestSuite struct {
 	suite.Suite
 
-	NewDB func(dir string) (store.VersionedDatabase, error)
+	NewDB          func(dir string) (store.VersionedDatabase, error)
+	EmptyBatchSize int
 }
 
 func (s *StorageTestSuite) TestDatabase_Close() {
 	db, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)
 	s.Require().NoError(db.Close())
+
+	// close should not be idempotent
+	s.Require().Panics(func() { _ = db.Close() })
 }
 
 func (s *StorageTestSuite) TestDatabase_LatestVersion() {
@@ -74,6 +78,9 @@ func (s *StorageTestSuite) TestDatabase_CRUD() {
 	val, err = db.Get(storeKey1, 1, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Nil(val)
+
+	err = db.Delete(storeKey1, 1, []byte("not_exists"))
+	s.Require().NoError(err)
 }
 
 func (s *StorageTestSuite) TestDatabase_VersionedKeys() {
@@ -188,9 +195,7 @@ func (s *StorageTestSuite) TestDatabase_ResetBatch() {
 	s.Require().NotZero(batch.Size())
 	batch.Reset()
 	s.Require().NotPanics(func() { batch.Reset() })
-
-	// There is an initial cost of 12 bytes for the batch header
-	s.Require().LessOrEqual(batch.Size(), 12)
+	s.Require().LessOrEqual(batch.Size(), s.EmptyBatchSize)
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorEmptyDomain() {

@@ -52,7 +52,9 @@ func NewWithDB(storage *pebble.DB) *Database {
 }
 
 func (db *Database) Close() error {
-	return db.storage.Close()
+	err := db.storage.Close()
+	db.storage = nil
+	return err
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

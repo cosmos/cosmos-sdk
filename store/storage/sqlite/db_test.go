@@ -1,4 +1,4 @@
-package pebbledb
+package sqlite
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func TestStorageTestSuite(t *testing.T) {
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
 			return New(dir)
 		},
-		EmptyBatchSize: 12,
+		EmptyBatchSize: 0,
 	}
 	suite.Run(t, s)
 }

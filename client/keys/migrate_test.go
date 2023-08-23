@@ -35,6 +35,10 @@ type MigrateTestSuite struct {
 	pub     cryptotypes.PubKey
 }
 
+func TestMigrateTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrateTestSuite))
+}
+
 func (s *MigrateTestSuite) SetupSuite() {
 	s.dir = s.T().TempDir()
 	s.cdc = moduletestutil.MakeTestEncodingConfig().Codec
@@ -152,8 +156,4 @@ func (s *MigrateTestSuite) Test_runMigrateCmdLegacyMultiInfo() {
 	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 	s.Require().NoError(cmd.ExecuteContext(ctx))
-}
-
-func TestMigrateTestSuite(t *testing.T) {
-	suite.Run(t, new(MigrateTestSuite))
 }

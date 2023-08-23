@@ -19,7 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -126,7 +126,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[nft.ModuleName] = nftDataBz
 
-	s.ac = codecaddress.NewBech32Codec("cosmos")
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 
 	s.initAccount()
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -61,14 +62,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	outputFormat := clientCtx.OutputFormat
 
 	if len(args) == 1 {
-		k, err = fetchKey(clientCtx.Keyring, args[0])
+		k, err = fetchKey(clientCtx.Keyring, args[0], clientCtx.AddressCodec)
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %w", args[0], err)
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
-			k, err := fetchKey(clientCtx.Keyring, keyref)
+			k, err := fetchKey(clientCtx.Keyring, keyref, clientCtx.AddressCodec)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %w", keyref, err)
 			}
@@ -111,7 +112,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	bechPrefix, _ := cmd.Flags().GetString(FlagBechPrefix)
-	bechKeyOut, err := getBechKeyOut(bechPrefix)
+	ko, err := getKeyOutput(clientCtx, bechPrefix, k)
 	if err != nil {
 		return err
 	}
@@ -122,10 +123,6 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	switch {
 	case isShowAddr, isShowPubKey:
-		ko, err := bechKeyOut(k)
-		if err != nil {
-			return err
-		}
 		out := ko.Address
 		if isShowPubKey {
 			out = ko.PubKey
@@ -135,7 +132,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 	default:
-		if err := printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat); err != nil {
+		if err := printKeyringRecord(cmd.OutOrStdout(), ko, outputFormat); err != nil {
 			return err
 		}
 	}
@@ -169,7 +166,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
+func fetchKey(kb keyring.Keyring, keyref string, addressCodec address.Codec) (*keyring.Record, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
 	k, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
@@ -179,7 +176,7 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 		return k, err
 	}
 
-	accAddr, err := sdk.AccAddressFromBech32(keyref)
+	accAddr, err := addressCodec.StringToBytes(keyref)
 	if err != nil {
 		return k, err
 	}
@@ -199,15 +196,15 @@ func validateMultisigThreshold(k, nKeys int) error {
 	return nil
 }
 
-func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
+func getKeyOutput(clientCtx client.Context, bechPrefix string, k *keyring.Record) (KeyOutput, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return MkAccKeyOutput, nil
+		return MkAccKeyOutput(k, clientCtx.AddressCodec)
 	case sdk.PrefixValidator:
-		return MkValKeyOutput, nil
+		return MkValKeyOutput(k, clientCtx.ValidatorAddressCodec)
 	case sdk.PrefixConsensus:
-		return MkConsKeyOutput, nil
+		return MkConsKeyOutput(k, clientCtx.ConsensusAddressCodec)
 	}
 
-	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
+	return KeyOutput{}, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
 }

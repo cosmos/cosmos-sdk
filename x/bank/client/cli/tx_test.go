@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -45,12 +45,15 @@ func (s *CLITestSuite) SetupSuite() {
 		WithCodec(s.encCfg.Codec).
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
-		WithOutput(io.Discard)
+		WithOutput(io.Discard).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 }
 
 func (s *CLITestSuite) TestSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewSendTxCmd(address.NewBech32Codec("cosmos"))
+	cmd := cli.NewSendTxCmd(addresscodec.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -136,7 +139,7 @@ func (s *CLITestSuite) TestSendTxCmd() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
-	cmd := cli.NewMultiSendTxCmd(address.NewBech32Codec("cosmos"))
+	cmd := cli.NewMultiSendTxCmd(addresscodec.NewBech32Codec("cosmos"))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

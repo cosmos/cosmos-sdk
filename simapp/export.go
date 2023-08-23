@@ -195,11 +195,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	err = app.StakingKeeper.UnbondingDelegations.Walk(
 		ctx,
 		nil,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
-			ubd, err := stakingtypes.UnmarshalUBD(app.appCodec, value)
-			if err != nil {
-				return true, err
-			}
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd stakingtypes.UnbondingDelegation) (stop bool, err error) {
 			for i := range ubd.Entries {
 				ubd.Entries[i].CreationHeight = 0
 			}

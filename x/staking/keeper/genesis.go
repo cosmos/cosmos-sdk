@@ -218,12 +218,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	err := k.UnbondingDelegations.Walk(
 		ctx,
 		nil,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value []byte) (stop bool, err error) {
-			unbondingDelegation, err := types.UnmarshalUBD(k.cdc, value)
-			if err != nil {
-				return true, err
-			}
-			unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
+		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
 			return false, nil
 		},
 	)

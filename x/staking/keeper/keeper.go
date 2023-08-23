@@ -44,7 +44,7 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
-	UnbondingDelegations        collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], []byte]
+	UnbondingDelegations        collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.UnbondingDelegation]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
@@ -146,7 +146,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.AccAddressKey, sdk.LengthPrefixedAddressKey(sdk.ValAddressKey)), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		UnbondingDelegations: collections.NewMap(sb, types.UnbondingDelegationKey, "unbonding_delegation", collections.PairKeyCodec(sdk.AccAddressKey, sdk.LengthPrefixedAddressKey(sdk.ValAddressKey)), codec.CollValue[types.UnbondingDelegation](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 	}
 
 	schema, err := sb.Build()

@@ -104,7 +104,13 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kbHome := t.TempDir()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(cdc)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{

@@ -7,6 +7,6 @@ import (
 )
 
 func NewBech32Codec(prefix string) address.Codec {
-	// Host custom bech32 address if auth ever do not depend on the Cosmos SDK
+	// Host custom bech32 address codec here, if auth ever do not depend on the Cosmos SDK.
 	return addresscodec.NewBech32Codec(prefix)
 }

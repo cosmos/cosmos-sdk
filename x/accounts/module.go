@@ -96,7 +96,7 @@ func (m Module) Create(
 func (m Module) Execute(
 	ctx context.Context,
 	accountAddr []byte,
-	creator []byte,
+	sender []byte,
 	execRequest any,
 ) (any, error) {
 	// get account type
@@ -115,7 +115,7 @@ func (m Module) Execute(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, m.storeService, accountAddr, creator)
+	ctx = implementation.MakeAccountContext(ctx, m.storeService, accountAddr, sender)
 	return impl.Execute(ctx, execRequest)
 }
 

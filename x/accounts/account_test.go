@@ -3,8 +3,9 @@ package accounts
 import (
 	"context"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)

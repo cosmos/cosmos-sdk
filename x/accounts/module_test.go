@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func newModule(t *testing.T, accounts map[string]implementation.Account) (Module, context.Context) {

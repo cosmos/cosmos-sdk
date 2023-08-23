@@ -12,9 +12,7 @@ import (
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
-var (
-	errAccountTypeNotFound = errors.New("account type not found")
-)
+var errAccountTypeNotFound = errors.New("account type not found")
 
 var (
 	// AccountTypeKeyPrefix is the prefix for the account type key.
@@ -110,7 +108,7 @@ func (m Module) Execute(
 	// get account implementation
 	impl, err := m.getImplementation(accountType)
 	if err != nil {
-		// this means the account was initialised with an implementation
+		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
 		// as it might signal that the app-dev stopped supporting an account type.
 		return nil, err
@@ -136,7 +134,7 @@ func (m Module) Query(
 	// get account implementation
 	impl, err := m.getImplementation(accountType)
 	if err != nil {
-		// this means the account was initialised with an implementation
+		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
 		// as it might signal that the app-dev stopped supporting an account type.
 		return nil, err

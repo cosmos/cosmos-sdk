@@ -275,6 +275,7 @@ func PrefixesCmd() *cobra.Command {
 
 			checksumLen := 7
 			if _, ok := clientCtx.AddressCodec.(addresscodec.Bech32Codec); !ok {
+				cmd.Printf("%s uses custom address codec, this command may not work as expected.\n", version.AppName)
 				checksumLen = 0
 			}
 

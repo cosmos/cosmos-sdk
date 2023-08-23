@@ -115,9 +115,15 @@ func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrants
 		}
 
 		grantee := firstAddressFromGrantStoreKey(key)
+
+		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+		if err != nil {
+			return nil, err
+		}
+
 		return &authz.GrantAuthorization{
 			Granter:       req.Granter,
-			Grantee:       grantee.String(),
+			Grantee:       granteeAddr,
 			Authorization: any,
 			Expiration:    auth.Expiration,
 		}, nil
@@ -163,10 +169,15 @@ func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrants
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 
+		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+		if err != nil {
+			return nil, err
+		}
+
 		return &authz.GrantAuthorization{
 			Authorization: authorizationAny,
 			Expiration:    auth.Expiration,
-			Granter:       granter.String(),
+			Granter:       granterAddr,
 			Grantee:       req.Grantee,
 		}, nil
 	}, func() *authz.Grant {

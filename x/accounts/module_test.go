@@ -13,6 +13,7 @@ import (
 )
 
 func newModule(t *testing.T, accounts map[string]implementation.Account) (Module, context.Context) {
+	t.Helper()
 	ss, ctx := colltest.MockStore()
 	m, err := NewModule(ss, accounts)
 	require.NoError(t, err)

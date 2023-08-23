@@ -123,7 +123,7 @@ func NewKeeper(
 			codec.CollValue[types.Redelegation](cdc),
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
-		// key format is: 54 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)
+		// key format is: 53 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)
 		RedelegationsByValSrc: collections.NewMap(
 			sb, types.RedelegationByValSrcIndexKey,
 			"redelegations_by_val_src",
@@ -134,7 +134,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		// key format is: 53 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
+		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
 		RedelegationsByValDst: collections.NewMap(
 			sb, types.RedelegationByValDstIndexKey,
 			"redelegations_by_val_dst",

@@ -23,6 +23,7 @@ service Query {
   }
 
   // Vote queries voted information based on proposalID, voterAddr.
+  // Due to how we handle state, this query would error for proposals that has already been finished.
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}";
   }

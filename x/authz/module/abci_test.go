@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -31,7 +30,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(types.Header{})
+	ctx := testCtx.Ctx
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",

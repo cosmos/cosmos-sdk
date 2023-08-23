@@ -11,7 +11,7 @@ import (
 var (
 	errNoInitHandler    = errors.New("no init handler")
 	errNoExecuteHandler = errors.New("account does not accept messages")
-	ErrInvalidMessage   = errors.New("invalid message")
+	errInvalidMessage   = errors.New("invalid message")
 )
 
 // NewInitBuilder creates a new InitBuilder instance.
@@ -56,7 +56,7 @@ type ExecuteBuilder struct {
 func (r *ExecuteBuilder) getMessageName(msg any) (string, error) {
 	protoMsg, ok := msg.(protoreflect.ProtoMessage)
 	if !ok {
-		return "", fmt.Errorf("%w: expected protoreflect.Message, got %T", ErrInvalidMessage, msg)
+		return "", fmt.Errorf("%w: expected protoreflect.Message, got %T", errInvalidMessage, msg)
 	}
 	return string(protoMsg.ProtoReflect().Descriptor().FullName()), nil
 }
@@ -81,7 +81,7 @@ func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest
 		}
 		handler, ok := r.handlers[messageName]
 		if !ok {
-			return nil, fmt.Errorf("%w: no handler for message %s", ErrInvalidMessage, messageName)
+			return nil, fmt.Errorf("%w: no handler for message %s", errInvalidMessage, messageName)
 		}
 		return handler(ctx, executeRequest)
 	}, nil

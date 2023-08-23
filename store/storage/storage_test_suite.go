@@ -122,6 +122,30 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	ok, err = db.Has(storeKey1, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().True(ok)
+
+	for i := uint64(11); i <= 14; i++ {
+		bz, err = db.Get(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().Equal([]byte("value011"), bz)
+
+		ok, err = db.Has(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().True(ok)
+	}
+
+	err = db.Delete(storeKey1, 15, []byte("key"))
+	s.Require().NoError(err)
+
+	for i := uint64(15); i <= 17; i++ {
+		bz, err = db.Get(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		// TODO should we assert nil?
+		s.Require().Empty(bz)
+
+		ok, err = db.Has(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().False(ok)
+	}
 }
 
 func (s *StorageTestSuite) TestDatabase_Batch() {

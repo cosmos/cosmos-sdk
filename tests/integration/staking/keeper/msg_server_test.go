@@ -113,7 +113,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				Amount:           unbondingAmount,
 				CreationHeight:   10,
 			},
-			expErrMsg: "not found",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name:      "invalid delegator address",

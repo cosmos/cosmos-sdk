@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -264,7 +263,7 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 				require.NoError(err)
 				require.Equal(tc.validator, val)
 			} else {
-				require.Error(err, collections.ErrNotFound)
+				require.Error(err, types.ErrNoValidatorFound)
 			}
 		})
 	}

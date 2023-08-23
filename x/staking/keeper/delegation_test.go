@@ -598,7 +598,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 
 	//  now validator should be deleted from state
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, collections.ErrNotFound)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
 func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
@@ -665,7 +665,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 
 	// validator should now be deleted from state
 	_, err = keeper.GetValidator(ctx, addrVals[0])
-	require.ErrorIs(err, collections.ErrNotFound)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state

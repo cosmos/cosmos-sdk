@@ -127,6 +127,9 @@ func (k Keeper) GetValidatorByUnbondingID(ctx context.Context, id uint64) (val t
 
 	val, err = k.Validators.Get(ctx, valKey)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.Validator{}, types.ErrNoValidatorFound
+		}
 		return types.Validator{}, err
 	}
 

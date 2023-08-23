@@ -124,7 +124,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 			name:      "invalid address",
 			msg:       &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
 			expPass:   false,
-			expErrMsg: "not found",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name:    "valid request",
@@ -192,7 +192,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 			name:      "invalid validator",
 			msg:       &types.QueryValidatorCommissionRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
 			expPass:   false,
-			expErrMsg: "not found",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name:    "valid request",
@@ -571,7 +571,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 				ValidatorAddress: valAddr2.String(),
 			},
 			expPass:   false,
-			expErrMsg: "not found",
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name: "valid request",

@@ -24,6 +24,9 @@ import (
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
 	validator, err = k.Validators.Get(ctx, addr)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.Validator{}, types.ErrNoValidatorFound
+		}
 		return validator, err
 	}
 	return validator, nil

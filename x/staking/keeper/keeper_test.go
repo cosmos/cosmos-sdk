@@ -264,8 +264,9 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 			}
 			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
 			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
+			s.ctx.KVStore(s.key).Set(stakingtypes.GetUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
-		"a428c023032bfc71a954f8a696e33ecc0806ae77021bd17fc369ba203a96681f",
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
 	)
 	s.Require().NoError(err)
 

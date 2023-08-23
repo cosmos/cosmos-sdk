@@ -14,6 +14,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -43,6 +44,7 @@ type KeeperTestSuite struct {
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
 	key           *storetypes.KVStoreKey
+	cdc           codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -54,6 +56,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
+	s.cdc = encCfg.Codec
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -231,10 +234,29 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *KeeperTestSuite) TestDiffCollsMigration() {
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	unbondingQueueKey := []byte{0x41}
+	return append(unbondingQueueKey, bz...)
+}
+
+func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 	s.SetupTest()
 
 	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getUnbondingDelegationTimeKey(date), []byte{})
+		},
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,
 		100,

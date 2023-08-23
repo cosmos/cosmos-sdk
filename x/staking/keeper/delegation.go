@@ -393,24 +393,24 @@ func (k Keeper) SetUnbondingDelegationEntry(
 // is a slice of DVPairs corresponding to unbonding delegations that expire at a
 // certain time.
 func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvPairs []types.DVPair, err error) {
-	bz, err := k.UnbondingQueue.Get(ctx, timestamp)
-	if bz == nil || err != nil {
+	dvPair, err := k.UnbondingQueue.Get(ctx, timestamp)
+	if err != nil {
 		return []types.DVPair{}, err
 	}
 
 	pairs := types.DVPairs{}
-	err = k.cdc.Unmarshal(bz, &pairs)
+	pairs.Pairs = append(pairs.Pairs, dvPair)
 
 	return pairs.Pairs, err
 }
 
 // SetUBDQueueTimeSlice sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVPair) error {
-	bz, err := k.cdc.Marshal(&types.DVPairs{Pairs: keys})
-	if err != nil {
-		return err
+	dvPairs := types.DVPairs{Pairs: keys}
+	if len(dvPairs.Pairs) == 0 {
+		return k.UnbondingQueue.Set(ctx, timestamp, types.DVPair{})
 	}
-	return k.UnbondingQueue.Set(ctx, timestamp, bz)
+	return k.UnbondingQueue.Set(ctx, timestamp, dvPairs.Pairs[0])
 }
 
 // InsertUBDQueue inserts an unbonding delegation to the appropriate timeslice
@@ -433,15 +433,13 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time) (matureUnbonds []types.DVPair, err error) {
-	err = k.UnbondingQueue.Walk(ctx, nil, func(key time.Time, _ []byte) (bool, error) {
+	err = k.UnbondingQueue.Walk(ctx, nil, func(key time.Time, _ types.DVPair) (bool, error) {
 		timeslice := types.DVPairs{}
 		value, err := k.UnbondingQueue.Get(ctx, currTime)
 		if err != nil {
 			return true, err
 		}
-		if err = k.cdc.Unmarshal(value, &timeslice); err != nil {
-			return true, err
-		}
+		timeslice.Pairs = append(timeslice.Pairs, value)
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
 

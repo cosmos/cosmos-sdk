@@ -15,6 +15,7 @@ import (
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -44,6 +45,45 @@ func initCometBFTConfig() *cmtcfg.Config {
 	// cfg.P2P.MaxNumOutboundPeers = 40
 
 	return cfg
+}
+
+// initAppConfig helps to override default client config template and configs.
+// return "", nil if no custom configuration is required for the application.
+func initClientConfig() (string, interface{}) {
+	type GasConfig struct {
+		GasAdjustment float64 `mapstructure:"gas_adjustment"`
+	}
+
+	type CustomClientConfig struct {
+		clientconfig.Config `mapstructure:",squash"`
+
+		GasConfig GasConfig `mapstructure:"gas"`
+	}
+
+	// Optionally allow the chain developer to overwrite the SDK's default client config.
+	clientCfg := clientconfig.DefaultConfig()
+	// The SDK's default keyring backend is set to "os".
+	// This is more secure than "test" and is the recommended value.
+	//
+	// In simapp, we set the default keyring backend to test, as SimApp is meant
+	// to be an example and testing application.
+	clientCfg.KeyringBackend = "test"
+
+	customClientConfig := CustomClientConfig{
+		Config: *clientCfg,
+		GasConfig: GasConfig{
+			GasAdjustment: 1.5,
+		},
+	}
+
+	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + `
+	[gas]
+	# This is the gas adjustment factor used by the tx commands.
+	# It defaults to 1 and can be overridden by the --gas-adjustment flag or here.
+	gas-adjustment = 0
+`
+
+	return customClientConfigTemplate, customClientConfig
 }
 
 // initAppConfig helps to override default appConfig template and configs.

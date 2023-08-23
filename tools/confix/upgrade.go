@@ -86,7 +86,7 @@ func CheckValid(fileName string, data []byte) error {
 			return fmt.Errorf("server config invalid: %w", err)
 		}
 	case strings.HasSuffix(fileName, ClientConfig):
-		var cfg clientcfg.ClientConfig
+		var cfg clientcfg.Config
 		if err := v.Unmarshal(&cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal as client config: %w", err)
 		}

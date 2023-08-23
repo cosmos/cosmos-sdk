@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-func DefaultConfig() *ClientConfig {
-	return &ClientConfig{
+func DefaultConfig() *Config {
+	return &Config{
 		ChainID:        "",
 		KeyringBackend: "os",
 		Output:         "text",
@@ -18,7 +18,7 @@ func DefaultConfig() *ClientConfig {
 	}
 }
 
-type ClientConfig struct {
+type Config struct {
 	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
 	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
 	Output         string `mapstructure:"output" json:"output"`
@@ -26,31 +26,30 @@ type ClientConfig struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
-func (c *ClientConfig) SetChainID(chainID string) {
+func (c *Config) SetChainID(chainID string) {
 	c.ChainID = chainID
 }
 
-func (c *ClientConfig) SetKeyringBackend(keyringBackend string) {
+func (c *Config) SetKeyringBackend(keyringBackend string) {
 	c.KeyringBackend = keyringBackend
 }
 
-func (c *ClientConfig) SetOutput(output string) {
+func (c *Config) SetOutput(output string) {
 	c.Output = output
 }
 
-func (c *ClientConfig) SetNode(node string) {
+func (c *Config) SetNode(node string) {
 	c.Node = node
 }
 
-func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
+func (c *Config) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
-func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+func ReadFromClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := DefaultConfig()
 
 	// when config.toml does not exist create and init with default values
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
@@ -58,12 +57,36 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 			return ctx, fmt.Errorf("couldn't make client config: %w", err)
 		}
 
-		if ctx.ChainID != "" {
-			conf.ChainID = ctx.ChainID // chain-id will be written to the client.toml while initiating the chain.
-		}
+		if customClientTemplate != "" {
+			setConfigTemplate(customClientTemplate)
 
-		if err := writeConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %w", err)
+			if err = ctx.Viper.Unmarshal(&customConfig); err != nil {
+				return ctx, fmt.Errorf("failed to parse custom client config: %w", err)
+			}
+
+			if ctx.ChainID != "" {
+				if cfg, ok := customConfig.(interface{ SetChainID(string) }); ok {
+					cfg.SetChainID(ctx.ChainID)
+				}
+			}
+
+			if err := writeConfigFile(configFilePath, customConfig); err != nil {
+				return ctx, fmt.Errorf("could not write client config to the file: %w", err)
+			}
+
+		} else {
+			config, err := parseConfig(ctx.Viper)
+			if err != nil {
+				return ctx, fmt.Errorf("couldn't parse config: %w", err)
+			}
+
+			if ctx.ChainID != "" {
+				config.ChainID = ctx.ChainID // chain-id will be written to the client.toml while initiating the chain.
+			}
+
+			if err := writeConfigFile(configFilePath, config); err != nil {
+				return ctx, fmt.Errorf("could not write client config to the file: %w", err)
+			}
 		}
 	}
 
@@ -71,7 +94,8 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %w", err)
 	}
-	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
+
+	// we need to update KeyringDir field on client.Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
 		WithChainID(conf.ChainID).
 		WithKeyringDir(ctx.HomeDir)
@@ -81,17 +105,17 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		return ctx, fmt.Errorf("couldn't get keyring: %w", err)
 	}
 
-	ctx = ctx.WithKeyring(keyring)
-
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
 	client, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", err)
 	}
 
-	ctx = ctx.WithNodeURI(conf.Node).
+	ctx = ctx.
+		WithNodeURI(conf.Node).
+		WithBroadcastMode(conf.BroadcastMode).
 		WithClient(client).
-		WithBroadcastMode(conf.BroadcastMode)
+		WithKeyring(keyring)
 
 	return ctx, nil
 }

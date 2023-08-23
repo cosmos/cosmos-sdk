@@ -38,7 +38,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
-	clientCtx, err := config.ReadFromClientConfig(clientCtx)
+	clientCtx, err := config.ReadFromClientConfig(clientCtx, "", nil)
 	require.NoError(t, err)
 	require.Equal(t, clientCtx.ChainID, chainID)
 

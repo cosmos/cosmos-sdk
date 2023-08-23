@@ -243,7 +243,6 @@ func init() {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
-
 	if configTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
 	}
@@ -260,26 +259,30 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 
 // SetConfigTemplate sets the custom app config template for
 // the application
-func SetConfigTemplate(customTemplate string) {
+func SetConfigTemplate(customTemplate string) error {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
 
 	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config interface{}) {
+func WriteConfigFile(configFilePath string, config interface{}) error {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {
-		panic(err)
+		return err
 	}
 
 	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+
+	return nil
 }
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )

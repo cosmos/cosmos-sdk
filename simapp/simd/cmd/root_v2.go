@@ -124,6 +124,8 @@ func ProvideClientContext(
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
 ) client.Context {
+	var err error
+
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
@@ -138,7 +140,10 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	return initClientCtx
 }

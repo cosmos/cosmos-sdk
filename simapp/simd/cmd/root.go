@@ -101,7 +101,11 @@ func NewRootCmd() *cobra.Command {
 
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	var err error
+	initClientCtx, err = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.Keyring = initClientCtx.Keyring

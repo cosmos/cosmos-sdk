@@ -62,6 +62,8 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 		config.Config `mapstructure:",squash"`
 
 		GasConfig GasConfig `mapstructure:"gas"`
+
+		Note string `mapstructure:"note"`
 	}
 
 	clientCfg := config.DefaultConfig()
@@ -73,12 +75,15 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 		GasConfig: GasConfig{
 			GasAdjustment: 1.5,
 		},
+		Note: "Sent from the CLI.",
 	}
 
 	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
 # This is the gas adjustment factor used by the tx commands.
 # Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
+# Memo to include in all transactions.
+note = "{{ .Note }}"
 `
 
 	t.Run("custom template and config provided", func(t *testing.T) {
@@ -91,6 +96,7 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 		require.NoError(t, err)
 		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
 		require.Equal(t, customClientConfig.GasConfig.GasAdjustment, clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment))
+		require.Equal(t, customClientConfig.Note, clientCtx.Viper.GetString(flags.FlagNote))
 	})
 
 	t.Run("no template and custom config provided", func(t *testing.T) {

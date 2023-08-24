@@ -248,8 +248,7 @@ func init() {
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for the
-// application.
+// ParseConfig retrieves the default environment configuration for the application.
 func ParseConfig(v *viper.Viper) (*Config, error) {
 	conf := DefaultConfig()
 	err := v.Unmarshal(conf)
@@ -257,8 +256,7 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
-// SetConfigTemplate sets the custom app config template for
-// the application
+// SetConfigTemplate sets the custom app config template for the application.
 func SetConfigTemplate(customTemplate string) error {
 	var err error
 
@@ -271,8 +269,7 @@ func SetConfigTemplate(customTemplate string) error {
 	return nil
 }
 
-// WriteConfigFile renders config using the template and writes it to
-// configFilePath.
+// WriteConfigFile renders config using the template and writes it to configFilePath.
 func WriteConfigFile(configFilePath string, config interface{}) error {
 	var buffer bytes.Buffer
 
@@ -280,13 +277,9 @@ func WriteConfigFile(configFilePath string, config interface{}) error {
 		return err
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
 
 	return nil
-}
-
-func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := os.WriteFile(filePath, contents, mode); err != nil {
-		panic(fmt.Errorf("failed to write file: %w", err))
-	}
 }

@@ -113,7 +113,7 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 
 		require.NoError(t, err)
 		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment))
+		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
 	})
 
 	t.Run("no template and no config provided", func(t *testing.T) {
@@ -125,7 +125,7 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 
 		require.NoError(t, err)
 		require.Equal(t, config.DefaultConfig().KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment))
+		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
 	})
 }
 

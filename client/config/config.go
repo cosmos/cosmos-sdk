@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
+// DefaultConfig returns default config for the client.toml
 func DefaultConfig() *Config {
 	return &Config{
 		ChainID:        "",
@@ -19,32 +20,16 @@ func DefaultConfig() *Config {
 	}
 }
 
+// ClientConfig is an alias for Config for backward compatibility
+// Deprecated: use Config instead which avoid name stuttering
+type ClientConfig Config
+
 type Config struct {
 	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
 	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
 	Output         string `mapstructure:"output" json:"output"`
 	Node           string `mapstructure:"node" json:"node"`
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-}
-
-func (c *Config) SetChainID(chainID string) {
-	c.ChainID = chainID
-}
-
-func (c *Config) SetKeyringBackend(keyringBackend string) {
-	c.KeyringBackend = keyringBackend
-}
-
-func (c *Config) SetOutput(output string) {
-	c.Output = output
-}
-
-func (c *Config) SetNode(node string) {
-	c.Node = node
-}
-
-func (c *Config) SetBroadcastMode(broadcastMode string) {
-	c.BroadcastMode = broadcastMode
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
@@ -82,10 +67,6 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 
 		} else {
 			conf := DefaultConfig()
-			if err := ctx.Viper.Unmarshal(conf); err != nil {
-				return ctx, fmt.Errorf("couldn't parse config: %w", err)
-			}
-
 			if ctx.ChainID != "" {
 				// chain-id will be written to the client.toml while initiating the chain.
 				conf.ChainID = ctx.ChainID

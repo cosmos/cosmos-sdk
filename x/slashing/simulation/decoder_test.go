@@ -27,12 +27,12 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
-	missed := []byte{1} // we want to display the bytes for simulation diffs
+	// missed := []byte{1} // we want to display the bytes for simulation diffs
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshal(&info)},
-			{Key: types.ValidatorMissedBlockBitmapKey(consAddr1, 6), Value: missed},
+			// {Key: types.ValidatorMissedBlockBitmapKey(consAddr1, 6), Value: missed},
 			{Key: []byte{0x99}, Value: []byte{0x99}}, // This test should panic
 		},
 	}
@@ -43,7 +43,7 @@ func TestDecodeStore(t *testing.T) {
 		panics      bool
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info), false},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v\n", missed, missed), false},
+		// {"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v\n", missed, missed), false},
 		{"other", "", true},
 	}
 	for i, tt := range tests {

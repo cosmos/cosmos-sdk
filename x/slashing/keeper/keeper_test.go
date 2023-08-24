@@ -18,6 +18,7 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -36,10 +37,12 @@ type KeeperTestSuite struct {
 	slashingKeeper slashingkeeper.Keeper
 	queryClient    slashingtypes.QueryClient
 	msgServer      slashingtypes.MsgServer
+	key            *storetypes.KVStoreKey
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
+	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
@@ -130,6 +133,41 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
 	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
+
+// validatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
+// missed block bitmap.
+func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
+	validatorMissedBlockBitmapKeyPrefix := []byte{0x02} // Prefix for missed block bitmap
+
+	return append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...)
+}
+
+// func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
+// 	s.SetupTest()
+
+// 	err := testutil.DiffCollectionsMigration(
+// 		s.ctx,
+// 		s.key,
+// 		100,
+// 		func(i int64) {
+// 			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+// 		},
+// 		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
+// 	)
+// 	s.Require().NoError(err)
+
+// 	err = testutil.DiffCollectionsMigration(
+// 		s.ctx,
+// 		s.key,
+// 		100,
+// 		func(i int64) {
+// 			err := s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
+// 			s.Require().NoError(err)
+// 		},
+// 		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
+// 	)
+// 	s.Require().NoError(err)
+// }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

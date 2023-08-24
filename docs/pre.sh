@@ -19,7 +19,6 @@ cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/
 sed -i -e "s|(../core/|(../../develop/advanced-concepts/"./docs/integrate/building-modules/01-module-manager.md
 
 ## Add tooling documentation
-cp ../tools/proto/README.md ./docs/integrate/tooling/00-proto.md
 cp ../tools/cosmovisor/README.md ./docs/integrate/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/integrate/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/integrate/tooling/03-hubl.md

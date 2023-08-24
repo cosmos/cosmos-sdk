@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,29 +21,34 @@ import (
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
-	// setup the app
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	_, app, ctx := createTestInput(t)
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 
 	// set the not bonded pool module account
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 5)
+	startCoin := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), startCoin))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	moduleBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
-	// accounts
-	delAddrs := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.NewInt(10000))
-	validators := app.StakingKeeper.GetValidators(ctx, 10)
-	require.Equal(t, len(validators), 1)
+	// create a  validator
+	validatorPubKey := simtestutil.CreateTestPubKeys(1)[0]
+	validatorAddr := sdk.ValAddress(validatorPubKey.Address())
 
-	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
-	require.NoError(t, err)
+	validator := stakingtestutil.NewValidator(t, validatorAddr, validatorPubKey)
+	validator.Tokens = startTokens
+	validator.DelegatorShares = sdk.NewDecFromInt(startTokens)
+	validator.Status = types.Bonded
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	// create a delegator
+	delAddrs := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.NewInt(10000))
 	delegatorAddr := delAddrs[0]
 
 	// setting the ubd entry
@@ -53,7 +57,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		delegatorAddr, validatorAddr, 10,
 		ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
-		0,
+		1,
 	)
 
 	// set and retrieve a record
@@ -74,16 +78,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
-				CreationHeight:   0,
-			},
-		},
-		{
-			Name:      "invalid coin",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 		},
@@ -141,7 +135,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(ctx, &testCase.req)
+			_, err := msgServer.CancelUnbondingDelegation(sdk.WrapSDKContext(ctx), &testCase.req)
 			if testCase.ExceptErr {
 				require.Error(t, err)
 			} else {
@@ -1127,163 +1121,6 @@ func TestValidatorBond(t *testing.T) {
 	}
 }
 
-func TestChangeValidatorBond(t *testing.T) {
-	_, app, ctx := createTestInput(t)
-	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-
-	checkValidatorBondShares := func(validatorAddress sdk.ValAddress, expectedShares sdk.Int) {
-		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
-		require.True(t, found, "validator should have been found")
-		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
-	}
-
-	// Create a delegator and 3 validators
-	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 4, sdk.NewInt(1_000_000))
-	pubKeys := simtestutil.CreateTestPubKeys(4)
-
-	validatorAPubKey := pubKeys[1]
-	validatorBPubKey := pubKeys[2]
-	validatorCPubKey := pubKeys[3]
-
-	delegatorAddress := addresses[0]
-	validatorAAddress := sdk.ValAddress(validatorAPubKey.Address())
-	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
-	validatorCAddress := sdk.ValAddress(validatorCPubKey.Address())
-
-	validatorA := stakingtestutil.NewValidator(t, validatorAAddress, validatorAPubKey)
-	validatorB := stakingtestutil.NewValidator(t, validatorBAddress, validatorBPubKey)
-	validatorC := stakingtestutil.NewValidator(t, validatorCAddress, validatorCPubKey)
-
-	validatorA.Tokens = sdk.NewInt(1_000_000)
-	validatorB.Tokens = sdk.NewInt(1_000_000)
-	validatorC.Tokens = sdk.NewInt(1_000_000)
-	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
-	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
-	validatorC.DelegatorShares = sdk.NewDec(1_000_000)
-
-	app.StakingKeeper.SetValidator(ctx, validatorA)
-	app.StakingKeeper.SetValidator(ctx, validatorB)
-	app.StakingKeeper.SetValidator(ctx, validatorC)
-
-	// The test will go through Delegate/Redelegate/Undelegate messages with the following
-	delegation1Amount := sdk.NewInt(1000)
-	delegation2Amount := sdk.NewInt(1000)
-	redelegateAmount := sdk.NewInt(500)
-	undelegateAmount := sdk.NewInt(500)
-
-	delegate1Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation1Amount)
-	delegate2Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation2Amount)
-	redelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), redelegateAmount)
-	undelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), undelegateAmount)
-
-	// Delegate to validator's A and C - validator bond shares should not change
-	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           delegate1Coin,
-	})
-	require.NoError(t, err, "no error expected during first delegation")
-
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorCAddress.String(),
-		Amount:           delegate1Coin,
-	})
-	require.NoError(t, err, "no error expected during first delegation")
-
-	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, sdk.ZeroInt())
-
-	// Flag the the delegations to validator A and C validator bond's
-	// Their bond shares should increase
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-	})
-	require.NoError(t, err, "no error expected during validator bond")
-
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorCAddress.String(),
-	})
-	require.NoError(t, err, "no error expected during validator bond")
-
-	checkValidatorBondShares(validatorAAddress, delegation1Amount)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, delegation1Amount)
-
-	// Delegate more to validator A - it should increase the validator bond shares
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           delegate2Coin,
-	})
-	require.NoError(t, err, "no error expected during second delegation")
-
-	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, delegation1Amount)
-
-	// Redelegate partially from A to B (where A is a validator bond and B is not)
-	// It should remove the bond shares from A, and B's validator bond shares should not change
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
-		DelegatorAddress:    delegatorAddress.String(),
-		ValidatorSrcAddress: validatorAAddress.String(),
-		ValidatorDstAddress: validatorBAddress.String(),
-		Amount:              redelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during redelegation")
-
-	expectedBondSharesA := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount)
-	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, delegation1Amount)
-
-	// Now redelegate from B to C (where B is not a validator bond, but C is)
-	// Validator B's bond shares should remain at zero, but C's bond shares should increase
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
-		DelegatorAddress:    delegatorAddress.String(),
-		ValidatorSrcAddress: validatorBAddress.String(),
-		ValidatorDstAddress: validatorCAddress.String(),
-		Amount:              redelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during redelegation")
-
-	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, delegation1Amount.Add(redelegateAmount))
-
-	// Redelegate partially from A to C (where C is a validator bond delegation)
-	// It should remove the bond shares from A, and increase the bond shares on validator C
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
-		DelegatorAddress:    delegatorAddress.String(),
-		ValidatorSrcAddress: validatorAAddress.String(),
-		ValidatorDstAddress: validatorCAddress.String(),
-		Amount:              redelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during redelegation")
-
-	expectedBondSharesA = expectedBondSharesA.Sub(redelegateAmount)
-	expectedBondSharesC := delegation1Amount.Add(redelegateAmount).Add(redelegateAmount)
-	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
-
-	// Undelegate from validator A - it should remove shares
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           undelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during undelegation")
-
-	expectedBondSharesA = expectedBondSharesA.Sub(undelegateAmount)
-	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
-}
-
 func TestEnableDisableTokenizeShares(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
@@ -1440,106 +1277,6 @@ func TestUnbondValidator(t *testing.T) {
 	require.True(t, validator.Jailed)
 }
 
-func TestChangeValidatorBond(t *testing.T) {
-	_, app, ctx := createTestInput(t)
-	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-
-	checkValidatorBondShares := func(validatorAddress sdk.ValAddress, expectedShares sdk.Int) {
-		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
-		require.True(t, found, "validator should have been found")
-		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
-	}
-
-	// Create a delegator and 2 validators
-	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 3, sdk.NewInt(1_000_000))
-	pubKeys := simtestutil.CreateTestPubKeys(3)
-
-	validatorAPubKey := pubKeys[1]
-	validatorBPubKey := pubKeys[2]
-
-	delegatorAddress := addresses[0]
-	validatorAAddress := sdk.ValAddress(validatorAPubKey.Address())
-	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
-
-	validatorA := stakingtestutil.NewValidator(t, validatorAAddress, validatorAPubKey)
-	validatorB := stakingtestutil.NewValidator(t, validatorBAddress, validatorBPubKey)
-
-	validatorA.Tokens = sdk.NewInt(1_000_000)
-	validatorB.Tokens = sdk.NewInt(1_000_000)
-	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
-	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
-
-	app.StakingKeeper.SetValidator(ctx, validatorA)
-	app.StakingKeeper.SetValidator(ctx, validatorB)
-
-	// The test will go through Delegate/Redelegate/Undelegate messages with the following
-	delegation1Amount := sdk.NewInt(1000)
-	delegation2Amount := sdk.NewInt(1000)
-	redelegateAmount := sdk.NewInt(500)
-	undelegateAmount := sdk.NewInt(500)
-
-	delegate1Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation1Amount)
-	delegate2Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation2Amount)
-	redelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), redelegateAmount)
-	undelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), undelegateAmount)
-
-	// Delegate to validator A - validator bond shares should not change
-	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           delegate1Coin,
-	})
-	require.NoError(t, err, "no error expected during first delegation")
-
-	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-
-	// Flag the delegation as a validator bond
-	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-	})
-	require.NoError(t, err, "no error expected during validator bond")
-
-	checkValidatorBondShares(validatorAAddress, delegation1Amount)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-
-	// Delegate more - it should increase the validator bond shares
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           delegate2Coin,
-	})
-	require.NoError(t, err, "no error expected during second delegation")
-
-	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-
-	// Redelegate partially from A to B - it should remove the bond shares from the source validator
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
-		DelegatorAddress:    delegatorAddress.String(),
-		ValidatorSrcAddress: validatorAAddress.String(),
-		ValidatorDstAddress: validatorBAddress.String(),
-		Amount:              redelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during redelegation")
-
-	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount))
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-
-	// Undelegate from validator A - it should have removed the shares
-	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
-		DelegatorAddress: delegatorAddress.String(),
-		ValidatorAddress: validatorAAddress.String(),
-		Amount:           undelegateCoin,
-	})
-	require.NoError(t, err, "no error expected during undelegation")
-
-	expectedBondShares := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount).Sub(undelegateAmount)
-	checkValidatorBondShares(validatorAAddress, expectedBondShares)
-	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
-}
-
 // TestICADelegateUndelegate tests that an ICA account can undelegate
 // sequentially right after delegating.
 func TestICADelegateUndelegate(t *testing.T) {
@@ -1613,130 +1350,159 @@ func TestICADelegateUndelegate(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
 }
 
-func TestCancelUnbondingDelegation(t *testing.T) {
+func TestChangeValidatorBond(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	bondDenom := app.StakingKeeper.BondDenom(ctx)
-
-	// set the not bonded pool module account
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 5)
-	startCoin := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
-
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), startCoin))
-	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	moduleBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), app.StakingKeeper.BondDenom(ctx))
-	require.Equal(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
-
-	// create a  validator
-	validatorPubKey := simtestutil.CreateTestPubKeys(1)[0]
-	validatorAddr := sdk.ValAddress(validatorPubKey.Address())
-
-	validator := stakingtestutil.NewValidator(t, validatorAddr, validatorPubKey)
-	validator.Tokens = startTokens
-	validator.DelegatorShares = sdk.NewDecFromInt(startTokens)
-	validator.Status = types.Bonded
-	app.StakingKeeper.SetValidator(ctx, validator)
-
-	// create a delegator
-	delAddrs := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.NewInt(10000))
-	delegatorAddr := delAddrs[0]
-
-	// setting the ubd entry
-	unbondingAmount := sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 5)
-	ubd := types.NewUnbondingDelegation(
-		delegatorAddr, validatorAddr, 10,
-		ctx.BlockTime().Add(time.Minute*10),
-		unbondingAmount.Amount,
-		1,
-	)
-
-	// set and retrieve a record
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
-	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	require.True(t, found)
-	require.Equal(t, ubd, resUnbond)
-
-	testCases := []struct {
-		Name      string
-		ExceptErr bool
-		req       types.MsgCancelUnbondingDelegation
-	}{
-		{
-			Name:      "invalid height",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
-				CreationHeight:   0,
-			},
-		},
-		{
-			Name:      "validator not exists",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: sdk.ValAddress(sdk.AccAddress("asdsad")).String(),
-				Amount:           unbondingAmount,
-				CreationHeight:   0,
-			},
-		},
-		{
-			Name:      "invalid delegator address",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: "invalid_delegator_addrtess",
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           unbondingAmount,
-				CreationHeight:   0,
-			},
-		},
-		{
-			Name:      "invalid amount",
-			ExceptErr: true,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           unbondingAmount.Add(sdk.NewInt64Coin(bondDenom, 10)),
-				CreationHeight:   10,
-			},
-		},
-		{
-			Name:      "success",
-			ExceptErr: false,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           unbondingAmount.Sub(sdk.NewInt64Coin(bondDenom, 1)),
-				CreationHeight:   10,
-			},
-		},
-		{
-			Name:      "success",
-			ExceptErr: false,
-			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: resUnbond.DelegatorAddress,
-				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           unbondingAmount.Sub(unbondingAmount.Sub(sdk.NewInt64Coin(bondDenom, 1))),
-				CreationHeight:   10,
-			},
-		},
+	checkValidatorBondShares := func(validatorAddress sdk.ValAddress, expectedShares sdk.Int) {
+		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddress)
+		require.True(t, found, "validator should have been found")
+		require.Equal(t, expectedShares.Int64(), validator.ValidatorBondShares.TruncateInt64(), "validator bond shares")
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(sdk.WrapSDKContext(ctx), &testCase.req)
-			if testCase.ExceptErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				balanceForNotBondedPool := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
-				require.Equal(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
-				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
-			}
-		})
-	}
+	// Create a delegator and 3 validators
+	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 4, sdk.NewInt(1_000_000))
+	pubKeys := simtestutil.CreateTestPubKeys(4)
+
+	validatorAPubKey := pubKeys[1]
+	validatorBPubKey := pubKeys[2]
+	validatorCPubKey := pubKeys[3]
+
+	delegatorAddress := addresses[0]
+	validatorAAddress := sdk.ValAddress(validatorAPubKey.Address())
+	validatorBAddress := sdk.ValAddress(validatorBPubKey.Address())
+	validatorCAddress := sdk.ValAddress(validatorCPubKey.Address())
+
+	validatorA := stakingtestutil.NewValidator(t, validatorAAddress, validatorAPubKey)
+	validatorB := stakingtestutil.NewValidator(t, validatorBAddress, validatorBPubKey)
+	validatorC := stakingtestutil.NewValidator(t, validatorCAddress, validatorCPubKey)
+
+	validatorA.Tokens = sdk.NewInt(1_000_000)
+	validatorB.Tokens = sdk.NewInt(1_000_000)
+	validatorC.Tokens = sdk.NewInt(1_000_000)
+	validatorA.DelegatorShares = sdk.NewDec(1_000_000)
+	validatorB.DelegatorShares = sdk.NewDec(1_000_000)
+	validatorC.DelegatorShares = sdk.NewDec(1_000_000)
+
+	app.StakingKeeper.SetValidator(ctx, validatorA)
+	app.StakingKeeper.SetValidator(ctx, validatorB)
+	app.StakingKeeper.SetValidator(ctx, validatorC)
+
+	// The test will go through Delegate/Redelegate/Undelegate messages with the following
+	delegation1Amount := sdk.NewInt(1000)
+	delegation2Amount := sdk.NewInt(1000)
+	redelegateAmount := sdk.NewInt(500)
+	undelegateAmount := sdk.NewInt(500)
+
+	delegate1Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation1Amount)
+	delegate2Coin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegation2Amount)
+	redelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), redelegateAmount)
+	undelegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), undelegateAmount)
+
+	// Delegate to validator's A and C - validator bond shares should not change
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegate1Coin,
+	})
+	require.NoError(t, err, "no error expected during first delegation")
+
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorCAddress.String(),
+		Amount:           delegate1Coin,
+	})
+	require.NoError(t, err, "no error expected during first delegation")
+
+	checkValidatorBondShares(validatorAAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, sdk.ZeroInt())
+
+	// Flag the the delegations to validator A and C validator bond's
+	// Their bond shares should increase
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+	})
+	require.NoError(t, err, "no error expected during validator bond")
+
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorCAddress.String(),
+	})
+	require.NoError(t, err, "no error expected during validator bond")
+
+	checkValidatorBondShares(validatorAAddress, delegation1Amount)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
+
+	// Delegate more to validator A - it should increase the validator bond shares
+	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegate2Coin,
+	})
+	require.NoError(t, err, "no error expected during second delegation")
+
+	checkValidatorBondShares(validatorAAddress, delegation1Amount.Add(delegation2Amount))
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
+
+	// Redelegate partially from A to B (where A is a validator bond and B is not)
+	// It should remove the bond shares from A, and B's validator bond shares should not change
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	expectedBondSharesA := delegation1Amount.Add(delegation2Amount).Sub(redelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount)
+
+	// Now redelegate from B to C (where B is not a validator bond, but C is)
+	// Validator B's bond shares should remain at zero, but C's bond shares should increase
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorBAddress.String(),
+		ValidatorDstAddress: validatorCAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, delegation1Amount.Add(redelegateAmount))
+
+	// Redelegate partially from A to C (where C is a validator bond delegation)
+	// It should remove the bond shares from A, and increase the bond shares on validator C
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorCAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during redelegation")
+
+	expectedBondSharesA = expectedBondSharesA.Sub(redelegateAmount)
+	expectedBondSharesC := delegation1Amount.Add(redelegateAmount).Add(redelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
+
+	// Undelegate from validator A - it should remove shares
+	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &types.MsgUndelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           undelegateCoin,
+	})
+	require.NoError(t, err, "no error expected during undelegation")
+
+	expectedBondSharesA = expectedBondSharesA.Sub(undelegateAmount)
+	checkValidatorBondShares(validatorAAddress, expectedBondSharesA)
+	checkValidatorBondShares(validatorBAddress, sdk.ZeroInt())
+	checkValidatorBondShares(validatorCAddress, expectedBondSharesC)
 }

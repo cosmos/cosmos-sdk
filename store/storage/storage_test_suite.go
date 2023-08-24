@@ -139,8 +139,7 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	for i := uint64(15); i <= 17; i++ {
 		bz, err = db.Get(storeKey1, i, []byte("key"))
 		s.Require().NoError(err)
-		// TODO should we assert nil?
-		s.Require().Empty(bz)
+		s.Require().Nil(bz)
 
 		ok, err = db.Has(storeKey1, i, []byte("key"))
 		s.Require().NoError(err)

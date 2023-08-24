@@ -362,11 +362,11 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 		ctx,
 		k.UnbondingDelegations,
 		req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (types.UnbondingDelegation, error) {
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (types.UnbondingDelegation, error) {
 			unbondingDelegations = append(unbondingDelegations, value)
 			return value, nil
 		},
-		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
+		query.WithCollectionPaginationPairPrefix[[]byte, []byte](delAddr),
 	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

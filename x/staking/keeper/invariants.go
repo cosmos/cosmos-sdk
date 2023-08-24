@@ -76,7 +76,7 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 		err = k.UnbondingDelegations.Walk(
 			ctx,
 			nil,
-			func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+			func(key collections.Pair[[]byte, []byte], ubd types.UnbondingDelegation) (stop bool, err error) {
 				for _, entry := range ubd.Entries {
 					notBonded = notBonded.Add(entry.Balance)
 				}

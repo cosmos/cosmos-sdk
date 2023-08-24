@@ -201,7 +201,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			}
 			err = app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 			if err != nil {
-				panic(err)
+				return true, err
 			}
 			return false, err
 		},

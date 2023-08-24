@@ -131,11 +131,11 @@ func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAd
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
 
 	i := 0
-	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
 	err = k.UnbondingDelegations.Walk(
 		ctx,
 		rng,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value types.UnbondingDelegation) (stop bool, err error) {
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
 			unbondingDelegations = append(unbondingDelegations, value)
 			i++
 
@@ -154,7 +154,7 @@ func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAd
 
 // GetUnbondingDelegation returns a unbonding delegation.
 func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, err error) {
-	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr, valAddr))
+	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return ubd, types.ErrNoUnbondingDelegation
@@ -194,11 +194,11 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
-	rng := collections.NewPrefixUntilPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
 	err := k.UnbondingDelegations.Walk(
 		ctx,
 		rng,
-		func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], ubd types.UnbondingDelegation) (stop bool, err error) {
+		func(key collections.Pair[[]byte, []byte], ubd types.UnbondingDelegation) (stop bool, err error) {
 			for _, entry := range ubd.Entries {
 				unbonding = unbonding.Add(entry.Balance)
 			}
@@ -274,7 +274,7 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 	if err != nil {
 		return err
 	}
-	err = k.UnbondingDelegations.Set(ctx, collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr)), ubd)
+	err = k.UnbondingDelegations.Set(ctx, collections.Join(delAddr, valAddr), ubd)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 	if err != nil {
 		return err
 	}
-	err = k.UnbondingDelegations.Remove(ctx, collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr)))
+	err = k.UnbondingDelegations.Remove(ctx, collections.Join(delAddr, valAddr))
 	if err != nil {
 		return err
 	}

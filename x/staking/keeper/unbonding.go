@@ -60,7 +60,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 	delAddr := ubdKey[2 : (len(ubdKey)/2)+1]
 	valAddr := ubdKey[2+len(ubdKey)/2:]
 
-	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr)))
+	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr, valAddr))
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation

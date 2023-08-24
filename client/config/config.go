@@ -58,6 +58,10 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 			return ctx, fmt.Errorf("couldn't make client config: %w", err)
 		}
 
+		if (customClientTemplate != "" && customConfig == nil) || (customClientTemplate == "" && customConfig != nil) {
+			return ctx, fmt.Errorf("customClientTemplate and customConfig should be both nil or not nil")
+		}
+
 		if customClientTemplate != "" {
 			if err := setConfigTemplate(customClientTemplate); err != nil {
 				return ctx, fmt.Errorf("couldn't set client config template: %w", err)
@@ -77,17 +81,17 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 			}
 
 		} else {
-			config, err := parseConfig(ctx.Viper)
-			if err != nil {
+			conf := DefaultConfig()
+			if err := ctx.Viper.Unmarshal(conf); err != nil {
 				return ctx, fmt.Errorf("couldn't parse config: %w", err)
 			}
 
 			if ctx.ChainID != "" {
 				// chain-id will be written to the client.toml while initiating the chain.
-				config.ChainID = ctx.ChainID
+				conf.ChainID = ctx.ChainID
 			}
 
-			if err := writeConfigFile(configFilePath, config); err != nil {
+			if err := writeConfigFile(configFilePath, conf); err != nil {
 				return ctx, fmt.Errorf("could not write client config to the file: %w", err)
 			}
 		}

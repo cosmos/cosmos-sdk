@@ -38,19 +38,10 @@ func init() {
 	}
 }
 
-// parseConfig retrieves the default environment configuration for the client.
-func parseConfig(v *viper.Viper) (*Config, error) {
-	conf := DefaultConfig()
-	err := v.Unmarshal(conf)
-
-	return conf, err
-}
-
 // setConfigTemplate sets the custom app config template for
 // the application
 func setConfigTemplate(customTemplate string) error {
 	tmpl := template.New("clientConfigFileTemplate")
-
 	var err error
 	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
 		return err

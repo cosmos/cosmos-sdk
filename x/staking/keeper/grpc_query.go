@@ -178,15 +178,13 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil, err
 	}
 
-	var keys []collections.Pair[sdk.ValAddress, sdk.AccAddress]
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	_, pageRes, err := query.CollectionPaginate(
+	keys, pageRes, err := query.CollectionPaginate(
 		ctx,
 		k.UnbondingDelegationByValIndex,
 		req.Pagination,
-		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (types.UnbondingDelegation, error) {
-			keys = append(keys, key)
-			return types.UnbondingDelegation{}, nil
+		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (collections.Pair[sdk.ValAddress, sdk.AccAddress], error) {
+			return key, nil
 		},
 		query.WithCollectionPaginationPairPrefix[sdk.ValAddress, sdk.AccAddress](valAddr),
 	)

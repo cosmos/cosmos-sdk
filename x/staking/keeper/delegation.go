@@ -172,7 +172,7 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
-	rng := collections.NewPrefixUntilPairRange[sdk.ValAddress, sdk.AccAddress](valAddr)
+	rng := collections.NewPrefixedPairRange[sdk.ValAddress, sdk.AccAddress](valAddr)
 	err = k.UnbondingDelegationByValIndex.Walk(
 		ctx,
 		rng,

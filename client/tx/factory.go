@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/math"
 
@@ -50,10 +51,12 @@ type Factory struct {
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-	if clientCtx.Viper != nil {
-		if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
-			return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
-		}
+	if clientCtx.Viper == nil {
+		clientCtx.Viper = viper.New()
+	}
+
+	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
+		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
 	signModeStr := clientCtx.SignModeStr

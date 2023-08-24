@@ -345,6 +345,10 @@ func initTestnetFiles(
 			return err
 		}
 
+		if err := srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate); err != nil {
+			return err
+		}
+
 		if err := srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig); err != nil {
 			return err
 		}

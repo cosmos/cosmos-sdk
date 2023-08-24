@@ -69,6 +69,7 @@ func initClientConfig() (string, interface{}) {
 	// to be an example and testing application.
 	clientCfg.KeyringBackend = "test"
 
+	// Now we set the custom config default values.
 	customClientConfig := CustomClientConfig{
 		Config: *clientCfg,
 		GasConfig: GasConfig{
@@ -76,10 +77,13 @@ func initClientConfig() (string, interface{}) {
 		},
 	}
 
+	// The default SDK app template is defined in serverconfig.DefaultConfigTemplate.
+	// We append the custom config template to the default one.
+	// And we set the default config to the custom app template.
 	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + `
 [gas]
 # This is the gas adjustment factor used by the tx commands.
-# Sets the default and can be overridden by the --gas-adjustment flag in tx commands.
+# Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
 `
 
@@ -124,6 +128,7 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.MinGasPrices = "0stake"
 	// srvCfg.BaseConfig.IAVLDisableFastNode = true // disable fastnode by default
 
+	// Now we set the custom config default values.
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
 		WASM: WASMConfig{
@@ -132,6 +137,9 @@ func initAppConfig() (string, interface{}) {
 		},
 	}
 
+	// The default SDK app template is defined in serverconfig.DefaultConfigTemplate.
+	// We append the custom config template to the default one.
+	// And we set the default config to the custom app template.
 	customAppTemplate := serverconfig.DefaultConfigTemplate + `
 [wasm]
 # This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries

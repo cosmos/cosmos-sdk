@@ -11,11 +11,9 @@ import (
 )
 
 type ChainRegistryEntry struct {
-	APIs ChainRegistryAPIs `json:"apis"`
-}
-
-type ChainRegistryAPIs struct {
-	GRPC []*APIEntry `json:"grpc"`
+	APIs struct {
+		GRPC []*APIEntry `json:"grpc"`
+	} `json:"apis"`
 }
 
 type APIEntry struct {

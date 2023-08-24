@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.20"
+          go-version: "1.21"
           check-latest: true
       # Starship Infra setup
       # - Connects to k8s cluster with kubeconfig (digital ocean)
@@ -29,7 +29,7 @@ jobs:
       # - Port forward all ports to localhost for next steps to connect
       - name: Setup Test infra
         id: starship-action
-        uses: cosmology-tech/starship-action@0.2.14
+        uses: cosmology-tech/starship-action@0.2.15
         with:
           values: tests/starship/configs/ci.yaml
           port-forward: true
@@ -50,7 +50,7 @@ jobs:
           DEVNET_NAMESPACE: ${{ steps.starship-action.outputs.namespace }}
 
   sims-notify-success:
-    needs: [ e2e-test ]
+    needs: [e2e-test]
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
@@ -64,7 +64,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -77,12 +77,12 @@ jobs:
   sims-notify-failure:
     permissions:
       contents: none
-    needs: [ e2e-test ]
+    needs: [e2e-test]
     runs-on: ubuntu-latest
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

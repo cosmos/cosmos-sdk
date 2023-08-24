@@ -410,9 +410,9 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
 	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
-		redels, pageRes, err = queryRedelegationsFromSrcValidator(store, k, req)
+		redels, pageRes, err = queryRedelegationsFromSrcValidator(ctx, store, k, req)
 	default:
-		redels, pageRes, err = queryAllRedelegations(store, k, req)
+		redels, pageRes, err = queryAllRedelegations(ctx, store, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -505,7 +505,7 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, err
 	}
 
-	redel, err := k.GetRedelegation(ctx, delAddr, srcValAddr, dstValAddr)
+	redel, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr, srcValAddr, dstValAddr))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -517,43 +517,34 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 	return redels, nil
 }
 
-func queryRedelegationsFromSrcValidator(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryRedelegationsFromSrcValidator(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (types.Redelegations, *query.PageResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	srcValPrefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	redStore := prefix.NewStore(store, srcValPrefix)
-	res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
-		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
-		red, err := types.UnmarshalRED(k.cdc, storeValue)
+	return query.CollectionPaginate(ctx, k.RedelegationsByValSrc, req.Pagination, func(key collections.Triple[[]byte, []byte, []byte], val []byte) (types.Redelegation, error) {
+		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
+		red, err := k.Keeper.Redelegations.Get(ctx, collections.Join3(delAddr, valSrcAddr, valDstAddr))
 		if err != nil {
-			return err
+			return types.Redelegation{}, err
 		}
-		redels = append(redels, red)
-		return nil
-	})
-
-	return redels, res, err
+		return red, nil
+	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](valAddr))
 }
 
-func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-	res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
-		redelegation, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return err
-		}
-		redels = append(redels, redelegation)
-		return nil
-	})
+	redels, res, err = query.CollectionPaginate(ctx, k.Keeper.Redelegations, req.Pagination, func(_ collections.Triple[[]byte, []byte, []byte], red types.Redelegation) (types.Redelegation, error) {
+		return red, nil
+	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](delAddr))
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return redels, res, err
 }

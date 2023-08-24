@@ -32,20 +32,36 @@ tool for other options.
 
 ## Writing a schedule
 
-When the `--write` flag is set, the tool will write a schedule in JSON to
-stdout. The following flags control the output:
+When the `--write` flag is set, the tool will write a schedule to stdout.
+The format is the the format expected by the `create-periodic-vesting-account`
+or `create-clawback-vesting-account` cli commands, namely a JSON
+object with the members:
 
-- `--coins:` The coins to vest, e.g. `100ubld,50urun`.
-- `--months`: The number of months to vest over.
-- `--time`: The time of day of the vesting event, in 24-hour HH:MM format.
-  Defaults to midnight.
+- `"start_time"`: integer UNIX time;
+- `"periods"`: a JSON array of JSON objects with members:
+    - "coins": string giving the text coins format for the amount vested at this event;
+    - "length_seconds": positive integer seconds from the last vesting event, or from the start time for the first vesting event.
+
+The following flags control the output:
+
+- `--coins:` The total coins to vest, e.g. `100ubld,50urun`.
+- `--months`: The number of monthly to vesting events.
 - `--start`: The vesting start time: i.e. the first event happens in the
   next month. Specified in the format `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`,
   e.g. `2006-01-02T15:04` for 3:04pm on January 2, 2006.
-- `--cliffs`: One or more vesting cliffs in `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`
+- `--time`: The time of day of the vesting events, in 24-hour HH:MM format.
+  Defaults to midnight.
+- `--cliffs`: Vesting cliffs in `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`
   format. Only the latest one will have any effect, but it is useful to let
   the computer do that calculation to avoid mistakes. Multiple cliff dates
-  can be separated by commas or given as multiple arguments.
+  can be separated by commas or given as multiple arguments. Cliffs are not required.
+
+The vesting events will occur each month following the start time on the same
+day of the month (or the last day of the month, if the month does not have a
+sufficient number of days), for the specified number of months. The total coins
+to vest will be divided as evenly as possible among all the vesting events.
+Lastly, all events before the last cliff time, if any, are consolidated into a single even
+at the last cliff time with the sum of the event amounts.
 
 ## Reading a schedule
 

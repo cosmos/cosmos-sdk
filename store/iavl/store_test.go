@@ -4,6 +4,7 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"fmt"
+	"math"
 	"sort"
 	"testing"
 
@@ -667,12 +668,11 @@ func TestCacheWraps(t *testing.T) {
 }
 
 func TestChangeSets(t *testing.T) {
-	t.Skip("This test causes memdb to deadlock in CI, in a running network a non in memory db will be used")
 	db := dbm.NewMemDB()
 	treeSize := 1000
 	treeVersion := int64(10)
 	targetVersion := int64(6)
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger(), iavl.FlushThresholdOption(math.MaxInt))
 
 	for j := int64(0); j < treeVersion; j++ {
 		keys := [][]byte{}

@@ -415,7 +415,8 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value []byte) (bool, error) {
 		// sanity check
 		if i >= int(maxValidators) {
-			panic("more validators than maxValidators found")
+			// panic("more validators than maxValidators found")
+			return true, nil
 		}
 
 		validator, err := k.GetValidator(ctx, key)

@@ -29,7 +29,7 @@ type (
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -93,12 +93,12 @@ func ValidateVoteExtensions(
 		}
 
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		_, cmtPubKeyProto, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
+		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get validator %X info (bonded tokens and public key): %w", valConsAddr, err)
+			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
 		}
 
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtPubKeyProto)
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
 		if err != nil {
 			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}

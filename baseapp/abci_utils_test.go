@@ -13,8 +13,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,9 +76,9 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 	s.valStore = valStore
 
 	// set up mock
-	s.valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), s.vals[0].consAddr.Bytes()).Return(math.NewInt(0), s.vals[0].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), s.vals[1].consAddr.Bytes()).Return(math.NewInt(0), s.vals[1].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), s.vals[2].consAddr.Bytes()).Return(math.NewInt(0), s.vals[2].tmPk, nil).AnyTimes()
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[0].consAddr.Bytes()).Return(s.vals[0].tmPk, nil).AnyTimes()
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[1].consAddr.Bytes()).Return(s.vals[1].tmPk, nil).AnyTimes()
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[2].consAddr.Bytes()).Return(s.vals[2].tmPk, nil).AnyTimes()
 
 	// create context
 	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{

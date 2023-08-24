@@ -26,7 +26,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -1791,7 +1790,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	}
 
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(0), tmPk, nil)
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {

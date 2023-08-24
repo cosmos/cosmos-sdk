@@ -46,7 +46,7 @@ type Keeper struct {
 	UnbondingIndex              collections.Map[uint64, []byte]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
-	LastValidatorPower          collections.Map[sdk.ValAddress, []byte]
+	LastValidatorPower          collections.Map[[]byte, []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -135,7 +135,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, collections.BytesValue), // nolint: staticcheck // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
 		RedelegationsByValDst: collections.NewMap(
 			sb, types.RedelegationByValDstIndexKey,

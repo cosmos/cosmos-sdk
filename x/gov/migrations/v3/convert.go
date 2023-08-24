@@ -161,8 +161,8 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 				newWVOs[j] = v1.NewWeightedVoteOption(v1.VoteOption(oldWVO.Option), oldWVO.Weight)
 			}
 
-		case oldVote.Option != v1beta1.OptionEmpty: //nolint:staticcheck // Depcrecated but required for migrations
-			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option)) //nolint:staticcheck // Depcrecated but required for migrations
+		case oldVote.Option != v1beta1.OptionEmpty:
+			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
 		default:
 			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}
@@ -177,21 +177,21 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 	return newVotes, nil
 }
 
-func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1.DepositParams { //nolint:staticcheck // Depcrecated but required for migrations
-	return v1.DepositParams{ //nolint:staticcheck // Depcrecated but required for migrations
+func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1.DepositParams {
+	return v1.DepositParams{
 		MinDeposit:       oldDepParams.MinDeposit,
 		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
 	}
 }
 
-func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1.VotingParams { //nolint:staticcheck // Depcrecated but required for migrations
-	return v1.VotingParams{ //nolint:staticcheck // Depcrecated but required for migrations
+func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1.VotingParams {
+	return v1.VotingParams{
 		VotingPeriod: &oldVoteParams.VotingPeriod,
 	}
 }
 
-func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1.TallyParams { //nolint:staticcheck // Depcrecated but required for migrations
-	return v1.TallyParams{ //nolint:staticcheck // Depcrecated but required for migrations
+func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1.TallyParams {
+	return v1.TallyParams{
 		Quorum:        oldTallyParams.Quorum.String(),
 		Threshold:     oldTallyParams.Threshold.String(),
 		VetoThreshold: oldTallyParams.VetoThreshold.String(),

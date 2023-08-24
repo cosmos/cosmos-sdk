@@ -58,7 +58,9 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 		}
 
 		if customClientTemplate != "" {
-			setConfigTemplate(customClientTemplate)
+			if err := setConfigTemplate(customClientTemplate); err != nil {
+				return ctx, fmt.Errorf("couldn't set client config template: %w", err)
+			}
 
 			if err = ctx.Viper.Unmarshal(&customConfig); err != nil {
 				return ctx, fmt.Errorf("failed to parse custom client config: %w", err)

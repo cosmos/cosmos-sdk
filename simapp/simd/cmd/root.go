@@ -64,7 +64,8 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
@@ -99,7 +100,8 @@ func NewRootCmd() *cobra.Command {
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
 
 	// autocli opts
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	customClientTemplate, customClientConfig := initClientConfig()
+	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.Keyring = initClientCtx.Keyring

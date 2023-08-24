@@ -51,7 +51,7 @@ func initCometBFTConfig() *cmtcfg.Config {
 // return "", nil if no custom configuration is required for the application.
 func initClientConfig() (string, interface{}) {
 	type GasConfig struct {
-		GasAdjustment float64 `mapstructure:"gas_adjustment"`
+		GasAdjustment float64 `mapstructure:"gas-adjustment"`
 	}
 
 	type CustomClientConfig struct {
@@ -77,10 +77,10 @@ func initClientConfig() (string, interface{}) {
 	}
 
 	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + `
-	[gas]
-	# This is the gas adjustment factor used by the tx commands.
-	# It defaults to 1 and can be overridden by the --gas-adjustment flag or here.
-	gas-adjustment = 0
+[gas]
+# This is the gas adjustment factor used by the tx commands.
+# Sets the default and can be overridden by the --gas-adjustment flag in tx commands.
+gas-adjustment = {{ .GasConfig.GasAdjustment }}
 `
 
 	return customClientConfigTemplate, customClientConfig
@@ -94,10 +94,10 @@ func initAppConfig() (string, interface{}) {
 	// WASMConfig defines configuration for the wasm module.
 	type WASMConfig struct {
 		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
-		QueryGasLimit uint64 `mapstructure:"query_gas_limit"`
+		QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
 
 		// Address defines the gRPC-web server to listen on
-		LruSize uint64 `mapstructure:"lru_size"`
+		LruSize uint64 `mapstructure:"lru-size"`
 	}
 
 	type CustomAppConfig struct {
@@ -135,10 +135,10 @@ func initAppConfig() (string, interface{}) {
 	customAppTemplate := serverconfig.DefaultConfigTemplate + `
 [wasm]
 # This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
-query_gas_limit = 300000
+query-gas-limit = {{ .WASM.QueryGasLimit }}
 # This is the number of wasm vm instances we keep cached in memory for speed-up
 # Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
-lru_size = 0`
+lru-size = {{ .WASM.LruSize }}`
 
 	return customAppTemplate, customAppConfig
 }

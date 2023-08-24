@@ -9,7 +9,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0-rc3
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/iavl v1.0.0-beta.2
+	github.com/cosmos/iavl v1.0.0-rc.1
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3 // indirect

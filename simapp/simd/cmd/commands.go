@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
@@ -80,12 +81,11 @@ func initClientConfig() (string, interface{}) {
 	// The default SDK app template is defined in serverconfig.DefaultConfigTemplate.
 	// We append the custom config template to the default one.
 	// And we set the default config to the custom app template.
-	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + `
-[gas]
-# This is the gas adjustment factor used by the tx commands.
-# Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
+	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + strings.TrimSpace(`
+# This is default the gas adjustment factor used in tx commands.
+# It can be overwriten by the --gas-adjustment flag in each tx command.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
-`
+`)
 
 	return customClientConfigTemplate, customClientConfig
 }

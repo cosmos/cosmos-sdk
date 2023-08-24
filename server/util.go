@@ -290,14 +290,18 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			config.WriteConfigFile(appCfgFilePath, customConfig)
+			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
 		} else {
 			appConf, err := config.ParseConfig(rootViper)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			config.WriteConfigFile(appCfgFilePath, appConf)
+			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
 		}
 	}
 

@@ -76,7 +76,6 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 	}
 
 	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
-[gas]
 # This is the gas adjustment factor used by the tx commands.
 # Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
@@ -91,7 +90,7 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 
 		require.NoError(t, err)
 		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Equal(t, customClientConfig.GasConfig.GasAdjustment, clientCtx.Viper.Get(flags.FlagGasAdjustment))
+		require.Equal(t, customClientConfig.GasConfig.GasAdjustment, clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment))
 	})
 
 	t.Run("no template and custom config provided", func(t *testing.T) {

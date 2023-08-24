@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/binary"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -134,40 +135,51 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
-// validatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
-// missed block bitmap.
-func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
-	validatorMissedBlockBitmapKeyPrefix := []byte{0x02} // Prefix for missed block bitmap
+// // validatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
+// // missed block bitmap.
+// func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
+// 	validatorMissedBlockBitmapKeyPrefix := []byte{0x02} // Prefix for missed block bitmap
 
-	return append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...)
+// 	return append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...)
+// }
+
+func validatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
+
+	validatorMissedBlockBitmapKeyPrefix := []byte{0x02}
+	// return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
+	return append(append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...), bz...)
 }
 
-// func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
-// 	s.SetupTest()
+func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
+	s.SetupTest()
 
-// 	err := testutil.DiffCollectionsMigration(
-// 		s.ctx,
-// 		s.key,
-// 		100,
-// 		func(i int64) {
-// 			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
-// 		},
-// 		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
-// 	)
-// 	s.Require().NoError(err)
+	consAddr := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
-// 	err = testutil.DiffCollectionsMigration(
-// 		s.ctx,
-// 		s.key,
-// 		100,
-// 		func(i int64) {
-// 			err := s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
-// 			s.Require().NoError(err)
-// 		},
-// 		"6cd9b908445fbe0b280b82cac51758cdb125882674a91d348b690dac4b7055cb",
-// 	)
-// 	s.Require().NoError(err)
-// }
+	err := sdktestutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			s.ctx.KVStore(s.key).Set(validatorMissedBlockBitmapKey(consAddr, 0), []byte{})
+		},
+		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",
+	)
+	s.Require().NoError(err)
+
+	err = sdktestutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			err := s.slashingKeeper.SetMissedBlockBitmapValue(s.ctx, consAddr, 0, true)
+			s.Require().NoError(err)
+		},
+		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",
+	)
+	s.Require().NoError(err)
+}
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

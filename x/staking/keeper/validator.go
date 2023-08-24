@@ -382,7 +382,7 @@ func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAd
 
 // IterateLastValidatorPowers iterates over last validator powers.
 func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) error {
-	err := k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value []byte) (bool, error) {
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
 		addr := sdk.ValAddress(key)
 		intV := &gogotypes.Int64Value{}
 
@@ -412,7 +412,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	validators = make([]types.Validator, maxValidators)
 
 	i := 0
-	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value []byte) (bool, error) {
+	err = k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
 		// sanity check
 		if i >= int(maxValidators) {
 			// panic("more validators than maxValidators found")

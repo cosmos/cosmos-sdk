@@ -463,7 +463,7 @@ type validatorsByAddr map[string][]byte
 func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
-	err := k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value []byte) (bool, error) {
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
 		valAddrStr, err := k.validatorAddressCodec.BytesToString(key)
 		if err != nil {
 			return true, err

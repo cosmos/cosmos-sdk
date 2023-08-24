@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
+
+// vestcalc is a utility for creating or reading period files
+// for use in some vesting account types.  See README.md for usage.
 
 // divide returns the division of total as evenly as possible.
 // Divisor must be 1 or greater and total must be nonnegative.
@@ -24,17 +27,29 @@ func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
 		return nil, fmt.Errorf("total must be nonnegative")
 	}
 	divisions := make([]sdk.Int, divisor)
-	// Calculate truncated division and the remainder.
-	// Fact: remainder < divisions, hence fits in int64
+
+	// Ideally we could compute total of the first i divisions as
+	//     cumulative(i) = floor((total * i) / divisor)
+	// and so
+	//     divisions[i] = cumulative(i + 1) - cumulative(i)
+	// but this could lead to numeric overflow for large values of total.
+	// Instead, we'll compute
+	//     truncated = floor(total / divisor)
+	// so that
+	//     total = truncated * divisor + remainder
+	// where remainder < divisor, then divide the remainder via the
+	// above algorithm - which now won't overflow - and sum the
+	// truncated and slices of the remainder to form the divisions.
 	truncated := total.QuoRaw(div64)
 	remainder := total.ModRaw(div64)
-	fraction := sdk.NewInt(0) // portion of remainder which has been doled out
+	cumulative := sdk.NewInt(0) // portion of remainder which has been doled out
 	for i := int64(0); i < div64; i++ {
-		// multiply will not overflow since remainder and i are < 2^63
-		nextFraction := remainder.MulRaw(i + 1).QuoRaw(div64)
-		divisions[i] = truncated.Add(nextFraction.Sub(fraction))
-		fraction = nextFraction
+		// multiply will not overflow since remainder and div64 are < 2^63
+		nextCumulative := remainder.MulRaw(i + 1).QuoRaw(div64)
+		divisions[i] = truncated.Add(nextCumulative.Sub(cumulative))
+		cumulative = nextCumulative
 	}
+
 	// Integrity check
 	sum := sdk.NewInt(0)
 	for _, x := range divisions {
@@ -46,6 +61,8 @@ func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
 	return divisions, nil
 }
 
+// divideCoins divides the coins into divisor separate parts as evenly as possible.
+// Divisor must be positive. Returns an array holding the division.
 func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 	if divisor < 1 {
 		return nil, fmt.Errorf("divisor must be 1 or greater")
@@ -81,6 +98,7 @@ func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 // monthlyVestTimes generates timestamps for successive months after startTime.
 // The monthly events occur at the given time of day. If the month is not
 // long enough for the desired date, the last day of the month is used.
+// The number of months must be postive.
 func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]time.Time, error) {
 	if months < 1 {
 		return nil, fmt.Errorf("must have at least one vesting period")
@@ -101,6 +119,7 @@ func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]t
 		times[i-1] = time.Date(tm.Year(), tm.Month(), tm.Day(), hour, minute, second, 0, location)
 	}
 	// Integrity check: dates must be sequential and 26-33 days apart.
+	// (Jan 31 to Feb 28 or Feb 28 to Mar 31, plus slop for DST.)
 	lastTime := startTime
 	for _, tm := range times {
 		duration := tm.Sub(lastTime)
@@ -115,7 +134,7 @@ func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]t
 	return times, nil
 }
 
-// marshalVestingData gives the JSON encoding.
+// marshalVestingData writes the vesting data as JSON.
 func marshalVestingData(data cli.VestingData) ([]byte, error) {
 	return json.MarshalIndent(data, "", "  ")
 }
@@ -133,7 +152,8 @@ type event struct {
 	Coins sdk.Coins
 }
 
-// zipEvents generates events by zipping corresponding amounts and times.
+// zipEvents generates events by zipping corresponding amounts and times
+// from equal-sized arrays, returning an event array of the same size.
 func zipEvents(divisions []sdk.Coins, times []time.Time) ([]event, error) {
 	n := len(divisions)
 	if len(times) != n {
@@ -166,24 +186,19 @@ func marshalEvents(events []event) ([]byte, error) {
 // into a single event, leaving subsequent events unchanged.
 func applyCliff(events []event, cliff time.Time) ([]event, error) {
 	newEvents := []event{}
-	coins := sdk.NewCoins()
-	for _, e := range events {
-		if !e.Time.After(cliff) {
-			coins = coins.Add(e.Coins...)
-			continue
-		}
-		if !coins.IsZero() {
-			cliffEvent := event{Time: cliff, Coins: coins}
-			newEvents = append(newEvents, cliffEvent)
-			coins = sdk.NewCoins()
-		}
-		newEvents = append(newEvents, e)
+	preCliffAmount := sdk.NewCoins()
+	i := 0
+	for ; i < len(events) && !events[i].Time.After(cliff); i++ {
+		preCliffAmount = preCliffAmount.Add(events[i].Coins...)
 	}
-	if !coins.IsZero() {
-		// special case if all events are before the cliff
-		cliffEvent := event{Time: cliff, Coins: coins}
+	if !preCliffAmount.IsZero() {
+		cliffEvent := event{Time: cliff, Coins: preCliffAmount}
 		newEvents = append(newEvents, cliffEvent)
 	}
+	for ; i < len(events); i++ {
+		newEvents = append(newEvents, events[i])
+	}
+
 	// integrity check
 	oldTotal := sdk.NewCoins()
 	for _, e := range events {
@@ -196,6 +211,7 @@ func applyCliff(events []event, cliff time.Time) ([]event, error) {
 	if !oldTotal.IsEqual(newTotal) {
 		return nil, fmt.Errorf("applying vesting cliff changed total from %s to %s", oldTotal, newTotal)
 	}
+
 	return newEvents, nil
 }
 
@@ -335,6 +351,8 @@ const hhmmFmt = "15:04"
 // isoDate is time.Time as a flag.Value in shortIsoFmt.
 type isoDate struct{ time.Time }
 
+var _ flag.Value = &isoDate{}
+
 // Set implements flag.Value.Set().
 func (id *isoDate) Set(s string) error {
 	t, err := parseIso(s)
@@ -359,6 +377,8 @@ func isoDateFlag(name string, usage string) *time.Time {
 
 // isoDateList is []time.Time as a flag.Value in repeated or comma-separated shortIsoFmt.
 type isoDateList []time.Time
+
+var _ flag.Value = &isoDateList{}
 
 // Set implements flag.Value.Set().
 func (dates *isoDateList) Set(s string) error {
@@ -394,6 +414,8 @@ func isoDateListFlag(name string, usage string) *isoDateList {
 
 // isoTime is time.Time as a flagValue in HH:MM format.
 type isoTime struct{ time.Time }
+
+var _ flag.Value = &isoTime{}
 
 // Set implements flag.Value.Set().
 func (it *isoTime) Set(s string) error {
@@ -431,10 +453,10 @@ var (
 	flagWrite  = flag.Bool("write", false, "Write periods file to stdout.")
 )
 
-// readCmd reads periods in JSON from stdin and writes a sequence of vesting
-// events in local time to stdout.
+// readCmd reads a schedule file from stdin and writes a sequence of vesting
+// events in local time to stdout. See README.md for the format.
 func readCmd() {
-	bzIn, err := ioutil.ReadAll(os.Stdin)
+	bzIn, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot read stdin: %v", err)
 		return
@@ -458,7 +480,9 @@ func readCmd() {
 
 // writeConfig bundles data needed for the write operation.
 type writeConfig struct {
-	Coins     sdk.Coins
+	// Coins is the total amount to be vested.
+	Coins sdk.Coins
+	// Months is the number of months to vest over. Must be positive.
 	Months    int
 	TimeOfDay time.Time
 	Start     time.Time
@@ -483,9 +507,7 @@ func genWriteConfig() (writeConfig, error) {
 	return wc, nil
 }
 
-// generateEvents generates vesting events for the given amount and
-// denomination across the given monthly vesting events with the given start
-// time and subject to the vesting cliff times, if any.
+// generateEvents generates vesting events from the writeConfig.
 func (wc writeConfig) generateEvents() ([]event, error) {
 	divisions, err := divideCoins(wc.Coins, wc.Months)
 	if err != nil {
@@ -509,13 +531,13 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 	return events, nil
 }
 
-// convertRelative converts absolute-time events to relative periods.
+// convertRelative converts absolute-time events to VestingData relative to the Start time.
 func (wc writeConfig) convertRelative(events []event) cli.VestingData {
 	return eventsToVestingData(wc.Start, events)
 }
 
-// writeCmd generates a set of vesting events based on flags and writes a
-// sequences of periods in JSON format to stdout.
+// writeCmd generates a set of vesting events based on parsed flags
+// and writes a schedule file to stdout.
 func writeCmd() {
 	wc, err := genWriteConfig()
 	if err != nil {
@@ -536,7 +558,8 @@ func writeCmd() {
 	fmt.Println(string(bz))
 }
 
-// main executes either readCmd() or writeCmd() based on flags.
+// main parses the flags and executes a subcommand based on flags.
+// See README.md for flags and subcommands.
 func main() {
 	flag.Parse()
 	switch {
@@ -547,5 +570,6 @@ func main() {
 	default:
 		fmt.Fprintln(os.Stderr, "Must specify one of --read or --write")
 		flag.Usage()
+		os.Exit(1)
 	}
 }

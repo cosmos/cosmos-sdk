@@ -12,10 +12,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -213,17 +213,19 @@ func AddrCmd() *cobra.Command {
 				if err2 != nil {
 					var err3 error
 					addr, err3 = clientCtx.ValidatorAddressCodec.StringToBytes(addrString)
-
 					if err3 != nil {
-						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
+						return fmt.Errorf("expected hex or bech32. Got errors: hex: %w, bech32 acc: %w, bech32 val: %w", err, err2, err3)
 					}
 				}
 			}
 
+			acc, _ := clientCtx.AddressCodec.BytesToString(addr)
+			val, _ := clientCtx.ValidatorAddressCodec.BytesToString(addr)
+
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
-			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
-			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
+			cmd.Printf("Bech32 Acc: %s\n", acc)
+			cmd.Printf("Bech32 Val: %s\n", val)
 			return nil
 		},
 	}
@@ -263,12 +265,24 @@ func PrefixesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "prefixes",
 		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
-		Long:    "List prefixes used in Bech32 addresses. NOTE, if the chain does not use the Cosmos SDK global config, this will not be accurate.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
-			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
-			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			acc, _ := clientCtx.AddressCodec.BytesToString([]byte{})
+			val, _ := clientCtx.ValidatorAddressCodec.BytesToString([]byte{})
+			cons, _ := clientCtx.ConsensusAddressCodec.BytesToString([]byte{})
+
+			checksumLen := 7
+			if _, ok := clientCtx.AddressCodec.(addresscodec.Bech32Codec); !ok {
+				cmd.Printf("%s uses custom address codec, this command may not work as expected.\n", version.AppName)
+				checksumLen = 0
+			}
+
+			cmd.Printf("Bech32 Acc: %s\n", acc[:len(acc)-checksumLen])
+			cmd.Printf("Bech32 Val: %s\n", val[:len(val)-checksumLen])
+			cmd.Printf("Bech32 Con: %s\n", cons[:len(cons)-checksumLen])
+
 			return nil
 		},
 	}

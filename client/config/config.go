@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 func DefaultConfig() *Config {
@@ -62,14 +63,13 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 				return ctx, fmt.Errorf("couldn't set client config template: %w", err)
 			}
 
-			if err = ctx.Viper.Unmarshal(&customConfig); err != nil {
-				return ctx, fmt.Errorf("failed to parse custom client config: %w", err)
+			if ctx.ChainID != "" {
+				// chain-id will be written to the client.toml while initiating the chain.
+				ctx.Viper.Set(flags.FlagChainID, ctx.ChainID)
 			}
 
-			if ctx.ChainID != "" {
-				if cfg, ok := customConfig.(interface{ SetChainID(string) }); ok {
-					cfg.SetChainID(ctx.ChainID)
-				}
+			if err = ctx.Viper.Unmarshal(&customConfig); err != nil {
+				return ctx, fmt.Errorf("failed to parse custom client config: %w", err)
 			}
 
 			if err := writeConfigFile(configFilePath, customConfig); err != nil {
@@ -83,7 +83,8 @@ func ReadFromClientConfig(ctx client.Context, customClientTemplate string, custo
 			}
 
 			if ctx.ChainID != "" {
-				config.ChainID = ctx.ChainID // chain-id will be written to the client.toml while initiating the chain.
+				// chain-id will be written to the client.toml while initiating the chain.
+				config.ChainID = ctx.ChainID
 			}
 
 			if err := writeConfigFile(configFilePath, config); err != nil {

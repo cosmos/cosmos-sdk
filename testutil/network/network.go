@@ -404,7 +404,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for API server")
 				}
 				port := <-portPool
-				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
 			}
 
 			appCfg.API.Address = apiListenAddr
@@ -421,7 +421,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for RPC server")
 				}
 				port := <-portPool
-				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%s", port)
 			}
 
 			if cfg.GRPCAddress != "" {
@@ -431,7 +431,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for GRPC server")
 				}
 				port := <-portPool
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", port)
+				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
 			}
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
@@ -467,14 +467,14 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
 		port := <-portPool
-		proxyAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
+		proxyAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.ProxyApp = proxyAddr
 
 		if len(portPool) == 0 {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
 		port = <-portPool
-		p2pAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
+		p2pAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.P2P.ListenAddress = p2pAddr
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true

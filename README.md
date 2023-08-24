@@ -4,7 +4,7 @@ This is a lightweight fork of CosmosSDK. The current version of the forked code 
 
 ## Making Changes to the Fork
 
-1. Open a PR against the current default branch (i.e. `dydx-fork-v0.47.0-alpha2`).
+1. Open a PR against the current default branch (i.e. `dydx-fork-v0.50.3`).
 2. Get approval, and merge. *DO NOT SQUASH AND MERGE. PLEASE REBASE AND MERGE*
 3. After merging, update the `v4` repository's `go.mod`, and `go.sum` files with your merged `$COMMIT_HASH`.
 4. (In `dydxprotocol/v4`) `go mod edit -replace github.com/cosmos/cosmos-sdk=github.com/dydxprotocol/cosmos-sdk@$COMMIT_HASH`
@@ -28,12 +28,12 @@ Note that this doesn't pull in upstream tags, so in order to do this follow thes
 When a new version of CosmosSDK is published, we may want to adopt the changes in our fork. This process can be somewhat tedious, but below are the recommended steps to accomplish this.
 
 1. Ensure the `main` branch and all tags are up to date by following the steps above in "Fork maintenance".
-2. Create a new branch off the desired CosmosSDK commit using tags. `git checkout -b dydx-fork-$VERSION <CosmosSDK repo's tag name>`. The new branch should be named something like `dydx-fork-$VERSION` where `$VERSION` is the version of CosmosSDK being forked (should match the CosmosSDK repo's tag name). i.e. `dydx-fork-v0.47.0-alpha2`.
-3. Push the new branch (i.e `dydx-fork-v0.47.0-alpha2`).
+2. Create a new branch off the desired CosmosSDK commit using tags. `git checkout -b dydx-fork-$VERSION <CosmosSDK repo's tag name>`. The new branch should be named something like `dydx-fork-$VERSION` where `$VERSION` is the version of CosmosSDK being forked (should match the CosmosSDK repo's tag name). i.e. `dydx-fork-v0.50.3`.
+3. Push the new branch (i.e `dydx-fork-v0.50.3`).
 4. Off of this new branch, create a new branch. (i.e `totoro/dydxCommits`)
-5. Cherry-pick each dydx-created commit from the current default branch, in order, on to the new `dydx-fork-$VERSION` branch (note: you may want to consider creating multiple PRs for this process if there are difficulties or merge conflicts). For example, `git cherry-pick <commit hash>`. You can verify the first commit by seeing the most recent commit sha for the `$VERSION` (i.e `v0.47.0-alpha2`) tag on the `cosmos/cosmos-sdk` repo, and taking the next commit from that sha.
+5. Cherry-pick each dydx-created commit from the current default branch, in order, on to the new `dydx-fork-$VERSION` branch (note: you may want to consider creating multiple PRs for this process if there are difficulties or merge conflicts). For example, `git cherry-pick <commit hash>`. You can verify the first commit by seeing the most recent commit sha for the `$VERSION` (i.e `v0.50.3`) tag on the `cosmos/cosmos-sdk` repo, and taking the next commit from that sha.
 6. The dYdX fork uses an optimized version of `runTx` for handling ABCI CheckTx messages. Ensure that the logic within `runCheckTxConcurrently` stays up to date with the `runTx` counterpart by diffing [baseapp.go#runTx](https://github.com/dydxprotocol/cosmos-sdk/blob/6477dcf5693422fef693432e29bd979709aa995d/baseapp/baseapp.go#L754) current version against the new version copying over relevant changes to [baseapp.go#runCheckTxConcurrently](https://github.com/dydxprotocol/cosmos-sdk/blob/6477dcf5693422fef693432e29bd979709aa995d/baseapp/baseapp.go#L619).
-7. Open a PR to merge the second branch (`totoro/dydxCommits`) into the first (`dydx-fork-v0.47.0-alpha2`). Get approval, and merge. *DO NOT SQUASH AND MERGE. PLEASE REBASE AND MERGE*
+7. Open a PR to merge the second branch (`totoro/dydxCommits`) into the first (`dydx-fork-v0.50.3`). Get approval, and merge. *DO NOT SQUASH AND MERGE. PLEASE REBASE AND MERGE*
 8. Update `dydxprotocol/v4` by following the steps in "Making Changes to the fork" above.
 9. Set `dydx-fork-$VERSION` as the [default branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) in this repository.
 

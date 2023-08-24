@@ -90,7 +90,7 @@ modules:
       "@type": cosmos.staking.module.v1.Module
   - name: tx
     config:
-      "@type": cosmos.tx.module.v1.Module
+      "@type": cosmos.tx.config.v1.Config
 ```
 
 A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml).

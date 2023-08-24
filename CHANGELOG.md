@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (x/authz) [#17524](https://github.com/cosmos/cosmos-sdk/pull/17524) Fix an issue where the `cachedValue` of an authorization would not be correcty populated when there are multiple authorizations returned in `GetAuthorizations`.
+
 ## [v0.46.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.14) - 2023-08-21
 
 ### Improvements
@@ -46,7 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/genutil) [#17296](https://github.com/cosmos/cosmos-sdk/pull/17296) Add `MigrateHandler` to allow reuse migrate genesis related function.
     * In v0.46, v0.47 this function is additive to the `genesis migrate` command. However in v0.50+, adding custom migrations to the `genesis migrate` command is directly possible.
 
-## Bug Fixes
+### Bug Fixes
 
 * (server) [#17181](https://github.com/cosmos/cosmos-sdk/pull/17181) Fix `db_backend` lookup fallback from `config.toml`.
 

@@ -138,29 +138,29 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 // and the total liquid staked shares cannot exceed the validator bond cap
 // 1) (TotalLiquidStakedTokens / TotalStakedTokens) <= ValidatorLiquidStakingCap
 // 2) LiquidShares <= (ValidatorBondShares * ValidatorBondFactor)
-func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator *types.Validator, shares sdk.Dec) error {
+func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// Confirm the validator bond factor and validator liquid staking cap will not be exceeded
-	if k.CheckExceedsValidatorBondCap(ctx, *validator, shares) {
+	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
 		return types.ErrInsufficientValidatorBondShares
 	}
-	if k.CheckExceedsValidatorLiquidStakingCap(ctx, *validator, shares) {
+	if k.CheckExceedsValidatorLiquidStakingCap(ctx, validator, shares) {
 		return types.ErrValidatorLiquidStakingCapExceeded
 	}
 
 	// Increment the validator's liquid shares
 	validator.LiquidShares = validator.LiquidShares.Add(shares)
-	k.SetValidator(ctx, *validator)
+	k.SetValidator(ctx, validator)
 
 	return nil
 }
 
 // DecreaseValidatorLiquidShares decrements the liquid shares on a validator
-func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator *types.Validator, shares sdk.Dec) error {
+func (k Keeper) DecreaseValidatorLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	if shares.GT(validator.LiquidShares) {
 		return types.ErrValidatorLiquidSharesUnderflow
 	}
 	validator.LiquidShares = validator.LiquidShares.Sub(shares)
-	k.SetValidator(ctx, *validator)
+	k.SetValidator(ctx, validator)
 	return nil
 }
 
@@ -174,7 +174,7 @@ func (k Keeper) IncreaseValidatorBondShares(ctx sdk.Context, validator types.Val
 // SafelyDecreaseValidatorBond decrements the validator's self bond
 // so long as it will not cause the current delegations to exceed the threshold
 // set by validator bond factor
-func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator *types.Validator, shares sdk.Dec) error {
+func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// Check if the decreased self bond will cause the validator bond threshold to be exceeded
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
 	validatorBondEnabled := !validatorBondFactor.Equal(types.ValidatorBondCapDisabled)
@@ -186,7 +186,7 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator *types.Va
 
 	// Decrement the validator's total self bond
 	validator.ValidatorBondShares = validator.ValidatorBondShares.Sub(shares)
-	k.SetValidator(ctx, *validator)
+	k.SetValidator(ctx, validator)
 
 	return nil
 }
@@ -335,16 +335,21 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 	iterator := store.Iterator(types.TokenizeSharesUnlockQueuePrefix, prefixEnd)
 	defer iterator.Close()
 
+	// collect all unlocked addresses
 	unlockedAddresses = []string{}
 	for ; iterator.Valid(); iterator.Next() {
 		authorizations := types.PendingTokenizeShareAuthorizations{}
 		k.cdc.MustUnmarshal(iterator.Value(), &authorizations)
 
 		for _, addressString := range authorizations.Addresses {
-			k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(addressString))
 			unlockedAddresses = append(unlockedAddresses, addressString)
 		}
 		store.Delete(iterator.Key())
+	}
+
+	// remove the lock from each unlocked address
+	for _, unlockedAddress := range unlockedAddresses {
+		k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(unlockedAddress))
 	}
 
 	return unlockedAddresses

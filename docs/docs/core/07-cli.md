@@ -96,9 +96,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v
 
 Those custom templates and config must be provided to the `server.InterceptConfigsPreRunHandler` command in the `PersistentPreRunE` function of the root command. See [configuration](#configurations) section for more details.
 
-Lastly, the client config that sets default values for the client can be set in the `initClientConfig()` function. This is useful for setting default values for the client without having to pass a flag. For example, the Cosmos SDK sets the default `keyring-backend` to `os` but the chain developer might instead want to always set it to `file` by default. This can be done in the `initClientConfig()` function.
+Additionally, like the `app.toml` and `config.toml`, the `client.toml` config can be extended or over-written by the user thanks to the `client.CreateClientConfigAndOrContext` function. This is useful for setting default values for the client without having to pass a flag. For example, the Cosmos SDK sets the default `keyring-backend` to `os` but the chain developer might instead want to always set it to `file` by default. Creating the custom template can be done in a `initClientConfig()` function.
 
-Additionally, like the `app.toml` and `config.toml`, the `client.toml` config can be extended or over-written by the user:
 
 ```go reference
 <TODO>

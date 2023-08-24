@@ -49,7 +49,7 @@ func initClientContextWithTemplate(t *testing.T, envVar, customTemplate string, 
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
-	clientCtx, err := config.ReadFromClientConfig(clientCtx, customTemplate, customConfig)
+	clientCtx, err := config.CreateClientConfigAndOrContext(clientCtx, customTemplate, customConfig)
 	return clientCtx, func() { _ = os.RemoveAll(home) }, err
 }
 

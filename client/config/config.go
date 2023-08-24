@@ -32,8 +32,17 @@ type Config struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
-// ReadFromClientConfig reads values from client.toml file and updates them in client Context
-func ReadFromClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
+// ReadFromClientConfig reads values from client.toml file and updates them in client.Context
+// It uses CreateClientConfigAndContext internally with no custom template and custom config.
+func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+	return CreateClientConfigAndOrContext(ctx, "", nil)
+}
+
+// CreateClientConfigAndContext reads the client.toml file and returns a new populated client.Context
+// If the client.toml file does not exist, it creates one with default values.
+// It takes a customClientTemplate and customConfig as input that can be used to overwrite the default config and enhance the client.toml file.
+// The custom template/config must be both provided or be "" and nil.
+func CreateClientConfigAndOrContext(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 

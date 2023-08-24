@@ -5,7 +5,34 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
-### Migration to Collections
+### SimApp
+
+In this section we describe the changes made in Cosmos SDK' SimApp.
+**These changes are directly applicable to your application wiring.**
+
+#### Client (`root.go`)
+
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
+This is part of the work of abstracting the SDK from the global bech32 config.
+
+This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
+
+```diff
+clientCtx = clientCtx.
++ WithAddressCodec(addressCodec).
++ WithValidatorAddressCodec(validatorAddressCodec).
++ WithConsensusAddressCodec(consensusAddressCodec)
+```
+
+**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+
+Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+
+### Modules
+
+#### `**all**`
+
+##### Migration to Collections
 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
@@ -82,6 +109,7 @@ for more info.
 ```diff
 + app.SetPreBlocker(app.PreBlocker)
 ```
+
 ```diff
 +func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.ResponsePreBlock, error) {
 +	return app.ModuleManager.PreBlock(ctx, req)

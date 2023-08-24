@@ -232,12 +232,17 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
-		authority.String(),
+		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 	)

@@ -56,7 +56,7 @@ func (s *TestSuite) SetupTest() {
 	s.cdc = encodingConfig
 
 	grpcConn, err := grpc.Dial(
-		fmt.Sprintf("0.0.0.0:%d", config.GetChain(chainID).Ports.Grpc),
+		fmt.Sprintf("127.0.0.1:%d", config.GetChain(chainID).Ports.Grpc),
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cdc.InterfaceRegistry).GRPCCodec())))
 	s.Require().NoError(err)

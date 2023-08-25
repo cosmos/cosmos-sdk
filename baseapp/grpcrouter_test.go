@@ -59,7 +59,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	err := depinject.Inject(
 		depinject.Configs(
 			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&appBuilder)
 	require.NoError(t, err)

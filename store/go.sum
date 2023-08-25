@@ -1,7 +1,7 @@
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
-cosmossdk.io/log v1.2.0 h1:BbykkDsutXPSy8RojFB3KZEWyvMsToLy0ykb/ZhsLqQ=
-cosmossdk.io/log v1.2.0/go.mod h1:GNSCc/6+DhFIj1aLn/j7Id7PaO8DzNylUZoOYBL9+I4=
+cosmossdk.io/log v1.2.1 h1:Xc1GgTCicniwmMiKwDxUjO4eLhPxoVdI9vtMW8Ti/uk=
+cosmossdk.io/log v1.2.1/go.mod h1:GNSCc/6+DhFIj1aLn/j7Id7PaO8DzNylUZoOYBL9+I4=
 cosmossdk.io/math v1.1.2 h1:ORZetZCTyWkI5GlZ6CZS28fMHi83ZYf+A2vVnHNzZBM=
 cosmossdk.io/math v1.1.2/go.mod h1:l2Gnda87F0su8a/7FEKJfFdJrM0JZRXQaohlgJeyQh0=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=

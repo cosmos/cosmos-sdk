@@ -66,7 +66,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
 
-	app := baseapp.NewBaseApp(t.Name(), log.NewNopLogger(), db, txConfig.TxDecoder(), opts...)
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
@@ -91,7 +91,7 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
@@ -192,7 +192,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 }
 
 func TestLoadVersion(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
@@ -323,7 +323,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := baseapp.NewBaseApp(t.Name(), log.NewNopLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, nil, opts...)
 			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -346,7 +346,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res, err := app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
@@ -405,7 +405,7 @@ func TestOptionFunction(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	bap := baseapp.NewBaseApp("starting name", log.NewNopLogger(), db, nil, testChangeNameHelper("new name"))
+	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -597,7 +597,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)

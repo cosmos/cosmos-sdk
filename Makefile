@@ -371,7 +371,11 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
+<<<<<<< HEAD
 golangci_version=v1.51.2
+=======
+golangci_version=v1.54.2
+>>>>>>> 5839c3a60 (chore: bump golangci-lint to v1.54.2 (#17538))
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

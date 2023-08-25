@@ -152,6 +152,8 @@ func TestConvertToLegacyTallyResult(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
+		tc := tc
+
 		t.Run(name, func(t *testing.T) {
 			_, err := v3.ConvertToLegacyTallyResult(&tc.tallyResult)
 			if tc.expErr {

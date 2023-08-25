@@ -31,7 +31,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Features
+=======
+## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.1) - 2023-08-25
+
+* [#17532](https://github.com/cosmos/cosmos-sdk/pull/17532) Proper marshalling of `fmt.Stringer` (follow-up of [#17205](https://github.com/cosmos/cosmos-sdk/pull/17205)).
+
+## [v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.0) - 2023-07-31
+>>>>>>> 03fb7da26 (fix(log): custom marshaller produce invalid data (#17532))
 
 * [#15956](https://github.com/cosmos/cosmos-sdk/pull/15956) Introduce extra options to configure logger.
 

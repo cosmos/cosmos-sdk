@@ -6,6 +6,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
+<<<<<<< HEAD
+=======
+func init() {
+	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+		switch v := i.(type) {
+		case json.Marshaler:
+			return json.Marshal(i)
+		case encoding.TextMarshaler:
+			return json.Marshal(i)
+		case fmt.Stringer:
+			return json.Marshal(v.String())
+		default:
+			return json.Marshal(i)
+		}
+	}
+}
+
+>>>>>>> 03fb7da26 (fix(log): custom marshaller produce invalid data (#17532))
 // ModuleKey defines a module logging key.
 const ModuleKey = "module"
 

@@ -10,6 +10,7 @@ import (
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (
@@ -155,7 +156,7 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrStartAfterEnd
 	}
 
-	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), version)
+	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
 
 	var upperBound []byte
 	if end != nil {
@@ -182,13 +183,13 @@ func prependStoreKey(storeKey string, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (bz []byte, err error) {
+func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([]byte, error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++
 	}
 
-	it, err := db.NewIter(&pebble.IterOptions{
+	itr, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
@@ -196,16 +197,16 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
 	}
 	defer func() {
-		err = errors.Join(err, it.Close())
+		err = errors.Join(err, itr.Close())
 	}()
 
-	if !it.Last() {
+	if !itr.Last() {
 		return nil, store.ErrRecordNotFound
 	}
 
-	_, vBz, ok := SplitMVCCKey(it.Key())
+	_, vBz, ok := SplitMVCCKey(itr.Key())
 	if !ok {
-		return nil, fmt.Errorf("unexpected key format: %s", it.Key())
+		return nil, fmt.Errorf("unexpected key format: %s", itr.Key())
 	}
 
 	keyVersion, err := decodeUint64Ascending(vBz)
@@ -216,8 +217,5 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
 	}
 
-	bz = make([]byte, len(it.Value()))
-	copy(bz, it.Value())
-
-	return bz, nil
+	return util.CopyBytes(itr.Value()), nil
 }

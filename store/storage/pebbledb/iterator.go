@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 var _ store.Iterator = (*iterator)(nil)
@@ -29,7 +30,19 @@ type iterator struct {
 
 func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte, version uint64) *iterator {
 	// move the underlying PebbleDB iterator to the first key
-	_ = src.First()
+	valid := src.First()
+	if valid {
+		// The first key may not represent the desired target version, so move the
+		// cursor to the correct location.
+		firstKey, _, ok := SplitMVCCKey(src.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			valid = false
+		} else {
+			valid = src.SeekLT(MVCCEncode(firstKey, version+1))
+		}
+	}
 
 	return &iterator{
 		source:  src,
@@ -37,7 +50,7 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 		start:   mvccStart,
 		end:     mvccEnd,
 		version: version,
-		valid:   src.Valid(),
+		valid:   valid,
 	}
 }
 
@@ -57,20 +70,13 @@ func (itr *iterator) Key() []byte {
 		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 	}
 
-	keyCopy := make([]byte, len(key))
-	_ = copy(keyCopy, key)
-
+	keyCopy := util.CopyBytes(key)
 	return keyCopy[len(itr.prefix):]
 }
 
 func (itr *iterator) Value() []byte {
 	itr.assertIsValid()
-	val := itr.source.Value()
-
-	valCopy := make([]byte, len(val))
-	_ = copy(valCopy, val)
-
-	return valCopy
+	return util.CopyBytes(itr.source.Value())
 }
 
 func (itr *iterator) Next() bool {
@@ -138,6 +144,13 @@ func (itr *iterator) assertIsValid() {
 
 func (itr *iterator) debugRawIterate() {
 	valid := itr.source.Valid()
+	if valid {
+		// The first key may not represent the desired target version, so move the
+		// cursor to the correct location.
+		firstKey, _, _ := SplitMVCCKey(itr.source.Key())
+		valid = itr.source.SeekLT(MVCCEncode(firstKey, itr.version+1))
+	}
+
 	for valid {
 		key, vBz, ok := SplitMVCCKey(itr.source.Key())
 		if !ok {
@@ -156,7 +169,6 @@ func (itr *iterator) debugRawIterate() {
 			if !ok {
 				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 			}
-
 			valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
 		} else {
 			valid = false

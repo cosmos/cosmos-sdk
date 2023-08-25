@@ -68,13 +68,13 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	testCases := []struct {
 		name      string
 		exceptErr bool
-		req       *types.MsgCancelUnbondingDelegation
+		req       types.MsgCancelUnbondingDelegation
 		expErrMsg string
 	}{
 		{
 			name:      "entry not found at height",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin(bondDenom, math.NewInt(4)),
@@ -85,7 +85,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "invalid height",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin(bondDenom, math.NewInt(4)),
@@ -96,7 +96,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "invalid coin",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           sdk.NewCoin("dump_coin", math.NewInt(4)),
@@ -107,7 +107,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "validator not exists",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: sdk.ValAddress(sdk.AccAddress("asdsad")).String(),
 				Amount:           unbondingAmount,
@@ -118,7 +118,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "invalid delegator address",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: "invalid_delegator_addrtess",
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           unbondingAmount,
@@ -129,7 +129,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "invalid amount",
 			exceptErr: true,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           unbondingAmount.Add(sdk.NewInt64Coin(bondDenom, 10)),
@@ -140,7 +140,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "success",
 			exceptErr: false,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           unbondingAmount.Sub(sdk.NewInt64Coin(bondDenom, 1)),
@@ -150,7 +150,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		{
 			name:      "success",
 			exceptErr: false,
-			req: &types.MsgCancelUnbondingDelegation{
+			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           unbondingAmount.Sub(unbondingAmount.Sub(sdk.NewInt64Coin(bondDenom, 1))),
@@ -159,16 +159,18 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(ctx, testCase.req)
-			if testCase.exceptErr {
-				assert.ErrorContains(t, err, testCase.expErrMsg)
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.CancelUnbondingDelegation(ctx, &tc.req)
+			if tc.exceptErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
 				assert.NilError(t, err)
 				balanceForNotBondedPool := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
-				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
-				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
+				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(tc.req.Amount))
+				moduleBalance = moduleBalance.Sub(tc.req.Amount)
 			}
 		})
 	}

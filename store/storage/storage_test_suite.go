@@ -129,6 +129,42 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	ok, err = db.Has(storeKey1, 10, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().True(ok)
+
+	for i := uint64(11); i <= 14; i++ {
+		bz, err = db.Get(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().Equal([]byte("value011"), bz)
+
+		ok, err = db.Has(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().True(ok)
+	}
+
+	// chain progresses to version 15 with a delete to key
+	err = db.Delete(storeKey1, 15, []byte("key"))
+	s.Require().NoError(err)
+
+	// all queries up to version 14 should return the latest value
+	for i := uint64(1); i <= 14; i++ {
+		bz, err = db.Get(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().NotNil(bz)
+
+		ok, err = db.Has(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().True(ok)
+	}
+
+	// all queries after version 15 should return nil
+	for i := uint64(15); i <= 17; i++ {
+		bz, err = db.Get(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().Nil(bz)
+
+		ok, err = db.Has(storeKey1, i, []byte("key"))
+		s.Require().NoError(err)
+		s.Require().False(ok)
+	}
 }
 
 func (s *StorageTestSuite) TestDatabase_Batch() {

@@ -30,7 +30,7 @@ func TestRegisterMsgService(t *testing.T) {
 	err := depinject.Inject(
 		depinject.Configs(
 			makeMinimalConfig(),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB(), nil)
@@ -62,7 +62,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	err := depinject.Inject(
 		depinject.Configs(
 			makeMinimalConfig(),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()

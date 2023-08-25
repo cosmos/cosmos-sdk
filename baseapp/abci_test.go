@@ -77,7 +77,7 @@ func TestABCI_First_block_Height(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
 	capKey := storetypes.NewKVStoreKey("main")
@@ -179,7 +179,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -196,7 +196,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -219,7 +219,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
 		return sdk.BeginBlock{
@@ -286,7 +286,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 		voteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
@@ -369,7 +369,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
@@ -502,7 +502,7 @@ func TestABCI_P2PQuery(t *testing.T) {
 func TestBaseApp_PrepareCheckState(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -531,7 +531,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 func TestBaseApp_Precommit(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -1234,7 +1234,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 
@@ -1347,7 +1347,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	t.Parallel()
 
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
@@ -1370,7 +1370,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	t.Parallel()
 
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
@@ -2004,7 +2004,7 @@ func TestABCI_HaltChain(t *testing.T) {
 func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	_, err := app.InitChain(&abci.RequestInitChain{})

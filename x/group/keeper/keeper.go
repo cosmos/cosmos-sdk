@@ -373,6 +373,8 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 		return nil
 	}
 	for _, proposal := range proposals {
+		proposal := proposal
+
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return err

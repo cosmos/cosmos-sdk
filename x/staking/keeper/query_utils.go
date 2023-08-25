@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	"cosmossdk.io/collections"
 
@@ -94,7 +93,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 			return false, nil
 		},
 	)
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 	return unbondingDelegations, nil

@@ -1,7 +1,31 @@
 syntax = "proto3";
 
 package cosmos.accounts.v1;
-option  go_package = "cosmossdk.io/x/accounts/v1";
+
+option go_package = "cosmossdk.io/x/accounts/v1";
 
 // Msg defines the Msg service for the x/accounts module.
-service Msg {}
+service Msg {
+  // Create creates a new account in the chain.
+  rpc Create(MsgCreate) returns (MsgCreateResponse);
+}
+
+// MsgCreate defines the Create request type for the Msg/Create RPC method.
+message MsgCreate {
+  // sender is the address of the sender of this message.
+  string sender = 1;
+  // account_type is the type of the account to be created.
+  string account_type = 2;
+  // message is the message to be sent to the account, it's up to the account
+  // implementation to decide what encoding format should be used to interpret
+  // this message.
+  bytes message = 3;
+}
+
+// MsgCreateResponse defines the Create response type for the Msg/Create RPC method.
+message MsgCreateResponse {
+  // account_address is the address of the newly created account.
+  string account_address = 1;
+  // response is the response returned by the account implementation.
+  bytes response = 2;
+}

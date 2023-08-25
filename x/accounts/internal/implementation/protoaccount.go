@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -18,12 +19,28 @@ func RegisterInitHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
 ](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error)) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
+	respName := ProtoResp(new(Resp)).ProtoReflect().Descriptor().FullName()
+
 	router.handler = func(ctx context.Context, initRequest any) (initResponse any, err error) {
 		concrete, ok := initRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, initRequest)
 		}
 		return handler(ctx, concrete)
+	}
+
+	router.decodeRequest = func(b []byte) (any, error) {
+		req := new(Req)
+		err := protojson.Unmarshal(b, ProtoReq(req))
+		return req, err
+	}
+
+	router.encodeResponse = func(resp any) ([]byte, error) {
+		protoResp, ok := resp.(ProtoResp)
+		if !ok {
+			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, respName, resp)
+		}
+		return protojson.Marshal(protoResp)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -12,10 +13,17 @@ import (
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
+var _ address.Codec = (*addressCodec)(nil)
+
+type addressCodec struct{}
+
+func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte(text), nil }
+func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
+
 func newKeeper(t *testing.T, accounts map[string]implementation.Account) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, accounts)
+	m, err := NewKeeper(ss, addressCodec{}, accounts)
 	require.NoError(t, err)
 	return m, ctx
 }

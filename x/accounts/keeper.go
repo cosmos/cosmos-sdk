@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
@@ -21,10 +22,11 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
-func NewKeeper(ss store.KVStoreService, accounts map[string]implementation.Account) (Keeper, error) {
+func NewKeeper(ss store.KVStoreService, addressCodec address.Codec, accounts map[string]implementation.Account) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
 		storeService:   ss,
+		addressCodec:   addressCodec,
 		accounts:       map[string]implementation.Implementation{},
 		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -51,11 +53,12 @@ type Keeper struct {
 
 	accounts map[string]implementation.Implementation
 
+	addressCodec address.Codec
+
 	// Schema is the schema for the module.
 	Schema collections.Schema
 	// AccountNumber is the last global account number.
 	AccountNumber collections.Sequence
-
 	// AccountsByType maps account address to their implementation.
 	AccountsByType collections.Map[[]byte, string]
 }

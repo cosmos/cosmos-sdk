@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -61,6 +64,34 @@ func TestImplementation(t *testing.T) {
 		_, err = impl.Query(ctx, "test")
 		require.ErrorIs(t, err, errInvalidMessage)
 		_, err = impl.Init(ctx, "test")
+		require.ErrorIs(t, err, errInvalidMessage)
+	})
+
+	// schemas
+	t.Run("decode init request - ok", func(t *testing.T) {
+		want := &wrapperspb.StringValue{Value: "test"}
+		req, err := protojson.Marshal(want)
+		require.NoError(t, err)
+
+		got, err := impl.DecodeInitRequest(req)
+		require.NoError(t, err)
+		require.True(t, proto.Equal(want, got.(protoreflect.ProtoMessage)))
+	})
+
+	t.Run("encode init response - ok", func(t *testing.T) {
+		want := &wrapperspb.StringValue{Value: "test"}
+
+		gotBytes, err := impl.EncodeInitResponse(want)
+		require.NoError(t, err)
+
+		wantBytes, err := protojson.Marshal(want)
+		require.NoError(t, err)
+
+		require.Equal(t, wantBytes, gotBytes)
+	})
+
+	t.Run("decode init response - invalid message", func(t *testing.T) {
+		_, err := impl.EncodeInitResponse([]byte("invalid"))
 		require.ErrorIs(t, err, errInvalidMessage)
 	})
 }

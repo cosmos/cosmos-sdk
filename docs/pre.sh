@@ -21,7 +21,7 @@ cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/
 cp ../tools/cosmovisor/README.md ./docs/integrate/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/integrate/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/integrate/tooling/03-hubl.md
-wget -O docs/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
+wget -O docs/user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
 
 ## Add package documentation
 cp ../client/v2/README.md ./docs/develop/advanced-concepts/17-autocli.md

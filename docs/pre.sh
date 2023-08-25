@@ -16,7 +16,6 @@ cp ../x/auth/tx/README.md ./docs/integrate/modules/auth/2-tx.md
 
 ## Add modules page list
 cat ../x/README.md | sed 's/\.\.\/docs\/integrate\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/integrate/modules/"$MODDOC/$(basename "$D").md"
-sed -i -e "s|(../core/|(../../develop/advanced-concepts/"./docs/integrate/building-modules/01-module-manager.md
 
 ## Add tooling documentation
 cp ../tools/cosmovisor/README.md ./docs/integrate/tooling/01-cosmovisor.md
@@ -41,6 +40,3 @@ cp -r ./rfc ./docs/integrate
 
 ## Add SDK migration documentation
 cp -r ../UPGRADING.md ./docs/integrate/migrations/02-upgrading.md
-sed -i -e "s|./proto/README.md|../../../../proto/README.md|g" ./docs/integrate/migrations/02-upgrading.md
-sed -i -e "s|./docs/docs/develop/advanced-concepts/05-encoding.md|../../develop/advanced-concepts/05-encoding.md|g" ./docs/integrate/migrations/02-upgrading.md
-rm ./docs/integrate/migrations/02-upgrading.md-e

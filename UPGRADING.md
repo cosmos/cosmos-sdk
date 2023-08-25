@@ -498,7 +498,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
-See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md).
 
 #### Gogoproto Import Paths
 
@@ -533,7 +533,7 @@ Here are the following replacements that you need to perform on your proto files
 
 Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
 
-For more information, see the [encoding guide](./docs/docs/develop/advanced-concepts/05-encoding.md).
+For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/develop/advanced-concepts/05-encoding.md).
 
 ### Transactions
 

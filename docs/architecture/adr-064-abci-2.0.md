@@ -5,6 +5,11 @@
 * 2023-01-17: Initial Draft (@alexanderbez)
 * 2023-04-06: Add upgrading section (@alexanderbez)
 * 2023-04-10: Simplify vote extension state persistence (@alexanderbez)
+<<<<<<< HEAD
+=======
+* 2023-07-07: Revise vote extension state persistence (@alexanderbez)
+* 2023-08-24: Revise vote extension power calculations and staking interface (@davidterpay)
+>>>>>>> bb0c86619 (fix(baseapp): Utilizing voting power from VEs in ValidateVoteExtensions (#17518))
 
 ## Status
 
@@ -218,26 +223,35 @@ a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	TotalBondedTokens(ctx context.Context) (math.Int, error)
-	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // ValidateVoteExtensions is a function that an application can execute in
 // ProcessProposal to verify vote extension signatures.
 func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
+	votingPower := 0
+	totalVotingPower := 0
+
 	for _, vote := range extCommit.Votes {
+		totalVotingPower += vote.Validator.Power
+
 		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
 			continue
 		}
 
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		bondedTokens, cmtPubKey, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
+		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get bonded tokens and public key for validator %s: %w", valConsAddr, err)
+			return fmt.Errorf("failed to get public key for validator %s: %w", valConsAddr, err)
 		}
 
 		if len(vote.ExtensionSignature) == 0 {
 			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)
+		}
+
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
+		if err != nil {
+			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}
 
 		cve := cmtproto.CanonicalVoteExtension{
@@ -256,8 +270,14 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 			return errors.New("received vote with invalid signature")
 		}
 
-		return nil
+		votingPower += vote.Validator.Power
 	}
+
+	if (votingPower / totalVotingPower) < threshold {
+		return errors.New("not enough voting power for the vote extensions")
+	}
+
+	return nil
 }
 ```
 

@@ -15,5 +15,5 @@ func UnsafeStrToBytes(s string) []byte {
 // to be used generally, but for a specific pattern to delete keys
 // from a map.
 func UnsafeBytesToStr(b []byte) string {
-	return unsafe.String(&b[0], len(b)) // ref https://github.com/golang/go/issues/53003#issuecomment-1140276077
+	return *(*string)(unsafe.Pointer(&b))
 }

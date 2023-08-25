@@ -5,11 +5,8 @@
 * 2023-01-17: Initial Draft (@alexanderbez)
 * 2023-04-06: Add upgrading section (@alexanderbez)
 * 2023-04-10: Simplify vote extension state persistence (@alexanderbez)
-<<<<<<< HEAD
-=======
 * 2023-07-07: Revise vote extension state persistence (@alexanderbez)
 * 2023-08-24: Revise vote extension power calculations and staking interface (@davidterpay)
->>>>>>> bb0c86619 (fix(baseapp): Utilizing voting power from VEs in ValidateVoteExtensions (#17518))
 
 ## Status
 

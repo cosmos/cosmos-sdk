@@ -21,9 +21,9 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
-func NewModule(ss store.KVStoreService, accounts map[string]implementation.Account) (Module, error) {
+func NewKeeper(ss store.KVStoreService, accounts map[string]implementation.Account) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
-	module := Module{
+	keeper := Keeper{
 		storeService:   ss,
 		accounts:       map[string]implementation.Implementation{},
 		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
@@ -34,19 +34,19 @@ func NewModule(ss store.KVStoreService, accounts map[string]implementation.Accou
 	for typ, acc := range accounts {
 		impl, err := implementation.NewImplementation(acc)
 		if err != nil {
-			return Module{}, err
+			return Keeper{}, err
 		}
-		module.accounts[typ] = impl
+		keeper.accounts[typ] = impl
 	}
 	schema, err := sb.Build()
 	if err != nil {
-		return Module{}, err
+		return Keeper{}, err
 	}
-	module.Schema = schema
-	return module, nil
+	keeper.Schema = schema
+	return keeper, nil
 }
 
-type Module struct {
+type Keeper struct {
 	storeService store.KVStoreService
 
 	accounts map[string]implementation.Implementation
@@ -61,52 +61,52 @@ type Module struct {
 }
 
 // Create creates a new account of the given type.
-func (m Module) Create(
+func (k Keeper) Create(
 	ctx context.Context,
 	accountType string,
 	creator []byte,
 	initRequest any,
 ) (any, []byte, error) {
-	impl, err := m.getImplementation(accountType)
+	impl, err := k.getImplementation(accountType)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// make a new account address
-	accountAddr, err := m.makeAddress(ctx)
+	accountAddr, err := k.makeAddress(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// make the context and init the account
-	ctx = implementation.MakeAccountContext(ctx, m.storeService, accountAddr, creator)
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, creator)
 	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// map account address to account type
-	if err := m.AccountsByType.Set(ctx, accountAddr, accountType); err != nil {
+	if err := k.AccountsByType.Set(ctx, accountAddr, accountType); err != nil {
 		return nil, nil, err
 	}
 	return resp, accountAddr, nil
 }
 
 // Execute executes a state transition on the given account.
-func (m Module) Execute(
+func (k Keeper) Execute(
 	ctx context.Context,
 	accountAddr []byte,
 	sender []byte,
 	execRequest any,
 ) (any, error) {
 	// get account type
-	accountType, err := m.AccountsByType.Get(ctx, accountAddr)
+	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	// get account implementation
-	impl, err := m.getImplementation(accountType)
+	impl, err := k.getImplementation(accountType)
 	if err != nil {
 		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
@@ -115,24 +115,24 @@ func (m Module) Execute(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, m.storeService, accountAddr, sender)
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, sender)
 	return impl.Execute(ctx, execRequest)
 }
 
 // Query queries the given account.
-func (m Module) Query(
+func (k Keeper) Query(
 	ctx context.Context,
 	accountAddr []byte,
 	queryRequest any,
 ) (any, error) {
 	// get account type
-	accountType, err := m.AccountsByType.Get(ctx, accountAddr)
+	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	// get account implementation
-	impl, err := m.getImplementation(accountType)
+	impl, err := k.getImplementation(accountType)
 	if err != nil {
 		// this means the account was initialized with an implementation
 		// that the chain does not know about, in theory should never happen,
@@ -141,20 +141,20 @@ func (m Module) Query(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, m.storeService, accountAddr, nil)
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, nil)
 	return impl.Query(ctx, queryRequest)
 }
 
-func (m Module) getImplementation(accountType string) (implementation.Implementation, error) {
-	impl, ok := m.accounts[accountType]
+func (k Keeper) getImplementation(accountType string) (implementation.Implementation, error) {
+	impl, ok := k.accounts[accountType]
 	if !ok {
 		return implementation.Implementation{}, fmt.Errorf("%w: %s", errAccountTypeNotFound, accountType)
 	}
 	return impl, nil
 }
 
-func (m Module) makeAddress(ctx context.Context) ([]byte, error) {
-	num, err := m.AccountNumber.Next(ctx)
+func (k Keeper) makeAddress(ctx context.Context) ([]byte, error) {
+	num, err := k.AccountNumber.Next(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -12,16 +12,16 @@ import (
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
-func newModule(t *testing.T, accounts map[string]implementation.Account) (Module, context.Context) {
+func newKeeper(t *testing.T, accounts map[string]implementation.Account) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewModule(ss, accounts)
+	m, err := NewKeeper(ss, accounts)
 	require.NoError(t, err)
 	return m, ctx
 }
 
-func TestModule_Create(t *testing.T) {
-	m, ctx := newModule(t, map[string]implementation.Account{
+func TestKeeper_Create(t *testing.T) {
+	m, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
 
@@ -50,8 +50,8 @@ func TestModule_Create(t *testing.T) {
 	})
 }
 
-func TestModule_Execute(t *testing.T) {
-	m, ctx := newModule(t, map[string]implementation.Account{
+func TestKeeper_Execute(t *testing.T) {
+	m, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
 
@@ -72,8 +72,8 @@ func TestModule_Execute(t *testing.T) {
 	})
 }
 
-func TestModule_Query(t *testing.T) {
-	m, ctx := newModule(t, map[string]implementation.Account{
+func TestKeeper_Query(t *testing.T) {
+	m, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
 

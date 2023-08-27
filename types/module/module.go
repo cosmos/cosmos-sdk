@@ -182,6 +182,8 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
+// AppModuleGenesis is the standard form for an application module genesis functions
+
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
 	HasGenesisBasics
@@ -226,6 +228,31 @@ type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
+
+// GenesisOnlyAppModule is an AppModule that only has import/export functionality
+type GenesisOnlyAppModule struct {
+	AppModuleBasic
+	HasABCIGenesis
+}
+
+// NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
+func NewGenesisOnlyAppModule(amg HasABCIGenesis) GenesisOnlyAppModule {
+	return GenesisOnlyAppModule{
+		HasABCIGenesis: amg,
+	}
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (GenesisOnlyAppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (GenesisOnlyAppModule) IsAppModule() {}
+
+// RegisterServices registers all services.
+func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules

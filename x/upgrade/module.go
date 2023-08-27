@@ -133,7 +133,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 			panic(err)
 		}
 	}
-
 }
 
 // DefaultGenesis is an empty object

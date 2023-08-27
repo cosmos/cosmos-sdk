@@ -92,18 +92,6 @@ func TestBasicManager(t *testing.T) {
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
 }
 
-func TestGenesisOnlyAppModule(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockModule := mock.NewMockAppModuleGenesis(mockCtrl)
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	goam := module.NewGenesisOnlyAppModule(mockModule)
-
-	// no-op
-	goam.RegisterInvariants(mockInvariantRegistry)
-}
-
 func TestAssertNoForgottenModules(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)

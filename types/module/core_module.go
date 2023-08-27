@@ -19,7 +19,7 @@ import (
 
 var (
 	_ AppModuleBasic = coreAppModuleBasicAdaptor{}
-	_ HasGenesis     = coreAppModuleBasicAdaptor{}
+	_ HasABCIGenesis = coreAppModuleBasicAdaptor{}
 	_ HasServices    = coreAppModuleBasicAdaptor{}
 )
 
@@ -107,7 +107,7 @@ func (c coreAppModuleBasicAdaptor) ExportGenesis(ctx sdk.Context, cdc codec.JSON
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleBasicAdaptor) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
+func (c coreAppModuleBasicAdaptor) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
@@ -123,13 +123,10 @@ func (c coreAppModuleBasicAdaptor) InitGenesis(ctx sdk.Context, cdc codec.JSONCo
 
 	if mod, ok := c.module.(HasGenesis); ok {
 		mod.InitGenesis(ctx, cdc, bz)
+		return nil
 	}
-}
-
-// InitGenesis implements HasGenesis
-func (c coreAppModuleBasicAdaptor) InitABCIGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	if mod, ok := c.module.(HasABCIGenesis); ok {
-		return mod.InitABCIGenesis(ctx, cdc, bz)
+		return mod.InitGenesis(ctx, cdc, bz)
 	}
 	return nil
 }

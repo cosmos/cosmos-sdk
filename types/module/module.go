@@ -182,12 +182,6 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-// AppModuleGenesis is the standard form for an application module genesis functions
-type AppModuleGenesis interface {
-	AppModuleBasic
-	HasGenesisBasics
-}
-
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
 	HasGenesisBasics
@@ -197,7 +191,7 @@ type HasGenesis interface {
 
 type HasABCIGenesis interface {
 	HasGenesisBasics
-	InitABCIGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
@@ -231,44 +225,6 @@ type HasConsensusVersion interface {
 type HasABCIEndblock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
-}
-
-// GenesisOnlyAppModule is an AppModule that only has import/export functionality
-type GenesisOnlyAppModule struct {
-	AppModuleGenesis
-}
-
-// NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
-	return GenesisOnlyAppModule{
-		AppModuleGenesis: amg,
-	}
-}
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (GenesisOnlyAppModule) IsOnePerModuleType() {}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (GenesisOnlyAppModule) IsAppModule() {}
-
-// RegisterInvariants is a placeholder function register no invariants
-func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// QuerierRoute returns an empty module querier route
-func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
-
-// RegisterServices registers all services.
-func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
-
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock returns an empty module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context) error { return nil }
-
-// EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
 }
 
 // Manager defines a module manager that provides the high level utility for managing and executing
@@ -476,7 +432,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			module.InitGenesis(ctx, cdc, genesisData[moduleName])
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates := module.InitABCIGenesis(ctx, cdc, genesisData[moduleName])
+			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
@@ -702,10 +658,9 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			module1, ok := m.Modules[moduleName].(HasGenesis)
 			if ok {
 				module1.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
-
 			}
 			if module2, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates := module2.InitABCIGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
+				moduleValUpdates := module2.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

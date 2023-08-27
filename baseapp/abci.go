@@ -659,6 +659,10 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	return resp, err
 }
 
+// internalFinalizeBlock it's what actually executes the block, called by the Optimistic
+// Execution flow or by the FinalizeBlock ABCI method. The context received is
+// only used to handle early cancellation, for anything related to state app.finalizeBlockState.ctx
+// must be used.
 func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 

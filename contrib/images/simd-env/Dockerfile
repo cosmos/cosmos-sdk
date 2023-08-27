@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS build
+FROM golang:1.20-alpine AS build
 
 RUN apk add build-base git linux-headers
 
@@ -17,6 +17,7 @@ RUN go mod download
 
 COPY ./ /work
 RUN LEDGER_ENABLED=false make clean build
+
 
 FROM alpine AS run
 RUN apk add bash curl jq

@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine AS build
+FROM arm64v8/golang:1.21-alpine AS build
 
 RUN apk add build-base git linux-headers
 
@@ -18,9 +18,8 @@ RUN go mod download
 COPY ./ /work
 RUN LEDGER_ENABLED=false make clean build
 
-
-FROM alpine AS run
-RUN apk add bash curl jq
+FROM arm64v8/alpine AS run
+RUN apk add bash curl jq iproute2
 EXPOSE 26656 26657
 ENTRYPOINT ["/usr/bin/wrapper.sh"]
 CMD ["start", "--log_format", "plain"]

@@ -495,11 +495,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
 		// abort any running OE
-		if app.optimisticExec.Running() {
-			app.optimisticExec.Abort()
-			_, _ = app.optimisticExec.WaitResult() // ignore the result
-		}
-
+		app.optimisticExec.Abort()
 		app.setState(execModeFinalize, header)
 	}
 
@@ -540,8 +536,12 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
-	// Only execute optimistic execution if OE is enabled and the block height is greater than the initial height.
-	// During the first block we'll be carrying state from InitChain, so it would be impossible for us to easily revert.
+	// Only execute optimistic execution if OE is enabled and the block height
+	// is greater than the initial height. During the first block we'll be carrying
+	// state from InitChain, so it would be impossible for us to easily revert.
+	// After the first block has been processed, the next blocks will get executed
+	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
+	// can have a response ready.
 	if app.optimisticExec.Enabled() && req.Height > app.initialHeight {
 		app.optimisticExec.Execute(req)
 	}
@@ -659,7 +659,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	return resp, err
 }
 
-func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -736,8 +736,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
-	if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
-		return nil, nil
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
 	}
 
 	events = append(events, beginBlock.Events...)
@@ -767,8 +770,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 		}
 
 		// check after every tx if we should abort
-		if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
-			return nil, nil
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
 		}
 
 		txResults = append(txResults, response)
@@ -784,8 +790,11 @@ func (app *BaseApp) internalFinalizeBlock(req *abci.RequestFinalizeBlock) (*abci
 	}
 
 	// check after endBlock if we should abort, to avoid propagating the result
-	if app.optimisticExec.Running() && app.optimisticExec.ShouldAbort() {
-		return nil, nil
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
 	}
 
 	events = append(events, endBlock.Events...)
@@ -818,7 +827,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 
 		// only return if we are not aborting
 		if !aborted {
-			res.AppHash = app.workingHash()
+			if res != nil {
+				res.AppHash = app.workingHash()
+			}
 			return res, err
 		}
 
@@ -828,7 +839,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
-	res, err := app.internalFinalizeBlock(req)
+	res, err := app.internalFinalizeBlock(context.Background(), req)
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}

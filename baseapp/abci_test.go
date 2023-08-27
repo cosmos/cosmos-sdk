@@ -2231,7 +2231,6 @@ func TestOptimisticExecution(t *testing.T) {
 		respFinalizeBlock, err := suite.baseApp.FinalizeBlock(&reqFinalizeBlock)
 		require.NoError(t, err)
 		require.Len(t, respFinalizeBlock.TxResults, 1)
-		fmt.Println(reqFinalizeBlock.Height)
 
 		_, err = suite.baseApp.Commit()
 		require.NoError(t, err)

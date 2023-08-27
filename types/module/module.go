@@ -185,13 +185,19 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	HasGenesis
+	HasGenesisBasics
 }
 
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
 	HasGenesisBasics
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)
+	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+}
+
+type HasABCIGenesis interface {
+	HasGenesisBasics
+	InitABCIGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
@@ -344,6 +350,10 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
+		if _, hasGenesis := module.(HasABCIGenesis); hasGenesis {
+			return !hasGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
@@ -463,7 +473,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
+			module.InitGenesis(ctx, cdc, genesisData[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			ctx.Logger().Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates := module.InitABCIGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
@@ -532,6 +545,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module HasGenesis, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
+			}(module, channels[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			channels[moduleName] = make(chan genesisResult)
+			go func(module HasABCIGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
 			}(module, channels[moduleName])
@@ -680,8 +699,13 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			}
 		} else {
 			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
+			module1, ok := m.Modules[moduleName].(HasGenesis)
+			if ok {
+				module1.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
+
+			}
+			if module2, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
+				moduleValUpdates := module2.InitABCIGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

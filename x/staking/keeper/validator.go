@@ -373,11 +373,7 @@ func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddre
 
 // DeleteLastValidatorPower deletes the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAddress) error {
-	bz, err := k.cdc.Marshal(&gogotypes.Int64Value{Value: 0})
-	if err != nil {
-		return err
-	}
-	return k.LastValidatorPower.Set(ctx, operator, bz) // setting power to 0 on deletion
+	return k.LastValidatorPower.Remove(ctx, operator) // setting power to 0 on deletion
 }
 
 // IterateLastValidatorPowers iterates over last validator powers.

@@ -44,7 +44,7 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
-	Validators                  collections.Map[sdk.ValAddress, types.Validator]
+	Validators                  collections.Map[[]byte, types.Validator]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
@@ -146,7 +146,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		Validators: collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), codec.CollValue[types.Validator](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		Validators: collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 	}
 
 	schema, err := sb.Build()

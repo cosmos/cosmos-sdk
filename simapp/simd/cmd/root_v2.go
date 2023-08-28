@@ -140,7 +140,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	initClientCtx, err = config.CreateClientConfigtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

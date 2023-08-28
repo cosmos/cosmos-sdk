@@ -10,6 +10,7 @@ import (
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (
@@ -17,6 +18,7 @@ const (
 
 	StorePrefixTpl   = "s/k:%s/"   // s/k:<storeKey>
 	latestVersionKey = "s/_latest" // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
+	tombstoneVal     = "TOMBSTONE"
 )
 
 var (
@@ -77,20 +79,16 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	_, err := getMVCCSlice(db.storage, storeKey, key, version)
+	val, err := db.Get(storeKey, version, key)
 	if err != nil {
-		if errors.Is(err, store.ErrRecordNotFound) {
-			return false, nil
-		}
-
-		return false, fmt.Errorf("failed to perform PebbleDB read: %w", err)
+		return false, err
 	}
 
-	return true, nil
+	return val != nil, nil
 }
 
-func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	bz, err := getMVCCSlice(db.storage, storeKey, key, version)
+func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
+	prefixedVal, err := getMVCCSlice(db.storage, storeKey, key, targetVersion)
 	if err != nil {
 		if errors.Is(err, store.ErrRecordNotFound) {
 			return nil, nil
@@ -99,47 +97,62 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
-	return bz, nil
+	valBz, tombBz, ok := SplitMVCCKey(prefixedVal)
+	if !ok {
+		return nil, fmt.Errorf("invalid PebbleDB MVCC value: %s", prefixedVal)
+	}
+
+	// A tombstone of zero or a target version that is less than the tombstone
+	// version means the key is not deleted at the target version.
+	if len(tombBz) == 0 {
+		return valBz, nil
+	}
+
+	tombstone, err := decodeUint64Ascending(tombBz)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode value tombstone: %w", err)
+	}
+	if tombstone > targetVersion {
+		return nil, fmt.Errorf("value tombstone too large: %d", tombstone)
+	}
+
+	// A tombstone of zero or a target version that is less than the tombstone
+	// version means the key is not deleted at the target version.
+	if targetVersion < tombstone {
+		return valBz, nil
+	}
+
+	// the value is considered deleted
+	return nil, nil
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	var versionBz [VersionSize]byte
-	binary.LittleEndian.PutUint64(versionBz[:], version)
-
-	batch := db.storage.NewBatch()
-
-	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
-		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
-	}
-	if err := batch.Set(MVCCEncode(prependStoreKey(storeKey, key), version), value, nil); err != nil {
-		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	b, err := db.NewBatch(version)
+	if err != nil {
+		return err
 	}
 
-	if err := batch.Commit(defaultWriteOpts); err != nil {
-		return fmt.Errorf("failed to commit PebbleDB batch: %w", err)
+	if err := b.Set(storeKey, key, value); err != nil {
+		return err
 	}
 
-	return nil
+	return b.Write()
 }
 
+// Delete marks the key as deleted. The key will not be retrievable at or before
+// the provided version. However, the key is still persisted in the underlying
+// database engine as it's value is marked with a non-zero tombestone.
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	var versionBz [VersionSize]byte
-	binary.LittleEndian.PutUint64(versionBz[:], version)
-
-	batch := db.storage.NewBatch()
-
-	if err := batch.Set([]byte(latestVersionKey), versionBz[:], nil); err != nil {
-		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
-	}
-	if err := batch.Delete(MVCCEncode(prependStoreKey(storeKey, key), version), nil); err != nil {
-		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	b, err := db.NewBatch(version)
+	if err != nil {
+		return err
 	}
 
-	if err := batch.Commit(defaultWriteOpts); err != nil {
-		return fmt.Errorf("failed to commit PebbleDB batch: %w", err)
+	if err := b.Delete(storeKey, key); err != nil {
+		return err
 	}
 
-	return nil
+	return b.Write()
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
@@ -155,7 +168,7 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrStartAfterEnd
 	}
 
-	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), version)
+	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
 
 	var upperBound []byte
 	if end != nil {
@@ -182,13 +195,13 @@ func prependStoreKey(storeKey string, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 
-func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (bz []byte, err error) {
+func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([]byte, error) {
 	// end domain is exclusive, so we need to increment the version by 1
 	if version < math.MaxUint64 {
 		version++
 	}
 
-	it, err := db.NewIter(&pebble.IterOptions{
+	itr, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: MVCCEncode(prependStoreKey(storeKey, key), 0),
 		UpperBound: MVCCEncode(prependStoreKey(storeKey, key), version),
 	})
@@ -196,16 +209,16 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
 	}
 	defer func() {
-		err = errors.Join(err, it.Close())
+		err = errors.Join(err, itr.Close())
 	}()
 
-	if !it.Last() {
+	if !itr.Last() {
 		return nil, store.ErrRecordNotFound
 	}
 
-	_, vBz, ok := SplitMVCCKey(it.Key())
+	_, vBz, ok := SplitMVCCKey(itr.Key())
 	if !ok {
-		return nil, fmt.Errorf("unexpected key format: %s", it.Key())
+		return nil, fmt.Errorf("invalid PebbleDB MVCC key: %s", itr.Key())
 	}
 
 	keyVersion, err := decodeUint64Ascending(vBz)
@@ -216,8 +229,5 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) (b
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
 	}
 
-	bz = make([]byte, len(it.Value()))
-	copy(bz, it.Value())
-
-	return bz, nil
+	return util.CopyBytes(itr.Value()), nil
 }

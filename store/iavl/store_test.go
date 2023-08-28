@@ -4,6 +4,7 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"fmt"
+	"math"
 	"sort"
 	"testing"
 
@@ -671,7 +672,7 @@ func TestChangeSets(t *testing.T) {
 	treeSize := 1000
 	treeVersion := int64(10)
 	targetVersion := int64(6)
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger(), iavl.FlushThresholdOption(math.MaxInt))
 
 	for j := int64(0); j < treeVersion; j++ {
 		keys := [][]byte{}

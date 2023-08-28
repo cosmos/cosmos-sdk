@@ -44,6 +44,9 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
+	UnbondingDelegations        collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
+	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -109,6 +112,7 @@ func NewKeeper(
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
 		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key, collections.Uint64Value),
+		// key format is: 52 | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(DstValAddr)
 		Redelegations: collections.NewMap(
 			sb, types.RedelegationKey,
 			"redelegations",
@@ -120,6 +124,36 @@ func NewKeeper(
 			codec.CollValue[types.Redelegation](cdc),
 		),
 		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key, collections.BytesValue),
+		// key format is: 53 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)
+		RedelegationsByValSrc: collections.NewMap(
+			sb, types.RedelegationByValSrcIndexKey,
+			"redelegations_by_val_src",
+			collections.TripleKeyCodec(
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			collections.BytesValue,
+		),
+		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
+		RedelegationsByValDst: collections.NewMap(
+			sb, types.RedelegationByValDstIndexKey,
+			"redelegations_by_val_dst",
+			collections.TripleKeyCodec(
+				collections.BytesKey,
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			collections.BytesValue,
+		),
+		UnbondingDelegations: collections.NewMap(
+			sb, types.UnbondingDelegationKey,
+			"unbonding_delegation",
+			collections.PairKeyCodec(
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			codec.CollValue[types.UnbondingDelegation](cdc)),
 	}
 
 	schema, err := sb.Build()

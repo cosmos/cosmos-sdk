@@ -27,7 +27,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -1806,8 +1805,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	}
 
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1881,8 +1879,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				{
 					Validator: abci.Validator{
 						Address: consAddr.Bytes(),
-						// this is being ignored by our validation function
-						Power: sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction),
+						Power:   666,
 					},
 					VoteExtension:      ext,
 					ExtensionSignature: extSig,
@@ -1896,7 +1893,24 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
+	reqPrepareProposal = abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     3, // this value can't be 0
+		LocalLastCommit: abci.ExtendedCommitInfo{
+			Round: 0,
+			Votes: []abci.ExtendedVoteInfo{
+				{
+					Validator: abci.Validator{
+						Address: consAddr.Bytes(),
+						Power:   666,
+					},
+					VoteExtension:      ext,
+					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagNil, // This will ignore the vote extension
+				},
+			},
+		},
+	}
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))

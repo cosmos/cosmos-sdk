@@ -481,7 +481,7 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger).WithStreamingManager(app.streamingManager),
+		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
 	}
 
 	switch mode {
@@ -811,6 +811,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		if r := recover(); r != nil {
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
 			err, result = processRecovery(r, recoveryMW), nil
+			ctx.Logger().Error("panic recovered in runTx", "err", err)
 		}
 
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}

@@ -238,11 +238,11 @@ reconnect = true
 ```bash
 vim $HOME/.simd/config/config.toml
 
-priv_validator_laddr = "tcp://0.0.0.0:26659"
+priv_validator_laddr = "tcp://127.0.0.1:26659"
 ```
 
 :::tip
-The above address it set to `0.0.0.0` but it is recommended to set the tmkms server to secure the startup
+The above address it set to `127.0.0.1` but it is recommended to set the tmkms server to secure the startup
 :::
 
 :::tip

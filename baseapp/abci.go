@@ -560,9 +560,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -622,9 +621,8 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
@@ -1027,7 +1025,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithHeaderInfo(coreheader.Info{})
+		ctx = ctx.WithHeaderInfo(coreheader.Info{}).WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}
 
@@ -1131,10 +1129,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit multi-store for safety
-	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.ctx.BlockHeader())
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

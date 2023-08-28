@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -87,6 +88,20 @@ func NewMockAccountKeeper(ctrl *gomock.Controller) *MockAccountKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 	return m.recorder
+}
+
+// AddressCodec mocks base method.
+func (m *MockAccountKeeper) AddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// AddressCodec indicates an expected call of AddressCodec.
+func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
 }
 
 // GetModuleAccount mocks base method.

@@ -191,6 +191,7 @@ type HasGenesis interface {
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
+// HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
 type HasABCIGenesis interface {
 	HasGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate

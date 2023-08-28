@@ -116,6 +116,8 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*coretypes.ResultT
 	resBlocks := make(map[int64]*coretypes.ResultBlock)
 
 	for _, resTx := range resTxs {
+		resTx := resTx
+
 		if _, ok := resBlocks[resTx.Height]; !ok {
 			resBlock, err := node.Block(context.Background(), &resTx.Height)
 			if err != nil {

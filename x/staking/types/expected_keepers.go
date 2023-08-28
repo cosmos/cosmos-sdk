@@ -74,9 +74,9 @@ type ValidatorSet interface {
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
 
-	// BondedTokensAndPubKeyByConsAddr returns the bonded tokens and consensus public key for a validator.
-	// Used in vote extension validation.
-	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
+	// extension validation.
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

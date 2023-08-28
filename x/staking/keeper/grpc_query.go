@@ -183,10 +183,10 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 		ctx,
 		k.UnbondingDelegationByValIndex,
 		req.Pagination,
-		func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value []byte) (collections.Pair[sdk.ValAddress, sdk.AccAddress], error) {
+		func(key collections.Pair[[]byte, []byte], value []byte) (collections.Pair[[]byte, []byte], error) {
 			return key, nil
 		},
-		query.WithCollectionPaginationPairPrefix[sdk.ValAddress, sdk.AccAddress](valAddr),
+		query.WithCollectionPaginationPairPrefix[[]byte, []byte](valAddr),
 	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

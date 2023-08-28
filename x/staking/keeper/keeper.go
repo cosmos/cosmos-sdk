@@ -46,7 +46,7 @@ type Keeper struct {
 	UnbondingIndex                collections.Map[uint64, []byte]
 	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
-	UnbondingDelegationByValIndex collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
+	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -127,7 +127,7 @@ func NewKeeper(
 		UnbondingDelegationByValIndex: collections.NewMap(
 			sb, types.UnbondingDelegationByValIndexKey,
 			"unbonding_delegation_by_val_index",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.PairKeyCodec(sdk.LengthPrefixedBytesKey, sdk.LengthPrefixedBytesKey), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			collections.BytesValue,
 		),
 		// key format is: 53 | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(DstValAddr)

@@ -59,7 +59,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 
 	// remove prefix bytes and length bytes (since ubdKey obtained is prefixed by UnbondingDelegationKey prefix and length of the address)
 	delAddr := ubdKey[2 : (len(ubdKey)/2)+1]
-	// remvoe prefix length bytes
+	// remove prefix length bytes
 	valAddr := ubdKey[2+len(ubdKey)/2:]
 
 	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr, valAddr))

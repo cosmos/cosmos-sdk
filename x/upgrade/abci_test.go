@@ -11,11 +11,11 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"	
-	"github.com/stretchr/testify/require"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -120,6 +120,8 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)
+
+	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
 	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 

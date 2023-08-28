@@ -45,7 +45,7 @@ type Keeper struct {
 	Redelegations               collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
-	RedelegationQueue           collections.Map[time.Time, types.DVVTriplet]
+	RedelegationQueue           collections.Map[time.Time, types.DVVTriplets]
 	UnbondingDelegations        collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
@@ -148,7 +148,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		RedelegationQueue: collections.NewMap(sb, types.RedelegationQueueKey, "redelegation_queue", sdk.TimeKey, codec.CollValue[types.DVVTriplet](cdc)),
+		RedelegationQueue: collections.NewMap(sb, types.RedelegationQueueKey, "redelegation_queue", sdk.TimeKey, codec.CollValue[types.DVVTriplets](cdc)),
 		UnbondingDelegations: collections.NewMap(
 			sb, types.UnbondingDelegationKey,
 			"unbonding_delegation",

@@ -174,6 +174,13 @@ func getRedelegationTimeKey(timestamp time.Time) []byte {
 	return append(redelegationQueueKey, bz...)
 }
 
+// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
+// VALUE: staking/UnbondingDelegation
+func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	unbondingDelegationKey := []byte{0x32}
+	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
+}
+
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -238,46 +245,6 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
-	s.SetupTest()
-
-	err := testutil.DiffCollectionsMigration(
-		s.ctx,
-		s.key,
-		100,
-		func(i int64) {
-			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
-			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), []byte{})
-		},
-		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
-	)
-	s.Require().NoError(err)
-
-	err = testutil.DiffCollectionsMigration(
-		s.ctx,
-		s.key,
-		100,
-		func(i int64) {
-			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
-			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, nil)
-			s.Require().NoError(err)
-		},
-		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
-	)
-	s.Require().NoError(err)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
-// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
-// VALUE: staking/UnbondingDelegation
-func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	unbondingDelegationKey := []byte{0x32}
-	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
-}
-
 func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -331,4 +298,37 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 	)
 
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
+	s.SetupTest()
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), []byte{})
+		},
+		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, nil)
+			s.Require().NoError(err)
+		},
+		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
+	)
+	s.Require().NoError(err)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

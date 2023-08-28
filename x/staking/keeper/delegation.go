@@ -626,23 +626,21 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 // timeslice is a slice of DVVTriplets corresponding to redelegations that
 // expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet, err error) {
-	dvvTriplet, err := k.RedelegationQueue.Get(ctx, timestamp)
+	triplets, err := k.RedelegationQueue.Get(ctx, timestamp)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		return []types.DVVTriplet{}, nil
 	}
-
-	triplets := types.DVVTriplets{}
-	triplets.Triplets = append(triplets.Triplets, dvvTriplet)
 
 	return triplets.Triplets, nil
 }
 
 // SetRedelegationQueueTimeSlice sets a specific redelegation queue timeslice.
 func (k Keeper) SetRedelegationQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVVTriplet) error {
-	if len(keys) == 0 {
-		return k.RedelegationQueue.Set(ctx, timestamp, types.DVVTriplet{})
-	}
-	return k.RedelegationQueue.Set(ctx, timestamp, keys[0])
+	triplets := types.DVVTriplets{Triplets: keys}
+	return k.RedelegationQueue.Set(ctx, timestamp, triplets)
 }
 
 // InsertRedelegationQueue insert an redelegation delegation to the appropriate
@@ -672,13 +670,13 @@ func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegat
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err = k.RedelegationQueue.Walk(ctx, nil, func(key time.Time, _ types.DVVTriplet) (bool, error) {
+	err = k.RedelegationQueue.Walk(ctx, nil, func(key time.Time, _ types.DVVTriplets) (bool, error) {
 		timeslice, err := k.RedelegationQueue.Get(ctx, sdkCtx.HeaderInfo().Time)
 		if err != nil {
 			return true, err
 		}
 
-		matureRedelegations = append(matureRedelegations, timeslice)
+		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
 
 		if err = k.RedelegationQueue.Remove(ctx, key); err != nil {
 			return true, err

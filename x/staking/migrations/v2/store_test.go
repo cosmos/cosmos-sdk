@@ -56,7 +56,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
@@ -143,6 +143,10 @@ func TestStoreMigration(t *testing.T) {
 
 func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
 }
 
 func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {

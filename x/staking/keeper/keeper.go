@@ -47,6 +47,7 @@ type Keeper struct {
 	UnbondingDelegations          collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
 	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	Validators                    collections.Map[[]byte, types.Validator]
 	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
 }
 
@@ -153,6 +154,7 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
+		Validators: collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		UnbondingDelegations: collections.NewMap(
 			sb, types.UnbondingDelegationKey,
 			"unbonding_delegation",

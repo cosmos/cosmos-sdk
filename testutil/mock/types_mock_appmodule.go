@@ -101,11 +101,9 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) ExportGenesis(arg0, arg1 i
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleWithAllExtensions) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockAppModuleWithAllExtensions) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]types.ValidatorUpdate)
-	return ret0
+	m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 }
 
 // InitGenesis indicates an expected call of InitGenesis.

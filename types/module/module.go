@@ -322,6 +322,10 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
@@ -336,8 +340,8 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
-		if _, hasGenesis := module.(HasABCIGenesis); hasGenesis {
-			return !hasGenesis
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
 		}
 
 		_, hasGenesis := module.(HasGenesis)

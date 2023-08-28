@@ -6,6 +6,7 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
@@ -36,12 +37,13 @@ func initClientConfig() (string, interface{}) {
 
 	// Optionally allow the chain developer to overwrite the SDK's default client config.
 	clientCfg := clientconfig.DefaultConfig()
+
 	// The SDK's default keyring backend is set to "os".
 	// This is more secure than "test" and is the recommended value.
 	//
 	// In simapp, we set the default keyring backend to test, as SimApp is meant
 	// to be an example and testing application.
-	clientCfg.KeyringBackend = "test"
+	clientCfg.KeyringBackend = keyring.BackendTest
 
 	// Now we set the custom config default values.
 	customClientConfig := CustomClientConfig{

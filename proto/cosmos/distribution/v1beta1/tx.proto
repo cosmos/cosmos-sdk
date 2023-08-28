@@ -192,14 +192,14 @@ message MsgCommunityPoolSpendResponse {}
 //
 // Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPool {
-  option (amino.name) = "cosmos-sdk/distr/MsgDepositValRewards";
+  option (amino.name)           = "cosmos-sdk/distr/MsgDepositValRewards";
   option (cosmos.msg.v1.signer) = "depositor";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string depositor         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string   depositor                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   validator_address               = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.encoding)         = "legacy_coins",

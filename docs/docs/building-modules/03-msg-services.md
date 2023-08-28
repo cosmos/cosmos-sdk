@@ -92,7 +92,7 @@ ctx.EventManager().EmitEvent(
 
 These events are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/08-events.md) to learn more about events.
 
-The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error` using `sdk.WrapServiceResult(ctx context.Context, res proto.Message, err error)`:
+The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error`:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/msg_service_router.go#L160

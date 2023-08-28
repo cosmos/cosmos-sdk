@@ -26,7 +26,7 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 ## Automation
 
 * [Depinject](./01-depinject.md) - Dependency injection framework
-* [Client/v2](https://pkg.go.dev/cosmossdk.io/client/v2) - Library powering [AutoCLI](https://docs.cosmos.network/main/building-modules/autocli)
+* [Client/v2](https://pkg.go.dev/cosmossdk.io/client/v2) - Library powering [AutoCLI](https://docs.cosmos.network/main/core/autocli)
 
 ## Utilities
 

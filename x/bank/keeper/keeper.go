@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -25,7 +23,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
+	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(context.Context, *types.GenesisState)
 	ExportGenesis(context.Context) *types.GenesisState
@@ -61,11 +59,9 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	storeService           store.KVStoreService
-	mintCoinsRestrictionFn MintingRestrictionFn
+	mintCoinsRestrictionFn types.MintingRestrictionFn
 	logger                 log.Logger
 }
-
-type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -105,7 +101,7 @@ func NewBaseKeeper(
 		ak:                     ak,
 		cdc:                    cdc,
 		storeService:           storeService,
-		mintCoinsRestrictionFn: func(ctx context.Context, coins sdk.Coins) error { return nil },
+		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 		logger:                 logger,
 	}
 }
@@ -115,19 +111,8 @@ func NewBaseKeeper(
 // Previous restriction functions can be nested as such:
 //
 //	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
-func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
-	oldRestrictionFn := k.mintCoinsRestrictionFn
-	k.mintCoinsRestrictionFn = func(ctx context.Context, coins sdk.Coins) error {
-		err := check(ctx, coins)
-		if err != nil {
-			return err
-		}
-		err = oldRestrictionFn(ctx, coins)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
+func (k BaseKeeper) WithMintCoinsRestriction(check types.MintingRestrictionFn) BaseKeeper {
+	k.mintCoinsRestrictionFn = check.Then(k.mintCoinsRestrictionFn)
 	return k
 }
 
@@ -258,7 +243,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.M
 	err := k.BaseViewKeeper.DenomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
 		return cb(metadata), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }
@@ -479,7 +464,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin
 	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) (bool, error) {
 		return cb(sdk.NewCoin(s, m)), nil
 	})
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		panic(err)
 	}
 }

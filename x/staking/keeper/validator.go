@@ -441,11 +441,12 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 // GetUnbondingValidators returns a slice of mature validator addresses that
 // complete their unbonding at a given time and height.
 func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, endHeight int64) ([]string, error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GetValidatorQueueKey(endTime, endHeight))
+	bz, err := k.ValidatorQueue.Get(ctx, collections.Join(endTime, endHeight))
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		return []string{}, nil
 	}
 
 	if bz == nil {
@@ -463,12 +464,11 @@ func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, e
 // SetUnbondingValidatorsQueue sets a given slice of validator addresses into
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx context.Context, endTime time.Time, endHeight int64, addrs []string) error {
-	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&types.ValAddresses{Addresses: addrs})
 	if err != nil {
 		return err
 	}
-	return store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
+	return k.ValidatorQueue.Set(ctx, collections.Join(endTime, endHeight), bz)
 }
 
 // InsertUnbondingValidatorQueue inserts a given unbonding validator address into
@@ -485,8 +485,7 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx context.Context, val types.Val
 // DeleteValidatorQueueTimeSlice deletes all entries in the queue indexed by a
 // given height and time.
 func (k Keeper) DeleteValidatorQueueTimeSlice(ctx context.Context, endTime time.Time, endHeight int64) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetValidatorQueueKey(endTime, endHeight))
+	return k.ValidatorQueue.Remove(ctx, collections.Join(endTime, endHeight))
 }
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
@@ -523,13 +522,6 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 	return k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
 }
 
-// ValidatorQueueIterator returns an interator ranging over validators that are
-// unbonding whose unbonding completion occurs at the given height and time.
-func (k Keeper) ValidatorQueueIterator(ctx context.Context, endTime time.Time, endHeight int64) (corestore.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Iterator(types.ValidatorQueueKey, storetypes.InclusiveEndBytes(types.GetValidatorQueueKey(endTime, endHeight)))
-}
-
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
@@ -542,61 +534,64 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	// ValidatorQueueKey | timeBzLen (8-byte big endian) | timeBz | heightBz (8-byte big endian),
 	// so it may be possible that certain validator addresses that are iterated
 	// over are not ready to unbond, so an explicit check is required.
-	unbondingValIterator, err := k.ValidatorQueueIterator(ctx, blockTime, blockHeight)
-	if err != nil {
-		return err
-	}
-	defer unbondingValIterator.Close()
-
-	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-		key := unbondingValIterator.Key()
-		keyTime, keyHeight, err := types.ParseValidatorQueueKey(key)
-		if err != nil {
-			return fmt.Errorf("failed to parse unbonding key: %w", err)
-		}
+	// unbondingValIterator, err := k.ValidatorQueueIterator(ctx, blockTime, blockHeight)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer unbondingValIterator.Close()
+	rng := collections.NewPrefixUntilPairRange[time.Time, int64](blockTime).EndInclusive(blockHeight)
+	err := k.ValidatorQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, int64], value []byte) (stop bool, err error) {
+		// for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
+		// key := unbondingValIterator.Key()
+		// keyTime, keyHeight, err := types.ParseValidatorQueueKey(key)
+		// if err != nil {
+		// 	return true, fmt.Errorf("failed to parse unbonding key: %w", err)
+		// }
+		keyTime := key.K1()
+		keyHeight := key.K2()
 
 		// All addresses for the given key have the same unbonding height and time.
 		// We only unbond if the height and time are less than the current height
 		// and time.
 		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
 			addrs := types.ValAddresses{}
-			if err = k.cdc.Unmarshal(unbondingValIterator.Value(), &addrs); err != nil {
-				return err
+			if err = k.cdc.Unmarshal(value, &addrs); err != nil {
+				return true, err
 			}
 
 			for _, valAddr := range addrs.Addresses {
 				addr, err := k.validatorAddressCodec.StringToBytes(valAddr)
 				if err != nil {
-					return err
+					return true, err
 				}
 				val, err := k.GetValidator(ctx, addr)
 				if err != nil {
-					return errorsmod.Wrap(err, "validator in the unbonding queue was not found")
+					return true, errorsmod.Wrap(err, "validator in the unbonding queue was not found")
 				}
 
 				if !val.IsUnbonding() {
-					return fmt.Errorf("unexpected validator in unbonding queue; status was not unbonding")
+					return true, fmt.Errorf("unexpected validator in unbonding queue; status was not unbonding")
 				}
 
 				if val.UnbondingOnHoldRefCount == 0 {
 					for _, id := range val.UnbondingIds {
 						if err = k.DeleteUnbondingIndex(ctx, id); err != nil {
-							return err
+							return true, err
 						}
 					}
 
 					val, err = k.UnbondingToUnbonded(ctx, val)
 					if err != nil {
-						return err
+						return true, err
 					}
 
 					if val.GetDelegatorShares().IsZero() {
 						str, err := k.validatorAddressCodec.StringToBytes(val.GetOperator())
 						if err != nil {
-							return err
+							return true, err
 						}
 						if err = k.RemoveValidator(ctx, str); err != nil {
-							return err
+							return true, err
 						}
 					} else {
 						// remove unbonding ids
@@ -605,11 +600,16 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 
 					// remove validator from queue
 					if err = k.DeleteValidatorQueue(ctx, val); err != nil {
-						return err
+						return true, err
 					}
 				}
 			}
 		}
+		// }
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
 	return nil
 }

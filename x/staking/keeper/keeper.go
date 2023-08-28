@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -48,6 +49,7 @@ type Keeper struct {
 	UnbondingDelegations        collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	ValidatorQueue              collections.Map[collections.Pair[time.Time, int64], []byte]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -155,7 +157,17 @@ func NewKeeper(
 				collections.BytesKey,
 				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			),
-			codec.CollValue[types.UnbondingDelegation](cdc)),
+			codec.CollValue[types.UnbondingDelegation](cdc),
+		),
+		ValidatorQueue: collections.NewMap(
+			sb, types.ValidatorQueueKey,
+			"validator_queue",
+			collections.PairKeyCodec(
+				sdk.TimeKey,
+				collections.Int64Key,
+			),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()

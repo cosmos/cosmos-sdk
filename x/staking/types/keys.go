@@ -50,9 +50,9 @@ var (
 	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
 	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
-	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
+	UnbondingQueueKey    = []byte{0x41}              // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey = []byte{0x42}              // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
@@ -144,31 +144,6 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	}
 
 	return operAddr
-}
-
-// GetValidatorQueueKey returns the prefix key used for getting a set of unbonding
-// validators whose unbonding completion occurs at the given time and height.
-func GetValidatorQueueKey(timestamp time.Time, height int64) []byte {
-	heightBz := sdk.Uint64ToBigEndian(uint64(height))
-	timeBz := sdk.FormatTimeBytes(timestamp)
-	timeBzL := len(timeBz)
-	prefixL := len(ValidatorQueueKey)
-
-	bz := make([]byte, prefixL+8+timeBzL+8)
-
-	// copy the prefix
-	copy(bz[:prefixL], ValidatorQueueKey)
-
-	// copy the encoded time bytes length
-	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
-
-	// copy the encoded time bytes
-	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
-
-	// copy the encoded height
-	copy(bz[prefixL+8+timeBzL:], heightBz)
-
-	return bz
 }
 
 // ParseValidatorQueueKey returns the encoded time and height from a key created

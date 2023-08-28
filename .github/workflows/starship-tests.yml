@@ -29,7 +29,7 @@ jobs:
       # - Port forward all ports to localhost for next steps to connect
       - name: Setup Test infra
         id: starship-action
-        uses: cosmology-tech/starship-action@0.2.14
+        uses: cosmology-tech/starship-action@0.2.15
         with:
           values: tests/starship/configs/ci.yaml
           port-forward: true
@@ -64,7 +64,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -82,7 +82,7 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

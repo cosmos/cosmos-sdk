@@ -369,7 +369,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.53.3
+golangci_version=v1.54.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

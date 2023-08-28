@@ -75,7 +75,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 		ve := abci.ExtendedVoteInfo{
 			Validator: abci.Validator{
 				Address: valbz,
-				Power:   v.ConsensusPower(sdk.DefaultPowerReduction),
+				Power:   1000,
 			},
 			VoteExtension:      voteExt,
 			ExtensionSignature: sig,

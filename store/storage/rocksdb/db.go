@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math"
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage/util"
@@ -180,17 +179,9 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 }
 
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.
-// Note, a zero version indicates a maximum version.
 func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
-	var ver uint64
-	if version == 0 {
-		ver = math.MaxUint64
-	} else {
-		ver = version
-	}
-
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], ver)
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	readOpts := grocksdb.NewDefaultReadOptions()
 	readOpts.SetTimestamp(ts[:])

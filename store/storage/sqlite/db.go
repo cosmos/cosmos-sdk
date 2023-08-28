@@ -31,7 +31,12 @@ const (
   ON CONFLICT(store_key, key, version) DO UPDATE SET
     value = ?;
 	`
-	delStmt = "DELETE FROM state_storage WHERE store_key = ? AND key = ? AND version = ?;"
+	delStmt = `
+	UPDATE state_storage SET tombstone = ?
+	WHERE id = (
+		SELECT id FROM state_storage WHERE store_key = ? AND key = ? AND version <= ? ORDER BY version DESC LIMIT 1
+	) AND tombstone = 0;
+	`
 )
 
 var _ store.VersionedDatabase = (*Database)(nil)
@@ -53,6 +58,7 @@ func New(dataDir string) (*Database, error) {
 		key varchar not null,
 		value varchar not null,
 		version integer unsigned not null,
+		tombstone integer unsigned default 0,
 		unique (store_key, key, version)
 	);
 
@@ -104,29 +110,17 @@ func (db *Database) SetLatestVersion(version uint64) error {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	stmt, err := db.storage.Prepare(`
-	SELECT EXISTS(
-		SELECT 1 FROM state_storage WHERE store_key = ? AND key = ? AND version <= ?
-		ORDER BY version DESC LIMIT 1
-	);
-	`)
+	val, err := db.Get(storeKey, version, key)
 	if err != nil {
-		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
+		return false, err
 	}
 
-	defer stmt.Close()
-
-	var exists bool
-	if err := stmt.QueryRow(storeKey, key, version).Scan(&exists); err != nil {
-		return false, fmt.Errorf("failed to query row: %w", err)
-	}
-
-	return exists, nil
+	return val != nil, nil
 }
 
-func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
+func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	stmt, err := db.storage.Prepare(`
-	SELECT value FROM state_storage
+	SELECT value, tombstone FROM state_storage
 	WHERE store_key = ? AND key = ? AND version <= ?
 	ORDER BY version DESC LIMIT 1;
 	`)
@@ -136,8 +130,11 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 
 	defer stmt.Close()
 
-	var value []byte
-	if err := stmt.QueryRow(storeKey, key, version).Scan(&value); err != nil {
+	var (
+		value []byte
+		tomb  uint64
+	)
+	if err := stmt.QueryRow(storeKey, key, targetVersion).Scan(&value, &tomb); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
@@ -145,7 +142,14 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 		return nil, fmt.Errorf("failed to query row: %w", err)
 	}
 
-	return value, nil
+	// A tombstone of zero or a target version that is less than the tombstone
+	// version means the key is not deleted at the target version.
+	if tomb == 0 || targetVersion < tomb {
+		return value, nil
+	}
+
+	// the value is considered deleted
+	return nil, nil
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
@@ -158,7 +162,7 @@ func (db *Database) Set(storeKey string, version uint64, key, value []byte) erro
 }
 
 func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	_, err := db.storage.Exec(delStmt, storeKey, key, version)
+	_, err := db.storage.Exec(delStmt, version, storeKey, key, version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -187,8 +191,8 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 }
 
 // nolint:unused // used for debugging in tests only
-func (db *Database) printRowsDebug() {
-	stmt, err := db.storage.Prepare("SELECT store_key, key, value, version FROM state_storage")
+func (db *Database) PrintRowsDebug() {
+	stmt, err := db.storage.Prepare("SELECT store_key, key, value, version, tombstone FROM state_storage")
 	if err != nil {
 		panic(fmt.Errorf("failed to prepare SQL statement: %w", err))
 	}
@@ -207,16 +211,17 @@ func (db *Database) printRowsDebug() {
 			key      []byte
 			value    []byte
 			version  uint64
+			tomb     uint64
 		)
-		if err := rows.Scan(&storeKey, &key, &value, &version); err != nil {
+		if err := rows.Scan(&storeKey, &key, &value, &version, &tomb); err != nil {
 			panic(fmt.Sprintf("failed to scan row: %s", err))
 		}
 
-		sb.WriteString(fmt.Sprintf("STORE_KEY: %s, KEY: %s, VALUE: %s, VERSION: %d\n", storeKey, key, value, version))
+		sb.WriteString(fmt.Sprintf("STORE_KEY: %s, KEY: %s, VALUE: %s, VERSION: %d, TOMBSTONE: %d\n", storeKey, key, value, version, tomb))
 	}
 	if err := rows.Err(); err != nil {
 		panic(fmt.Errorf("received unexpected error: %w", err))
 	}
 
-	fmt.Println(sb.String())
+	fmt.Println(strings.TrimSpace(sb.String()))
 }

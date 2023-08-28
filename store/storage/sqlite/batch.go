@@ -79,7 +79,7 @@ func (b *Batch) Write() error {
 			}
 
 		case batchActionDel:
-			_, err := b.tx.Exec(delStmt, op.storeKey, op.key, b.version)
+			_, err := b.tx.Exec(delStmt, b.version, op.storeKey, op.key, b.version)
 			if err != nil {
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}

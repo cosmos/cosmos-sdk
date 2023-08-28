@@ -86,14 +86,6 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		return nil, err
 	}
 
-	// Check if the sender is an admin, authority or has permission for all messages
-	hasPermissionForAllMsgs := perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority())
-
-	// return early if the sender has no permissions at all
-	if !hasPermissionForAllMsgs && perms.Level != types.Permissions_LEVEL_SOME_MSGS {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker")
-	}
-
 	for _, msgTypeURL := range msg.MsgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
@@ -105,9 +97,16 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 			return nil, fmt.Errorf("message %s is already disabled", msgTypeURL)
 		}
 
-		// if the sender is not one of the super admins, check if the sender has permission for this specific message
-		if !hasPermissionForAllMsgs && !hasPermissionForMsg(perms, msgTypeURL) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+		switch {
+		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
+			// if the sender is a super admin or the module authority, no need to check perms
+		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
+			// if the sender has permission for some messages, check if the sender has permission for this specific message
+			if !hasPermissionForMsg(perms, msgTypeURL) {
+				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+			}
+		default:
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker")
 		}
 
 		if err = srv.DisableList.Set(ctx, msgTypeURL); err != nil {
@@ -147,14 +146,6 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		return nil, err
 	}
 
-	// Check if the sender is an admin, authority or has permission for all messages
-	hasPermissionForAllMsgs := perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority())
-
-	// return early if the sender has no permissions at all
-	if !hasPermissionForAllMsgs && perms.Level != types.Permissions_LEVEL_SOME_MSGS {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
-	}
-
 	for _, msgTypeURL := range msg.MsgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
@@ -166,15 +157,21 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 			return nil, fmt.Errorf("message %s is not disabled", msgTypeURL)
 		}
 
-		// if the sender is not one of the super admins, check if the sender has permission for this specific message
-		if !hasPermissionForAllMsgs && !hasPermissionForMsg(perms, msgTypeURL) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker for message %s", msgTypeURL)
+		switch {
+		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
+			// if the sender is a super admin or the module authority, no need to check perms
+		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
+			// if the sender has permission for some messages, check if the sender has permission for this specific message
+			if !hasPermissionForMsg(perms, msgTypeURL) {
+				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker for message %s", msgTypeURL)
+			}
+		default:
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
 		}
 
 		if err = srv.DisableList.Remove(ctx, msgTypeURL); err != nil {
 			return nil, err
 		}
-
 	}
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")

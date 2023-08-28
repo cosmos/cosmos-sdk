@@ -45,9 +45,7 @@ func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType t
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint64) (ubd types.UnbondingDelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	ubdKey, err := k.UnbondingIndex.Get(ctx, id)
+	ubdKey, err := k.UnbondingIndex.Get(ctx, id) // ubdKey => [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr]
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
@@ -59,18 +57,16 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 		return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
 	}
 
-	value, err := store.Get(ubdKey)
-	if err != nil {
-		return types.UnbondingDelegation{}, err
-	}
+	// remove prefix bytes and length bytes (since ubdKey obtained is prefixed by UnbondingDelegationKey prefix and length of the address)
+	delAddr := ubdKey[2 : (len(ubdKey)/2)+1]
+	// remove prefix length bytes
+	valAddr := ubdKey[2+len(ubdKey)/2:]
 
-	if value == nil {
-		return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
-	}
-
-	ubd, err = types.UnmarshalUBD(k.cdc, value)
-	// An error here means that what we got wasn't the right type
+	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr, valAddr))
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
+		}
 		return types.UnbondingDelegation{}, err
 	}
 

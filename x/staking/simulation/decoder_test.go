@@ -3,13 +3,11 @@ package simulation_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -20,16 +18,13 @@ import (
 
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
-	delAddr1 = sdk.AccAddress(delPk1.Address())
 	valAddr1 = sdk.ValAddress(delPk1.Address())
 )
 
 func TestDecodeStore(t *testing.T) {
 	cdc := testutil.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
-	bondTime := time.Now().UTC()
 
-	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, math.OneInt(), 1, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	oneIntBz, err := math.OneInt().Marshal()
 	require.NoError(t, err)
 
@@ -37,7 +32,6 @@ func TestDecodeStore(t *testing.T) {
 		Pairs: []kv.Pair{
 			{Key: types.LastTotalPowerKey, Value: oneIntBz},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshal(&ubd)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -48,7 +42,6 @@ func TestDecodeStore(t *testing.T) {
 	}{
 		{"LastTotalPower", fmt.Sprintf("%v\n%v", math.OneInt(), math.OneInt())},
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
-		{"UnbondingDelegation", fmt.Sprintf("%v\n%v", ubd, ubd)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

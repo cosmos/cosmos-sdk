@@ -167,6 +167,20 @@ func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
 }
 
+// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
+// VALUE: staking/UnbondingDelegation
+func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	unbondingDelegationKey := []byte{0x32}
+	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
+}
+
+// getValidatorKey creates the key for the validator with address
+// VALUE: staking/Validator
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	validatorsKey := []byte{0x21}
+	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
+}
+
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -231,16 +245,61 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
+	s.SetupTest()
+
+	delAddrs, valAddrs := createValAddrs(100)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			ubd := stakingtypes.UnbondingDelegation{
+				DelegatorAddress: delAddrs[i].String(),
+				ValidatorAddress: valAddrs[i].String(),
+				Entries: []stakingtypes.UnbondingDelegationEntry{
+					{
+						CreationHeight: i,
+						CompletionTime: time.Unix(i, 0).UTC(),
+						Balance:        math.NewInt(i),
+						UnbondingId:    uint64(i),
+					},
+				},
+			}
+			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
+			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
+			s.ctx.KVStore(s.key).Set(stakingtypes.GetUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+		},
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			ubd := stakingtypes.UnbondingDelegation{
+				DelegatorAddress: delAddrs[i].String(),
+				ValidatorAddress: valAddrs[i].String(),
+				Entries: []stakingtypes.UnbondingDelegationEntry{
+					{
+						CreationHeight: i,
+						CompletionTime: time.Unix(i, 0).UTC(),
+						Balance:        math.NewInt(i),
+						UnbondingId:    uint64(i),
+					},
+				},
+			}
+			err := s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
+			s.Require().NoError(err)
+		},
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+	s.Require().NoError(err)
 }
 
-func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	validatorsKey := []byte{0x21}
-	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
-}
-
-func (s *KeeperTestSuite) TestDiffCollsMigration() {
+func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 	s.SetupTest()
 	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
 	s.Require().NoError(err)
@@ -298,4 +357,8 @@ func (s *KeeperTestSuite) TestDiffCollsMigration() {
 		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
 	)
 	s.Require().NoError(err)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

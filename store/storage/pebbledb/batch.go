@@ -43,14 +43,23 @@ func (b *Batch) Reset() {
 	b.batch.Reset()
 }
 
-func (b *Batch) Set(storeKey string, key, value []byte) error {
+func (b *Batch) set(storeKey string, tombstone uint64, key, value []byte) error {
 	prefixedKey := MVCCEncode(prependStoreKey(storeKey, key), b.version)
-	return b.batch.Set(prefixedKey, value, nil)
+	prefixedVal := MVCCEncode(value, tombstone)
+
+	if err := b.batch.Set(prefixedKey, prefixedVal, nil); err != nil {
+		return fmt.Errorf("failed to write PebbleDB batch: %w", err)
+	}
+
+	return nil
+}
+
+func (b *Batch) Set(storeKey string, key, value []byte) error {
+	return b.set(storeKey, 0, key, value)
 }
 
 func (b *Batch) Delete(storeKey string, key []byte) error {
-	prefixedKey := MVCCEncode(prependStoreKey(storeKey, key), b.version)
-	return b.batch.Delete(prefixedKey, nil)
+	return b.set(storeKey, b.version, key, []byte(tombstoneVal))
 }
 
 func (b *Batch) Write() (err error) {

@@ -190,7 +190,7 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 	panic("not implemented!")
 }
 
-func (db *Database) printRowsDebug() {
+func (db *Database) PrintRowsDebug() {
 	stmt, err := db.storage.Prepare("SELECT store_key, key, value, version, tombstone FROM state_storage")
 	if err != nil {
 		panic(fmt.Errorf("failed to prepare SQL statement: %w", err))

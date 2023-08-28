@@ -32,7 +32,7 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-*Note: Only the last two versions of cosmovisor are actively developed/maintained. Older versions are longer maintained and is recommended not to be used*
+*Note: Only the last two versions (v1.3.0 & v1.5.0) of cosmovisor are actively developed/maintained. Older versions are longer maintained and is recommended not to be used.*
 
 ## Contributing
 

@@ -110,6 +110,7 @@ func (k Keeper) GetRedelegationByUnbondingID(ctx context.Context, id uint64) (re
 // GetValidatorByUnbondingID returns the validator that is unbonding with a certain unbonding op ID
 func (k Keeper) GetValidatorByUnbondingID(ctx context.Context, id uint64) (val types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
+
 	valKey, err := k.UnbondingIndex.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -121,6 +122,7 @@ func (k Keeper) GetValidatorByUnbondingID(ctx context.Context, id uint64) (val t
 	if valKey == nil {
 		return types.Validator{}, types.ErrNoValidatorFound
 	}
+
 	value, err := store.Get(valKey)
 	if err != nil {
 		return types.Validator{}, err

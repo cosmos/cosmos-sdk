@@ -65,12 +65,12 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			customClientTemplate, customClientConfig := initClientConfig()
-			initClientCtx, err = config.CreateClientConfigAndOrContext(initClientCtx, customClientTemplate, customClientConfig)
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after CreateClientConfigAndOrContext, as that function
+			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts := tx.ConfigOptions{
@@ -102,7 +102,7 @@ func NewRootCmd() *cobra.Command {
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()
 	var err error
-	initClientCtx, err = config.CreateClientConfigAndOrContext(initClientCtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

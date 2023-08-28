@@ -13,6 +13,7 @@ import (
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -75,7 +76,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingDelegationKey",
 			v1.GetUBDKey(addr4, valAddr1),
-			types.GetUBDKey(addr4, valAddr1),
+			unbondingKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
@@ -143,4 +144,8 @@ func TestStoreMigration(t *testing.T) {
 func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
 	return append(types.UnbondingQueueKey, bz...)
+}
+
+func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr)...), sdkaddress.MustLengthPrefix(valAddr)...)
 }

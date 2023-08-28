@@ -299,6 +299,10 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 	s.SetupTest()
 	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
@@ -357,8 +361,4 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
 	)
 	s.Require().NoError(err)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

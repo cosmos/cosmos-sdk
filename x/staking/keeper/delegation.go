@@ -346,13 +346,13 @@ func (k Keeper) SetUnbondingDelegationEntry(
 // is a slice of DVPairs corresponding to unbonding delegations that expire at a
 // certain time.
 func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvPairs []types.DVPair, err error) {
-	dvPair, err := k.UnbondingQueue.Get(ctx, timestamp)
+	pairs, err := k.UnbondingQueue.Get(ctx, timestamp)
 	if err != nil {
-		return []types.DVPair{}, err
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		return []types.DVPair{}, nil
 	}
-
-	pairs := types.DVPairs{}
-	pairs.Pairs = append(pairs.Pairs, dvPair)
 
 	return pairs.Pairs, err
 }
@@ -360,10 +360,7 @@ func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (
 // SetUBDQueueTimeSlice sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVPair) error {
 	dvPairs := types.DVPairs{Pairs: keys}
-	if len(dvPairs.Pairs) == 0 {
-		return k.UnbondingQueue.Set(ctx, timestamp, types.DVPair{})
-	}
-	return k.UnbondingQueue.Set(ctx, timestamp, dvPairs.Pairs[0])
+	return k.UnbondingQueue.Set(ctx, timestamp, dvPairs)
 }
 
 // InsertUBDQueue inserts an unbonding delegation to the appropriate timeslice
@@ -371,7 +368,10 @@ func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, k
 func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegation, completionTime time.Time) error {
 	dvPair := types.DVPair{DelegatorAddress: ubd.DelegatorAddress, ValidatorAddress: ubd.ValidatorAddress}
 
-	timeSlice, _ := k.GetUBDQueueTimeSlice(ctx, completionTime)
+	timeSlice, err := k.GetUBDQueueTimeSlice(ctx, completionTime)
+	if err != nil {
+		return err
+	}
 	if len(timeSlice) == 0 {
 		if err := k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair}); err != nil {
 			return err
@@ -386,21 +386,29 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time) (matureUnbonds []types.DVPair, err error) {
-	err = k.UnbondingQueue.Walk(ctx, nil, func(key time.Time, _ types.DVPair) (bool, error) {
-		timeslice := types.DVPairs{}
-		value, err := k.UnbondingQueue.Get(ctx, currTime)
+	// get an iterator for all timeslices from time 0 until the current Blockheader time
+	iter, err := k.UnbondingQueue.Iterate(ctx, (&collections.Range[time.Time]{}).EndInclusive(currTime))
+	if err != nil {
+		return matureUnbonds, err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		timeslice, err := iter.Value()
 		if err != nil {
-			return true, err
+			return matureUnbonds, err
 		}
-		timeslice.Pairs = append(timeslice.Pairs, value)
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
-
-		if err = k.UnbondingQueue.Remove(ctx, key); err != nil {
-			return true, err
+		key, err := iter.Key()
+		if err != nil {
+			return matureUnbonds, err
 		}
-		return false, nil
-	})
+		if err = k.UnbondingQueue.Remove(ctx, key); err != nil {
+			return matureUnbonds, err
+		}
+	}
+
 	if err != nil {
 		return matureUnbonds, err
 	}

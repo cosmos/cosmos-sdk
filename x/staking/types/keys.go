@@ -35,7 +35,7 @@ var (
 	LastValidatorPowerKey = collections.NewPrefix(17) // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = collections.NewPrefix(18) // prefix for the total power
 
-	ValidatorsKey             = []byte{0x21}              // prefix for each key to a validator
+	ValidatorsKey             = collections.NewPrefix(33) // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = collections.NewPrefix(34) // prefix for each key to a validator index, by pubkey
 	ValidatorsByPowerIndexKey = []byte{0x23}              // prefix for each key to a validator index, sorted by power
 

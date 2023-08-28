@@ -14,6 +14,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -43,6 +44,7 @@ type KeeperTestSuite struct {
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
 	key           *storetypes.KVStoreKey
+	cdc           codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -54,6 +56,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
+	s.cdc = encCfg.Codec
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -266,4 +269,66 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
+// VALUE: staking/UnbondingDelegation
+func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	unbondingDelegationKey := []byte{0x32}
+	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
+}
+
+func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
+	s.SetupTest()
+
+	delAddrs, valAddrs := createValAddrs(100)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			ubd := stakingtypes.UnbondingDelegation{
+				DelegatorAddress: delAddrs[i].String(),
+				ValidatorAddress: valAddrs[i].String(),
+				Entries: []stakingtypes.UnbondingDelegationEntry{
+					{
+						CreationHeight: i,
+						CompletionTime: time.Unix(i, 0).UTC(),
+						Balance:        math.NewInt(i),
+						UnbondingId:    uint64(i),
+					},
+				},
+			}
+			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
+			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
+			s.ctx.KVStore(s.key).Set(stakingtypes.GetUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+		},
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			ubd := stakingtypes.UnbondingDelegation{
+				DelegatorAddress: delAddrs[i].String(),
+				ValidatorAddress: valAddrs[i].String(),
+				Entries: []stakingtypes.UnbondingDelegationEntry{
+					{
+						CreationHeight: i,
+						CompletionTime: time.Unix(i, 0).UTC(),
+						Balance:        math.NewInt(i),
+						UnbondingId:    uint64(i),
+					},
+				},
+			}
+			err := s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
+			s.Require().NoError(err)
+		},
+		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+
+	s.Require().NoError(err)
 }

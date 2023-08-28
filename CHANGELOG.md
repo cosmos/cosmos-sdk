@@ -59,6 +59,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
     * remove from `types`: `GetRedelegationTimeKey`
     * remove from `Keeper`: `RedelegationQueueIterator`
+* (x/staking) [#17270](https://github.com/cosmos/cosmos-sdk/pull/17270) Use collections for `UnbondingDelegation`:
+    * remove from `types`: `GetUBDsKey`
+    * remove from `Keeper`: `IterateUnbondingDelegations`, `IterateDelegatorUnbondingDelegations`
 * (client/keys) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) `clientkeys.NewKeyOutput`, `MkConsKeyOutput`, `MkValKeyOutput`, `MkAccKeyOutput`, `MkAccKeysOutput` now take their corresponding address codec instead of using the global SDK config.
 * (x/staking) [#17336](https://github.com/cosmos/cosmos-sdk/pull/17336) Use collections for `RedelegationByValDstIndexKey`:
     * remove from `types`: `GetREDByValDstIndexKey`, `GetREDsToValDstIndexKey`

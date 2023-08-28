@@ -46,6 +46,7 @@ type Keeper struct {
 	Delegations                 collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
 	UnbondingIndex              collections.Map[uint64, []byte]
 	RedelegationQueue           collections.Map[time.Time, types.DVVTriplet]
+	UnbondingDelegations        collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 }
@@ -148,6 +149,14 @@ func NewKeeper(
 			collections.BytesValue,
 		),
 		RedelegationQueue: collections.NewMap(sb, types.RedelegationQueueKey, "redelegation_queue", sdk.TimeKey, codec.CollValue[types.DVVTriplet](cdc)),
+		UnbondingDelegations: collections.NewMap(
+			sb, types.UnbondingDelegationKey,
+			"unbonding_delegation",
+			collections.PairKeyCodec(
+				collections.BytesKey,
+				sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+			),
+			codec.CollValue[types.UnbondingDelegation](cdc)),
 	}
 
 	schema, err := sb.Build()

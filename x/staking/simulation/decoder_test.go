@@ -25,15 +25,12 @@ func TestDecodeStore(t *testing.T) {
 	cdc := testutil.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	val, err := types.NewValidator(valAddr1.String(), delPk1, types.NewDescription("test", "test", "test", "test", "test"))
-	require.NoError(t, err)
 	oneIntBz, err := math.OneInt().Marshal()
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.LastTotalPowerKey, Value: oneIntBz},
-			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshal(&val)},
 			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
@@ -44,7 +41,6 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"LastTotalPower", fmt.Sprintf("%v\n%v", math.OneInt(), math.OneInt())},
-		{"Validator", fmt.Sprintf("%v\n%v", val, val)},
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
 		{"other", ""},
 	}

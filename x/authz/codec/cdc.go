@@ -10,12 +10,11 @@ import (
 var (
 	Amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(Amino)
-	GlobalCdc *codec.ProtoCodec
+	GlobalCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 )
 
 func init() {
 	cryptocodec.RegisterCrypto(Amino)
 	codec.RegisterEvidences(Amino)
 	sdk.RegisterLegacyAminoCodec(Amino)
-	GlobalCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 }

@@ -26,7 +26,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -78,7 +77,7 @@ func TestABCI_First_block_Height(t *testing.T) {
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
 	capKey := storetypes.NewKVStoreKey("main")
@@ -180,7 +179,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -197,7 +196,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -219,7 +218,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
 		return sdk.BeginBlock{
@@ -286,7 +285,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 		voteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
@@ -369,7 +368,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewNopLogger(), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
@@ -503,7 +502,7 @@ func TestABCI_P2PQuery(t *testing.T) {
 func TestBaseApp_PrepareCheckState(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -532,7 +531,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 func TestBaseApp_Precommit(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	cp := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
@@ -1238,7 +1237,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 
@@ -1351,7 +1350,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	t.Parallel()
 
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
@@ -1374,7 +1373,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	t.Parallel()
 
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
@@ -1791,8 +1790,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	}
 
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1866,8 +1864,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				{
 					Validator: abci.Validator{
 						Address: consAddr.Bytes(),
-						// this is being ignored by our validation function
-						Power: sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction),
+						Power:   666,
 					},
 					VoteExtension:      ext,
 					ExtensionSignature: extSig,
@@ -1881,7 +1878,24 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
+	reqPrepareProposal = abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     3, // this value can't be 0
+		LocalLastCommit: abci.ExtendedCommitInfo{
+			Round: 0,
+			Votes: []abci.ExtendedVoteInfo{
+				{
+					Validator: abci.Validator{
+						Address: consAddr.Bytes(),
+						Power:   666,
+					},
+					VoteExtension:      ext,
+					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagNil, // This will ignore the vote extension
+				},
+			},
+		},
+	}
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))
@@ -2009,7 +2023,7 @@ func TestABCI_HaltChain(t *testing.T) {
 func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
-	logger := log.NewNopLogger()
+	logger := log.NewTestLogger(t)
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 	_, err := app.InitChain(&abci.RequestInitChain{})

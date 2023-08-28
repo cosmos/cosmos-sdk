@@ -368,16 +368,16 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	unbStore := prefix.NewStore(store, types.GetUBDsKey(delAddr))
-	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key, value []byte) error {
-		unbond, err := types.UnmarshalUBD(k.cdc, value)
-		if err != nil {
-			return err
-		}
-		unbondingDelegations = append(unbondingDelegations, unbond)
-		return nil
-	})
+	_, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.UnbondingDelegations,
+		req.Pagination,
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (types.UnbondingDelegation, error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return value, nil
+		},
+		query.WithCollectionPaginationPairPrefix[[]byte, []byte](delAddr),
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

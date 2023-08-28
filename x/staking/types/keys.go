@@ -40,11 +40,12 @@ var (
 	ValidatorsByPowerIndexKey = []byte{0x23}              // prefix for each key to a validator index, sorted by power
 
 	DelegationKey                    = collections.NewPrefix(49) // key for a delegation
-	UnbondingDelegationKey           = []byte{0x32}              // key for an unbonding-delegation
+	UnbondingDelegationKey           = collections.NewPrefix(50) // key for an unbonding-delegation
 	UnbondingDelegationByValIndexKey = collections.NewPrefix(51) // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = collections.NewPrefix(52) // key for a redelegation
-	RedelegationByValSrcIndexKey     = collections.NewPrefix(53) // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = collections.NewPrefix(54) // prefix for each key for an redelegation, by destination validator operator
+
+	RedelegationKey              = collections.NewPrefix(52) // key for a redelegation
+	RedelegationByValSrcIndexKey = collections.NewPrefix(53) // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey = collections.NewPrefix(54) // prefix for each key for an redelegation, by destination validator operator
 
 	UnbondingIDKey    = collections.NewPrefix(55) // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
@@ -193,12 +194,7 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 // GetUBDKey creates the key for an unbonding delegation by delegator and validator addr
 // VALUE: staking/UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetUBDsKey(delAddr.Bytes()), address.MustLengthPrefix(valAddr)...)
-}
-
-// GetUBDsKey creates the prefix for all unbonding delegations from a delegator
-func GetUBDsKey(delAddr sdk.AccAddress) []byte {
-	return append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)
+	return append(append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...), address.MustLengthPrefix(valAddr)...)
 }
 
 // GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator

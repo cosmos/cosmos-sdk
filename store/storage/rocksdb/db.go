@@ -179,7 +179,6 @@ func (db *Database) NewReverseIterator(storeKey string, version uint64, start, e
 }
 
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.
-// Note, a zero version indicates a maximum version.
 func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	var ts [TimestampSize]byte
 	binary.LittleEndian.PutUint64(ts[:], version)

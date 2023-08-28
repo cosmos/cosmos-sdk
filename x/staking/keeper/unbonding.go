@@ -45,7 +45,7 @@ func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType t
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint64) (ubd types.UnbondingDelegation, err error) {
-	ubdKey, err := k.UnbondingIndex.Get(ctx, id)
+	ubdKey, err := k.UnbondingIndex.Get(ctx, id) // ubdKey => [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr]
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
@@ -57,7 +57,9 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 		return types.UnbondingDelegation{}, types.ErrNoUnbondingDelegation
 	}
 
+	// remove prefix bytes and length bytes (since ubdKey obtained is prefixed by UnbondingDelegationKey prefix and length of the address)
 	delAddr := ubdKey[2 : (len(ubdKey)/2)+1]
+	// remvoe prefix length bytes
 	valAddr := ubdKey[2+len(ubdKey)/2:]
 
 	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr, valAddr))

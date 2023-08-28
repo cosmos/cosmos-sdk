@@ -33,9 +33,8 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.AppModuleGenesis = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ module.HasGenesis       = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.HasGenesis     = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the circuit module.

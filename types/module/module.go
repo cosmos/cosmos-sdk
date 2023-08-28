@@ -229,6 +229,8 @@ type HasABCIEndblock interface {
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
+var _ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
+
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleBasic

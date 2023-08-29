@@ -273,7 +273,8 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	s.Require().EqualError(err, "ApplyUpgrade should never be called without first checking HasHandler")
 
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(err)
 	upgradedProtocolVersion, err := s.baseApp.AppVersion(s.ctx)
 	s.Require().NoError(err)
 

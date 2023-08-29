@@ -128,16 +128,16 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		return nil, err
 	}
 
-	genesisFile, err := AppGenesisFromReader(bufio.NewReader(file))
+	appGenesis, err := AppGenesisFromReader(bufio.NewReader(file))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read genesis from file %s: %s", genFile, err)
 	}
 
 	if err := file.Close(); err != nil {
 		return nil, err
 	}
 
-	return genesisFile, nil
+	return appGenesis, nil
 }
 
 // --------------------------

@@ -93,18 +93,6 @@ func TestBasicManager(t *testing.T) {
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
 }
 
-func TestGenesisOnlyAppModule(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockModule := mock.NewMockAppModuleGenesis(mockCtrl)
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	goam := module.NewGenesisOnlyAppModule(mockModule)
-
-	// no-op
-	goam.RegisterInvariants(mockInvariantRegistry)
-}
-
 func TestAssertNoForgottenModules(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -230,7 +218,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mockAppModule2.EXPECT().Name().Times(4).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
@@ -241,7 +229,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1)
 	_, err := mm.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis")
 
@@ -252,17 +240,24 @@ func TestManager_InitGenesis(t *testing.T) {
 		"module3": json.RawMessage(`{"key": "value"}`),
 	}
 
+	mockAppModuleABCI1 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
+	mockAppModuleABCI2 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
+	mockAppModuleABCI1.EXPECT().Name().Times(4).Return("module1")
+	mockAppModuleABCI2.EXPECT().Name().Times(2).Return("module2")
+	mmABCI := module.NewManager(mockAppModuleABCI1, mockAppModuleABCI2)
 	// panic because more than one module returns validator set updates
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	_, err = mmABCI.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
 
 	// happy path
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{})
+
+	mm2 := module.NewManager(mockAppModuleABCI1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1)
 	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	_, err = mm2.InitGenesis(ctx, cdc, genesisData)
 	require.NoError(t, err)
 }
 

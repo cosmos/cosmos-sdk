@@ -57,20 +57,3 @@ var (
 func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
-
-// // ValidatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
-// // missed block bitmap.
-// func ValidatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
-// 	return append(ValidatorMissedBlockBitmapKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
-// }
-
-// // ValidatorMissedBlockBitmapKey returns the key for a validator's missed block
-// // bitmap chunk.
-// func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
-// 	bz := make([]byte, 8)
-// 	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
-
-// 	validatorMissedBlockBitmapKeyPrefix := []byte{0x02}
-// 	// return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
-// 	return append(append(validatorMissedBlockBitmapKeyPrefix, address.MustLengthPrefix(v.Bytes())...), bz...)
-// }

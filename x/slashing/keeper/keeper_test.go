@@ -135,20 +135,13 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
-// // validatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
-// // missed block bitmap.
-// func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
-// 	validatorMissedBlockBitmapKeyPrefix := []byte{0x02} // Prefix for missed block bitmap
-
-// 	return append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...)
-// }
-
+// ValidatorMissedBlockBitmapKey returns the key for a validator's missed block
+// bitmap chunk.
 func validatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 	bz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
 
-	validatorMissedBlockBitmapKeyPrefix := []byte{0x02}
-	// return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
+	validatorMissedBlockBitmapKeyPrefix := []byte{0x02} // Prefix for missed block bitmap
 	return append(append(validatorMissedBlockBitmapKeyPrefix, addresstypes.MustLengthPrefix(v.Bytes())...), bz...)
 }
 
@@ -156,13 +149,13 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 	s.SetupTest()
 
 	consAddr := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
-
+	index := int64(0)
 	err := sdktestutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,
 		100,
 		func(i int64) {
-			s.ctx.KVStore(s.key).Set(validatorMissedBlockBitmapKey(consAddr, 0), []byte{})
+			s.ctx.KVStore(s.key).Set(validatorMissedBlockBitmapKey(consAddr, index), []byte{})
 		},
 		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",
 	)
@@ -173,7 +166,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 		s.key,
 		100,
 		func(i int64) {
-			err := s.slashingKeeper.SetMissedBlockBitmapValue(s.ctx, consAddr, 0, true)
+			err := s.slashingKeeper.SetMissedBlockBitmapChunk(s.ctx, consAddr, index, []byte{})
 			s.Require().NoError(err)
 		},
 		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",

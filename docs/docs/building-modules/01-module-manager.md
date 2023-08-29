@@ -86,10 +86,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 #### module.HasGenesisBasics
 
-:::note
-Use `appmodule.HasGenesis` instead.
-:::
-
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L76-L79
 ```

@@ -197,7 +197,6 @@ func (itr *iterator) cursorTombstoned() bool {
 	return true
 }
 
-// nolint:unused // used for debugging in tests only
 func (itr *iterator) DebugRawIterate() {
 	valid := itr.source.Valid()
 	if valid {

@@ -670,22 +670,27 @@ func (k Keeper) InsertRedelegationQueue(ctx context.Context, red types.Redelegat
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err = k.RedelegationQueue.Walk(ctx, nil, func(key time.Time, _ types.DVVTriplets) (bool, error) {
-		timeslice, err := k.RedelegationQueue.Get(ctx, sdkCtx.HeaderInfo().Time)
+	redelegationTimesliceIterator, err := k.RedelegationQueue.Iterate(ctx, (&collections.Range[time.Time]{}).EndInclusive(sdkCtx.HeaderInfo().Time))
+	if err != nil {
+		return nil, err
+	}
+	defer redelegationTimesliceIterator.Close()
+	
+	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
+		timeslice, err := redelegationTimesliceIterator.Value()
 		if err != nil {
-			return true, err
+			return matureRedelegations, err
 		}
 
 		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
 
-		if err = k.RedelegationQueue.Remove(ctx, key); err != nil {
-			return true, err
+		key, err := redelegationTimesliceIterator.Key()
+		if err != nil {
+			return matureRedelegations, err
 		}
-		return false, nil
-	})
-
-	if err != nil {
-		return matureRedelegations, err
+		if err = k.RedelegationQueue.Remove(ctx, key); err != nil {
+			return matureRedelegations, err
+		}
 	}
 
 	return matureRedelegations, nil

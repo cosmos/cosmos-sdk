@@ -130,7 +130,7 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 
 	appGenesis, err := AppGenesisFromReader(bufio.NewReader(file))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read genesis from file %s: %s", genFile, err)
+		return nil, fmt.Errorf("failed to read genesis from file %s: %w", genFile, err)
 	}
 
 	if err := file.Close(); err != nil {

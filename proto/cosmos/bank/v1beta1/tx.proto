@@ -135,11 +135,7 @@ message MsgBurn {
   option (gogoproto.goproto_getters) = false;
 
   string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin amount = 3 [
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(amino.dont_omitempty) = true, (amino.encoding) = "legacy_coins"];
 }
 
 // MsgBurnResponse defines the Msg/Burn response type.

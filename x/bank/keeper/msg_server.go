@@ -188,6 +188,11 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		err  error
 	)
 
+	var coins sdk.Coins
+	for _, coin := range msg.Amount {
+		coins = append(coins, sdk.NewCoin(coin.Denom, coin.Amount))
+	}
+
 	if base, ok := k.Keeper.(BaseKeeper); ok {
 		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
 		if err != nil {
@@ -197,20 +202,20 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid keeper type: %T", k.Keeper)
 	}
 
-	if !msg.Amount.IsValid() {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !coins.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
-	if !msg.Amount.IsAllPositive() {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !coins.IsAllPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
+	if err := k.IsSendEnabledCoins(ctx, coins...); err != nil {
 		return nil, err
 	}
 
-	err = k.BurnCoins(ctx, from, msg.Amount)
+	err = k.BurnCoins(ctx, from, coins)
 	if err != nil {
 		return nil, err
 	}

@@ -149,11 +149,22 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 
 func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	lastCommitID := app.cms.LastCommitID()
+	appVersion := InitialAppVersion
+	if lastCommitID.Version > 0 {
+		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed creating query context: %w", err)
+		}
+		appVersion, err = app.AppVersion(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed getting app version: %w", err)
+		}
+	}
 
 	return &abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       app.appVersion,
+		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}, nil

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -85,24 +84,18 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey)) // smallest to largest
+	rng := collections.NewPrefixUntilPairRange[[]byte, []byte](delegator)
+	err := k.UnbondingDelegations.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return false, nil
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-	defer iterator.Close()
-
-	for i := 0; iterator.Valid(); iterator.Next() {
-		unbondingDelegation, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		i++
-	}
-
 	return unbondingDelegations, nil
 }
 

@@ -22,6 +22,10 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.1) - 2023-08-25
+
+* [#17532](https://github.com/cosmos/cosmos-sdk/pull/17532) Proper marshalling of `fmt.Stringer` (follow-up of [#17205](https://github.com/cosmos/cosmos-sdk/pull/17205)).
+
 ## [v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.0) - 2023-07-31
 
 * [#17194](https://github.com/cosmos/cosmos-sdk/pull/17194) Avoid repeating parse log level in `ParseLogLevel`.

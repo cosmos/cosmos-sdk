@@ -101,7 +101,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingQueueKey",
 			v1.GetUnbondingDelegationTimeKey(now),
-			types.GetUnbondingDelegationTimeKey(now),
+			getUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
@@ -139,6 +139,11 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.UnbondingQueueKey, bz...)
 }
 
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {

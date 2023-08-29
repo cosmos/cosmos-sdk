@@ -118,18 +118,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 ## appmodule.HasGenesis
 
-> Note; `appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
-
-The `HasGenesis` interface is an extension interface of `HasGenesisBasics`.
+> Note: `appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/genesis.go#L10-L24
 ```
-
-Let us go through the two added methods:
-
-* `InitGenesis(context.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
-* `ExportGenesis(context.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
 
 ### `AppModule`
 

@@ -1,11 +1,14 @@
 package types
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -85,11 +88,11 @@ func (ag *AppGenesis) SaveAs(file string) error {
 	return os.WriteFile(file, appGenesisBytes, 0o600)
 }
 
-// AppGenesisFromFile reads the AppGenesis from the provided file.
-func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
-	jsonBlob, err := os.ReadFile(genFile)
+// AppGenesisFromReader reads the AppGenesis from the reader.
+func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
+	jsonBlob, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read AppGenesis file (%s): %w", genFile, err)
+		return nil, err
 	}
 
 	var appGenesis AppGenesis
@@ -97,7 +100,7 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		// fallback to CometBFT genesis
 		var ctmGenesis cmttypes.GenesisDoc
 		if err2 := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); err2 != nil {
-			return nil, fmt.Errorf("error unmarshalling AppGenesis at %s: %w\n failed fallback to CometBFT GenDoc: %w", genFile, err, err2)
+			return nil, fmt.Errorf("error unmarshalling AppGenesis: %w\n failed fallback to CometBFT GenDoc: %w", err, err2)
 		}
 
 		appGenesis = AppGenesis{
@@ -116,6 +119,25 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 	}
 
 	return &appGenesis, nil
+}
+
+// AppGenesisFromFile reads the AppGenesis from the provided file.
+func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
+	file, err := os.Open(filepath.Clean(genFile))
+	if err != nil {
+		return nil, err
+	}
+
+	appGenesis, err := AppGenesisFromReader(bufio.NewReader(file))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read genesis from file %s: %w", genFile, err)
+	}
+
+	if err := file.Close(); err != nil {
+		return nil, err
+	}
+
+	return appGenesis, nil
 }
 
 // --------------------------

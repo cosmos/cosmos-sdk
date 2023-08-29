@@ -56,7 +56,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
@@ -144,6 +144,10 @@ func TestStoreMigration(t *testing.T) {
 func getRedelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
 	return append(types.RedelegationQueueKey, bz...)
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
 }
 
 func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {

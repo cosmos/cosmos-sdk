@@ -34,7 +34,9 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: Only the last version of cosmovisor is actively developed/maintained.*
 
-*Warning: Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.*
+:::warning
+Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.
+:::
 
 ## Contributing
 
@@ -65,7 +67,8 @@ Run `cosmovisor version` to check the cosmovisor version.
 Alternatively, for building from source, simply run `make cosmovisor`. The binary will be located in `tools/cosmovisor`.
 
 :::warning
-Building from source using `make cosmovisor` won't display the correct `cosmovisor` version.
+Installing cosmovisor using `go install` will display the correct `cosmovisor` version.
+Building from source (`make cosmovisor`) or installing `cosmovisor` by other means won't display the correct version.
 :::
 
 ### Command Line Arguments And Environment Variables

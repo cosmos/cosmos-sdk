@@ -58,7 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * (x/staking) [#17562](https://github.com/cosmos/cosmos-sdk/pull/17562) Use collections for `ValidatorQueue`
-    * remove from `types`: `GetValidatorQueueKey`
+    * remove from `types`: `GetValidatorQueueKey`, `ParseValidatorQueueKey`
     * remove from `Keeper`: `ValidatorQueueIterator`
 * (x/staking) [#17481](https://github.com/cosmos/cosmos-sdk/pull/17481) Use collections for `UnbondingQueue`:
     * remove from `Keeper`: `UBDQueueIterator`

@@ -1,9 +1,7 @@
 package types
 
 import (
-	"bytes"
 	"encoding/binary"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -144,25 +142,6 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	}
 
 	return operAddr
-}
-
-// ParseValidatorQueueKey returns the encoded time and height from a key created
-// from GetValidatorQueueKey.
-func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
-	prefixL := len(ValidatorQueueKey)
-	if prefix := bz[:prefixL]; !bytes.Equal(prefix, ValidatorQueueKey) {
-		return time.Time{}, 0, fmt.Errorf("invalid prefix; expected: %X, got: %X", ValidatorQueueKey, prefix)
-	}
-
-	timeBzL := sdk.BigEndianToUint64(bz[prefixL : prefixL+8])
-	ts, err := sdk.ParseTimeBytes(bz[prefixL+8 : prefixL+8+int(timeBzL)])
-	if err != nil {
-		return time.Time{}, 0, err
-	}
-
-	height := sdk.BigEndianToUint64(bz[prefixL+8+int(timeBzL):])
-
-	return ts, int64(height), nil
 }
 
 // GetUBDKey creates the key for an unbonding delegation by delegator and validator addr

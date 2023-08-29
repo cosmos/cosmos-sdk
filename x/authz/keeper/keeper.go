@@ -266,9 +266,9 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 	iter := storetypes.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 
-	var authorization authz.Grant
 	var authorizations []authz.Authorization
 	for ; iter.Valid(); iter.Next() {
+		var authorization authz.Grant
 		if err := k.cdc.Unmarshal(iter.Value(), &authorization); err != nil {
 			return nil, err
 		}

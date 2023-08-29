@@ -22,17 +22,14 @@ import (
 
 // GetValidator gets a single validator
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	value, err := store.Get(types.GetValidatorKey(addr))
+	validator, err = k.Validators.Get(ctx, addr)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.Validator{}, types.ErrNoValidatorFound
+		}
 		return validator, err
 	}
-
-	if value == nil {
-		return validator, types.ErrNoValidatorFound
-	}
-
-	return types.UnmarshalValidator(k.cdc, value)
+	return validator, nil
 }
 
 func (k Keeper) mustGetValidator(ctx context.Context, addr sdk.ValAddress) types.Validator {
@@ -69,13 +66,11 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.Con
 
 // SetValidator sets the main record holding validator details
 func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz := types.MustMarshalValidator(k.cdc, &validator)
-	str, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	valBz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	if err != nil {
 		return err
 	}
-	return store.Set(types.GetValidatorKey(str), bz)
+	return k.Validators.Set(ctx, sdk.ValAddress(valBz), validator)
 }
 
 // SetValidatorByConsAddr sets a validator by conesensus address
@@ -233,7 +228,7 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 	// delete the old validator record
 	store := k.storeService.OpenKVStore(ctx)
-	if err = store.Delete(types.GetValidatorKey(address)); err != nil {
+	if err = k.Validators.Remove(ctx, address); err != nil {
 		return err
 	}
 
@@ -629,17 +624,17 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 	return v.Jailed, nil
 }
 
-// BondedTokensAndPubKeyByConsAddr returns the consensus public key and bonded tokens by consensus address
-func (k Keeper) BondedTokensAndPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error) {
+// GetPubKeyByConsAddr returns the consensus public key by consensus address.
+func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (cmtprotocrypto.PublicKey, error) {
 	v, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {
-		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+		return cmtprotocrypto.PublicKey{}, err
 	}
 
 	pubkey, err := v.CmtConsPublicKey()
 	if err != nil {
-		return math.ZeroInt(), cmtprotocrypto.PublicKey{}, err
+		return cmtprotocrypto.PublicKey{}, err
 	}
 
-	return v.BondedTokens(), pubkey, nil
+	return pubkey, nil
 }

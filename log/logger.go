@@ -19,7 +19,7 @@ func init() {
 		case encoding.TextMarshaler:
 			return json.Marshal(i)
 		case fmt.Stringer:
-			return fmt.Appendf([]byte("\""), "%s%s", v.String(), "\""), nil
+			return json.Marshal(v.String())
 		default:
 			return json.Marshal(i)
 		}

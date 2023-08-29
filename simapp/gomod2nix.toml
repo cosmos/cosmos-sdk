@@ -32,14 +32,14 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-ZD1fhIefk3qkt9I4+ed9NBmBqTDvym9cXWmgFBh5qu0="
   [mod."cosmossdk.io/log"]
-    version = "v1.2.0"
-    hash = "sha256-c3rrloofFFuyW8TikJusWhKh0q9LjXqrD7l6Xdcvmq4="
+    version = "v1.2.1"
+    hash = "sha256-2Mb0jQ5Yvi+2fvhCVEiiacwODXM8+6vhsKOnHz+wsiY="
   [mod."cosmossdk.io/math"]
     version = "v1.1.2"
     hash = "sha256-i/qHqbA3ptTvIBITkdWITn+owFBwcgJSBiV04MhSGyA="
   [mod."cosmossdk.io/store"]
-    version = "v1.0.0-alpha.1.0.20230728080422-54ed7dab3982"
-    hash = "sha256-LevgmMWi/aZnT1oyZ3S7kfShxTcMlHB/rwBX4Hw2uwg="
+    version = "v1.0.0-rc.0"
+    hash = "sha256-DgW4ZrDwmgsPtEXajPyAsrQuPjXekw5PfsYFvA5yuiE="
   [mod."cosmossdk.io/x/tx"]
     version = "v0.9.1"
     hash = "sha256-/fopDRDbfIUr8Ub0qqu3k0y6FsLKTAwf51PJaCL18Bk="
@@ -90,14 +90,14 @@ schema = 3
     version = "v2.0.2"
     hash = "sha256-UrPHkvqVF8V78+kXKmjTHl79XsgDBnqFsje5BMYh0E4="
   [mod."github.com/cockroachdb/errors"]
-    version = "v1.10.0"
-    hash = "sha256-l6CCw3FKGNaGlwzLfAaF0cruf3E9MZr6GK1GZ+vQm2c="
+    version = "v1.11.1"
+    hash = "sha256-ufKtavyfW/i3ZemiqDqKGc0JM+f0IBi6bZWkZyb/jdc="
   [mod."github.com/cockroachdb/logtags"]
     version = "v0.0.0-20230118201751-21c54148d20b"
     hash = "sha256-7dQH6j1o99fuxHKkw0RhNC5wJKkvRLMDJpUiVnDx6h8="
   [mod."github.com/cockroachdb/pebble"]
-    version = "v0.0.0-20230817233644-564b068800e0"
-    hash = "sha256-loZCO8ya+rQoVDrqSwLiuBCHLOq3JHHONfjH+BzIfmo="
+    version = "v0.0.0-20230824192853-9bb0864bdb98"
+    hash = "sha256-N6IiH+Eo8grOVCGpLjTRS0BAfcaUP22HCOk6n6CX0gg="
   [mod."github.com/cockroachdb/redact"]
     version = "v1.1.5"
     hash = "sha256-0rtT7LRO0wxf9XovOK8GXRrhmx8OcbdPK/mXOKbJdog="
@@ -129,8 +129,8 @@ schema = 3
     version = "v1.4.11"
     hash = "sha256-hXJIGN8Arg09ldCgrSyYZK+xMelYavEj2I3ltxJfAqE="
   [mod."github.com/cosmos/iavl"]
-    version = "v1.0.0-beta.2"
-    hash = "sha256-LM71ZcKUTYx/E4oOdicm6AoWL+1ya2CQ3N1JUZe5VWE="
+    version = "v1.0.0-rc.1"
+    hash = "sha256-hb3RDt7Cyj5TIZp8socDzmJ+Pip8w6d4fXi0bJl5zHo="
   [mod."github.com/cosmos/ics23/go"]
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
@@ -171,8 +171,8 @@ schema = 3
     version = "v1.5.0"
     hash = "sha256-dsju6Xt83pe5SRPN/pUOnDUQByZ6hrhKIXWs3sSu7t8="
   [mod."github.com/emicklei/dot"]
-    version = "v1.5.0"
-    hash = "sha256-dnI2czMoZvN3xm1PU5iR0uvH/7Fufca+TAICBoZeK4c="
+    version = "v1.6.0"
+    hash = "sha256-SQ8UXIOJGsToegDOefk8CYrIycGSjCsqVV5ZTlyCCiw="
   [mod."github.com/fatih/color"]
     version = "v1.15.0"
     hash = "sha256-7b+scFVQeEUoXfeCDd8X2gS8GMoWA+HxjK8wfbypa5s="
@@ -369,8 +369,8 @@ schema = 3
     version = "v2.0.9"
     hash = "sha256-mLpNBZOK72qPpForSmzQkDrqR5xzmpUdM/0XxB2AYFA="
   [mod."github.com/petermattis/goid"]
-    version = "v0.0.0-20230518223814-80aa455d8761"
-    hash = "sha256-PxSWG219xbSAw+NA/LHL6SvBd2XYH7W0EvtckRHtT9U="
+    version = "v0.0.0-20230808133559-b036b712a89b"
+    hash = "sha256-CkgiPOrtS2b5UuBfnh+NfYMehI6KtqxjmdNiuJYROuM="
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
@@ -493,7 +493,7 @@ schema = 3
     version = "v0.0.0-20230726155614-23370e0ffb3e"
     hash = "sha256-C5k3rjFGJasm5uQd1oz/oxZ2Qvu0WQ2n8imG4vyvf7k="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20230815205213-6bfd019c3878"
+    version = "v0.0.0-20230822172742-b8732ec3820d"
     hash = "sha256-1kP7lqQ+fKtARDzTrRNob0owX4GsUnxzOwLyBZSmHOc="
   [mod."google.golang.org/grpc"]
     version = "v1.57.0"

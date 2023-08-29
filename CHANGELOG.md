@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwritting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
 * (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
 
 ### Improvements
@@ -52,9 +53,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583), [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
+* (baseapp) [#17518](https://github.com/cosmos/cosmos-sdk/pull/17518) Utilizing voting power from vote extensions (CometBFT) instead of the current bonded tokens (x/staking) to determine if a set of vote extensions are valid.
 
 ### API Breaking Changes
 
+* (x/staking) [#17481](https://github.com/cosmos/cosmos-sdk/pull/17481) Use collections for `UnbondingQueue`:
+    * remove from `Keeper`: `UBDQueueIterator`
+    * remove from `types`: `GetUnbondingDelegationTimeKey`
+* (x/staking) [#17123](https://github.com/cosmos/cosmos-sdk/pull/17123) Use collections for `Validators`
+* (x/staking) [#17270](https://github.com/cosmos/cosmos-sdk/pull/17270) Use collections for `UnbondingDelegation`:
+    * remove from `types`: `GetUBDsKey`
+    * remove from `Keeper`: `IterateUnbondingDelegations`, `IterateDelegatorUnbondingDelegations`
 * (client/keys) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) `clientkeys.NewKeyOutput`, `MkConsKeyOutput`, `MkValKeyOutput`, `MkAccKeyOutput`, `MkAccKeysOutput` now take their corresponding address codec instead of using the global SDK config.
 * (x/staking) [#17336](https://github.com/cosmos/cosmos-sdk/pull/17336) Use collections for `RedelegationByValDstIndexKey`:
     * remove from `types`: `GetREDByValDstIndexKey`, `GetREDsToValDstIndexKey`

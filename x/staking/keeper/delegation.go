@@ -409,10 +409,6 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time
 		}
 	}
 
-	if err != nil {
-		return matureUnbonds, err
-	}
-
 	return matureUnbonds, nil
 }
 

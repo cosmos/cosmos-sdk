@@ -181,3 +181,51 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 
 	return &types.MsgSetSendEnabledResponse{}, nil
 }
+
+func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+	var (
+		from []byte
+		err  error
+	)
+
+	if base, ok := k.Keeper.(BaseKeeper); ok {
+		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
+		}
+	} else {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid keeper type: %T", k.Keeper)
+	}
+
+	if !msg.Amount.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	if !msg.Amount.IsAllPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
+		return nil, err
+	}
+
+	err = k.BurnCoins(ctx, from, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		for _, a := range msg.Amount {
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "send"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
+		}
+	}()
+
+	return &types.MsgBurnResponse{}, nil
+}

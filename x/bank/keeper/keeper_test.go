@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestSupply() {
 
 	// burning all supplied tokens
 	suite.mockBurnCoins(burnerAcc)
-	require.NoError(keeper.BurnCoins(ctx, authtypes.Burner, initCoins))
+	require.NoError(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), initCoins))
 
 	total, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -565,19 +565,20 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
+	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no module account")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")
+	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
+	fmt.Println(minterAcc.GetAddress(), 123)
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission")
+	require.Error(keeper.BurnCoins(ctx, []byte{}, supplyAfterInflation), "random permission")
 
 	suite.mockBurnCoins(burnerAcc)
-	require.Error(keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation), "insufficient coins")
+	require.Error(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), supplyAfterInflation), "insufficient coins")
 
 	suite.mockBurnCoins(burnerAcc)
-	require.NoError(keeper.BurnCoins(ctx, authtypes.Burner, initCoins))
+	require.NoError(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), initCoins))
 
 	supplyAfterBurn, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -595,7 +596,7 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	require.NoError(keeper.SendCoins(ctx, minterAcc.GetAddress(), multiPermAcc.GetAddress(), initCoins))
 
 	suite.mockBurnCoins(multiPermAcc)
-	require.NoError(keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins))
+	require.NoError(keeper.BurnCoins(ctx, multiPermAcc.GetAddress(), initCoins))
 
 	supplyAfterBurn, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -1838,7 +1839,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	require.NoError(
 		suite.bankKeeper.BurnCoins(
 			suite.ctx,
-			multiPermAcc.Name,
+			multiPermAcc.GetAddress(),
 			sdk.NewCoins(sdk.NewInt64Coin("utxo", 1000)),
 		),
 	)

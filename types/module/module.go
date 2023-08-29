@@ -232,16 +232,21 @@ var (
 	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
 )
 
-// GenesisOnlyAppModule is an AppModule that only has import/export functionality
-type GenesisOnlyAppModule struct {
+// genesisOnlyModule is an interface need to return GenesisOnlyAppModule struct in order to wrap two interfaces
+type genesisOnlyModule interface {
 	AppModuleBasic
 	HasABCIGenesis
 }
 
+// GenesisOnlyAppModule is an AppModule that only has import/export functionality
+type GenesisOnlyAppModule struct {
+	genesisOnlyModule
+}
+
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg HasABCIGenesis) GenesisOnlyAppModule {
+func NewGenesisOnlyAppModule(amg genesisOnlyModule) GenesisOnlyAppModule {
 	return GenesisOnlyAppModule{
-		HasABCIGenesis: amg,
+		genesisOnlyModule: amg,
 	}
 }
 
@@ -253,18 +258,6 @@ func (GenesisOnlyAppModule) IsAppModule() {}
 
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// RegisterInterfaces is a placeholder function register no interfaces
-func (GenesisOnlyAppModule) RegisterInterfaces(_ types.InterfaceRegistry) {}
-
-// RegisterLegacyAminoCodec is a placeholder function register codecs
-func (GenesisOnlyAppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
-
-// RegisterGRPCGatewayRoutes is a placeholder function register no grpc gateway
-func (GenesisOnlyAppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
-
-// RegisterServices registers all services.
-func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }

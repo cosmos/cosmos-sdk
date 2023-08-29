@@ -98,13 +98,11 @@ Let us go through the methods:
 
 ### `HasGenesis`
 
-`HasGenesis` is an extension interface for allowing modules to implement genesis functionalities. If you 
+`HasGenesis` is an extension interface for allowing modules to implement genesis functionalities.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193
 ```
-
-It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods.
 
 ### `HasABCIGenesis`
 
@@ -114,9 +112,6 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193 
 ```
 <!-- TODO change link above after merge -->
-
-It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods.
-
 
 ### `AppModule`
 

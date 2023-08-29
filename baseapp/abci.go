@@ -721,7 +721,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
-			WithBlockGasMeter(gasMeter)
+			WithBlockGasMeter(gasMeter).WithHeaderInfo(coreheader.Info{Hash: req.Hash, Height: req.Height, Time: req.Time})
 	}
 
 	if app.preFinalizeBlockHook != nil {

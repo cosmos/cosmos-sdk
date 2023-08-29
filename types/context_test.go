@@ -109,11 +109,12 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithKVGasConfig(zeroGasCfg).
 		WithTransientKVGasConfig(zeroGasCfg).
 		WithHeaderInfo(header.Info{
+			Height:  height,
 			ChainID: chainid,
 			Hash:    headerHash,
 		})
 
-	s.Require().Equal(height, ctx.BlockHeight())
+	s.Require().Equal(height, ctx.HeaderInfo().Height)
 	s.Require().Equal(chainid, ctx.HeaderInfo().ChainID)
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
 	s.Require().Equal(txbytes, ctx.TxBytes())
@@ -157,17 +158,23 @@ func (s *contextTestSuite) TestContextHeader() {
 
 	ctx = ctx.
 		WithBlockTime(time).
-		WithProposer(proposer)
+		WithProposer(proposer).
+		WithHeaderInfo(header.Info{
+			Height: height,
+			Time:   time,
+		})
 	s.Require().Equal(height, ctx.BlockHeight())
-	s.Require().Equal(height, ctx.BlockHeader().Height)
-	s.Require().Equal(time.UTC(), ctx.BlockHeader().Time)
+	s.Require().Equal(height, ctx.HeaderInfo().Height)
+	s.Require().Equal(time.UTC(), ctx.HeaderInfo().Time)
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }
 
 func (s *contextTestSuite) TestWithBlockTime() {
 	now := time.Now()
 	ctx := types.NewContext(nil, false, nil)
-	ctx = ctx.WithBlockTime(now)
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: now,
+	})
 	cmttime2 := cmttime.Canonical(now)
 	s.Require().Equal(ctx.BlockTime(), cmttime2)
 }
@@ -215,13 +222,23 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 	for name, tc := range cases {
 		tc := tc
 		s.T().Run(name, func(t *testing.T) {
-			ctx := types.NewContext(nil, false, nil).WithBlockHeader(tc.h)
+			ctx := types.NewContext(nil, false, nil).WithHeaderInfo(header.Info{
+				Height:  tc.h.Height,
+				Time:    tc.h.Time,
+				ChainID: tc.h.ChainID,
+				AppHash: tc.h.AppHash,
+			})
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
 			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 
 			// update only changes one field
 			var newHeight int64 = 17
-			ctx = ctx.WithHeaderInfo(header.Info{Height: newHeight})
+			ctx = ctx.WithHeaderInfo(header.Info{
+				Height:  newHeight,
+				Time:    tc.h.Time,
+				ChainID: tc.h.ChainID,
+				AppHash: tc.h.AppHash,
+			})
 			s.Require().Equal(newHeight, ctx.BlockHeight())
 			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 		})

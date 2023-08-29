@@ -149,6 +149,7 @@ func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
 }
 
 // WithBlockHeader returns a Context with an updated CometBFT block header in UTC time.
+// Deprecated: Use WithHeaderInfo or WithCometInfo instead.
 func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -159,10 +160,10 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 // WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
 // Stripping the monotonic component is for time equality.
 func (c Context) WithBlockTime(newTime time.Time) Context {
-	newHeader := c.BlockHeader()
+	newHeader := c.HeaderInfo()
 	// https://github.com/gogo/protobuf/issues/519
 	newHeader.Time = newTime.Round(0).UTC()
-	return c.WithBlockHeader(newHeader)
+	return c.WithHeaderInfo(newHeader)
 }
 
 // WithProposer returns a Context with an updated proposer consensus address.

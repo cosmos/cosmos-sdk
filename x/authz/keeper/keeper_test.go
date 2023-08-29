@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -164,7 +165,7 @@ func (s *TestSuite) TestKeeperIter() {
 func (s *TestSuite) TestDispatchAction() {
 	addrs := s.addrs
 	require := s.Require()
-	now := s.ctx.BlockTime()
+	now := s.ctx.HeaderInfo().Time
 
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
@@ -213,7 +214,7 @@ func (s *TestSuite) TestDispatchAction() {
 				e := now.AddDate(0, 0, 1)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
 				require.NoError(err)
-				return s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(0, 0, 2))
+				return s.ctx.WithHeaderInfo(header.Info{Time: s.ctx.BlockTime().AddDate(0, 0, 2)})
 			},
 			func() {},
 		},
@@ -363,7 +364,7 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	granter := addrs[0]
 	grantee := addrs[1]
 	grantee1 := addrs[2]
-	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
+	exp := s.ctx.HeaderInfo().Time.AddDate(0, 0, 1)
 	a := banktypes.SendAuthorization{SpendLimit: coins100}
 
 	// create few authorizations
@@ -381,7 +382,7 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	err = s.authzKeeper.SaveGrant(s.ctx, granter, grantee, &a, &exp2)
 	require.NoError(err)
 
-	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Time: exp.AddDate(1, 0, 0)})
 	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
 	require.NoError(err)
 

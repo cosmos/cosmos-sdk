@@ -40,9 +40,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+<<<<<<< HEAD
 * (debug) [#18219](https://github.com/cosmos/cosmos-sdk/pull/18219) Add debug commands for application codec types.
 * (client/keys) [#17639](https://github.com/cosmos/cosmos-sdk/pull/17639) Allows using and saving public keys encoded as base64.
 * (server) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add a `shutdown-grace` flag for waiting a given time before exit.
+=======
+* (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwritting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
+* (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 
 ### Improvements
 

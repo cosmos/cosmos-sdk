@@ -76,7 +76,6 @@ Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its 
 :::
 
 `rootCmd` has a function called `initAppConfig()` which is useful for setting the application's custom configs.
-By default app uses CometBFT app config template from Cosmos SDK, which can be over-written via `initAppConfig()`.
 Here's an example code to override default `app.toml` template.
 
 ```go reference
@@ -87,6 +86,26 @@ The `initAppConfig()` also allows overriding the default Cosmos SDK's [server co
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L164-L180
+```
+
+By default the app uses CometBFT app config template from Cosmos SDK, which can also be over-written via `initCometBFTConfig()`.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L132-L142
+```
+
+Those custom templates and config must be provided to the `server.InterceptConfigsPreRunHandler` command in the `PersistentPreRunE` function of the root command. See [configuration](#configurations) section for more details.
+
+Additionally, like the `app.toml` and `config.toml`, the `client.toml` config can be extended or over-written by the user thanks to the `client.CreateClientConfig` function. This is useful for setting default values for the client without having to pass a flag. For example, the Cosmos SDK sets the default `keyring-backend` to `os` but the chain developer might instead want to always set it to `file` by default.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/bb23e920676096b9fd2d2196daec389ad7f8192e/simapp/simd/cmd/root_v2.go#L78-L82
+```
+
+Creating the custom template can be done in a `initClientConfig()` function.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/bb23e920676096b9fd2d2196daec389ad7f8192e/simapp/simd/cmd/config.go#L24-L64
 ```
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually *do* with it - is enabled by its `tx` and `query` commands.

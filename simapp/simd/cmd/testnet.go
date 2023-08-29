@@ -342,8 +342,18 @@ func initTestnetFiles(
 			return err
 		}
 
+<<<<<<< HEAD
 		srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate)
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig)
+=======
+		if err := srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate); err != nil {
+			return err
+		}
+
+		if err := srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig); err != nil {
+			return err
+		}
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 	}
 
 	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

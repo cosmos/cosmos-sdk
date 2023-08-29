@@ -68,12 +68,36 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
+<<<<<<< HEAD
 			clientCtx, err = config.ReadFromClientConfig(clientCtx)
+=======
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 			if err != nil {
 				return err
 			}
 
+<<<<<<< HEAD
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+=======
+			// This needs to go after CreateClientConfig, as that function
+			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
+			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+			txConfigOpts := tx.ConfigOptions{
+				EnabledSignModes:           enabledSignModes,
+				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+			}
+			txConfigWithTextual, err := tx.NewTxConfigWithOptions(
+				codec.NewProtoCodec(interfaceRegistry),
+				txConfigOpts,
+			)
+			if err != nil {
+				return err
+			}
+			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
+			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 				return err
 			}
 
@@ -99,7 +123,13 @@ func ProvideClientContext(
 	txConfigOpts tx.ConfigOptions,
 	legacyAmino *codec.LegacyAmino,
 ) client.Context {
+<<<<<<< HEAD
 	clientCtx := client.Context{}.
+=======
+	var err error
+
+	initClientCtx := client.Context{}.
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithLegacyAmino(legacyAmino).
@@ -108,8 +138,17 @@ func ProvideClientContext(
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
+<<<<<<< HEAD
 	// Read the config again to overwrite the default values with the values from the config file
 	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
+=======
+	// Read the config to overwrite the default values with the values from the config file
+	customClientTemplate, customClientConfig := initClientConfig()
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 
 	// re-create the tx config grpc instead of bank keeper
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)

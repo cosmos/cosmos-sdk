@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -34,6 +32,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
+<<<<<<< HEAD
 // initCometBFTConfig helps to override default CometBFT Config values.
 // return cmtcfg.DefaultConfig if no custom configuration is required for the application.
 func initCometBFTConfig() *cmtcfg.Config {
@@ -103,6 +102,8 @@ lru_size = {{ .WASM.LruSize }}`
 	return customAppTemplate, customAppConfig
 }
 
+=======
+>>>>>>> 6601713eb (feat(client): allow overwritting client.toml (#17513))
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,

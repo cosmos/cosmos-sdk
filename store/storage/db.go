@@ -82,13 +82,6 @@ func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
 	return db.vdb.Delete(storeKey, version, key)
 }
 
-func (db *Database) isClosed() bool {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	return db.vdb == nil
-}
-
 func (db *Database) GetLatestVersion() (uint64, error) {
 	return db.vdb.GetLatestVersion()
 }

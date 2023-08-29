@@ -51,9 +51,9 @@ var (
 	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
 	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
-	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
+	UnbondingQueueKey    = collections.NewPrefix(65) // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey = []byte{0x42}              // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey    = []byte{0x43}              // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
@@ -195,12 +195,6 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 // VALUE: staking/UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...), address.MustLengthPrefix(valAddr)...)
-}
-
-// GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
-func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(UnbondingQueueKey, bz...)
 }
 
 // GetREDKey returns a key prefix for indexing a redelegation from a delegator

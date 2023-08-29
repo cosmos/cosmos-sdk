@@ -181,6 +181,13 @@ func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 	return append(append(unbondingDelegationByValIndexKey, addresstypes.MustLengthPrefix(valAddr)...), addresstypes.MustLengthPrefix(delAddr)...)
 }
 
+// getUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	unbondingQueueKey := []byte{0x41}
+	return append(unbondingQueueKey, bz...)
+}
+
 // getValidatorKey creates the key for the validator with address
 // VALUE: staking/Validator
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
@@ -302,6 +309,36 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 			s.Require().NoError(err)
 		},
 		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+	)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
+	s.SetupTest()
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getUnbondingDelegationTimeKey(date), []byte{})
+		},
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			err := s.stakingKeeper.SetUBDQueueTimeSlice(s.ctx, date, nil)
+			s.Require().NoError(err)
+		},
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
 	)
 	s.Require().NoError(err)
 }

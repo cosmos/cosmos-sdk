@@ -101,7 +101,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingQueueKey",
 			v1.GetUnbondingDelegationTimeKey(now),
-			types.GetUnbondingDelegationTimeKey(now),
+			getUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
@@ -143,6 +143,11 @@ func TestStoreMigration(t *testing.T) {
 
 func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
+}
+
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.UnbondingQueueKey, bz...)
 }
 
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {

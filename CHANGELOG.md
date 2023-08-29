@@ -58,6 +58,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [#17291](https://github.com/cosmos/cosmos-sdk/pull/17291) Use collections for `UnbondingDelegationByValIndex`:
     * remove from `types`: `GetUBDKeyFromValIndexKey`, `GetUBDsByValIndexKey`, `GetUBDByValIndexKey`
+* (x/staking) [#17481](https://github.com/cosmos/cosmos-sdk/pull/17481) Use collections for `UnbondingQueue`:
+    * remove from `Keeper`: `UBDQueueIterator`
+    * remove from `types`: `GetUnbondingDelegationTimeKey`
 * (x/staking) [#17123](https://github.com/cosmos/cosmos-sdk/pull/17123) Use collections for `Validators`
 * (x/staking) [#17270](https://github.com/cosmos/cosmos-sdk/pull/17270) Use collections for `UnbondingDelegation`:
     * remove from `types`: `GetUBDsKey`

@@ -228,6 +228,7 @@ type HasABCIEndblock interface {
 }
 
 var _ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
+var _ AppModuleBasic = (*GenesisOnlyAppModule)(nil)
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
@@ -247,6 +248,18 @@ func (GenesisOnlyAppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (GenesisOnlyAppModule) IsAppModule() {}
+
+// RegisterInvariants is a placeholder function register no invariants
+func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// RegisterInterfaces is a placeholder function register no interfaces
+func (GenesisOnlyAppModule) RegisterInterfaces(_ types.InterfaceRegistry) {}
+
+// RegisterLegacyAminoCodec is a placeholder function register codecs
+func (GenesisOnlyAppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+
+// RegisterGRPCGatewayRoutes is a placeholder function register no grpc gateway
+func (GenesisOnlyAppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
 
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}

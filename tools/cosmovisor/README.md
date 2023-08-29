@@ -6,20 +6,22 @@ sidebar_position: 1
 
 `cosmovisor` is a process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-    * [Installation](#installation)
-    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-    * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-    * [Initialization](#initialization)
-    * [Detecting Upgrades](#detecting-upgrades)
-    * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-    * [Chain Setup](#chain-setup)
-        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-        * [Update App](#update-app)
+- [Cosmovisor](#cosmovisor)
+  - [Design](#design)
+  - [Contributing](#contributing)
+  - [Setup](#setup)
+    - [Installation](#installation)
+    - [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    - [Folder Layout](#folder-layout)
+  - [Usage](#usage)
+    - [Initialization](#initialization)
+    - [Detecting Upgrades](#detecting-upgrades)
+    - [Adding Upgrade Binary](#adding-upgrade-binary)
+    - [Auto-Download](#auto-download)
+  - [Example: SimApp Upgrade](#example-simapp-upgrade)
+    - [Chain Setup](#chain-setup)
+      - [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+      - [Update App](#update-app)
 
 ## Design
 
@@ -34,7 +36,9 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: Only the last version of cosmovisor is actively developed/maintained.*
 
-*Warning: Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.*
+:::warning
+Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.
+:::
 
 ## Contributing
 
@@ -65,7 +69,8 @@ Run `cosmovisor version` to check the cosmovisor version.
 Alternatively, for building from source, simply run `make cosmovisor`. The binary will be located in `tools/cosmovisor`.
 
 :::warning
-Building from source using `make cosmovisor` won't display the correct `cosmovisor` version.
+Installing cosmovisor using `go install` will display the correct `cosmovisor` version.
+Building from source (`make cosmovisor`) or installing `cosmovisor` by other means won't display the correct version.
 :::
 
 ### Command Line Arguments And Environment Variables

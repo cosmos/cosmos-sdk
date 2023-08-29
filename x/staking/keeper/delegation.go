@@ -675,7 +675,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime 
 		return nil, err
 	}
 	defer redelegationTimesliceIterator.Close()
-	
+
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice, err := redelegationTimesliceIterator.Value()
 		if err != nil {

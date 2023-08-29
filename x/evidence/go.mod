@@ -3,9 +3,9 @@ module cosmossdk.io/x/evidence
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.0
+	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.10.0
+	cosmossdk.io/core v0.10.1-0.20230820170544-1bd37053e0c0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
@@ -38,7 +38,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cockroachdb/errors v1.11.0 // indirect
+	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230824192853-9bb0864bdb98 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect

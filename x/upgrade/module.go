@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +37,7 @@ func init() {
 }
 
 // ConsensusVersion defines the current x/upgrade module consensus version.
-const ConsensusVersion uint64 = 2
+const ConsensusVersion uint64 = 3
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -109,6 +108,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
@@ -143,7 +146,7 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
@@ -176,10 +179,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	AddressCodec address.Codec
+	Config             *modulev1.Module
+	StoreService       store.KVStoreService
+	Cdc                codec.Codec
+	AddressCodec       address.Codec
+	AppVersionModifier baseapp.AppVersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -189,7 +193,6 @@ type ModuleOutputs struct {
 
 	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -213,13 +216,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, nil, authority.String())
-	baseappOpt := func(app *baseapp.BaseApp) {
-		k.SetVersionSetter(app)
-	}
+	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, in.AppVersionModifier, authority.String())
 	m := NewAppModule(k, in.AddressCodec)
 
-	return ModuleOutputs{UpgradeKeeper: k, Module: m, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

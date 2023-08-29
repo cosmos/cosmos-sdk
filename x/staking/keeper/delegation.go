@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -130,23 +129,23 @@ func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegatio
 func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
 
-	store := k.storeService.OpenKVStore(ctx)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
-
-	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
-	if err != nil {
-		return unbondingDelegations, err
-	}
-	defer iterator.Close()
-
 	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		unbondingDelegation, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return unbondingDelegations, err
-		}
-		unbondingDelegations[i] = unbondingDelegation
-		i++
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
+	err = k.UnbondingDelegations.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			i++
+
+			if i >= int(maxRetrieve) {
+				return true, nil
+			}
+			return false, nil
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	return unbondingDelegations[:i], nil // trim if the array length < maxRetrieve
@@ -154,18 +153,14 @@ func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAd
 
 // GetUnbondingDelegation returns a unbonding delegation.
 func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	key := types.GetUBDKey(delAddr, valAddr)
-	value, err := store.Get(key)
+	ubd, err = k.UnbondingDelegations.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return ubd, types.ErrNoUnbondingDelegation
+		}
 		return ubd, err
 	}
-
-	if value == nil {
-		return ubd, types.ErrNoUnbondingDelegation
-	}
-
-	return types.UnmarshalUBD(k.cdc, value)
+	return ubd, nil
 }
 
 // GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
@@ -195,63 +190,24 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 	return ubds, nil
 }
 
-// IterateUnbondingDelegations iterates through all of the unbonding delegations.
-func (k Keeper) IterateUnbondingDelegations(ctx context.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) error {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.UnbondingDelegationKey
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	for i := int64(0); iterator.Valid(); iterator.Next() {
-		ubd, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
-		if stop := fn(i, ubd); stop {
-			break
-		}
-		i++
-	}
-
-	return nil
-}
-
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
-	err := k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
-		for _, entry := range ubd.Entries {
-			unbonding = unbonding.Add(entry.Balance)
-		}
-		return false
-	})
-	return unbonding, err
-}
-
-// IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
-func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd types.UnbondingDelegation) (stop bool)) error {
-	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetUBDsKey(delegator)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
+	err := k.UnbondingDelegations.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], ubd types.UnbondingDelegation) (stop bool, err error) {
+			for _, entry := range ubd.Entries {
+				unbonding = unbonding.Add(entry.Balance)
+			}
+			return false, nil
+		},
+	)
 	if err != nil {
-		return err
+		return unbonding, err
 	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		ubd, err := types.UnmarshalUBD(k.cdc, iterator.Value())
-		if err != nil {
-			return err
-		}
-		if cb(ubd) {
-			break
-		}
-	}
-
-	return nil
+	return unbonding, err
 }
 
 // GetDelegatorBonded returs the total amount a delegator has bonded.
@@ -307,19 +263,17 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
+	store := k.storeService.OpenKVStore(ctx)
+
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
-
-	store := k.storeService.OpenKVStore(ctx)
-	bz := types.MustMarshalUBD(k.cdc, ubd)
 	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return err
 	}
-	key := types.GetUBDKey(delAddr, valAddr)
-	err = store.Set(key, bz)
+	err = k.UnbondingDelegations.Set(ctx, collections.Join(delAddr, valAddr), ubd)
 	if err != nil {
 		return err
 	}
@@ -329,23 +283,21 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
-	if err != nil {
-		return err
-	}
-
 	store := k.storeService.OpenKVStore(ctx)
-	addr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
+	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
-	key := types.GetUBDKey(delegatorAddress, addr)
-	err = store.Delete(key)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(ubd.ValidatorAddress)
+	if err != nil {
+		return err
+	}
+	err = k.UnbondingDelegations.Remove(ctx, collections.Join(delAddr, valAddr))
 	if err != nil {
 		return err
 	}
 
-	return store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
+	return store.Delete(types.GetUBDByValIndexKey(delAddr, valAddr))
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
@@ -394,27 +346,21 @@ func (k Keeper) SetUnbondingDelegationEntry(
 // is a slice of DVPairs corresponding to unbonding delegations that expire at a
 // certain time.
 func (k Keeper) GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvPairs []types.DVPair, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	bz, err := store.Get(types.GetUnbondingDelegationTimeKey(timestamp))
-	if bz == nil || err != nil {
-		return []types.DVPair{}, err
+	pairs, err := k.UnbondingQueue.Get(ctx, timestamp)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		return []types.DVPair{}, nil
 	}
-
-	pairs := types.DVPairs{}
-	err = k.cdc.Unmarshal(bz, &pairs)
 
 	return pairs.Pairs, err
 }
 
 // SetUBDQueueTimeSlice sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []types.DVPair) error {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := k.cdc.Marshal(&types.DVPairs{Pairs: keys})
-	if err != nil {
-		return err
-	}
-	return store.Set(types.GetUnbondingDelegationTimeKey(timestamp), bz)
+	dvPairs := types.DVPairs{Pairs: keys}
+	return k.UnbondingQueue.Set(ctx, timestamp, dvPairs)
 }
 
 // InsertUBDQueue inserts an unbonding delegation to the appropriate timeslice
@@ -426,9 +372,8 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 	if err != nil {
 		return err
 	}
-
 	if len(timeSlice) == 0 {
-		if err = k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair}); err != nil {
+		if err := k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair}); err != nil {
 			return err
 		}
 		return nil
@@ -438,38 +383,30 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 	return k.SetUBDQueueTimeSlice(ctx, completionTime, timeSlice)
 }
 
-// UBDQueueIterator returns all the unbonding queue timeslices from time 0 until endTime.
-func (k Keeper) UBDQueueIterator(ctx context.Context, endTime time.Time) (corestore.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Iterator(types.UnbondingQueueKey,
-		storetypes.InclusiveEndBytes(types.GetUnbondingDelegationTimeKey(endTime)))
-}
-
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time) (matureUnbonds []types.DVPair, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
-	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	unbondingTimesliceIterator, err := k.UBDQueueIterator(ctx, currTime)
+	// get an iterator for all timeslices from time 0 until the current Blockheader time
+	iter, err := k.UnbondingQueue.Iterate(ctx, (&collections.Range[time.Time]{}).EndInclusive(currTime))
 	if err != nil {
 		return matureUnbonds, err
 	}
-	defer unbondingTimesliceIterator.Close()
+	defer iter.Close()
 
-	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
-		timeslice := types.DVPairs{}
-		value := unbondingTimesliceIterator.Value()
-		if err = k.cdc.Unmarshal(value, &timeslice); err != nil {
+	for ; iter.Valid(); iter.Next() {
+		timeslice, err := iter.Value()
+		if err != nil {
 			return matureUnbonds, err
 		}
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
-
-		if err = store.Delete(unbondingTimesliceIterator.Key()); err != nil {
+		key, err := iter.Key()
+		if err != nil {
 			return matureUnbonds, err
 		}
-
+		if err = k.UnbondingQueue.Remove(ctx, key); err != nil {
+			return matureUnbonds, err
+		}
 	}
 
 	return matureUnbonds, nil

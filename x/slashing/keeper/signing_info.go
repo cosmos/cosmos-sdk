@@ -66,7 +66,7 @@ func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 	if err != nil {
 		return nil, err
 	}
-	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(consAddr, chunkIndex))
+	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(consAddr, uint64(chunkIndex)))
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -83,7 +83,7 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 	if err != nil {
 		return err
 	}
-	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(consAddr, chunkIndex), chunk)
+	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(consAddr, uint64(chunkIndex)), chunk)
 }
 
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block
@@ -159,8 +159,8 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	if err != nil {
 		return err
 	}
-	rng := collections.NewPrefixedPairRange[[]byte, int64](consAddr)
-	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value []byte) (bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](consAddr)
+	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
 		if err != nil {
 			return true, err
@@ -186,8 +186,8 @@ func (k Keeper) IterateMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddre
 		return err
 	}
 	var index int64
-	rng := collections.NewPrefixedPairRange[[]byte, int64](consAddr)
-	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value []byte) (bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](consAddr)
+	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
 
 		if err := bs.UnmarshalBinary(value); err != nil {

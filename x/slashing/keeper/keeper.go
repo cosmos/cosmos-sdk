@@ -30,7 +30,7 @@ type Keeper struct {
 	Params                     collections.Item[types.Params]
 	ValidatorSigningInfo       collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
 	AddrPubkeyRelation         collections.Map[[]byte, cryptotypes.PubKey]
-	ValidatorMissedBlockBitmap collections.Map[collections.Pair[[]byte, int64], []byte]
+	ValidatorMissedBlockBitmap collections.Map[collections.Pair[[]byte, uint64], []byte]
 }
 
 // NewKeeper creates a slashing keeper
@@ -61,7 +61,7 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			sb,
 			types.ValidatorMissedBlockBitmapKeyPrefix,
 			"validator_missed_block_bitmap",
-			collections.PairKeyCodec(sdk.LengthPrefixedBytesKey, collections.Int64Key),
+			collections.PairKeyCodec(sdk.LengthPrefixedBytesKey, collections.Uint64Key),
 			collections.BytesValue,
 		),
 	}

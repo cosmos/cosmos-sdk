@@ -7,15 +7,19 @@ import (
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -37,6 +41,7 @@ type App struct {
 	logger        log.Logger
 	moduleManager module.Manager
 	queryHelper   *baseapp.QueryServiceTestHelper
+	txConfig      client.TxConfig
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
@@ -50,7 +55,19 @@ func NewIntegrationApp(
 ) *App {
 	db := dbm.NewMemDB()
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(
+		codectypes.InterfaceRegistryOptions{
+			ProtoFiles: proto.HybridResolver,
+			SigningOptions: signing.Options{
+				AddressCodec:          address.NewBech32Codec("cosmos"),
+				ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
+			},
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	moduleManager := module.NewManagerFromMap(modules)
 	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
@@ -102,7 +119,7 @@ func NewIntegrationApp(
 		}
 	}
 
-	_, err := bApp.Commit()
+	_, err = bApp.Commit()
 	if err != nil {
 		panic(err)
 	}
@@ -115,6 +132,7 @@ func NewIntegrationApp(
 		ctx:           ctx,
 		moduleManager: *moduleManager,
 		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
+		txConfig:      txConfig,
 	}
 }
 
@@ -140,11 +158,27 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		}()
 	}
 
+	txBuilder := app.txConfig.NewTxBuilder()
+	if err := txBuilder.SetMsgs(msg); err != nil {
+		return nil, fmt.Errorf("failed to set message: %w", err)
+	}
+
+	bz, err := app.txConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode transaction: %w", err)
+	}
+
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height}); err != nil {
+		resp, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
+			Height: height,
+			Txs:    [][]byte{bz},
+		})
+		if err != nil {
 			return nil, fmt.Errorf("failed to run finalize block: %w", err)
 		}
+
+		panic(resp.GetTxResults()[0])
 	}
 
 	app.logger.Info("Running msg", "msg", msg.String())

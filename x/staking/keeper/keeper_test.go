@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -166,6 +167,27 @@ func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
 }
 
+// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
+// VALUE: staking/UnbondingDelegation
+func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	unbondingDelegationKey := []byte{0x32}
+	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
+}
+
+// getUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	unbondingQueueKey := []byte{0x41}
+	return append(unbondingQueueKey, bz...)
+}
+
+// getValidatorKey creates the key for the validator with address
+// VALUE: staking/Validator
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	validatorsKey := []byte{0x21}
+	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
+}
+
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -230,17 +252,6 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
-// getUBDKey creates the key for an unbonding delegation by delegator and validator addr
-// VALUE: staking/UnbondingDelegation
-func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	unbondingDelegationKey := []byte{0x32}
-	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
-}
-
 func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -292,6 +303,99 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 		},
 		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
 	)
-
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
+	s.SetupTest()
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getUnbondingDelegationTimeKey(date), []byte{})
+		},
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
+			err := s.stakingKeeper.SetUBDQueueTimeSlice(s.ctx, date, nil)
+			s.Require().NoError(err)
+		},
+		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+	)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
+	s.SetupTest()
+	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
+	s.Require().NoError(err)
+
+	_, valAddrs := createValAddrs(100)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			val := stakingtypes.Validator{
+				OperatorAddress:   valAddrs[i].String(),
+				ConsensusPubkey:   pkAny,
+				Jailed:            false,
+				Status:            stakingtypes.Bonded,
+				Tokens:            sdk.DefaultPowerReduction,
+				DelegatorShares:   math.LegacyOneDec(),
+				Description:       stakingtypes.Description{},
+				UnbondingHeight:   int64(0),
+				UnbondingTime:     time.Unix(0, 0).UTC(),
+				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+				MinSelfDelegation: math.ZeroInt(),
+			}
+			valBz := stakingtypes.MustMarshalValidator(s.cdc, &val)
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
+		},
+		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			val := stakingtypes.Validator{
+				OperatorAddress:   valAddrs[i].String(),
+				ConsensusPubkey:   pkAny,
+				Jailed:            false,
+				Status:            stakingtypes.Bonded,
+				Tokens:            sdk.DefaultPowerReduction,
+				DelegatorShares:   math.LegacyOneDec(),
+				Description:       stakingtypes.Description{},
+				UnbondingHeight:   int64(0),
+				UnbondingTime:     time.Unix(0, 0).UTC(),
+				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+				MinSelfDelegation: math.ZeroInt(),
+			}
+
+			err := s.stakingKeeper.SetValidator(s.ctx, val)
+			s.Require().NoError(err)
+		},
+		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+	)
+	s.Require().NoError(err)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

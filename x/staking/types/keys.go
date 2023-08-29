@@ -35,7 +35,7 @@ var (
 	LastValidatorPowerKey = []byte{0x11}              // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = collections.NewPrefix(18) // prefix for the total power
 
-	ValidatorsKey             = []byte{0x21}              // prefix for each key to a validator
+	ValidatorsKey             = collections.NewPrefix(33) // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = collections.NewPrefix(34) // prefix for each key to a validator index, by pubkey
 	ValidatorsByPowerIndexKey = []byte{0x23}              // prefix for each key to a validator index, sorted by power
 
@@ -50,9 +50,9 @@ var (
 	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
 	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
-	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
+	UnbondingQueueKey    = collections.NewPrefix(65) // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey = []byte{0x42}              // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey    = []byte{0x43}              // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
@@ -219,12 +219,6 @@ func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
 // GetUBDsByValIndexKey creates the prefix keyspace for the indexes of unbonding delegations for a validator
 func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
-}
-
-// GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
-func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(UnbondingQueueKey, bz...)
 }
 
 // GetREDKey returns a key prefix for indexing a redelegation from a delegator

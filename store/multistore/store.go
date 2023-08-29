@@ -1,6 +1,17 @@
 package multistore
 
-// TODO: Move this to Core package.
-type MultiStore interface{}
+import (
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
+)
 
-type Store struct{}
+// TODO: Move this to Core package.
+type MultiStore interface {
+	WorkingHash() []byte
+	Commit() error
+}
+
+type Store struct {
+	ss store.VersionedDatabase
+	sc map[string]*commitment.Database
+}

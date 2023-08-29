@@ -50,7 +50,7 @@ type Keeper struct {
 	UnbondingDelegations        collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
 	RedelegationsByValDst       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc       collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
-	ValidatorQueue              collections.Map[collections.Pair[time.Time, int64], []byte]
+	ValidatorQueue              collections.Map[collections.Pair[time.Time, int64], types.ValAddresses]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -168,7 +168,7 @@ func NewKeeper(
 				sdk.TimeKey,
 				collections.Int64Key,
 			),
-			collections.BytesValue,
+			codec.CollValue[types.ValAddresses](cdc),
 		),
 	}
 

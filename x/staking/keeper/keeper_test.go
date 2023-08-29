@@ -188,6 +188,33 @@ func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
 }
 
+// getValidatorQueueKey returns the prefix key used for getting a set of unbonding
+// validators whose unbonding completion occurs at the given time and height.
+func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	validatorQueueKey := []byte{0x43}
+
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(validatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], validatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
+}
+
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 	s.SetupTest()
 
@@ -392,6 +419,44 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			s.Require().NoError(err)
 		},
 		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+	)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
+	s.SetupTest()
+	_, valAddrs := createValAddrs(100)
+	endTime := time.Unix(0, 0).UTC()
+	endHeight := int64(10)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			var addrs []string
+			addrs = append(addrs, valAddrs[i].String())
+			bz, err := s.cdc.Marshal(&stakingtypes.ValAddresses{Addresses: addrs})
+			s.Require().NoError(err)
+
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getValidatorQueueKey(endTime, endHeight), bz)
+		},
+		"bd39c68022fad4bd2d89b076a44ea6829a96f2668590582672b821794dc655a1",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			var addrs []string
+			addrs = append(addrs, valAddrs[i].String())
+
+			err := s.stakingKeeper.SetUnbondingValidatorsQueue(s.ctx, endTime, endHeight, addrs)
+			s.Require().NoError(err)
+		},
+		"bd39c68022fad4bd2d89b076a44ea6829a96f2668590582672b821794dc655a1",
 	)
 	s.Require().NoError(err)
 }

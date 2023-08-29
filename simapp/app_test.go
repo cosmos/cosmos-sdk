@@ -284,8 +284,6 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}
-
-	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }
 
 // TestMergedRegistry tests that fetching the gogo/protov2 merged registry

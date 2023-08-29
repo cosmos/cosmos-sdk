@@ -40,7 +40,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-
 * (genutil) [#17571](https://github.com/cosmos/cosmos-sdk/pull/17571) Allow creation of `AppGenesis` without a file lookup.
 
 ### Bug Fixes

@@ -37,7 +37,7 @@ type Keeper struct {
 	storeService       corestore.KVStoreService        // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
+	versionModifier    xp.AppVersionModifier           // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
@@ -49,14 +49,14 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.AppVersionModifier, authority string) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeService:       storeService,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
-		versionSetter:      vs,
+		versionModifier:    vs,
 		authority:          authority,
 	}
 
@@ -65,16 +65,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStore
 	}
 
 	return k
-}
-
-// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
-func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
-	k.versionSetter = vs
-}
-
-// GetVersionSetter gets the protocol version field of baseapp
-func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
-	return k.versionSetter
 }
 
 // SetInitVersionMap sets the initial version map.
@@ -94,35 +84,6 @@ func (k *Keeper) GetInitVersionMap() module.VersionMap {
 // must be set even if it is a no-op function.
 func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
 	k.upgradeHandlers[name] = upgradeHandler
-}
-
-// setProtocolVersion sets the protocol version to state
-func (k Keeper) setProtocolVersion(ctx context.Context, v uint64) error {
-	store := k.storeService.OpenKVStore(ctx)
-	versionBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(versionBytes, v)
-	return store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
-}
-
-// getProtocolVersion gets the protocol version from state
-func (k Keeper) getProtocolVersion(ctx context.Context) (uint64, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	ok, err := store.Has([]byte{types.ProtocolVersionByte})
-	if err != nil {
-		return 0, err
-	}
-
-	if ok {
-		pvBytes, err := store.Get([]byte{types.ProtocolVersionByte})
-		if err != nil {
-			return 0, err
-		}
-
-		protocolVersion := binary.BigEndian.Uint64(pvBytes)
-		return protocolVersion, nil
-	}
-	// default value
-	return 0, nil
 }
 
 // SetModuleVersionMap saves a given version map to state
@@ -441,6 +402,7 @@ func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error)
 func (k Keeper) setDone(ctx context.Context, name string) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	fmt.Println("setting done", "height", sdkCtx.HeaderInfo().Height, "name", name)
 	return store.Set(encodeDoneKey(name, sdkCtx.HeaderInfo().Height), []byte{1})
 }
 
@@ -451,6 +413,7 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
+// If successful, it will increment the app version and clear the IBC state
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
@@ -472,20 +435,16 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the protocol version and set it in state and baseapp
-	nextProtocolVersion, err := k.getProtocolVersion(ctx)
-	if err != nil {
-		return err
-	}
-	nextProtocolVersion++
-	err = k.setProtocolVersion(ctx, nextProtocolVersion)
-	if err != nil {
-		return err
-	}
+	// incremement the app version and set it in state and baseapp
+	if k.versionModifier != nil {
+		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
+		if err != nil {
+			return err
+		}
 
-	if k.versionSetter != nil {
-		// set protocol version on BaseApp
-		k.versionSetter.SetProtocolVersion(nextProtocolVersion)
+		if err := k.versionModifier.SetAppVersion(ctx, currentAppVersion+1); err != nil {
+			return err
+		}
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

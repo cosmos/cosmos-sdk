@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -122,7 +123,7 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 
 // AppGenesisFromFile reads the AppGenesis from the provided file.
 func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
-	file, err := os.Open(genFile)
+	file, err := os.Open(filepath.Clean(genFile))
 	if err != nil {
 		return nil, err
 	}

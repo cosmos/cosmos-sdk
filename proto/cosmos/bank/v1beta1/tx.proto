@@ -21,6 +21,8 @@ service Msg {
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
 
   // Burn defines a method for burning coins by an account.
+  //
+  // Since: cosmos-sdk 0.51
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
 
   // UpdateParams defines a governance operation for updating the x/bank module parameters.
@@ -127,6 +129,8 @@ message MsgSetSendEnabled {
 message MsgSetSendEnabledResponse {}
 
 // MsgBurn defines a message for burning coins.
+//
+// Since: cosmos-sdk 0.51
 message MsgBurn {
   option (cosmos.msg.v1.signer) = "from_address";
   option (amino.name)           = "cosmos-sdk/MsgBurn";
@@ -139,4 +143,6 @@ message MsgBurn {
 }
 
 // MsgBurnResponse defines the Msg/Burn response type.
+//
+// Since: cosmos-sdk 0.51
 message MsgBurnResponse {}

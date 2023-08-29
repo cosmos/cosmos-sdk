@@ -2,7 +2,6 @@
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
   - independent module functionality (AppModuleBasic)
-  - inter-dependent module genesis functionality (AppModuleGenesis)
   - inter-dependent module simulation functionality (AppModuleSimulation)
   - inter-dependent module full functionality (AppModule)
 
@@ -21,7 +20,7 @@ have to manually register all of the codecs for all the modules. This basic
 procedure as well as other basic patterns are handled through the use of
 BasicManager.
 
-Lastly the interface for genesis functionality (AppModuleGenesis) has been
+Lastly the interface for genesis functionality (HasGenesis & HasABCIGenesis) has been
 separated out from full module functionality (AppModule) so that modules which
 are only used for genesis can take advantage of the Module patterns without
 needlessly defining many placeholder functions
@@ -181,8 +180,6 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 		}
 	}
 }
-
-// AppModuleGenesis is the standard form for an application module genesis functions
 
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {

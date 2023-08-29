@@ -29,14 +29,14 @@ There are 4 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
-* (legacy) [`module.AppModuleGenesis`](#appmodulegenesis) for inter-dependent genesis-related module functionalities.
+* (legacy) [`module.HasGenesis`](#hasgenesis) for inter-dependent genesis-related module functionalities.
+* (legacy) [`module.HasABCIGenesis`](#hasabcigenesis) for inter-dependent genesis-related module functionalities.
 * (legacy) `module.GenesisOnlyAppModule`: Defines an `AppModule` that only has import/export functionality
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#hasgenesisbasics): The legacy interface for stateless genesis methods.
-* [`appmodule.HasGenesis` / `module.HasGenesis`](#hasgenesis): The extension interface for stateful genesis methods.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
 * [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
@@ -96,32 +96,27 @@ Let us go through the methods:
 * `DefaultGenesis(codec.JSONCodec)`: Returns a default [`GenesisState`](./08-genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing.
 * `ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./08-genesis.md#validategenesis) function defined by the module developer.
 
-### `AppModuleGenesis`
+### `HasGenesis`
 
-:::note
-Use `appmodule.HasGenesis` instead.
-:::
-
-The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` and `HasGenesis` interfaces.
+`HasGenesis` is an extension interface for allowing modules to implement genesis functionalities. If you 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L183-L186
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193
 ```
 
 It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods.
 
-### `HasGenesis`
+### `HasABCIGenesis`
 
-The `HasGenesis` interface is an extension interface of `HasGenesisBasics`.
+`HasABCIGenesis` is an extension interface for allowing modules to implement genesis functionalities and returns validator set updates.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/genesis.go#L10-L24
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193 
 ```
+<!-- TODO change link above after merge -->
 
-Let us go through the two added methods:
+It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods.
 
-* `InitGenesis(context.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
-* `ExportGenesis(context.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
 
 ### `AppModule`
 

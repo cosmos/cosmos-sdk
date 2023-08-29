@@ -41,7 +41,7 @@ func initChain(
 		Time:            genesisTimestamp,
 	}
 	// Valid app version can only be zero on app initialization.
-	req.ConsensusParams.Version.App = 0
+	req.ConsensusParams.Version.AppVersion = 0
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 

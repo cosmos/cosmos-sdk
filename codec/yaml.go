@@ -3,7 +3,7 @@ package codec
 import (
 	"encoding/json"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 )
 

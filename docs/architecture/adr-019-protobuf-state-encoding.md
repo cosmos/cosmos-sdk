@@ -82,7 +82,7 @@ are encoded and persisted via their concrete Amino codec to Protobuf and have th
 `Marshaler` that will be a `ProtoCodec`. This migration is simple as things will just work as-is.
 
 Note, any business logic that needs to encode primitive types like `bool` or `int64` should use
-[gogoprotobuf](https://github.com/cosmos/gogoproto) Value types.
+[gogoprotobuf](https://github.com/gogo/protobuf) Value types.
 
 Example:
 
@@ -149,8 +149,8 @@ and client developer UX.
 
 ### Safe usage of `Any`
 
-By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/cosmos/gogoproto/types)
-uses [global type registration]( https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540)
+By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
+uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
 in the dependency tree could registry a type with the global protobuf registry

@@ -1,11 +1,10 @@
 package authz
 
 import (
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	"time"
 
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +27,6 @@ var (
 )
 
 // NewMsgGrant creates a new MsgGrant
-//
 //nolint:interfacer
 func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
@@ -122,7 +120,6 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-//
 //nolint:interfacer
 func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
@@ -179,7 +176,6 @@ func (msg MsgRevoke) GetSignBytes() []byte {
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
-//
 //nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))

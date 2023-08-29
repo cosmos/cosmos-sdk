@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	protoio "github.com/cosmos/gogoproto/io"
+	protoio "github.com/gogo/protobuf/io"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"

@@ -196,23 +196,10 @@ func NewSimApp(
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	// A default nonce-based mempool is set automatically in BaseApp along with a
-	// default implementation of PrepareProposal and ProcessProposal. To override
-	// them, perform the following:
-	//
-	// baseAppOptions = append(baseAppOptions, baseapp.SetMempool(mp))
-	// baseAppOptions = append(baseAppOptions, baseapp.SetPrepareProposal(prepareProposalHandler))
-	// baseAppOptions = append(baseAppOptions, baseapp.SetProcessProposal(processProposalHandler))
-
-	baseAppOptions = append(baseAppOptions, baseapp.SetMempool(NoOpMempool{}))
-	baseAppOptions = append(baseAppOptions, baseapp.SetPrepareProposal(NoOpPrepareProposal()))
-	baseAppOptions = append(baseAppOptions, baseapp.SetProcessProposal(NoOpProcessProposal()))
-
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,

@@ -1,59 +1,48 @@
 package mock
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 
+	"github.com/tendermint/tendermint/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
-	db "github.com/tendermint/tm-db"
-	"google.golang.org/grpc"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
-// in order to guarantee consistent results.
+// in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
 
+	// Capabilities key to access the main KVStore.
 	capKeyMainStore := sdk.NewKVStoreKey("main")
+
+	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
+	baseApp.SetParamStore(&mock.ParamStore{Db: db})
+
+	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStores(capKeyMainStore)
+
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &kvstoreTx{})
+	// Set a Route.
+	baseApp.Router().AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 
-	router := bam.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
-
-	newDesc := &grpc.ServiceDesc{
-		ServiceName: "test",
-		Methods: []grpc.MethodDesc{
-			{
-				MethodName: "Test",
-				Handler:    _Msg_Test_Handler,
-			},
-		},
-	}
-
-	router.RegisterService(newDesc, &MsgServerImpl{capKeyMainStore})
-	baseApp.SetMsgServiceRouter(router)
-
+	// Load latest version.
 	if err := baseApp.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
@@ -62,10 +51,10 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
-// them to the db.
-func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
+// them to the db
+func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		dTx, ok := msg.(*kvstoreTx)
+		dTx, ok := msg.(kvstoreTx)
 		if !ok {
 			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
 		}
@@ -96,7 +85,7 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 
@@ -117,7 +106,8 @@ func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChai
 
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.
+	RawMessage, err error) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -134,38 +124,8 @@ func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) 
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
-func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (
+	appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
 	return
-}
-
-// Manually write the handlers for this custom message
-type MsgServer interface {
-	Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error)
-}
-
-type MsgServerImpl struct {
-	capKeyMainStore *storetypes.KVStoreKey
-}
-
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(kvstoreTx)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).Test(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/kvstoreTx",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Test(ctx, req.(*kvstoreTx))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func (m MsgServerImpl) Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error) {
-	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
 }

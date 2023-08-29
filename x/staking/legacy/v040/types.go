@@ -1,330 +1,201 @@
-// Package v040 is copy-pasted from:
-// https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/staking/types/keys.go
 package v040
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"strconv"
+	"strings"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Staking params default values
 const (
-	// ModuleName is the name of the staking module
-	ModuleName = "staking"
+	// DefaultUnbondingTime reflects three weeks in seconds as the default
+	// unbonding time.
+	// TODO: Justify our choice of default here.
+	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
-	// StoreKey is the string store representation
-	StoreKey = ModuleName
+	// Default maximum number of bonded validators
+	DefaultMaxValidators uint32 = 100
 
-	// QuerierRoute is the querier route for the staking module
-	QuerierRoute = ModuleName
+	// Default maximum entries in a UBD/RED pair
+	DefaultMaxEntries uint32 = 7
 
-	// RouterKey is the msg router key for the staking module
-	RouterKey = ModuleName
+	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
+	// value by not adding the staking module to the application module manager's
+	// SetOrderBeginBlockers.
+	DefaultHistoricalEntries uint32 = 10000
 )
 
-var (
-	// Keys for store prefixes
-	// Last* values are constant during a block.
-	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
-	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
-
-	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
-	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
-	ValidatorsByPowerIndexKey = []byte{0x23} // prefix for each key to a validator index, sorted by power
-
-	DelegationKey                    = []byte{0x31} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x32} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x33} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x34} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
-
-	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
-
-	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
-)
-
-// gets the key for the validator with address
-// VALUE: staking/Validator
-func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsKey, operatorAddr.Bytes()...)
-}
-
-// gets the key for the validator with pubkey
-// VALUE: validator operator address ([]byte)
-func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
-	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
-}
-
-// Get the validator operator address from LastValidatorPowerKey
-func AddressFromLastValidatorPowerKey(key []byte) []byte {
-	return key[1:] // remove prefix bytes
-}
-
-// get the validator by power index.
-// Power index is the key used in the power-store, and represents the relative
-// power ranking of the validator.
-// VALUE: validator operator address ([]byte)
-func GetValidatorsByPowerIndexKey(validator types.Validator) []byte {
-	// NOTE the address doesn't need to be stored because counter bytes must always be different
-	// NOTE the larger values are of higher value
-
-	consensusPower := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
-	consensusPowerBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
-
-	powerBytes := consensusPowerBytes
-	powerBytesLen := len(powerBytes) // 8
-
-	// key is of format prefix || powerbytes || addrBytes
-	key := make([]byte, 1+powerBytesLen+v040auth.AddrLen)
-
-	key[0] = ValidatorsByPowerIndexKey[0]
-	copy(key[1:powerBytesLen+1], powerBytes)
-	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
-	if err != nil {
-		panic(err)
+// NewParams creates a new Params instance
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
+	return Params{
+		UnbondingTime:     unbondingTime,
+		MaxValidators:     maxValidators,
+		MaxEntries:        maxEntries,
+		HistoricalEntries: historicalEntries,
+		BondDenom:         bondDenom,
 	}
-	operAddrInvr := sdk.CopyBytes(addr)
+}
 
-	for i, b := range operAddrInvr {
-		operAddrInvr[i] = ^b
+// String returns a human readable string representation of the parameters.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
+func DefaultParams() Params {
+	return NewParams(
+		DefaultUnbondingTime,
+		DefaultMaxValidators,
+		DefaultMaxEntries,
+		DefaultHistoricalEntries,
+		sdk.DefaultBondDenom,
+	)
+}
+
+// String implements the Stringer interface for a Commission object.
+func (c Commission) String() string {
+	out, _ := yaml.Marshal(c)
+	return string(out)
+}
+
+// String implements the Stringer interface for a CommissionRates object.
+func (cr CommissionRates) String() string {
+	out, _ := yaml.Marshal(cr)
+	return string(out)
+}
+
+// String implements the Stringer interface for a DVPair object.
+func (dv DVPair) String() string {
+	out, _ := yaml.Marshal(dv)
+	return string(out)
+}
+
+// String implements the Stringer interface for a DVVTriplet object.
+func (dvv DVVTriplet) String() string {
+	out, _ := yaml.Marshal(dvv)
+	return string(out)
+}
+
+// String returns a human readable string representation of a Delegation.
+func (d Delegation) String() string {
+	out, _ := yaml.Marshal(d)
+	return string(out)
+}
+
+// Delegations is a collection of delegations
+type Delegations []Delegation
+
+func (d Delegations) String() (out string) {
+	for _, del := range d {
+		out += del.String() + "\n"
 	}
 
-	copy(key[powerBytesLen+1:], operAddrInvr)
-
-	return key
+	return strings.TrimSpace(out)
 }
 
-// get the bonded validator index key for an operator address
-func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
-	return append(LastValidatorPowerKey, operator...)
+// String implements the stringer interface for a UnbondingDelegationEntry.
+func (e UnbondingDelegationEntry) String() string {
+	out, _ := yaml.Marshal(e)
+	return string(out)
 }
 
-// parse the validators operator address from power rank key
-func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
-	powerBytesLen := 8
-	if len(key) != 1+powerBytesLen+v040auth.AddrLen {
-		panic("Invalid validator power rank key length")
+// String returns a human readable string representation of an UnbondingDelegation.
+func (ubd UnbondingDelegation) String() string {
+	out := fmt.Sprintf(`Unbonding Delegations between:
+  Delegator:                 %s
+  Validator:                 %s
+	Entries:`, ubd.DelegatorAddress, ubd.ValidatorAddress)
+	for i, entry := range ubd.Entries {
+		out += fmt.Sprintf(`    Unbonding Delegation %d:
+      Creation Height:           %v
+      Min time to unbond (unix): %v
+      Expected balance:          %s`, i, entry.CreationHeight,
+			entry.CompletionTime, entry.Balance)
 	}
 
-	operAddr = sdk.CopyBytes(key[powerBytesLen+1:])
+	return out
+}
 
-	for i, b := range operAddr {
-		operAddr[i] = ^b
+// UnbondingDelegations is a collection of UnbondingDelegation
+type UnbondingDelegations []UnbondingDelegation
+
+func (ubds UnbondingDelegations) String() (out string) {
+	for _, u := range ubds {
+		out += u.String() + "\n"
 	}
 
-	return operAddr
+	return strings.TrimSpace(out)
 }
 
-// GetValidatorQueueKey returns the prefix key used for getting a set of unbonding
-// validators whose unbonding completion occurs at the given time and height.
-func GetValidatorQueueKey(timestamp time.Time, height int64) []byte {
-	heightBz := sdk.Uint64ToBigEndian(uint64(height))
-	timeBz := sdk.FormatTimeBytes(timestamp)
-	timeBzL := len(timeBz)
-	prefixL := len(ValidatorQueueKey)
-
-	bz := make([]byte, prefixL+8+timeBzL+8)
-
-	// copy the prefix
-	copy(bz[:prefixL], ValidatorQueueKey)
-
-	// copy the encoded time bytes length
-	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
-
-	// copy the encoded time bytes
-	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
-
-	// copy the encoded height
-	copy(bz[prefixL+8+timeBzL:], heightBz)
-
-	return bz
+// String implements the Stringer interface for a RedelegationEntry object.
+func (e RedelegationEntry) String() string {
+	out, _ := yaml.Marshal(e)
+	return string(out)
 }
 
-// ParseValidatorQueueKey returns the encoded time and height from a key created
-// from GetValidatorQueueKey.
-func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
-	prefixL := len(ValidatorQueueKey)
-	if prefix := bz[:prefixL]; !bytes.Equal(prefix, ValidatorQueueKey) {
-		return time.Time{}, 0, fmt.Errorf("invalid prefix; expected: %X, got: %X", ValidatorQueueKey, prefix)
+// String returns a human readable string representation of a Redelegation.
+func (red Redelegation) String() string {
+	out := fmt.Sprintf(`Redelegations between:
+  Delegator:                 %s
+  Source Validator:          %s
+  Destination Validator:     %s
+  Entries:
+`,
+		red.DelegatorAddress, red.ValidatorSrcAddress, red.ValidatorDstAddress,
+	)
+
+	for i, entry := range red.Entries {
+		out += fmt.Sprintf(`    Redelegation Entry #%d:
+      Creation height:           %v
+      Min time to unbond (unix): %v
+      Dest Shares:               %s
+`,
+			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst,
+		)
 	}
 
-	timeBzL := sdk.BigEndianToUint64(bz[prefixL : prefixL+8])
-	ts, err := sdk.ParseTimeBytes(bz[prefixL+8 : prefixL+8+int(timeBzL)])
-	if err != nil {
-		return time.Time{}, 0, err
+	return strings.TrimRight(out, "\n")
+}
+
+// Redelegations are a collection of Redelegation
+type Redelegations []Redelegation
+
+func (d Redelegations) String() (out string) {
+	for _, red := range d {
+		out += red.String() + "\n"
 	}
 
-	height := sdk.BigEndianToUint64(bz[prefixL+8+int(timeBzL):])
-
-	return ts, int64(height), nil
+	return strings.TrimSpace(out)
 }
 
-// gets the key for delegator bond with validator
-// VALUE: staking/Delegation
-func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetDelegationsKey(delAddr), valAddr.Bytes()...)
+// String implements the Stringer interface for DelegationResponse.
+func (d DelegationResponse) String() string {
+	return fmt.Sprintf("%s\n  Balance:   %s", d.Delegation.String(), d.Balance)
 }
 
-// gets the prefix for a delegator for all validators
-func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegationKey, delAddr.Bytes()...)
+// String implements the Stringer interface for a Validator object.
+func (v Validator) String() string {
+	out, _ := yaml.Marshal(v)
+	return string(out)
 }
 
-// gets the key for an unbonding delegation by delegator and validator addr
-// VALUE: staking/UnbondingDelegation
-func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(
-		GetUBDsKey(delAddr.Bytes()),
-		valAddr.Bytes()...)
-}
+// Validators is a collection of Validator
+type Validators []Validator
 
-// gets the index-key for an unbonding delegation, stored by validator-index
-// VALUE: none (key rearrangement used)
-func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetUBDsByValIndexKey(valAddr), delAddr.Bytes()...)
-}
-
-// rearranges the ValIndexKey to get the UBDKey
-func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
-	addrs := indexKey[1:] // remove prefix bytes
-	if len(addrs) != 2*v040auth.AddrLen {
-		panic("unexpected key length")
+func (v Validators) String() (out string) {
+	for _, val := range v {
+		out += val.String() + "\n"
 	}
 
-	valAddr := addrs[:v040auth.AddrLen]
-	delAddr := addrs[v040auth.AddrLen:]
-
-	return GetUBDKey(delAddr, valAddr)
+	return strings.TrimSpace(out)
 }
 
-// gets the prefix for all unbonding delegations from a delegator
-func GetUBDsKey(delAddr sdk.AccAddress) []byte {
-	return append(UnbondingDelegationKey, delAddr.Bytes()...)
-}
-
-// gets the prefix keyspace for the indexes of unbonding delegations for a validator
-func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
-	return append(UnbondingDelegationByValIndexKey, valAddr.Bytes()...)
-}
-
-// gets the prefix for all unbonding delegations from a delegator
-func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(UnbondingQueueKey, bz...)
-}
-
-// GetREDKey returns a key prefix for indexing a redelegation from a delegator
-// and source validator to a destination validator.
-func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	key := make([]byte, 1+v040auth.AddrLen*3)
-
-	copy(key[0:v040auth.AddrLen+1], GetREDsKey(delAddr.Bytes()))
-	copy(key[v040auth.AddrLen+1:2*v040auth.AddrLen+1], valSrcAddr.Bytes())
-	copy(key[2*v040auth.AddrLen+1:3*v040auth.AddrLen+1], valDstAddr.Bytes())
-
-	return key
-}
-
-// gets the index-key for a redelegation, stored by source-validator-index
-// VALUE: none (key rearrangement used)
-func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	REDSFromValsSrcKey := GetREDsFromValSrcIndexKey(valSrcAddr)
-	offset := len(REDSFromValsSrcKey)
-
-	// key is of the form REDSFromValsSrcKey || delAddr || valDstAddr
-	key := make([]byte, len(REDSFromValsSrcKey)+2*v040auth.AddrLen)
-	copy(key[0:offset], REDSFromValsSrcKey)
-	copy(key[offset:offset+v040auth.AddrLen], delAddr.Bytes())
-	copy(key[offset+v040auth.AddrLen:offset+2*v040auth.AddrLen], valDstAddr.Bytes())
-
-	return key
-}
-
-// gets the index-key for a redelegation, stored by destination-validator-index
-// VALUE: none (key rearrangement used)
-func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	REDSToValsDstKey := GetREDsToValDstIndexKey(valDstAddr)
-	offset := len(REDSToValsDstKey)
-
-	// key is of the form REDSToValsDstKey || delAddr || valSrcAddr
-	key := make([]byte, len(REDSToValsDstKey)+2*v040auth.AddrLen)
-	copy(key[0:offset], REDSToValsDstKey)
-	copy(key[offset:offset+v040auth.AddrLen], delAddr.Bytes())
-	copy(key[offset+v040auth.AddrLen:offset+2*v040auth.AddrLen], valSrcAddr.Bytes())
-
-	return key
-}
-
-// GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
-func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
-	// note that first byte is prefix byte
-	if len(indexKey) != 3*v040auth.AddrLen+1 {
-		panic("unexpected key length")
-	}
-
-	valSrcAddr := indexKey[1 : v040auth.AddrLen+1]
-	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]
-	valDstAddr := indexKey[2*v040auth.AddrLen+1 : 3*v040auth.AddrLen+1]
-
-	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
-}
-
-// GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
-func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
-	// note that first byte is prefix byte
-	if len(indexKey) != 3*v040auth.AddrLen+1 {
-		panic("unexpected key length")
-	}
-
-	valDstAddr := indexKey[1 : v040auth.AddrLen+1]
-	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]
-	valSrcAddr := indexKey[2*v040auth.AddrLen+1 : 3*v040auth.AddrLen+1]
-
-	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
-}
-
-// GetRedelegationTimeKey returns a key prefix for indexing an unbonding
-// redelegation based on a completion time.
-func GetRedelegationTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(RedelegationQueueKey, bz...)
-}
-
-// GetREDsKey returns a key prefix for indexing a redelegation from a delegator
-// address.
-func GetREDsKey(delAddr sdk.AccAddress) []byte {
-	return append(RedelegationKey, delAddr.Bytes()...)
-}
-
-// GetREDsFromValSrcIndexKey returns a key prefix for indexing a redelegation to
-// a source validator.
-func GetREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
-	return append(RedelegationByValSrcIndexKey, valSrcAddr.Bytes()...)
-}
-
-// GetREDsToValDstIndexKey returns a key prefix for indexing a redelegation to a
-// destination (target) validator.
-func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
-	return append(RedelegationByValDstIndexKey, valDstAddr.Bytes()...)
-}
-
-// GetREDsByDelToValDstIndexKey returns a key prefix for indexing a redelegation
-// from an address to a source validator.
-func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
-	return append(GetREDsToValDstIndexKey(valDstAddr), delAddr.Bytes()...)
-}
-
-// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
-func GetHistoricalInfoKey(height int64) []byte {
-	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+// String implements the Stringer interface for a Description object.
+func (d Description) String() string {
+	out, _ := yaml.Marshal(d)
+	return string(out)
 }

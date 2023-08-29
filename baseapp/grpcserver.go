@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
@@ -47,7 +47,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.CreateQueryContext(height, false)
+		sdkCtx, err := app.createQueryContext(height, false)
 		if err != nil {
 			return nil, err
 		}

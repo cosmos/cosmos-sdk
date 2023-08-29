@@ -18,7 +18,7 @@ for more information on Proto3, which Amino is largely compatible with (but not 
 
 Due to Amino having significant performance drawbacks, being reflection-based, and
 not having any meaningful cross-language/client support, Protocol Buffers, specifically
-[gogoprotobuf](https://github.com/cosmos/gogoproto/), is being used in place of Amino.
+[gogoprotobuf](https://github.com/gogo/protobuf/), is being used in place of Amino.
 Note, this process of using Protocol Buffers over Amino is still an ongoing process.
 
 Binary wire encoding of types in the Cosmos SDK can be broken down into two main
@@ -87,7 +87,7 @@ which is required when signing this kind of messages using a Ledger.
 
 ### Gogoproto
 
-Modules are encouraged to utilize Protobuf encoding for their respective types. In the SDK, we use the [Gogoproto](https://github.com/cosmos/gogoproto) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
+Modules are encouraged to utilize Protobuf encoding for their respective types. In the SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
 
 ### Guidelines for protobuf message definitions
 

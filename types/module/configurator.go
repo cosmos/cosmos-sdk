@@ -3,7 +3,7 @@ package module
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/grpc"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

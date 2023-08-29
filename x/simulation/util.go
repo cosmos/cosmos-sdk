@@ -102,7 +102,6 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := helpers.GenTx(
-		txCtx.R,
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,

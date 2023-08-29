@@ -61,8 +61,8 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := abci.Misbehavior{
-		Type: abci.MisbehaviorType_DUPLICATE_VOTE,
+	tmEvidence := abci.Evidence{
+		Type: abci.EvidenceType_DUPLICATE_VOTE,
 		Validator: abci.Validator{
 			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			Power:   100,

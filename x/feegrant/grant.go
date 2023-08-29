@@ -1,7 +1,7 @@
 package feegrant
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,6 @@ var (
 )
 
 // NewGrant creates a new FeeAllowanceGrant.
-//
 //nolint:interfacer
 func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)

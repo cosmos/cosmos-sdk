@@ -128,16 +128,9 @@ func queryState() error {
 
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
-        // your gRPC server address
-        "127.0.0.1:9090",
-        // the Cosmos SDK doesn't support any transport security mechanism.
-        grpc.WithInsecure(),
-        // This instantiates a general gRPC codec which handles proto bytes. We
-        // pass in a nil interface registry if the request/response types contain
-        // interface instead of 'nil' you should pass the application specific
-        // codec.
-        grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
-	)
+        "127.0.0.1:9090", // your gRPC server address.
+        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+    )
     defer grpcConn.Close()
 
     // This creates a gRPC client to query the x/bank service.

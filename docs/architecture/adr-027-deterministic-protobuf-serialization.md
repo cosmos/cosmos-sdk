@@ -127,7 +127,7 @@ There are three main implementation strategies, ordered from the least to the
 most custom development:
 
 - **Use a protobuf serializer that follows the above rules by default.** E.g.
-  [gogoproto](https://pkg.go.dev/github.com/cosmos/gogoproto/gogoproto) is known to
+  [gogoproto](https://pkg.go.dev/github.com/gogo/protobuf/gogoproto) is known to
   be compliant by in most cases, but not when certain annotations such as
   `nullable = false` are used. It might also be an option to configure an
   existing serializer accordingly.

@@ -6,7 +6,7 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

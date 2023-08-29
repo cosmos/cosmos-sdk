@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,10 +23,8 @@ type Animal interface {
 	Greet() string
 }
 
-var (
-	_ Animal        = (*Dog)(nil)
-	_ proto.Message = (*Dog)(nil)
-)
+var _ Animal = (*Dog)(nil)
+var _ proto.Message = (*Dog)(nil)
 
 func TestAnyPackUnpack(t *testing.T) {
 	registry := NewInterfaceRegistry()

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/grpc"
+	"github.com/gogo/protobuf/grpc"
 
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

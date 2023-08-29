@@ -31,8 +31,8 @@ message Grant {
 // GrantAuthorization extends a grant with both the addresses of the grantee and granter.
 // It is used in genesis.proto and query.proto
 message GrantAuthorization {
-  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string granter = 1;
+  string grantee = 2;
 
   google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];

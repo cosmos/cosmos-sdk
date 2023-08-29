@@ -5,8 +5,8 @@ import (
 	"compress/zlib"
 	"io"
 
-	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
+	protoio "github.com/gogo/protobuf/io"
+	"github.com/gogo/protobuf/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

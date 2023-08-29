@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -62,14 +62,6 @@ func (w *wrapper) GetMsgs() []sdk.Msg {
 
 func (w *wrapper) ValidateBasic() error {
 	return w.tx.ValidateBasic()
-}
-
-func (w *wrapper) Size() int {
-	panic("not implemented")
-}
-
-func (w *wrapper) Hash() [32]byte {
-	panic("not implemented")
 }
 
 func (w *wrapper) getBodyBytes() []byte {
@@ -168,12 +160,10 @@ func (w *wrapper) GetTimeoutHeight() uint64 {
 func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
-
 	pubKeys, err := w.GetPubKeys()
 	if err != nil {
 		return nil, err
 	}
-
 	n := len(signerInfos)
 	res := make([]signing.SignatureV2, n)
 
@@ -185,17 +175,16 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			}
 		} else {
 			var err error
-
 			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
 			if err != nil {
 				return nil, err
 			}
-
 			res[i] = signing.SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
 				Sequence: si.GetSequence(),
 			}
+
 		}
 	}
 

@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/proto"
 
 	amino "github.com/tendermint/go-amino"
 )

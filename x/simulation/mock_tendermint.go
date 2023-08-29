@@ -167,14 +167,14 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	if len(pastTimes) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,
-			LastCommitInfo: abci.CommitInfo{
+			LastCommitInfo: abci.LastCommitInfo{
 				Votes: voteInfos,
 			},
 		}
 	}
 
 	// TODO: Determine capacity before allocation
-	evidence := make([]abci.Misbehavior, 0)
+	evidence := make([]abci.Evidence, 0)
 
 	for r.Float64() < params.EvidenceFraction() {
 		height := header.Height
@@ -196,8 +196,8 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 
 		evidence = append(evidence,
-			abci.Misbehavior{
-				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
+			abci.Evidence{
+				Type:             abci.EvidenceType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             time,
@@ -210,7 +210,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	return abci.RequestBeginBlock{
 		Header: header,
-		LastCommitInfo: abci.CommitInfo{
+		LastCommitInfo: abci.LastCommitInfo{
 			Votes: voteInfos,
 		},
 		ByzantineValidators: evidence,

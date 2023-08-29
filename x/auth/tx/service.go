@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"

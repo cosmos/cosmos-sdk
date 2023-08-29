@@ -3,17 +3,7 @@ version: "3"
 services:
   cosmos:
     image: rosetta-ci:latest
-    command:
-      [
-        "simd",
-        "start",
-        "--pruning",
-        "nothing",
-        "--grpc-web.enable",
-        "true",
-        "--grpc-web.address",
-        "0.0.0.0:9091"
-      ]
+    command: ["simd", "start", "--pruning", "nothing", "--grpc-web.enable", "true", "--grpc-web.address", "0.0.0.0:9091"]
     ports:
       - 9090:9090
       - 26657:26657
@@ -22,21 +12,15 @@ services:
 
   rosetta:
     image: rosetta-ci:latest
-    command:
-      [
-        "simd",
-        "rosetta",
-        "--blockchain",
-        "app",
-        "--network",
-        "network",
-        "--tendermint",
-        "cosmos:26657",
-        "--grpc",
-        "cosmos:9090",
-        "--addr",
-        ":8080"
-      ]
+    command: [
+      "simd",
+      "rosetta",
+      "--blockchain", "app",
+      "--network", "network",
+      "--tendermint", "cosmos:26657",
+      "--grpc", "cosmos:9090",
+      "--addr", ":8080",
+    ]
     ports:
       - 8080:8080
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"

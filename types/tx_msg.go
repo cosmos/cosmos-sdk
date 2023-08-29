@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -37,7 +37,7 @@ type (
 
 	// Tx defines the interface a transaction must fulfill.
 	Tx interface {
-		// GetMsgs returns the all the transaction's messages.
+		// Gets the all the transaction's messages.
 		GetMsgs() []Msg
 
 		// ValidateBasic does a simple and lightweight validation check that doesn't
@@ -54,7 +54,7 @@ type (
 		FeeGranter() AccAddress
 	}
 
-	// TxWithMemo must have GetMemo() method to use ValidateMemoDecorator
+	// Tx must have GetMemo() method to use ValidateMemoDecorator
 	TxWithMemo interface {
 		Tx
 		GetMemo() string

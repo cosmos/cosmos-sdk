@@ -1,7 +1,7 @@
 package secp256r1
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"

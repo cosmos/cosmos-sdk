@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestGRPCQueryRouter(t *testing.T) {
+func TestGRPCGatewayRouter(t *testing.T) {
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
@@ -32,9 +32,9 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	res, err = client.Echo(context.Background(), nil)
-	require.Nil(t, err)
-	require.Empty(t, res.Message)
+	require.Panics(t, func() {
+		_, _ = client.Echo(context.Background(), nil)
+	})
 
 	res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 	require.Nil(t, err)

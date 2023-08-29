@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/gogoproto/jsonpb"
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/jsonpb"
+	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -100,8 +100,8 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for k, v := range attrMap {
 		attrs = append(attrs, abci.EventAttribute{
-			Key:   k,
-			Value: string(v),
+			Key:   []byte(k),
+			Value: v,
 		})
 	}
 
@@ -132,7 +132,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 	attrMap := make(map[string]json.RawMessage)
 	for _, attr := range event.Attributes {
-		attrMap[attr.Key] = json.RawMessage(attr.Value)
+		attrMap[string(attr.Key)] = attr.Value
 	}
 
 	attrBytes, err := json.Marshal(attrMap)
@@ -191,7 +191,7 @@ func (a Attribute) String() string {
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
-	return abci.EventAttribute{Key: a.Key, Value: a.Value}
+	return abci.EventAttribute{Key: []byte(a.Key), Value: []byte(a.Value)}
 }
 
 // AppendAttributes adds one or more attributes to an Event.

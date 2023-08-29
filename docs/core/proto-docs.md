@@ -4,6 +4,13 @@
 
 ## Table of Contents
 
+- [amino/amino.proto](#amino/amino.proto)
+    - [File-level Extensions](#amino/amino.proto-extensions)
+    - [File-level Extensions](#amino/amino.proto-extensions)
+    - [File-level Extensions](#amino/amino.proto-extensions)
+    - [File-level Extensions](#amino/amino.proto-extensions)
+    - [File-level Extensions](#amino/amino.proto-extensions)
+  
 - [cosmos/auth/v1beta1/auth.proto](#cosmos/auth/v1beta1/auth.proto)
     - [BaseAccount](#cosmos.auth.v1beta1.BaseAccount)
     - [ModuleAccount](#cosmos.auth.v1beta1.ModuleAccount)
@@ -31,6 +38,7 @@
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
     - [Grant](#cosmos.authz.v1beta1.Grant)
+    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
   
 - [cosmos/authz/v1beta1/event.proto](#cosmos/authz/v1beta1/event.proto)
     - [EventGrant](#cosmos.authz.v1beta1.EventGrant)
@@ -38,25 +46,16 @@
   
 - [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
-    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
   
 - [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryGranteeGrantsRequest](#cosmos.authz.v1beta1.QueryGranteeGrantsRequest)
+    - [QueryGranteeGrantsResponse](#cosmos.authz.v1beta1.QueryGranteeGrantsResponse)
+    - [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest)
+    - [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse)
     - [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest)
     - [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse)
   
     - [Query](#cosmos.authz.v1beta1.Query)
-  
-- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
-    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
-    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
-    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
-    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
-    - [Result](#cosmos.base.abci.v1beta1.Result)
-    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
-    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
-    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
-    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
-    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
   
 - [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
     - [MsgExec](#cosmos.authz.v1beta1.MsgExec)
@@ -123,9 +122,27 @@
   
     - [Msg](#cosmos.bank.v1beta1.Msg)
   
+- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
+    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
+    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
+    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
+    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
+    - [Result](#cosmos.base.abci.v1beta1.Result)
+    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
+    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
+    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
+    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
+    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
+  
 - [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
     - [Pair](#cosmos.base.kv.v1beta1.Pair)
     - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
+  
+- [cosmos/base/node/v1beta1/query.proto](#cosmos/base/node/v1beta1/query.proto)
+    - [ConfigRequest](#cosmos.base.node.v1beta1.ConfigRequest)
+    - [ConfigResponse](#cosmos.base.node.v1beta1.ConfigResponse)
+  
+    - [Service](#cosmos.base.node.v1beta1.Service)
   
 - [cosmos/base/reflection/v1beta1/reflection.proto](#cosmos/base/reflection/v1beta1/reflection.proto)
     - [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest)
@@ -605,6 +622,56 @@
 
 
 
+<a name="amino/amino.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## amino/amino.proto
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+
+<a name="amino/amino.proto-extensions"></a>
+
+### File-level Extensions
+| Extension | Type | Base | Number | Description |
+| --------- | ---- | ---- | ------ | ----------- |
+| `dont_omitempty` | bool | .google.protobuf.FieldOptions | 11110005 | dont_omitempty sets the field in the JSON object even if its value is empty, i.e. equal to the Golang zero value. To learn what the zero values are, see https://go.dev/ref/spec#The_zero_value.
+
+Fields default to `omitempty`, which is the default behavior when this annotation is unset. When set to true, then the field value in the JSON object will be set, i.e. not `undefined`.
+
+Example:
+
+message Foo { string bar = 1; string baz = 2 [(amino.dont_omitempty) = true]; }
+
+f := Foo{}; out := AminoJSONEncoder(&f); out == {"baz":""} |
+| `encoding` | string | .google.protobuf.FieldOptions | 11110003 | encoding describes the encoding format used by Amino for the given field. The field type is chosen to be a string for flexibility, but it should ideally be short and expected to be machine-readable, for example "base64" or "utf8_json". We highly recommend to use underscores for word separation instead of spaces.
+
+If left empty, then the Amino encoding is expected to be the same as the Protobuf one.
+
+This annotation should not be confused with the `message_encoding` one which operates on the message level. |
+| `field_name` | string | .google.protobuf.FieldOptions | 11110004 | field_name sets a different field name (i.e. key name) in the amino JSON object for the given field.
+
+Example:
+
+message Foo { string bar = 1 [(amino.field_name) = "baz"]; }
+
+Then the Amino encoding of Foo will be: `{"baz":"some value"}` |
+| `message_encoding` | string | .google.protobuf.MessageOptions | 11110002 | encoding describes the encoding format used by Amino for the given message. The field type is chosen to be a string for flexibility, but it should ideally be short and expected to be machine-readable, for example "base64" or "utf8_json". We highly recommend to use underscores for word separation instead of spaces.
+
+If left empty, then the Amino encoding is expected to be the same as the Protobuf one.
+
+This annotation should not be confused with the `encoding` one which operates on the field level. |
+| `name` | string | .google.protobuf.MessageOptions | 11110001 | name is the string used when registering a concrete type into the Amino type registry, via the Amino codec's `RegisterConcrete()` method. This string MUST be at most 39 characters long, or else the message will be rejected by the Ledger hardware device. |
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/auth/v1beta1/auth.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -959,6 +1026,25 @@ the provide method with expiration time.
 
 
 
+
+<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
+
+### GrantAuthorization
+GrantAuthorization extends a grant with both the addresses of the grantee and granter.
+It is used in genesis.proto and query.proto
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1040,24 +1126,6 @@ GenesisState defines the authz module's genesis state.
 
 
 
-
-<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
-
-### GrantAuthorization
-GrantAuthorization defines the GenesisState/GrantAuthorization type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1073,6 +1141,70 @@ GrantAuthorization defines the GenesisState/GrantAuthorization type.
 
 ## cosmos/authz/v1beta1/query.proto
 Since: cosmos-sdk 0.43
+
+
+<a name="cosmos.authz.v1beta1.QueryGranteeGrantsRequest"></a>
+
+### QueryGranteeGrantsRequest
+QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryGranteeGrantsResponse"></a>
+
+### QueryGranteeGrantsResponse
+QueryGranteeGrantsResponse is the response type for the Query/GranteeGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grants` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated | grants is a list of grants granted to the grantee. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsRequest"></a>
+
+### QueryGranterGrantsRequest
+QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsResponse"></a>
+
+### QueryGranterGrantsResponse
+QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grants` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated | grants is a list of grants granted by the granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
 
 
 <a name="cosmos.authz.v1beta1.QueryGrantsRequest"></a>
@@ -1123,206 +1255,8 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Grants` | [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest) | [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/grants|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/abci/v1beta1/abci.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/abci/v1beta1/abci.proto
-
-
-
-<a name="cosmos.base.abci.v1beta1.ABCIMessageLog"></a>
-
-### ABCIMessageLog
-ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_index` | [uint32](#uint32) |  |  |
-| `log` | [string](#string) |  |  |
-| `events` | [StringEvent](#cosmos.base.abci.v1beta1.StringEvent) | repeated | Events contains a slice of Event objects that were emitted during some execution. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.Attribute"></a>
-
-### Attribute
-Attribute defines an attribute wrapper where the key and value are
-strings instead of raw bytes.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
-
-### GasInfo
-GasInfo defines tx execution gas context.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
-| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.MsgData"></a>
-
-### MsgData
-MsgData defines the data returned in a Result object during message
-execution.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `data` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.Result"></a>
-
-### Result
-Result is the union of ResponseFormat and ResponseCheckTx.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
-| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
-| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
-
-### SearchTxsResult
-SearchTxsResult defines a structure for querying txs pageable
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total_count` | [uint64](#uint64) |  | Count of all txs |
-| `count` | [uint64](#uint64) |  | Count of txs in current page |
-| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
-| `page_total` | [uint64](#uint64) |  | Count of total pages |
-| `limit` | [uint64](#uint64) |  | Max count txs per page |
-| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
-
-### SimulationResponse
-SimulationResponse defines the response generated when a transaction is
-successfully simulated.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
-| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
-
-### StringEvent
-StringEvent defines en Event object wrapper where all the attributes
-contain key/value pairs that are strings instead of raw bytes.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
-
-### TxMsgData
-TxMsgData defines a list of MsgData. A transaction will have a MsgData object
-for each message.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
-
-### TxResponse
-TxResponse defines a structure containing relevant tx data and metadata. The
-tags are stringified and the log is JSON decoded.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  | The block height |
-| `txhash` | [string](#string) |  | The transaction hash. |
-| `codespace` | [string](#string) |  | Namespace for the Code |
-| `code` | [uint32](#uint32) |  | Response code. |
-| `data` | [string](#string) |  | Result bytes, if any. |
-| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
-| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
-| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
-| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
-| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
-| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
-| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
-| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
-
-Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
+| `GranterGrants` | [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest) | [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse) | GranterGrants returns list of `Authorization`, granted by granter. | GET|/cosmos/authz/v1beta1/grants/granter/{granter}|
+| `GranteeGrants` | [QueryGranteeGrantsRequest](#cosmos.authz.v1beta1.QueryGranteeGrantsRequest) | [QueryGranteeGrantsResponse](#cosmos.authz.v1beta1.QueryGranteeGrantsResponse) | GranteeGrants returns a list of `GrantAuthorization` by grantee. | GET|/cosmos/authz/v1beta1/grants/grantee/{grantee}|
 
  <!-- end services -->
 
@@ -2204,6 +2138,206 @@ Msg defines the bank Msg service.
 
 
 
+<a name="cosmos/base/abci/v1beta1/abci.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/abci/v1beta1/abci.proto
+
+
+
+<a name="cosmos.base.abci.v1beta1.ABCIMessageLog"></a>
+
+### ABCIMessageLog
+ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_index` | [uint32](#uint32) |  |  |
+| `log` | [string](#string) |  |  |
+| `events` | [StringEvent](#cosmos.base.abci.v1beta1.StringEvent) | repeated | Events contains a slice of Event objects that were emitted during some execution. |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.Attribute"></a>
+
+### Attribute
+Attribute defines an attribute wrapper where the key and value are
+strings instead of raw bytes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
+
+### GasInfo
+GasInfo defines tx execution gas context.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
+| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.MsgData"></a>
+
+### MsgData
+MsgData defines the data returned in a Result object during message
+execution.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [string](#string) |  |  |
+| `data` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.Result"></a>
+
+### Result
+Result is the union of ResponseFormat and ResponseCheckTx.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
+| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
+
+### SearchTxsResult
+SearchTxsResult defines a structure for querying txs pageable
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_count` | [uint64](#uint64) |  | Count of all txs |
+| `count` | [uint64](#uint64) |  | Count of txs in current page |
+| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
+| `page_total` | [uint64](#uint64) |  | Count of total pages |
+| `limit` | [uint64](#uint64) |  | Max count txs per page |
+| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
+
+### SimulationResponse
+SimulationResponse defines the response generated when a transaction is
+successfully simulated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
+| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
+
+### StringEvent
+StringEvent defines en Event object wrapper where all the attributes
+contain key/value pairs that are strings instead of raw bytes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `type` | [string](#string) |  |  |
+| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
+
+### TxMsgData
+TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+for each message.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
+
+### TxResponse
+TxResponse defines a structure containing relevant tx data and metadata. The
+tags are stringified and the log is JSON decoded.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  | The block height |
+| `txhash` | [string](#string) |  | The transaction hash. |
+| `codespace` | [string](#string) |  | Namespace for the Code |
+| `code` | [uint32](#uint32) |  | Response code. |
+| `data` | [string](#string) |  | Result bytes, if any. |
+| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
+| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
+| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
+| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
+| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
+| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
+| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
+
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/base/kv/v1beta1/kv.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -2246,6 +2380,57 @@ Pairs defines a repeated slice of Pair objects.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/node/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/node/v1beta1/query.proto
+
+
+
+<a name="cosmos.base.node.v1beta1.ConfigRequest"></a>
+
+### ConfigRequest
+ConfigRequest defines the request structure for the Config gRPC query.
+
+
+
+
+
+
+<a name="cosmos.base.node.v1beta1.ConfigResponse"></a>
+
+### ConfigResponse
+ConfigResponse defines the response structure for the Config gRPC query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_gas_price` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.base.node.v1beta1.Service"></a>
+
+### Service
+Service defines the gRPC querier service for node related queries.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Config` | [ConfigRequest](#cosmos.base.node.v1beta1.ConfigRequest) | [ConfigResponse](#cosmos.base.node.v1beta1.ConfigResponse) | Config queries for the operator configuration. | GET|/cosmos/base/node/v1beta1/config|
 
  <!-- end services -->
 
@@ -2931,6 +3116,7 @@ a version/height.
 | ----- | ---- | ----- | ----------- |
 | `version` | [int64](#int64) |  |  |
 | `store_infos` | [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo) | repeated |  |
+| `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
@@ -5171,8 +5357,8 @@ TallyParams defines the params for tallying votes on governance proposals.
 | `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
 | `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
 | `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
-| `expedited_quorum` | [bytes](#bytes) |  | Minimum proportion of Yes votes for an expedited quorum proposal to pass. Default value: 0.67. |
 | `expedited_threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67. |
+| `expedited_quorum` | [bytes](#bytes) |  | Minimum proportion of Yes votes for an expedited proposal to reach quorum. Default value: 0.67. |
 
 
 

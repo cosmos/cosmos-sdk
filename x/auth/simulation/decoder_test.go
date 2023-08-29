@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

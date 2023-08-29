@@ -10,8 +10,8 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -477,7 +477,6 @@ type ModeInfo struct {
 	// multisig signer
 	//
 	// Types that are valid to be assigned to Sum:
-	//
 	//	*ModeInfo_Single_
 	//	*ModeInfo_Multi_
 	Sum isModeInfo_Sum `protobuf_oneof:"sum"`

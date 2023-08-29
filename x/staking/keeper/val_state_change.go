@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
+	gogotypes "github.com/gogo/protobuf/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

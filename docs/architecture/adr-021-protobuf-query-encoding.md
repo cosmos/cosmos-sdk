@@ -71,7 +71,7 @@ message AnyProposal {
 
 ### Custom Query Implementation
 
-In order to implement the query service, we can reuse the existing [gogo protobuf](https://github.com/cosmos/gogoproto)
+In order to implement the query service, we can reuse the existing [gogo protobuf](https://github.com/gogo/protobuf)
 grpc plugin, which for a service named `Query` generates an interface named
 `QueryServer` as below:
 
@@ -204,7 +204,7 @@ type QueryClient interface {
 }
 ```
 
-Via a small patch to gogo protobuf ([gogo/protobuf#675](https://github.com/cosmos/gogoproto/pull/675))
+Via a small patch to gogo protobuf ([gogo/protobuf#675](https://github.com/gogo/protobuf/pull/675))
 we have tweaked the grpc codegen to use an interface rather than concrete type
 for the generated client struct. This allows us to also reuse the GRPC infrastructure
 for ABCI client queries.

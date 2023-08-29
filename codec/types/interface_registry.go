@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/jsonpb"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -51,9 +52,6 @@ type InterfaceRegistry interface {
 	// ListImplementations lists the valid type URLs for the given interface name that can be used
 	// for the provided interface type URL.
 	ListImplementations(ifaceTypeURL string) []string
-
-	// EnsureRegistered ensures there is a registered interface for the given concrete type.
-	EnsureRegistered(iface interface{}) error
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -83,7 +81,6 @@ type UnpackInterfacesMessage interface {
 type interfaceRegistry struct {
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
-	implInterfaces map[reflect.Type]reflect.Type
 	typeURLMap     map[string]reflect.Type
 }
 
@@ -94,7 +91,6 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
-		implInterfaces: map[reflect.Type]reflect.Type{},
 		typeURLMap:     map[string]reflect.Type{},
 	}
 }
@@ -104,24 +100,8 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	if typ.Elem().Kind() != reflect.Interface {
 		panic(fmt.Errorf("%T is not an interface type", iface))
 	}
-
 	registry.interfaceNames[protoName] = typ
 	registry.RegisterImplementations(iface, impls...)
-}
-
-// EnsureRegistered ensures there is a registered interface for the given concrete type.
-//
-// Returns an error if not, and nil if so.
-func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
-	if reflect.ValueOf(impl).Kind() != reflect.Ptr {
-		return fmt.Errorf("%T is not a pointer", impl)
-	}
-
-	if _, found := registry.implInterfaces[reflect.TypeOf(impl)]; !found {
-		return fmt.Errorf("%T does not have a registered interface", impl)
-	}
-
-	return nil
 }
 
 // RegisterImplementations registers a concrete proto Message which implements
@@ -182,7 +162,7 @@ func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL strin
 
 	imap[typeURL] = implType
 	registry.typeURLMap[typeURL] = implType
-	registry.implInterfaces[implType] = ityp
+
 	registry.interfaceImpls[ityp] = imap
 }
 

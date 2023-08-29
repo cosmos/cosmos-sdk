@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	gateway "github.com/cosmos/gogogateway"
+	"github.com/gogo/gateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

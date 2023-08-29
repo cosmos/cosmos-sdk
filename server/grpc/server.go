@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
 	reflection "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
@@ -31,7 +30,6 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 	grpcSrv := grpc.NewServer(
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
-		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 	)
 	app.RegisterGRPCServer(grpcSrv)
 

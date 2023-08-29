@@ -345,14 +345,15 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 func TestDisplay(t *testing.T) {
 	require := require.New(t)
 	pubKeys := generatePubKeys(3)
-
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
-	require.NotEmpty(msig.String())
 
+	// LegacyAminoPubKey wraps PubKeys into Amino (for serialization) and Any String method doesn't work.
+	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
+		func() { require.Empty(msig.String()) },
+	)
 	ccfg := simapp.MakeTestEncodingConfig()
 	bz, err := ccfg.Marshaler.MarshalInterfaceJSON(msig)
 	require.NoError(err)
-
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))
 	// Example output:

@@ -21,7 +21,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		switch tmEvidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
-		case abci.MisbehaviorType_DUPLICATE_VOTE, abci.MisbehaviorType_LIGHT_CLIENT_ATTACK:
+		case abci.EvidenceType_DUPLICATE_VOTE, abci.EvidenceType_LIGHT_CLIENT_ATTACK:
 			evidence := types.FromABCIEvidence(tmEvidence)
 			k.HandleEquivocationEvidence(ctx, evidence.(*types.Equivocation))
 

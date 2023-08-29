@@ -1,6 +1,0 @@
-# This workspace file points to the roots found in your
-# previous "buf.yaml" configuration.
-version: v1
-directories:
-  - proto
-  # - orm/internal

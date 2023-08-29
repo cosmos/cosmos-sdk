@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON
@@ -96,9 +96,8 @@ func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 // NOTE: to unmarshal a concrete type, you should use Unmarshal instead
 //
 // Example:
-//
-//	var x MyInterface
-//	err := cdc.UnmarshalInterface(bz, &x)
+//   var x MyInterface
+//   err := cdc.UnmarshalInterface(bz, &x)
 func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
@@ -118,9 +117,8 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 // NOTE: to unmarshal a concrete type, you should use UnmarshalJSON instead
 //
 // Example:
-//
-//	var x MyInterface
-//	err := cdc.UnmarshalInterfaceJSON(bz, &x)
+//   var x MyInterface
+//   err := cdc.UnmarshalInterfaceJSON(bz, &x)
 func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }

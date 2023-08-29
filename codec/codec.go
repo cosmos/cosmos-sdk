@@ -1,8 +1,7 @@
 package codec
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/grpc/encoding"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -95,13 +94,5 @@ type (
 		UnmarshalAmino([]byte) error
 		MarshalAminoJSON() ([]byte, error)
 		UnmarshalAminoJSON([]byte) error
-	}
-
-	// GRPCCodecProvider is implemented by the Codec implementations which return
-	// a gRPC encoding.Codec.
-	//
-	// And it is used to decode requests and encode responses passed through gRPC.
-	GRPCCodecProvider interface {
-		GRPCCodec() encoding.Codec
 	}
 )

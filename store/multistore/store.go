@@ -18,6 +18,10 @@ type MultiStore interface {
 	LoadVersion(version uint64) error
 	WorkingHash() []byte
 	Commit() ([]byte, error)
+	// TODO:
+	// - Tracing
+	// - Pruning
+	// - Queries
 
 	io.Closer
 }

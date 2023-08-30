@@ -38,14 +38,39 @@ Each `Msg` service method must have exactly one argument, which must implement t
 
 `sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with the `GetSigners()` method. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
-`sdk.Msg` is a alias of `proto.Message`. To attach a `ValidateBasic()` and/or `GetSigners()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic` and/or 
-
-<!-- TODO add docs on how to use custom getsigners after talking with matt -->
+`sdk.Msg` is a alias of `proto.Message`. To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L89
 ```
 
+In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
+
+```protobuf reference 
+https://github.com/cosmos/cosmos-sdk/blob/e6848d99b55a65d014375b295bdd7f9641aac95e/proto/cosmos/bank/v1beta1/tx.proto#L41
+```
+
+If there is a need for custom signers then there is an alternative path which can be taken. A function which returns `signing.CustomGetSigner` for a specific message can be defined. 
+
+```go
+func ProvideBankSendTransactionGetSigners() signing.CustomGetSigner {
+
+			// Extract the signer from the signature.
+			signer, err := coretypes.LatestSigner(Tx).Sender(ethTx)
+      if err != nil {
+				return nil, err
+			}
+
+			// Return the signer in the required format.
+			return [][]byte{signer.Bytes()}, nil
+}
+```
+
+When using dependency injection (depinject) this can be provided to the application via the provide method.
+
+```go
+depinject.Provide(banktypes.ProvideBankSendTransactionGetSigners)
+```
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:
 

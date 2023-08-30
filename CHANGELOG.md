@@ -62,6 +62,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#17498](https://github.com/cosmos/cosmos-sdk/pull/17498) Use collections for `LastValidatorPower`:
     * remove from `types`: `GetLastValidatorPowerKey`
     * remove from `Keeper`: `LastValidatorsIterator`
+* (x/staking) [#17291](https://github.com/cosmos/cosmos-sdk/pull/17291) Use collections for `UnbondingDelegationByValIndex`:
+    * remove from `types`: `GetUBDKeyFromValIndexKey`, `GetUBDsByValIndexKey`, `GetUBDByValIndexKey`
+* (x/slashing) [#17568](https://github.com/cosmos/cosmos-sdk/pull/17568) Use collections for `ValidatorMissedBlockBitmap`:
+    * remove from `types`: `ValidatorMissedBlockBitmapPrefixKey`, `ValidatorMissedBlockBitmapKey`
 * (x/staking) [#17481](https://github.com/cosmos/cosmos-sdk/pull/17481) Use collections for `UnbondingQueue`:
     * remove from `Keeper`: `UBDQueueIterator`
     * remove from `types`: `GetUnbondingDelegationTimeKey`

@@ -235,7 +235,7 @@ var (
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	HasGenesis
+	HasABCIGenesis
 }
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality

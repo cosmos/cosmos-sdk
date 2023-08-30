@@ -179,7 +179,7 @@ func NewInMemoryWithKeyring(kr keyring.Keyring, cdc codec.Codec, opts ...Option)
 // New creates a new instance of a keyring.
 // Keyring options can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
-func New(
+func newKeyringGeneric(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
 ) (Keyring, error) {
 	var (

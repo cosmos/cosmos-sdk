@@ -32,7 +32,11 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.44.3` or earlier if the auto-download option is enabled.*
+*Note: Only the last version of cosmovisor is actively developed/maintained.*
+
+:::warning
+Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.
+:::
 
 ## Contributing
 
@@ -44,7 +48,7 @@ Release branches have the following format `release/cosmovisor/vA.B.x`, where A 
 
 ### Installation
 
-You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.3.0).
+You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.5.0).
 
 To install the latest version of `cosmovisor`, run the following command:
 
@@ -63,7 +67,8 @@ Run `cosmovisor version` to check the cosmovisor version.
 Alternatively, for building from source, simply run `make cosmovisor`. The binary will be located in `tools/cosmovisor`.
 
 :::warning
-Building from source using `make cosmovisor` won't display the correct `cosmovisor` version.
+Installing cosmovisor using `go install` will display the correct `cosmovisor` version.
+Building from source (`make cosmovisor`) or installing `cosmovisor` by other means won't display the correct version.
 :::
 
 ### Command Line Arguments And Environment Variables

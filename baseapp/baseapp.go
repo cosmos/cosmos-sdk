@@ -685,6 +685,9 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 		// write the consensus parameters in store to context
 		if rsp.ConsensusParamsChanged {
 			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+			// GasMeter must be set after we get a context with updated consensus params.
+			gasMeter := app.getBlockGasMeter(ctx)
+			ctx = ctx.WithBlockGasMeter(gasMeter)
 			app.finalizeBlockState.ctx = ctx
 		}
 	}

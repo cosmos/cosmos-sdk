@@ -13,16 +13,21 @@ import (
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
-	err := keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
+	err := keeper.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+		validator, err := keeper.GetValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			returnErr = err
-			return true
+			return true, err
 		}
 		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		if err != nil {
 			returnErr = err
-			return true
+			return true, err
 		}
 
 		vals = append(vals, cmttypes.GenesisValidator{
@@ -32,7 +37,7 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 			Name:    validator.GetMoniker(),
 		})
 
-		return false
+		return false, nil
 	})
 	if err != nil {
 		return nil, err

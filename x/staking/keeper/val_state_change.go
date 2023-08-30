@@ -469,9 +469,7 @@ func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, 
 			return true, err
 		}
 
-		powerBytes := value
-		last[valAddrStr] = make([]byte, len(powerBytes))
-		copy(last[valAddrStr], powerBytes)
+		last[valAddrStr] = value
 		return false, nil
 	})
 	if err != nil {

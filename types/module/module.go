@@ -232,21 +232,21 @@ var (
 	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
 )
 
-// genesisOnlyModule is an interface need to return GenesisOnlyAppModule struct in order to wrap two interfaces
-type genesisOnlyModule interface {
+// AppModuleGenesis is the standard form for an application module genesis functions
+type AppModuleGenesis interface {
 	AppModuleBasic
-	HasABCIGenesis
+	HasGenesis
 }
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
-	genesisOnlyModule
+	AppModuleGenesis
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg genesisOnlyModule) GenesisOnlyAppModule {
+func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
 	return GenesisOnlyAppModule{
-		genesisOnlyModule: amg,
+		AppModuleGenesis: amg,
 	}
 }
 

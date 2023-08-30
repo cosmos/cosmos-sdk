@@ -441,7 +441,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorQueueKey(endTime, endHeight), bz)
 		},
-		"bd39c68022fad4bd2d89b076a44ea6829a96f2668590582672b821794dc655a1",
+		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
 	)
 	s.Require().NoError(err)
 
@@ -456,7 +456,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			err := s.stakingKeeper.SetUnbondingValidatorsQueue(s.ctx, endTime, endHeight, addrs)
 			s.Require().NoError(err)
 		},
-		"bd39c68022fad4bd2d89b076a44ea6829a96f2668590582672b821794dc655a1",
+		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
 	)
 	s.Require().NoError(err)
 }

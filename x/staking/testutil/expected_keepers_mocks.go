@@ -8,63 +8,14 @@ import (
 	context "context"
 	reflect "reflect"
 
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
+	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
-
-// MockDistributionKeeper is a mock of DistributionKeeper interface.
-type MockDistributionKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockDistributionKeeperMockRecorder
-}
-
-// MockDistributionKeeperMockRecorder is the mock recorder for MockDistributionKeeper.
-type MockDistributionKeeperMockRecorder struct {
-	mock *MockDistributionKeeper
-}
-
-// NewMockDistributionKeeper creates a new mock instance.
-func NewMockDistributionKeeper(ctrl *gomock.Controller) *MockDistributionKeeper {
-	mock := &MockDistributionKeeper{ctrl: ctrl}
-	mock.recorder = &MockDistributionKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
-	return m.recorder
-}
-
-// GetFeePoolCommunityCoins mocks base method.
-func (m *MockDistributionKeeper) GetFeePoolCommunityCoins(ctx context.Context) types.DecCoins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFeePoolCommunityCoins", ctx)
-	ret0, _ := ret[0].(types.DecCoins)
-	return ret0
-}
-
-// GetFeePoolCommunityCoins indicates an expected call of GetFeePoolCommunityCoins.
-func (mr *MockDistributionKeeperMockRecorder) GetFeePoolCommunityCoins(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeePoolCommunityCoins", reflect.TypeOf((*MockDistributionKeeper)(nil).GetFeePoolCommunityCoins), ctx)
-}
-
-// GetValidatorOutstandingRewardsCoins mocks base method.
-func (m *MockDistributionKeeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val types.ValAddress) types.DecCoins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValidatorOutstandingRewardsCoins", ctx, val)
-	ret0, _ := ret[0].(types.DecCoins)
-	return ret0
-}
-
-// GetValidatorOutstandingRewardsCoins indicates an expected call of GetValidatorOutstandingRewardsCoins.
-func (mr *MockDistributionKeeperMockRecorder) GetValidatorOutstandingRewardsCoins(ctx, val interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidatorOutstandingRewardsCoins", reflect.TypeOf((*MockDistributionKeeper)(nil).GetValidatorOutstandingRewardsCoins), ctx, val)
-}
 
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {
@@ -356,6 +307,21 @@ func (mr *MockValidatorSetMockRecorder) Delegation(arg0, arg1, arg2 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockValidatorSet)(nil).Delegation), arg0, arg1, arg2)
 }
 
+// GetPubKeyByConsAddr mocks base method.
+func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr.
+func (mr *MockValidatorSetMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubKeyByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).GetPubKeyByConsAddr), arg0, arg1)
+}
+
 // IterateBondedValidatorsByPower mocks base method.
 func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
@@ -443,7 +409,7 @@ func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 inter
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 types0.Infraction) (math.Int, error) {
+func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 stakingv1beta1.Infraction) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)

@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -62,7 +64,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), math.NewInt(10), 0)
+		time.Unix(5, 0), math.NewInt(10), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
@@ -121,12 +123,12 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), math.NewInt(10), math.LegacyNewDec(10), 0)
+		time.Unix(5, 0), math.NewInt(10), math.LegacyNewDec(10), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDec(10))
+	del := types.NewDelegation(addrDels[0].String(), addrVals[1].String(), math.LegacyNewDec(10))
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, del))
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
@@ -155,7 +157,7 @@ func TestSlashRedelegation(t *testing.T) {
 	slashAmount, err = f.stakingKeeper.SlashRedelegation(f.sdkCtx, validator, rd, 0, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, slashAmount.Equal(math.NewInt(5)))
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 
@@ -166,7 +168,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.DeepEqual(t, math.NewInt(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
-	del, found = f.stakingKeeper.GetDelegation(f.sdkCtx, addrDels[0], addrVals[1])
+	del, found = f.stakingKeeper.Delegations.Get(f.sdkCtx, collections.Join(addrDels[0], addrVals[1]))
 	assert.Assert(t, found)
 	assert.Equal(t, int64(5), del.Shares.RoundInt64())
 
@@ -197,7 +199,10 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
@@ -235,7 +240,10 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// end block
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
-	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, validator.GetOperator())
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+
+	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, valbz)
 	assert.Assert(t, found)
 	// power decreased
 	assert.Equal(t, int64(5), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
@@ -259,7 +267,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, 0)
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
 	// slash validator for the first time
@@ -389,11 +397,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// set a redelegation
 	rdTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, math.LegacyNewDecFromInt(rdTokens), 0)
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, math.LegacyNewDecFromInt(rdTokens), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0].String(), addrVals[1].String(), math.LegacyNewDecFromInt(rdTokens))
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, del))
 
 	// update bonded tokens
@@ -430,7 +438,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -467,7 +475,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -498,7 +506,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldBonded = f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// apply TM updates
@@ -528,7 +536,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	assert.Assert(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
 
 	// read updating redelegation
-	rd, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rd, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rd.Entries) == 1)
 	// read updated validator
@@ -547,18 +555,18 @@ func TestSlashBoth(t *testing.T) {
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rdATokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 6)
-	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, math.LegacyNewDecFromInt(rdATokens), 0)
+	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, math.LegacyNewDecFromInt(rdATokens), 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rdA))
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0].String(), addrVals[1].String(), math.LegacyNewDecFromInt(rdATokens))
 	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delA))
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubdATokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 4)
 	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdATokens, 0)
+		time.Unix(0, 0), ubdATokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubdA))
 
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdATokens.MulRaw(2)))
@@ -599,7 +607,7 @@ func TestSlashBoth(t *testing.T) {
 	assert.Assert(math.IntEq(t, oldNotBonded.Sub(burnedNotBondedAmount), notBondedPoolBalance))
 
 	// read updating redelegation
-	rdA, found = f.stakingKeeper.GetRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
+	rdA, found = f.stakingKeeper.Redelegations.Get(f.sdkCtx, collections.Join3(addrDels[0].Bytes(), addrVals[0].Bytes(), addrVals[1].Bytes()))
 	assert.Assert(t, found)
 	assert.Assert(t, len(rdA.Entries) == 1)
 	// read updated validator

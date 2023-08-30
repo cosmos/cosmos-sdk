@@ -39,7 +39,12 @@ func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAcc
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
-	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil
+	addr, err := s.k.addressCodec.BytesToString(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: addr}, nil
 }
 
 func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
@@ -226,9 +231,14 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
-	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+	// if there is no public key, avoid serializing the nil value
+	pubKey := account.GetPubKey()
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 
 	return &types.QueryAccountInfoResponse{

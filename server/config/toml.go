@@ -21,6 +21,10 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
+# The maximum gas a query coming over rest/grpc may consume.
+# If this is set to zero, the query can consume an unbounded amount of gas.
+query-gas-limit = "{{ .BaseConfig.QueryGasLimit }}"
+
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 # everything: 2 latest states will be kept; pruning at 10 block intervals.
@@ -77,14 +81,9 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
-# IAVLLazyLoading enable/disable the lazy loading of iavl store.
-# Default is false.
-iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
-
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
-# First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in CometBFT's config.toml.
+# The fallback is the db_backend value set in CometBFT's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
@@ -244,14 +243,12 @@ func init() {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
-
 	if configTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for the
-// application.
+// ParseConfig retrieves the default environment configuration for the application.
 func ParseConfig(v *viper.Viper) (*Config, error) {
 	conf := DefaultConfig()
 	err := v.Unmarshal(conf)
@@ -259,32 +256,30 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
-// SetConfigTemplate sets the custom app config template for
-// the application
-func SetConfigTemplate(customTemplate string) {
+// SetConfigTemplate sets the custom app config template for the application.
+func SetConfigTemplate(customTemplate string) error {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
 
 	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
-// WriteConfigFile renders config using the template and writes it to
-// configFilePath.
-func WriteConfigFile(configFilePath string, config interface{}) {
+// WriteConfigFile renders config using the template and writes it to configFilePath.
+func WriteConfigFile(configFilePath string, config interface{}) error {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {
-		panic(err)
+		return err
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
-}
-
-func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := os.WriteFile(filePath, contents, mode); err != nil {
-		panic(fmt.Errorf("failed to write file: %w", err))
+	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o600); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
 	}
+
+	return nil
 }

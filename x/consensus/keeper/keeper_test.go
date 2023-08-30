@@ -30,7 +30,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	ctx := testCtx.Ctx
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
 
@@ -114,6 +114,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		s.Run(tc.msg, func() {
 			s.SetupTest() // reset
 

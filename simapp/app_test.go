@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -41,7 +42,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -238,7 +238,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
@@ -284,8 +284,6 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}
-
-	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }
 
 // TestMergedRegistry tests that fetching the gogo/protov2 merged registry
@@ -317,8 +315,8 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 
 func TestAddressCodecFactory(t *testing.T) {
 	var addrCodec address.Codec
-	var valAddressCodec stakingtypes.ValidatorAddressCodec
-	var consAddressCodec stakingtypes.ConsensusAddressCodec
+	var valAddressCodec runtime.ValidatorAddressCodec
+	var consAddressCodec runtime.ConsensusAddressCodec
 
 	err := depinject.Inject(
 		depinject.Configs(
@@ -344,8 +342,8 @@ func TestAddressCodecFactory(t *testing.T) {
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },
-				func() stakingtypes.ValidatorAddressCodec { return customAddressCodec{} },
-				func() stakingtypes.ConsensusAddressCodec { return customAddressCodec{} },
+				func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
+				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
 			),
 		),
 		&addrCodec, &valAddressCodec, &consAddressCodec)

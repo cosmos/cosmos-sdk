@@ -8,9 +8,7 @@ sidebar_position: 1
 This document describes `BaseApp`, the abstraction that implements the core functionalities of a Cosmos SDK application.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 * [Lifecycle of a Cosmos SDK transaction](../basics/01-tx-lifecycle.md)
@@ -92,7 +90,6 @@ Then, parameters used to define [volatile states](#state-updates) (i.e. cached s
   [`Commit`](#commit) and gets re-initialized on `FinalizeBlock`.
 * `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
 * `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
-* `voteExtensionState`: This state is updated during [`ExtendVote`](#extendvote) & [`VerifyVoteExtension`](#verifyvoteextension).
 
 Finally, a few more important parameters:
 
@@ -132,7 +129,7 @@ Naturally, developers can add additional `options` based on their application's 
 ## State Updates
 
 The `BaseApp` maintains four primary volatile states and a root or main state. The main state
-is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processProposalState`, `voteExtensionState` and `finalizeBlockState`
+is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processProposalState` and `finalizeBlockState`
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
@@ -458,7 +455,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
   This function also resets the [main gas meter](../basics/04-gas-fees.md#main-gas-meter).
 
 * Initialize the [block gas meter](../basics/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
-* Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
+* Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the non-upgrade modules.
 * Set the [`VoteInfos`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,10 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
+	valCodec := address.NewBech32Codec("cosmosvaloper")
+
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -66,12 +70,15 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(5)},
 	}
 
-	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, val.GetOperator())
+	valBz, err := valCodec.StringToBytes(val.GetOperator())
+	require.NoError(t, err)
+
+	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, valCommission.Commission)
 
 	// check current rewards
-	currentRewards, err := distrKeeper.ValidatorCurrentRewards.Get(ctx, val.GetOperator())
+	currentRewards, err := distrKeeper.ValidatorCurrentRewards.Get(ctx, valBz)
 	require.NoError(t, err)
 	require.Equal(t, expected, currentRewards.Rewards)
 }
@@ -91,6 +98,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -217,6 +225,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -248,7 +257,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// create third validator with 10% commission
 	valAddr2 := sdk.ValAddress(valConsAddr2)
-	val2, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr2), valConsPk1, stakingtypes.Description{})
+	val2, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr2).String(), valConsPk1, stakingtypes.Description{})
 	require.NoError(t, err)
 	val2.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2, nil).AnyTimes()

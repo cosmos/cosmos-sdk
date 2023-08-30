@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -28,8 +27,12 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	// fetch all the bonded validators, insert them into currValidators
 	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		currValidators[validator.GetOperator().String()] = v1.NewValidatorGovInfo(
-			validator.GetOperator(),
+		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return false
+		}
+		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
+			valBz,
 			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
 			math.LegacyZeroDec(),
@@ -50,7 +53,10 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 			return false, err
 		}
 
-		valAddrStr := sdk.ValAddress(voter).String()
+		valAddrStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(voter)
+		if err != nil {
+			return false, err
+		}
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val
@@ -58,7 +64,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
 		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
-			valAddrStr := delegation.GetValidatorAddr().String()
+			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := currValidators[valAddrStr]; ok {
 				// There is no need to handle the special case that validator address equal to voter address.
@@ -86,7 +92,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	})
 
-	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return false, false, tallyResults, err
 	}
 

@@ -2,7 +2,6 @@
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
   - independent module functionality (AppModuleBasic)
-  - inter-dependent module genesis functionality (AppModuleGenesis)
   - inter-dependent module simulation functionality (AppModuleSimulation)
   - inter-dependent module full functionality (AppModule)
 
@@ -21,7 +20,7 @@ have to manually register all of the codecs for all the modules. This basic
 procedure as well as other basic patterns are handled through the use of
 BasicManager.
 
-Lastly the interface for genesis functionality (AppModuleGenesis) has been
+Lastly the interface for genesis functionality (HasGenesis & HasABCIGenesis) has been
 separated out from full module functionality (AppModule) so that modules which
 are only used for genesis can take advantage of the Module patterns without
 needlessly defining many placeholder functions
@@ -182,14 +181,15 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-// AppModuleGenesis is the standard form for an application module genesis functions
-type AppModuleGenesis interface {
-	AppModuleBasic
-	HasGenesis
-}
-
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
+	HasGenesisBasics
+	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)
+	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+}
+
+// HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
+type HasABCIGenesis interface {
 	HasGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
@@ -227,15 +227,26 @@ type HasABCIEndblock interface {
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
+var (
+	_ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
+	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
+)
+
+// genesisOnlyModule is an interface need to return GenesisOnlyAppModule struct in order to wrap two interfaces
+type genesisOnlyModule interface {
+	AppModuleBasic
+	HasABCIGenesis
+}
+
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
-	AppModuleGenesis
+	genesisOnlyModule
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
+func NewGenesisOnlyAppModule(amg genesisOnlyModule) GenesisOnlyAppModule {
 	return GenesisOnlyAppModule{
-		AppModuleGenesis: amg,
+		genesisOnlyModule: amg,
 	}
 }
 
@@ -248,22 +259,8 @@ func (GenesisOnlyAppModule) IsAppModule() {}
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// QuerierRoute returns an empty module querier route
-func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
-
-// RegisterServices registers all services.
-func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock returns an empty module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context) error { return nil }
-
-// EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
-}
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
@@ -330,6 +327,10 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
@@ -342,6 +343,10 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 		module := m.Modules[moduleName]
 		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
 			return !hasGenesis
+		}
+
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
 		}
 
 		_, hasGenesis := module.(HasGenesis)
@@ -366,8 +371,12 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
 		func(moduleName string) bool {
 			module := m.Modules[moduleName]
-			_, hasEndBlock := module.(HasABCIEndblock)
-			return !hasEndBlock
+			if _, hasEndBlock := module.(appmodule.HasEndBlocker); hasEndBlock {
+				return !hasEndBlock
+			}
+
+			_, hasABCIEndBlock := module.(HasABCIEndblock)
+			return !hasABCIEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
 }
@@ -459,6 +468,9 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
+			module.InitGenesis(ctx, cdc, genesisData[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
@@ -531,6 +543,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
 			}(module, channels[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			channels[moduleName] = make(chan genesisResult)
+			go func(module HasABCIGenesis, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
+			}(module, channels[moduleName])
 		}
 	}
 
@@ -558,9 +576,9 @@ func (m *Manager) checkModulesExists(moduleName []string) error {
 	return nil
 }
 
-// assertNoForgottenModules checks that we didn't forget any modules in the
-// SetOrder* functions.
-// `pass` is a closure which allows one to omit modules from `moduleNames`. If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
+// assertNoForgottenModules checks that we didn't forget any modules in the SetOrder* functions.
+// `pass` is a closure which allows one to omit modules from `moduleNames`.
+// If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
 func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {
@@ -676,8 +694,12 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			}
 		} else {
 			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
+			module1, ok := m.Modules[moduleName].(HasGenesis)
+			if ok {
+				module1.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
+			}
+			if module2, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
+				moduleValUpdates := module2.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
@@ -692,17 +714,32 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// BeginBlock performs begin block functionality for all modules. It creates a
-// child context with an event manager to aggregate events emitted from all
+// RunMigrationBeginBlock performs begin block functionality for upgrade module.
+// It takes the current context as a parameter and returns a boolean value
+// indicating whether the migration was executed or not and an error if fails.
+func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
+	for _, moduleName := range m.OrderBeginBlockers {
+		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			if _, ok := mod.(appmodule.UpgradeModule); ok {
+				err := mod.BeginBlock(ctx)
+				return err == nil, err
+			}
+		}
+	}
+	return false, nil
+}
+
+// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
+// child context with an event manager to aggregate events emitted from non-upgrade
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
-
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			err := module.BeginBlock(ctx)
-			if err != nil {
-				return sdk.BeginBlock{}, err
+			if _, ok := module.(appmodule.UpgradeModule); !ok {
+				if err := module.BeginBlock(ctx); err != nil {
+					return sdk.BeginBlock{}, err
+				}
 			}
 		}
 	}

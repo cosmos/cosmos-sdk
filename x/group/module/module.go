@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -58,6 +57,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 var (
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -89,11 +89,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
 	}
 	return data.Validate()
-}
-
-// GetQueryCmd returns the cli query commands for the group module
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(a.Name())
 }
 
 // GetTxCmd returns the transaction commands for the group module
@@ -130,9 +125,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	am.keeper.InitGenesis(ctx, cdc, data)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group

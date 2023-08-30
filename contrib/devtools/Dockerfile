@@ -3,7 +3,7 @@
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
 FROM bufbuild/buf:1.24.0 as BUILDER
-FROM golang:1.20-alpine
+FROM golang:1.21-alpine
 
 RUN apk add --no-cache \
   nodejs \
@@ -11,7 +11,8 @@ RUN apk add --no-cache \
   git \
   make \
   clang-extra-tools \
-  g++
+  g++ \
+  jq
 
 RUN npm install -g swagger-combine
 

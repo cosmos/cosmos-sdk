@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +47,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 	}
 
 	for _, dvPair := range matureUnbonds {
-		addr, err := sdk.ValAddressFromBech32(dvPair.ValidatorAddress)
+		addr, err := k.validatorAddressCodec.StringToBytes(dvPair.ValidatorAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -77,11 +78,11 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 	}
 
 	for _, dvvTriplet := range matureRedelegations {
-		valSrcAddr, err := sdk.ValAddressFromBech32(dvvTriplet.ValidatorSrcAddress)
+		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(dvvTriplet.ValidatorSrcAddress)
 		if err != nil {
 			return nil, err
 		}
-		valDstAddr, err := sdk.ValAddressFromBech32(dvvTriplet.ValidatorDstAddress)
+		valDstAddr, err := k.validatorAddressCodec.StringToBytes(dvvTriplet.ValidatorDstAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +212,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		totalPower = totalPower.Add(math.NewInt(newPower))
 	}
 
-	noLongerBonded, err := sortNoLongerBonded(last)
+	noLongerBonded, err := sortNoLongerBonded(last, k.validatorAddressCodec)
 	if err != nil {
 		return nil, err
 	}
@@ -222,8 +223,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, err
 		}
+		str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+		if err != nil {
+			return nil, err
+		}
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		if err = k.DeleteLastValidatorPower(ctx, validator.GetOperator()); err != nil {
+		if err = k.DeleteLastValidatorPower(ctx, str); err != nil {
 			return nil, err
 		}
 
@@ -251,13 +256,14 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 	// set total power on lookup index if there are any updates
 	if len(updates) > 0 {
-		if err = k.SetLastTotalPower(ctx, totalPower); err != nil {
+		if err = k.LastTotalPower.Set(ctx, totalPower); err != nil {
 			return nil, err
 		}
 	}
 
+	valUpdates := types.ValidatorUpdates{Updates: updates}
 	// set the list of validator updates
-	if err = k.SetValidatorUpdates(ctx, updates); err != nil {
+	if err = k.ValidatorUpdates.Set(ctx, valUpdates); err != nil {
 		return nil, err
 	}
 
@@ -356,7 +362,12 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 
@@ -414,7 +425,12 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 
@@ -471,13 +487,13 @@ func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, 
 
 // given a map of remaining validators to previous bonded power
 // returns the list of validators to be unbonded, sorted by operator address
-func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
+func sortNoLongerBonded(last validatorsByAddr, ac address.Codec) ([][]byte, error) {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
 
 	for valAddrStr := range last {
-		valAddrBytes, err := sdk.ValAddressFromBech32(valAddrStr)
+		valAddrBytes, err := ac.StringToBytes(valAddrStr)
 		if err != nil {
 			return nil, err
 		}

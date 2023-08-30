@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +70,7 @@ func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabled
 		msgs = append(msgs, msgUrl)
 		return false, nil
 	})
-	if err != nil && !errorsmod.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, err
 	}
 

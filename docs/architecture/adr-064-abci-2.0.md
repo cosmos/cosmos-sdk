@@ -6,6 +6,7 @@
 * 2023-04-06: Add upgrading section (@alexanderbez)
 * 2023-04-10: Simplify vote extension state persistence (@alexanderbez)
 * 2023-07-07: Revise vote extension state persistence (@alexanderbez)
+* 2023-08-24: Revise vote extension power calculations and staking interface (@davidterpay)
 
 ## Status
 
@@ -106,10 +107,11 @@ type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseEx
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
-A new execution state, `voteExtensionState`, will be introduced and provided as
-the `Context` that is supplied to both handlers. It will contain relevant metadata
-such as the block height and block hash. Note, `voteExtensionState` is never
-committed and will exist as ephemeral state only in the context of a single block.
+An ephemeral context and state will be supplied to both handlers. The
+context will contain relevant metadata such as the block height and block hash.
+The state will be a cached version of the committed state of the application and
+will be discarded after the execution of the handler, this means that both handlers
+get a fresh state view and no changes made to it will be written.
 
 If an application decides to implement `ExtendVoteHandler`, it must return a
 non-nil `ResponseExtendVote.VoteExtension`.
@@ -218,31 +220,35 @@ a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	GetValidatorByConsAddr(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // ValidateVoteExtensions is a function that an application can execute in
 // ProcessProposal to verify vote extension signatures.
 func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
+	votingPower := 0
+	totalVotingPower := 0
+
 	for _, vote := range extCommit.Votes {
+		totalVotingPower += vote.Validator.Power
+
 		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
 			continue
 		}
 
-		valConsAddr := cmtcrypto.Address(vote.Validator.Address)
-
-		validator, err := app.validatorStore.GetValidatorByConsAddr(ctx, valConsAddr)
+		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get validator %s for vote extension", valConsAddr)
-		}
-
-		cmtPubKey, err := validator.CmtConsPublicKey()
-		if err != nil {
-			return fmt.Errorf("failed to convert public key: %w", err)
+			return fmt.Errorf("failed to get public key for validator %s: %w", valConsAddr, err)
 		}
 
 		if len(vote.ExtensionSignature) == 0 {
 			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)
+		}
+
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
+		if err != nil {
+			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}
 
 		cve := cmtproto.CanonicalVoteExtension{
@@ -261,8 +267,14 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 			return errors.New("received vote with invalid signature")
 		}
 
-		return nil
+		votingPower += vote.Validator.Power
 	}
+
+	if (votingPower / totalVotingPower) < threshold {
+		return errors.New("not enough voting power for the vote extensions")
+	}
+
+	return nil
 }
 ```
 

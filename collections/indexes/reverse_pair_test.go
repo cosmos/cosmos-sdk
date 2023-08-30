@@ -64,8 +64,12 @@ func TestReversePair(t *testing.T) {
 	// assert if we remove address1 atom balance, we can no longer find it in the index
 	err = indexedMap.Remove(ctx, collections.Join("address1", "atom"))
 	require.NoError(t, err)
-	_, err = indexedMap.Indexes.Denom.MatchExact(ctx, "atom")
-	require.ErrorIs(t, collections.ErrInvalidIterator, err)
+	iter, err = indexedMap.Indexes.Denom.MatchExact(ctx, "atom")
+	require.NoError(t, err)
+	defer iter.Close()
+	pks, err = iter.PrimaryKeys()
+	require.NoError(t, err)
+	require.Empty(t, pks)
 }
 
 func TestUncheckedReversePair(t *testing.T) {

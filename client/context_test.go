@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -13,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -68,52 +68,6 @@ x: "10"
 `, buf.String())
 }
 
-func TestContext_PrintObjectLegacy(t *testing.T) {
-	ctx := client.Context{}
-
-	animal := &testdata.Dog{
-		Size_: "big",
-		Name:  "Spot",
-	}
-	anyAnimal, err := types.NewAnyWithValue(animal)
-	require.NoError(t, err)
-	hasAnimal := &testdata.HasAnimal{
-		Animal: anyAnimal,
-		X:      10,
-	}
-
-	// amino
-	amino := testdata.NewTestAmino()
-	ctx = ctx.WithLegacyAmino(&codec.LegacyAmino{Amino: amino})
-
-	// json
-	buf := &bytes.Buffer{}
-	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = flags.OutputFormatJSON
-	err = ctx.PrintObjectLegacy(hasAnimal)
-	require.NoError(t, err)
-	require.Equal(t,
-		`{"type":"testpb/HasAnimal","value":{"animal":{"type":"testpb/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
-`, buf.String())
-
-	// yaml
-	buf = &bytes.Buffer{}
-	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = flags.OutputFormatText
-	err = ctx.PrintObjectLegacy(hasAnimal)
-	require.NoError(t, err)
-	require.Equal(t,
-		`type: testpb/HasAnimal
-value:
-  animal:
-    type: testpb/Dog
-    value:
-      name: Spot
-      size: big
-  x: "10"
-`, buf.String())
-}
-
 func TestContext_PrintRaw(t *testing.T) {
 	ctx := client.Context{}
 	hasAnimal := json.RawMessage(`{"animal":{"@type":"/testpb.Dog","size":"big","name":"Spot"},"x":"10"}`)
@@ -154,6 +108,7 @@ func TestGetFromFields(t *testing.T) {
 		expectedErr string
 	}{
 		{
+			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				kb := keyring.NewInMemory(cfg.Codec)
 
@@ -165,6 +120,7 @@ func TestGetFromFields(t *testing.T) {
 			from: "alice",
 		},
 		{
+			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
 				require.NoError(t, err)
@@ -177,13 +133,15 @@ func TestGetFromFields(t *testing.T) {
 			from: "alice",
 		},
 		{
+			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
 			from:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			expectedErr: "key with address cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5 not found: key not found",
+			expectedErr: "key with given address not found: key not found",
 		},
 		{
+			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
 				require.NoError(t, err)
@@ -193,36 +151,37 @@ func TestGetFromFields(t *testing.T) {
 			expectedErr: "alice.info: key not found",
 		},
 		{
+			clientCtx: client.Context{}.WithSimulation(true).WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			from:      "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			clientCtx: client.Context{}.WithSimulation(true),
+			from: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 		},
 		{
+			clientCtx: client.Context{}.WithSimulation(true).WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
 			from:        "alice",
-			clientCtx:   client.Context{}.WithSimulation(true),
-			expectedErr: "a valid bech32 address must be provided in simulation mode",
+			expectedErr: "a valid address must be provided in simulation mode",
 		},
 		{
+			clientCtx: client.Context{}.WithGenerateOnly(true).WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			from:      "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			clientCtx: client.Context{}.WithGenerateOnly(true),
+			from: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 		},
 		{
+			clientCtx: client.Context{}.WithGenerateOnly(true).WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
 			from:        "alice",
-			clientCtx:   client.Context{}.WithGenerateOnly(true),
 			expectedErr: "alice.info: key not found",
 		},
 		{
+			clientCtx: client.Context{}.WithGenerateOnly(true).WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
 				require.NoError(t, err)
@@ -232,8 +191,7 @@ func TestGetFromFields(t *testing.T) {
 
 				return kb
 			},
-			clientCtx: client.Context{}.WithGenerateOnly(true),
-			from:      "alice",
+			from: "alice",
 		},
 	}
 
@@ -242,7 +200,7 @@ func TestGetFromFields(t *testing.T) {
 		if tc.expectedErr == "" {
 			require.NoError(t, err)
 		} else {
-			require.True(t, strings.HasPrefix(err.Error(), tc.expectedErr))
+			require.ErrorContains(t, err, tc.expectedErr)
 		}
 	}
 }

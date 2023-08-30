@@ -52,7 +52,7 @@ func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotype
 // CreateValidatorMsg returns a message used to create validator in this service.
 func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount math.Int) *stakingtypes.MsgCreateValidator {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr.String(), pk, coin, stakingtypes.Description{}, sh.Commission, math.OneInt())
 	require.NoError(sh.t, err)
 	return msg
 }
@@ -63,7 +63,7 @@ func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{Moniker: "TestValidator"}, sh.Commission, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(addr.String(), pk, coin, stakingtypes.Description{Moniker: "TestValidator"}, sh.Commission, math.OneInt())
 	require.NoError(sh.t, err)
 	res, err := sh.msgSrvr.CreateValidator(sh.Ctx, msg)
 	if ok {
@@ -78,7 +78,7 @@ func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, co
 // Delegate calls staking module staking module `MsgServer/Delegate` to delegate stake for a validator
 func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int) {
 	coin := sdk.NewCoin(sh.Denom, amount)
-	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
+	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
 	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
@@ -87,7 +87,7 @@ func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount 
 // DelegateWithPower calls staking module `MsgServer/Delegate` to delegate stake for a validator
 func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress, power int64) {
 	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(sh.Ctx, power))
-	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
+	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
 	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
@@ -96,7 +96,7 @@ func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress
 // Undelegate calls staking module `MsgServer/Undelegate` to unbound some stake from a validator.
 func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int, ok bool) {
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
-	msg := stakingtypes.NewMsgUndelegate(delegator, val, unbondAmt)
+	msg := stakingtypes.NewMsgUndelegate(delegator.String(), val.String(), unbondAmt)
 	res, err := sh.msgSrvr.Undelegate(sh.Ctx, msg)
 	if ok {
 		require.NoError(sh.t, err)
@@ -117,12 +117,6 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 		require.Equal(sh.t, status, v.Status)
 	}
 	return v
-}
-
-// CheckDelegator asserts that a delegator exists
-func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
-	_, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
-	require.Equal(sh.t, ok, found)
 }
 
 // TurnBlock calls EndBlocker and updates the block time

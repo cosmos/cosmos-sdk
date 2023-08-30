@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,12 +73,16 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			panic(err)
 		}
 
-		err = k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
-			for _, entry := range ubd.Entries {
-				notBonded = notBonded.Add(entry.Balance)
-			}
-			return false
-		})
+		err = k.UnbondingDelegations.Walk(
+			ctx,
+			nil,
+			func(key collections.Pair[[]byte, []byte], ubd types.UnbondingDelegation) (stop bool, err error) {
+				for _, entry := range ubd.Entries {
+					notBonded = notBonded.Add(entry.Balance)
+				}
+				return false, nil
+			},
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -119,7 +124,7 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
-			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx))
+			powerKey := types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.ValidatorAddressCodec())
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				broken = true
@@ -189,7 +194,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 
 		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
-			validatorsDelegationShares[validator.GetOperator().String()] = math.LegacyZeroDec()
+			validatorsDelegationShares[validator.GetOperator()] = math.LegacyZeroDec()
 		}
 
 		// iterate through all the delegations to calculate the total delegation shares for each validator
@@ -199,7 +204,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		}
 
 		for _, delegation := range delegations {
-			delegationValidatorAddr := delegation.GetValidatorAddr().String()
+			delegationValidatorAddr := delegation.GetValidatorAddr()
 			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]
 			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
 		}
@@ -207,7 +212,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
 		for _, validator := range validators {
 			expValTotalDelShares := validator.GetDelegatorShares()
-			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator().String()]
+			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator()]
 			if !calculatedValTotalDelShares.Equal(expValTotalDelShares) {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+

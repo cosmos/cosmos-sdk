@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -44,12 +43,12 @@ func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequ
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
-	consAddr, err := sdk.ConsAddressFromBech32(req.ConsAddress)
+	consAddr, err := k.sk.ConsensusAddressCodec().StringToBytes(req.ConsAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	signingInfo, err := k.GetValidatorSigningInfo(ctx, consAddr)
+	signingInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "SigningInfo not found for validator %s", req.ConsAddress)
 	}

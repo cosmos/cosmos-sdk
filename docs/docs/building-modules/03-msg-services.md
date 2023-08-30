@@ -8,9 +8,7 @@ sidebar_position: 1
 A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messages). Protobuf `Msg` services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../core/00-baseapp.md#delivertx).
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Module Manager](./01-module-manager.md)
 * [Messages and Queries](./02-messages-and-queries.md)
@@ -35,7 +33,7 @@ When possible, the existing module's [`Keeper`](./06-keeper.md) should implement
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L17-L19
 ```
 
-`msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
+`msgServer` methods can retrieve the `context.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L56
@@ -94,7 +92,7 @@ ctx.EventManager().EmitEvent(
 
 These events are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/08-events.md) to learn more about events.
 
-The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error` using `sdk.WrapServiceResult(ctx sdk.Context, res proto.Message, err error)`:
+The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error`:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/msg_service_router.go#L160

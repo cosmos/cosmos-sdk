@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -188,29 +187,7 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideAddressCodec),
 	)
-}
-
-type AddressCodecInputs struct {
-	depinject.In
-
-	Config              *modulev1.Module
-	AddressCodecFactory func() address.Codec `optional:"true"`
-}
-
-// ProvideAddressCodec provides an address.Codec to the container for any
-// modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) address.Codec {
-	if in.AddressCodecFactory != nil {
-		return in.AddressCodecFactory()
-	}
-
-	if in.Config.Bech32Prefix == "" {
-		panic("bech32 prefix cannot be empty")
-	}
-
-	return authcodec.NewBech32Codec(in.Config.Bech32Prefix)
 }
 
 type ModuleInputs struct {
@@ -255,7 +232,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
+	auth, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

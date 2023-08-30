@@ -68,7 +68,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -174,7 +174,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 
 	// setup staking validator
-	validator, err := stakingtypes.NewValidator(f.valAddr, PKS[0], stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(f.valAddr.String(), PKS[0], stakingtypes.Description{})
 	assert.NilError(t, err)
 	commission := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
 	validator, err = validator.SetInitialCommission(commission)
@@ -196,13 +196,15 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	// setup delegation
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
-	delegation := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), issuedShares)
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	require.NoError(t, err)
+	delegation := stakingtypes.NewDelegation(delAddr.String(), validator.GetOperator(), issuedShares)
 	require.NoError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
-	require.NoError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(validator.GetOperator(), delAddr), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20)))
+	require.NoError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), delAddr), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 20)))
 	// setup validator rewards
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	err = f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(validator.GetOperator(), uint64(2)), historicalRewards)
+	err = f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), uint64(2)), historicalRewards)
 	require.NoError(t, err)
 	// setup current rewards and outstanding rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
@@ -253,7 +255,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "no delegation for (address, validator) tuple",
+			expErrMsg: "not found",
 		},
 		{
 			name: "validator with no delegations",
@@ -275,8 +277,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 	height := f.app.LastBlockHeight()
 
-	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	assert.Error(t, err, "previous proposer not set")
+	_, err = f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
+	assert.ErrorIs(t, err, collections.ErrNotFound)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -315,7 +317,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
 			assert.NilError(t, err)
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
@@ -685,6 +687,20 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
+			name: "community tax is nil",
+			msg: &distrtypes.MsgUpdateParams{
+				Authority: f.distrKeeper.GetAuthority(),
+				Params: distrtypes.Params{
+					CommunityTax:        math.LegacyDec{},
+					WithdrawAddrEnabled: withdrawAddrEnabled,
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
+				},
+			},
+			expErr:    true,
+			expErrMsg: "community tax must be not nil",
+		},
+		{
 			name: "community tax > 1",
 			msg: &distrtypes.MsgUpdateParams{
 				Authority: f.distrKeeper.GetAuthority(),
@@ -696,7 +712,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
+			expErrMsg: "community tax too large: 2.000000000000000000",
 		},
 		{
 			name: "negative community tax",
@@ -710,7 +726,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
+			expErrMsg: "community tax must be positive: -0.200000000000000000",
 		},
 		{
 			name: "base proposer reward set",

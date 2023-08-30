@@ -16,7 +16,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 				panic(err)
 			}
 
-			err = keeper.AddPubkey(ctx, consPk)
+			err = keeper.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
 			if err != nil {
 				panic(err)
 			}
@@ -28,18 +28,18 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 	}
 
 	for _, info := range data.SigningInfos {
-		address, err := sdk.ConsAddressFromBech32(info.Address)
+		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(info.Address)
 		if err != nil {
 			panic(err)
 		}
-		err = keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		err = keeper.ValidatorSigningInfo.Set(ctx, address, info.ValidatorSigningInfo)
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	for _, array := range data.MissedBlocks {
-		address, err := sdk.ConsAddressFromBech32(array.Address)
+		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(array.Address)
 		if err != nil {
 			panic(err)
 		}
@@ -66,7 +66,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
-	err = keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
 		bechAddr := address.String()
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
@@ -83,7 +83,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 			MissedBlocks: localMissedBlocks,
 		})
 
-		return false
+		return false, nil
 	})
 	if err != nil {
 		panic(err)

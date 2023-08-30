@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
@@ -26,9 +25,39 @@ func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger())
 
 	return ctx
+}
+
+// DefaultContextWithKeys creates a sdk.Context with a fresh MemDB, mounting the providing keys for usage in the multistore.
+// This function is intended to be used for testing purposes only.
+func DefaultContextWithKeys(
+	keys map[string]*storetypes.KVStoreKey,
+	transKeys map[string]*storetypes.TransientStoreKey,
+	memKeys map[string]*storetypes.MemoryStoreKey,
+) sdk.Context {
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+
+	for _, key := range keys {
+		cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	}
+
+	for _, tKey := range transKeys {
+		cms.MountStoreWithDB(tKey, storetypes.StoreTypeTransient, db)
+	}
+
+	for _, memkey := range memKeys {
+		cms.MountStoreWithDB(memkey, storetypes.StoreTypeMemory, db)
+	}
+
+	err := cms.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
+
+	return sdk.NewContext(cms, false, log.NewNopLogger())
 }
 
 type TestContext struct {
@@ -46,7 +75,7 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithBlockTime(time.Now())
 
 	return TestContext{ctx, db, cms}
 }

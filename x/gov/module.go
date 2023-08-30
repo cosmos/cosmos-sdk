@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -41,6 +41,7 @@ const ConsensusVersion = 5
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -99,6 +100,12 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	legacyProposalCLIHandlers := getProposalCLIHandlers(ab.legacyProposalHandlers)
 
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
+}
+
+// GetQueryCmd returns the custom query commands for the gov modules.
+// This command will be enhanced by AutoCLI as defined in the AutoCLIOptions() method.
+func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetCustomQueryCmd(ab.ac)
 }
 
 func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {
@@ -225,8 +232,8 @@ func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 
 	// Default route order is a lexical sort by RouteKey.
 	// Explicit ordering can be added to the module config if required.
-	slices.SortFunc(routes, func(x, y v1beta1.HandlerRoute) bool {
-		return x.RouteKey < y.RouteKey
+	slices.SortFunc(routes, func(x, y v1beta1.HandlerRoute) int {
+		return strings.Compare(x.RouteKey, y.RouteKey)
 	})
 
 	router := v1beta1.NewRouter()
@@ -300,11 +307,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState v1.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the gov

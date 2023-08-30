@@ -7,9 +7,7 @@ sidebar_position: 1
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions.
 :::
 
-:::note
-
-### Pre-requisite Readings
+:::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 * [CometBFT Documentation on Events](https://docs.cometbft.com/v0.37/spec/abci/abci++_basic_concepts#events)
@@ -98,14 +96,7 @@ ctx.EventManager().EmitEvent(
 )
 ```
 
-Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
-
-```go
-func NewHandler(keeper Keeper) sdk.Handler {
-    return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-        ctx = ctx.WithEventManager(sdk.NewEventManager())
-        switch msg := msg.(type) {
-```
+Where the `EventManager` is accessed via the [`Context`](./02-context.md).
 
 See the [`Msg` services](../building-modules/03-msg-services.md) concept doc for a more detailed
 view on how to typically implement Events and use the `EventManager` in modules.

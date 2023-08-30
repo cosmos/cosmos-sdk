@@ -3,17 +3,14 @@ package types
 import (
 	context "context"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// DistributionKeeper expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx context.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) sdk.DecCoins
-}
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
@@ -66,7 +63,7 @@ type ValidatorSet interface {
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
 	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
-	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, Infraction) (math.Int, error)
+	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, st.Infraction) (math.Int, error)
 	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
 	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
 
@@ -76,6 +73,10 @@ type ValidatorSet interface {
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
+
+	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
+	// extension validation.
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

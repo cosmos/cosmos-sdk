@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -60,7 +59,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -124,9 +123,9 @@ func initFixture(tb testing.TB) *fixture {
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3), time.Unix(2, 0), false, int64(10))
 	info2 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4), time.Unix(2, 0), false, int64(10))
 
-	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
+	err = slashingKeeper.ValidatorSigningInfo.Set(sdkCtx, sdk.ConsAddress(addrDels[0]), info1)
 	assert.NilError(tb, err)
-	err = slashingKeeper.SetValidatorSigningInfo(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
+	err = slashingKeeper.ValidatorSigningInfo.Set(sdkCtx, sdk.ConsAddress(addrDels[1]), info2)
 	assert.NilError(tb, err)
 	return &fixture{
 		app:            integrationApp,
@@ -233,10 +232,10 @@ func TestHandleNewValidator(t *testing.T) {
 	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
 
-	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
+	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
+	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info))
 
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, valpubkey, 100, true)
@@ -261,7 +260,7 @@ func TestHandleNewValidator(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 2)
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagAbsent))
 
-	info, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, sdk.ConsAddress(valpubkey.Address()))
+	info, found := f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, sdk.ConsAddress(valpubkey.Address()))
 	assert.Assert(t, found)
 	assert.Equal(t, signedBlocksWindow+1, info.StartHeight)
 	assert.Equal(t, int64(2), info.IndexOffset)
@@ -287,11 +286,11 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	power := int64(100)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
-	err := f.slashingKeeper.AddPubkey(f.ctx, pks[0])
+	err := f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0])
 	assert.NilError(t, err)
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(val.Address()), f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, sdk.ConsAddress(val.Address()), info))
+	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(val.Address()), info))
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -362,10 +361,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 	valAddr := sdk.ValAddress(addr)
 
-	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))
+	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.ctx, pks[0].Address(), pks[0]))
 
 	info := slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info))
+	assert.NilError(t, f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info))
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)
 	validatorUpdates, err := f.stakingKeeper.EndBlocker(f.ctx)
@@ -426,11 +425,11 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 
 	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info)
 	assert.NilError(t, err)
 
 	// check all the signing information
-	signInfo, found := f.slashingKeeper.GetValidatorSigningInfo(f.ctx, consAddr)
+	signInfo, found := f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, consAddr)
 	assert.Assert(t, found)
 	assert.Equal(t, int64(700), signInfo.StartHeight)
 	assert.Equal(t, int64(0), signInfo.MissedBlocksCounter)
@@ -441,7 +440,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	f.ctx = f.ctx.WithBlockHeight(height)
 
 	info = slashingtypes.NewValidatorSigningInfo(consAddr, f.ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	err = f.slashingKeeper.SetValidatorSigningInfo(f.ctx, consAddr, info)
+	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, consAddr, info)
 	assert.NilError(t, err)
 
 	// validator rejoins and starts signing again
@@ -456,7 +455,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// check start height is correctly set
-	signInfo, found = f.slashingKeeper.GetValidatorSigningInfo(f.ctx, consAddr)
+	signInfo, found = f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, consAddr)
 	assert.Assert(t, found)
 	assert.Equal(t, height, signInfo.StartHeight)
 

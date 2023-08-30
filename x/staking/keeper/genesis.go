@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		panic(err)
 	}
 
-	if err := k.SetLastTotalPower(ctx, data.LastTotalPower); err != nil {
+	if err := k.LastTotalPower.Set(ctx, data.LastTotalPower); err != nil {
 		panic(err)
 	}
 
@@ -54,7 +55,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+			valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+			if err != nil {
+				panic(err)
+			}
+			if err := k.Hooks().AfterValidatorCreated(ctx, valbz); err != nil {
 				panic(err)
 			}
 		}
@@ -84,9 +89,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			panic(fmt.Errorf("invalid delegator address: %s", err))
 		}
 
+		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+		if err != nil {
+			panic(err)
+		}
+
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, valAddr); err != nil {
 				panic(err)
 			}
 		}
@@ -97,7 +107,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr); err != nil {
 				panic(err)
 			}
 		}
@@ -168,7 +178,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	// don't need to run CometBFT updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
-			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
 			if err != nil {
 				panic(err)
 			}
@@ -205,10 +215,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
 
-	err := k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
-		unbondingDelegations = append(unbondingDelegations, ubd)
-		return false
-	})
+	err := k.UnbondingDelegations.Walk(
+		ctx,
+		nil,
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return false, nil
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -226,7 +240,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	var lastValidatorPowers []types.LastValidatorPower
 
 	err = k.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr.String(), Power: power})
+		addrStr, err := k.validatorAddressCodec.BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addrStr, Power: power})
 		return false
 	})
 	if err != nil {
@@ -238,7 +256,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	totalPower, err := k.GetLastTotalPower(ctx)
+	totalPower, err := k.LastTotalPower.Get(ctx)
 	if err != nil {
 		panic(err)
 	}

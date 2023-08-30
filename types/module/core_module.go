@@ -19,7 +19,7 @@ import (
 
 var (
 	_ AppModuleBasic = coreAppModuleBasicAdaptor{}
-	_ HasGenesis     = coreAppModuleBasicAdaptor{}
+	_ HasABCIGenesis = coreAppModuleBasicAdaptor{}
 	_ HasServices    = coreAppModuleBasicAdaptor{}
 )
 
@@ -122,9 +122,12 @@ func (c coreAppModuleBasicAdaptor) InitGenesis(ctx sdk.Context, cdc codec.JSONCo
 	}
 
 	if mod, ok := c.module.(HasGenesis); ok {
+		mod.InitGenesis(ctx, cdc, bz)
+		return nil
+	}
+	if mod, ok := c.module.(HasABCIGenesis); ok {
 		return mod.InitGenesis(ctx, cdc, bz)
 	}
-
 	return nil
 }
 

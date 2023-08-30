@@ -10,7 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -23,7 +23,7 @@ import (
 func TestStoreMigration(t *testing.T) {
 	stakingKey := storetypes.NewKVStoreKey("staking")
 	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
+	ctx := sdktestutil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
@@ -81,7 +81,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingDelegationByValIndexKey",
 			v1.GetUBDByValIndexKey(addr4, valAddr1),
-			types.GetUBDByValIndexKey(addr4, valAddr1),
+			getUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
@@ -144,6 +144,10 @@ func TestStoreMigration(t *testing.T) {
 func getRedelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
 	return append(types.RedelegationQueueKey, bz...)
+}
+
+func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
 }
 
 func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {

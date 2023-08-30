@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -167,26 +166,29 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
-	prefix := types.GetUBDsByValIndexKey(valAddr)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](valAddr)
+	err = k.UnbondingDelegationByValIndex.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], value []byte) (stop bool, err error) {
+			valAddr := key.K1()
+			delAddr := key.K2()
+			ubdkey := types.GetUBDKey(delAddr, valAddr)
+			ubdValue, err := store.Get(ubdkey)
+			if err != nil {
+				return true, err
+			}
+			unbondingDelegation, err := types.UnmarshalUBD(k.cdc, ubdValue)
+			if err != nil {
+				return true, err
+			}
+			ubds = append(ubds, unbondingDelegation)
+			return false, nil
+		},
+	)
 	if err != nil {
 		return ubds, err
 	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetUBDKeyFromValIndexKey(iterator.Key())
-		value, err := store.Get(key)
-		if err != nil {
-			return ubds, err
-		}
-		ubd, err := types.UnmarshalUBD(k.cdc, value)
-		if err != nil {
-			return ubds, err
-		}
-		ubds = append(ubds, ubd)
-	}
-
 	return ubds, nil
 }
 
@@ -263,8 +265,6 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	store := k.storeService.OpenKVStore(ctx)
-
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
@@ -278,12 +278,11 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 		return err
 	}
 
-	return store.Set(types.GetUBDByValIndexKey(delAddr, valAddr), []byte{}) // index, store empty bytes
+	return k.UnbondingDelegationByValIndex.Set(ctx, collections.Join(valAddr, delAddr), []byte{})
 }
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	store := k.storeService.OpenKVStore(ctx)
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
@@ -297,7 +296,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 		return err
 	}
 
-	return store.Delete(types.GetUBDByValIndexKey(delAddr, valAddr))
+	return k.UnbondingDelegationByValIndex.Remove(ctx, collections.Join(valAddr, delAddr))
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at

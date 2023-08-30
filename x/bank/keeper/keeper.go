@@ -390,7 +390,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		if !macc.HasPermission(authtypes.Burner) {
 			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %s does not have permissions to burn tokens", address)
 		}
-	} // if !ok then ignore
+	}
 
 	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
@@ -403,7 +403,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", address)
+	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	// emit burn event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

@@ -414,15 +414,28 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 	s.SetupTest()
 
+	addrs, valAddrs := createValAddrs(101)
+
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,
 		100,
 		func(i int64) {
-			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
-			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), []byte{})
+			date := time.Unix(i, i)
+			dvvTriplets := stakingtypes.DVVTriplets{
+				Triplets: []stakingtypes.DVVTriplet{
+					{
+						DelegatorAddress:    addrs[i].String(),
+						ValidatorSrcAddress: valAddrs[i].String(),
+						ValidatorDstAddress: valAddrs[i+1].String(),
+					},
+				},
+			}
+			bz, err := s.cdc.Marshal(&dvvTriplets)
+			s.Require().NoError(err)
+			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), bz)
 		},
-		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
+		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
 	)
 	s.Require().NoError(err)
 
@@ -431,11 +444,20 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 		s.key,
 		100,
 		func(i int64) {
-			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
-			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, nil)
+			date := time.Unix(i, i)
+			dvvTriplets := stakingtypes.DVVTriplets{
+				Triplets: []stakingtypes.DVVTriplet{
+					{
+						DelegatorAddress:    addrs[i].String(),
+						ValidatorSrcAddress: valAddrs[i].String(),
+						ValidatorDstAddress: valAddrs[i+1].String(),
+					},
+				},
+			}
+			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, dvvTriplets.Triplets)
 			s.Require().NoError(err)
 		},
-		"035e246f9d0bf0aa3dfeb88acf1665684168256d8afb742ae065872d6334f6d6",
+		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
 	)
 	s.Require().NoError(err)
 }

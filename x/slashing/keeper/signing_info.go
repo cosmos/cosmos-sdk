@@ -67,13 +67,10 @@ func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 		return nil, err
 	}
 	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(consAddr, uint64(chunkIndex)))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		return chunk, nil
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, err
 	}
-	return chunk, err
+	return chunk, nil
 }
 
 // SetMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for

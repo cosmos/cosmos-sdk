@@ -210,12 +210,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.IsSendEnabledCoins(ctx, coins...); err != nil {
-		return nil, err
-	}
-
-	err = k.BurnCoins(ctx, from, coins)
+	err = k.BurnCoins(goCtx, from, coins)
 	if err != nil {
 		return nil, err
 	}

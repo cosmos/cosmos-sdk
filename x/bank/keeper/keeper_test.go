@@ -177,8 +177,8 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authty
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *authtypes.ModuleAccount) {
@@ -570,7 +570,6 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
-	fmt.Println(minterAcc.GetAddress(), 123)
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, []byte{}, supplyAfterInflation), "random permission")
 

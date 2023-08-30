@@ -203,6 +203,7 @@ cosmossdk.io/math v1.1.2 h1:ORZetZCTyWkI5GlZ6CZS28fMHi83ZYf+A2vVnHNzZBM=
 cosmossdk.io/math v1.1.2/go.mod h1:l2Gnda87F0su8a/7FEKJfFdJrM0JZRXQaohlgJeyQh0=
 cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 h1:61YFeW2AhwwPfoJWzNJWvVubCj32sm5jZkJfraS9pDQ=
 cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982/go.mod h1:QAF9zeRa/9ghuv7E8NS9SzWqRbgVNwH/dZwGhYDHUjI=
+cosmossdk.io/store v1.0.0-rc.0/go.mod h1:FtBDOJmwtOZfmKKF65bKZbTYgS3bDNjjo3nP76dAegk=
 cosmossdk.io/x/tx v0.9.1 h1:9pmmXA9Vs4qdouOFnzhsdsff2mif0f0kylMq5xTGhRI=
 cosmossdk.io/x/tx v0.9.1/go.mod h1:/YFGTXG6+kyihd8YbfuJiXHV4R/mIMm2uvVzo80CIhA=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -349,6 +350,8 @@ github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQ
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
 github.com/cosmos/cosmos-sdk v0.50.0-rc.0 h1:cdcJSFqy4Yl7f9F3c5QsvDz+GF7/zR53571ECQeucvE=
 github.com/cosmos/cosmos-sdk v0.50.0-rc.0/go.mod h1:6HsAg8cQ/D3JnFN7jao6DOuTLWnUC4qh/vracVlSLAM=
+github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9 h1:y235JKySvAU3UgksIY5nk4t90WPozlkV9ZefDZvPE3c=
+github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9/go.mod h1:olbHxcVB4zWwnF+oNPbKIoEIO5HgHndzKUqdpuu4s34=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
@@ -358,6 +361,7 @@ github.com/cosmos/gogoproto v1.4.11 h1:LZcMHrx4FjUgrqQSWeaGC1v/TeuVFqSLa43CC6aWR
 github.com/cosmos/gogoproto v1.4.11/go.mod h1:/g39Mh8m17X8Q/GDEs5zYTSNaNnInBSohtaxzQnYq1Y=
 github.com/cosmos/iavl v1.0.0-beta.2 h1:XOsIM80Yyml/KifCXEYOy9tWCXwMAbLa91n6pReW07Y=
 github.com/cosmos/iavl v1.0.0-beta.2/go.mod h1:EA97dJ07TBktRlG/iGzK6g1eCXNj1q3MGoFYkVzrwHE=
+github.com/cosmos/iavl v1.0.0-rc.1/go.mod h1:CmTGqMnRnucjxbjduneZXT+0vPgNElYvdefjX2q9tYc=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=
@@ -672,6 +676,7 @@ github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d h1:dg1dEPuWpEqDnvIw251EVy4zlP8gWbsGj4BsUKCRpYs=
 github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
+github.com/hashicorp/golang-lru v1.0.2/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=

@@ -18,7 +18,7 @@ Following an exhaustive list:
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
-However, these commands and flags are still supported for backward compatibility.
+These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
@@ -26,6 +26,7 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
+* Usage of an application genesis (see [genutil](#xgenutil)).
 
 #### Enable Vote Extensions
 
@@ -66,6 +67,19 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
+<<<<<<< HEAD
+=======
+#### Upgrade
+
+**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+
+```diff
++ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
+```
+
+BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+
+>>>>>>> 0868daa05 (docs: add genesis changes in upgrading.md (#17596))
 #### Events
 
 The log section of `abci.TxResult` is not populated in the case of successful
@@ -297,7 +311,25 @@ For ante handler construction via `ante.NewAnteHandler`, the field `ante.Handler
 
 #### `x/capability`
 
-Capability has been moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
+Capability has been moved to [IBC Go](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
+
+#### `x/genutil`
+
+The Cosmos SDK has migrated from a CometBFT genesis to a application managed genesis file.
+The genesis is now fully handled by `x/genutil`. This has no consequences for running chains:
+
+* Importing a CometBFT genesis is still supported.
+* Exporting a genesis now exports the genesis as an application genesis.
+
+When needing to read an application genesis, use the following helpers from the `x/genutil/types` package:
+
+```go
+// AppGenesisFromReader reads the AppGenesis from the reader.
+func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error)
+
+// AppGenesisFromFile reads the AppGenesis from the provided file.
+func AppGenesisFromFile(genFile string) (*AppGenesis, error)
+```
 
 #### `x/gov`
 

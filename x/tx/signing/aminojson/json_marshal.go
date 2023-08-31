@@ -23,7 +23,10 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
-	// DonotSortFields when set turns off sorting of field names.
+	// Indent can only be composed of space or tab characters.
+	// It defines the indentation used for each level of indentation.
+	Indent string
+	// DoNotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver

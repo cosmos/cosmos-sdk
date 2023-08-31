@@ -478,6 +478,27 @@ func (s *TestSuite) TestGetAuthorization() {
 	}
 }
 
+func (s *TestSuite) TestGetAuthorizations() {
+	require := s.Require()
+	addr1 := s.addrs[1]
+	addr2 := s.addrs[2]
+
+	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
+	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+
+	start := s.ctx.BlockHeader().Time
+	expired := start.Add(time.Duration(1) * time.Second)
+
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthSend, &expired), "creating send grant 1->2")
+
+	authzs, err := s.authzKeeper.GetAuthorizations(s.ctx, addr1, addr2)
+	require.NoError(err)
+	require.Len(authzs, 2)
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), authzs[0].MsgTypeURL())
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
+}
+
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

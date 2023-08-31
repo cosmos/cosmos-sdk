@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230719143845-dff6b0e26aa4
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.10.0
-	github.com/cosmos/cosmos-sdk v0.50.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/spf13/cobra v1.7.0
@@ -19,9 +19,9 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.10.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
-	cosmossdk.io/log v1.2.0 // indirect
-	cosmossdk.io/math v1.0.1 // indirect
-	cosmossdk.io/store v1.0.0-alpha.1 // indirect
+	cosmossdk.io/log v1.2.1 // indirect
+	cosmossdk.io/math v1.1.2 // indirect
+	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 // indirect
 	cosmossdk.io/x/tx v0.9.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

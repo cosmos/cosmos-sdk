@@ -24,7 +24,7 @@ It is recommended to implement interfaces from the [Core API](https://docs.cosmo
 For legacy reason modules can still implement interfaces from the SDK `module` package.
 :::
 
-There are 3 main application module interfaces:
+There are 2 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
@@ -81,6 +81,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 * `HasName` is an interface that has a method `Name()`. This method returns the name of the module as a `string`.
 
 ### Genesis
+
+:::tip
+For easily creating an `AppModule` that only has genesis functionalities, use `module.GenesisOnlyAppModule`.
+:::
 
 #### `module.HasGenesisBasics`
 

@@ -33,9 +33,9 @@ There are 3 main application module interfaces:
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
+* (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
 * [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
 * [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
-* [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
 * [`appmodule.HasGenesis` / `module.HasGenesis`](#appmodulehasgenesis): The extension interface for stateful genesis methods.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.

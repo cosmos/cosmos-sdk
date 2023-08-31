@@ -24,18 +24,18 @@ It is recommended to implement interfaces from the [Core API](https://docs.cosmo
 For legacy reason modules can still implement interfaces from the SDK `module` package.
 :::
 
-There are 2 main application module interfaces:
+There are 3 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
+* (legacy) `module.GenesisOnlyAppModule` defines an `AppModule` that only has import/export functionality.
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
-* (legacy) [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
-* (legacy) [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
-* (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
-* (legacy) `module.GenesisOnlyAppModule`: Defines an `AppModule` that only has import/export functionality
+* [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
+* [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
+* [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
 * [`appmodule.HasGenesis` / `module.HasGenesis`](#appmodulehasgenesis): The extension interface for stateful genesis methods.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
@@ -81,7 +81,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 * `HasName` is an interface that has a method `Name()`. This method returns the name of the module as a `string`.
 
-### Genesis
+### `HasGenesis`
 
 #### module.HasGenesisBasics
 
@@ -94,29 +94,30 @@ Let us go through the methods:
 * `DefaultGenesis(codec.JSONCodec)`: Returns a default [`GenesisState`](./08-genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing.
 * `ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./08-genesis.md#validategenesis) function defined by the module developer.
 
-#### module.HasGenesis
+#### `module.HasGenesis`
 
 `HasGenesis` is an extension interface for allowing modules to implement genesis functionalities.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L184-L189
 ```
 
-#### module.HasABCIGenesis`
+#### `module.HasABCIGenesis`
 
 `HasABCIGenesis` is an extension interface for allowing modules to implement genesis functionalities and returns validator set updates.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L189-L193 
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L191-L196
 ```
-<!-- TODO change link above after merge -->
 
-## appmodule.HasGenesis
+#### `appmodule.HasGenesis`
 
-> Note: `appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
+:::warning
+`appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
+:::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/genesis.go#L10-L24
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/core/appmodule/genesis.go#L8-L25
 ```
 
 ### `AppModule`

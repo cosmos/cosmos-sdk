@@ -24,11 +24,6 @@ When a transaction is relayed from the underlying consensus engine to the Cosmos
 
 Defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/05-encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
-See an example of a `Msg` service definition from `x/bank` module:
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
-```
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
@@ -36,15 +31,25 @@ Each `Msg` service method must have exactly one argument, which must implement t
   rpc Send(MsgSend) returns (MsgSendResponse);
 ```
 
-`sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with the `GetSigners()` method. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
+See an example of a `Msg` service definition from `x/bank` module:
 
-`sdk.Msg` is a alias of `proto.Message`. To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
+```
+
+#### `sdk.Msg` Interface
+
+`sdk.Msg` is a alias of `proto.Message`. 
+
+To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L89
+https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88
 ```
 
 In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
+
+<!-- TODO: remove this todo after https://github.com/cosmos/cosmos-sdk/pull/15548 is merged -->
 
 ```protobuf reference 
 https://github.com/cosmos/cosmos-sdk/blob/e6848d99b55a65d014375b295bdd7f9641aac95e/proto/cosmos/bank/v1beta1/tx.proto#L41
@@ -81,31 +86,6 @@ A `RegisterMsgServer` method is also generated and should be used to register th
 
 In order for clients (CLI and grpc-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](01-module-manager.md#appmodulebasic) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
 
-### Legacy Amino `LegacyMsg`s
-
-The following way of defining messages is deprecated and using [`Msg` services](#msg-services) is preferred.
-
-Amino `LegacyMsg`s can be defined as protobuf messages. The messages definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said message.
-
-A `LegacyMsg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./09-module-interfaces.md). `message`s also need to implement the `sdk.Msg` interface:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L21-L28
-```
-
-It extends `proto.Message` and contains the following methods:
-
-* `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/migrations/legacytx/stdsign.go#L21-L29
-```
-
-See an example implementation of a `message` from the `gov` module:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/types/v1/msgs.go#L103-L150
-```
 
 ## Queries
 

@@ -70,33 +70,6 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 	return nil
 }
 
-// IterateLastValidators iterates through the active validator set and perform the provided function
-func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
-	iterator, err := k.LastValidatorsIterator(ctx)
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	i := int64(0)
-
-	for ; iterator.Valid(); iterator.Next() {
-		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
-
-		validator, err := k.GetValidator(ctx, address)
-		if err != nil {
-			return err
-		}
-
-		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
-		if stop {
-			break
-		}
-		i++
-	}
-	return nil
-}
-
 // Validator gets the Validator interface for a particular address
 func (k Keeper) Validator(ctx context.Context, address sdk.ValAddress) (types.ValidatorI, error) {
 	return k.GetValidator(ctx, address)

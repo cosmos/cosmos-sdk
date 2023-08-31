@@ -268,25 +268,25 @@ The following instructions provide a demonstration of `cosmovisor` using the sim
 
 ### Chain Setup
 
-Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
+Let's create a new chain using the `v0.47.4` version of simapp (the Cosmos SDK demo app):
 
 ```shell
-git checkout v0.44.6
+git checkout v0.47.4
 make build
 ```
 
 Clean `~/.simapp` (never do this in a production environment):
 
 ```shell
-./build/simd unsafe-reset-all
+./build/simd tendermint unsafe-reset-all
 ```
 
 Set up app config:
 
 ```shell
-./build/simd config set client chain-id test
-./build/simd config set client keyring-backend test
-./build/simd config set client broadcast-mode sync
+./build/simd config chain-id test
+./build/simd config keyring-backend test
+./build/simd config broadcast-mode sync
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):
@@ -297,16 +297,10 @@ Initialize the node and overwrite any previous genesis file (never do this in a 
 ./build/simd init test --chain-id test --overwrite
 ```
 
-Set the minimum gas price to `0stake` in `~/.simapp/config/app.toml`:
-
-```shell
-minimum-gas-prices = "0stake"
-```
-
 For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
 
 ```shell
-cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
+cat <<< $(jq '.app_state.gov.params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
 ```
 
 Create a validator, and setup genesis transaction:
@@ -339,17 +333,23 @@ Initialize cosmovisor with the current binary:
 cosmovisor init ./build/simd
 ```
 
-Now you can run cosmovisor with simapp v0.44:
+Now you can run cosmovisor with simapp v0.47.4:
 
 ```shell
 cosmovisor run start
 ```
 
-#### Update App
+### Update App
 
-Update app to the latest version (e.g. v0.45).
+Update app to the latest version (e.g. v0.50.0).
 
-Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/main/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change.
+:::note
+
+Migration plans are defined using the `x/upgrade` module and described in [In-Place Store Migrations](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/core/15-upgrade.md). Migrations can perform any deterministic state change.
+
+The migration plan to upgrade the simapp from v0.47 to v0.50 is defined in `simapp/upgrade.go`.
+
+:::
 
 Build the new version `simd` binary:
 
@@ -359,32 +359,20 @@ make build
 
 Add the new `simd` binary and the upgrade name: 
 
+:::warning
+
+The migration name must match the one defined in the migration plan.
+
+:::
+
 ```shell
-cosmovisor add-upgrade test1 ./build/simd
+cosmovisor add-upgrade v047-to-v050 ./build/simd
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
-**<= v0.45**:
-
 ```shell
-./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
-./build/simd tx gov deposit 1 10000000stake --from validator --yes
-./build/simd tx gov vote 1 yes --from validator --yes
-```
-
-**v0.46, v0.47**:
-
-```shell
-./build/simd tx gov submit-legacy-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --no-validate --from validator --yes
-./build/simd tx gov deposit 1 10000000stake --from validator --yes
-./build/simd tx gov vote 1 yes --from validator --yes
-```
-
-**>= v0.50+**:
-
-```shell
-./build/simd tx upgrade software-upgrade test1 --title upgrade --summary upgrade --upgrade-height 200 --upgrade-info "{}" --no-validate --from validator --yes
+./build/simd tx upgrade software-upgrade v047-to-v050 --title upgrade --summary upgrade --upgrade-height 200 --upgrade-info "{}" --no-validate --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

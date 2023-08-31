@@ -337,8 +337,7 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx context.Context) (corestore.Ite
 // GetLastValidatorPower loads the last validator power.
 // Returns zero if the operator was not a validator last block.
 func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddress) (power int64, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	bz, err := store.Get(types.GetLastValidatorPowerKey(operator))
+	bz, err := k.LastValidatorPower.Get(ctx, operator)
 	if err != nil {
 		return 0, err
 	}
@@ -358,44 +357,35 @@ func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddre
 
 // SetLastValidatorPower sets the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddress, power int64) error {
-	store := k.storeService.OpenKVStore(ctx)
 	bz, err := k.cdc.Marshal(&gogotypes.Int64Value{Value: power})
 	if err != nil {
 		return err
 	}
-	return store.Set(types.GetLastValidatorPowerKey(operator), bz)
+	return k.LastValidatorPower.Set(ctx, operator, bz)
 }
 
 // DeleteLastValidatorPower deletes the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAddress) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Delete(types.GetLastValidatorPowerKey(operator))
-}
-
-// lastValidatorsIterator returns an iterator for the consensus validators in the last block
-func (k Keeper) LastValidatorsIterator(ctx context.Context) (corestore.Iterator, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Iterator(types.LastValidatorPowerKey, storetypes.PrefixEndBytes(types.LastValidatorPowerKey))
+	return k.LastValidatorPower.Remove(ctx, operator)
 }
 
 // IterateLastValidatorPowers iterates over last validator powers.
 func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) error {
-	iter, err := k.LastValidatorsIterator(ctx)
-	if err != nil {
-		return err
-	}
-
-	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(types.AddressFromLastValidatorPowerKey(iter.Key()))
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+		addr := sdk.ValAddress(key)
 		intV := &gogotypes.Int64Value{}
 
-		if err = k.cdc.Unmarshal(iter.Value(), intV); err != nil {
-			return err
+		if err := k.cdc.Unmarshal(value, intV); err != nil {
+			return true, err
 		}
 
 		if handler(addr, intV.GetValue()) {
-			break
+			return true, nil
 		}
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -403,8 +393,6 @@ func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(ope
 
 // GetLastValidators gets the group of the bonded validators
 func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Validator, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-
 	// add the actual validator power sorted store
 	maxValidators, err := k.MaxValidators(ctx)
 	if err != nil {
@@ -412,27 +400,24 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	}
 	validators = make([]types.Validator, maxValidators)
 
-	iterator, err := store.Iterator(types.LastValidatorPowerKey, storetypes.PrefixEndBytes(types.LastValidatorPowerKey))
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
 	i := 0
-	for ; iterator.Valid(); iterator.Next() {
+	err = k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
 		// sanity check
 		if i >= int(maxValidators) {
 			panic("more validators than maxValidators found")
 		}
 
-		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		validator, err := k.GetValidator(ctx, address)
+		validator, err := k.GetValidator(ctx, key)
 		if err != nil {
-			return nil, err
+			return true, err
 		}
 
 		validators[i] = validator
 		i++
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return validators[:i], nil // trim

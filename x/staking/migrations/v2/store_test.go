@@ -46,7 +46,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"LastValidatorPowerKey",
 			v1.GetLastValidatorPowerKey(valAddr1),
-			types.GetLastValidatorPowerKey(valAddr1),
+			getLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
@@ -144,6 +144,10 @@ func TestStoreMigration(t *testing.T) {
 func getRedelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
 	return append(types.RedelegationQueueKey, bz...)
+}
+
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(types.LastValidatorPowerKey, sdkaddress.MustLengthPrefix(operator)...)
 }
 
 func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {

@@ -6,6 +6,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -201,6 +202,47 @@ func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	validatorsKey := []byte{0x21}
 	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
+}
+
+// getLastValidatorPowerKey creates the bonded validator index key for an operator address
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	lastValidatorPowerKey := []byte{0x11}
+	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
+}
+
+func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
+	s.SetupTest()
+
+	_, valAddrs := createValAddrs(100)
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
+			s.Require().NoError(err)
+
+			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+		},
+		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
+			s.Require().NoError(err)
+
+			err = s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
+			s.Require().NoError(err)
+		},
+		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+	)
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {

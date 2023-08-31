@@ -87,5 +87,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
+			// RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			// 	{
+			// 		RpcMethod:      "Send",
+			// 		Use:            "sdfsdf",
+			// 		Short:          "Submit proof that an invariant broken to halt the chain",
+			// 		PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}, {ProtoField: "invariant_route"}},
+			// 	},
+			// },
+		},
 	}
 }

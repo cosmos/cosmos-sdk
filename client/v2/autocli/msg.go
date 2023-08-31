@@ -5,6 +5,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cockroachdb/errors"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -112,6 +114,37 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		if err != nil {
 			return err
 		}
+
+		var initClientCtx client.Context
+		initClientCtx = initClientCtx.WithViper("").
+			WithCmdContext(cmd.Context()).
+			WithAddressCodec(b.AddressCodec)
+
+		fmt.Printf("b.AddressCodec: %v, %v\n", b.AddressCodec, initClientCtx.AddressCodec)
+
+		initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("initClientCtx_autoCli: %v\n", initClientCtx)
+
+		fmt.Println("cmdP_before", cmd)
+
+		if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			return err
+		}
+
+		fmt.Println("cmdP_after", cmd)
+
+		clientCtx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+		_ = clientCtx
+
+		// fmt.Println("cmd", cmd)
+		fmt.Printf("clientCtx.ChainID: %v\n", clientCtx)
 
 		return b.outOrStdoutFormat(cmd, bz)
 	})

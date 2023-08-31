@@ -349,6 +349,7 @@ func GetClientQueryContext(cmd *cobra.Command) (Context, error) {
 // - client.Context field pre-populated & flag set: uses set flag value
 func GetClientTxContext(cmd *cobra.Command) (Context, error) {
 	ctx := GetClientContextFromCmd(cmd)
+	fmt.Printf("ctx.AddressCodec: %v\n", ctx.AddressCodec)
 	return readTxCommandFlags(ctx, cmd.Flags())
 }
 
@@ -371,8 +372,12 @@ func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 		v = &clientCtx
 	}
 
+	fmt.Println("clientCtx in set Cmd", clientCtx)
+
 	clientCtxPtr := v.(*Context)
 	*clientCtxPtr = clientCtx
+
+	fmt.Printf("GetClientContextFromCmd(cmd): %v\n", GetClientContextFromCmd(cmd))
 
 	return nil
 }

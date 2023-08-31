@@ -390,6 +390,9 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		return nil, "", 0, nil
 	}
 
+	fmt.Printf("clientCtx.ChainID: %v\n", clientCtx.ChainID)
+	fmt.Printf("clientCtx.AddressCodec: %v\n", clientCtx.AddressCodec)
+	fmt.Printf("from: %v\n", from)
 	addr, err := clientCtx.AddressCodec.StringToBytes(from)
 	switch {
 	case clientCtx.Simulate:

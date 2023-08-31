@@ -28,7 +28,6 @@ There are 3 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
-* (legacy) `module.GenesisOnlyAppModule` defines an `AppModule` that only has import/export functionality.
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
@@ -81,7 +80,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 * `HasName` is an interface that has a method `Name()`. This method returns the name of the module as a `string`.
 
-### `HasGenesis`
+### Genesis
 
 #### `module.HasGenesisBasics`
 

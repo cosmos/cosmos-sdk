@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -40,18 +39,19 @@ type App struct {
 	ctx           sdk.Context
 	logger        log.Logger
 	moduleManager module.Manager
-	queryHelper   *baseapp.QueryServiceTestHelper
-	txConfig      client.TxConfig
+	// queryHelper   *baseapp.QueryServiceTestHelper
+	txConfig          client.TxConfig
+	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
 // is able to route messages to their respective handlers.
 func NewIntegrationApp(
-	sdkCtx sdk.Context,
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
 	modules map[string]appmodule.AppModule,
+	setupFn func(ctx sdk.Context) error,
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -75,6 +75,7 @@ func NewIntegrationApp(
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
+	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
@@ -86,11 +87,11 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
-	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
-		return moduleManager.BeginBlock(sdkCtx)
+	bApp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+		return moduleManager.BeginBlock(ctx)
 	})
-	bApp.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
-		return moduleManager.EndBlock(sdkCtx)
+	bApp.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
+		return moduleManager.EndBlock(ctx)
 	})
 
 	router := baseapp.NewMsgServiceRouter()
@@ -119,21 +120,49 @@ func NewIntegrationApp(
 		}
 	}
 
+	if err = setupFn(bApp.GetContextForFinalizeBlock([]byte{})); err != nil {
+		panic(err)
+	}
+
+	_, err = bApp.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: 1})
+	if err != nil {
+		panic(err)
+	}
+
 	_, err = bApp.Commit()
 	if err != nil {
 		panic(err)
 	}
 
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
-
 	return &App{
 		BaseApp:       bApp,
 		logger:        logger,
-		ctx:           ctx,
 		moduleManager: *moduleManager,
-		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
-		txConfig:      txConfig,
+		// queryHelper:   baseapp.NewQueryServerTestHelper(sdk.Context{}, interfaceRegistry), // tODO fix
+		interfaceRegistry: interfaceRegistry,
+		txConfig:          txConfig,
 	}
+}
+
+// RunArbitraryCode allows executing arbitrary code on the application state.
+// Useful when setting up the application state for testing purposes as it doesn't
+// increase the block height.
+func (app *App) RunArbitraryCode(fn func(ctx sdk.Context) error) error {
+	// Run ProcessProposal to set finalizeBlockState.
+	_, err := app.ProcessProposal(&cmtabcitypes.RequestProcessProposal{Height: app.LastBlockHeight() + 1})
+	if err != nil {
+		return err
+	}
+
+	ctx := app.GetContextForFinalizeBlock([]byte{})
+	if err = fn(ctx); err != nil {
+		return err
+	}
+	ms := ctx.MultiStore().(storetypes.CacheMultiStore)
+	ms.Write()
+
+	_, err = app.Commit()
+	return err
 }
 
 // RunMsg provides the ability to run a message and return the response.
@@ -142,7 +171,7 @@ func NewIntegrationApp(
 // The result of the message execution is returned as an Any type.
 // That any type can be unmarshaled to the expected response type.
 // If the message execution fails, an error is returned.
-func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
+func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*cmtabcitypes.ExecTxResult, error) {
 	// set options
 	cfg := &Config{}
 	for _, opt := range option {
@@ -168,42 +197,55 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		return nil, fmt.Errorf("failed to encode transaction: %w", err)
 	}
 
-	if cfg.AutomaticFinalizeBlock {
-		height := app.LastBlockHeight() + 1
-		resp, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
-			Height: height,
-			Txs:    [][]byte{bz},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to run finalize block: %w", err)
-		}
+	// if cfg.AutomaticFinalizeBlock {
+	height := app.LastBlockHeight() + 1
 
-		panic(resp.GetTxResults()[0])
+	_, err = app.ProcessProposal(&cmtabcitypes.RequestProcessProposal{
+		Height: height,
+		Txs:    [][]byte{bz},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to run process proposal: %w", err)
 	}
 
 	app.logger.Info("Running msg", "msg", msg.String())
 
-	handler := app.MsgServiceRouter().Handler(msg)
-	if handler == nil {
-		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
-	}
-
-	msgResult, err := handler(app.ctx, msg)
+	resp, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
+		Height: height,
+		Txs:    [][]byte{bz},
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
+		return nil, fmt.Errorf("failed to run finalize block: %w", err)
 	}
 
-	var response *codectypes.Any
-	if len(msgResult.MsgResponses) > 0 {
-		msgResponse := msgResult.MsgResponses[0]
-		if msgResponse == nil {
-			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
-		}
-
-		response = msgResponse
+	if resp.GetTxResults()[0].GetCode() != 0 {
+		return resp.GetTxResults()[0], fmt.Errorf("failed to run tx with error: %s", resp.GetTxResults()[0].GetLog())
 	}
 
-	return response, nil
+	return resp.GetTxResults()[0], nil
+	// }
+
+	// handler := app.MsgServiceRouter().Handler(msg)
+	// if handler == nil {
+	// 	return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
+	// }
+
+	// msgResult, err := handler(app.ctx, msg)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
+	// }
+
+	// var response *codectypes.Any
+	// if len(msgResult.MsgResponses) > 0 {
+	// 	msgResponse := msgResult.MsgResponses[0]
+	// 	if msgResponse == nil {
+	// 		return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
+	// 	}
+
+	// 	response = msgResponse
+	// }
+
+	// return nil, nil
 }
 
 // Context returns the application context. It can be unwrapped to a sdk.Context,
@@ -215,7 +257,8 @@ func (app *App) Context() context.Context {
 // QueryHelper returns the application query helper.
 // It can be used when registering query services.
 func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
-	return app.queryHelper
+	// return app.queryHelper
+	return baseapp.NewQueryServerTestHelper(app.GetContextForCheckTx([]byte{}), app.interfaceRegistry)
 }
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.

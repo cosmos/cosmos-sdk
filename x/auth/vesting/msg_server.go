@@ -47,6 +47,10 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
 	}
 
+	if msg.EndTime <= msg.StartTime {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid start and end time (must be start < end)")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := s.BankKeeper.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
@@ -71,7 +75,11 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	if msg.Delayed {
 		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
+		start := ctx.BlockTime().Unix()
+		if msg.StartTime != 0 {
+			start = msg.StartTime
+		}
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, start)
 	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)

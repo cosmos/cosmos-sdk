@@ -52,6 +52,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 			to2Addr,
 			sdk.Coins{fooCoin},
 			time.Now().Unix(),
+			time.Now().Unix()+1,
 			true,
 		),
 		vestingtypes.NewMsgCreateVestingAccount(
@@ -59,6 +60,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 			to3Addr,
 			sdk.Coins{fooCoin},
 			time.Now().Unix(),
+			time.Now().Unix()+1,
 			false,
 		),
 	}

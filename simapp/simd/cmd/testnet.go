@@ -345,7 +345,13 @@ func initTestnetFiles(
 			return err
 		}
 
-		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig)
+		if err := srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate); err != nil {
+			return err
+		}
+
+		if err := srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig); err != nil {
+			return err
+		}
 	}
 
 	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

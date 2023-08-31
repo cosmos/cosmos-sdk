@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -122,6 +121,7 @@ var (
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasServices     = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ module.HasGenesis         = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -144,7 +144,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
@@ -152,7 +152,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 	}
 
 	InitGenesis(ctx, am.keeper, &gs)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.

@@ -76,14 +76,14 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			fmt.Println("rootcmd")
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("initClientCtx: %v\n", initClientCtx)
 
-			// This needs to go after ReadFromClientConfig, as that function
+			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts := tx.ConfigOptions{
@@ -126,6 +126,8 @@ func ProvideClientContext(
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
 ) client.Context {
+	var err error
+
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
@@ -138,8 +140,12 @@ func ProvideClientContext(
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
-	// Read the config again to overwrite the default values with the values from the config file
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	// Read the config to overwrite the default values with the values from the config file
+	customClientTemplate, customClientConfig := initClientConfig()
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	return initClientCtx
 }

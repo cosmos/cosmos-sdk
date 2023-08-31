@@ -43,6 +43,7 @@ type Encoder struct {
 	fileResolver    signing.ProtoFileResolver
 	typeResolver    protoregistry.MessageTypeResolver
 	doNotSortFields bool
+	indent          string
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -70,6 +71,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,
 		doNotSortFields: options.DoNotSortFields,
+		indent:          options.Indent,
 	}
 	return enc
 }
@@ -109,6 +111,22 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 		enc.fieldEncoders = map[string]FieldEncoder{}
 	}
 	enc.fieldEncoders[name] = encoder
+	return enc
+}
+
+// DefineScalarEncoding defines a custom encoding for a protobuf scalar field.  The `name` field must match a usage of
+// an (cosmos_proto.scalar) option in the protobuf message as in the following example. This encoding will be used
+// instead of the default encoding for all usages of the tagged field.
+//
+//	message Balance {
+//	  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+//	  ...
+//	}
+func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encoder {
+	if enc.scalarEncoders == nil {
+		enc.scalarEncoders = map[string]FieldEncoder{}
+	}
+	enc.scalarEncoders[name] = encoder
 	return enc
 }
 

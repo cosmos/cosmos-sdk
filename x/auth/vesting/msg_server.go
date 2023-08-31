@@ -44,6 +44,14 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
+	if msg.EndTime <= 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
+	}
+
+	if msg.EndTime <= msg.StartTime {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid start and end time (must be start < end)")
+	}
+
 	if bk.BlockedAddr(to) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
@@ -60,7 +68,11 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	if msg.Delayed {
 		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
+		start := ctx.BlockTime().Unix()
+		if msg.StartTime != 0 {
+			start = msg.StartTime
+		}
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, start)
 	}
 
 	ak.SetAccount(ctx, vestingAccount)

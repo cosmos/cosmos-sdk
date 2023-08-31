@@ -63,6 +63,21 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			expectedCode: 0,
 			respType:     &sdk.TxResponse{},
 		},
+		"create a continuous vesting account with start time": {
+			args: []string{
+				sdk.AccAddress("addr2_______________").String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+				"4070908800",
+				fmt.Sprintf("--%s=%d", cli.FlagStartTime, 4070808800),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
+		},
 		"create a delayed vesting account": {
 			args: []string{
 				sdk.AccAddress("addr3_______________").String(),

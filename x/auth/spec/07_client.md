@@ -408,7 +408,7 @@ simd tx vesting create-periodic-vesting-account cosmos1.. periods.json
 
 #### create-vesting-account
 
-The `create-vesting-account` command creates a new vesting account funded with an allocation of tokens. The account can either be a delayed or continuous vesting account, which is determined by the '--delayed' flag. All vesting accouts created will have their start time set by the committed block's time. The end_time must be provided as a UNIX epoch timestamp.
+The `create-vesting-account` command creates a new vesting account funded with an allocation of tokens. The account can either be a delayed or continuous vesting account, which is determined by the '--delayed' flag. All vesting accounts created will have their start time set by the committed block's time unless specified explicitly using the `--start-time`flag. The `end_time` must be provided as a UNIX epoch timestamp.
 
 ```bash
 simd tx vesting create-vesting-account [to_address] [amount] [end_time] [flags]

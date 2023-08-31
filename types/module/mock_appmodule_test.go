@@ -18,6 +18,17 @@ type AppModuleWithAllExtensions interface {
 	module.HasName
 }
 
+// mocks to be used in module tests.
+type AppModuleWithAllExtensionsABCI interface {
+	module.AppModule
+	module.HasServices
+	module.HasABCIGenesis
+	module.HasInvariants
+	module.HasConsensusVersion
+	module.HasABCIEndblock
+	module.HasName
+}
+
 // CoreAppModule is solely here for the purpose of generating
 // mocks to be used in module tests.
 type CoreAppModule interface {

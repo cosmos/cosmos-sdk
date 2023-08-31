@@ -95,10 +95,10 @@ func initAppConfig() (string, interface{}) {
 	customAppTemplate := serverconfig.DefaultConfigTemplate + `
 [wasm]
 # This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
-query_gas_limit = 300000
+query_gas_limit = {{ .WASM.QueryGasLimit }}
 # This is the number of wasm vm instances we keep cached in memory for speed-up
 # Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
-lru_size = 0`
+lru_size = {{ .WASM.LruSize }}`
 
 	return customAppTemplate, customAppConfig
 }

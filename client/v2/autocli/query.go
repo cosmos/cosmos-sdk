@@ -102,8 +102,9 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 	enc := aminojson.NewEncoder(aminojson.EncoderOptions{
-		TypeResolver: b.TypeResolver,
-		FileResolver: b.FileResolver,
+		DoNotSortFields: true,
+		TypeResolver:    b.TypeResolver,
+		FileResolver:    b.FileResolver,
 	})
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {

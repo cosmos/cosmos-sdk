@@ -146,15 +146,15 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 // BurnCoins mocks base method.
 func (m *MockBankKeeper) BurnCoins(arg0 context.Context, arg1 []byte, arg2 types.Coins) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BurnCoins", ctx, name, amt)
+	ret := m.ctrl.Call(m, "BurnCoins", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // BurnCoins indicates an expected call of BurnCoins.
-func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, name, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) BurnCoins(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, name, amt)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), arg0, arg1, arg2)
 }
 
 // DelegateCoinsFromAccountToModule mocks base method.

@@ -83,7 +83,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 ### `HasGenesis`
 
-#### module.HasGenesisBasics
+#### `module.HasGenesisBasics`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L76-L79

@@ -207,10 +207,10 @@ message ModeInfo {
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty) = true,
-    (amino.encoding) = "legacy_coins"
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
   ];
 
   // gas_limit is the maximum gas that can be used in transaction processing
@@ -234,10 +234,10 @@ message Fee {
 message Tip {
   // amount is the amount of the tip
   repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty) = true,
-    (amino.encoding) = "legacy_coins"
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
   ];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

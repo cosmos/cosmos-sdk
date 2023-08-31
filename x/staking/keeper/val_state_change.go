@@ -223,8 +223,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, err
 		}
+		str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+		if err != nil {
+			return nil, err
+		}
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		if err = k.DeleteLastValidatorPower(ctx, validator.GetOperator()); err != nil {
+		if err = k.DeleteLastValidatorPower(ctx, str); err != nil {
 			return nil, err
 		}
 
@@ -358,7 +362,12 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 
@@ -416,7 +425,12 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 		return validator, err
 	}
 
-	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator()); err != nil {
+	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
+
+	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, str); err != nil {
 		return validator, err
 	}
 
@@ -449,23 +463,17 @@ type validatorsByAddr map[string][]byte
 func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
-	iterator, err := k.LastValidatorsIterator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		// extract the validator address from the key (prefix is 1-byte, addrLen is 1-byte)
-		valAddr := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(key)
 		if err != nil {
-			return nil, err
+			return true, err
 		}
 
-		powerBytes := iterator.Value()
-		last[valAddrStr] = make([]byte, len(powerBytes))
-		copy(last[valAddrStr], powerBytes)
+		last[valAddrStr] = value
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return last, nil

@@ -17,6 +17,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -26,7 +27,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -45,6 +45,9 @@ import (
 
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
+	ctx := suite.baseApp.NewContext(true)
+	err := suite.baseApp.StoreConsensusParams(ctx, cmttypes.DefaultConsensusParams().ToProto())
+	require.NoError(t, err)
 
 	reqInfo := abci.RequestInfo{}
 	res, err := suite.baseApp.Info(&reqInfo)
@@ -54,7 +57,18 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
+	appVersion, err := suite.baseApp.AppVersion(ctx)
+	require.NoError(t, err)
+	require.Equal(t, appVersion, res.AppVersion)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+	require.NoError(t, suite.baseApp.SetAppVersion(ctx, 1))
+	res, err = suite.baseApp.Info(&reqInfo)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), res.AppVersion)
 }
 
 func TestABCI_First_block_Height(t *testing.T) {
@@ -1791,8 +1805,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	}
 
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(667), tmPk, nil)
-	valStore.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(1000), nil).AnyTimes()
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1866,11 +1879,11 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				{
 					Validator: abci.Validator{
 						Address: consAddr.Bytes(),
-						// this is being ignored by our validation function
-						Power: sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction),
+						Power:   666,
 					},
 					VoteExtension:      ext,
 					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 				},
 			},
 		},
@@ -1880,7 +1893,24 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
 
 	// now vote extensions but our sole voter doesn't reach majority
-	valStore.EXPECT().BondedTokensAndPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(math.NewInt(666), tmPk, nil)
+	reqPrepareProposal = abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     3, // this value can't be 0
+		LocalLastCommit: abci.ExtendedCommitInfo{
+			Round: 0,
+			Votes: []abci.ExtendedVoteInfo{
+				{
+					Validator: abci.Validator{
+						Address: consAddr.Bytes(),
+						Power:   666,
+					},
+					VoteExtension:      ext,
+					ExtensionSignature: extSig,
+					BlockIdFlag:        cmtproto.BlockIDFlagNil, // This will ignore the vote extension
+				},
+			},
+		},
+	}
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resPrepareProposal.Txs))

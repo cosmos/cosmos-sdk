@@ -149,11 +149,22 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 
 func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	lastCommitID := app.cms.LastCommitID()
+	appVersion := InitialAppVersion
+	if lastCommitID.Version > 0 {
+		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed creating query context: %w", err)
+		}
+		appVersion, err = app.AppVersion(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed getting app version: %w", err)
+		}
+	}
 
 	return &abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       app.appVersion,
+		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}, nil
@@ -400,6 +411,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
 	}
 	app.setState(execModePrepareProposal, header)
 
@@ -442,7 +454,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 
 	resp, err = app.prepareProposal(app.prepareProposalState.ctx, req)
 	if err != nil {
-		app.logger.Error("failed to prepare proposal", "height", req.Height, "error", err)
+		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{}, nil
 	}
 
@@ -483,6 +495,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
 	}
 	app.setState(execModeProcessProposal, header)
 
@@ -528,7 +541,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	resp, err = app.processProposal(app.processProposalState.ctx, req)
 	if err != nil {
-		app.logger.Error("failed to process proposal", "height", req.Height, "error", err)
+		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
@@ -547,9 +560,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -591,7 +603,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	resp, err = app.extendVote(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to extend vote", "height", req.Height, "error", err)
+		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
@@ -609,9 +621,8 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
@@ -638,7 +649,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 	resp, err = app.verifyVoteExt(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to verify vote extension", "height", req.Height, "error", err)
+		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
@@ -725,7 +736,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		}
 	}
 
-	beginBlock := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(req)
+	if err != nil {
+		return nil, err
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
@@ -1010,7 +1025,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithHeaderInfo(coreheader.Info{})
+		ctx = ctx.WithHeaderInfo(coreheader.Info{}).WithBlockHeader(cmtproto.Header{})
 		return ctx
 	}
 
@@ -1114,9 +1129,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit multi-store for safety
-	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithBlockHeight(height)
+		WithBlockHeight(height).
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.ctx.BlockHeader())
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

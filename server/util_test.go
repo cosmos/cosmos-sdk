@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	db "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,6 +37,15 @@ func preRunETestImpl(cmd *cobra.Command, args []string) error {
 	}
 
 	return errCanceledInPreRun
+}
+
+func TestGetAppDBBackend(t *testing.T) {
+	v := viper.New()
+	require.Equal(t, server.GetAppDBBackend(v), db.GoLevelDBBackend)
+	v.Set("db_backend", "dbtype1") // value from CometBFT config
+	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype1"))
+	v.Set("app-db-backend", "dbtype2") // value from app.toml
+	require.Equal(t, server.GetAppDBBackend(v), db.BackendType("dbtype2"))
 }
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {
@@ -438,7 +449,8 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
 	appConf := config.DefaultConfig()
 	appConf.BaseConfig.MinGasPrices = ""
-	config.WriteConfigFile(appCfgTempFilePath, appConf)
+	err = config.WriteConfigFile(appCfgTempFilePath, appConf)
+	require.NoError(t, err)
 
 	// Run StartCmd.
 	cmd = server.StartCmd(nil)

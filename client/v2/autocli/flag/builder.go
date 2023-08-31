@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
 )
@@ -38,6 +39,9 @@ type Builder struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
+
+	// Keyring implementation
+	Keyring keyring.Keyring
 }
 
 func (b *Builder) init() {

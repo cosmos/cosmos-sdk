@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -291,22 +292,6 @@ func (m *MockValidatorSet) EXPECT() *MockValidatorSetMockRecorder {
 	return m.recorder
 }
 
-// BondedTokensAndPubKeyByConsAddr mocks base method.
-func (m *MockValidatorSet) BondedTokensAndPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, crypto.PublicKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedTokensAndPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(crypto.PublicKey)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// BondedTokensAndPubKeyByConsAddr indicates an expected call of BondedTokensAndPubKeyByConsAddr.
-func (mr *MockValidatorSetMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
-}
-
 // Delegation mocks base method.
 func (m *MockValidatorSet) Delegation(arg0 context.Context, arg1 types.AccAddress, arg2 types.ValAddress) (types0.DelegationI, error) {
 	m.ctrl.T.Helper()
@@ -322,6 +307,21 @@ func (mr *MockValidatorSetMockRecorder) Delegation(arg0, arg1, arg2 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockValidatorSet)(nil).Delegation), arg0, arg1, arg2)
 }
 
+// GetPubKeyByConsAddr mocks base method.
+func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr.
+func (mr *MockValidatorSetMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubKeyByConsAddr", reflect.TypeOf((*MockValidatorSet)(nil).GetPubKeyByConsAddr), arg0, arg1)
+}
+
 // IterateBondedValidatorsByPower mocks base method.
 func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
@@ -334,20 +334,6 @@ func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, 
 func (mr *MockValidatorSetMockRecorder) IterateBondedValidatorsByPower(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateBondedValidatorsByPower", reflect.TypeOf((*MockValidatorSet)(nil).IterateBondedValidatorsByPower), arg0, arg1)
-}
-
-// IterateLastValidators mocks base method.
-func (m *MockValidatorSet) IterateLastValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IterateLastValidators", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// IterateLastValidators indicates an expected call of IterateLastValidators.
-func (mr *MockValidatorSetMockRecorder) IterateLastValidators(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateLastValidators", reflect.TypeOf((*MockValidatorSet)(nil).IterateLastValidators), arg0, arg1)
 }
 
 // IterateValidators mocks base method.
@@ -409,7 +395,7 @@ func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 inter
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 types0.Infraction) (math.Int, error) {
+func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 stakingv1beta1.Infraction) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)

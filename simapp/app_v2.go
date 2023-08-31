@@ -268,9 +268,6 @@ func NewSimApp(
 	return app
 }
 
-// Name returns the name of the App
-func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable

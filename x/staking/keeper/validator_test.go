@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,7 +83,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(power, resPower)
 	require.NoError(keeper.DeleteLastValidatorPower(ctx, valAddr))
 	resPower, err = keeper.GetLastValidatorPower(ctx, valAddr)
-	require.NoError(err)
+	require.Error(err, collections.ErrNotFound)
 	require.Equal(int64(0), resPower)
 }
 
@@ -173,17 +174,20 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// remove a record
 
+	bz, err := keeper.ValidatorAddressCodec().StringToBytes(validators[1].GetOperator())
+	require.NoError(err)
+
 	// shouldn't be able to remove if status is not unbonded
-	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "cannot call RemoveValidator on bonded or unbonding validators: failed to remove validator")
+	require.EqualError(keeper.RemoveValidator(ctx, bz), "cannot call RemoveValidator on bonded or unbonding validators: failed to remove validator")
 
 	// shouldn't be able to remove if there are still tokens left
 	validators[1].Status = stakingtypes.Unbonded
 	require.NoError(keeper.SetValidator(ctx, validators[1]))
-	require.EqualError(keeper.RemoveValidator(ctx, validators[1].GetOperator()), "attempting to remove a validator which still contains tokens: failed to remove validator")
+	require.EqualError(keeper.RemoveValidator(ctx, bz), "attempting to remove a validator which still contains tokens: failed to remove validator")
 
-	validators[1].Tokens = math.ZeroInt()                                     // ...remove all tokens
-	require.NoError(keeper.SetValidator(ctx, validators[1]))                  // ...set the validator
-	require.NoError(keeper.RemoveValidator(ctx, validators[1].GetOperator())) // Now it can be removed.
+	validators[1].Tokens = math.ZeroInt()                    // ...remove all tokens
+	require.NoError(keeper.SetValidator(ctx, validators[1])) // ...set the validator
+	require.NoError(keeper.RemoveValidator(ctx, bz))         // Now it can be removed.
 	_, err = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
@@ -208,7 +212,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	require.NoError(err)
 	require.Equal(valTokens, validator.Tokens)
 
-	power := stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
+	power := stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx), keeper.ValidatorAddressCodec())
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// burn half the delegator shares
@@ -221,7 +225,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 
-	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
+	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx), keeper.ValidatorAddressCodec())
 	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// set new validator by power index
@@ -327,7 +331,10 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 			err = keeper.SetValidator(ctx, tc.validator)
 			require.NoError(err)
 
-			val, err := keeper.GetValidator(ctx, tc.validator.GetOperator())
+			bz, err := keeper.ValidatorAddressCodec().StringToBytes(tc.validator.GetOperator())
+			require.NoError(err)
+
+			val, err := keeper.GetValidator(ctx, bz)
 			require.NoError(err,
 				"expected to find validator for test case #%d with rate: %s", i, tc.newRate,
 			)

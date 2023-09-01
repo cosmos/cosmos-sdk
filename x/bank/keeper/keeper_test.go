@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true)
 }
 
@@ -553,7 +553,6 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	// set burnerAcc balance
 	suite.mockMintCoins(minterAcc)
 	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
-
 	suite.mockSendCoinsFromModuleToAccount(minterAcc, burnerAcc.GetAddress())
 	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
 
@@ -564,10 +563,10 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
-	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
+	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no module account")
 
-	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
+	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)

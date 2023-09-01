@@ -8,7 +8,14 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
         Before smashing the submit button please review the template.
-        Please also ensure that this is not a duplicate issue :)  
+
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search existing issues to avoid creating duplicates.
+      options:
+        - label: I have searched the existing issues
+          required: true
 
   - type: markdown
     attributes:

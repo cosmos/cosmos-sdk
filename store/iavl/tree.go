@@ -94,10 +94,6 @@ func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
 	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
-	panic("cannot call 'LazyLoadVersionForOverwriting' on an immutable IAVL tree")
-}
-
 func (it *immutableTree) WorkingHash() []byte {
 	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
 }

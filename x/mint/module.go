@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
@@ -119,6 +118,7 @@ func NewAppModule(
 var (
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ module.HasGenesis         = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -147,12 +147,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the mint module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
@@ -238,6 +237,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -245,7 +249,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		authority.String(),
+		as,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn

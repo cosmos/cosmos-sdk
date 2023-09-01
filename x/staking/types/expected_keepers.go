@@ -52,10 +52,6 @@ type ValidatorSet interface {
 	IterateBondedValidatorsByPower(context.Context,
 		func(index int64, validator ValidatorI) (stop bool)) error
 
-	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
-	IterateLastValidators(context.Context,
-		func(index int64, validator ValidatorI) (stop bool)) error
-
 	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
 	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (ValidatorI, error) // get a particular validator by consensus address
 	TotalBondedTokens(context.Context) (math.Int, error)                      // total bonded tokens within the validator set
@@ -74,9 +70,9 @@ type ValidatorSet interface {
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
 
-	// BondedTokensAndPubKeyByConsAddr returns the bonded tokens and consensus public key for a validator.
-	// Used in vote extension validation.
-	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
+	// extension validation.
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

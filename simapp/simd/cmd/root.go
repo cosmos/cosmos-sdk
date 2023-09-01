@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -41,6 +43,9 @@ func NewRootCmd() *cobra.Command {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix())).
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
@@ -59,12 +64,13 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after ReadFromClientConfig, as that function
+			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts := tx.ConfigOptions{
@@ -93,10 +99,19 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
 
-	// add keyring to autocli opts
+	// autocli opts
+	customClientTemplate, customClientConfig := initClientConfig()
+	var err error
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
+
 	autoCliOpts := tempApp.AutoCliOpts()
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
 	autoCliOpts.Keyring = initClientCtx.Keyring
+	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
+	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
+	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

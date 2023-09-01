@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -74,12 +75,13 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after ReadFromClientConfig, as that function
+			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts := tx.ConfigOptions{
@@ -114,18 +116,34 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) client.Context {
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	legacyAmino *codec.LegacyAmino,
+	addressCodec address.Codec,
+	validatorAddressCodec runtime.ValidatorAddressCodec,
+	consensusAddressCodec runtime.ConsensusAddressCodec,
+) client.Context {
+	var err error
+
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addressCodec).
+		WithValidatorAddressCodec(validatorAddressCodec).
+		WithConsensusAddressCodec(consensusAddressCodec).
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
-	// Read the config again to overwrite the default values with the values from the config file
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	// Read the config to overwrite the default values with the values from the config file
+	customClientTemplate, customClientConfig := initClientConfig()
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	return initClientCtx
 }

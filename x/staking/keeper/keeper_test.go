@@ -196,6 +196,12 @@ func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
 }
 
+// getLastValidatorPowerKey creates the bonded validator index key for an operator address
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	lastValidatorPowerKey := []byte{0x11}
+	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
+}
+
 // getValidatorQueueKey returns the prefix key used for getting a set of unbonding
 // validators whose unbonding completion occurs at the given time and height.
 func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
@@ -221,12 +227,6 @@ func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
 	copy(bz[prefixL+8+timeBzL:], heightBz)
 
 	return bz
-}
-
-// getLastValidatorPowerKey creates the bonded validator index key for an operator address
-func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
-	lastValidatorPowerKey := []byte{0x11}
-	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
 }
 
 func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {

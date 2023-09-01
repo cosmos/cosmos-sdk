@@ -426,7 +426,9 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 // GetUnbondingValidators returns a slice of mature validator addresses that
 // complete their unbonding at a given time and height.
 func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, endHeight int64) ([]string, error) {
-	valAddrs, err := k.ValidatorQueue.Get(ctx, collections.Join(endTime, endHeight))
+	timeBz := sdk.FormatTimeBytes(endTime)
+	timeBzL := len(timeBz)
+	valAddrs, err := k.ValidatorQueue.Get(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)))
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -441,7 +443,9 @@ func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, e
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx context.Context, endTime time.Time, endHeight int64, addrs []string) error {
 	valAddrs := types.ValAddresses{Addresses: addrs}
-	return k.ValidatorQueue.Set(ctx, collections.Join(endTime, endHeight), valAddrs)
+	timeBz := sdk.FormatTimeBytes(endTime)
+	timeBzL := len(timeBz)
+	return k.ValidatorQueue.Set(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)), valAddrs)
 }
 
 // InsertUnbondingValidatorQueue inserts a given unbonding validator address into
@@ -458,7 +462,9 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx context.Context, val types.Val
 // DeleteValidatorQueueTimeSlice deletes all entries in the queue indexed by a
 // given height and time.
 func (k Keeper) DeleteValidatorQueueTimeSlice(ctx context.Context, endTime time.Time, endHeight int64) error {
-	return k.ValidatorQueue.Remove(ctx, collections.Join(endTime, endHeight))
+	timeBz := sdk.FormatTimeBytes(endTime)
+	timeBzL := len(timeBz)
+	return k.ValidatorQueue.Remove(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)))
 }
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
@@ -508,7 +514,9 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	// so it may be possible that certain validator addresses that are iterated
 	// over are not ready to unbond, so an explicit check is required.
 
-	unbondingValIterator, err := k.ValidatorQueue.Iterate(ctx, (&collections.Range[collections.Pair[time.Time, int64]]{}).EndInclusive(collections.Join(blockTime, blockHeight)))
+	timeBz := sdk.FormatTimeBytes(blockTime)
+	timeBzL := len(timeBz)
+	unbondingValIterator, err := k.ValidatorQueue.Iterate(ctx, (&collections.Range[collections.Triple[uint64, time.Time, uint64]]{}).EndInclusive(collections.Join3(uint64(timeBzL), blockTime, uint64(blockHeight))))
 	if err != nil {
 		return err
 	}
@@ -519,12 +527,12 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		keyTime, keyHeight := key.K1(), key.K2()
+		_, keyTime, keyHeight := key.K1(), key.K2(), key.K3()
 
 		// All addresses for the given key have the same unbonding height and time.
 		// We only unbond if the height and time are less than the current height
 		// and time.
-		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
+		if keyHeight <= uint64(blockHeight) && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
 			addrs, err := unbondingValIterator.Value()
 			if err != nil {
 				return err

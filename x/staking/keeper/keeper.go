@@ -51,7 +51,7 @@ type Keeper struct {
 	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
-	ValidatorQueue                collections.Map[collections.Pair[time.Time, int64], types.ValAddresses]
+	ValidatorQueue                collections.Map[collections.Triple[uint64, time.Time, uint64], types.ValAddresses]
 	LastValidatorPower            collections.Map[[]byte, []byte]
 }
 
@@ -170,12 +170,14 @@ func NewKeeper(
 			),
 			codec.CollValue[types.UnbondingDelegation](cdc),
 		),
+		// key format is: 67 | length(timestamp Bytes) | timestamp | height
 		ValidatorQueue: collections.NewMap(
 			sb, types.ValidatorQueueKey,
 			"validator_queue",
-			collections.PairKeyCodec(
+			collections.TripleKeyCodec(
+				collections.Uint64Key,
 				sdk.TimeKey,
-				collections.Int64Key,
+				collections.Uint64Key,
 			),
 			codec.CollValue[types.ValAddresses](cdc),
 		),

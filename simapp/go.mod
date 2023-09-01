@@ -8,10 +8,8 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.10.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
-	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/store v1.0.0-rc.0
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f

@@ -3,7 +3,7 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=docs/build/modules/$(basename "$D")
+    MODDOC=docs/build/modules/$(echo $D | awk -F/ '{print $NF}')
     rm -rf $MODDOC
     mkdir -p $MODDOC && cp -r $D/README.md "$_"
   fi
@@ -36,7 +36,7 @@ cp -r ./architecture ./docs/build
 cp -r ./spec ./docs/build
 
 ## Add rfc documentation
-cp -r ./rfc ./docs/build
+cp -r ./rfc ./docs/build/rfc
 
 ## Add SDK migration documentation
 cp -r ../UPGRADING.md ./docs/build/migrations/02-upgrading.md

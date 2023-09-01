@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	cmttypes "github.com/cometbft/cometbft/types"
-
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

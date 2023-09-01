@@ -39,9 +39,9 @@ jobs:
           npm install -g npm@8.5.5
           make build-docs
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.4.3
-        with:
-          branch: gh-pages
-          folder: ~/output
-          single-commit: true
+      # - name: Deploy 🚀
+      #   uses: JamesIves/github-pages-deploy-action@v4.4.3
+      #   with:
+      #     branch: gh-pages
+      #     folder: ~/output
+      #     single-commit: true

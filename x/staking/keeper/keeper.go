@@ -35,23 +35,23 @@ type Keeper struct {
 	consensusAddressCodec addresscodec.Codec
 
 	Schema                        collections.Schema
-	HistoricalInfo                collections.Map[uint64, types.HistoricalInfo]                             // key: Height | value: HistoricalIndo
-	LastTotalPower                collections.Item[math.Int]                                                // value: LastTotalPower
-	ValidatorUpdates              collections.Item[types.ValidatorUpdates]                                  // value: ValidatorUpdates
-	DelegationsByValidator        collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte] // key: valAddr+delAddr | value: none used (index key for delegations by validator index)
+	HistoricalInfo                collections.Map[uint64, types.HistoricalInfo]                             // HistoricalInfo key: Height | value: HistoricalIndo
+	LastTotalPower                collections.Item[math.Int]                                                // LastTotalPower value: LastTotalPower
+	ValidatorUpdates              collections.Item[types.ValidatorUpdates]                                  // ValidatorUpdates value: ValidatorUpdates
+	DelegationsByValidator        collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte] // DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	UnbondingID                   collections.Sequence
-	ValidatorByConsensusAddress   collections.Map[sdk.ConsAddress, sdk.ValAddress]                                    // key: consAddr | value: valAddr
-	UnbondingType                 collections.Map[uint64, uint64]                                                     // key: unbondingID | value: index of UnbondingType
-	Redelegations                 collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]     // key: AccAddr+SrcValAddr+DstValAddr | value: Redelegation
-	Delegations                   collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation] // key: AccAddr+valAddr | value: Delegation
-	UnbondingIndex                collections.Map[uint64, []byte]                                                     // key:UnbondingID | value: ubdKey (ubdKey = [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr])
-	UnbondingQueue                collections.Map[time.Time, types.DVPairs]                                           // key: Timestamp | value: DVPairs [delAddr+valAddr]
-	Validators                    collections.Map[[]byte, types.Validator]                                            // key: valAddr | value: Validator
-	UnbondingDelegations          collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]        // key: delAddr+valAddr | value: UnbondingDelegation
-	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // key: DstValAddr+DelAccAddr+SrcValAddr | value: none used (index key for Redelegations stored by DstVal index)
-	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // key: SrcValAddr+DelAccAddr+DstValAddr |  value: none used (index key for Redelegations stored by SrcVal index)
-	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]                           // key: valAddr+delAddr | value: none used (index key for UnbondingDelegations stored by validator index)
-	LastValidatorPower            collections.Map[[]byte, []byte]                                                     // key: valAddr | value: power(gogotypes.Int64Value())
+	ValidatorByConsensusAddress   collections.Map[sdk.ConsAddress, sdk.ValAddress]                                    // ValidatorByConsensusAddress key: consAddr | value: valAddr
+	UnbondingType                 collections.Map[uint64, uint64]                                                     // UnbondingType key: unbondingID | value: index of UnbondingType
+	Redelegations                 collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]     // Redelegations key: AccAddr+SrcValAddr+DstValAddr | value: Redelegation
+	Delegations                   collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation] // Delegations key: AccAddr+valAddr | value: Delegation
+	UnbondingIndex                collections.Map[uint64, []byte]                                                     // UnbondingIndex key:UnbondingID | value: ubdKey (ubdKey = [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr])
+	UnbondingQueue                collections.Map[time.Time, types.DVPairs]                                           // UnbondingQueue key: Timestamp | value: DVPairs [delAddr+valAddr]
+	Validators                    collections.Map[[]byte, types.Validator]                                            // Validators key: valAddr | value: Validator
+	UnbondingDelegations          collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]        // UnbondingDelegations key: delAddr+valAddr | value: UnbondingDelegation
+	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // RedelegationsByValDst key: DstValAddr+DelAccAddr+SrcValAddr | value: none used (index key for Redelegations stored by DstVal index)
+	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // RedelegationsByValSrc key: SrcValAddr+DelAccAddr+DstValAddr |  value: none used (index key for Redelegations stored by SrcVal index)
+	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]                           // UnbondingDelegationByValIndex key: valAddr+delAddr | value: none used (index key for UnbondingDelegations stored by validator index)
+	LastValidatorPower            collections.Map[[]byte, []byte]                                                     // LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
 }
 
 // NewKeeper creates a new staking Keeper instance

@@ -29,8 +29,8 @@ type Keeper struct {
 	Schema                     collections.Schema
 	Params                     collections.Item[types.Params]
 	ValidatorSigningInfo       collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
-	AddrPubkeyRelation         collections.Map[[]byte, cryptotypes.PubKey]               // key: PubKey address | value: PubKey
-	ValidatorMissedBlockBitmap collections.Map[collections.Pair[[]byte, uint64], []byte] // key: ConsAddr | value:  key for a validator's missed block bitmap chunk
+	AddrPubkeyRelation         collections.Map[[]byte, cryptotypes.PubKey]               // AddrPubkeyRelation key: address | value: PubKey
+	ValidatorMissedBlockBitmap collections.Map[collections.Pair[[]byte, uint64], []byte] // ValidatorMissedBlockBitmap key: ConsAddr | value: byte key for a validator's missed block bitmap chunk
 }
 
 // NewKeeper creates a slashing keeper

@@ -25,11 +25,12 @@ type Keeper struct {
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority            string
-	Schema               collections.Schema
-	Params               collections.Item[types.Params]
-	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
-	AddrPubkeyRelation   collections.Map[[]byte, cryptotypes.PubKey]
+	authority                  string
+	Schema                     collections.Schema
+	Params                     collections.Item[types.Params]
+	ValidatorSigningInfo       collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
+	AddrPubkeyRelation         collections.Map[[]byte, cryptotypes.PubKey]
+	ValidatorMissedBlockBitmap collections.Map[collections.Pair[[]byte, uint64], []byte]
 }
 
 // NewKeeper creates a slashing keeper
@@ -55,6 +56,13 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeServi
 			"addr_pubkey_relation",
 			sdk.LengthPrefixedBytesKey, // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 			codec.CollInterfaceValue[cryptotypes.PubKey](cdc),
+		),
+		ValidatorMissedBlockBitmap: collections.NewMap(
+			sb,
+			types.ValidatorMissedBlockBitmapKeyPrefix,
+			"validator_missed_block_bitmap",
+			collections.PairKeyCodec(sdk.LengthPrefixedBytesKey, collections.Uint64Key),
+			collections.BytesValue,
 		),
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -174,6 +175,13 @@ func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(append(unbondingDelegationKey, addresstypes.MustLengthPrefix(delAddr)...), addresstypes.MustLengthPrefix(valAddr)...)
 }
 
+// getUBDByValIndexKey creates the index-key for an unbonding delegation, stored by validator-index
+// VALUE: none (key rearrangement used)
+func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	unbondingDelegationByValIndexKey := []byte{0x33}
+	return append(append(unbondingDelegationByValIndexKey, addresstypes.MustLengthPrefix(valAddr)...), addresstypes.MustLengthPrefix(delAddr)...)
+}
+
 // getUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
 func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
@@ -186,6 +194,47 @@ func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	validatorsKey := []byte{0x21}
 	return append(validatorsKey, addresstypes.MustLengthPrefix(operatorAddr)...)
+}
+
+// getLastValidatorPowerKey creates the bonded validator index key for an operator address
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	lastValidatorPowerKey := []byte{0x11}
+	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
+}
+
+func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
+	s.SetupTest()
+
+	_, valAddrs := createValAddrs(100)
+
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
+			s.Require().NoError(err)
+
+			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+		},
+		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
+			s.Require().NoError(err)
+
+			err = s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
+			s.Require().NoError(err)
+		},
+		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+	)
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
@@ -275,7 +324,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 			}
 			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
 			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
-			s.ctx.KVStore(s.key).Set(stakingtypes.GetUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+			s.ctx.KVStore(s.key).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
 		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
 	)

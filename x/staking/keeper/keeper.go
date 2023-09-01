@@ -12,6 +12,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -51,7 +53,7 @@ type Keeper struct {
 	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
-	LastValidatorPower            collections.Map[[]byte, []byte]
+	LastValidatorPower            collections.Map[[]byte, gogotypes.Int64Value]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -147,7 +149,8 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, collections.BytesValue), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+		// key format is: 17 | lengthPrefixedBytes(valAddr) | power
+		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, codec.CollValue[gogotypes.Int64Value](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
 		RedelegationsByValDst: collections.NewMap(
 			sb, types.RedelegationByValDstIndexKey,

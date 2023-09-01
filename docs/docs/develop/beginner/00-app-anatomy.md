@@ -147,7 +147,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding
 
 ## Modules
 
-[Modules](../../build/building-modules/01-intro.md) are the heart and soul of Cosmos SDK applications. They can be considered as state-machines nested within the state-machine. When a transaction is relayed from the underlying CometBFT engine via the ABCI to the application, it is routed by [`baseapp`](../advanced-concepts/00-baseapp.md) to the appropriate module in order to be processed. This paradigm enables developers to easily build complex state-machines, as most of the modules they need often already exist. **For developers, most of the work involved in building a Cosmos SDK application revolves around building custom modules required by their application that do not exist yet, and integrating them with modules that do already exist into one coherent application**. In the application directory, the standard practice is to store modules in the `x/` folder (not to be confused with the Cosmos SDK's `x/` folder, which contains already-built modules).
+[Modules](../../build/building-modules/01-intro.md) are the heart and soul of Cosmos SDK applications. They can be considered as state-machines nested within the state-machine. When a transaction is relayed from the underlying CometBFT engine via the ABCI to the application, it is routed by [`baseapp`](../advanced/00-baseapp.md) to the appropriate module in order to be processed. This paradigm enables developers to easily build complex state-machines, as most of the modules they need often already exist. **For developers, most of the work involved in building a Cosmos SDK application revolves around building custom modules required by their application that do not exist yet, and integrating them with modules that do already exist into one coherent application**. In the application directory, the standard practice is to store modules in the `x/` folder (not to be confused with the Cosmos SDK's `x/` folder, which contains already-built modules).
 
 ### Application Module Interface
 
@@ -159,7 +159,7 @@ Modules must implement [interfaces](../../build/building-modules/01-module-manag
 
 Each application module defines two [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services): one `Msg` service to handle messages, and one gRPC `Query` service to handle queries. If we consider the module as a state-machine, then a `Msg` service is a set of state transition RPC methods.
 Each Protobuf `Msg` service method is 1:1 related to a Protobuf request type, which must implement `sdk.Msg` interface.
-Note that `sdk.Msg`s are bundled in [transactions](../advanced-concepts/01-transactions.md), and each transaction contains one or multiple messages.
+Note that `sdk.Msg`s are bundled in [transactions](../advanced/01-transactions.md), and each transaction contains one or multiple messages.
 
 When a valid block of transactions is received by the full-node, CometBFT relays each one to the application via [`DeliverTx`](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#specifics-of-responsedelivertx). Then, the application handles the transaction:
 
@@ -192,7 +192,7 @@ Finally, each module should also implement the `RegisterServices` method as part
 
 ### Keeper
 
-[`Keepers`](../../build/building-modules/06-keeper.md) are the gatekeepers of their module's store(s). To read or write in a module's store, it is mandatory to go through one of its `keeper`'s methods. This is ensured by the [object-capabilities](../advanced-concepts/10-ocap.md) model of the Cosmos SDK. Only objects that hold the key to a store can access it, and only the module's `keeper` should hold the key(s) to the module's store(s).
+[`Keepers`](../../build/building-modules/06-keeper.md) are the gatekeepers of their module's store(s). To read or write in a module's store, it is mandatory to go through one of its `keeper`'s methods. This is ensured by the [object-capabilities](../advanced/10-ocap.md) model of the Cosmos SDK. Only objects that hold the key to a store can access it, and only the module's `keeper` should hold the key(s) to the module's store(s).
 
 `Keepers` are generally defined in a file called `keeper.go`. It contains the `keeper`'s type definition and methods.
 
@@ -213,7 +213,7 @@ Each module defines command-line commands, gRPC services, and REST routes to be 
 Generally, the [commands related to a module](../../build/building-modules/09-module-interfaces.md#cli) are defined in a folder called `client/cli` in the module's folder. The CLI divides commands into two categories, transactions and queries, defined in `client/cli/tx.go` and `client/cli/query.go`, respectively. Both commands are built on top of the [Cobra Library](https://github.com/spf13/cobra):
 
 * Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The Cosmos SDK handles signing and the addition of other transaction metadata.
-* Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../advanced-concepts/00-baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
+* Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../advanced/00-baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
 
 #### gRPC
 
@@ -236,7 +236,7 @@ The Cosmos SDK also provides a development endpoint to generate [Swagger](https:
 
 [Interfaces](#command-line-grpc-services-and-rest-interfaces) let end-users interact with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block.
 
-The main interface is the [Command-Line Interface](../advanced-concepts/07-cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and is defined in a file called `appd/main.go`. The file contains the following:
+The main interface is the [Command-Line Interface](../advanced/07-cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and is defined in a file called `appd/main.go`. The file contains the following:
 
 * **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys`, and `config`, query commands, tx commands, and `rest-server`.
 * **Query commands**, which are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.

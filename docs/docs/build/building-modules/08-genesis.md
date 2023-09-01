@@ -17,7 +17,7 @@ Modules generally handle a subset of the state and, as such, they need to define
 
 ## Type Definition
 
-The subset of the genesis state defined from a given module is generally defined in a `genesis.proto` file ([more info](../../develop/advanced-concepts/05-encoding.md#gogoproto) on how to define protobuf messages). The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process.
+The subset of the genesis state defined from a given module is generally defined in a `genesis.proto` file ([more info](../../develop/advanced/05-encoding.md#gogoproto) on how to define protobuf messages). The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process.
 
 See an example of `GenesisState` protobuf message definition from the `auth` module:
 
@@ -49,7 +49,7 @@ Other than the methods related directly to `GenesisState`, module developers are
 
 ### `InitGenesis`
 
-The `InitGenesis` method is executed during [`InitChain`](../../develop/advanced-concepts/00-baseapp.md#initchain) when the application is first started. Given a `GenesisState`, it initializes the subset of the state managed by the module by using the module's [`keeper`](./06-keeper.md) setter function on each parameter within the `GenesisState`.
+The `InitGenesis` method is executed during [`InitChain`](../../develop/advanced/00-baseapp.md#initchain) when the application is first started. Given a `GenesisState`, it initializes the subset of the state managed by the module by using the module's [`keeper`](./06-keeper.md) setter function on each parameter within the `GenesisState`.
 
 The [module manager](./01-module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules in order. This order is set by the application developer via the manager's `SetOrderGenesisMethod`, which is called in the [application's constructor function](../../develop/beginner/00-app-anatomy.md#constructor-function).
 

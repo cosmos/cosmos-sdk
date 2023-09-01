@@ -127,7 +127,7 @@ the consensus engine accepts only transactions in the form of raw bytes.
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L91-L95
 ```
 
-A standard implementation of both these objects can be found in the [`auth/tx` module](../../integrate/modules/auth/2-txREADME.md):
+A standard implementation of both these objects can be found in the [`auth/tx` module](../../integrate/modules/auth/2-tx.md):
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/decoder.go

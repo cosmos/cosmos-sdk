@@ -343,9 +343,7 @@ func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddre
 
 // SetLastValidatorPower sets the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddress, power int64) error {
-	var intV gogotypes.Int64Value
-	intV.Value = power
-	return k.LastValidatorPower.Set(ctx, operator, intV)
+	return k.LastValidatorPower.Set(ctx, operator, gogotypes.Int64Value{Value: power})
 }
 
 // DeleteLastValidatorPower deletes the last validator power.

@@ -112,31 +112,31 @@ func (m *MockProposalTxVerifier) EXPECT() *MockProposalTxVerifierMockRecorder {
 }
 
 // PrepareProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(arg0 types.Tx) ([]byte, error) {
+func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", arg0)
+	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", tx)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PrepareProposalVerifyTx indicates an expected call of PrepareProposalVerifyTx.
-func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(arg0 interface{}) *gomock.Call {
+func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).PrepareProposalVerifyTx), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).PrepareProposalVerifyTx), tx)
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(arg0 []byte) (types.Tx, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", arg0)
+	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
 	ret0, _ := ret[0].(types.Tx)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ProcessProposalVerifyTx indicates an expected call of ProcessProposalVerifyTx.
-func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(arg0 interface{}) *gomock.Call {
+func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(txBz interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), txBz)
 }

@@ -49,7 +49,8 @@ func TestStreamingConfig(t *testing.T) {
 
 	testDir := t.TempDir()
 	cfgFile := filepath.Join(testDir, "app.toml")
-	WriteConfigFile(cfgFile, &cfg)
+	err := WriteConfigFile(cfgFile, &cfg)
+	require.NoError(t, err)
 
 	cfgFileBz, err := os.ReadFile(cfgFile)
 	require.NoError(t, err, "reading %s", cfgFile)
@@ -100,7 +101,8 @@ func TestParseStreaming(t *testing.T) {
 func TestReadConfig(t *testing.T) {
 	cfg := DefaultConfig()
 	tmpFile := filepath.Join(t.TempDir(), "config")
-	WriteConfigFile(tmpFile, cfg)
+	err := WriteConfigFile(tmpFile, cfg)
+	require.NoError(t, err)
 
 	v := viper.New()
 	otherCfg, err := GetConfig(v)
@@ -117,13 +119,14 @@ func TestIndexEventsWriteRead(t *testing.T) {
 	conf := DefaultConfig()
 	conf.IndexEvents = expected
 
-	WriteConfigFile(confFile, conf)
+	err := WriteConfigFile(confFile, conf)
+	require.NoError(t, err)
 
 	// read the file into Viper
 	vpr := viper.New()
 	vpr.SetConfigFile(confFile)
 
-	err := vpr.ReadInConfig()
+	err = vpr.ReadInConfig()
 	require.NoError(t, err, "reading config file into viper")
 
 	// Check that the raw viper value is correct.
@@ -168,7 +171,8 @@ func TestGlobalLabelsWriteRead(t *testing.T) {
 	confFile := filepath.Join(t.TempDir(), "app.toml")
 	conf := DefaultConfig()
 	conf.Telemetry.GlobalLabels = expected
-	WriteConfigFile(confFile, conf)
+	err := WriteConfigFile(confFile, conf)
+	require.NoError(t, err)
 
 	// Read that file into viper.
 	vpr := viper.New()
@@ -197,7 +201,7 @@ func TestSetConfigTemplate(t *testing.T) {
 	// Set the template to the default one.
 	initTmpl := configTemplate
 	require.NotPanics(t, func() {
-		SetConfigTemplate(DefaultConfigTemplate)
+		_ = SetConfigTemplate(DefaultConfigTemplate)
 	}, "SetConfigTemplate")
 	setTmpl := configTemplate
 	require.NotSame(t, initTmpl, setTmpl, "configTemplate after set")

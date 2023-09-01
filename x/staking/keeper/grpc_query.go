@@ -172,7 +172,6 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
-	var ubds types.UnbondingDelegations
 
 	valAddr, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 	if err != nil {
@@ -180,21 +179,32 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
-	ubdStore := prefix.NewStore(store, srcValPrefix)
-	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key, value []byte) error {
-		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
+	keys, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.UnbondingDelegationByValIndex,
+		req.Pagination,
+		func(key collections.Pair[[]byte, []byte], value []byte) (collections.Pair[[]byte, []byte], error) {
+			return key, nil
+		},
+		query.WithCollectionPaginationPairPrefix[[]byte, []byte](valAddr),
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// loop over the collected keys and fetch unbonding delegations
+	var ubds []types.UnbondingDelegation
+	for _, key := range keys {
+		valAddr := key.K1()
+		delAddr := key.K2()
+		ubdKey := types.GetUBDKey(delAddr, valAddr)
+		storeValue := store.Get(ubdKey)
 
 		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		ubds = append(ubds, ubd)
-		return nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryValidatorUnbondingDelegationsResponse{

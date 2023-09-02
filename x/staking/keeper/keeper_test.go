@@ -253,10 +253,10 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 		s.key,
 		100,
 		func(i int64) {
-			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
-			s.Require().NoError(err)
+			var intV gogotypes.Int64Value
+			intV.Value = i
 
-			err = s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], bz)
+			err = s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], intV)
 			s.Require().NoError(err)
 		},
 		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",

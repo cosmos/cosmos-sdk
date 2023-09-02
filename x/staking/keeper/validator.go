@@ -337,31 +337,13 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx context.Context) (corestore.Ite
 // GetLastValidatorPower loads the last validator power.
 // Returns zero if the operator was not a validator last block.
 func (k Keeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddress) (power int64, err error) {
-	bz, err := k.LastValidatorPower.Get(ctx, operator)
-	if err != nil {
-		return 0, err
-	}
-
-	if bz == nil {
-		return 0, nil
-	}
-
-	intV := gogotypes.Int64Value{}
-	err = k.cdc.Unmarshal(bz, &intV)
-	if err != nil {
-		return 0, err
-	}
-
-	return intV.GetValue(), nil
+	intV, err := k.LastValidatorPower.Get(ctx, operator)
+	return intV.GetValue(), err
 }
 
 // SetLastValidatorPower sets the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx context.Context, operator sdk.ValAddress, power int64) error {
-	bz, err := k.cdc.Marshal(&gogotypes.Int64Value{Value: power})
-	if err != nil {
-		return err
-	}
-	return k.LastValidatorPower.Set(ctx, operator, bz)
+	return k.LastValidatorPower.Set(ctx, operator, gogotypes.Int64Value{Value: power})
 }
 
 // DeleteLastValidatorPower deletes the last validator power.
@@ -371,15 +353,10 @@ func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAd
 
 // IterateLastValidatorPowers iterates over last validator powers.
 func (k Keeper) IterateLastValidatorPowers(ctx context.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) error {
-	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value gogotypes.Int64Value) (bool, error) {
 		addr := sdk.ValAddress(key)
-		intV := &gogotypes.Int64Value{}
 
-		if err := k.cdc.Unmarshal(value, intV); err != nil {
-			return true, err
-		}
-
-		if handler(addr, intV.GetValue()) {
+		if handler(addr, value.GetValue()) {
 			return true, nil
 		}
 		return false, nil
@@ -401,7 +378,7 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 	validators = make([]types.Validator, maxValidators)
 
 	i := 0
-	err = k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+	err = k.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
 		// sanity check
 		if i >= int(maxValidators) {
 			panic("more validators than maxValidators found")

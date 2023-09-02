@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	addresscodec "cosmossdk.io/core/address"
@@ -40,18 +42,18 @@ type Keeper struct {
 	ValidatorUpdates              collections.Item[types.ValidatorUpdates]                                  // ValidatorUpdates value: ValidatorUpdates
 	DelegationsByValidator        collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte] // DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	UnbondingID                   collections.Sequence
-	ValidatorByConsensusAddress   collections.Map[sdk.ConsAddress, sdk.ValAddress]                                    // ValidatorByConsensusAddress key: consAddr | value: valAddr
-	UnbondingType                 collections.Map[uint64, uint64]                                                     // UnbondingType key: unbondingID | value: index of UnbondingType
-	Redelegations                 collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]     // Redelegations key: AccAddr+SrcValAddr+DstValAddr | value: Redelegation
-	Delegations                   collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation] // Delegations key: AccAddr+valAddr | value: Delegation
-	UnbondingIndex                collections.Map[uint64, []byte]                                                     // UnbondingIndex key:UnbondingID | value: ubdKey (ubdKey = [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr])
-	UnbondingQueue                collections.Map[time.Time, types.DVPairs]                                           // UnbondingQueue key: Timestamp | value: DVPairs [delAddr+valAddr]
-	Validators                    collections.Map[[]byte, types.Validator]                                            // Validators key: valAddr | value: Validator
-	UnbondingDelegations          collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]        // UnbondingDelegations key: delAddr+valAddr | value: UnbondingDelegation
-	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // RedelegationsByValDst key: DstValAddr+DelAccAddr+SrcValAddr | value: none used (index key for Redelegations stored by DstVal index)
-	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]                 // RedelegationsByValSrc key: SrcValAddr+DelAccAddr+DstValAddr |  value: none used (index key for Redelegations stored by SrcVal index)
-	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]                           // UnbondingDelegationByValIndex key: valAddr+delAddr | value: none used (index key for UnbondingDelegations stored by validator index)
-	LastValidatorPower            collections.Map[[]byte, []byte]                                                     // LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
+	ValidatorByConsensusAddress   collections.Map[sdk.ConsAddress, sdk.ValAddress]
+	UnbondingType                 collections.Map[uint64, uint64]
+	Redelegations                 collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
+	Delegations                   collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
+	UnbondingIndex                collections.Map[uint64, []byte]
+	UnbondingQueue                collections.Map[time.Time, types.DVPairs]
+	Validators                    collections.Map[[]byte, types.Validator]
+	UnbondingDelegations          collections.Map[collections.Pair[[]byte, []byte], types.UnbondingDelegation]
+	RedelegationsByValDst         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	RedelegationsByValSrc         collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
+	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
+	LastValidatorPower            collections.Map[[]byte, gogotypes.Int64Value]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -147,7 +149,8 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, collections.BytesValue), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+		// key format is: 17 | lengthPrefixedBytes(valAddr) | power
+		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, codec.CollValue[gogotypes.Int64Value](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		// key format is: 54 | lengthPrefixedBytes(DstValAddr) | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr)
 		RedelegationsByValDst: collections.NewMap(
 			sb, types.RedelegationByValDstIndexKey,

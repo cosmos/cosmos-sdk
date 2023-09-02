@@ -463,13 +463,15 @@ type validatorsByAddr map[string][]byte
 func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
-	err := k.LastValidatorPower.Walk(ctx, nil, func(key, value []byte) (bool, error) {
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value gogotypes.Int64Value) (bool, error) {
 		valAddrStr, err := k.validatorAddressCodec.BytesToString(key)
 		if err != nil {
 			return true, err
 		}
 
-		last[valAddrStr] = value
+		intV := value.GetValue()
+		bz := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: intV})
+		last[valAddrStr] = bz
 		return false, nil
 	})
 	if err != nil {

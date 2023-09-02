@@ -25,9 +25,9 @@ type Keeper struct {
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority            string
-	Schema               collections.Schema
-	Params               collections.Item[types.Params]
+	authority string
+	Schema    collections.Schema
+	Params    collections.Item[types.Params]
 	// ValidatorSigningInfo key: ConsAddr | value: ValidatorSigningInfo
 	ValidatorSigningInfo collections.Map[sdk.ConsAddress, types.ValidatorSigningInfo]
 	// AddrPubkeyRelation key: address | value: PubKey

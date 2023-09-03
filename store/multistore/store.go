@@ -93,3 +93,19 @@ func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.Co
 
 	return sc.GetProof(version, key)
 }
+
+func (s *Store) GetSCStore(storeKey string) *commitment.Database {
+	panic("not implemented!")
+}
+
+func (s *Store) LoadVersion(version uint64) error {
+	panic("not implemented!")
+}
+
+func (s *Store) WorkingHash() []byte {
+	panic("not implemented!")
+}
+
+func (s *Store) Commit() ([]byte, error) {
+	panic("not implemented!")
+}

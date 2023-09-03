@@ -19,6 +19,7 @@ type MultiStore interface {
 	MountSCStore(storeKey string, sc *commitment.Database) error
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 	LoadVersion(version uint64) error
+	GetLatestVersion() (uint64, error)
 	WorkingHash() []byte
 	Commit() ([]byte, error)
 
@@ -66,17 +67,28 @@ func (s *Store) Close() (err error) {
 
 func (s *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
 	if _, ok := s.sc[storeKey]; ok {
-		return fmt.Errorf("store with key %s already mounted", storeKey)
+		return fmt.Errorf("SC store with key %s already mounted", storeKey)
 	}
 
 	s.sc[storeKey] = sc
 	return nil
 }
 
+func (s *Store) GetLatestVersion() (uint64, error) {
+	for _, sc := range s.sc {
+		v := sc.GetLatestVersion()
+		if v != s.version {
+			return 0, fmt.Errorf("latest version mismatch for SC store; %d != %d", v, s.version)
+		}
+	}
+
+	return s.version, nil
+}
+
 func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
 	sc, ok := s.sc[storeKey]
 	if !ok {
-		return nil, fmt.Errorf("store with key %s not mounted", storeKey)
+		return nil, fmt.Errorf("SC store with key %s not mounted", storeKey)
 	}
 
 	return sc.GetProof(version, key)

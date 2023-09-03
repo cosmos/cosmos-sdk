@@ -21,9 +21,10 @@ type MultiStore interface {
 	LoadVersion(version uint64) error
 	WorkingHash() []byte
 	Commit() ([]byte, error)
+
 	// TODO:
 	// - Tracing
-	// - Pruning
+	// - Branching
 	// - Queries
 
 	io.Closer
@@ -63,11 +64,20 @@ func (s *Store) Close() (err error) {
 	return err
 }
 
-func (ms *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
-	if _, ok := ms.sc[storeKey]; ok {
+func (s *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
+	if _, ok := s.sc[storeKey]; ok {
 		return fmt.Errorf("store with key %s already mounted", storeKey)
 	}
 
-	ms.sc[storeKey] = sc
+	s.sc[storeKey] = sc
 	return nil
+}
+
+func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
+	sc, ok := s.sc[storeKey]
+	if !ok {
+		return nil, fmt.Errorf("store with key %s not mounted", storeKey)
+	}
+
+	return sc.GetProof(version, key)
 }

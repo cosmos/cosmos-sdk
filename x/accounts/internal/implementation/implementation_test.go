@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -70,7 +69,7 @@ func TestImplementation(t *testing.T) {
 	// schemas
 	t.Run("decode init request - ok", func(t *testing.T) {
 		want := &wrapperspb.StringValue{Value: "test"}
-		req, err := protojson.Marshal(want)
+		req, err := proto.Marshal(want)
 		require.NoError(t, err)
 
 		got, err := impl.DecodeInitRequest(req)
@@ -84,7 +83,7 @@ func TestImplementation(t *testing.T) {
 		gotBytes, err := impl.EncodeInitResponse(want)
 		require.NoError(t, err)
 
-		wantBytes, err := protojson.Marshal(want)
+		wantBytes, err := proto.Marshal(want)
 		require.NoError(t, err)
 
 		require.Equal(t, wantBytes, gotBytes)

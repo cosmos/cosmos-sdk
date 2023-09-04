@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -31,7 +31,7 @@ func RegisterInitHandler[
 
 	router.decodeRequest = func(b []byte) (any, error) {
 		req := new(Req)
-		err := protojson.Unmarshal(b, ProtoReq(req))
+		err := proto.Unmarshal(b, ProtoReq(req))
 		return req, err
 	}
 
@@ -40,7 +40,7 @@ func RegisterInitHandler[
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, respName, resp)
 		}
-		return protojson.Marshal(protoResp)
+		return proto.Marshal(protoResp)
 	}
 }
 

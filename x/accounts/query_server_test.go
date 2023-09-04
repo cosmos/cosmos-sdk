@@ -13,40 +13,45 @@ import (
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 
-func TestMsgServer(t *testing.T) {
+func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
 
-	s := NewMsgServer(k)
+	ms := NewMsgServer(k)
+	qs := NewQueryServer(k)
 
 	// create
 	initMsg, err := proto.Marshal(&emptypb.Empty{})
 	require.NoError(t, err)
 
-	initResp, err := s.Create(ctx, &v1.MsgCreate{
+	initResp, err := ms.Create(ctx, &v1.MsgCreate{
 		Sender:      "sender",
 		AccountType: "test",
 		Message:     initMsg,
 	})
 	require.NoError(t, err)
-	require.NotNil(t, initResp)
 
-	// execute
-	executeMsg := &wrapperspb.StringValue{
-		Value: "10",
-	}
-	executeMsgAny, err := anypb.New(executeMsg)
+	// query
+	req := &wrapperspb.UInt64Value{Value: 10}
+	anypbReq, err := anypb.New(req)
 	require.NoError(t, err)
 
-	executeMsgBytes, err := proto.Marshal(executeMsgAny)
+	anypbReqBytes, err := proto.Marshal(anypbReq)
 	require.NoError(t, err)
 
-	execResp, err := s.Execute(ctx, &v1.MsgExecute{
-		Sender:  "sender",
+	queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
 		Target:  initResp.AccountAddress,
-		Message: executeMsgBytes,
+		Request: anypbReqBytes,
 	})
 	require.NoError(t, err)
-	require.NotNil(t, execResp)
+
+	respAnyPB := &anypb.Any{}
+	err = proto.Unmarshal(queryResp.Response, respAnyPB)
+	require.NoError(t, err)
+
+	resp, err := respAnyPB.UnmarshalNew()
+	require.NoError(t, err)
+
+	require.Equal(t, "10", resp.(*wrapperspb.StringValue).Value)
 }

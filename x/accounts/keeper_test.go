@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/core/address"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 

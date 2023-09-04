@@ -39,4 +39,8 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 	implementation.RegisterQueryHandler(builder, func(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
 		return &emptypb.Empty{}, nil
 	})
+
+	implementation.RegisterQueryHandler(builder, func(_ context.Context, req *wrapperspb.UInt64Value) (*wrapperspb.StringValue, error) {
+		return wrapperspb.String(strconv.FormatUint(req.Value, 10)), nil
+	})
 }

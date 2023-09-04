@@ -35,6 +35,8 @@ func NewImplementation(account Account) (Implementation, error) {
 		EncodeInitResponse:    ir.encodeResponse,
 		DecodeExecuteRequest:  er.makeRequestDecoder(),
 		EncodeExecuteResponse: er.makeResponseEncoder(),
+		DecodeQueryRequest:    qr.er.makeRequestDecoder(),
+		EncodeQueryResponse:   qr.er.makeResponseEncoder(),
 	}, nil
 }
 
@@ -59,4 +61,9 @@ type Implementation struct {
 	DecodeExecuteRequest func([]byte) (any, error)
 	// EncodeExecuteResponse encodes an execute response to be sent back from the message server.
 	EncodeExecuteResponse func(any) ([]byte, error)
+
+	// DecodeQueryRequest decodes a query request coming from the message server.
+	DecodeQueryRequest func([]byte) (any, error)
+	// EncodeQueryResponse encodes a query response to be sent back from the message server.
+	EncodeQueryResponse func(any) ([]byte, error)
 }

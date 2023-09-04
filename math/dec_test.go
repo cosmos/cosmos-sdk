@@ -753,3 +753,13 @@ func TestNegativePrecisionPanic(t *testing.T) {
 		math.LegacyNewDecWithPrec(10, -1)
 	})
 }
+
+func TestZeroValue(t *testing.T) {
+	a := math.LegacyDec{}
+	b := math.LegacyNewDec(0)
+
+	bza, _ := json.Marshal(a)
+	bzb, _ := json.Marshal(b)
+
+	require.Equal(t, bza, bzb)
+}

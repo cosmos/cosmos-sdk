@@ -789,9 +789,8 @@ func LegacySortableDecBytes(dec LegacyDec) []byte {
 var nilJSON []byte
 
 func init() {
-	empty := new(big.Int)
-	bz, _ := empty.MarshalText()
-	nilJSON, _ = json.Marshal(string(bz))
+	empty := LegacyNewDec(0)
+	nilJSON, _ = empty.MarshalJSON()
 }
 
 // MarshalJSON marshals the decimal

@@ -174,6 +174,7 @@ func NewKeeper(
 			codec.CollValue[types.UnbondingDelegation](cdc),
 		),
 		// key format is: 67 | length(timestamp Bytes) | timestamp | height
+		// Note: We use 3 keys here because we prefixed time bytes with its length previously and to retain state compatibility we remain to use the same
 		ValidatorQueue: collections.NewMap(
 			sb, types.ValidatorQueueKey,
 			"validator_queue",

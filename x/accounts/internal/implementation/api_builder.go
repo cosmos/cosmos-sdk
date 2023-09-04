@@ -107,11 +107,8 @@ func (r *ExecuteBuilder) makeRequestDecoder() func(requestBytes []byte) (any, er
 			return nil, err
 		}
 
-		// check if part of the msg set
-		if _, exists := r.handlers[string(msg.ProtoReflect().Descriptor().FullName())]; !exists {
-			return nil, fmt.Errorf("%w: no handler for message %s", errInvalidMessage, string(msg.ProtoReflect().Descriptor().FullName()))
-		}
-
+		// we do not check if it is part of a valid message set that an account can handle
+		// since the handler will do so.
 		return msg, nil
 	}
 }
@@ -122,16 +119,13 @@ func (r *ExecuteBuilder) makeResponseEncoder() func(executeResponse any) ([]byte
 		if !ok {
 			return nil, fmt.Errorf("%w: expected protoreflect.Message, got %T", errInvalidMessage, executeResponse)
 		}
-
-		// check if part of the msg set
-		if _, exists := r.handlers[string(executeResponsePB.ProtoReflect().Descriptor().FullName())]; !exists {
-			return nil, fmt.Errorf("%w: not part of message set %s", errInvalidMessage, string(executeResponsePB.ProtoReflect().Descriptor().FullName()))
-		}
 		anyPB, err := anypb.New(executeResponsePB)
 		if err != nil {
 			return nil, err
 		}
 
+		// we do not check if it is part of an account's valid response message set
+		// as make handler will never allow for an invalid response to be returned.
 		return proto.Marshal(anyPB)
 	}
 }

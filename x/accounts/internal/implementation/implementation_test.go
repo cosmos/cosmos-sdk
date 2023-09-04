@@ -106,16 +106,6 @@ func TestImplementation(t *testing.T) {
 		require.True(t, proto.Equal(wantReq, gotReq.(protoreflect.ProtoMessage)))
 	})
 
-	t.Run("decode execute request - invalid message", func(t *testing.T) {
-		req := wrapperspb.Double(1)
-		anyPBReq, err := anypb.New(req)
-		require.NoError(t, err)
-		reqBytes, err := proto.Marshal(anyPBReq)
-		require.NoError(t, err)
-		_, err = impl.DecodeExecuteRequest(reqBytes)
-		require.ErrorIs(t, err, errInvalidMessage)
-	})
-
 	t.Run("encode execute response - ok", func(t *testing.T) {
 		resp := &wrapperspb.StringValue{Value: "test"}
 		gotRespBytes, err := impl.EncodeExecuteResponse(resp)
@@ -131,11 +121,5 @@ func TestImplementation(t *testing.T) {
 		_, err := impl.EncodeExecuteResponse("test")
 		require.ErrorIs(t, err, errInvalidMessage)
 		require.ErrorContains(t, err, "expected protoreflect.Message")
-	})
-
-	t.Run("encode execute response - not part of the message set", func(t *testing.T) {
-		_, err := impl.EncodeExecuteResponse(&wrapperspb.DoubleValue{Value: 1})
-		require.ErrorIs(t, err, errInvalidMessage)
-		require.ErrorContains(t, err, "not part of message set")
 	})
 }

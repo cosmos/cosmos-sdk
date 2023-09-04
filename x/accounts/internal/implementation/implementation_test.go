@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -89,8 +90,52 @@ func TestImplementation(t *testing.T) {
 		require.Equal(t, wantBytes, gotBytes)
 	})
 
-	t.Run("decode init response - invalid message", func(t *testing.T) {
+	t.Run("encode init response - invalid message", func(t *testing.T) {
 		_, err := impl.EncodeInitResponse([]byte("invalid"))
 		require.ErrorIs(t, err, errInvalidMessage)
+	})
+
+	t.Run("decode execute request - ok", func(t *testing.T) {
+		wantReq := &wrapperspb.StringValue{Value: "test"}
+		anyBPReq, err := anypb.New(wantReq)
+		require.NoError(t, err)
+		reqBytes, err := proto.Marshal(anyBPReq)
+		require.NoError(t, err)
+		gotReq, err := impl.DecodeExecuteRequest(reqBytes)
+		require.NoError(t, err)
+		require.True(t, proto.Equal(wantReq, gotReq.(protoreflect.ProtoMessage)))
+	})
+
+	t.Run("decode execute request - invalid message", func(t *testing.T) {
+		req := wrapperspb.Double(1)
+		anyPBReq, err := anypb.New(req)
+		require.NoError(t, err)
+		reqBytes, err := proto.Marshal(anyPBReq)
+		require.NoError(t, err)
+		_, err = impl.DecodeExecuteRequest(reqBytes)
+		require.ErrorIs(t, err, errInvalidMessage)
+	})
+
+	t.Run("encode execute response - ok", func(t *testing.T) {
+		resp := &wrapperspb.StringValue{Value: "test"}
+		gotRespBytes, err := impl.EncodeExecuteResponse(resp)
+		require.NoError(t, err)
+		anyPBResp, err := anypb.New(resp)
+		require.NoError(t, err)
+		wantRespBytes, err := proto.Marshal(anyPBResp)
+		require.NoError(t, err)
+		require.Equal(t, wantRespBytes, gotRespBytes)
+	})
+
+	t.Run("encode execute response - not a protobuf message", func(t *testing.T) {
+		_, err := impl.EncodeExecuteResponse("test")
+		require.ErrorIs(t, err, errInvalidMessage)
+		require.ErrorContains(t, err, "expected protoreflect.Message")
+	})
+
+	t.Run("encode execute response - not part of the message set", func(t *testing.T) {
+		_, err := impl.EncodeExecuteResponse(&wrapperspb.DoubleValue{Value: 1})
+		require.ErrorIs(t, err, errInvalidMessage)
+		require.ErrorContains(t, err, "not part of message set")
 	})
 }

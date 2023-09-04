@@ -28,11 +28,13 @@ func NewImplementation(account Account) (Implementation, error) {
 		return Implementation{}, err
 	}
 	return Implementation{
-		Init:               initHandler,
-		Execute:            executeHandler,
-		Query:              queryHandler,
-		DecodeInitRequest:  ir.decodeRequest,
-		EncodeInitResponse: ir.encodeResponse,
+		Init:                  initHandler,
+		Execute:               executeHandler,
+		Query:                 queryHandler,
+		DecodeInitRequest:     ir.decodeRequest,
+		EncodeInitResponse:    ir.encodeResponse,
+		DecodeExecuteRequest:  er.makeRequestDecoder(),
+		EncodeExecuteResponse: er.makeResponseEncoder(),
 	}, nil
 }
 
@@ -52,4 +54,9 @@ type Implementation struct {
 	DecodeInitRequest func([]byte) (any, error)
 	// EncodeInitResponse encodes an init response to be sent back from the message server.
 	EncodeInitResponse func(any) ([]byte, error)
+
+	// DecodeExecuteRequest decodes an execute request coming from the message server.
+	DecodeExecuteRequest func([]byte) (any, error)
+	// EncodeExecuteResponse encodes an execute response to be sent back from the message server.
+	EncodeExecuteResponse func(any) ([]byte, error)
 }

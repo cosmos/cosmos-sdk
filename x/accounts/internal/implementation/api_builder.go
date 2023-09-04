@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -54,7 +56,6 @@ func NewExecuteBuilder() *ExecuteBuilder {
 type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
 	handlers map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)
-
 	// err is the error that occurred before building the handler function.
 	err error
 }
@@ -91,6 +92,48 @@ func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest
 		}
 		return handler(ctx, executeRequest)
 	}, nil
+}
+
+func (r *ExecuteBuilder) makeRequestDecoder() func(requestBytes []byte) (any, error) {
+	return func(requestBytes []byte) (any, error) {
+		anyPB := new(anypb.Any)
+		err := proto.Unmarshal(requestBytes, anyPB)
+		if err != nil {
+			return nil, err
+		}
+
+		msg, err := anyPB.UnmarshalNew()
+		if err != nil {
+			return nil, err
+		}
+
+		// check if part of the msg set
+		if _, exists := r.handlers[string(msg.ProtoReflect().Descriptor().FullName())]; !exists {
+			return nil, fmt.Errorf("%w: no handler for message %s", errInvalidMessage, string(msg.ProtoReflect().Descriptor().FullName()))
+		}
+
+		return msg, nil
+	}
+}
+
+func (r *ExecuteBuilder) makeResponseEncoder() func(executeResponse any) ([]byte, error) {
+	return func(executeResponse any) ([]byte, error) {
+		executeResponsePB, ok := executeResponse.(protoreflect.ProtoMessage)
+		if !ok {
+			return nil, fmt.Errorf("%w: expected protoreflect.Message, got %T", errInvalidMessage, executeResponse)
+		}
+
+		// check if part of the msg set
+		if _, exists := r.handlers[string(executeResponsePB.ProtoReflect().Descriptor().FullName())]; !exists {
+			return nil, fmt.Errorf("%w: not part of message set %s", errInvalidMessage, string(executeResponsePB.ProtoReflect().Descriptor().FullName()))
+		}
+		anyPB, err := anypb.New(executeResponsePB)
+		if err != nil {
+			return nil, err
+		}
+
+		return proto.Marshal(anyPB)
+	}
 }
 
 // NewQueryBuilder creates a new QueryBuilder instance.

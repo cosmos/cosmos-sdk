@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	goerrors "errors"
 	"fmt"
 	"math"
 	"sort"
@@ -1115,5 +1114,5 @@ func (app *BaseApp) Close() error {
 		}
 	}
 
-	return goerrors.Join(errs...)
+	return errors.Join(errs...)
 }

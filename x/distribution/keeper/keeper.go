@@ -29,17 +29,24 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                          collections.Schema
-	Params                          collections.Item[types.Params]
-	FeePool                         collections.Item[types.FeePool]
-	DelegatorsWithdrawAddress       collections.Map[sdk.AccAddress, sdk.AccAddress]
-	ValidatorCurrentRewards         collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
-	DelegatorStartingInfo           collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	Schema  collections.Schema
+	Params  collections.Item[types.Params]
+	FeePool collections.Item[types.FeePool]
+	// DelegatorsWithdrawAddress key: delAddr | value: withdrawAddr
+	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]
+	// ValidatorCurrentRewards key: valAddr | value: ValidatorCurrentRewards
+	ValidatorCurrentRewards collections.Map[sdk.ValAddress, types.ValidatorCurrentRewards]
+	// DelegatorStartingInfo key: valAddr+delAccAddr | value: DelegatorStartingInfo
+	DelegatorStartingInfo collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+	// ValidatorsAccumulatedCommission key: valAddr | value: ValidatorAccumulatedCommission
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
-	ValidatorOutstandingRewards     collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
-	ValidatorHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
-	PreviousProposer                collections.Item[sdk.ConsAddress]
-	ValidatorSlashEvents            collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent] // key is valAddr, height, period
+	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOustandingRewards
+	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
+	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
+	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
+	PreviousProposer           collections.Item[sdk.ConsAddress]
+	// ValidatorSlashEvents key: valAddr+height+period | value: ValidatorSlashEvent
+	ValidatorSlashEvents collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }

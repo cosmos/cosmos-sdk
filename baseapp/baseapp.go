@@ -167,10 +167,6 @@ type BaseApp struct {
 	// application's version string
 	version string
 
-	// application's protocol version that increments on every upgrade
-	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
-	appVersion uint64
-
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
 
@@ -249,8 +245,19 @@ func (app *BaseApp) Name() string {
 }
 
 // AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion() uint64 {
-	return app.appVersion
+func (app *BaseApp) AppVersion(ctx context.Context) (uint64, error) {
+	if app.paramStore == nil {
+		return 0, errors.New("app.paramStore is nil")
+	}
+
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get consensus params: %w", err)
+	}
+	if cp.Version == nil {
+		return 0, nil
+	}
+	return cp.Version.App, nil
 }
 
 // Version returns the application's version string.
@@ -522,9 +529,6 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 // StoreConsensusParams sets the consensus parameters to the BaseApp's param
 // store.
-//
-// NOTE: We're explicitly not storing the CometBFT app_version in the param store.
-// It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		return errors.New("cannot store consensus params with no params store set")
@@ -807,6 +811,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		if r := recover(); r != nil {
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
 			err, result = processRecovery(r, recoveryMW), nil
+			ctx.Logger().Error("panic recovered in runTx", "err", err)
 		}
 
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}

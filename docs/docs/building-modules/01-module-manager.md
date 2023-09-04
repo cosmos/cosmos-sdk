@@ -22,21 +22,20 @@ Application module interfaces exist to facilitate the composition of modules tog
 
 It is recommended to implement interfaces from the [Core API](https://docs.cosmos.network/main/architecture/adr-063-core-module-api) `appmodule` package. This makes modules less dependent on the SDK.
 For legacy reason modules can still implement interfaces from the SDK `module` package.
-
 :::
 
-There are 4 main application module interfaces:
+There are 2 main application module interfaces:
 
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
-* (legacy) [`module.AppModuleGenesis`](#appmodulegenesis) for inter-dependent genesis-related module functionalities.
-* (legacy) `module.GenesisOnlyAppModule`: Defines an `AppModule` that only has import/export functionality
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
-* (legacy) [`module.HasGenesisBasics`](#hasgenesisbasics): The legacy interface for stateless genesis methods.
-* [`appmodule.HasGenesis` / `module.HasGenesis`](#hasgenesis): The extension interface for stateful genesis methods.
+* (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
+* [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
+* [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
+* [`appmodule.HasGenesis` / `module.HasGenesis`](#appmodulehasgenesis): The extension interface for stateful genesis methods.
 * [`appmodule.HasBeginBlocker`](#hasbeginblocker): The extension interface that contains information about the `AppModule` and `BeginBlock`.
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
 * [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
@@ -81,11 +80,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go
 
 * `HasName` is an interface that has a method `Name()`. This method returns the name of the module as a `string`.
 
-### `HasGenesisBasics`
+### Genesis
 
-:::note
-Use `appmodule.HasGenesis` instead.
+:::tip
+For easily creating an `AppModule` that only has genesis functionalities, use `module.GenesisOnlyAppModule`.
 :::
+
+#### `module.HasGenesisBasics`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L76-L79
@@ -96,32 +97,31 @@ Let us go through the methods:
 * `DefaultGenesis(codec.JSONCodec)`: Returns a default [`GenesisState`](./08-genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing.
 * `ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./08-genesis.md#validategenesis) function defined by the module developer.
 
-### `AppModuleGenesis`
+#### `module.HasGenesis`
 
-:::note
-Use `appmodule.HasGenesis` instead.
+`HasGenesis` is an extension interface for allowing modules to implement genesis functionalities.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L184-L189
+```
+
+#### `module.HasABCIGenesis`
+
+`HasABCIGenesis` is an extension interface for allowing modules to implement genesis functionalities and returns validator set updates.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L191-L196
+```
+
+#### `appmodule.HasGenesis`
+
+:::warning
+`appmodule.HasGenesis` is experimental and should be considered unstable, it is recommended to not use this interface at this time.
 :::
 
-The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` and `HasGenesis` interfaces.
-
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L183-L186
+https://github.com/cosmos/cosmos-sdk/blob/6ce2505/core/appmodule/genesis.go#L8-L25
 ```
-
-It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods.
-
-### `HasGenesis`
-
-The `HasGenesis` interface is an extension interface of `HasGenesisBasics`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/genesis.go#L10-L24
-```
-
-Let us go through the two added methods:
-
-* `InitGenesis(context.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
-* `ExportGenesis(context.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
 
 ### `AppModule`
 

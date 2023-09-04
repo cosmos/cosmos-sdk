@@ -10,9 +10,10 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -22,7 +23,7 @@ import (
 func TestStoreMigration(t *testing.T) {
 	stakingKey := storetypes.NewKVStoreKey("staking")
 	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
+	ctx := sdktestutil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
@@ -45,7 +46,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"LastValidatorPowerKey",
 			v1.GetLastValidatorPowerKey(valAddr1),
-			types.GetLastValidatorPowerKey(valAddr1),
+			getLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
@@ -55,7 +56,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
@@ -75,12 +76,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingDelegationKey",
 			v1.GetUBDKey(addr4, valAddr1),
-			types.GetUBDKey(addr4, valAddr1),
+			unbondingKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
 			v1.GetUBDByValIndexKey(addr4, valAddr1),
-			types.GetUBDByValIndexKey(addr4, valAddr1),
+			getUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
@@ -100,7 +101,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingQueueKey",
 			v1.GetUnbondingDelegationTimeKey(now),
-			types.GetUnbondingDelegationTimeKey(now),
+			getUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
@@ -138,4 +139,25 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(types.LastValidatorPowerKey, sdkaddress.MustLengthPrefix(operator)...)
+}
+
+func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
+}
+
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.UnbondingQueueKey, bz...)
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
+}
+
+func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr)...), sdkaddress.MustLengthPrefix(valAddr)...)
 }

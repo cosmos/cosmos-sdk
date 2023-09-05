@@ -32,9 +32,10 @@ When a new version of CosmosSDK is published, we may want to adopt the changes i
 3. Push the new branch (i.e `dydx-fork-v0.47.0-alpha2`).
 4. Off of this new branch, create a new branch. (i.e `totoro/dydxCommits`)
 5. Cherry-pick each dydx-created commit from the current default branch, in order, on to the new `dydx-fork-$VERSION` branch (note: you may want to consider creating multiple PRs for this process if there are difficulties or merge conflicts). For example, `git cherry-pick <commit hash>`. You can verify the first commit by seeing the most recent commit sha for the `$VERSION` (i.e `v0.47.0-alpha2`) tag on the `cosmos/cosmos-sdk` repo, and taking the next commit from that sha.
-6. Open a PR to merge the second branch (`totoro/dydxCommits`) into the first (`dydx-fork-v0.47.0-alpha2`). Get approval, and merge. *DO NOT SQUASH AND MERGE. PLEASE REBASE AND MERGE*
-7. Update `dydxprotocol/v4` by following the steps in "Making Changes to the fork" above.
-8. Set `dydx-fork-$VERSION` as the [default branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) in this repository.
+6. The dYdX fork uses an optimized version of `runTx` for handling ABCI CheckTx messages. Ensure that the logic within `runCheckTxConcurrently` stays up to date with the `runTx` counterpart by diffing [baseapp.go#runTx](https://github.com/dydxprotocol/cosmos-sdk/blob/6477dcf5693422fef693432e29bd979709aa995d/baseapp/baseapp.go#L754) current version against the new version copying over relevant changes to [baseapp.go#runCheckTxConcurrently](https://github.com/dydxprotocol/cosmos-sdk/blob/6477dcf5693422fef693432e29bd979709aa995d/baseapp/baseapp.go#L619).
+7. Open a PR to merge the second branch (`totoro/dydxCommits`) into the first (`dydx-fork-v0.47.0-alpha2`). Get approval, and merge. *DO NOT SQUASH AND MERGE. PLEASE REBASE AND MERGE*
+8. Update `dydxprotocol/v4` by following the steps in "Making Changes to the fork" above.
+9. Set `dydx-fork-$VERSION` as the [default branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) in this repository.
 
 Note that the github CI workflows need permissioning. If they fail with a permissioning error, i.e `Resource not accessible through integration`, a Github admin will need to whitelist the workflow.
 

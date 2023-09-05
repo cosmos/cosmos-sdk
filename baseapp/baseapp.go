@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/cockroachdb/errors"
@@ -813,6 +814,145 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	return endblock, nil
 }
 
+// runCheckTxConcurrently processes a transaction with either the checkTx or recheckTx modes, encoded transaction
+// bytes, and the decoded transaction itself. All state transitions occur through
+// a cached Context depending on the mode provided.
+//
+// Note, gas execution info is always returned. A reference to a Result is
+// returned if the tx does not run out of gas and if all the messages are valid
+// and execute successfully. An error is returned otherwise.
+func (app *BaseApp) runCheckTxConcurrently(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+	if mode != execModeCheck && mode != execModeReCheck {
+		panic("runCheckTxConcurrently can only be invoked for CheckTx and RecheckTx.")
+	}
+
+	// We don't support the post handler specifically to avoid creating a branched MultiStore and since dYdX
+	// doesn't need support for it. Once support is necessary or when we are trying to upstream these changes
+	// we can guard creation of the MultiStore to only occur when the post handler is specified.
+	if app.postHandler != nil {
+		panic("CheckTx/RecheckTx does not support a post hander.")
+	}
+
+	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
+	// determined by the GasMeter. We need access to the context to get the gas
+	// meter, so we initialize upfront.
+	var gasWanted uint64
+
+	tx, err := app.txDecoder(txBytes)
+	if err != nil {
+		return sdk.GasInfo{}, nil, nil, err
+	}
+
+	msgs := tx.GetMsgs()
+	if err := validateBasicTxMsgs(msgs); err != nil {
+		return sdk.GasInfo{}, nil, nil, err
+	}
+
+	for _, msg := range msgs {
+		handler := app.msgServiceRouter.Handler(msg)
+		if handler == nil {
+			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
+		}
+	}
+
+	// Execute the critical section under lock.
+	//
+	// Note that careful consideration is needed in the block below to ensure that we don't redefine
+	// gInfo, result, anteEvents, priority, or err local variables. Also note that this function is
+	// embedded here to ensure that the lifetime of the mutex is limited to only this function allowing
+	// for the return values to be computed without holding the lock.
+	func() {
+		app.mtx.Lock()
+		defer app.mtx.Unlock()
+
+		ctx := app.getContextForTx(mode, txBytes)
+		ms := ctx.MultiStore()
+
+		defer func() {
+			if r := recover(); r != nil {
+				recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
+				err, result = processRecovery(r, recoveryMW), nil
+				ctx.Logger().Error("panic recovered in runTx", "err", err)
+			}
+
+			gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
+		}()
+
+		if app.anteHandler != nil {
+			var (
+				anteCtx sdk.Context
+				msCache storetypes.CacheMultiStore
+				newCtx  sdk.Context
+			)
+
+			// Branch context before AnteHandler call in case it aborts.
+			// This is required for both CheckTx and DeliverTx.
+			// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
+			//
+			// NOTE: Alternatively, we could require that AnteHandler ensures that
+			// writes do not happen if aborted/failed.  This may have some
+			// performance benefits, but it'll be more difficult to get right.
+			anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+			anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+			newCtx, err = app.anteHandler(anteCtx, tx, mode == execModeSimulate)
+
+			if !newCtx.IsZero() {
+				// At this point, newCtx.MultiStore() is a store branch, or something else
+				// replaced by the AnteHandler. We want the original multistore.
+				//
+				// Also, in the case of the tx aborting, we need to track gas consumed via
+				// the instantiated gas meter in the AnteHandler, so we update the context
+				// prior to returning.
+				ctx = newCtx.WithMultiStore(ms)
+			}
+
+			events := ctx.EventManager().Events()
+
+			// GasMeter expected to be set in AnteHandler
+			gasWanted = ctx.GasMeter().Limit()
+
+			if err != nil {
+				// Note that we set the outputs here and return from the critical function back into
+				// runCheckTxConcurrently which will check `err` and return immediately.
+				result = nil
+				anteEvents = nil
+				return
+			}
+
+			msCache.Write()
+			anteEvents = events.ToABCIEvents()
+		}
+
+		if mode == execModeCheck {
+			err = app.mempool.Insert(ctx, tx)
+			if err != nil {
+				result = nil
+				return
+			}
+		}
+	}()
+	if err != nil {
+		return gInfo, result, anteEvents, err
+	}
+
+	// Execute a stripped down version of runMsgs that is only used for CheckTx and RecheckTx
+	var msgResponses []*codectypes.Any
+	data, err := makeABCIData(msgResponses)
+	if err != nil {
+		return gInfo, result, anteEvents, errorsmod.Wrap(err, "failed to marshal tx data")
+	}
+
+	result = &sdk.Result{
+		Data: data,
+		// Use an empty logs slice and format it to maintain forward compatibility with changes done by the Cosmos SDK.
+		Log:          strings.TrimSpace(sdk.ABCIMessageLogs{}.String()),
+		Events:       sdk.EmptyEvents().ToABCIEvents(),
+		MsgResponses: msgResponses,
+	}
+
+	return gInfo, result, anteEvents, err
+}
+
 // runTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
@@ -821,6 +961,10 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
 func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+	if mode == execModeCheck || mode == execModeReCheck {
+		panic("Expected CheckTx and RecheckTx to be executed via runCheckTxConcurrently")
+	}
+
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.

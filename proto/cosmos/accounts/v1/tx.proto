@@ -9,7 +9,7 @@ service Msg {
   // 'Create' creates a new account in the chain.
   rpc Create(MsgCreate) returns (MsgCreateResponse);
 
-  // Execute executes a message to the target account.
+  // `Execute` executes a message to the target account.
   rpc Execute(MsgExecute) returns (MsgExecuteResponse);
 }
 

@@ -2,7 +2,8 @@
 /node_modules
 
 # Production
-/build
+build
+!docs/build
 
 # Generated files
 .docusaurus
@@ -21,8 +22,9 @@ docs/docs/core/17-autocli.md
 docs/docs/packages/01-depinject.md
 docs/docs/packages/02-collections.md
 docs/docs/packages/03-orm.md
-docs/run-node/04-rosetta.md
-docs/migrations/02-upgrading.md
+docs/user/run-node/04-rosetta.md
+docs/build/migrations/02-upgrading.md
+docs/develop/advanced/17-autocli.md
 
 # Misc
 .DS_Store

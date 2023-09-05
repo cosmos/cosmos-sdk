@@ -13,7 +13,7 @@ jobs:
     # Skip draft PRs and PRs starting with: revert, test, chore, ci, docs, style, build, refactor
     if: "!github.event.pull_request.draft && !contains(github.event.pull_request.title, 'revert') && !contains(github.event.pull_request.title, 'test') && !contains(github.event.pull_request.title, 'chore') && !contains(github.event.pull_request.title, 'ci') && !contains(github.event.pull_request.title, 'docs') && !contains(github.event.pull_request.title, 'style') && !contains(github.event.pull_request.title, 'build') && !contains(github.event.pull_request.title, 'refactor')"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: mskelton/changelog-reminder-action@v3
         with:
           message: "@${{ github.actor }} your pull request is missing a changelog!"

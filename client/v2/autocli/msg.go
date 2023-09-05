@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"context"
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -119,6 +120,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		initClientCtx = initClientCtx.WithViper("").
 			WithCmdContext(cmd.Context()).
 			WithAddressCodec(b.AddressCodec)
+			// WithKeyring(b.Keyring)
 
 		fmt.Printf("b.AddressCodec: %v, %v\n", b.AddressCodec, initClientCtx.AddressCodec)
 
@@ -131,6 +133,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 		fmt.Println("cmdP_before", cmd)
 
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &initClientCtx))
 		if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 			return err
 		}

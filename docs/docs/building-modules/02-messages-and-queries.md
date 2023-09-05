@@ -37,7 +37,7 @@ See an example of a `Msg` service definition from `x/bank` module:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
 ```
 
-#### `sdk.Msg` Interface
+### `sdk.Msg` Interface
 
 `sdk.Msg` is a alias of `proto.Message`. 
 

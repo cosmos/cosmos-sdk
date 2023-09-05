@@ -47,10 +47,10 @@ Some functions have been renamed to reflect the naming change.
 
 Following an exhaustive list:
 
-* `client.TendermintRPC` -> `client.CometRPC`
-* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
-* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
-* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+- `client.TendermintRPC` -> `client.CometRPC`
+- `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+- `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+- Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
 These commands and flags are still supported for backward compatibility.
@@ -59,9 +59,9 @@ For backward compatibility, the `**/tendermint/**` gRPC services are still suppo
 
 Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
-* The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
-* The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
-* Usage of an application genesis (see [genutil](#xgenutil)).
+- The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
+- The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
+- Usage of an application genesis (see [genutil](#xgenutil)).
 
 #### Enable Vote Extensions
 
@@ -77,8 +77,8 @@ In a new chain, this can be done in the `genesis.json` file.
 
 For existing chains this can be done in two ways:
 
-* During an upgrade the value is set in an upgrade handler.
-* A governance proposal that changes the consensus param **after a coordinated upgrade has taken place**.
+- During an upgrade the value is set in an upgrade handler.
+- A governance proposal that changes the consensus param **after a coordinated upgrade has taken place**.
 
 ### BaseApp
 
@@ -174,19 +174,19 @@ Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderE
 
 The following modules `NewKeeper` function now take a `KVStoreService` instead of a `StoreKey`:
 
-* `x/auth`
-* `x/authz`
-* `x/bank`
-* `x/consensus`
-* `x/crisis`
-* `x/distribution`
-* `x/evidence`
-* `x/feegrant`
-* `x/gov`
-* `x/mint`
-* `x/nft`
-* `x/slashing`
-* `x/upgrade`
+- `x/auth`
+- `x/authz`
+- `x/bank`
+- `x/consensus`
+- `x/crisis`
+- `x/distribution`
+- `x/evidence`
+- `x/feegrant`
+- `x/gov`
+- `x/mint`
+- `x/nft`
+- `x/slashing`
+- `x/upgrade`
 
 **Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
 
@@ -199,6 +199,27 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 + runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
+```
+
+#### BeginBlock and EndBlock
+
+These two methods have changed their signature, so it is important that any module implementing them are updated accordingly.
+
+```diff
+- BeginBlock(sdk.Context, abci.RequestBeginBlock)
++ BeginBlock(context.Context) error
+```
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) error
+```
+
+In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndblock` interface instead.
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 ```
 
 #### Logger
@@ -294,7 +315,7 @@ References to `types/store.go` which contained aliases for store types have been
 
 ##### Extract Store to a standalone module
 
-The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
 ##### Streaming
@@ -311,35 +332,35 @@ if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil 
 
 #### Client
 
-The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
+The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type. If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
 
 ### Modules
 
 #### `**all**`
 
-* [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
-The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
-It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+- [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
+  The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
+  It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+- Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
-* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+- The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
-* The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
+- The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 
-    * `x/authz`
-    * `x/bank`
-    * `x/mint`
-    * `x/crisis`
-    * `x/distribution`
-    * `x/evidence`
-    * `x/gov`
-    * `x/slashing`
-    * `x/upgrade`
+  - `x/authz`
+  - `x/bank`
+  - `x/mint`
+  - `x/crisis`
+  - `x/distribution`
+  - `x/evidence`
+  - `x/gov`
+  - `x/slashing`
+  - `x/upgrade`
 
 #### `x/auth`
 
-For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
+For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
 #### `x/capability`
 
@@ -350,8 +371,8 @@ Capability has been moved to [IBC Go](https://github.com/cosmos/ibc-go). IBC v8 
 The Cosmos SDK has migrated from a CometBFT genesis to a application managed genesis file.
 The genesis is now fully handled by `x/genutil`. This has no consequences for running chains:
 
-* Importing a CometBFT genesis is still supported.
-* Exporting a genesis now exports the genesis as an application genesis.
+- Importing a CometBFT genesis is still supported.
+- Exporting a genesis now exports the genesis as an application genesis.
 
 When needing to read an application genesis, use the following helpers from the `x/genutil/types` package:
 
@@ -384,14 +405,14 @@ By default, the new `ProposalCancelRatio` parameter is set to `0.5` during migra
 
 ##### Extract evidence to a standalone module
 
-The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/nft` instead of `github.com/cosmos/cosmos-sdk/x/nft` across the SDK.
 
 #### x/feegrant
@@ -405,7 +426,7 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 
 ##### Extract upgrade to a standalone module
 
-The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ### Tooling
@@ -414,7 +435,7 @@ All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead 
 
 Rosetta has moved to it's own [repo](https://github.com/cosmos/rosetta) and not imported by the Cosmos SDK SimApp by default.
 Any user who is interested on using the tool can connect it standalone to any node without the need to add it as part of the node binary.
-The rosetta tool also allows multi chain connections.  
+The rosetta tool also allows multi chain connections.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -424,10 +445,10 @@ The Cosmos SDK has migrated to CometBFT, as its default consensus engine.
 CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
 Due to the import changes, this is a breaking change. Chains need to remove **entirely** their imports of Tendermint Core in their codebase, from direct and indirects imports in their `go.mod`.
 
-* Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
-* Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
-* Verify `github.com/tendermint/tendermint` is not an indirect or direct dependency
-* Run `make proto-gen`
+- Replace `github.com/tendermint/tendermint` by `github.com/cometbft/cometbft`
+- Replace `github.com/tendermint/tm-db` by `github.com/cometbft/cometbft-db`
+- Verify `github.com/tendermint/tendermint` is not an indirect or direct dependency
+- Run `make proto-gen`
 
 Other than that, the migration should be seamless.
 On the SDK side, clean-up of variables, functions to reflect the new name will only happen from v0.50 (part 2).
@@ -486,8 +507,8 @@ reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSv
 
 The constructor, `NewSimApp` has been simplified:
 
-* `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding parameters are injected (when using app wiring), or directly created in the constructor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
-* `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were unnecessary given as arguments as they were already present in the `AppOptions`.
+- `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding parameters are injected (when using app wiring), or directly created in the constructor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
+- `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were unnecessary given as arguments as they were already present in the `AppOptions`.
 
 #### Encoding
 
@@ -504,8 +525,8 @@ That argument should be passed to the module maanager `ExportGenesisFromModules`
 The `GoLevelDB` version must pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7` in the application, following versions might cause unexpected behavior.
 This can be done adding `replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7` to the `go.mod` file.
 
-* [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
-* [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
+- [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+- [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 
@@ -613,8 +634,8 @@ The `gov` module has been updated to support a minimum proposal deposit at submi
 parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
 the necessary proportion of coins needed at the proposal submission time. The motivation for this change is to prevent proposal spamming.
 
-By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
-feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
+By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this
+feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be
 modified to set the new parameter to the desired value.
 
 ##### New `Proposal.Proposer` field
@@ -737,31 +758,29 @@ For the exhaustive list of API renaming, please refer to the [CHANGELOG](https:/
 
 Additionally, new packages have been introduced in order to further split the codebase. Aliases are available for a new API breaking migration, but it is encouraged to migrate to this new packages:
 
-* `errors` should replace `types/errors` when registering errors or wrapping SDK errors.
-* `math` contains the `Int` or `Uint` types that are used in the SDK.
-* `x/nft` an NFT base module.
-* `x/group` a group module allowing to create DAOs, multisig and policies. Greatly composes with `x/authz`.
+- `errors` should replace `types/errors` when registering errors or wrapping SDK errors.
+- `math` contains the `Int` or `Uint` types that are used in the SDK.
+- `x/nft` an NFT base module.
+- `x/group` a group module allowing to create DAOs, multisig and policies. Greatly composes with `x/authz`.
 
 #### `x/authz`
 
-* `authz.NewMsgGrant` `expiration` is now a pointer. When `nil` is used, then no expiration will be set (grant won't expire).
-* `authz.NewGrant` takes a new argument: block time, to correctly validate expire time.
+- `authz.NewMsgGrant` `expiration` is now a pointer. When `nil` is used, then no expiration will be set (grant won't expire).
+- `authz.NewGrant` takes a new argument: block time, to correctly validate expire time.
 
 ### Keyring
 
 The keyring has been refactored in v0.46.
 
-* The `Unsafe*` interfaces have been removed from the keyring package. Please use interface casting if you wish to access those unsafe functions.
-* The keys' implementation has been refactored to be serialized as proto.
-* `keyring.NewInMemory` and `keyring.New` takes now a `codec.Codec`.
-* Take `keyring.Record` instead of `Info` as first argument in:
-        * `MkConsKeyOutput`
-        * `MkValKeyOutput`
-        * `MkAccKeyOutput`
-* Rename:
-        * `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
-        * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively.
-        * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
+- The `Unsafe*` interfaces have been removed from the keyring package. Please use interface casting if you wish to access those unsafe functions.
+- The keys' implementation has been refactored to be serialized as proto.
+- `keyring.NewInMemory` and `keyring.New` takes now a `codec.Codec`.
+- Take `keyring.Record` instead of `Info` as first argument in:
+  _ `MkConsKeyOutput`
+  _ `MkValKeyOutput` \* `MkAccKeyOutput`
+- Rename:
+  _ `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
+  _ `NewMultiInfo`, `NewLedgerInfo` to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively. \* `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
 
 ### PostHandler
 
@@ -788,8 +807,8 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
-* The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
+- The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
+- The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
 
@@ -811,7 +830,7 @@ Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own 
 
 The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:8cb30a2c4de74dc9bd8d260b1e75e176 --output <some_folder>`.
 
-Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
+Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`:
 
 ```protobuf
 message MsgSetWithdrawAddress {

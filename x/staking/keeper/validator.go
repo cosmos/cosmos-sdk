@@ -403,9 +403,8 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 // GetUnbondingValidators returns a slice of mature validator addresses that
 // complete their unbonding at a given time and height.
 func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, endHeight int64) ([]string, error) {
-	timeBz := sdk.FormatTimeBytes(endTime)
-	timeBzL := len(timeBz)
-	valAddrs, err := k.ValidatorQueue.Get(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)))
+	timeSize := sdk.TimeKey.Size(endTime)
+	valAddrs, err := k.ValidatorQueue.Get(ctx, collections.Join3(uint64(timeSize), endTime, uint64(endHeight)))
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err

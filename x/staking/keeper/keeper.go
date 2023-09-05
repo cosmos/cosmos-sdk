@@ -68,8 +68,8 @@ type Keeper struct {
 	RedelegationsByValSrc collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	// UnbondingDelegationByValIndex key: valAddr+delAddr | value: none used (index key for UnbondingDelegations stored by validator index)
 	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
-	RedelegationQueue             collections.Map[time.Time, types.DVVTriplets]
-	LastValidatorPower            collections.Map[[]byte, gogotypes.Int64Value]
+	// RedelegationQueue key: Timestamp | value: DVVTriplets [delAddr+valSrcAddr+valDstAddr]
+	RedelegationQueue collections.Map[time.Time, types.DVVTriplets]
 	// LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
 	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
 }

@@ -24,6 +24,7 @@ type MultiStore interface {
 	MountSCStore(storeKey string, sc *commitment.Database) error
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 	LoadVersion(version uint64) error
+	LoadLatestVersion() error
 	GetLatestVersion() (uint64, error)
 	WorkingHash() []byte
 	Commit() ([]byte, error)
@@ -98,6 +99,14 @@ func (s *Store) LastCommitID() (v1types.CommitID, error) {
 			return v1types.CommitID{}, err
 		}
 
+		// ensure integrity of latest version across all SC stores
+		for sk, sc := range s.scStores {
+			scVersion := sc.GetLatestVersion()
+			if scVersion != lv {
+				return v1types.CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, lv)
+			}
+		}
+
 		return v1types.CommitID{
 			Version: int64(lv),
 		}, nil
@@ -129,6 +138,15 @@ func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.Co
 
 func (s *Store) GetSCStore(storeKey string) *commitment.Database {
 	panic("not implemented!")
+}
+
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	return s.loadVersion(lv, nil)
 }
 
 func (s *Store) LoadVersion(v uint64) (err error) {

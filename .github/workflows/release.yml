@@ -16,7 +16,7 @@ jobs:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v4
         with:

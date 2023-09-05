@@ -20,6 +20,10 @@ Each node exposes the following endpoints for users to interact with a node, eac
 The node also exposes some other endpoints, such as the CometBFT P2P endpoint, or the [Prometheus endpoint](https://docs.cometbft.com/v0.37/core/metrics), which are not directly related to the Cosmos SDK. Please refer to the [CometBFT documentation](https://docs.cometbft.com/v0.37/core/configuration) for more information about these endpoints.
 :::
 
+:::note
+All endpoints are defaulted to localhost and must be modified to be exposed to the public internet.
+:::
+
 ## gRPC Server
 
 In the Cosmos SDK, Protobuf is the main [encoding](./encoding) library. This brings a wide range of Protobuf-based tools that can be plugged into the Cosmos SDK. One such tool is [gRPC](https://grpc.io), a modern open-source high performance RPC framework that has decent client support in several languages.
@@ -71,7 +75,7 @@ For application developers, gRPC-gateway REST routes needs to be wired up to the
 
 A [Swagger](https://swagger.io/) (or OpenAPIv2) specification file is exposed under the `/swagger` route on the API server. Swagger is an open specification describing the API endpoints a server serves, including description, input arguments, return types and much more about each endpoint.
 
-Enabling the `/swagger` endpoint is configurable inside `~/.simapp/config/app.toml` via the `api.swagger` field, which is set to true by default.
+Enabling the `/swagger` endpoint is configurable inside `~/.simapp/config/app.toml` via the `api.swagger` field, which is set to false by default.
 
 For application developers, you may want to generate your own Swagger definitions based on your custom modules.
 The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protoc-swagger-gen.sh) is a good place to start.

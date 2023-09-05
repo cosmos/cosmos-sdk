@@ -13,7 +13,7 @@ jobs:
       pull-requests: write # For reading the PR and posting comment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: orijtech/consensuswarn@main
         with:
           roots: "github.com/cosmos/cosmos-sdk/baseapp.BaseApp.PrepareProposal,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.ProcessProposal,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.FinalizeBlock,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.Commit,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.VerifyVoteExtension"

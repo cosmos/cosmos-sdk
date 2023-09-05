@@ -107,7 +107,7 @@ func (r *ExecuteBuilder) makeRequestDecoder() func(requestBytes []byte) (any, er
 			return nil, err
 		}
 
-		// we do not check if it is part of a valid message set that an account can handle
+		// we do not check if it is part of a valid message set as an account can handle
 		// since the handler will do so.
 		return msg, nil
 	}

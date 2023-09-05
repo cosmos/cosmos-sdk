@@ -22,11 +22,13 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc               codec.BinaryCodec
-	storeService      store.KVStoreService
-	authKeeper        feegrant.AccountKeeper
-	Schema            collections.Schema
-	FeeAllowance      collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	authKeeper   feegrant.AccountKeeper
+	Schema       collections.Schema
+	// FeeAllowance key: grantee+granter | value: Grant
+	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
 	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
 }
 

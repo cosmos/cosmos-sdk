@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
@@ -55,7 +55,7 @@ jobs:
     if: ${{ success() }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status

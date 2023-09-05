@@ -47,16 +47,22 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                 collections.Schema
-	Constitution           collections.Item[string]
-	Params                 collections.Item[v1.Params]
-	Deposits               collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
-	Votes                  collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
-	ProposalID             collections.Sequence
-	Proposals              collections.Map[uint64, v1.Proposal]
-	ActiveProposalsQueue   collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
+	Schema       collections.Schema
+	Constitution collections.Item[string]
+	Params       collections.Item[v1.Params]
+	// Deposits key: proposalID+depositorAddr | value: Deposit
+	Deposits collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
+	// Votes key: proposalID+voterAddr | value: Vote
+	Votes      collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	ProposalID collections.Sequence
+	// Proposals key:proposalID | value: Proposal
+	Proposals collections.Map[uint64, v1.Proposal]
+	// ActiveProposalsQueue key: votingEndTime+proposalID | value: proposalID
+	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
+	// InactiveProposalsQueue key: depositEndTime+proposalID | value: proposalID
 	InactiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
-	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
+	// VotingPeriodProposals key: proposalID | value: proposalStatus (votingPeriod or not)
+	VotingPeriodProposals collections.Map[uint64, []byte] // TODO(tip): this could be a keyset or index.
 }
 
 // GetAuthority returns the x/gov module's authority.

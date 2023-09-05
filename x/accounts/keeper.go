@@ -63,8 +63,8 @@ type Keeper struct {
 	AccountsByType collections.Map[[]byte, string]
 }
 
-// Create creates a new account of the given type.
-func (k Keeper) Create(
+// Init creates a new account of the given type.
+func (k Keeper) Init(
 	ctx context.Context,
 	accountType string,
 	creator []byte,

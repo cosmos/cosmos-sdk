@@ -25,7 +25,7 @@ func TestQueryServer(t *testing.T) {
 	initMsg, err := proto.Marshal(&emptypb.Empty{})
 	require.NoError(t, err)
 
-	initResp, err := ms.Create(ctx, &v1.MsgCreate{
+	initResp, err := ms.Init(ctx, &v1.MsgInit{
 		Sender:      "sender",
 		AccountType: "test",
 		Message:     initMsg,

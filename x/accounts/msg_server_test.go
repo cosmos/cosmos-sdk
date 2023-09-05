@@ -24,7 +24,7 @@ func TestMsgServer(t *testing.T) {
 	initMsg, err := proto.Marshal(&emptypb.Empty{})
 	require.NoError(t, err)
 
-	initResp, err := s.Create(ctx, &v1.MsgCreate{
+	initResp, err := s.Init(ctx, &v1.MsgInit{
 		Sender:      "sender",
 		AccountType: "test",
 		Message:     initMsg,

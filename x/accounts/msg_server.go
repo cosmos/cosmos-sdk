@@ -16,7 +16,7 @@ type msgServer struct {
 	k Keeper
 }
 
-func (m msgServer) Create(ctx context.Context, request *v1.MsgCreate) (*v1.MsgCreateResponse, error) {
+func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitResponse, error) {
 	creator, err := m.k.addressCodec.StringToBytes(request.Sender)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (m msgServer) Create(ctx context.Context, request *v1.MsgCreate) (*v1.MsgCr
 	}
 
 	// run account creation logic
-	resp, accAddr, err := m.k.Create(ctx, request.AccountType, creator, msg)
+	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (m msgServer) Create(ctx context.Context, request *v1.MsgCreate) (*v1.MsgCr
 		return nil, err
 	}
 
-	return &v1.MsgCreateResponse{
+	return &v1.MsgInitResponse{
 		AccountAddress: accAddrString,
 		Response:       respBytes,
 	}, nil

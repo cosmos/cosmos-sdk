@@ -6,15 +6,15 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 
 // Msg defines the Msg service for the x/accounts module.
 service Msg {
-  // 'Create' creates a new account in the chain.
-  rpc Create(MsgCreate) returns (MsgCreateResponse);
+  // Init creates a new account in the chain.
+  rpc Init(MsgInit) returns (MsgInitResponse);
 
-  // `Execute` executes a message to the target account.
+  // Execute executes a message to the target account.
   rpc Execute(MsgExecute) returns (MsgExecuteResponse);
 }
 
-// MsgCreate defines the Create request type for the Msg/Create RPC method.
-message MsgCreate {
+// MsgInit defines the Create request type for the Msg/Create RPC method.
+message MsgInit {
   // sender is the address of the sender of this message.
   string sender = 1;
   // account_type is the type of the account to be created.
@@ -25,8 +25,8 @@ message MsgCreate {
   bytes message = 3;
 }
 
-// MsgCreateResponse defines the Create response type for the Msg/Create RPC method.
-message MsgCreateResponse {
+// MsgInitResponse defines the Create response type for the Msg/Create RPC method.
+message MsgInitResponse {
   // account_address is the address of the newly created account.
   string account_address = 1;
   // response is the response returned by the account implementation.

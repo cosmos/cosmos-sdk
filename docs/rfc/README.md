@@ -36,7 +36,6 @@ sections.
 ## Table of Contents
 
 <!-- - [RFC-NNN: Title](./rfc-NNN-title.md) -->
-<<<<<<< HEAD
-=======
+
 * [RFC-002: Zero Copy Encoding](./rfc-002-zero-copy-encoding.md)
->>>>>>> f198ea944 (refactor: docs path updates (#17459))
+

@@ -382,14 +382,14 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, address)
-	fmt.Println("acc", acc)
+	fmt.Println("acc", fmt.Sprintf("%x", address))
 	if acc == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", address)
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %x does not exist", address)
 	}
 
 	if macc, ok := acc.(sdk.ModuleAccountI); ok {
 		if !macc.HasPermission(authtypes.Burner) {
-			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %s does not have permissions to burn tokens", address)
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
 		}
 	}
 

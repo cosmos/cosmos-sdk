@@ -51,6 +51,7 @@ const (
 
 var (
 	holderAcc    = authtypes.NewEmptyModuleAccount(holder)
+	randomAcc    = authtypes.NewEmptyModuleAccount(randomPerm)
 	burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
 	minterAcc    = authtypes.NewEmptyModuleAccount(authtypes.Minter, authtypes.Minter)
 	mintAcc      = authtypes.NewEmptyModuleAccount(banktypes.MintModuleName, authtypes.Minter)
@@ -177,7 +178,6 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authty
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc).AnyTimes()
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 }
 
@@ -195,6 +195,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 }
 
 func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
+	fmt.Println(sender.GetAddress(), receiver)
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
 }
@@ -563,14 +564,14 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
-	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil)
+	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil).AnyTimes()
 	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no module account")
 
-	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(nil)
+	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(nil).AnyTimes()
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
-	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Error(keeper.BurnCoins(ctx, []byte{}, supplyAfterInflation), "random permission")
+	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(nil).AnyTimes()
+	require.Error(keeper.BurnCoins(ctx, randomAcc.GetAddress(), supplyAfterInflation), "random permission")
 
 	suite.mockBurnCoins(burnerAcc)
 	require.Error(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), supplyAfterInflation), "insufficient coins")
@@ -590,6 +591,7 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
+	authKeeper.EXPECT().GetAccount(ctx, multiPermAcc.GetAddress()).Return(nil).AnyTimes()
 	suite.mockSendCoins(ctx, minterAcc, multiPermAcc.GetAddress())
 	require.NoError(keeper.SendCoins(ctx, minterAcc.GetAddress(), multiPermAcc.GetAddress(), initCoins))
 

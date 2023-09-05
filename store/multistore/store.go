@@ -5,6 +5,7 @@ import (
 	"io"
 	"sort"
 
+	"cosmossdk.io/log"
 	v1types "cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -15,7 +16,9 @@ import (
 // MultiStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 //
-// TODO: Move this type to the Core package.
+// TODO:
+// - Move this type to the Core package.
+// - Remove reliance on store v1 types.
 type MultiStore interface {
 	GetSCStore(storeKey string) *commitment.Database
 	MountSCStore(storeKey string, sc *commitment.Database) error
@@ -35,11 +38,9 @@ type MultiStore interface {
 
 var _ MultiStore = &Store{}
 
-// TODO:
-// - Commit
-// - LoadVersion
-
 type Store struct {
+	logger log.Logger
+
 	// ss reflects the state storage backend
 	ss store.VersionedDatabase
 
@@ -53,14 +54,17 @@ type Store struct {
 	lastCommitInfo *v1types.CommitInfo
 }
 
-func New(ss store.VersionedDatabase) (MultiStore, error) {
+func New(logger log.Logger, ss store.VersionedDatabase) (MultiStore, error) {
 	return &Store{
+		logger:     logger.With("module", "multi_store"),
 		ss:         ss,
 		scStores:   make(map[string]*commitment.Database),
 		removalMap: make(map[string]struct{}),
 	}, nil
 }
 
+// Close closes the store and resets all internal fields. Note, Close() is NOT
+// idempotent and should only be called once.
 func (s *Store) Close() (err error) {
 	err = errors.Join(err, s.ss.Close())
 	for _, sc := range s.scStores {
@@ -75,6 +79,7 @@ func (s *Store) Close() (err error) {
 }
 
 func (s *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
+	s.logger.Debug("mounting store", "store_key", storeKey)
 	if _, ok := s.scStores[storeKey]; ok {
 		return fmt.Errorf("SC store with key %s already mounted", storeKey)
 	}
@@ -127,11 +132,20 @@ func (s *Store) GetSCStore(storeKey string) *commitment.Database {
 }
 
 func (s *Store) LoadVersion(v uint64) (err error) {
+	return s.loadVersion(v, nil)
+}
+
+func (s *Store) loadVersion(v uint64, upgrades *v1types.StoreUpgrades) (err error) {
+	s.logger.Debug("loading version", "version", v)
+
 	for sk, sc := range s.scStores {
 		if loadErr := sc.LoadVersion(v); loadErr != nil {
 			err = errors.Join(err, fmt.Errorf("failed to load version %d for %s: %w", v, sk, loadErr))
 		}
 	}
+
+	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
+	// for reference.
 
 	return err
 }

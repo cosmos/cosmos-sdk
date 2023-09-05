@@ -6,7 +6,7 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 
 // Msg defines the Msg service for the x/accounts module.
 service Msg {
-  // Create creates a new account in the chain.
+  // 'Create' creates a new account in the chain.
   rpc Create(MsgCreate) returns (MsgCreateResponse);
 
   // Execute executes a message to the target account.

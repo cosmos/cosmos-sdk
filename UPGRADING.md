@@ -249,7 +249,7 @@ References to `types/store.go` which contained aliases for store types have been
 
 ##### Extract Store to a standalone module
 
-The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
 ##### Streaming
@@ -266,17 +266,17 @@ if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil 
 
 #### Client
 
-The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
+The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type. If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
 
 ### Modules
 
 #### `**all**`
 
 * [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
-The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
-It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+  The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
+  It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
 * The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
@@ -292,9 +292,28 @@ It is now recommended to validate message directly in the message server. When t
     * `x/slashing`
     * `x/upgrade`
 
+* BeginBlock and EndBlock have changed their signature, so it is important that any module implementing them are updated accordingly.
+
+```diff
+- BeginBlock(sdk.Context, abci.RequestBeginBlock)
++ BeginBlock(context.Context) error
+```
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) error
+```
+
+In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndblock` interface instead.
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+```
+
 #### `x/auth`
 
-For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
+For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
 #### `x/capability`
 
@@ -339,14 +358,14 @@ By default, the new `ProposalCancelRatio` parameter is set to `0.5` during migra
 
 ##### Extract evidence to a standalone module
 
-The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/nft` instead of `github.com/cosmos/cosmos-sdk/x/nft` across the SDK.
 
 #### x/feegrant
@@ -360,7 +379,7 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 
 ##### Extract upgrade to a standalone module
 
-The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ### Tooling

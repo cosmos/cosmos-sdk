@@ -55,9 +55,9 @@ func TestMigrateJSON(t *testing.T) {
 	"proposals": [],
 	"starting_proposal_id": "0",
 	"tally_params": {
-		"quorum": "0",
-		"threshold": "0",
-		"veto_threshold": "0"
+		"quorum": "0.000000000000000000",
+		"threshold": "0.000000000000000000",
+		"veto_threshold": "0.000000000000000000"
 	},
 	"votes": [
 		{

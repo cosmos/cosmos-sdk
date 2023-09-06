@@ -140,7 +140,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 		return 0, err
 	}
 
-	return uint64(lastCommitID.Version), nil
+	return lastCommitID.Version, nil
 }
 
 func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
@@ -272,7 +272,7 @@ func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 		// scLastCommitID := sc.LastCommitID()
 
-		// var commitID v1types.CommitID
+		// var commitID CommitID
 		// if scLastCommitID.Version >= version {
 		// 	scLastCommitID.Version = version
 		// 	commitID = scLastCommitID

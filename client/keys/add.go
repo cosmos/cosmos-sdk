@@ -215,20 +215,24 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if err != nil {
 			return err
 		}
+
 		var pk cryptotypes.PubKey
 		// create an empty pubkey in order to get the algo TypeUrl.
 		tempAny, err := codectypes.NewAnyWithValue(algo.Generate()([]byte{}).PubKey())
 		if err != nil {
 			return err
 		}
+
 		jsonPub := fmt.Sprintf(`{"@type":"%s","key":"%s"}`, tempAny.TypeUrl, b64)
 		if err = ctx.Codec.UnmarshalInterfaceJSON([]byte(jsonPub), &pk); err != nil {
 			return err
 		}
+
 		k, err := kb.SaveOfflineKey(name, pk)
 		if err != nil {
 			return err
 		}
+
 		return printCreate(ctx, cmd, k, false, "", outputFormat)
 	}
 

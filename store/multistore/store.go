@@ -67,6 +67,9 @@ type Store struct {
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *CommitInfo
+
+	// memListeners reflect a mapping of store key to a memory listener, which is used to flush writes to SS
+	memListeners map[types.StoreKey]*types.MemoryListener
 }
 
 func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (MultiStore, error) {
@@ -96,6 +99,9 @@ func (s *Store) Close() (err error) {
 	return err
 }
 
+// MountSCStore mounts a state commitment (SC) store to the multi-store. It will
+// also create a new MemoryListener entry for the store key if one has not
+// already been created. An error is returned if the SC store is already mounted.
 func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) error {
 	s.logger.Debug("mounting store", "store_key", storeKey.String())
 	if _, ok := s.scStores[storeKey]; ok {
@@ -103,6 +109,13 @@ func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) e
 	}
 
 	s.scStores[storeKey] = sc
+
+	// Mount memory listener for the store key so we can flush accumulated writes
+	// to SS upon Commit.
+	if _, ok := s.memListeners[storeKey]; !ok {
+		s.memListeners[storeKey] = types.NewMemoryListener()
+	}
+
 	return nil
 }
 
@@ -111,6 +124,9 @@ func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) e
 // latest version set, which is based off of the SS view.
 func (s *Store) LastCommitID() (CommitID, error) {
 	if s.lastCommitInfo == nil {
+		// XXX/TODO: We cannot use SS to get the latest version when lastCommitInfo
+		// is nil if SS is flushed asynchronously. This is because the latest version
+		// in SS might not be the latest version in the SC stores.
 		latestVersion, err := s.ss.GetLatestVersion()
 		if err != nil {
 			return CommitID{}, err
@@ -212,6 +228,13 @@ func (s *Store) SetCommitHeader(h CommitHeader) {
 	s.commitHeader = h
 }
 
+// Commit commits all state changes to the underlying SS backend and all SC stores.
+// Note, writes to the SS backend are retrieved from the SC memory listeners and
+// are committed in a single batch synchronously. All writes to each SC are also
+// committed synchronously, however, they are NOT atomic. A byte slice is returned
+// reflecting the Merkle root hash of all committed SC stores.
+//
+// TODO: Explore flushing writes to SS asynchronously.
 func (s *Store) Commit() ([]byte, error) {
 	var previousHeight, version uint64
 	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
@@ -234,11 +257,11 @@ func (s *Store) Commit() ([]byte, error) {
 	}
 
 	// remove and close all SC stores marked for removal
-	if err := s.clearRemovalMap(); err != nil {
-		return nil, err
+	if err := s.clearSCRemovalMap(); err != nil {
+		return nil, fmt.Errorf("failed to clear SC removal map: %w", err)
 	}
 
-	// commit writes to SC stores
+	// commit writes to all SC stores
 	commitInfo, err := s.commitSCStores(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
@@ -248,11 +271,14 @@ func (s *Store) Commit() ([]byte, error) {
 	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 
 	// TODO: Commit writes to SS backend asynchronously.
+	if err := s.commitSS(version); err != nil {
+		return nil, fmt.Errorf("failed to commit SS: %w", err)
+	}
 
 	return s.lastCommitInfo.Hash(), nil
 }
 
-func (s *Store) clearRemovalMap() error {
+func (s *Store) clearSCRemovalMap() error {
 	for sk := range s.removalMap {
 		if sc, ok := s.scStores[sk]; ok {
 			if err := sc.Close(); err != nil {
@@ -265,6 +291,47 @@ func (s *Store) clearRemovalMap() error {
 
 	s.removalMap = make(map[types.StoreKey]struct{})
 	return nil
+}
+
+// PopStateCache returns all the accumulated writes from all SC stores. Note,
+// calling popStateCache destroys only the currently accumulated state in each
+// listener not the state in the store itself. This is a mutating and destructive
+// operation.
+func (rs *Store) popStateCache() []*types.StoreKVPair {
+	var writes []*types.StoreKVPair
+	for _, ml := range rs.memListeners {
+		if ml != nil {
+			writes = append(writes, ml.PopStateCache()...)
+		}
+	}
+
+	sort.SliceStable(writes, func(i, j int) bool {
+		return writes[i].StoreKey < writes[j].StoreKey
+	})
+
+	return writes
+}
+
+func (s *Store) commitSS(version uint64) error {
+	batch, err := s.ss.NewBatch(version)
+	if err != nil {
+		return err
+	}
+
+	writes := s.popStateCache()
+	for _, skv := range writes {
+		if skv.Delete {
+			if err := batch.Delete(skv.StoreKey, skv.Key); err != nil {
+				return err
+			}
+		} else {
+			if err := batch.Set(skv.StoreKey, skv.Key, skv.Value); err != nil {
+				return err
+			}
+		}
+	}
+
+	return batch.Write()
 }
 
 // commitSCStores commits each SC store individually and returns a CommitInfo

@@ -233,17 +233,9 @@ func (s *Store) Commit() ([]byte, error) {
 	}
 
 	// remove and close all SC stores marked for removal
-	for sk := range s.removalMap {
-		if sc, ok := s.scStores[sk]; ok {
-			if err := sc.Close(); err != nil {
-				return nil, err
-			}
-
-			delete(s.scStores, sk)
-		}
+	if err := s.clearRemovalMap(); err != nil {
+		return nil, err
 	}
-
-	s.removalMap = make(map[string]struct{})
 
 	// commit writes to SC stores
 	commitInfo, err := s.commitSCStores(version)
@@ -257,6 +249,21 @@ func (s *Store) Commit() ([]byte, error) {
 	// TODO: Commit writes to SS backend asynchronously.
 
 	return s.lastCommitInfo.Hash(), nil
+}
+
+func (s *Store) clearRemovalMap() error {
+	for sk := range s.removalMap {
+		if sc, ok := s.scStores[sk]; ok {
+			if err := sc.Close(); err != nil {
+				return err
+			}
+
+			delete(s.scStores, sk)
+		}
+	}
+
+	s.removalMap = make(map[string]struct{})
+	return nil
 }
 
 // commitSCStores commits each SC store individually and returns a CommitInfo

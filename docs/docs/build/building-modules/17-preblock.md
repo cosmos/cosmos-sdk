@@ -5,7 +5,7 @@ sidebar_position: 1
 # PreBlocker
 
 :::note Synopsis
-`PreBlocker` is optional method module developers can implement in their module. They will be triggered before [`BeginBlock`](../core/00-baseapp.md#beginblock).
+`PreBlocker` is optional method module developers can implement in their module. They will be triggered before [`BeginBlock`](../../develop/advanced/00-baseapp.md#beginblock).
 :::
 
 :::note Pre-requisite Readings

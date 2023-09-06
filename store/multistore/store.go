@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/types"
 	"github.com/cockroachdb/errors"
 	ics23 "github.com/cosmos/ics23/go"
 )
@@ -21,9 +22,9 @@ type (
 	// TODO:
 	// - Move relevant types to the 'core' package.
 	MultiStore interface {
-		GetSCStore(storeKey string) *commitment.Database
-		MountSCStore(storeKey string, sc *commitment.Database) error
-		GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+		GetSCStore(storeKey types.StoreKey) *commitment.Database
+		MountSCStore(storeKey types.StoreKey, sc *commitment.Database) error
+		GetProof(storeKey types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error)
 		LoadVersion(version uint64) error
 		LoadLatestVersion() error
 		GetLatestVersion() (uint64, error)
@@ -59,10 +60,10 @@ type Store struct {
 	ss store.VersionedDatabase
 
 	// scStores reflect a mapping of store key to state commitment backend (i.e. a backend per module)
-	scStores map[string]*commitment.Database
+	scStores map[types.StoreKey]*commitment.Database
 
 	// removalMap reflects module stores marked for removal
-	removalMap map[string]struct{}
+	removalMap map[types.StoreKey]struct{}
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *CommitInfo
@@ -73,8 +74,8 @@ func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (Mul
 		logger:         logger.With("module", "multi_store"),
 		initialVersion: initVersion,
 		ss:             ss,
-		scStores:       make(map[string]*commitment.Database),
-		removalMap:     make(map[string]struct{}),
+		scStores:       make(map[types.StoreKey]*commitment.Database),
+		removalMap:     make(map[types.StoreKey]struct{}),
 	}, nil
 }
 
@@ -95,8 +96,8 @@ func (s *Store) Close() (err error) {
 	return err
 }
 
-func (s *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
-	s.logger.Debug("mounting store", "store_key", storeKey)
+func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) error {
+	s.logger.Debug("mounting store", "store_key", storeKey.String())
 	if _, ok := s.scStores[storeKey]; ok {
 		return fmt.Errorf("SC store with key %s already mounted", storeKey)
 	}
@@ -143,7 +144,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
+func (s *Store) GetProof(storeKey types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error) {
 	sc, ok := s.scStores[storeKey]
 	if !ok {
 		return nil, fmt.Errorf("SC store with key %s not mounted", storeKey)
@@ -152,7 +153,7 @@ func (s *Store) GetProof(storeKey string, version uint64, key []byte) (*ics23.Co
 	return sc.GetProof(version, key)
 }
 
-func (s *Store) GetSCStore(storeKey string) *commitment.Database {
+func (s *Store) GetSCStore(storeKey types.StoreKey) *commitment.Database {
 	panic("not implemented!")
 }
 
@@ -192,7 +193,7 @@ func (s *Store) WorkingHash() []byte {
 	for sk, sc := range s.scStores {
 		if _, ok := s.removalMap[sk]; !ok {
 			storeInfos = append(storeInfos, StoreInfo{
-				Name: sk,
+				Name: sk.Name(),
 				CommitID: CommitID{
 					Hash: sc.WorkingHash(),
 				},
@@ -262,7 +263,7 @@ func (s *Store) clearRemovalMap() error {
 		}
 	}
 
-	s.removalMap = make(map[string]struct{})
+	s.removalMap = make(map[types.StoreKey]struct{})
 	return nil
 }
 
@@ -293,7 +294,7 @@ func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
 		}
 
 		storeInfos = append(storeInfos, StoreInfo{
-			Name: sk,
+			Name: sk.Name(),
 			CommitID: CommitID{
 				Version: version,
 				Hash:    commitBz,

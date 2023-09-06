@@ -195,7 +195,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	pubKeyBase64, _ := cmd.Flags().GetString(flagPubKeyBase64)
 	if pubKey != "" && pubKeyBase64 != "" {
-		return errors.New(fmt.Sprintf(`flags %s and %s cannot be used simultaneously`, FlagPublicKey, flagPubKeyBase64))
+		return fmt.Errorf(`flags %s and %s cannot be used simultaneously`, FlagPublicKey, flagPubKeyBase64)
 	}
 	if pubKey != "" {
 		var pk cryptotypes.PubKey

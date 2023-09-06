@@ -223,14 +223,21 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return err
 		}
 
-		jsonPub := fmt.Sprintf(`{"@type":"%s","key":"%s"}`, tempAny.TypeUrl, b64)
-		if err = ctx.Codec.UnmarshalInterfaceJSON([]byte(jsonPub), &pk); err != nil {
+		jsonPub, err := json.Marshal(struct {
+			Type string `json:"@type,omitempty"`
+			Key  string `json:"key,omitempty"`
+		}{tempAny.TypeUrl, string(b64)})
+		if err != nil {
+			return fmt.Errorf("failed to JSON marshal typeURL and base64 key: %w", err)
+		}
+
+		if err = ctx.Codec.UnmarshalInterfaceJSON(jsonPub, &pk); err != nil {
 			return err
 		}
 
 		k, err := kb.SaveOfflineKey(name, pk)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to save offline key: %w", err)
 		}
 
 		return printCreate(ctx, cmd, k, false, "", outputFormat)

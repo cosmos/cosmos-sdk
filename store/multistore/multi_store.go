@@ -190,7 +190,7 @@ func (s *Store) WorkingHash() []byte {
 	storeInfos := make([]StoreInfo, 0, len(s.scStores))
 
 	for sk, sc := range s.scStores {
-		if _, ok := s.removalMap[sk]; ok {
+		if _, ok := s.removalMap[sk]; !ok {
 			storeInfos = append(storeInfos, StoreInfo{
 				Name: sk,
 				CommitID: CommitID{

@@ -342,6 +342,7 @@ func initTestnetFiles(
 			return err
 		}
 
+		srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate)
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig)
 	}
 

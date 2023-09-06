@@ -10,69 +10,68 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
-
 // Msg defines the pool Msg service.
 service Msg {
-    option (cosmos.msg.v1.service) = true;
-  
-    // FundCommunityPool defines a method to allow an account to directly
-    // fund the community pool.
-    //
-    // Since: cosmos-sdk 0.50
-    rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
-  
-    // CommunityPoolSpend defines a governance operation for sending tokens from
-    // the community pool in the x/pool module to another account, which
-    // could be the governance module itself. The authority is defined in the
-    // keeper.
-    //
-    // Since: cosmos-sdk 0.50
-    rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
-  }
-  
-  // MsgFundCommunityPool allows an account to directly
+  option (cosmos.msg.v1.service) = true;
+
+  // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
-  message MsgFundCommunityPool {
-    option (cosmos.msg.v1.signer) = "depositor";
-    option (amino.name)           = "cosmos-sdk/pool/MsgFundCommunityPool";
-  
-    option (gogoproto.equal)           = false;
-    option (gogoproto.goproto_getters) = false;
-  
-    repeated cosmos.base.v1beta1.Coin amount = 1 [
-      (gogoproto.nullable)     = false,
-      (amino.dont_omitempty)   = true,
-      (amino.encoding)         = "legacy_coins",
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-    ];
-    string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  }
-  
-  // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
-  message MsgFundCommunityPoolResponse {}
-  
-  // MsgCommunityPoolSpend defines a message for sending tokens from the community
-  // pool to another account. This message is typically executed via a governance
-  // proposal with the governance module being the executing authority.
   //
   // Since: cosmos-sdk 0.50
-  message MsgCommunityPoolSpend {
-    option (cosmos.msg.v1.signer) = "authority";
-    option (amino.name)           = "cosmos-sdk/pool/MsgCommunityPoolSpend";
-  
-    // authority is the address that controls the module (defaults to x/gov unless overwritten).
-    string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-    string   recipient                       = 2;
-    repeated cosmos.base.v1beta1.Coin amount = 3 [
-      (gogoproto.nullable)     = false,
-      (amino.dont_omitempty)   = true,
-      (amino.encoding)         = "legacy_coins",
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-    ];
-  }
-  
-  // MsgCommunityPoolSpendResponse defines the response to executing a
-  // MsgCommunityPoolSpend message.
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+
+  // CommunityPoolSpend defines a governance operation for sending tokens from
+  // the community pool in the x/pool module to another account, which
+  // could be the governance module itself. The authority is defined in the
+  // keeper.
   //
-  // Since: cosmos-sdk 0.47
-  message MsgCommunityPoolSpendResponse {}
+  // Since: cosmos-sdk 0.50
+  rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
+}
+
+// MsgFundCommunityPool allows an account to directly
+// fund the community pool.
+message MsgFundCommunityPool {
+  option (cosmos.msg.v1.signer) = "depositor";
+  option (amino.name)           = "cosmos-sdk/pool/MsgFundCommunityPool";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
+message MsgFundCommunityPoolResponse {}
+
+// MsgCommunityPoolSpend defines a message for sending tokens from the community
+// pool to another account. This message is typically executed via a governance
+// proposal with the governance module being the executing authority.
+//
+// Since: cosmos-sdk 0.50
+message MsgCommunityPoolSpend {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/pool/MsgCommunityPoolSpend";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   recipient                       = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgCommunityPoolSpendResponse defines the response to executing a
+// MsgCommunityPoolSpend message.
+//
+// Since: cosmos-sdk 0.47
+message MsgCommunityPoolSpendResponse {}

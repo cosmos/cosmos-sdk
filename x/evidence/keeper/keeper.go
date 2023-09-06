@@ -32,7 +32,8 @@ type Keeper struct {
 
 	cometInfo comet.BlockInfoService
 
-	Schema    collections.Schema
+	Schema collections.Schema
+	// Evidences key: evidence hash bytes | value: Evidence
 	Evidences collections.Map[[]byte, exported.Evidence]
 }
 

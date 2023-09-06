@@ -49,7 +49,7 @@ type (
 	}
 )
 
-var _ MultiStore = &Store{}
+var _ MultiStore = (*Store)(nil)
 
 type Store struct {
 	logger         log.Logger
@@ -123,29 +123,27 @@ func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) e
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
 func (s *Store) LastCommitID() (CommitID, error) {
-	if s.lastCommitInfo == nil {
-		// XXX/TODO: We cannot use SS to get the latest version when lastCommitInfo
-		// is nil if SS is flushed asynchronously. This is because the latest version
-		// in SS might not be the latest version in the SC stores.
-		latestVersion, err := s.ss.GetLatestVersion()
-		if err != nil {
-			return CommitID{}, err
-		}
-
-		// ensure integrity of latest version across all SC stores
-		for sk, sc := range s.scStores {
-			scVersion := sc.GetLatestVersion()
-			if scVersion != latestVersion {
-				return CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
-			}
-		}
-
-		return CommitID{
-			Version: latestVersion,
-		}, nil
+	if s.lastCommitInfo != nil {
+		return s.lastCommitInfo.CommitID(), nil
 	}
 
-	return s.lastCommitInfo.CommitID(), nil
+	// XXX/TODO: We cannot use SS to get the latest version when lastCommitInfo
+	// is nil if SS is flushed asynchronously. This is because the latest version
+	// in SS might not be the latest version in the SC stores.
+	latestVersion, err := s.ss.GetLatestVersion()
+	if err != nil {
+		return CommitID{}, err
+	}
+
+	// ensure integrity of latest version across all SC stores
+	for sk, sc := range s.scStores {
+		scVersion := sc.GetLatestVersion()
+		if scVersion != latestVersion {
+			return CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
+		}
+	}
+
+	return CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal

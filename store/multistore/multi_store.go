@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	v1types "cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"github.com/cockroachdb/errors"
@@ -21,7 +20,6 @@ type (
 	//
 	// TODO:
 	// - Move relevant types to the 'core' package.
-	// - Remove reliance on store v1 types.
 	MultiStore interface {
 		GetSCStore(storeKey string) *commitment.Database
 		MountSCStore(storeKey string, sc *commitment.Database) error
@@ -34,9 +32,12 @@ type (
 		SetCommitHeader(h CommitHeader)
 
 		// TODO:
+		//
 		// - Tracing
 		// - Branching
 		// - Queries
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
 		io.Closer
 	}
@@ -64,13 +65,13 @@ type Store struct {
 	removalMap map[string]struct{}
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *v1types.CommitInfo
+	lastCommitInfo *CommitInfo
 }
 
-func New(logger log.Logger, initialVersion uint64, ss store.VersionedDatabase) (MultiStore, error) {
+func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (MultiStore, error) {
 	return &Store{
 		logger:         logger.With("module", "multi_store"),
-		initialVersion: initialVersion,
+		initialVersion: initVersion,
 		ss:             ss,
 		scStores:       make(map[string]*commitment.Database),
 		removalMap:     make(map[string]struct{}),
@@ -107,23 +108,23 @@ func (s *Store) MountSCStore(storeKey string, sc *commitment.Database) error {
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (v1types.CommitID, error) {
+func (s *Store) LastCommitID() (CommitID, error) {
 	if s.lastCommitInfo == nil {
-		lv, err := s.ss.GetLatestVersion()
+		latestVersion, err := s.ss.GetLatestVersion()
 		if err != nil {
-			return v1types.CommitID{}, err
+			return CommitID{}, err
 		}
 
 		// ensure integrity of latest version across all SC stores
 		for sk, sc := range s.scStores {
 			scVersion := sc.GetLatestVersion()
-			if scVersion != lv {
-				return v1types.CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, lv)
+			if scVersion != latestVersion {
+				return CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
 			}
 		}
 
-		return v1types.CommitID{
-			Version: int64(lv),
+		return CommitID{
+			Version: latestVersion,
 		}, nil
 	}
 
@@ -168,7 +169,7 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 	return s.loadVersion(v, nil)
 }
 
-func (s *Store) loadVersion(v uint64, upgrades *v1types.StoreUpgrades) (err error) {
+func (s *Store) loadVersion(v uint64, upgrades any) (err error) {
 	s.logger.Debug("loading version", "version", v)
 
 	for sk, sc := range s.scStores {
@@ -179,18 +180,20 @@ func (s *Store) loadVersion(v uint64, upgrades *v1types.StoreUpgrades) (err erro
 
 	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
 	// for reference.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
 	return err
 }
 
 func (s *Store) WorkingHash() []byte {
-	storeInfos := make([]v1types.StoreInfo, 0, len(s.scStores))
+	storeInfos := make([]StoreInfo, 0, len(s.scStores))
 
 	for sk, sc := range s.scStores {
 		if _, ok := s.removalMap[sk]; ok {
-			storeInfos = append(storeInfos, v1types.StoreInfo{
+			storeInfos = append(storeInfos, StoreInfo{
 				Name: sk,
-				CommitId: v1types.CommitID{
+				CommitID: CommitID{
 					Hash: sc.WorkingHash(),
 				},
 			})
@@ -201,7 +204,7 @@ func (s *Store) WorkingHash() []byte {
 		return storeInfos[i].Name < storeInfos[j].Name
 	})
 
-	return v1types.CommitInfo{StoreInfos: storeInfos}.Hash()
+	return CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
 func (s *Store) SetCommitHeader(h CommitHeader) {
@@ -221,7 +224,7 @@ func (s *Store) Commit() ([]byte, error) {
 		// 		increment the version from there.
 		// 2. There was no previous commit, and initial version was not set, in which
 		// 		case we start at version 1.
-		previousHeight = uint64(s.lastCommitInfo.GetVersion())
+		previousHeight = s.lastCommitInfo.GetVersion()
 		version = previousHeight + 1
 	}
 
@@ -243,7 +246,7 @@ func (s *Store) Commit() ([]byte, error) {
 	s.removalMap = make(map[string]struct{})
 
 	// commit writes to SC stores
-	commitInfo, err := s.commitSC(version)
+	commitInfo, err := s.commitSCStores(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
 	}
@@ -256,16 +259,17 @@ func (s *Store) Commit() ([]byte, error) {
 	return s.lastCommitInfo.Hash(), nil
 }
 
-// commitSC commits each SC store individually and returns a CommitInfo
+// commitSCStores commits each SC store individually and returns a CommitInfo
 // representing commitment of all the SC stores. Note, commitment is NOT atomic.
 // An error is returned if any SC store fails to commit.
-func (s *Store) commitSC(version uint64) (*v1types.CommitInfo, error) {
-	storeInfos := make([]v1types.StoreInfo, 0, len(s.scStores))
+func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
+	storeInfos := make([]StoreInfo, 0, len(s.scStores))
 
 	for sk, sc := range s.scStores {
 		// TODO: Handle and support SC store last CommitID to handle the case where
 		// a Commit is interrupted and a SC store could have a version that is ahead:
 		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 		// scLastCommitID := sc.LastCommitID()
 
 		// var commitID v1types.CommitID
@@ -281,10 +285,10 @@ func (s *Store) commitSC(version uint64) (*v1types.CommitInfo, error) {
 			return nil, fmt.Errorf("failed to commit SC store %s: %w", sk, err)
 		}
 
-		storeInfos = append(storeInfos, v1types.StoreInfo{
+		storeInfos = append(storeInfos, StoreInfo{
 			Name: sk,
-			CommitId: v1types.CommitID{
-				Version: int64(version),
+			CommitID: CommitID{
+				Version: version,
 				Hash:    commitBz,
 			},
 		})
@@ -294,8 +298,8 @@ func (s *Store) commitSC(version uint64) (*v1types.CommitInfo, error) {
 		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
 	})
 
-	return &v1types.CommitInfo{
-		Version:    int64(version),
+	return &CommitInfo{
+		Version:    version,
 		StoreInfos: storeInfos,
 	}, nil
 }

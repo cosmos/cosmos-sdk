@@ -276,11 +276,12 @@ func (s *Store) Commit() ([]byte, error) {
 	return s.lastCommitInfo.Hash(), nil
 }
 
-func (s *Store) clearSCRemovalMap() error {
+func (s *Store) clearSCRemovalMap() (err error) {
 	for sk := range s.removalMap {
-		if sc, ok := s.scStores[sk]; ok {
-			if err := sc.Close(); err != nil {
-				return err
+		sc, ok := s.scStores[sk]
+		if ok {
+			if ce := sc.Close(); ce != nil {
+				err = errors.Join(err, ce)
 			}
 
 			delete(s.scStores, sk)
@@ -288,7 +289,7 @@ func (s *Store) clearSCRemovalMap() error {
 	}
 
 	s.removalMap = make(map[types.StoreKey]struct{})
-	return nil
+	return err
 }
 
 // PopStateCache returns all the accumulated writes from all SC stores. Note,

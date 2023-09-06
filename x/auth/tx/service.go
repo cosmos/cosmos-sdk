@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep legacy for now
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -320,7 +320,10 @@ func RegisterTxService(
 // RegisterGRPCGatewayRoutes mounts the tx service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
-	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
+	err := txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func parseOrderBy(orderBy txtypes.OrderBy) string {

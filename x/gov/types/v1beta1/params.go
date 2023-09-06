@@ -3,6 +3,8 @@ package v1beta1
 import (
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,10 +15,10 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens = math.NewInt(10000000)
+	DefaultQuorum           = math.LegacyNewDecWithPrec(334, 3)
+	DefaultThreshold        = math.LegacyNewDecWithPrec(5, 1)
+	DefaultVetoThreshold    = math.LegacyNewDecWithPrec(334, 3)
 )
 
 // NewDepositParams creates a new DepositParams object
@@ -41,7 +43,7 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, vetoThreshold math.LegacyDec) TallyParams {
 	return TallyParams{
 		Quorum:        quorum,
 		Threshold:     threshold,

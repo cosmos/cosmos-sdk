@@ -31,9 +31,39 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* [#14134](https://github.com/cosmos/cosmos-sdk/pull/14134) Initialise core (Prefix, KeyEncoder, ValueEncoder, Map).
-* [#14351](https://github.com/cosmos/cosmos-sdk/pull/14351) Add keyset
-* [#14364](https://github.com/cosmos/cosmos-sdk/pull/14364) Add sequence
-* [#14468](https://github.com/cosmos/cosmos-sdk/pull/14468) Add Map.IterateRaw API.
-* [#14310](https://github.com/cosmos/cosmos-sdk/pull/14310) Add Pair keys 
-* [#14397](https://github.com/cosmos/cosmos-sdk/pull/14397) Add IndexedMap
+## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.4.0)
+
+### Features
+
+* [#17024](https://github.com/cosmos/cosmos-sdk/pull/17024) - Introduces `Triple`, a composite key with three keys.
+
+### API Breaking
+
+* [#17290](https://github.com/cosmos/cosmos-sdk/pull/17290) - Collections iteration methods (Iterate, Walk) will not error when the collection is empty.
+
+### Improvements
+
+* [#17021](https://github.com/cosmos/cosmos-sdk/pull/17021) Make collections implement the `appmodule.HasGenesis` interface.
+
+## [v0.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.3.0)
+
+### Features
+
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16607) - Introduces `Clear` method for `Map` and `KeySet`
+* [#16773](https://github.com/cosmos/cosmos-sdk/pull/16773)
+    * Adds `AltValueCodec` which provides a way to decode a value in two ways.
+    * Adds the possibility to specify an alternative way to decode the values of `KeySet`, `indexes.Multi`, `indexes.ReversePair`. 
+
+## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.2.0)
+
+### Features
+
+* [#16074](https://github.com/cosmos/cosmos-sdk/pull/16074) – Makes the generic Collection interface public, still highly unstable.
+
+### API Breaking
+
+* [#16127](https://github.com/cosmos/cosmos-sdk/pull/16127) – In the `Walk` method the call back function being passed is allowed to error.
+
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.1.0)
+
+Collections `v0.1.0` is released! Check out the [docs](https://docs.cosmos.network/main/packages/collections) to know how to use the APIs.

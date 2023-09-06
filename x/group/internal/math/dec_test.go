@@ -2,8 +2,6 @@ package math
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -256,42 +254,4 @@ func testIsNegative(t *rapid.T) {
 	f, dec := floatAndDec.float, floatAndDec.dec
 
 	require.Equal(t, f < 0, dec.IsNegative())
-}
-
-func floatDecimalPlaces(t *rapid.T, f float64) uint32 { //nolint:unused
-	reScientific := regexp.MustCompile(`^\-?(?:[[:digit:]]+(?:\.([[:digit:]]+))?|\.([[:digit:]]+))(?:e?(?:\+?([[:digit:]]+)|(-[[:digit:]]+)))?$`)
-	fStr := fmt.Sprintf("%g", f)
-	matches := reScientific.FindAllStringSubmatch(fStr, 1)
-	if len(matches) != 1 {
-		t.Fatalf("Didn't match float: %g", f)
-	}
-
-	// basePlaces is the number of decimal places in the decimal part of the
-	// string
-	basePlaces := 0
-	if matches[0][1] != "" {
-		basePlaces = len(matches[0][1])
-	} else if matches[0][2] != "" {
-		basePlaces = len(matches[0][2])
-	}
-	t.Logf("Base places: %d", basePlaces)
-
-	// exp is the exponent
-	exp := 0
-	if matches[0][3] != "" {
-		var err error
-		exp, err = strconv.Atoi(matches[0][3])
-		require.NoError(t, err)
-	} else if matches[0][4] != "" {
-		var err error
-		exp, err = strconv.Atoi(matches[0][4])
-		require.NoError(t, err)
-	}
-
-	// Subtract exponent from base and check if negative
-	if res := basePlaces - exp; res <= 0 {
-		return 0
-	} else { //nolint:revive
-		return uint32(res)
-	}
 }

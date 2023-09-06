@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -11,8 +10,16 @@ import (
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	nftmodule "cosmossdk.io/x/nft/module"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -20,11 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
-	nftmodule "cosmossdk.io/x/nft/module"
-	nfttestutil "cosmossdk.io/x/nft/testutil"
 )
 
 const (
@@ -75,6 +77,8 @@ type CLITestSuite struct {
 	ctx       context.Context
 
 	owner sdk.AccAddress
+
+	ac address.Codec
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -91,10 +95,12 @@ func (s *CLITestSuite) SetupSuite() {
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	s.ctx = svrcmd.CreateExecuteContext(context.Background())
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -102,7 +108,7 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 
 	cfg, err := network.DefaultConfigWithAppConfig(nfttestutil.AppConfig)
 	s.Require().NoError(err)
@@ -120,6 +126,8 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[nft.ModuleName] = nftDataBz
 
+	s.ac = addresscodec.NewBech32Codec("cosmos")
+
 	s.initAccount()
 }
 
@@ -130,7 +138,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	testCases := []struct {
@@ -149,7 +157,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty class id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"nft id is empty",
@@ -160,18 +168,18 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			true,
-			"empty nft id",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
-			"invalid receiver address",
+			"empty receiver address",
 			[]string{
 				testClassID,
 				testID,
-				"invalid receiver",
+				"",
 			},
 			0,
 			true,
-			"Invalid receiver address",
+			"class-id, nft-id and receiver cannot be empty",
 		},
 		{
 			"valid transaction",
@@ -189,7 +197,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			args := append(tc.args, extraArgs...) //nolint:gocritic // false positive
+			args := append(tc.args, extraArgs...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
 			cmd.SetArgs(args)
@@ -222,13 +230,13 @@ func (s *CLITestSuite) initAccount() {
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 	}
 
 	s.owner, err = keyinfo.GetAddress()
 	s.Require().NoError(err)
 
-	amount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(200)))
-	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, args...)
+	amount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(200)))
+	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, s.ac, args...)
 	s.Require().NoError(err)
 }

@@ -51,7 +51,7 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
+func NewThresholdDecisionPolicy(threshold string, votingPeriod, minExecutionPeriod time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
 }
 
@@ -156,7 +156,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
+func NewPercentageDecisionPolicy(percentage string, votingPeriod, executionPeriod time.Duration) DecisionPolicy {
 	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
 }
 
@@ -364,10 +364,14 @@ func (g GroupMember) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := MemberToMemberRequest(g.Member).ValidateBasic()
-	if err != nil {
-		return errorsmod.Wrap(err, "group member")
+	if _, err := sdk.AccAddressFromBech32(g.Member.Address); err != nil {
+		return errorsmod.Wrap(err, "group member's address")
 	}
+
+	if _, err := math.NewNonNegativeDecFromString(g.Member.Weight); err != nil {
+		return errorsmod.Wrap(err, "weight must be non negative")
+	}
+
 	return nil
 }
 

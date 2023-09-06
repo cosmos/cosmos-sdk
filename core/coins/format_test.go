@@ -5,22 +5,23 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/coins"
-	"github.com/stretchr/testify/require"
 )
 
 // coinsJsonTest is the type of test cases in the coin.json file.
-type coinJsonTest struct {
+type coinJSONTest struct {
 	Proto    *basev1beta1.Coin
 	Metadata *bankv1beta1.Metadata
 	Text     string
 	Error    bool
 }
 
-// coinsJsonTest is the type of test cases in the coins.json file.
-type coinsJsonTest struct {
+// coinsJSONTest is the type of test cases in the coins.json file.
+type coinsJSONTest struct {
 	Proto    []*basev1beta1.Coin
 	Metadata map[string]*bankv1beta1.Metadata
 	Text     string
@@ -28,7 +29,7 @@ type coinsJsonTest struct {
 }
 
 func TestFormatCoin(t *testing.T) {
-	var testcases []coinJsonTest
+	var testcases []coinJSONTest
 	raw, err := os.ReadFile("../../x/tx/signing/textual/internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -52,7 +53,7 @@ func TestFormatCoin(t *testing.T) {
 }
 
 func TestFormatCoins(t *testing.T) {
-	var testcases []coinsJsonTest
+	var testcases []coinsJSONTest
 	raw, err := os.ReadFile("../../x/tx/signing/textual/internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -78,4 +79,12 @@ func TestFormatCoins(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDecodeCoin(t *testing.T) {
+	encodedCoin := "1000000000foo"
+	coin, err := coins.ParseCoin(encodedCoin)
+	require.NoError(t, err)
+	require.Equal(t, "1000000000", coin.Amount)
+	require.Equal(t, "foo", coin.Denom)
 }

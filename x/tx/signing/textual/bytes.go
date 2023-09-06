@@ -24,9 +24,7 @@ func NewBytesValueRenderer() ValueRenderer {
 
 type bytesValueRenderer struct{}
 
-var _ ValueRenderer = bytesValueRenderer{}
-
-func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+func (vr bytesValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	bz := v.Bytes()
 
 	if len(bz) <= maxByteLen {

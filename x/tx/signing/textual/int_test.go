@@ -11,11 +11,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestIntJsonTestcases(t *testing.T) {
+func TestIntJSONTestcases(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
 	raw, err := os.ReadFile("./internal/testdata/integers.json")
@@ -46,7 +45,25 @@ func TestIntJsonTestcases(t *testing.T) {
 				checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
 			}
 
-			// Parse test case strings as sdk.Ints
+			// Parse test case strings as protobuf int64
+			ii, err := strconv.ParseInt(tc[0], 10, 64)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT64"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
+			}
+
+			// Parse test case strings as protobuf int32
+			ii, err = strconv.ParseInt(tc[0], 10, 32)
+			if err == nil {
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("INT32"))
+				require.NoError(t, err)
+
+				checkNumberTest(t, r, protoreflect.ValueOf(ii), tc[1])
+			}
+
+			// Parse test case strings as math.Ints
 			_, ok := math.NewIntFromString(tc[0])
 			if ok {
 				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKINT"))
@@ -61,6 +78,7 @@ func TestIntJsonTestcases(t *testing.T) {
 // checkNumberTest checks that the output of a number value renderer
 // matches the expected string. Only use it to test numbers.
 func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {
+	t.Helper()
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)

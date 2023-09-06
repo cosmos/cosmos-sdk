@@ -8,20 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	// For amino support.
-	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-
-	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
+	_, _ sdk.Msg                       = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
-//
-//nolint:interfacer
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
@@ -37,22 +31,6 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 		Grantee:   grantee.String(),
 		Allowance: any,
 	}, nil
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgGrantAllowance) ValidateBasic() error {
-	return nil
-}
-
-// GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgGrantAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -73,26 +51,6 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 
 // NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
 // granter and grantee
-//
-//nolint:interfacer
-func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
+func NewMsgRevokeAllowance(granter, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgRevokeAllowance) ValidateBasic() error {
-
-	return nil
-}
-
-// GetSigners gets the granter address associated with an Allowance
-// to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgRevokeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

@@ -11,14 +11,16 @@ echo 1 abc {}
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin (json)                               
+      --a-coin cosmos.base.v1beta1.Coin                                      some random coin
+      --a-consensus-address account address or key name                      
       --a-message testpb.AMessage (json)                                     
-      --an-address bech32 account address key name                           
+      --a-validator-address account address or key name                      
+      --an-address account address or key name                               
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
       --bools bools                                                           (default [])
-      --bz bytesBase64                                                       
+      --bz binary                                                            some bytes
       --deprecated-field string                                               (DEPRECATED: don't use this)
-      --duration duration                                                    
+      --duration duration                                                    some random duration
       --durations duration (repeated)                                        
       --enums Enum (unspecified | one | two | five | neg-three) (repeated)   
       --grpc-addr string                                                     the gRPC endpoint to use for this chain
@@ -27,10 +29,14 @@ Flags:
   -h, --help                                                                 help for echo
       --i32 int32                                                            some random int32
       --i64 int                                                              
+      --map-string-coin map[string]cosmos.base.v1beta1.Coin                  some map of string to coin
+      --map-string-string stringToString                                     some map of string to string (default [])
+      --map-string-uint32 stringToUint32                                     some map of string to int32
+      --no-indent                                                            Do not indent JSON output
       --node string                                                          <host>:<port> to CometBFT RPC interface for this chain (default "tcp://localhost:26657")
   -o, --output string                                                        Output format (text|json) (default "text")
       --page-count-total                                                     
-      --page-key bytesBase64                                                 
+      --page-key binary                                                      
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         

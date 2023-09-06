@@ -4,13 +4,29 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
+)
+
+// ExecMode defines the execution mode which can be set on a Context.
+type ExecMode uint8
+
+// All possible execution modes.
+const (
+	ExecModeCheck ExecMode = iota
+	ExecModeReCheck
+	ExecModeSimulate
+	ExecModePrepareProposal
+	ExecModeProcessProposal
+	ExecModeVoteExtension
+	ExecModeFinalize
 )
 
 /*
@@ -22,10 +38,13 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx              context.Context
-	ms                   storetypes.MultiStore
-	header               cmtproto.Header
-	headerHash           []byte
+	baseCtx context.Context
+	ms      storetypes.MultiStore
+	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	header cmtproto.Header
+	// Deprecated: Use HeaderService for hash
+	headerHash []byte
+	// Deprecated: Use HeaderService for chainID and CometService for the rest
 	chainID              string
 	txBytes              []byte
 	logger               log.Logger
@@ -34,13 +53,16 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	execMode             ExecMode
 	minGasPrice          DecCoins
-	consParams           *cmtproto.ConsensusParams
+	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
+	cometInfo            comet.BlockInfo
+	headerInfo           header.Info
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -59,12 +81,15 @@ func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMe
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
+func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
+func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -79,8 +104,8 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
-func (c Context) ConsensusParams() *cmtproto.ConsensusParams {
-	return proto.Clone(c.consParams).(*cmtproto.ConsensusParams)
+func (c Context) ConsensusParams() cmtproto.ConsensusParams {
+	return c.consParams
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -96,14 +121,14 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
-	// https://github.com/gogo/protobuf/issues/519
-	header.Time = header.Time.UTC()
+func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Context {
+	h := cmtproto.Header{}
+	h.Time = h.Time.UTC()
 	return Context{
 		baseCtx:              context.Background(),
 		ms:                   ms,
-		header:               header,
-		chainID:              header.ChainID,
+		header:               h,
+		chainID:              h.ChainID,
 		checkTx:              isCheckTx,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
@@ -111,6 +136,9 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		headerInfo: header.Info{
+			Time: h.Time.UTC(),
+		},
 	}
 }
 
@@ -131,6 +159,9 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
+
+	// when calling withBlockheader on a new context chainID in the struct is empty
+	c.chainID = header.ChainID
 	return c
 }
 
@@ -219,6 +250,7 @@ func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Contex
 // WithIsCheckTx enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
+	c.execMode = ExecModeCheck
 	return c
 }
 
@@ -229,6 +261,13 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	c.execMode = ExecModeReCheck
+	return c
+}
+
+// WithExecMode returns a Context with an updated ExecMode.
+func (c Context) WithExecMode(m ExecMode) Context {
+	c.execMode = m
 	return c
 }
 
@@ -239,7 +278,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *cmtproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
@@ -259,6 +298,20 @@ func (c Context) WithPriority(p int64) Context {
 // WithStreamingManager returns a Context with an updated streaming manager
 func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 	c.streamingManager = sm
+	return c
+}
+
+// WithCometInfo returns a Context with an updated comet info
+func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
+	c.cometInfo = cometInfo
+	return c
+}
+
+// WithHeaderInfo returns a Context with an updated header info
+func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
+	// Set time to UTC
+	headerInfo.Time = headerInfo.Time.UTC()
+	c.headerInfo = headerInfo
 	return c
 }
 

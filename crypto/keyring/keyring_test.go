@@ -564,7 +564,65 @@ func TestImportPrivKey(t *testing.T) {
 	}
 }
 
-func TestExportImportPrivKey(t *testing.T) {
+func TestImportPrivKeyHex(t *testing.T) {
+	cdc := getCodec()
+	tests := []struct {
+		name        string
+		uid         string
+		backend     string
+		hexKey      string
+		algo        string
+		expectedErr error
+	}{
+		{
+			name:        "correct import",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "correct import without prefix",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "a3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: nil,
+		},
+		{
+			name:        "wrong hex length",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xae57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "secp256k1",
+			expectedErr: hex.ErrLength,
+		},
+		{
+			name:        "unsupported algo",
+			uid:         "hexImport",
+			backend:     BackendTest,
+			hexKey:      "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			algo:        "notSupportedAlgo",
+			expectedErr: ErrUnsupportedSigningAlgo,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kb, err := New("TestExport", tt.backend, t.TempDir(), nil, cdc)
+			require.NoError(t, err)
+			err = kb.ImportPrivKeyHex(tt.uid, tt.hexKey, tt.algo)
+			if tt.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.True(t, errors.Is(err, tt.expectedErr))
+			}
+		})
+	}
+}
+
+func TestExportImportPrivKeyArmor(t *testing.T) {
 	cdc := getCodec()
 	tests := []struct {
 		name              string
@@ -833,35 +891,35 @@ func TestImportPubKey(t *testing.T) {
 		uid         string
 		backend     string
 		armor       string
-		expectedErr error
+		expectedErr string
 	}{
 		{
 			name:        "correct import",
 			uid:         "correctTest",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			name:        "modified armor",
 			uid:         "modified",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: fmt.Errorf("couldn't unarmor bytes: openpgp: invalid data: armor invalid"),
+			expectedErr: "couldn't unarmor bytes: openpgp: invalid data: armor invalid",
 		},
 		{
 			name:        "empty armor",
 			uid:         "empty",
 			backend:     BackendTest,
 			armor:       "",
-			expectedErr: fmt.Errorf("couldn't unarmor bytes: EOF"),
+			expectedErr: "couldn't unarmor bytes: EOF",
 		},
 		{
 			name:        "correct in memory import",
 			uid:         "inMemory",
 			backend:     BackendMemory,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: nil,
+			expectedErr: "",
 		},
 	}
 	for _, tt := range tests {
@@ -869,10 +927,10 @@ func TestImportPubKey(t *testing.T) {
 			kb, err := New("keybasename", tt.backend, t.TempDir(), nil, cdc)
 			require.NoError(t, err)
 			err = kb.ImportPubKey(tt.uid, tt.armor)
-			if tt.expectedErr == nil {
+			if tt.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.Equal(t, err, tt.expectedErr)
+				require.ErrorContains(t, err, tt.expectedErr)
 			}
 		})
 	}
@@ -1978,7 +2036,8 @@ func TestChangeBcrypt(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func requireEqualRenamedKey(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {
+func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool) {
+	t.Helper()
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}
@@ -1997,6 +2056,7 @@ func requireEqualRenamedKey(t *testing.T, key *Record, mnemonic *Record, nameMat
 }
 
 func newKeyring(t *testing.T, name string) Keyring {
+	t.Helper()
 	cdc := getCodec()
 	kr, err := New(name, "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -2004,12 +2064,14 @@ func newKeyring(t *testing.T, name string) Keyring {
 }
 
 func newKeyRecord(t *testing.T, kr Keyring, name string) *Record {
+	t.Helper()
 	k, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	return k
 }
 
 func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
+	t.Helper()
 	for _, n := range names {
 		_, err := kr.Key(n)
 		require.NoError(t, err)

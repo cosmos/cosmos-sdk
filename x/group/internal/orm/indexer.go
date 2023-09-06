@@ -1,9 +1,8 @@
 package orm
 
 import (
-	storetypes "cosmossdk.io/store/types"
-
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -177,7 +176,7 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 }
 
 // difference returns the list of elements that are in a but not in b.
-func difference(a []interface{}, b []interface{}) ([]interface{}, error) {
+func difference(a, b []interface{}) ([]interface{}, error) {
 	set := make(map[interface{}]struct{}, len(b))
 	for _, v := range b {
 		bt, err := keyPartBytes(v, true)

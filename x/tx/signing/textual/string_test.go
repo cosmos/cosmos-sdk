@@ -7,20 +7,21 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/x/tx/signing/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
-type stringJsonTest struct {
+type stringJSONTest struct {
 	Text string
 }
 
-func TestStringJsonTestcases(t *testing.T) {
+func TestStringJSONTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/string.json")
 	require.NoError(t, err)
 
-	var testcases []stringJsonTest
+	var testcases []stringJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

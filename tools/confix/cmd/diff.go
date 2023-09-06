@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/tools/confix"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
+
+	"cosmossdk.io/tools/confix"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func DiffCommand() *cobra.Command {
@@ -17,12 +20,14 @@ func DiffCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var filename string
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			if len(args) > 1 {
+			switch {
+
+			case len(args) > 1:
 				filename = args[1]
-			} else if clientCtx.HomeDir != "" {
+			case clientCtx.HomeDir != "":
 				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
-			} else {
-				return fmt.Errorf("must provide a path to the app.toml file")
+			default:
+				return errors.New("must provide a path to the app.toml file")
 			}
 
 			targetVersion := args[0]
@@ -37,7 +42,7 @@ func DiffCommand() *cobra.Command {
 
 			rawFile, err := confix.LoadConfig(filename)
 			if err != nil {
-				return fmt.Errorf("failed to load config: %v", err)
+				return fmt.Errorf("failed to load config: %w", err)
 			}
 
 			diff := confix.DiffValues(rawFile, targetVersionFile)

@@ -10,9 +10,11 @@ import (
 	"github.com/creachadair/tomledit/transform"
 )
 
+type DiffType string
+
 const (
-	Section = "S"
-	Mapping = "M"
+	Section DiffType = "S"
+	Mapping DiffType = "M"
 )
 
 type KV struct {
@@ -22,7 +24,7 @@ type KV struct {
 }
 
 type Diff struct {
-	Type    string // "section" or "mapping"
+	Type    DiffType
 	Deleted bool
 
 	KV KV
@@ -40,19 +42,20 @@ func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 
 	i, j := 0, 0
 	for i < len(lsec) && j < len(rsec) {
-		if lsec[i].Name.Before(rsec[j].Name) {
+		switch {
+		case lsec[i].Name.Before(rsec[j].Name):
 			diff = append(diff, Diff{Type: Section, Deleted: true, KV: KV{Key: lsec[i].Name.String()}})
 			for _, kv := range allKVs(lsec[i]) {
 				diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: kv})
 			}
 			i++
-		} else if rsec[j].Name.Before(lsec[i].Name) {
+		case rsec[j].Name.Before(lsec[i].Name):
 			diff = append(diff, Diff{Type: Section, KV: KV{Key: rsec[j].Name.String()}})
 			for _, kv := range allKVs(rsec[j]) {
 				diff = append(diff, Diff{Type: Mapping, KV: kv})
 			}
 			j++
-		} else {
+		default:
 			diff = append(diff, diffDocs(allKVs(lsec[i]), allKVs(rsec[j]), false)...)
 			i++
 			j++
@@ -84,13 +87,14 @@ func DiffValues(lhs, rhs *tomledit.Document) []Diff {
 
 	i, j := 0, 0
 	for i < len(lsec) && j < len(rsec) {
-		if lsec[i].Name.Before(rsec[j].Name) {
+		switch {
+		case lsec[i].Name.Before(rsec[j].Name):
 			// skip keys present in lhs but not in rhs
 			i++
-		} else if rsec[j].Name.Before(lsec[i].Name) {
+		case rsec[j].Name.Before(lsec[i].Name):
 			// skip keys present in rhs but not in lhs
 			j++
-		} else {
+		default:
 			for _, d := range diffDocs(allKVs(lsec[i]), allKVs(rsec[j]), true) {
 				if !d.Deleted {
 					diff = append(diff, d)
@@ -133,13 +137,14 @@ func diffDocs(lhs, rhs []KV, value bool) []Diff {
 
 	i, j := 0, 0
 	for i < len(lhs) && j < len(rhs) {
-		if lhs[i].Key < rhs[j].Key {
+		switch {
+		case lhs[i].Key < rhs[j].Key:
 			diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: lhs[i]})
 			i++
-		} else if lhs[i].Key > rhs[j].Key {
+		case lhs[i].Key > rhs[j].Key:
 			diff = append(diff, Diff{Type: Mapping, KV: rhs[j]})
 			j++
-		} else {
+		default:
 			// key exists in both lhs and rhs
 			// if value is true, compare the values
 			if value && lhs[i].Value != rhs[j].Value {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,14 +18,14 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens          = sdk.NewInt(10000000)
-	DefaultMinExpeditedDepositTokens = DefaultMinDepositTokens.Mul(math.NewInt(DefaultMinExpeditedDepositTokensRatio))
-	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
-	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
-	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
+	DefaultMinDepositTokens          = sdkmath.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                    = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdkmath.LegacyNewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdkmath.LegacyNewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio    = sdkmath.LegacyZeroDec()
+	DefaultProposalCancelRatio       = sdkmath.LegacyMustNewDecFromStr("0.5")
 	DefaultProposalCancelDestAddress = ""
 	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
@@ -122,50 +122,50 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("maximum deposit period must be positive: %d", p.MaxDepositPeriod)
 	}
 
-	quorum, err := sdk.NewDecFromStr(p.Quorum)
+	quorum, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
 	if err != nil {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", quorum)
 	}
-	if quorum.GT(math.LegacyOneDec()) {
+	if quorum.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("quorom too large: %s", p.Quorum)
 	}
 
-	threshold, err := sdk.NewDecFromStr(p.Threshold)
+	threshold, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
 	if err != nil {
 		return fmt.Errorf("invalid threshold string: %w", err)
 	}
 	if !threshold.IsPositive() {
 		return fmt.Errorf("vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(math.LegacyOneDec()) {
+	if threshold.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", threshold)
 	}
 
-	expeditedThreshold, err := sdk.NewDecFromStr(p.ExpeditedThreshold)
+	expeditedThreshold, err := sdkmath.LegacyNewDecFromStr(p.ExpeditedThreshold)
 	if err != nil {
 		return fmt.Errorf("invalid expedited threshold string: %w", err)
 	}
 	if !threshold.IsPositive() {
 		return fmt.Errorf("expedited vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(math.LegacyOneDec()) {
+	if threshold.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("expedited vote threshold too large: %s", threshold)
 	}
 	if expeditedThreshold.LTE(threshold) {
 		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", expeditedThreshold, threshold)
 	}
 
-	vetoThreshold, err := sdk.NewDecFromStr(p.VetoThreshold)
+	vetoThreshold, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)
 	if err != nil {
 		return fmt.Errorf("invalid vetoThreshold string: %w", err)
 	}
 	if !vetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
 	}
-	if vetoThreshold.GT(math.LegacyOneDec()) {
+	if vetoThreshold.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("veto threshold too large: %s", vetoThreshold)
 	}
 
@@ -186,25 +186,25 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
 	}
 
-	minInitialDepositRatio, err := sdk.NewDecFromStr(p.MinInitialDepositRatio)
+	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(p.MinInitialDepositRatio)
 	if err != nil {
 		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
 	}
 	if minInitialDepositRatio.IsNegative() {
 		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
 	}
-	if minInitialDepositRatio.GT(math.LegacyOneDec()) {
+	if minInitialDepositRatio.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	proposalCancelRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
+	proposalCancelRate, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelRatio)
 	if err != nil {
 		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
 	}
 	if proposalCancelRate.IsNegative() {
 		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelRate)
 	}
-	if proposalCancelRate.GT(math.LegacyOneDec()) {
+	if proposalCancelRate.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
 	}
 

@@ -6,24 +6,27 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/tools/confix/cmd"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"gotest.tools/v3/assert"
 )
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T) (client.Context, func()) {
+	t.Helper()
 	home := t.TempDir()
-	chainId := "test-chain" //nolint:revive
+	chainID := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper("").
-		WithChainID(chainId)
+		WithChainID(chainID)
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	assert.NilError(t, err)
-	assert.Equal(t, clientCtx.ChainID, chainId)
+	assert.Equal(t, clientCtx.ChainID, chainID)
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
 

@@ -10,11 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/rs/zerolog"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -22,9 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 )
 
 // ExportSystem wraps a (*cmdtest).System
@@ -56,8 +58,8 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	sys := cmdtest.NewSystem()
 	sys.AddCommands(
-		server.ExportCmd(exporter, homeDir),
-		genutilcli.InitCmd(module.NewBasicManager(), homeDir),
+		server.ExportCmd(exporter),
+		genutilcli.InitCmd(module.NewBasicManager()),
 	)
 
 	tw := zerolog.NewTestWriter(t)
@@ -91,6 +93,7 @@ func (s *ExportSystem) Run(args ...string) cmdtest.RunResult {
 
 // MustRun wraps (*cmdtest.System).MustRunC, providing e's context.
 func (s *ExportSystem) MustRun(t *testing.T, args ...string) cmdtest.RunResult {
+	t.Helper()
 	return s.sys.MustRunC(t, s.Ctx, args...)
 }
 
@@ -101,7 +104,7 @@ func isZeroExportedApp(a types.ExportedApp) bool {
 	return a.AppState == nil &&
 		len(a.Validators) == 0 &&
 		a.Height == 0 &&
-		a.ConsensusParams == nil
+		a.ConsensusParams == cmtproto.ConsensusParams{}
 }
 
 // mockExporter provides an Export method matching server/types.AppExporter,
@@ -127,7 +130,7 @@ type mockExporter struct {
 // when e.Export is called.
 func (e *mockExporter) SetDefaultExportApp() {
 	e.ExportApp = types.ExportedApp{
-		ConsensusParams: &cmtproto.ConsensusParams{
+		ConsensusParams: cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxBytes: 5 * 1024 * 1024,
 				MaxGas:   -1,

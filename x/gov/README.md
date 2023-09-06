@@ -16,14 +16,14 @@ on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, the proposal enters voting period.
-* **Vote:** Participants can vote on proposals that reached MinDeposit
+minimum deposit is reached, the proposal enters voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within deposit period.
+* **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
-deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period, the deposit is burned.
+deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
 
-This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
+This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
 Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
@@ -142,9 +142,7 @@ Note that when *participants* have bonded and unbonded Atoms, their voting power
 
 Once a proposal reaches `MinDeposit`, it immediately enters `Voting period`. We
 define `Voting period` as the interval between the moment the vote opens and
-the moment the vote closes. `Voting period` should always be shorter than
-`Unbonding period` to prevent double voting. The initial value of
-`Voting period` is 2 weeks.
+the moment the vote closes. The initial value of `Voting period` is 2 weeks.
 
 #### Option set
 
@@ -230,34 +228,6 @@ At present, validators are not punished for failing to vote.
 #### Governance address
 
 Later, we may add permissioned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the CometBFT PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive CometBFT PrivKey.
-
-### Software Upgrade
-
-If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided into
-two steps:
-
-#### Signal
-
-After a `SoftwareUpgradeProposal` is accepted, validators are expected to
-download and install the new version of the software while continuing to run
-the previous version. Once a validator has downloaded and installed the
-upgrade, it will start signaling to the network that it is ready to switch by
-including the proposal's `proposalID` in its *precommits*. (*Note: Confirmation that we want it in the precommit?*)
-
-Note: There is only one signal slot per *precommit*. If several
-`SoftwareUpgradeProposals` are accepted in a short timeframe, a pipeline will
-form and they will be implemented one after the other in the order that they
-were accepted.
-
-#### Switch
-
-Once a block contains more than 2/3rd *precommits* where a common
-`SoftwareUpgradeProposal` is signaled, all the nodes (including validator
-nodes, non-validating full nodes and light-nodes) are expected to switch to the
-new version of the software.
-
-Validators and full nodes can use an automation tool, such as [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), for automatically switching version of the chain.
 
 #### Burnable Params
 
@@ -524,11 +494,13 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
 ### Legacy Proposal
 
+:::warning
+Legacy proposals are deprecated. Use the new proposal flow by granting the governance module the right to execute the message.
+:::
+
 A legacy proposal is the old implementation of governance proposal.
 Contrary to proposal that can contain any messages, a legacy proposal allows to submit a set of pre-defined proposals.
-These proposal are defined by their types.
-
-While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
+These proposals are defined by their types and handled by handlers that are registered in the gov v1beta1 router.
 
 More information on how to submit proposals in the [client section](#client).
 
@@ -1209,6 +1181,10 @@ where `proposal.json` contains:
 
 :::note
 By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
+:::
+
+:::tip
+When metadata is not specified, the title is limited to 255 characters and the summary 40x the title length.
 :::
 
 ##### submit-legacy-proposal

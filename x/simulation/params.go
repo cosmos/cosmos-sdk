@@ -150,14 +150,14 @@ func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
 
 // WeightedProposalContent defines a common struct for proposal content defined by external modules (i.e outside gov)
 //
-//nolint:staticcheck
+//nolint:staticcheck // used for legacy testing
 type WeightedProposalContent struct {
 	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
 	defaultWeight      int                           // default weight
 	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck
+func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
 }
 
@@ -169,14 +169,14 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck // used for legacy testing
 	return w.contentSimulatorFn
 }
 
 // Consensus Params
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *cmtproto.ConsensusParams {
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec, maxGas int64) *cmtproto.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -187,7 +187,7 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	consensusParams := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			MaxGas:   -1,
+			MaxGas:   maxGas,
 		},
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},

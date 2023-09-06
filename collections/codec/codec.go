@@ -74,6 +74,56 @@ type ValueCodec[T any] interface {
 	ValueType() string
 }
 
+// NewUntypedValueCodec returns an UntypedValueCodec for the provided ValueCodec.
+func NewUntypedValueCodec[V any](v ValueCodec[V]) UntypedValueCodec {
+	typeName := fmt.Sprintf("%T", *new(V))
+	checkType := func(value interface{}) (v V, err error) {
+		concrete, ok := value.(V)
+		if !ok {
+			return v, fmt.Errorf("%w: expected value of type %s, got %T", ErrEncoding, typeName, value)
+		}
+		return concrete, nil
+	}
+	return UntypedValueCodec{
+		Decode: func(b []byte) (interface{}, error) { return v.Decode(b) },
+		Encode: func(value interface{}) ([]byte, error) {
+			concrete, err := checkType(value)
+			if err != nil {
+				return nil, err
+			}
+			return v.Encode(concrete)
+		},
+		DecodeJSON: func(b []byte) (interface{}, error) {
+			return v.DecodeJSON(b)
+		},
+		EncodeJSON: func(value interface{}) ([]byte, error) {
+			concrete, err := checkType(value)
+			if err != nil {
+				return nil, err
+			}
+			return v.EncodeJSON(concrete)
+		},
+		Stringify: func(value interface{}) (string, error) {
+			concrete, err := checkType(value)
+			if err != nil {
+				return "", err
+			}
+			return v.Stringify(concrete), nil
+		},
+		ValueType: func() string { return v.ValueType() },
+	}
+}
+
+// UntypedValueCodec wraps a ValueCodec to expose an untyped API for encoding and decoding values.
+type UntypedValueCodec struct {
+	Decode     func(b []byte) (interface{}, error)
+	Encode     func(value interface{}) ([]byte, error)
+	DecodeJSON func(b []byte) (interface{}, error)
+	EncodeJSON func(value interface{}) ([]byte, error)
+	Stringify  func(value interface{}) (string, error)
+	ValueType  func() string
+}
+
 // KeyToValueCodec converts a KeyCodec into a ValueCodec.
 func KeyToValueCodec[K any](keyCodec KeyCodec[K]) ValueCodec[K] { return keyToValueCodec[K]{keyCodec} }
 

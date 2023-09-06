@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -26,6 +27,7 @@ type MessageRouter interface {
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	circuitBreaker    CircuitBreaker
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -35,6 +37,10 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}
+}
+
+func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	msr.circuitBreaker = cb
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
@@ -115,16 +121,31 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			)
 		}
 
-		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+		msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
-				return handler(goCtx, req)
+				return handler(goCtx, msg)
 			}
 
-			if err := req.ValidateBasic(); err != nil {
-				return nil, err
+			if m, ok := msg.(sdk.HasValidateBasic); ok {
+				if err := m.ValidateBasic(); err != nil {
+					return nil, err
+				}
 			}
+
+			if msr.circuitBreaker != nil {
+				msgURL := sdk.MsgTypeURL(msg)
+				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				if err != nil {
+					return nil, err
+				}
+
+				if !isAllowed {
+					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
+				}
+			}
+
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
 			res, err := methodHandler(handler, ctx, noopDecoder, interceptor)
@@ -137,7 +158,20 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 			}
 
-			return sdk.WrapServiceResult(ctx, resMsg, err)
+			anyResp, err := codectypes.NewAnyWithValue(resMsg)
+			if err != nil {
+				return nil, err
+			}
+
+			var events []abci.Event
+			if evtMgr := ctx.EventManager(); evtMgr != nil {
+				events = evtMgr.ABCIEvents()
+			}
+
+			return &sdk.Result{
+				Events:       events,
+				MsgResponses: []*codectypes.Any{anyResp},
+			}, nil
 		}
 	}
 }

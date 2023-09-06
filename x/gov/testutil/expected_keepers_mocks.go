@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -40,8 +41,22 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 	return m.recorder
 }
 
+// AddressCodec mocks base method.
+func (m *MockAccountKeeper) AddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// AddressCodec indicates an expected call of AddressCodec.
+func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
+}
+
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)
@@ -55,7 +70,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, name string) types.ModuleAccountI {
+func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, name string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, name)
 	ret0, _ := ret[0].(types.ModuleAccountI)
@@ -83,7 +98,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, cb func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, cb func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, cb)
 }
@@ -95,7 +110,7 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, cb interface{}) *g
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(arg0 types.Context, arg1 types.ModuleAccountI) {
+func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types.ModuleAccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", arg0, arg1)
 }
@@ -144,6 +159,18 @@ func (mr *MockBankKeeperMockRecorder) AllBalances(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllBalances", reflect.TypeOf((*MockBankKeeper)(nil).AllBalances), arg0, arg1)
 }
 
+// AppendSendRestriction mocks base method.
+func (m *MockBankKeeper) AppendSendRestriction(restriction types0.SendRestrictionFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AppendSendRestriction", restriction)
+}
+
+// AppendSendRestriction indicates an expected call of AppendSendRestriction.
+func (mr *MockBankKeeperMockRecorder) AppendSendRestriction(restriction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).AppendSendRestriction), restriction)
+}
+
 // Balance mocks base method.
 func (m *MockBankKeeper) Balance(arg0 context.Context, arg1 *types0.QueryBalanceRequest) (*types0.QueryBalanceResponse, error) {
 	m.ctrl.T.Helper()
@@ -174,7 +201,7 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 }
 
 // BurnCoins mocks base method.
-func (m *MockBankKeeper) BurnCoins(ctx types.Context, moduleName string, amt types.Coins) error {
+func (m *MockBankKeeper) BurnCoins(ctx context.Context, moduleName string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BurnCoins", ctx, moduleName, amt)
 	ret0, _ := ret[0].(error)
@@ -187,8 +214,20 @@ func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, moduleName, amt interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, moduleName, amt)
 }
 
+// ClearSendRestriction mocks base method.
+func (m *MockBankKeeper) ClearSendRestriction() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ClearSendRestriction")
+}
+
+// ClearSendRestriction indicates an expected call of ClearSendRestriction.
+func (mr *MockBankKeeperMockRecorder) ClearSendRestriction() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).ClearSendRestriction))
+}
+
 // DelegateCoins mocks base method.
-func (m *MockBankKeeper) DelegateCoins(ctx types.Context, delegatorAddr, moduleAccAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelegateCoins", ctx, delegatorAddr, moduleAccAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -202,7 +241,7 @@ func (mr *MockBankKeeperMockRecorder) DelegateCoins(ctx, delegatorAddr, moduleAc
 }
 
 // DelegateCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) DelegateCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
+func (m *MockBankKeeper) DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelegateCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -216,7 +255,7 @@ func (mr *MockBankKeeperMockRecorder) DelegateCoinsFromAccountToModule(ctx, send
 }
 
 // DeleteSendEnabled mocks base method.
-func (m *MockBankKeeper) DeleteSendEnabled(ctx types.Context, denoms ...string) {
+func (m *MockBankKeeper) DeleteSendEnabled(ctx context.Context, denoms ...string) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range denoms {
@@ -245,6 +284,21 @@ func (m *MockBankKeeper) DenomMetadata(arg0 context.Context, arg1 *types0.QueryD
 func (mr *MockBankKeeperMockRecorder) DenomMetadata(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadata", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadata), arg0, arg1)
+}
+
+// DenomMetadataByQueryString mocks base method.
+func (m *MockBankKeeper) DenomMetadataByQueryString(arg0 context.Context, arg1 *types0.QueryDenomMetadataByQueryStringRequest) (*types0.QueryDenomMetadataByQueryStringResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DenomMetadataByQueryString", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QueryDenomMetadataByQueryStringResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DenomMetadataByQueryString indicates an expected call of DenomMetadataByQueryString.
+func (mr *MockBankKeeperMockRecorder) DenomMetadataByQueryString(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadataByQueryString", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadataByQueryString), arg0, arg1)
 }
 
 // DenomOwners mocks base method.
@@ -278,7 +332,7 @@ func (mr *MockBankKeeperMockRecorder) DenomsMetadata(arg0, arg1 interface{}) *go
 }
 
 // ExportGenesis mocks base method.
-func (m *MockBankKeeper) ExportGenesis(arg0 types.Context) *types0.GenesisState {
+func (m *MockBankKeeper) ExportGenesis(arg0 context.Context) *types0.GenesisState {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0)
 	ret0, _ := ret[0].(*types0.GenesisState)
@@ -292,7 +346,7 @@ func (mr *MockBankKeeperMockRecorder) ExportGenesis(arg0 interface{}) *gomock.Ca
 }
 
 // GetAccountsBalances mocks base method.
-func (m *MockBankKeeper) GetAccountsBalances(ctx types.Context) []types0.Balance {
+func (m *MockBankKeeper) GetAccountsBalances(ctx context.Context) []types0.Balance {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountsBalances", ctx)
 	ret0, _ := ret[0].([]types0.Balance)
@@ -306,7 +360,7 @@ func (mr *MockBankKeeperMockRecorder) GetAccountsBalances(ctx interface{}) *gomo
 }
 
 // GetAllBalances mocks base method.
-func (m *MockBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -320,7 +374,7 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 }
 
 // GetAllDenomMetaData mocks base method.
-func (m *MockBankKeeper) GetAllDenomMetaData(ctx types.Context) []types0.Metadata {
+func (m *MockBankKeeper) GetAllDenomMetaData(ctx context.Context) []types0.Metadata {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllDenomMetaData", ctx)
 	ret0, _ := ret[0].([]types0.Metadata)
@@ -334,7 +388,7 @@ func (mr *MockBankKeeperMockRecorder) GetAllDenomMetaData(ctx interface{}) *gomo
 }
 
 // GetAllSendEnabledEntries mocks base method.
-func (m *MockBankKeeper) GetAllSendEnabledEntries(ctx types.Context) []types0.SendEnabled {
+func (m *MockBankKeeper) GetAllSendEnabledEntries(ctx context.Context) []types0.SendEnabled {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllSendEnabledEntries", ctx)
 	ret0, _ := ret[0].([]types0.SendEnabled)
@@ -362,7 +416,7 @@ func (mr *MockBankKeeperMockRecorder) GetAuthority() *gomock.Call {
 }
 
 // GetBalance mocks base method.
-func (m *MockBankKeeper) GetBalance(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
+func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types.AccAddress, denom string) types.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBalance", ctx, addr, denom)
 	ret0, _ := ret[0].(types.Coin)
@@ -390,7 +444,7 @@ func (mr *MockBankKeeperMockRecorder) GetBlockedAddresses() *gomock.Call {
 }
 
 // GetDenomMetaData mocks base method.
-func (m *MockBankKeeper) GetDenomMetaData(ctx types.Context, denom string) (types0.Metadata, bool) {
+func (m *MockBankKeeper) GetDenomMetaData(ctx context.Context, denom string) (types0.Metadata, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDenomMetaData", ctx, denom)
 	ret0, _ := ret[0].(types0.Metadata)
@@ -405,7 +459,7 @@ func (mr *MockBankKeeperMockRecorder) GetDenomMetaData(ctx, denom interface{}) *
 }
 
 // GetPaginatedTotalSupply mocks base method.
-func (m *MockBankKeeper) GetPaginatedTotalSupply(ctx types.Context, pagination *query.PageRequest) (types.Coins, *query.PageResponse, error) {
+func (m *MockBankKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (types.Coins, *query.PageResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaginatedTotalSupply", ctx, pagination)
 	ret0, _ := ret[0].(types.Coins)
@@ -421,7 +475,7 @@ func (mr *MockBankKeeperMockRecorder) GetPaginatedTotalSupply(ctx, pagination in
 }
 
 // GetParams mocks base method.
-func (m *MockBankKeeper) GetParams(ctx types.Context) types0.Params {
+func (m *MockBankKeeper) GetParams(ctx context.Context) types0.Params {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
 	ret0, _ := ret[0].(types0.Params)
@@ -435,7 +489,7 @@ func (mr *MockBankKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call {
 }
 
 // GetSendEnabledEntry mocks base method.
-func (m *MockBankKeeper) GetSendEnabledEntry(ctx types.Context, denom string) (types0.SendEnabled, bool) {
+func (m *MockBankKeeper) GetSendEnabledEntry(ctx context.Context, denom string) (types0.SendEnabled, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSendEnabledEntry", ctx, denom)
 	ret0, _ := ret[0].(types0.SendEnabled)
@@ -450,7 +504,7 @@ func (mr *MockBankKeeperMockRecorder) GetSendEnabledEntry(ctx, denom interface{}
 }
 
 // GetSupply mocks base method.
-func (m *MockBankKeeper) GetSupply(ctx types.Context, denom string) types.Coin {
+func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSupply", ctx, denom)
 	ret0, _ := ret[0].(types.Coin)
@@ -464,7 +518,7 @@ func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom interface{}) *gomock.
 }
 
 // HasBalance mocks base method.
-func (m *MockBankKeeper) HasBalance(ctx types.Context, addr types.AccAddress, amt types.Coin) bool {
+func (m *MockBankKeeper) HasBalance(ctx context.Context, addr types.AccAddress, amt types.Coin) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasBalance", ctx, addr, amt)
 	ret0, _ := ret[0].(bool)
@@ -478,7 +532,7 @@ func (mr *MockBankKeeperMockRecorder) HasBalance(ctx, addr, amt interface{}) *go
 }
 
 // HasDenomMetaData mocks base method.
-func (m *MockBankKeeper) HasDenomMetaData(ctx types.Context, denom string) bool {
+func (m *MockBankKeeper) HasDenomMetaData(ctx context.Context, denom string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasDenomMetaData", ctx, denom)
 	ret0, _ := ret[0].(bool)
@@ -492,7 +546,7 @@ func (mr *MockBankKeeperMockRecorder) HasDenomMetaData(ctx, denom interface{}) *
 }
 
 // HasSupply mocks base method.
-func (m *MockBankKeeper) HasSupply(ctx types.Context, denom string) bool {
+func (m *MockBankKeeper) HasSupply(ctx context.Context, denom string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasSupply", ctx, denom)
 	ret0, _ := ret[0].(bool)
@@ -506,7 +560,7 @@ func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom interface{}) *gomock.
 }
 
 // InitGenesis mocks base method.
-func (m *MockBankKeeper) InitGenesis(arg0 types.Context, arg1 *types0.GenesisState) {
+func (m *MockBankKeeper) InitGenesis(arg0 context.Context, arg1 *types0.GenesisState) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "InitGenesis", arg0, arg1)
 }
@@ -518,21 +572,21 @@ func (mr *MockBankKeeperMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomoc
 }
 
 // InputOutputCoins mocks base method.
-func (m *MockBankKeeper) InputOutputCoins(ctx types.Context, inputs types0.Input, outputs []types0.Output) error {
+func (m *MockBankKeeper) InputOutputCoins(ctx context.Context, input types0.Input, outputs []types0.Output) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, inputs, outputs)
+	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, input, outputs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InputOutputCoins indicates an expected call of InputOutputCoins.
-func (mr *MockBankKeeperMockRecorder) InputOutputCoins(ctx, inputs, outputs interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) InputOutputCoins(ctx, input, outputs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InputOutputCoins", reflect.TypeOf((*MockBankKeeper)(nil).InputOutputCoins), ctx, inputs, outputs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InputOutputCoins", reflect.TypeOf((*MockBankKeeper)(nil).InputOutputCoins), ctx, input, outputs)
 }
 
 // IsSendEnabledCoin mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoin(ctx types.Context, coin types.Coin) bool {
+func (m *MockBankKeeper) IsSendEnabledCoin(ctx context.Context, coin types.Coin) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsSendEnabledCoin", ctx, coin)
 	ret0, _ := ret[0].(bool)
@@ -546,7 +600,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoin(ctx, coin interface{}) *
 }
 
 // IsSendEnabledCoins mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoins(ctx types.Context, coins ...types.Coin) error {
+func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types.Coin) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range coins {
@@ -565,7 +619,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoins(ctx interface{}, coins 
 }
 
 // IsSendEnabledDenom mocks base method.
-func (m *MockBankKeeper) IsSendEnabledDenom(ctx types.Context, denom string) bool {
+func (m *MockBankKeeper) IsSendEnabledDenom(ctx context.Context, denom string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsSendEnabledDenom", ctx, denom)
 	ret0, _ := ret[0].(bool)
@@ -579,7 +633,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledDenom(ctx, denom interface{})
 }
 
 // IterateAccountBalances mocks base method.
-func (m *MockBankKeeper) IterateAccountBalances(ctx types.Context, addr types.AccAddress, cb func(types.Coin) bool) {
+func (m *MockBankKeeper) IterateAccountBalances(ctx context.Context, addr types.AccAddress, cb func(types.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccountBalances", ctx, addr, cb)
 }
@@ -591,7 +645,7 @@ func (mr *MockBankKeeperMockRecorder) IterateAccountBalances(ctx, addr, cb inter
 }
 
 // IterateAllBalances mocks base method.
-func (m *MockBankKeeper) IterateAllBalances(ctx types.Context, cb func(types.AccAddress, types.Coin) bool) {
+func (m *MockBankKeeper) IterateAllBalances(ctx context.Context, cb func(types.AccAddress, types.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAllBalances", ctx, cb)
 }
@@ -603,7 +657,7 @@ func (mr *MockBankKeeperMockRecorder) IterateAllBalances(ctx, cb interface{}) *g
 }
 
 // IterateAllDenomMetaData mocks base method.
-func (m *MockBankKeeper) IterateAllDenomMetaData(ctx types.Context, cb func(types0.Metadata) bool) {
+func (m *MockBankKeeper) IterateAllDenomMetaData(ctx context.Context, cb func(types0.Metadata) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAllDenomMetaData", ctx, cb)
 }
@@ -615,7 +669,7 @@ func (mr *MockBankKeeperMockRecorder) IterateAllDenomMetaData(ctx, cb interface{
 }
 
 // IterateSendEnabledEntries mocks base method.
-func (m *MockBankKeeper) IterateSendEnabledEntries(ctx types.Context, cb func(string, bool) bool) {
+func (m *MockBankKeeper) IterateSendEnabledEntries(ctx context.Context, cb func(string, bool) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateSendEnabledEntries", ctx, cb)
 }
@@ -627,7 +681,7 @@ func (mr *MockBankKeeperMockRecorder) IterateSendEnabledEntries(ctx, cb interfac
 }
 
 // IterateTotalSupply mocks base method.
-func (m *MockBankKeeper) IterateTotalSupply(ctx types.Context, cb func(types.Coin) bool) {
+func (m *MockBankKeeper) IterateTotalSupply(ctx context.Context, cb func(types.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateTotalSupply", ctx, cb)
 }
@@ -639,7 +693,7 @@ func (mr *MockBankKeeperMockRecorder) IterateTotalSupply(ctx, cb interface{}) *g
 }
 
 // LockedCoins mocks base method.
-func (m *MockBankKeeper) LockedCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) LockedCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LockedCoins", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -653,7 +707,7 @@ func (mr *MockBankKeeperMockRecorder) LockedCoins(ctx, addr interface{}) *gomock
 }
 
 // MintCoins mocks base method.
-func (m *MockBankKeeper) MintCoins(ctx types.Context, moduleName string, amt types.Coins) error {
+func (m *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MintCoins", ctx, moduleName, amt)
 	ret0, _ := ret[0].(error)
@@ -681,8 +735,20 @@ func (mr *MockBankKeeperMockRecorder) Params(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Params", reflect.TypeOf((*MockBankKeeper)(nil).Params), arg0, arg1)
 }
 
+// PrependSendRestriction mocks base method.
+func (m *MockBankKeeper) PrependSendRestriction(restriction types0.SendRestrictionFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PrependSendRestriction", restriction)
+}
+
+// PrependSendRestriction indicates an expected call of PrependSendRestriction.
+func (mr *MockBankKeeperMockRecorder) PrependSendRestriction(restriction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrependSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).PrependSendRestriction), restriction)
+}
+
 // SendCoins mocks base method.
-func (m *MockBankKeeper) SendCoins(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -696,7 +762,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt inter
 }
 
 // SendCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -710,7 +776,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAd
 }
 
 // SendCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -724,7 +790,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 }
 
 // SendCoinsFromModuleToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderModule, recipientModule string, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -753,7 +819,7 @@ func (mr *MockBankKeeperMockRecorder) SendEnabled(arg0, arg1 interface{}) *gomoc
 }
 
 // SetAllSendEnabled mocks base method.
-func (m *MockBankKeeper) SetAllSendEnabled(ctx types.Context, sendEnableds []*types0.SendEnabled) {
+func (m *MockBankKeeper) SetAllSendEnabled(ctx context.Context, sendEnableds []*types0.SendEnabled) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAllSendEnabled", ctx, sendEnableds)
 }
@@ -765,7 +831,7 @@ func (mr *MockBankKeeperMockRecorder) SetAllSendEnabled(ctx, sendEnableds interf
 }
 
 // SetDenomMetaData mocks base method.
-func (m *MockBankKeeper) SetDenomMetaData(ctx types.Context, denomMetaData types0.Metadata) {
+func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types0.Metadata) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDenomMetaData", ctx, denomMetaData)
 }
@@ -777,7 +843,7 @@ func (mr *MockBankKeeperMockRecorder) SetDenomMetaData(ctx, denomMetaData interf
 }
 
 // SetParams mocks base method.
-func (m *MockBankKeeper) SetParams(ctx types.Context, params types0.Params) error {
+func (m *MockBankKeeper) SetParams(ctx context.Context, params types0.Params) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetParams", ctx, params)
 	ret0, _ := ret[0].(error)
@@ -791,7 +857,7 @@ func (mr *MockBankKeeperMockRecorder) SetParams(ctx, params interface{}) *gomock
 }
 
 // SetSendEnabled mocks base method.
-func (m *MockBankKeeper) SetSendEnabled(ctx types.Context, denom string, value bool) {
+func (m *MockBankKeeper) SetSendEnabled(ctx context.Context, denom string, value bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetSendEnabled", ctx, denom, value)
 }
@@ -833,7 +899,7 @@ func (mr *MockBankKeeperMockRecorder) SpendableBalances(arg0, arg1 interface{}) 
 }
 
 // SpendableCoin mocks base method.
-func (m *MockBankKeeper) SpendableCoin(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
+func (m *MockBankKeeper) SpendableCoin(ctx context.Context, addr types.AccAddress, denom string) types.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoin", ctx, addr, denom)
 	ret0, _ := ret[0].(types.Coin)
@@ -847,7 +913,7 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoin(ctx, addr, denom interface{}
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -891,7 +957,7 @@ func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 interface{}) *gomoc
 }
 
 // UndelegateCoins mocks base method.
-func (m *MockBankKeeper) UndelegateCoins(ctx types.Context, moduleAccAddr, delegatorAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UndelegateCoins", ctx, moduleAccAddr, delegatorAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -905,7 +971,7 @@ func (mr *MockBankKeeperMockRecorder) UndelegateCoins(ctx, moduleAccAddr, delega
 }
 
 // UndelegateCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) UndelegateCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankKeeper) UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UndelegateCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -919,7 +985,7 @@ func (mr *MockBankKeeperMockRecorder) UndelegateCoinsFromModuleToAccount(ctx, se
 }
 
 // ValidateBalance mocks base method.
-func (m *MockBankKeeper) ValidateBalance(ctx types.Context, addr types.AccAddress) error {
+func (m *MockBankKeeper) ValidateBalance(ctx context.Context, addr types.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateBalance", ctx, addr)
 	ret0, _ := ret[0].(error)
@@ -933,7 +999,7 @@ func (mr *MockBankKeeperMockRecorder) ValidateBalance(ctx, addr interface{}) *go
 }
 
 // WithMintCoinsRestriction mocks base method.
-func (m *MockBankKeeper) WithMintCoinsRestriction(arg0 keeper.MintingRestrictionFn) keeper.BaseKeeper {
+func (m *MockBankKeeper) WithMintCoinsRestriction(arg0 types0.MintingRestrictionFn) keeper.BaseKeeper {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithMintCoinsRestriction", arg0)
 	ret0, _ := ret[0].(keeper.BaseKeeper)
@@ -970,11 +1036,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondDenom mocks base method.
-func (m *MockStakingKeeper) BondDenom(ctx types.Context) string {
+func (m *MockStakingKeeper) BondDenom(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondDenom", ctx)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // BondDenom indicates an expected call of BondDenom.
@@ -984,9 +1051,11 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types1.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
+	ret := m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateBondedValidatorsByPower indicates an expected call of IterateBondedValidatorsByPower.
@@ -996,9 +1065,11 @@ func (mr *MockStakingKeeperMockRecorder) IterateBondedValidatorsByPower(arg0, ar
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types1.DelegationI) bool) {
+func (m *MockStakingKeeper) IterateDelegations(ctx context.Context, delegator types.AccAddress, fn func(int64, types1.DelegationI) bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // IterateDelegations indicates an expected call of IterateDelegations.
@@ -1008,7 +1079,7 @@ func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn i
 }
 
 // TokensFromConsensusPower mocks base method.
-func (m *MockStakingKeeper) TokensFromConsensusPower(ctx types.Context, power int64) math.Int {
+func (m *MockStakingKeeper) TokensFromConsensusPower(ctx context.Context, power int64) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TokensFromConsensusPower", ctx, power)
 	ret0, _ := ret[0].(math.Int)
@@ -1022,17 +1093,32 @@ func (mr *MockStakingKeeperMockRecorder) TokensFromConsensusPower(ctx, power int
 }
 
 // TotalBondedTokens mocks base method.
-func (m *MockStakingKeeper) TotalBondedTokens(arg0 types.Context) math.Int {
+func (m *MockStakingKeeper) TotalBondedTokens(arg0 context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TotalBondedTokens", arg0)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TotalBondedTokens indicates an expected call of TotalBondedTokens.
 func (mr *MockStakingKeeperMockRecorder) TotalBondedTokens(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockStakingKeeper)(nil).TotalBondedTokens), arg0)
+}
+
+// ValidatorAddressCodec mocks base method.
+func (m *MockStakingKeeper) ValidatorAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ValidatorAddressCodec indicates an expected call of ValidatorAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorAddressCodec))
 }
 
 // MockDistributionKeeper is a mock of DistributionKeeper interface.
@@ -1059,7 +1145,7 @@ func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
 }
 
 // FundCommunityPool mocks base method.
-func (m *MockDistributionKeeper) FundCommunityPool(ctx types.Context, amount types.Coins, sender types.AccAddress) error {
+func (m *MockDistributionKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
 	ret0, _ := ret[0].(error)

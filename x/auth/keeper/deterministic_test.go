@@ -3,20 +3,25 @@ package keeper_test
 import (
 	"encoding/hex"
 	"sort"
+	"sync/atomic"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -24,7 +29,10 @@ import (
 type DeterministicTestSuite struct {
 	suite.Suite
 
+	accountNumberLanes uint64
+
 	key           *storetypes.KVStoreKey
+	storeService  corestore.KVStoreService
 	ctx           sdk.Context
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
@@ -47,8 +55,9 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -61,19 +70,22 @@ func (suite *DeterministicTestSuite) SetupTest() {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
-		key,
+		storeService,
 		types.ProtoBaseAccount,
 		maccPerms,
+		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	suite.key = key
+	suite.storeService = storeService
 	suite.maccPerms = maccPerms
+	suite.accountNumberLanes = 1
 }
 
 // createAndSetAccount creates a random account and sets to the keeper store.
@@ -81,7 +93,15 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	accs := make([]sdk.AccountI, 0, count)
 
 	// We need all generated account-numbers unique
-	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 { return i }).Draw(t, "acc-numss")
+	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 {
+		return i
+	}).Draw(t, "acc-nums")
+
+	// then we change account numbers in such a way that there cannot be accounts with the same account number
+	lane := atomic.AddUint64(&suite.accountNumberLanes, 1)
+	for i := range accNums {
+		accNums[i] += lane * 1000
+	}
 
 	for i := 0; i < count; i++ {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
@@ -93,14 +113,12 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 		accs = append(accs, acc1)
 	}
-
 	return accs
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		accs := suite.createAndSetAccounts(t, 1)
-
 		req := &types.QueryAccountRequest{Address: accs[0].GetAddress().String()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Account, 0, true)
 	})
@@ -139,7 +157,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	})
 
 	// Regression test
-	addr1, err := sdk.AccAddressFromBech32("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
+	addr1, err := suite.accountKeeper.AddressCodec().StringToBytes("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
 	suite.Require().NoError(err)
 	pub1, err := hex.DecodeString("D1002E1B019000010BB7034500E71F011F1CA90D5B000E134BFB0F3603030D0303")
 	suite.Require().NoError(err)
@@ -161,16 +179,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		pub := pubkeyGenerator(t).Draw(t, "pubkey")
-		addr := sdk.AccAddress(pub.Address())
-
-		accNum := rapid.Uint64().Draw(t, "account-number")
-		seq := rapid.Uint64().Draw(t, "sequence")
-
-		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
-
-		req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
+		accs := suite.createAndSetAccounts(t, 1)
+		req := &types.QueryAccountAddressByIDRequest{AccountId: accs[0].GetAccountNumber()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountAddressByID, 0, true)
 	})
 
@@ -194,7 +204,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-ed25519"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-Secp256k1"),
 		)
-		err := suite.accountKeeper.SetParams(suite.ctx, params)
+		err := suite.accountKeeper.Params.Set(suite.ctx, params)
 		suite.Require().NoError(err)
 
 		req := &types.QueryParamsRequest{}
@@ -204,7 +214,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 	// Regression test
 	params := types.NewParams(15, 167, 100, 1, 21457)
 
-	err := suite.accountKeeper.SetParams(suite.ctx, params)
+	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	suite.Require().NoError(err)
 
 	req := &types.QueryParamsRequest{}
@@ -233,7 +243,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, ak)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(ak))
 	return types.NewQueryClient(queryHelper)
 }
 
@@ -280,9 +290,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.key,
+			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
+			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)
@@ -326,9 +337,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
-			suite.key,
+			suite.storeService,
 			types.ProtoBaseAccount,
 			maccPerms,
+			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)

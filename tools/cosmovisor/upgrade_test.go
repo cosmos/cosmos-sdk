@@ -11,8 +11,6 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
-	"github.com/rs/zerolog"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -95,7 +93,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
-	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "cosmovisor").Impl().(*zerolog.Logger)
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -128,7 +126,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 }
 
 func (s *upgradeTestSuite) TestUpgradeBinary() {
-	logger := log.NewLoggerWithKV(os.Stdout, log.ModuleKey, "cosmovisor").Impl().(*zerolog.Logger)
+	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
 
 	cases := map[string]struct {
 		url         string

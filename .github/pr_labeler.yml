@@ -1,3 +1,5 @@
+"C:x/accounts":
+  - x/accounts/**/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":
@@ -43,9 +45,6 @@
   - collections/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
-"C:Rosetta":
-  - contrib/rosetta/**/*
-  - tools/rosetta/**/*
 "C:Confix":
   - tools/confix/**/*
 "C:Hubl":

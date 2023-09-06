@@ -10,11 +10,11 @@ import (
 	"time"
 
 	abci_server "github.com/cometbft/cometbft/abci/server"
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -78,7 +78,7 @@ func TestInitCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := genutilcli.InitCmd(testMbm, home)
+			cmd := genutilcli.InitCmd(testMbm)
 			cmd.SetArgs(
 				tt.flags(home),
 			)
@@ -111,7 +111,7 @@ func TestInitRecover(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{
@@ -142,11 +142,10 @@ func TestInitDefaultBondDenom(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 
 	cmd.SetArgs([]string{
 		"appnode-test",
-		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
 		fmt.Sprintf("--%s=testtoken", genutilcli.FlagDefaultBondDenom),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -159,6 +158,7 @@ func TestEmptyState(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx.Config.SetRoot(home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -170,8 +170,8 @@ func TestEmptyState(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd := genutilcli.InitCmd(testMbm)
+	cmd.SetArgs([]string{"appnode-test"})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -179,14 +179,15 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil, home)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd = server.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, err := io.Copy(&buf, r)
+		require.NoError(t, err)
+
 		outC <- buf.String()
 	}()
 
@@ -216,10 +217,11 @@ func TestStartStandAlone(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, closeFn())
 
-	svr, err := abci_server.NewServer(svrAddr, "socket", app)
+	cmtApp := server.NewCometABCIWrapper(app)
+	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
 	require.NoError(t, err, "error creating listener")
 
-	svr.SetLogger(servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", "abci-server")})
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
 	err = svr.Start()
 	require.NoError(t, err)
 
@@ -262,7 +264,7 @@ func TestInitConfig(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"testnode"})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -271,13 +273,14 @@ func TestInitConfig(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil, home)
+	cmd = server.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, err := io.Copy(&buf, r)
+		require.NoError(t, err)
 		outC <- buf.String()
 	}()
 
@@ -309,7 +312,7 @@ func TestInitWithHeight(t *testing.T) {
 
 	testInitialHeight := int64(333)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -341,7 +344,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 
 	testInitialHeight := int64(-333)
 
-	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))

@@ -64,8 +64,8 @@ func SetGenesisStateInAppState(
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromAppGenesis(gesnsis *AppGenesis) (genesisState map[string]json.RawMessage, err error) {
-	if err = json.Unmarshal(gesnsis.AppState, &genesisState); err != nil {
+func GenesisStateFromAppGenesis(genesis *AppGenesis) (genesisState map[string]json.RawMessage, err error) {
+	if err = json.Unmarshal(genesis.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}
 	return genesisState, nil
@@ -109,8 +109,11 @@ func DefaultMessageValidator(msgs []sdk.Msg) error {
 	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
 		return fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
 	}
-	if err := msgs[0].ValidateBasic(); err != nil {
-		return fmt.Errorf("invalid GenTx '%s': %w", msgs[0], err)
+
+	if m, ok := msgs[0].(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid GenTx '%s': %w", msgs[0], err)
+		}
 	}
 
 	return nil
@@ -121,7 +124,7 @@ func DefaultMessageValidator(msgs []sdk.Msg) error {
 func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder, validator MessageValidator) (sdk.Tx, error) {
 	tx, err := txJSONDecoder(genTx)
 	if err != nil {
-		return tx, fmt.Errorf("failed to decode gentx: %s, error: %s", genTx, err)
+		return tx, fmt.Errorf("failed to decode gentx: %s, error: %w", genTx, err)
 	}
 
 	return tx, validator(tx.GetMsgs())

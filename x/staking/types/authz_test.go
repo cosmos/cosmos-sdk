@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +26,7 @@ var (
 func TestAuthzAuthorizations(t *testing.T) {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	ctx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
 
 	// verify ValidateBasic returns error for the AUTHORIZATION_TYPE_UNSPECIFIED authorization type
 	delAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED, &coin100)
@@ -73,7 +73,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val1.String(), coin100),
 			false,
 			true,
 			nil,
@@ -84,7 +84,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			stakingtypes.NewMsgDelegate(delAddr, val1, coin150),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val1.String(), coin150),
 			true,
 			false,
 			nil,
@@ -95,7 +95,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			stakingtypes.NewMsgDelegate(delAddr, val1, coin50),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val1.String(), coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -110,7 +110,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			stakingtypes.NewMsgDelegate(delAddr, val3, coin100),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val3.String(), coin100),
 			true,
 			false,
 			nil,
@@ -121,7 +121,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
-			stakingtypes.NewMsgDelegate(delAddr, val2, coin100),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val2.String(), coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -136,7 +136,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
-			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val1.String(), coin100),
 			true,
 			false,
 			nil,
@@ -147,7 +147,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
-			stakingtypes.NewMsgDelegate(delAddr, val2, coin100),
+			stakingtypes.NewMsgDelegate(delAddr.String(), val2.String(), coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -162,7 +162,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val1.String(), coin100),
 			false,
 			true,
 			nil,
@@ -173,7 +173,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgUndelegate(delAddr, val1, coin50),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val1.String(), coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -188,7 +188,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgUndelegate(delAddr, val3, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val3.String(), coin100),
 			true,
 			false,
 			nil,
@@ -199,7 +199,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			nil,
-			stakingtypes.NewMsgUndelegate(delAddr, val2, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val2.String(), coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -214,7 +214,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val1.String(), coin100),
 			true,
 			false,
 			nil,
@@ -226,7 +226,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr.String(), val1.String(), coin100),
 			false,
 			true,
 			nil,
@@ -237,7 +237,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgBeginRedelegate(delAddr, val1, val1, coin50),
+			stakingtypes.NewMsgBeginRedelegate(delAddr.String(), val1.String(), val1.String(), coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -252,7 +252,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgBeginRedelegate(delAddr, val3, val3, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr.String(), val3.String(), val3.String(), coin100),
 			true,
 			false,
 			nil,
@@ -263,7 +263,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			nil,
-			stakingtypes.NewMsgBeginRedelegate(delAddr, val2, val2, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr.String(), val2.String(), val2.String(), coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -278,7 +278,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			stakingtypes.NewMsgBeginRedelegate(delAddr, val1, val1, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr.String(), val1.String(), val1.String(), coin100),
 			true,
 			false,
 			nil,
@@ -289,7 +289,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr.String(), val1.String(), ctx.HeaderInfo().Height, coin100),
 			false,
 			true,
 			nil,
@@ -300,7 +300,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr.String(), val1.String(), ctx.HeaderInfo().Height, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -317,7 +317,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val3, ctx.BlockHeight(), coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr.String(), val3.String(), ctx.HeaderInfo().Height, coin50),
 			true,
 			false,
 			nil,
@@ -328,7 +328,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			nil,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val2, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr.String(), val2.String(), ctx.HeaderInfo().Height, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -345,7 +345,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr, val1, ctx.BlockHeight(), coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(delAddr.String(), val1.String(), ctx.HeaderInfo().Height, coin100),
 			true,
 			false,
 			nil,

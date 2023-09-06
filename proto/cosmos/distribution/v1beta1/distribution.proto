@@ -15,7 +15,7 @@ message Params {
 
   string community_tax = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (amino.dont_omitempty) = true,
     (gogoproto.nullable)   = false
   ];
@@ -24,7 +24,7 @@ message Params {
   // in the x/distribution module's reward mechanism.
   string base_proposer_reward = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,
     deprecated             = true
@@ -34,7 +34,7 @@ message Params {
   // in the x/distribution module's reward mechanism.
   string bonus_proposer_reward = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,
     deprecated             = true
@@ -104,7 +104,7 @@ message ValidatorSlashEvent {
   uint64 validator_period = 1;
   string fraction         = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -158,7 +158,7 @@ message DelegatorStartingInfo {
   uint64 previous_period = 1;
   string stake           = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -171,7 +171,7 @@ message DelegatorStartingInfo {
 message DelegationDelegatorReward {
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   repeated cosmos.base.v1beta1.DecCoin reward = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",

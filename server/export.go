@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -22,7 +23,7 @@ const (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
+func ExportCmd(appExporter types.AppExporter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
@@ -30,9 +31,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
-			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-			config.SetRoot(homeDir)
 
 			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
@@ -87,6 +85,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
+			// set current binary version
+			appGenesis.AppName = version.AppName
+			appGenesis.AppVersion = version.Version
+
 			appGenesis.AppState = exported.AppState
 			appGenesis.InitialHeight = exported.Height
 			appGenesis.Consensus = genutiltypes.NewConsensusGenesis(exported.ConsensusParams, exported.Validators)
@@ -110,7 +112,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Int64(FlagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")

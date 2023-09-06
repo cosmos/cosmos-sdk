@@ -6,9 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -27,7 +29,7 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100))),
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(100))),
 	})
 
 	require.NoError(t, err)

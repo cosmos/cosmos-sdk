@@ -6,12 +6,11 @@ import (
 	"reflect"
 	"strings"
 
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	proto "github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

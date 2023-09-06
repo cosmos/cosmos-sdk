@@ -1,6 +1,7 @@
 package feegrant
 
 import (
+	"context"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -21,8 +22,8 @@ var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
-func (a *PeriodicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	blockTime := ctx.BlockTime()
+func (a *PeriodicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+	blockTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 
 	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "absolute limit")
@@ -90,7 +91,7 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	if !a.PeriodCanSpend.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "can spend amount is invalid: %s", a.PeriodCanSpend)
 	}
-	// We allow 0 for CanSpend
+	// We allow 0 for `PeriodCanSpend`
 	if a.PeriodCanSpend.IsAnyNegative() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "can spend must not be negative")
 	}
@@ -108,6 +109,7 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	return nil
 }
 
+// ExpiresAt returns the expiry time of the PeriodicAllowance.
 func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Basic.ExpiresAt()
 }

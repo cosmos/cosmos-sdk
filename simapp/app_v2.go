@@ -3,25 +3,19 @@
 package simapp
 
 import (
-	_ "embed"
 	"io"
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/evidence"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	nftmodule "cosmossdk.io/x/nft/module"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/upgrade"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -38,70 +32,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-var (
-	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome string
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		mint.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler,
-			},
-		),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		feegrantmodule.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-		groupmodule.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		nftmodule.AppModuleBasic{},
-		consensus.AppModuleBasic{},
-	)
-)
+// DefaultNodeHome default home directories for the application daemon
+var DefaultNodeHome string
 
 var (
 	_ runtime.AppI            = (*SimApp)(nil)
@@ -117,7 +64,6 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
-	autoCliOpts       autocli.AppOptions
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -136,6 +82,7 @@ type SimApp struct {
 	GroupKeeper           groupkeeper.Keeper
 	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
+	CircuitBreakerKeeper  circuitkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -169,6 +116,8 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
+				// supply the logger
+				logger,
 
 				// ADVANCED CONFIGURATION
 
@@ -179,11 +128,28 @@ func NewSimApp(
 				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
 				//
 				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
-
+				//
 				// For providing a custom a base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
+				//
+				// For providing a different address codec, add it below.
+				// By default the auth module uses a Bech32 address codec,
+				// with the prefix defined in the auth module configuration.
+				//
+				// func() address.Codec { return <- custom address codec type -> }
+
+				//
+				// STAKING
+				//
+				// For provinding a different validator and consensus address codec, add it below.
+				// By default the staking module uses the bech32 prefix provided in the auth config,
+				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
+				// When providing a custom address codec in auth, custom address codecs must be provided here as well.
+				//
+				// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
+				// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
 
 				//
 				// MINT
@@ -202,7 +168,6 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
@@ -219,6 +184,7 @@ func NewSimApp(
 		&app.GroupKeeper,
 		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
+		&app.CircuitBreakerKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -249,7 +215,14 @@ func NewSimApp(
 	// }
 	// baseAppOptions = append(baseAppOptions, prepareOpt)
 
-	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
+	// create and set dummy vote extension handler
+	voteExtOp := func(bApp *baseapp.BaseApp) {
+		voteExtHandler := NewVoteExtensionHandler()
+		voteExtHandler.SetHandlers(bApp)
+	}
+	baseAppOptions = append(baseAppOptions, voteExtOp)
+
+	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
 	// register streaming services
 	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
@@ -295,9 +268,6 @@ func NewSimApp(
 	return app
 }
 
-// Name returns the name of the App
-func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -314,7 +284,7 @@ func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns SimApp's InterfaceRegistry
+// InterfaceRegistry returns SimApp's InterfaceRegistry.
 func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 	return app.interfaceRegistry
 }
@@ -322,11 +292,6 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// AutoCliOpts returns the autocli options for the app.
-func (app *SimApp) AutoCliOpts() autocli.AppOptions {
-	return app.autoCliOpts
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

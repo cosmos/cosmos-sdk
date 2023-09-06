@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sort"
 
-	ics23 "github.com/confio/ics23/go"
+	ics23 "github.com/cosmos/ics23/go"
 
 	sdkmaps "cosmossdk.io/store/internal/maps"
 )

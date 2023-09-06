@@ -26,7 +26,6 @@ var grand *Rand
 
 func init() {
 	grand = NewRand()
-	grand.init()
 }
 
 func NewRand() *Rand {

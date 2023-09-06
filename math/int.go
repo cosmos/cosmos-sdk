@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"encoding/json"
 	"fmt"
+	stdmath "math"
 	"math/big"
 	"strings"
 	"sync"
@@ -17,31 +18,31 @@ func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
 }
 
-func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
+func equal(i, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
 
-func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
+func gt(i, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
-func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
+func gte(i, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
 
-func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
+func lt(i, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
 
-func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
+func lte(i, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
 
-func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
+func add(i, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
 
-func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
+func sub(i, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
 
-func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
+func mul(i, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
 
-func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
+func div(i, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 
-func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
+func mod(i, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
 func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
 
-func min(i *big.Int, i2 *big.Int) *big.Int {
+func min(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
@@ -49,7 +50,7 @@ func min(i *big.Int, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
-func max(i *big.Int, i2 *big.Int) *big.Int {
+func max(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == -1 {
 		return new(big.Int).Set(i2)
 	}
@@ -105,6 +106,7 @@ func NewIntFromUint64(n uint64) Int {
 
 // NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
+// Note, the caller can safely mutate the argument after this function returns.
 func NewIntFromBigInt(i *big.Int) Int {
 	if i == nil {
 		return Int{}
@@ -113,7 +115,8 @@ func NewIntFromBigInt(i *big.Int) Int {
 	if i.BitLen() > MaxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
-	return Int{i}
+
+	return Int{new(big.Int).Set(i)}
 }
 
 // NewIntFromString constructs Int from string
@@ -152,6 +155,11 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
+
+// ToLegacyDec converts Int to LegacyDec
+func (i Int) ToLegacyDec() LegacyDec {
+	return LegacyNewDecFromInt(i)
+}
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -422,6 +430,24 @@ func (i *Int) Unmarshal(data []byte) error {
 
 // Size implements the gogo proto custom type interface.
 func (i *Int) Size() int {
+	if i.i == nil {
+		return 1
+	}
+	// A float64 can store 52 bits exactly, which allows us to use
+	// math.Log10 to compute the size fast and garbage free.
+	if i.i.BitLen() <= 52 {
+		i64 := i.i.Int64()
+		if i64 == 0 {
+			return 1
+		}
+		size := 0
+		if i64 < 0 {
+			i64 = -i64
+			size++
+		}
+		return size + 1 + int(stdmath.Log10(float64(i64)))
+	}
+	// Slow path.
 	bz, _ := i.Marshal()
 	return len(bz)
 }
@@ -432,6 +458,7 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
@@ -455,8 +482,12 @@ var stringsBuilderPool = &sync.Pool{
 
 // FormatInt formats an integer (encoded as in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the int or sdk.Int object).
+// (instead of manipulating the int or math.Int object).
 func FormatInt(v string) (string, error) {
+	if len(v) == 0 {
+		return "", fmt.Errorf("cannot format empty string")
+	}
+
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

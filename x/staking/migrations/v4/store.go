@@ -3,6 +3,7 @@ package v4
 import (
 	"sort"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,9 +13,7 @@ import (
 )
 
 // MigrateStore performs in-place store migrations from v3 to v4.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
-	store := ctx.KVStore(storeKey)
-
+func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	// migrate params
 	if err := migrateParams(ctx, store, cdc, legacySubspace); err != nil {
 		return err
@@ -67,8 +66,8 @@ func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.Bina
 
 		for _, h := range creationHeights {
 			ubdEntry := types.UnbondingDelegationEntry{
-				Balance:        sdk.ZeroInt(),
-				InitialBalance: sdk.ZeroInt(),
+				Balance:        sdkmath.ZeroInt(),
+				InitialBalance: sdkmath.ZeroInt(),
 			}
 			for _, entry := range entriesAtSameCreationHeight[h] {
 				ubdEntry.Balance = ubdEntry.Balance.Add(entry.Balance)

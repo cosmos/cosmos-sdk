@@ -12,7 +12,6 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
@@ -71,8 +70,8 @@ func TestMetadataQuerier(t *testing.T) {
 	require.ErrorIs(t, err, expErr)
 }
 
-func TestCoinJsonTestcases(t *testing.T) {
-	var testcases []coinJsonTest
+func TestCoinJSONTestcases(t *testing.T) {
+	var testcases []coinJSONTest
 	raw, err := os.ReadFile("./internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -121,7 +120,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinJsonTest struct {
+type coinJSONTest struct {
 	Proto    *basev1beta1.Coin
 	Metadata *bankv1beta1.Metadata
 	Error    bool

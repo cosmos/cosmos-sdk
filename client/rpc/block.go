@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,7 +47,7 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 //		  tx.height = 5                       # all txs of the fifth block
 //
 // For more information, see the /subscribe CometBFT RPC endpoint documentation
-func QueryBlocks(clientCtx client.Context, page, limit int, query string, orderBy string) (*sdk.SearchBlocksResult, error) {
+func QueryBlocks(clientCtx client.Context, page, limit int, query, orderBy string) (*sdk.SearchBlocksResult, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err

@@ -4,7 +4,9 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -23,8 +25,8 @@ func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []feegrant.Grant {
 
 func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) feegrant.Grant {
 	allowances := make([]feegrant.Grant, 3)
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
+	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10)))
 
 	basic := feegrant.BasicAllowance{
 		SpendLimit: spendLimit,
@@ -63,7 +65,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var feegrants []feegrant.Grant
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, "feegrant", &feegrants, simState.Rand,
+		"feegrant", &feegrants, simState.Rand,
 		func(r *rand.Rand) { feegrants = genFeeGrants(r, simState.Accounts) },
 	)
 

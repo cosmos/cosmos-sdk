@@ -124,7 +124,7 @@ type GetTxsEventRequest struct {
 	// query defines the transaction event query that is proxied to Tendermint's
 	// TxSearch RPC method. The query must be valid.
 	//
-	// Since Cosmos SDK 0.48
+	// Since cosmos-sdk 0.50
 	Query string `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
 }
 

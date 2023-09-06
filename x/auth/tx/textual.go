@@ -4,17 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/signing/textual"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/textual"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -79,7 +78,7 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 
 	return h.t.GetSignBytes(ctx, txsigning.SignerData{
 		Address:       data.Address,
-		ChainId:       data.ChainID,
+		ChainID:       data.ChainID,
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		PubKey: &anypb.Any{

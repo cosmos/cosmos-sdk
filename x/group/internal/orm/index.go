@@ -5,10 +5,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -134,7 +133,7 @@ func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, 
 //	it = LimitIterator(it, defaultLimit)
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
+func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI, endI interface{}) (Iterator, error) {
 	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
@@ -154,7 +153,7 @@ func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI interface{}, endI 
 // this as an endpoint to the public without further limits. See `LimitIterator`
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
+func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI, endI interface{}) (Iterator, error) {
 	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
@@ -167,7 +166,7 @@ func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI interface{}
 
 // getStartEndBz gets the start and end bytes to be passed into the SDK store
 // iterator.
-func getStartEndBz(startI interface{}, endI interface{}) ([]byte, []byte, error) {
+func getStartEndBz(startI, endI interface{}) ([]byte, []byte, error) {
 	start, err := getPrefixScanKeyBytes(startI)
 	if err != nil {
 		return nil, nil, err

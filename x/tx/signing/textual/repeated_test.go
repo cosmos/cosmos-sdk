@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -16,16 +15,16 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-type repeatedJsonTest struct {
+type repeatedJSONTest struct {
 	Proto   *testpb.Qux
 	Screens []textual.Screen
 }
 
-func TestRepeatedJsonTestcases(t *testing.T) {
+func TestRepeatedJSONTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/repeated.json")
 	require.NoError(t, err)
 
-	var testcases []repeatedJsonTest
+	var testcases []repeatedJSONTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 

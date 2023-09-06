@@ -3,15 +3,14 @@ package keeper
 import (
 	"context"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -26,17 +25,17 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.WithdrawAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)
 	}
-	withdrawAddress, err := sdk.AccAddressFromBech32(msg.WithdrawAddress)
-	if err != nil {
-		return nil, err
-	}
+
 	err = k.SetWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	if err != nil {
 		return nil, err
@@ -45,17 +44,17 @@ func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWi
 	return &types.MsgSetWithdrawAddressResponse{}, nil
 }
 
-func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.MsgWithdrawDelegatorReward) (*types.MsgWithdrawDelegatorRewardResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWithdrawDelegatorReward) (*types.MsgWithdrawDelegatorRewardResponse, error) {
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
 
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
+
 	amount, err := k.WithdrawDelegationRewards(ctx, delegatorAddress, valAddr)
 	if err != nil {
 		return nil, err
@@ -76,13 +75,12 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
-func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
+
 	amount, err := k.Keeper.WithdrawValidatorCommission(ctx, valAddr)
 	if err != nil {
 		return nil, err
@@ -103,99 +101,135 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
-func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	depositer, err := sdk.AccAddressFromBech32(msg.Depositor)
+func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
+	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+	}
+
+	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositer); err != nil {
+
+	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
 
-func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if k.authority != req.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
-	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck
-		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
-		return nil, errorsmod.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
+	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck // deprecated but kept for backwards compatibility
+		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck // deprecated but kept for backwards compatibility
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, req.Params); err != nil {
+	if err := msg.Params.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
-	if k.authority != req.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := validateAmount(msg.Amount); err != nil {
+		return nil, err
+	}
 
-	recipient, err := sdk.AccAddressFromBech32(req.Recipient)
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, err
 	}
 
 	if k.bankKeeper.BlockedAddr(recipient) {
-		return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive external funds", req.Recipient)
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", msg.Recipient)
 	}
 
-	if err := k.DistributeFromFeePool(ctx, req.Amount, recipient); err != nil {
+	if err := k.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", req.Amount.String(), "recipient", req.Recipient)
+	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
-func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	authority, err := sdk.AccAddressFromBech32(req.Authority)
+func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
+	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, err
 	}
 
-	// deposit coins from sender's account to the distribution module
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, authority, types.ModuleName, req.Amount); err != nil {
+	// deposit coins from depositor's account to the distribution module
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	if validator == nil {
-		return nil, errorsmod.Wrapf(types.ErrNoValidatorExists, valAddr.String())
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.
-	reward := sdk.NewDecCoinsFromCoins(req.Amount...)
-	k.AllocateTokensToValidator(ctx, validator, reward)
+	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
+	if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
+		return nil, err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(
 		"transferred from rewards to validator rewards pool",
-		"authority", req.Authority,
-		"amount", req.Amount.String(),
-		"validator", req.ValidatorAddress,
+		"depositor", msg.Depositor,
+		"amount", msg.Amount.String(),
+		"validator", msg.ValidatorAddress,
 	)
 
 	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil
+}
+
+func (k *Keeper) validateAuthority(authority string) error {
+	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	if k.authority != authority {
+		return errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
+	}
+
+	return nil
+}
+
+func validateAmount(amount sdk.Coins) error {
+	if amount == nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amount cannot be nil")
+	}
+
+	if err := amount.Validate(); err != nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	}
+
+	return nil
 }

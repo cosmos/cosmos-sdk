@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -16,8 +16,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
-
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
@@ -41,7 +40,7 @@ type SignModeOptions struct {
 
 	// FileResolver are the protobuf files to use for resolving message
 	// descriptors. If it is nil, the global protobuf registry will be used.
-	FileResolver *protoregistry.Files
+	FileResolver signing.ProtoFileResolver
 
 	// TypeResolver are the protobuf type resolvers to use for resolving message
 	// types. If it is nil, then a dynamicpb will be used on top of FileResolver.
@@ -51,7 +50,7 @@ type SignModeOptions struct {
 // SignModeHandler holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
 type SignModeHandler struct {
-	fileResolver        *protoregistry.Files
+	fileResolver        signing.ProtoFileResolver
 	typeResolver        protoregistry.MessageTypeResolver
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
@@ -96,7 +95,7 @@ func (r *SignModeHandler) SpecVersion() uint64 {
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
 func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
-	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
+	// Scalars, such as math.Int and math.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind:
 		if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
 			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
@@ -138,13 +137,15 @@ func (r *SignModeHandler) GetFieldValueRenderer(fd protoreflect.FieldDescriptor)
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
 		return NewMessageValueRenderer(r, md), nil
+	case fd.Kind() == protoreflect.BoolKind:
+		return NewBoolValueRenderer(), nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
 	}
 }
 
-// GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
+// GetMessageValueRenderer returns a value renderer for a message.
 // It is useful when the message type is discovered outside the context of a field,
 // e.g. when handling a google.protobuf.Any.
 func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
@@ -163,7 +164,7 @@ func (r *SignModeHandler) GetMessageValueRenderer(md protoreflect.MessageDescrip
 func (r *SignModeHandler) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRendererCreator{}
-		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
+		r.scalars["cosmos.Int"] = NewIntValueRenderer
 		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
@@ -188,26 +189,22 @@ func (r *SignModeHandler) DefineMessageRenderer(name protoreflect.FullName, vr V
 	r.messages[name] = vr
 }
 
-// GetSignBytes returns the transaction sign bytes.
+// GetSignBytes returns the transaction sign bytes which is the CBOR representation
+// of a list of screens created from the TX data.
 func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	data := &textualpb.TextualData{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
 		SignerData: &textualpb.SignerData{
 			Address:       signerData.Address,
-			ChainId:       signerData.ChainId,
+			ChainId:       signerData.ChainID,
 			AccountNumber: signerData.AccountNumber,
 			Sequence:      signerData.Sequence,
 			PubKey:        signerData.PubKey,
 		},
 	}
 
-	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
-	if err != nil {
-		return nil, err
-	}
-
-	screens, err := vr.Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
+	screens, err := NewTxValueRenderer(r).Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}

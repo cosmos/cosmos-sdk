@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -16,24 +15,11 @@ import (
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
 
-	enhanceMsg := func(cmd *cobra.Command, modOpts *autocliv1.ModuleOptions, moduleName string) error {
-		txQueryDesc := modOpts.Query
-		if txQueryDesc != nil {
-			subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
-			err := b.AddQueryServiceCommands(subCmd, txQueryDesc)
-			if err != nil {
-				return err
-			}
-
-			cmd.AddCommand(subCmd)
-		}
-		return nil
-	}
-	if err := b.enhanceCommandCommon(queryCmd, moduleOptions, customCmds, enhanceMsg); err != nil {
+	if err := b.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customCmds); err != nil {
 		return nil, err
 	}
 
@@ -45,9 +31,12 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
-		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
-		err := b.AddQueryServiceCommands(subCmd, subCmdDesc)
-		if err != nil {
+		subCmd := findSubCommand(cmd, cmdName)
+		if subCmd == nil {
+			subCmd = topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+		}
+
+		if err := b.AddQueryServiceCommands(subCmd, subCmdDesc); err != nil {
 			return err
 		}
 
@@ -59,11 +48,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		return nil
 	}
 
-	resolver := b.FileResolver
-	if resolver == nil {
-		resolver = protoregistry.GlobalFiles
-	}
-	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
+	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
 		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
@@ -81,8 +66,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		}
 	}
 
-	n := methods.Len()
-	for i := 0; i < n; i++ {
+	for i := 0; i < methods.Len(); i++ {
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
 		if !ok {
@@ -98,8 +82,13 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			return err
 		}
 
-		cmd.AddCommand(methodCmd)
+		if findSubCommand(cmd, methodCmd.Name()) != nil {
+			// do not overwrite existing commands
+			// we do not display a warning because you may want to overwrite an autocli command
+			continue
+		}
 
+		cmd.AddCommand(methodCmd)
 	}
 
 	return nil
@@ -121,25 +110,26 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
+			jsonMarshalOptions.Indent = ""
+		}
+
 		clientConn, err := getClientConn(cmd)
 		if err != nil {
 			return err
 		}
 
 		output := outputType.New()
-		ctx := cmd.Context()
-		err = clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
-		if err != nil {
+		if err := clientConn.Invoke(cmd.Context(), methodName, input.Interface(), output.Interface()); err != nil {
 			return err
 		}
 
 		bz, err := jsonMarshalOptions.Marshal(output.Interface())
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
 		}
 
-		err = b.outOrStdoutFormat(cmd, bz)
-		return err
+		return b.outOrStdoutFormat(cmd, bz)
 	})
 	if err != nil {
 		return nil, err
@@ -147,6 +137,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 	if b.AddQueryConnFlags != nil {
 		b.AddQueryConnFlags(cmd)
+
+		cmd.Flags().BoolP(flagNoIndent, "", false, "Do not indent JSON output")
 	}
 
 	return cmd, nil

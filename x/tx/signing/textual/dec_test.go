@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestDecJsonTestcases(t *testing.T) {
+func TestDecJSONTestcases(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
 	raw, err := os.ReadFile("./internal/testdata/decimals.json")
@@ -38,6 +38,7 @@ func TestDecJsonTestcases(t *testing.T) {
 }
 
 func checkDecTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Value, expected string) {
+	t.Helper()
 	screens, err := r.Format(context.Background(), pv)
 	require.NoError(t, err)
 	require.Len(t, screens, 1)

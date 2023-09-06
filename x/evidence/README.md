@@ -107,7 +107,7 @@ by the `Handler` should be persisted.
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(sdk.Context, Evidence) error
+type Handler func(context.Context, Evidence) error
 ```
 
 
@@ -152,7 +152,7 @@ as follows:
 
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
-  if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
+  if _, err := GetEvidence(ctx, evidence.Hash()); err == nil {
     return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
   }
   if !router.HasRoute(evidence.Route()) {
@@ -271,7 +271,7 @@ The `evidence` command allows users to list all evidence or evidence by hash.
 Usage:
 
 ```bash
-simd query evidence [flags]
+simd query evidence evidence [flags]
 ```
 
 To query evidence by hash
@@ -279,7 +279,7 @@ To query evidence by hash
 Example:
 
 ```bash
-simd query evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+simd query evidence evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
 ```
 
 Example Output:
@@ -297,7 +297,7 @@ To get all evidence
 Example:
 
 ```bash
-simd query evidence
+simd query evidence list
 ```
 
 Example Output:

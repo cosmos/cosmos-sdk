@@ -1,6 +1,7 @@
 package upgrade_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"testing"
@@ -8,9 +9,9 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
@@ -18,6 +19,8 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,26 +28,92 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type TestSuite struct {
-	suite.Suite
-
 	module  appmodule.HasBeginBlocker
 	keeper  *keeper.Keeper
-	handler govtypesv1beta1.Handler
 	ctx     sdk.Context
 	baseApp *baseapp.BaseApp
 	encCfg  moduletestutil.TestEncodingConfig
 }
 
-var s TestSuite
+func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
+	t.Helper()
+	t.Log("Verify that a panic happens at the upgrade height")
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
+
+	s.VerifyCleared(t, newCtx)
+}
+
+func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+	t.Helper()
+	t.Log("Verify that a panic happens at the upgrade height")
+
+	err := s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
+
+	s.VerifyCleared(t, newCtx)
+}
+
+func (s *TestSuite) VerifyCleared(t *testing.T, newCtx sdk.Context) {
+	t.Helper()
+	t.Log("Verify that the upgrade plan has been cleared")
+	_, err := s.keeper.GetUpgradePlan(newCtx)
+	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
+}
+
+func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
+	t.Log("Verify that upgrade was not done")
+	height, err := s.keeper.GetDoneHeight(newCtx, name)
+	require.Zero(t, height)
+	require.NoError(t, err)
+}
+
+func (s *TestSuite) VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+	t.Helper()
+	t.Log("Verify that the upgrade plan has been executed")
+	height, err := s.keeper.GetDoneHeight(newCtx, name)
+	require.NotZero(t, height)
+	require.NoError(t, err)
+}
+
+func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
+	t.Helper()
+	t.Log("Verify if the skip upgrade has been set")
+
+	for k := range skipUpgradeHeights {
+		require.True(t, s.keeper.IsSkipHeight(k))
+	}
+}
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
+	t.Helper()
+	s := TestSuite{}
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
@@ -53,27 +122,19 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
-	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	s.keeper.SetVersionSetter(s.baseApp)
+	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: height})
+	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	s.module = upgrade.NewAppModule(s.keeper)
-	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
+
+	s.module = upgrade.NewAppModule(s.keeper, addresscodec.NewBech32Codec("cosmos"))
 	return &s
-}
-
-func TestRequireName(t *testing.T) {
-	s := setupTest(t, 10, map[int64]bool{})
-
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{}}) //nolint:staticcheck // we're testing deprecated code
-	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() - 1}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height - 1})
 	require.Error(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
@@ -81,120 +142,74 @@ func TestRequireFutureBlock(t *testing.T) {
 func TestDoHeightUpgrade(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 
-	VerifyDoUpgrade(t)
+	s.VerifyDoUpgrade(t)
 }
 
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Can overwrite plan")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "bad_test", Height: s.ctx.HeaderInfo().Height + 10})
 	require.NoError(t, err)
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 
-	VerifyDoUpgrade(t)
-}
-
-func VerifyDoUpgrade(t *testing.T) {
-	t.Log("Verify that a panic happens at the upgrade height")
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
-
-	VerifyCleared(t, newCtx)
-}
-
-func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
-	t.Log("Verify that a panic happens at the upgrade height")
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
-
-	VerifyCleared(t, newCtx)
+	s.VerifyDoUpgrade(t)
 }
 
 func TestHaltIfTooNew(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
-	s.keeper.SetUpgradeHandler("future", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler("future", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		called++
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+	err := s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 	require.Equal(t, 0, called)
 
-	t.Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}}) //nolint:staticcheck // we're testing deprecated code
+	t.Log("Verify we error if we have a registered handler ahead of time")
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: s.ctx.HeaderInfo().Height + 3})
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.EqualError(t, err, "BINARY UPDATED BEFORE TRIGGER! UPGRADE \"future\" - in binary but not executed on chain. Downgrade your binary")
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
-	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(futCtx)
-	})
+	futCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 3, Time: time.Now()})
+	err = s.module.BeginBlock(futCtx)
+	require.NoError(t, err)
 	require.Equal(t, 1, called)
 
-	VerifyCleared(t, futCtx)
-}
-
-func VerifyCleared(t *testing.T, newCtx sdk.Context) {
-	t.Log("Verify that the upgrade plan has been cleared")
-	plan, _ := s.keeper.GetUpgradePlan(newCtx)
-	expected := types.Plan{}
-	require.Equal(t, plan, expected)
+	s.VerifyCleared(t, futCtx)
 }
 
 func TestCanClear(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify upgrade is scheduled")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 100}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 100})
 	require.NoError(t, err)
 
-	err = s.handler(s.ctx, &types.CancelSoftwareUpgradeProposal{Title: "cancel"}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ClearUpgradePlan(s.ctx)
 	require.NoError(t, err)
 
-	VerifyCleared(t, s.ctx)
+	s.VerifyCleared(t, s.ctx)
 }
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	height := s.ctx.BlockHeader().Height + 1
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}}) //nolint:staticcheck // we're testing deprecated code
+	height := s.ctx.HeaderInfo().Height + 1
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.NoError(t, err)
-	VerifyDoUpgrade(t)
+	s.VerifyDoUpgrade(t)
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.Error(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
@@ -202,9 +217,8 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 func TestNoSpuriousUpgrades(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(s.ctx)
-	})
+	err := s.module.BeginBlock(s.ctx)
+	require.NoError(t, err)
 }
 
 func TestPlanStringer(t *testing.T) {
@@ -212,31 +226,11 @@ func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `name:"test" time:<seconds:-62135596800 > height:100 `, (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
 }
 
-func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Log("Verify that upgrade was not done")
-	height := s.keeper.GetDoneHeight(newCtx, name)
-	require.Zero(t, height)
-}
-
-func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
-	t.Log("Verify that the upgrade plan has been executed")
-	height := s.keeper.GetDoneHeight(newCtx, name)
-	require.NotZero(t, height)
-}
-
-func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
-	t.Log("Verify if the skip upgrade has been set")
-
-	for k := range skipUpgradeHeights {
-		require.True(t, s.keeper.IsSkipHeight(k))
-	}
-}
-
 func TestContains(t *testing.T) {
 	var skipOne int64 = 11
 	s := setupTest(t, 10, map[int64]bool{skipOne: true})
 
-	VerifySet(t, map[int64]bool{skipOne: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")
 	require.True(t, s.keeper.IsSkipHeight(11))
 
@@ -253,31 +247,29 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	newCtx := s.ctx
 
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: skipOne})
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
-	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
-
-	t.Log("Verify a second proposal also is being cleared")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
+	err = s.module.BeginBlock(newCtx)
 	require.NoError(t, err)
 
-	newCtx = newCtx.WithBlockHeight(skipTwo)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	t.Log("Verify a second proposal also is being cleared")
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: skipTwo})
+	require.NoError(t, err)
+
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	// To ensure verification is being done only after both upgrades are cleared
 	t.Log("Verify if both proposals are cleared")
-	VerifyCleared(t, s.ctx)
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyNotDone(t, s.ctx, "test2")
+	s.VerifyCleared(t, s.ctx)
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyNotDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOne(t *testing.T) {
@@ -289,28 +281,27 @@ func TestUpgradeSkippingOne(t *testing.T) {
 
 	newCtx := s.ctx
 
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: skipOne})
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	VerifySet(t, map[int64]bool{skipOne: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true})
 
 	// Setting block height of proposal test
-	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	t.Log("Verify the second proposal is not skipped")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: skipTwo})
 	require.NoError(t, err)
 	// Setting block height of proposal test2
-	newCtx = newCtx.WithBlockHeight(skipTwo)
-	VerifyDoUpgradeWithCtx(t, newCtx, "test2")
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
+	s.VerifyDoUpgradeWithCtx(t, newCtx, "test2")
 
 	t.Log("Verify first proposal is cleared and second is done")
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyDone(t, s.ctx, "test2")
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOnlyTwo(t *testing.T) {
@@ -323,51 +314,48 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 	newCtx := s.ctx
 
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: skipOne}}) //nolint:staticcheck // we're testing deprecated code
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: skipOne})
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
+	s.VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	// Setting block height of proposal test
-	newCtx = newCtx.WithBlockHeight(skipOne)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipOne})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	// A new proposal with height in skipUpgradeHeights
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop2", Plan: types.Plan{Name: "test2", Height: skipTwo}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: skipTwo})
 	require.NoError(t, err)
 	// Setting block height of proposal test2
-	newCtx = newCtx.WithBlockHeight(skipTwo)
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipTwo})
+	err = s.module.BeginBlock(newCtx)
+	require.NoError(t, err)
 
 	t.Log("Verify a new proposal is not skipped")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop3", Plan: types.Plan{Name: "test3", Height: skipThree}}) //nolint:staticcheck // we're testing deprecated code
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test3", Height: skipThree})
 	require.NoError(t, err)
-	newCtx = newCtx.WithBlockHeight(skipThree)
-	VerifyDoUpgradeWithCtx(t, newCtx, "test3")
+	newCtx = newCtx.WithHeaderInfo(header.Info{Height: skipThree})
+	s.VerifyDoUpgradeWithCtx(t, newCtx, "test3")
 
 	t.Log("Verify two proposals are cleared and third is done")
-	VerifyNotDone(t, s.ctx, "test")
-	VerifyNotDone(t, s.ctx, "test2")
-	VerifyDone(t, s.ctx, "test3")
+	s.VerifyNotDone(t, s.ctx, "test")
+	s.VerifyNotDone(t, s.ctx, "test2")
+	s.VerifyDone(t, s.ctx, "test3")
 }
 
 func TestUpgradeWithoutSkip(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx)
-	})
+	err = s.module.BeginBlock(newCtx)
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
-	VerifyDoUpgrade(t)
-	VerifyDone(t, s.ctx, "test")
+	s.VerifyDoUpgrade(t)
+	s.VerifyDone(t, s.ctx, "test")
 }
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
@@ -378,7 +366,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	_, err := s.keeper.ReadUpgradeInfoFromDisk()
 	require.NoError(err)
 
-	planHeight := s.ctx.BlockHeight() + 1
+	planHeight := s.ctx.HeaderInfo().Height + 1
 	plan := types.Plan{
 		Name:   "test",
 		Height: 0, // this should be overwritten by DumpUpgradeInfoToFile
@@ -409,7 +397,7 @@ func TestBinaryVersion(t *testing.T) {
 	testCases := []struct {
 		name        string
 		preRun      func() sdk.Context
-		expectPanic bool
+		expectError bool
 	}{
 		{
 			"test not panic: no scheduled upgrade or applied upgrade is present",
@@ -421,19 +409,19 @@ func TestBinaryVersion(t *testing.T) {
 		{
 			"test not panic: upgrade handler is present for last applied upgrade",
 			func() sdk.Context {
-				s.keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
 
-				err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test0", Height: s.ctx.BlockHeight() + 2}}) //nolint:staticcheck // we're testing deprecated code
+				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test0", Height: s.ctx.HeaderInfo().Height + 2})
 				require.NoError(t, err)
 
-				newCtx := s.ctx.WithBlockHeight(12)
-				s.keeper.ApplyUpgrade(newCtx, types.Plan{
+				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
+				err = s.keeper.ApplyUpgrade(newCtx, types.Plan{
 					Name:   "test0",
 					Height: 12,
 				})
-
+				require.NoError(t, err)
 				return newCtx
 			},
 			false,
@@ -441,10 +429,10 @@ func TestBinaryVersion(t *testing.T) {
 		{
 			"test panic: upgrade needed",
 			func() sdk.Context {
-				err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test2", Height: 13}}) //nolint:staticcheck // we're testing deprecated code
+				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: 13})
 				require.NoError(t, err)
 
-				newCtx := s.ctx.WithBlockHeight(13)
+				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 13})
 				return newCtx
 			},
 			true,
@@ -453,14 +441,11 @@ func TestBinaryVersion(t *testing.T) {
 
 	for _, tc := range testCases {
 		ctx := tc.preRun()
-		if tc.expectPanic {
-			require.Panics(t, func() {
-				s.module.BeginBlock(ctx)
-			})
+		err := s.module.BeginBlock(ctx)
+		if tc.expectError {
+			require.Error(t, err)
 		} else {
-			require.NotPanics(t, func() {
-				s.module.BeginBlock(ctx)
-			})
+			require.NoError(t, err)
 		}
 	}
 }
@@ -470,53 +455,49 @@ func TestDowngradeVerification(t *testing.T) {
 	// for the two keepers.
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now(), Height: 10})
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}
-	tempDir := t.TempDir()
-	k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	m := upgrade.NewAppModule(k)
-	handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// submit a plan.
 	planName := "downgrade"
-	err := handler(ctx, &types.SoftwareUpgradeProposal{Title: "test", Plan: types.Plan{Name: planName, Height: ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
+	err := k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// set the handler.
-	k.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	k.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
 
 	// successful upgrade.
-	require.NotPanics(t, func() {
-		m.BeginBlock(ctx)
-	})
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	require.NoError(t, m.BeginBlock(ctx))
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	testCases := map[string]struct {
 		preRun      func(*keeper.Keeper, sdk.Context, string)
-		expectPanic bool
+		expectError bool
 	}{
 		"valid binary": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				k.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
 			},
 		},
 		"downgrade with an active plan": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
-				err := handler(ctx, &types.SoftwareUpgradeProposal{Title: "test", Plan: types.Plan{Name: "another" + planName, Height: ctx.BlockHeight() + 1}}) //nolint:staticcheck // we're testing deprecated code
+				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: ctx.HeaderInfo().Height + 1})
 				require.NoError(t, err, name)
 			},
-			expectPanic: true,
+			expectError: true,
 		},
 		"downgrade without any active plan": {
-			expectPanic: true,
+			expectError: true,
 		},
 	}
 
@@ -524,29 +505,46 @@ func TestDowngradeVerification(t *testing.T) {
 		ctx, _ := ctx.CacheContext()
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-		m := upgrade.NewAppModule(k)
+		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions
-		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
+		lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
+		require.NoError(t, err)
 		require.Equal(t, planName, lastAppliedPlan)
 		require.False(t, k.HasHandler(planName))
 		require.False(t, k.DowngradeVerified())
-		_, found := k.GetUpgradePlan(ctx)
-		require.False(t, found)
+		_, err = k.GetUpgradePlan(ctx)
+		require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 
 		if tc.preRun != nil {
 			tc.preRun(k, ctx, name)
 		}
 
-		if tc.expectPanic {
-			require.Panics(t, func() {
-				m.BeginBlock(ctx)
-			}, name)
+		err = m.BeginBlock(ctx)
+		if tc.expectError {
+			require.Error(t, err, name)
 		} else {
-			require.NotPanics(t, func() {
-				m.BeginBlock(ctx)
-			}, name)
+			require.NoError(t, err, name)
 		}
 	}
+}
+
+type paramStore struct {
+	params cmtproto.ConsensusParams
+}
+
+var _ baseapp.ParamStore = (*paramStore)(nil)
+
+func (ps *paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
+	ps.params = value
+	return nil
+}
+
+func (ps paramStore) Has(_ context.Context) (bool, error) {
+	return true, nil
+}
+
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
+	return ps.params, nil
 }

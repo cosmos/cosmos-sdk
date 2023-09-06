@@ -5,7 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/merkle"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	ics23 "github.com/confio/ics23/go"
+	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -61,7 +61,7 @@ func NewSmtCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 }
 
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
-// The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
+// The proofOp.Data is just a marshaled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
 func CommitmentOpDecoder(pop cmtprotocrypto.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec

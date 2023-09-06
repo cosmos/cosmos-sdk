@@ -14,33 +14,36 @@ ACCEPTED Partially Implemented
 
 A new core API is proposed as a way to develop cosmos-sdk applications that will eventually replace the existing
 `AppModule` and `sdk.Context` frameworks a set of core services and extension interfaces. This core API aims to:
-- be simpler,
-- more extensible,
-- more stable than the current framework,
-- enable deterministic events and queries, 
-- support event listeners and
-- [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md) clients.
+
+* be simpler
+* more extensible
+* more stable than the current framework
+* enable deterministic events and queries,
+* support event listeners
+* [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md) clients.
 
 ## Context
 
 Historically modules have exposed their functionality to the framework via the `AppModule` and `AppModuleBasic`
 interfaces which have the following shortcomings:
+
 * both `AppModule` and `AppModuleBasic` need to be defined and registered which is counter-intuitive
 * apps need to implement the full interfaces, even parts they don't need (although there are workarounds for this),
-* interface methods depend heavily on unstable third party dependencies, in particular Tendermint,
+* interface methods depend heavily on unstable third party dependencies, in particular Comet,
 * legacy required methods have littered these interfaces for far too long
 
 In order to interact with the state machine, modules have needed to do a combination of these things:
+
 * get store keys from the app
 * call methods on `sdk.Context` which contains more or less the full set of capability available to modules.
 
 By isolating all the state machine functionality into `sdk.Context`, the set of functionalities available to
-modules are tightly coupled to this type. If there are changes to upstream dependencies (such as Tendermint)
+modules are tightly coupled to this type. If there are changes to upstream dependencies (such as Comet)
 or new functionalities are desired (such as alternate store types), the changes need impact `sdk.Context` and all
 consumers of it (basically all modules). Also, all modules now receive `context.Context` and need to convert these
 to `sdk.Context`'s with a non-ergonomic unwrapping function.
 
-Any breaking changes to these interfaces, such as ones imposed by third-party dependencies like Tendermint, have the
+Any breaking changes to these interfaces, such as ones imposed by third-party dependencies like Comet, have the
 side effect of forcing all modules in the ecosystem to update in lock-step. This means it is almost impossible to have
 a version of the module which can be run with 2 or 3 different versions of the SDK or 2 or 3 different versions of
 another module. This lock-step coupling slows down overall development within the ecosystem and causes updates to
@@ -50,11 +53,13 @@ components to be delayed longer than they would if things were more stable and l
 
 The `core` API proposes a set of core APIs that modules can rely on to interact with the state machine and expose their
 functionalities to it that are designed in a principled way such that:
+
 * tight coupling of dependencies and unrelated functionalities is minimized or eliminated
 * APIs can have long-term stability guarantees
 * the SDK framework is extensible in a safe and straightforward way
 
 The design principles of the core API are as follows:
+
 * everything that a module wants to interact with in the state machine is a service
 * all services coordinate state via `context.Context` and don't try to recreate the "bag of variables" approach of `sdk.Context`
 * all independent services are isolated in independent packages with minimal APIs and minimal dependencies
@@ -63,7 +68,7 @@ The design principles of the core API are as follows:
   functionalities exposed by core extension interfaces
 * other non-core and/or non-LTS services can be exposed by specific versions of runtime modules or other modules 
 following the same design principles, this includes functionality that interacts with specific non-stable versions of
-third party dependencies such as Tendermint
+third party dependencies such as Comet
 * the core API doesn't implement *any* functionality, it just defines types
 * go stable API compatibility guidelines are followed: https://go.dev/blog/module-compatibility
 
@@ -74,7 +79,7 @@ SDK's current tightly coupled `BaseApp` design while still allowing for a high d
 compatibility.
 
 Modules which are built only against the core API don't need to know anything about which version of runtime,
-`BaseApp` or Tendermint in order to be compatible. Modules from the core mainline SDK could be easily composed
+`BaseApp` or Comet in order to be compatible. Modules from the core mainline SDK could be easily composed
 with a forked version of runtime with this pattern.
 
 This design is intended to enable matrices of compatible dependency versions. Ideally a given version of any module
@@ -85,7 +90,7 @@ slower than more fast moving projects.
 ### Core Services
 
 The following "core services" are defined by the core API. All valid runtime module implementations should provide
-implementations of these services to modules via both [dependency injection](./adr-057-app-wiring-1.md) and
+implementations of these services to modules via both [dependency injection](./adr-057-app-wiring.md) and
 manual wiring. The individual services described below are all bundled in a convenient `appmodule.Service`
 "bundle service" so that for simplicity modules can declare a dependency on a single service.
 
@@ -112,6 +117,7 @@ type TransientStoreService interface {
 ```
 
 Modules can use these services like this:
+
 ```go
 func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
     store := k.kvStoreSvc.OpenKVStore(ctx)
@@ -160,12 +166,41 @@ the block or app hash is left to the runtime to specify).
 Events emitted by `EmitKVEvent` and `EmitProtoEventNonConsensus` are not considered to be part of consensus and cannot be observed
 by other modules. If there is a client-side need to add events in patch releases, these methods can be used.
 
+#### Logger
+
+A logger (`cosmossdk.io/log`) must be supplied using `depinject`, and will
+be made available for modules to use via `depinject.In`.
+Modules using it should follow the current pattern in the SDK by adding the module name before using it.
+
+```go
+type ModuleInputs struct {
+  depinject.In
+
+  Logger log.Logger
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+  keeper := keeper.NewKeeper(
+    in.logger,
+  )
+}
+
+func NewKeeper(logger log.Logger) Keeper {
+  return Keeper{
+    logger: logger.With(log.ModuleKey, "x/"+types.ModuleName),
+  }
+}
+```
+
+```
+
 ### Core `AppModule` extension interfaces
 
 
 Modules will provide their core services to the runtime module via extension interfaces built on top of the
 `cosmossdk.io/core/appmodule.AppModule` tag interface. This tag interface requires only two empty methods which
 allow `depinject` to identify implementors as `depinject.OnePerModule` types and as app module implementations:
+
 ```go
 type AppModule interface {
   depinject.OnePerModuleType
@@ -226,6 +261,7 @@ streaming genesis and modules using these frameworks generally do not need to wr
 genesis code.
 
 To support genesis, modules should implement the `HasGenesis` extension interface:
+
 ```go
 type HasGenesis interface {
 	AppModule
@@ -248,6 +284,7 @@ type HasGenesis interface {
 
 Modules that have functionality that runs before transactions (begin blockers) or after transactions
 (end blockers) should implement the has `HasBeginBlocker` and/or `HasEndBlocker` interfaces:
+
 ```go
 type HasBeginBlocker interface {
   AppModule
@@ -261,25 +298,64 @@ type HasEndBlocker interface {
 ```
 
 The `BeginBlock` and `EndBlock` methods will take a `context.Context`, because:
-* most modules don't need Tendermint information other than `BlockInfo` so we can eliminate dependencies on specific
-Tendermint versions
-* for the few modules that need Tendermint block headers and/or return validator updates, specific versions of the
-runtime module will provide specific functionality for interacting with the specific version(s) of Tendermint
+
+* most modules don't need Comet information other than `BlockInfo` so we can eliminate dependencies on specific
+Comet versions
+* for the few modules that need Comet block headers and/or return validator updates, specific versions of the
+runtime module will provide specific functionality for interacting with the specific version(s) of Comet
 supported
 
-In order for `BeginBlock`, `EndBlock` and `InitGenesis` to send back validator updates and retrieve full Tendermint
-block headers, the runtime module for a specific version of Tendermint could provide services like this:
+In order for `BeginBlock`, `EndBlock` and `InitGenesis` to send back validator updates and retrieve full Comet
+block headers, the runtime module for a specific version of Comet could provide services like this:
+
 ```go
 type ValidatorUpdateService interface {
     SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
 }
+```
 
-type BeginBlockService interface {
-    GetBeginBlockRequest(context.Context) abci.RequestBeginBlock 
+Header Service defines a way to get header information about a block. This information is generalized for all implementations: 
+
+```go 
+
+type Service interface {
+	GetHeaderInfo(context.Context) Info
+}
+
+type Info struct {
+	Height int64      // Height returns the height of the block
+	Hash []byte       // Hash returns the hash of the block header
+	Time time.Time    // Time returns the time of the block
+	ChainID string    // ChainId returns the chain ID of the block
 }
 ```
 
-We know these types will change at the Tendermint level and that also a very limited set of modules actually need this
+Comet Service provides a way to get comet specific information: 
+
+```go
+type Service interface {
+	GetCometInfo(context.Context) Info
+}
+
+type CometInfo struct {
+  Evidence []abci.Misbehavior // Misbehavior returns the misbehavior of the block
+	// ValidatorsHash returns the hash of the validators
+	// For Comet, it is the hash of the next validators
+	ValidatorsHash []byte
+	ProposerAddress []byte            // ProposerAddress returns the address of the block proposer
+	DecidedLastCommit abci.CommitInfo // DecidedLastCommit returns the last commit info
+}
+```
+
+If a user would like to provide a module other information they would need to implement another service like:
+
+```go
+type RollKit Interface {
+  ...
+}
+```
+
+We know these types will change at the Comet level and that also a very limited set of modules actually need this
 functionality, so they are intentionally kept out of core to keep core limited to the necessary, minimal set of stable
 APIs.
 
@@ -287,6 +363,7 @@ APIs.
 
 The current `AppModule` framework handles a number of additional concerns which aren't addressed by this core API.
 These include:
+
 * gas
 * block headers
 * upgrades
@@ -307,6 +384,7 @@ gRPC gateway registration should probably be handled by the runtime module, but 
 gateway types as 1) we are already using an older version and 2) it's possible the framework can do this registration
 automatically in the future. So for now, the runtime module should probably provide some sort of specific type for doing
 this registration ex:
+
 ```go
 type GrpcGatewayInfo struct {
     Handlers []GrpcGatewayHandler
@@ -316,6 +394,7 @@ type GrpcGatewayHandler func(ctx context.Context, mux *runtime.ServeMux, client 
 ```
 
 which modules can return in a provider:
+
 ```go
 func ProvideGrpcGateway() GrpcGatewayInfo {
     return GrpcGatewayinfo {
@@ -365,6 +444,51 @@ should check this compatibility version and return an error if the current `Runt
 than the version of the core API that this runtime version can support. When new features are adding to the `core`
 module API that runtime modules are required to support, this version should be incremented.
 
+### Runtime Modules
+
+The initial `runtime` module will simply be created within the existing `github.com/cosmos/cosmos-sdk` go module
+under the `runtime` package. This module will be a small wrapper around the existing `BaseApp`, `sdk.Context` and
+module manager and follow the Cosmos SDK's existing [0-based versioning](https://0ver.org). To move to semantic
+versioning as well as runtime modularity, new officially supported runtime modules will be created under the
+`cosmossdk.io/runtime` prefix. For each supported consensus engine a semantically-versioned go module should be created
+with a runtime implementation for that consensus engine. For example:
+- `cosmossdk.io/runtime/comet`
+- `cosmossdk.io/runtime/comet/v2`
+- `cosmossdk.io/runtime/rollkit`
+- etc.
+
+These runtime modules should attempt to be semantically versioned even if the underlying consensus engine is not. Also,
+because a runtime module is also a first class Cosmos SDK module, it should have a protobuf module config type.
+A new semantically versioned module config type should be created for each of these runtime module such that there is a
+1:1 correspondence between the go module and module config type. This is the same practice should be followed for every 
+semantically versioned Cosmos SDK module as described in [ADR 057: App Wiring](./adr-057-app-wiring.md).
+
+Currently, `github.com/cosmos/cosmos-sdk/runtime` uses the protobuf config type `cosmos.app.runtime.v1alpha1.Module`.
+When we have a standalone v1 comet runtime, we should use a dedicated protobuf module config type such as
+`cosmos.runtime.comet.v1.Module1`. When we release v2 of the comet runtime (`cosmossdk.io/runtime/comet/v2`) we should
+have a corresponding `cosmos.runtime.comet.v2.Module` protobuf type.
+
+In order to make it easier to support different consensus engines that support the same core module functionality as
+described in this ADR, a common go module should be created with shared runtime components. The easiest runtime components
+to share initially are probably the message/query router, inter-module client, service register, and event router.
+This common runtime module should be created initially as the `cosmossdk.io/runtime/common` go module.
+
+When this new architecture has been implemented, the main dependency for a Cosmos SDK module would be
+`cosmossdk.io/core` and that module should be able to be used with any supported consensus engine (to the extent
+that it does not explicitly depend on consensus engine specific functionality such as Comet's block headers). An
+app developer would then be able to choose which consensus engine they want to use by importing the corresponding
+runtime module. The current `BaseApp` would be refactored into the `cosmossdk.io/runtime/comet` module, the router
+infrastructure in `baseapp/` would be refactored into `cosmossdk.io/runtime/common` and support ADR 033, and eventually
+a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
+
+In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
+would implement the `cosmossdk.io/core` functionality for that consensus engine.
+
+On additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
+Likely it would make sense to modularize the current server architecture so that it can be used with any runtime even
+if that is based on a consensus engine besides Comet. This means that eventually the Comet runtime would need to
+encapsulate the logic for starting Comet and the ABCI app.
+
 ### Testing
 
 A mock implementation of all services should be provided in core to allow for unit testing of modules
@@ -373,7 +497,7 @@ allow tests to observe service behavior or provide a non-production implementati
 stores can be used to mock stores.
 
 For integration testing, a mock runtime implementation should be provided that allows composing different app modules
-together for testing without a dependency on runtime or Tendermint.
+together for testing without a dependency on runtime or Comet.
 
 ## Consequences
 
@@ -381,7 +505,7 @@ together for testing without a dependency on runtime or Tendermint.
 
 Early versions of runtime modules should aim to support as much as possible modules built with the existing
 `AppModule`/`sdk.Context` framework. As the core API is more widely adopted, later runtime versions may choose to
-drop support and only support the core API plus any runtime module specific APIs (like specific versions of Tendermint).
+drop support and only support the core API plus any runtime module specific APIs (like specific versions of Comet).
 
 The core module itself should strive to remain at the go semantic version `v1` as long as possible and follow design
 principles that allow for strong long-term support (LTS).

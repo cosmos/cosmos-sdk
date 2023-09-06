@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -80,9 +79,6 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
-
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -121,6 +117,7 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 var (
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -151,7 +148,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -161,7 +158,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	if !am.skipGenesisInvariants {
 		am.keeper.AssertInvariants(ctx)
 	}
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the crisis
@@ -177,8 +173,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	EndBlocker(c, *am.keeper)
+	EndBlocker(ctx, *am.keeper)
 	return nil
 }
 
@@ -191,30 +186,29 @@ func init() {
 	)
 }
 
-//nolint:revive
-type CrisisInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config  *modulev1.Module
-	Key     *store.KVStoreKey
-	Cdc     codec.Codec
-	AppOpts servertypes.AppOptions `optional:"true"`
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	AppOpts      servertypes.AppOptions `optional:"true"`
 
-	BankKeeper types.SupplyKeeper
+	BankKeeper   types.SupplyKeeper
+	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type CrisisOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var invalidCheckPeriod uint
 	if in.AppOpts != nil {
 		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
@@ -233,11 +227,12 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		in.AddressCodec,
 	)
 
 	var skipGenesisInvariants bool
@@ -247,5 +242,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: m}
+	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

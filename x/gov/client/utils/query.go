@@ -35,7 +35,7 @@ func (p Proposer) String() string {
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
 // will fetch and build votes directly from the returned txs and returns a JSON
-// marshalled result or any error that occurred.
+// marshaled result or any error that occurred.
 func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		votes      []*v1.Vote

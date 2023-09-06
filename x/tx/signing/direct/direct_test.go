@@ -4,16 +4,16 @@ import (
 	"context"
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/api/cosmos/crypto/secp256k1"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/api/cosmos/crypto/secp256k1"
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/direct"
 )
@@ -58,12 +58,12 @@ func TestDirectModeHandler(t *testing.T) {
 
 	directHandler := direct.SignModeHandler{}
 
-	chainId := "test-chain"
+	chainID := "test-chain"
 	accNum := uint64(1)
 
 	signingData := signing.SignerData{
 		Address:       "",
-		ChainId:       chainId,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		PubKey:        pk,
 	}
@@ -89,7 +89,7 @@ func TestDirectModeHandler(t *testing.T) {
 	signBytes2, err := proto.Marshal(&txv1beta1.SignDoc{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
-		ChainId:       chainId,
+		ChainId:       chainID,
 		AccountNumber: accNum,
 	})
 	require.NoError(t, err)

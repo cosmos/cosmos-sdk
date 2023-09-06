@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
@@ -66,21 +65,34 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 }
 
 func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.GroupPolicyInfo {
-	groupPolicies := make([]*group.GroupPolicyInfo, 3)
+	var groupPolicies []*group.GroupPolicyInfo
+
+	usedAccs := make(map[string]bool)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
+
+		if usedAccs[acc.Address.String()] {
+			if len(usedAccs) != len(simState.Accounts) {
+				// Go again if the account is used and there are more to take from
+				i--
+			}
+
+			continue
+		}
+		usedAccs[acc.Address.String()] = true
+
 		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
 		if err != nil {
 			panic(err)
 		}
-		groupPolicies[i] = &group.GroupPolicyInfo{
+		groupPolicies = append(groupPolicies, &group.GroupPolicyInfo{
 			GroupId:        uint64(i + 1),
 			Admin:          acc.Address.String(),
 			Address:        acc.Address.String(),
 			Version:        1,
 			DecisionPolicy: any,
 			Metadata:       simtypes.RandStringOfLength(r, 10),
-		}
+		})
 	}
 	return groupPolicies
 }
@@ -167,38 +179,23 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// groups
 	var groups []*group.GroupInfo
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupInfo, &groups, simState.Rand,
-		func(r *rand.Rand) { groups = getGroups(r, simState.Accounts) },
-	)
+	simState.AppParams.GetOrGenerate(GroupInfo, &groups, simState.Rand, func(r *rand.Rand) { groups = getGroups(r, simState.Accounts) })
 
 	// group members
 	var members []*group.GroupMember
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupMembers, &members, simState.Rand,
-		func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts) },
-	)
+	simState.AppParams.GetOrGenerate(GroupMembers, &members, simState.Rand, func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts) })
 
 	// group policies
 	var groupPolicies []*group.GroupPolicyInfo
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupPolicyInfo, &groupPolicies, simState.Rand,
-		func(r *rand.Rand) { groupPolicies = getGroupPolicies(r, simState) },
-	)
+	simState.AppParams.GetOrGenerate(GroupPolicyInfo, &groupPolicies, simState.Rand, func(r *rand.Rand) { groupPolicies = getGroupPolicies(r, simState) })
 
 	// proposals
 	var proposals []*group.Proposal
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupProposals, &proposals, simState.Rand,
-		func(r *rand.Rand) { proposals = getProposals(r, simState, groupPolicies) },
-	)
+	simState.AppParams.GetOrGenerate(GroupProposals, &proposals, simState.Rand, func(r *rand.Rand) { proposals = getProposals(r, simState, groupPolicies) })
 
 	// votes
 	var votes []*group.Vote
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupVote, &votes, simState.Rand,
-		func(r *rand.Rand) { votes = getVotes(r, simState) },
-	)
+	simState.AppParams.GetOrGenerate(GroupVote, &votes, simState.Rand, func(r *rand.Rand) { votes = getVotes(r, simState) })
 
 	groupGenesis := group.GenesisState{
 		GroupSeq:       3,

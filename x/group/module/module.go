@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -47,7 +46,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		bankKeeper:     bk,
 		accKeeper:      ak,
@@ -58,6 +57,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 var (
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -68,6 +68,7 @@ func (am AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the group module's name.
@@ -90,14 +91,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 	return data.Validate()
 }
 
-// GetQueryCmd returns the cli query commands for the group module
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(a.Name())
-}
-
 // GetTxCmd returns the transaction commands for the group module
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.TxCmd(a.Name())
+	return cli.TxCmd(a.Name(), a.ac)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
@@ -129,9 +125,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	am.keeper.InitGenesis(ctx, cdc, data)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group
@@ -180,7 +175,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		am.registry,
-		simState.AppParams, simState.Cdc,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
 }

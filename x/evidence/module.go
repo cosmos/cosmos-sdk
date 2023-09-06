@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
+	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"
@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -94,11 +93,6 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(evidenceCLIHandlers)
 }
 
-// GetQueryCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 // RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
@@ -124,8 +118,10 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 }
 
 var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+	_ module.HasGenesis         = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -142,13 +138,13 @@ func (am AppModule) Name() string {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, am.keeper)
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(&am.keeper))
 	return nil
 }
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
@@ -156,7 +152,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 	}
 
 	InitGenesis(ctx, am.keeper, &gs)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
@@ -168,8 +163,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	am.keeper.BeginBlocker(ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions
@@ -181,7 +176,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
+	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
@@ -199,28 +194,29 @@ func init() {
 	)
 }
 
-//nolint:revive
-type EvidenceInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Key *store.KVStoreKey
-	Cdc codec.Codec
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
+	AddressCodec   address.Codec
+
+	BlockInfoService comet.BlockInfoService
 }
 
-//nolint:revive
-type EvidenceOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         appmodule.AppModule
 }
 
-func ProvideModule(in EvidenceInputs) EvidenceOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
 	m := NewAppModule(*k)
 
-	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
+	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

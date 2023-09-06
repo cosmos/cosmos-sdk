@@ -16,13 +16,13 @@ import (
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -169,37 +169,35 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	var logger log.Logger
-	if ctx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
-		zl := zerolog.New(out).With().Timestamp().Logger()
-		logger = log.NewCustomLogger(zl)
-	} else {
-		logger = log.NewLogger(out)
+	var opts []log.Option
+	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+		opts = append(opts, log.OutputJSONOption())
 	}
 
-	// set filter level or keys for the logger if any
+	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
+	if logLvlStr == "" {
+		return log.NewLogger(out, opts...), nil
+	}
+
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	if err != nil {
+	switch {
+	case err != nil:
 		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
 		filterFunc, err := log.ParseLogLevel(logLvlStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+			return nil, err
 		}
 
-		logger = log.FilterKeys(logger, filterFunc)
-	} else {
-		zl := logger.Impl().(*zerolog.Logger)
-		// Check if the CometBFT flag for trace logging is set if it is then setup a tracing logger in this app as well.
-		// Note it overrides log level passed in `log_levels`.
-		if ctx.Viper.GetBool(cmtcli.TraceFlag) {
-			logger = log.NewCustomLogger(zl.Level(zerolog.TraceLevel))
-		} else {
-			logger = log.NewCustomLogger(zl.Level(logLvl))
-		}
+		opts = append(opts, log.FilterOption(filterFunc))
+	default:
+		opts = append(opts, log.LevelOption(logLvl))
 	}
 
-	return logger, nil
+	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
+	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
+
+	return log.NewLogger(out, opts...), nil
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
@@ -214,10 +212,11 @@ func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
+// If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	v := cmd.Context().Value(ServerContextKey)
 	if v == nil {
-		return errors.New("server context not set")
+		v = serverCtx
 	}
 
 	serverCtxPtr := v.(*Context)
@@ -246,10 +245,16 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
-		conf.RPC.PprofListenAddress = "localhost:6060"
-		conf.P2P.RecvRate = 5120000
-		conf.P2P.SendRate = 5120000
-		conf.Consensus.TimeoutCommit = 5 * time.Second
+		defaultCometCfg := cmtcfg.DefaultConfig()
+		// The SDK is opinionated about those comet values, so we set them here.
+		// We verify first that the user has not changed them for not overriding them.
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
+		}
+		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
+			conf.RPC.PprofListenAddress = "localhost:6060"
+		}
+
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:
@@ -276,21 +281,31 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
+		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
+			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+		}
+
 		if customAppTemplate != "" {
-			config.SetConfigTemplate(customAppTemplate)
+			if err := config.SetConfigTemplate(customAppTemplate); err != nil {
+				return nil, fmt.Errorf("failed to set config template: %w", err)
+			}
 
 			if err = rootViper.Unmarshal(&customConfig); err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			config.WriteConfigFile(appCfgFilePath, customConfig)
+			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
 		} else {
 			appConf, err := config.ParseConfig(rootViper)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			config.WriteConfigFile(appCfgFilePath, appConf)
+			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+			}
 		}
 	}
 
@@ -306,7 +321,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -320,17 +335,18 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		VersionCmd(),
 		cmtcmd.ResetAllCmd,
 		cmtcmd.ResetStateCmd,
+		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmd(appCreator, defaultNodeHome)
+	startCmd := StartCmd(appCreator)
 	addStartFlags(startCmd)
 
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
-		ExportCmd(appExport, defaultNodeHome),
+		ExportCmd(appExport),
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator, defaultNodeHome),
+		NewRollbackCmd(appCreator),
 	)
 }
 
@@ -370,25 +386,34 @@ func ExternalIP() (string, error) {
 // the cleanup function is called, indicating the caller can gracefully exit or
 // return.
 //
-// Note, this performs a non-blocking process so the caller must ensure the
-// corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(cancelFn context.CancelFunc, logger log.Logger) {
+// Note, the blocking behavior of this depends on the block argument.
+// The caller must ensure the corresponding context derived from the cancelFn is used correctly.
+func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
+	f := func() {
 		sig := <-sigCh
 		cancelFn()
 
 		logger.Info("caught signal", "signal", sig.String())
-	}()
+	}
+
+	if block {
+		g.Go(func() error {
+			f()
+			return nil
+		})
+	} else {
+		go f()
+	}
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
 	if len(rv) == 0 {
-		rv = cast.ToString(opts.Get("db-backend"))
+		rv = cast.ToString(opts.Get("db_backend"))
 	}
 
 	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
@@ -468,16 +493,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		chainID = appGenesis.ChainID
 	}
 
-	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
-	if err = os.MkdirAll(snapshotDir, os.ModePerm); err != nil {
-		panic(fmt.Errorf("failed to create snapshots directory: %w", err))
-	}
-
-	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
-	if err != nil {
-		panic(err)
-	}
-	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	snapshotStore, err := GetSnapshotStore(appOpts)
 	if err != nil {
 		panic(err)
 	}
@@ -486,6 +502,15 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
 	)
+
+	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
+	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
+		defaultMempool = baseapp.SetMempool(
+			mempool.NewSenderNonceMempool(
+				mempool.SenderNonceMaxTxOpt(maxTxs),
+			),
+		)
+	}
 
 	return []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
@@ -499,12 +524,27 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
-		baseapp.SetMempool(
-			mempool.NewSenderNonceMempool(
-				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
-			),
-		),
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
+		defaultMempool,
 		baseapp.SetChainID(chainID),
+		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
+}
+
+func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
+	if err := os.MkdirAll(snapshotDir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
+	}
+
+	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshotStore, nil
 }

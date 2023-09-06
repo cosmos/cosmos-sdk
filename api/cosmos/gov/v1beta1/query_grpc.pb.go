@@ -38,12 +38,13 @@ type QueryClient interface {
 	// Proposals queries all proposals based on given status.
 	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
 	// Vote queries voted information based on proposalID, voterAddr.
+	// Due to how we handle state, this query would error for proposals that has already been finished.
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal.
 	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
 	// Params queries all parameters of the gov module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Deposit queries single deposit information based proposalID, depositAddr.
+	// Deposit queries single deposit information based on proposalID, depositor address.
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
 	// Deposits queries all deposits of a single proposal.
 	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
@@ -140,12 +141,13 @@ type QueryServer interface {
 	// Proposals queries all proposals based on given status.
 	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
 	// Vote queries voted information based on proposalID, voterAddr.
+	// Due to how we handle state, this query would error for proposals that has already been finished.
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal.
 	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
 	// Params queries all parameters of the gov module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Deposit queries single deposit information based proposalID, depositAddr.
+	// Deposit queries single deposit information based on proposalID, depositor address.
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
 	// Deposits queries all deposits of a single proposal.
 	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)

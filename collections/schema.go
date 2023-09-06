@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -25,8 +24,8 @@ func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.K
 	return &SchemaBuilder{
 		schema: &Schema{
 			storeAccessor:       accessorFunc,
-			collectionsByName:   map[string]collection{},
-			collectionsByPrefix: map[string]collection{},
+			collectionsByName:   map[string]Collection{},
+			collectionsByPrefix: map[string]Collection{},
 		},
 	}
 }
@@ -84,9 +83,9 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 	return schema, nil
 }
 
-func (s *SchemaBuilder) addCollection(collection collection) {
-	prefix := collection.getPrefix()
-	name := collection.getName()
+func (s *SchemaBuilder) addCollection(collection Collection) {
+	prefix := collection.GetPrefix()
+	name := collection.GetName()
 
 	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
 		s.appendError(fmt.Errorf("prefix %v already taken within schema", prefix))
@@ -128,8 +127,8 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 type Schema struct {
 	storeAccessor       func(context.Context) store.KVStore
 	collectionsOrdered  []string
-	collectionsByPrefix map[string]collection
-	collectionsByName   map[string]collection
+	collectionsByPrefix map[string]Collection
+	collectionsByName   map[string]Collection
 }
 
 // NewSchema creates a new schema for the provided KVStoreService.
@@ -157,10 +156,16 @@ func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
 func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema {
 	return Schema{
 		storeAccessor:       accessor,
-		collectionsByName:   map[string]collection{},
-		collectionsByPrefix: map[string]collection{},
+		collectionsByName:   map[string]Collection{},
+		collectionsByPrefix: map[string]Collection{},
 	}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (s Schema) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (s Schema) IsAppModule() {}
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
@@ -279,10 +284,18 @@ func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarge
 	return coll.exportGenesis(ctx, wc)
 }
 
-func (s Schema) getCollection(name string) (collection, error) {
+func (s Schema) getCollection(name string) (Collection, error) {
 	coll, ok := s.collectionsByName[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown collection: %s", name)
 	}
 	return coll, nil
+}
+
+func (s Schema) ListCollections() []Collection {
+	colls := make([]Collection, len(s.collectionsOrdered))
+	for i, name := range s.collectionsOrdered {
+		colls[i] = s.collectionsByName[name]
+	}
+	return colls
 }

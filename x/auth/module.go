@@ -7,34 +7,30 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	"cosmossdk.io/depinject"
-
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 4
+const (
+	ConsensusVersion = 5
+	GovModuleName    = "gov"
+)
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -43,7 +39,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the auth module's name.
 func (AppModuleBasic) Name() string {
@@ -78,16 +76,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetTxCmd returns the root tx command for the auth module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-// GetQueryCmd returns the root query command for the auth module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 // RegisterInterfaces registers interfaces and implementations of the auth module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
@@ -115,7 +103,7 @@ func (am AppModule) IsAppModule() {}
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{},
+		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		legacySubspace:    ss,
@@ -131,7 +119,7 @@ func (AppModule) Name() string {
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
 
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -146,9 +134,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
 
-	// see migrations/v5/doc.go
-	if err := cfg.RegisterMigration(types.ModuleName, 4, func(ctx sdk.Context) error { return nil }); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4To5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5", types.ModuleName))
 	}
 }
 
@@ -185,7 +172,7 @@ func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Weight
 
 // RegisterStoreDecoder registers a decoder for auth module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.accountKeeper)
+	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.accountKeeper.Schema)
 }
 
 // WeightedOperations doesn't return any auth module operation.
@@ -199,25 +186,18 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideAddressCodec),
 		appmodule.Provide(ProvideModule),
 	)
 }
 
-// ProvideAddressCodec provides an address.Codec to the container for any
-// modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(config *modulev1.Module) address.Codec {
-	return codecaddress.NewBech32Codec(config.Bech32Prefix)
-}
-
-//nolint:revive
-type AuthInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
 
+	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 
@@ -225,22 +205,21 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-//nolint:revive
-type AuthOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in AuthInputs) AuthOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
 	// default to governance authority if not provided
-	authority := types.NewModuleAddress(govtypes.ModuleName)
+	authority := types.NewModuleAddress(GovModuleName)
 	if in.Config.Authority != "" {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
@@ -253,8 +232,13 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	auth, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: m}
+	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

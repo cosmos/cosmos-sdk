@@ -1,16 +1,21 @@
 package baseapp
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"math"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -32,6 +37,15 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	}
 
 	return func(bapp *BaseApp) { bapp.setMinGasPrices(gasPrices) }
+}
+
+// SetQueryGasLimit returns an option that sets a gas limit for queries.
+func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
+	if queryGasLimit == 0 {
+		queryGasLimit = math.MaxUint64
+	}
+
+	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
@@ -69,11 +83,6 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
-}
-
-// SetIAVLLazyLoading enables/disables lazy loading of the IAVL store.
-func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -122,9 +131,25 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// SetProtocolVersion sets the application's protocol version
-func (app *BaseApp) SetProtocolVersion(v uint64) {
-	app.appVersion = v
+// SetAppVersion sets the application's version this is used as part of the
+// header in blocks and is returned to the consensus engine in EndBlock.
+func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
+	if app.paramStore == nil {
+		return errors.New("param store must be set to set app version")
+	}
+
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get consensus params: %w", err)
+	}
+	if cp.Version == nil {
+		return errors.New("version is not set in param store")
+	}
+	cp.Version.App = v
+	if err := app.paramStore.Set(ctx, cp); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {
@@ -165,6 +190,30 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	}
 
 	app.endBlocker = endBlocker
+}
+
+func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckStater) {
+	if app.sealed {
+		panic("SetPrepareCheckStater() on sealed BaseApp")
+	}
+
+	app.prepareCheckStater = prepareCheckStater
+}
+
+func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
+	if app.sealed {
+		panic("SetPrecommiter() on sealed BaseApp")
+	}
+
+	app.precommiter = precommiter
+}
+
+func (app *BaseApp) SetPreFinalizeBlockHook(hook sdk.PreFinalizeBlockHook) {
+	if app.sealed {
+		panic("SetPreFinalizeBlockHook() on sealed BaseApp")
+	}
+
+	app.preFinalizeBlockHook = hook
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
@@ -240,6 +289,7 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
+	app.cdc = codec.NewProtoCodec(registry)
 }
 
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
@@ -282,6 +332,22 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	}
 
 	app.prepareProposal = handler
+}
+
+func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
+	if app.sealed {
+		panic("SetExtendVoteHandler() on sealed BaseApp")
+	}
+
+	app.extendVote = handler
+}
+
+func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensionHandler) {
+	if app.sealed {
+		panic("SetVerifyVoteExtensionHandler() on sealed BaseApp")
+	}
+
+	app.verifyVoteExt = handler
 }
 
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.

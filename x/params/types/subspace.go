@@ -32,7 +32,7 @@ type Subspace struct {
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, tkey storetypes.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey, name string) Subspace {
 	return Subspace{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,
@@ -93,7 +93,7 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	}
 
 	if err := attr.vfn(value); err != nil {
-		return fmt.Errorf("invalid parameter value: %s", err)
+		return fmt.Errorf("invalid parameter value: %w", err)
 	}
 
 	return nil

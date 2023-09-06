@@ -6,17 +6,17 @@ import (
 	"os"
 	"testing"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 
-func TestCoinsJsonTestcases(t *testing.T) {
-	var testcases []coinsJsonTest
+func TestCoinsJSONTestcases(t *testing.T) {
+	var testcases []coinsJSONTest
 	raw, err := os.ReadFile("./internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
@@ -66,12 +66,13 @@ func TestCoinsJsonTestcases(t *testing.T) {
 // rendering, so we lose initial Coins ordering. Instead, we just check
 // set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
+	t.Helper()
 	require.Equal(t, l1.Len(), l2.Len())
 	coinsMap := make(map[string]*basev1beta1.Coin, l1.Len())
 
 	for i := 0; i < l1.Len(); i++ {
 		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
-		require.True(t, ok)
+		require.True(t, ok, "not a *basev1beta1.Coin: %#v", l1.Get(i).Message().Interface())
 		coinsMap[coin.Denom] = coin
 	}
 
@@ -85,20 +86,21 @@ func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 }
 
 func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
+	t.Helper()
 	require.Equal(t, coin1.Denom, coin.Denom)
 	v, ok := math.NewIntFromString(coin.Amount)
 	require.True(t, ok)
 	v1, ok := math.NewIntFromString(coin1.Amount)
 	require.True(t, ok)
-	require.True(t, v.Equal(v1))
+	require.True(t, v.Equal(v1), "Mismatch\n\tv:  %+v\n\tv1: %+v", v, v1)
 }
 
-// coinsJsonTest is the type of test cases in the testdata file.
+// coinsJSONTest is the type of test cases in the testdata file.
 // If the test case has a Proto, try to Format() it. If Error is set, expect
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no
 // Proto, try to Parse() the Text and expect an error if Error is set.
-type coinsJsonTest struct {
+type coinsJSONTest struct {
 	Proto    []*basev1beta1.Coin
 	Metadata map[string]*bankv1beta1.Metadata
 	Text     string

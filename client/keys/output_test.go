@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -36,10 +36,10 @@ func TestBech32KeysOutput(t *testing.T) {
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
 	accAddr := sdk.AccAddress(pubKey.Address())
-	expectedOutput, err := NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk)
+	expectedOutput, err := NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk, addresscodec.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 
-	out, err := MkAccKeyOutput(k)
+	out, err := MkAccKeyOutput(k, addresscodec.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, out)
 	require.Equal(t, "{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]} Mnemonic:}", fmt.Sprintf("%+v", out))
@@ -62,11 +62,17 @@ func TestProtoMarshalJSON(t *testing.T) {
 	require.NoError(err)
 	require.True(pk2.Equals(msig))
 
+	addressCodec := addresscodec.NewBech32Codec("cosmos")
+
 	// Test that we can correctly unmarshal key from output
 	k, err := keyring.NewMultiRecord("my multisig", msig)
 	require.NoError(err)
-	ko, err := MkAccKeyOutput(k)
+	ko, err := MkAccKeyOutput(k, addressCodec)
 	require.NoError(err)
-	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
+
+	expectedOutput, err := addressCodec.BytesToString(pk2.Address())
+	require.NoError(err)
+
+	require.Equal(ko.Address, expectedOutput)
 	require.Equal(ko.PubKey, string(bz))
 }

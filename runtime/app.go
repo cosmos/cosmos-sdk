@@ -9,7 +9,8 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -18,6 +19,7 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -49,6 +51,7 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
+	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
 	initChainer sdk.InitChainer
@@ -73,7 +76,26 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
+		if module, ok := appModule.(module.HasServices); ok {
+			module.RegisterServices(a.configurator)
+		} else if module, ok := appModule.(appmodule.HasServices); ok {
+			if err := module.RegisterServices(a.configurator); err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
+}
+
+// RegisterStores registers the provided store keys.
+// This method should only be used for registering extra stores
+// wiich is necessary for modules that not registered using the app config.
+// To be used in combination of RegisterModules.
+func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
+	a.storeKeys = append(a.storeKeys, keys...)
+	a.MountStores(keys...)
+
 	return nil
 }
 
@@ -102,6 +124,16 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetEndBlocker(a.EndBlocker)
 	}
 
+	if len(a.config.Precommiters) != 0 {
+		a.ModuleManager.SetOrderPrecommiters(a.config.Precommiters...)
+		a.SetPrecommiter(a.Precommiter)
+	}
+
+	if len(a.config.PrepareCheckStaters) != 0 {
+		a.ModuleManager.SetOrderPrepareCheckStaters(a.config.PrepareCheckStaters...)
+		a.SetPrepareCheckStater(a.PrepareCheckStater)
+	}
+
 	if len(a.config.OrderMigrations) != 0 {
 		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
@@ -116,17 +148,33 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // BeginBlocker application updates every begin block
-func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
-	return a.ModuleManager.BeginBlock(ctx, req)
+func (a *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return a.ModuleManager.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	return a.ModuleManager.EndBlock(ctx, req)
+func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return a.ModuleManager.EndBlock(ctx)
+}
+
+// Precommiter application updates every commit
+func (a *App) Precommiter(ctx sdk.Context) {
+	err := a.ModuleManager.Precommit(ctx)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// PrepareCheckStater application updates every commit
+func (a *App) PrepareCheckStater(ctx sdk.Context) {
+	err := a.ModuleManager.PrepareCheckState(ctx)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // InitChainer initializes the chain.
-func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
+func (a *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -158,17 +206,18 @@ func (a *App) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (a *App) RegisterTendermintService(clientCtx client.Context) {
+	cmtApp := server.NewCometABCIWrapper(a)
 	cmtservice.RegisterTendermintService(
 		clientCtx,
 		a.GRPCQueryRouter(),
 		a.interfaceRegistry,
-		a.Query,
+		cmtApp.Query,
 	)
 }
 
 // RegisterNodeService registers the node gRPC service on the app gRPC router.
-func (a *App) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
+func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
 }
 
 // Configurator returns the app's configurator.

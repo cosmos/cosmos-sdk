@@ -5,16 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
-
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
@@ -84,14 +78,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetTxCmd returns no root tx command for the mint module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
-
-// GetQueryCmd returns the root query command for the mint module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 // AppModule implements an application module for the mint module.
 type AppModule struct {
 	AppModuleBasic
@@ -132,6 +118,7 @@ func NewAppModule(
 var (
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ module.HasGenesis         = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -149,7 +136,7 @@ func (AppModule) Name() string {
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 
@@ -160,12 +147,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the mint module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
@@ -180,8 +166,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return BeginBlocker(c, am.keeper, am.inflationCalculator)
+	return BeginBlocker(ctx, am.keeper, am.inflationCalculator)
 }
 
 // AppModuleSimulation functions
@@ -198,7 +183,7 @@ func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Weight
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations doesn't return any mint module operation.
@@ -216,56 +201,59 @@ func init() {
 	)
 }
 
-//nolint:revive
-type MintInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
 	ModuleKey              depinject.OwnModuleKey
 	Config                 *modulev1.Module
-	Key                    *store.KVStoreKey
+	StoreService           store.KVStoreService
 	Cdc                    codec.Codec
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
 }
 
-//nolint:revive
-type MintOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	MintKeeper keeper.Keeper
 	Module     appmodule.AppModule
 }
 
-func ProvideModule(in MintInputs) MintOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.StoreService,
 		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		authority.String(),
+		as,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
-	return MintOutputs{MintKeeper: k, Module: m}
+	return ModuleOutputs{MintKeeper: k, Module: m}
 }

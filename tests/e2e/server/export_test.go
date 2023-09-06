@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -36,7 +35,6 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
 	assert.NilError(t, cmd.ExecuteContext(ctx))
 
 	var exportedAppGenesis genutiltypes.AppGenesis
@@ -55,7 +53,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+	serverCtxPtr := ctx.Value(server.ServerContextKey)
+	serverCtxPtr.(*server.Context).Config.SetRoot("foobar")
 
 	err := cmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
@@ -96,14 +95,15 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
+				app.FinalizeBlock(&abci.RequestFinalizeBlock{
+					Height: i,
+				})
 				app.Commit()
 			}
 
 			output := &bytes.Buffer{}
 			cmd.SetOut(output)
-			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
+			cmd.SetArgs(tc.flags)
 			assert.NilError(t, cmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis
@@ -136,8 +136,7 @@ func TestExportCmd_Output(t *testing.T) {
 
 			output := &bytes.Buffer{}
 			cmd.SetOut(output)
-			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
+			cmd.SetArgs(tc.flags)
 			assert.NilError(t, cmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis
@@ -181,29 +180,30 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
-			AppStateBytes:   appGenesis.AppState,
-		},
+	app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: simtestutil.DefaultConsensusParams,
+		AppStateBytes:   appGenesis.AppState,
+	},
 	)
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
 	app.Commit()
 
-	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
-			var simApp *simapp.SimApp
-			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
-				if err := simApp.LoadHeight(height); err != nil {
-					return types.ExportedApp{}, err
-				}
-			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
+	cmd := server.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+		var simApp *simapp.SimApp
+		if height != -1 {
+			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
+			if err := simApp.LoadHeight(height); err != nil {
+				return types.ExportedApp{}, err
 			}
+		} else {
+			simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
+		}
 
-			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-		}, tempDir)
+		return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	})
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

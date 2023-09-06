@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -12,14 +13,14 @@ import (
 
 // StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
-	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate, err error)
+	ApplyAndReturnValidatorSetUpdates(context.Context) (updates []abci.ValidatorUpdate, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	NewAccount(sdk.Context, sdk.AccountI) sdk.AccountI
-	SetAccount(sdk.Context, sdk.AccountI)
-	IterateAccounts(ctx sdk.Context, process func(sdk.AccountI) (stop bool))
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	SetAccount(context.Context, sdk.AccountI)
+	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)

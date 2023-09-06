@@ -3,6 +3,7 @@ syntax = "proto3";
 package testpb;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "testpb/test_schema.proto";
 
@@ -30,6 +31,10 @@ service TestSchemaQueryService {
   rpc GetExampleTimestamp(GetExampleTimestampRequest) returns (GetExampleTimestampResponse) {}
   // ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
   rpc ListExampleTimestamp(ListExampleTimestampRequest) returns (ListExampleTimestampResponse) {}
+  // Get queries the ExampleDuration table by its primary key.
+  rpc GetExampleDuration(GetExampleDurationRequest) returns (GetExampleDurationResponse) {}
+  // ListExampleDuration queries the ExampleDuration table using prefix and range queries against defined indexes.
+  rpc ListExampleDuration(ListExampleDurationRequest) returns (ListExampleDurationResponse) {}
   // Get queries the SimpleExample table by its primary key.
   rpc GetSimpleExample(GetSimpleExampleRequest) returns (GetSimpleExampleResponse) {}
   // GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
@@ -304,6 +309,73 @@ message ListExampleTimestampRequest {
 message ListExampleTimestampResponse {
   // values are the results of the query.
   repeated ExampleTimestamp values = 1;
+  // pagination is the pagination response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// GetExampleDurationRequest is the TestSchemaQuery/GetExampleDurationRequest request type.
+message GetExampleDurationRequest {
+  // id specifies the value of the id field in the primary key.
+  uint64 id = 1;
+}
+
+// GetExampleDurationResponse is the TestSchemaQuery/GetExampleDurationResponse response type.
+message GetExampleDurationResponse {
+  // value is the response value.
+  ExampleDuration value = 1;
+}
+
+// ListExampleDurationRequest is the TestSchemaQuery/ListExampleDurationRequest request type.
+message ListExampleDurationRequest {
+  // IndexKey specifies the value of an index key to use in prefix and range queries.
+  message IndexKey {
+    // key specifies the index key value.
+    oneof key {
+      // id specifies the value of the Id index key to use in the query.
+      Id id = 1;
+      // dur specifies the value of the Dur index key to use in the query.
+      Dur dur = 2;
+    }
+
+    message Id {
+      // id is the value of the id field in the index.
+      // It can be omitted to query for all valid values of that field in this segment of the index.
+      optional uint64 id = 1;
+    }
+
+    message Dur {
+      // dur is the value of the dur field in the index.
+      // It can be omitted to query for all valid values of that field in this segment of the index.
+      optional google.protobuf.Duration dur = 1;
+    }
+  }
+
+  // query specifies the type of query - either a prefix or range query.
+  oneof query {
+    // prefix_query specifies the index key value to use for the prefix query.
+    IndexKey prefix_query = 1;
+    // range_query specifies the index key from/to values to use for the range query.
+    RangeQuery range_query = 2;
+  }
+  // pagination specifies optional pagination parameters.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+
+  // RangeQuery specifies the from/to index keys for a range query.
+  message RangeQuery {
+    // from is the index key to use for the start of the range query.
+    // To query from the start of an index, specify an index key for that index with empty values.
+    IndexKey from = 1;
+    // to is the index key to use for the end of the range query.
+    // The index key type MUST be the same as the index key type used for from.
+    // To query from to the end of an index it can be omitted.
+    IndexKey to = 2;
+  }
+}
+
+// ListExampleDurationResponse is the TestSchemaQuery/ListExampleDurationResponse response type.
+message ListExampleDurationResponse {
+  // values are the results of the query.
+  repeated ExampleDuration values = 1;
   // pagination is the pagination response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -20,14 +20,24 @@ var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}
 // SignModeHandler.
 type signModeLegacyAminoJSONHandler struct{}
 
+// NewSignModeLegacyAminoJSONHandler returns a new signModeLegacyAminoJSONHandler.
+// Note: The public constructor is only used for testing.
+// Deprecated: Please use x/tx/signing/aminojson instead.
+func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
+	return signModeLegacyAminoJSONHandler{}
+}
+
+// Deprecated: Please use x/tx/signing/aminojson instead.
 func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
+// Deprecated: Please use x/tx/signing/aminojson instead.
 func (s signModeLegacyAminoJSONHandler) Modes() []signingtypes.SignMode {
 	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
+// Deprecated: Please use x/tx/signing/aminojson instead.
 func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)

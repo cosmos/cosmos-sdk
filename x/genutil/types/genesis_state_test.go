@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -40,11 +41,10 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
 
-	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
+	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()).String(), pk1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
-	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
+	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()).String(), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
@@ -62,7 +62,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 func TestValidateGenesisBadMessage(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 
-	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()).String(), desc, nil, nil)
 
 	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
@@ -88,7 +88,7 @@ func TestGenesisStateFromGenFile(t *testing.T) {
 
 	require.True(t, bankGenesis.Params.DefaultSendEnabled)
 	require.Equal(t, "1000nametoken,100000000stake", bankGenesis.Balances[0].GetCoins().String())
-	require.Equal(t, "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4", bankGenesis.Balances[0].GetAddress().String())
+	require.Equal(t, "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4", bankGenesis.Balances[0].Address)
 	require.Equal(t, "The native staking token of the Cosmos Hub.", bankGenesis.DenomMetadata[0].GetDescription())
 	require.Equal(t, "uatom", bankGenesis.DenomMetadata[0].GetBase())
 	require.Equal(t, "matom", bankGenesis.DenomMetadata[0].GetDenomUnits()[1].GetDenom())

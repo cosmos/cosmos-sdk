@@ -2,6 +2,7 @@ package sims
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -23,12 +24,16 @@ type GenerateAccountStrategy func(int) []sdk.AccAddress
 // provides the staking bond denom. It is used in arguments in this package's
 // functions so that a mock staking keeper can be passed instead of the real one.
 type BondDenomProvider interface {
-	BondDenom(ctx sdk.Context) string
+	BondDenom(ctx context.Context) (string, error)
 }
 
 // AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
 func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), accAmt))
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 
 	for _, pk := range pubKeys {
 		initAccountWithCoins(bankKeeper, ctx, sdk.AccAddress(pk.Address()), initCoins)
@@ -48,7 +53,11 @@ func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper BondDen
 
 func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
-	initCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), accAmt))
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 
 	for _, addr := range testAddrs {
 		initAccountWithCoins(bankKeeper, ctx, addr, initCoins)
@@ -100,7 +109,7 @@ func CreateRandomAccounts(accNum int) []sdk.AccAddress {
 	return testAddrs
 }
 
-func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
+func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
 		return nil, err

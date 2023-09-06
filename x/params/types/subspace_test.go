@@ -6,11 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
@@ -44,7 +43,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.amino = encodingConfig.Amino
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms, cmtproto.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 
@@ -154,7 +153,8 @@ func (suite *SubspaceTestSuite) TestModified() {
 
 func (suite *SubspaceTestSuite) TestUpdate() {
 	suite.Require().Panics(func() {
-		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) //nolint:errcheck
+		err := suite.ss.Update(suite.ctx, []byte("invalid_key"), nil)
+		suite.Require().NoError(err)
 	})
 
 	t := time.Hour * 48

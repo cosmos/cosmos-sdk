@@ -6,9 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -64,9 +68,20 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if err != nil {
 		return ctx, err
 	}
-	signers := sigTx.GetSigners()
 
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	signerStrs := make([]string, len(signers))
 	for i, pk := range pubkeys {
+		var err error
+		signerStrs[i], err = spkd.ak.AddressCodec().BytesToString(signers[i])
+		if err != nil {
+			return sdk.Context{}, err
+		}
+
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
 			if !simulate {
@@ -77,7 +92,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
@@ -107,7 +122,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	var events sdk.Events
 	for i, sig := range sigs {
 		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
 		))
 
 		sigBzs, err := signatureDataToBz(sig.Data)
@@ -160,10 +175,13 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
+		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -194,17 +212,17 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	return next(ctx, tx, simulate)
 }
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
+// SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	signModeHandler *txsigning.HandlerMap
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
@@ -233,7 +251,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -245,15 +263,18 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
+	if len(sigs) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	for i, sig := range sigs {
-		acc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -279,17 +300,27 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{
-			Address:       acc.GetAddress().String(),
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-			PubKey:        pubKey,
-		}
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
+			signerData := txsigning.SignerData{
+				Address:       acc.GetAddress().String(),
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      acc.GetSequence(),
+				PubKey: &anypb.Any{
+					TypeUrl: anyPk.TypeUrl,
+					Value:   anyPk.Value,
+				},
+			}
+			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+			if !ok {
+				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+			}
+			txData := adaptableTx.GetSigningTxData()
+			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {
@@ -297,7 +328,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 					// and therefore communicate sequence number as a potential cause of error.
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
 				} else {
-					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 				}
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 
@@ -334,8 +365,13 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(ctx, addr)
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	for _, signer := range signers {
+		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)
 		}
@@ -501,10 +537,10 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 			sigs = append(sigs, nestedSigs...)
 		}
 
-		multisig := cryptotypes.MultiSignature{
+		multiSignature := cryptotypes.MultiSignature{
 			Signatures: sigs,
 		}
-		aggregatedSig, err := multisig.Marshal()
+		aggregatedSig, err := multiSignature.Marshal()
 		if err != nil {
 			return nil, err
 		}

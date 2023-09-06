@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // IndexKeyCodec is the codec for (non-unique) index keys.

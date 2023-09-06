@@ -2,9 +2,15 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,20 +18,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
-var _ exported.ConsensusParamSetter = (*Keeper)(nil)
+var StoreKey = "Consensus"
 
 type Keeper struct {
 	storeService storetypes.KVStoreService
-	cdc          codec.BinaryCodec
+	event        event.Service
 
-	authority string
+	authority   string
+	ParamsStore collections.Item[cmtproto.ConsensusParams]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string) Keeper {
+var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
+
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
-		cdc:          cdc,
 		authority:    authority,
+		event:        em,
+		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }
 
@@ -33,30 +44,45 @@ func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// Get gets the consensus parameters
-func (k *Keeper) Get(ctx context.Context) (*cmtproto.ConsensusParams, error) {
-	store := k.storeService.OpenKVStore(ctx)
+// Querier
 
-	bz, err := store.Get(types.ParamStoreKeyConsensusParams)
+var _ types.QueryServer = Keeper{}
+
+// Params queries params of consensus module
+func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryParamsResponse{Params: &params}, nil
+}
+
+// MsgServer
+
+var _ types.MsgServer = Keeper{}
+
+func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if k.GetAuthority() != msg.Authority {
+		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	consensusParams := msg.ToProtoConsensusParams()
+	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	cp := &cmtproto.ConsensusParams{}
-	if err := k.cdc.Unmarshal(bz, cp); err != nil {
+	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
 		return nil, err
 	}
 
-	return cp, nil
-}
+	if err := k.event.EventManager(ctx).EmitKV(
+		ctx,
+		"update_consensus_params",
+		event.Attribute{Key: "authority", Value: msg.Authority},
+		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
+		return nil, err
+	}
 
-func (k *Keeper) Has(ctx context.Context) (bool, error) {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Has(types.ParamStoreKeyConsensusParams)
-}
-
-// Set sets the consensus parameters
-func (k *Keeper) Set(ctx context.Context, cp *cmtproto.ConsensusParams) error {
-	store := k.storeService.OpenKVStore(ctx)
-	return store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
+	return &types.MsgUpdateParamsResponse{}, nil
 }

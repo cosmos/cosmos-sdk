@@ -8,6 +8,8 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -22,9 +24,10 @@ func TestLogger(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 
 	require.Equal(t,
 		testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
@@ -36,8 +39,9 @@ func TestInvariants(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 	require.Equal(t, keeper.InvCheckPeriod(), uint(5))
 
 	orgInvRoutes := keeper.Routes()
@@ -51,9 +55,10 @@ func TestAssertInvariants(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
-	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 
 	keeper.RegisterRoute("testModule", "testRoute1", func(sdk.Context) (string, bool) { return "", false })
 	require.NotPanics(t, func() { keeper.AssertInvariants(testCtx.Ctx) })

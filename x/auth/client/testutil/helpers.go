@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -23,7 +21,7 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 	}
 
 	cmd := cli.GetSignCommand()
-	cmtcli.PrepareBaseCmd(cmd, "", "")
+	cmd.PersistentFlags().String(flags.FlagHome, clientCtx.HomeDir, "directory for config and data")
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, append(args, extraArgs...))
 }
@@ -54,7 +52,7 @@ func TxValidateSignaturesExec(clientCtx client.Context, filename string) (testut
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetValidateSignaturesCommand(), args)
 }
 
-func TxMultiSignExec(clientCtx client.Context, from string, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxMultiSignExec(clientCtx client.Context, from, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
@@ -91,13 +89,7 @@ func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...stri
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAuxToFeeCommand(), append(args, extraArgs...))
 }
 
-func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{address.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
-
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), append(args, extraArgs...))
-}
-
-func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string, sigFile1 string, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
+func TxMultiSignBatchExec(clientCtx client.Context, filename, from, sigFile1, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		filename,

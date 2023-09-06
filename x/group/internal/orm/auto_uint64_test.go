@@ -4,10 +4,11 @@ import (
 	"math"
 	"testing"
 
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -52,7 +53,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store storetypes.KVStore, start uint64, end uint64) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end uint64) (Iterator, error)
 	}{
 		"first element": {
 			start:     1,

@@ -16,6 +16,7 @@ import (
 // This method can be used to canonicalize JSON to be returned by GetSignBytes,
 // e.g. for the ledger integration.
 // If the passed JSON isn't valid it will return an error.
+// Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
 func SortJSON(toSortJSON []byte) ([]byte, error) {
 	var c interface{}
 	err := json.Unmarshal(toSortJSON, &c)
@@ -31,6 +32,7 @@ func SortJSON(toSortJSON []byte) ([]byte, error) {
 
 // MustSortJSON is like SortJSON but panic if an error occurs, e.g., if
 // the passed JSON isn't valid.
+// Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
 func MustSortJSON(toSortJSON []byte) []byte {
 	js, err := SortJSON(toSortJSON)
 	if err != nil {
@@ -75,13 +77,13 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // Parses an encoded type using FormatTimeKey back into a time.Time
-func ParseTime(T any) (time.Time, error) { //nolint:gocritic
+func ParseTime(t any) (time.Time, error) {
 	var (
 		result time.Time
 		err    error
 	)
 
-	switch t := T.(type) {
+	switch t := t.(type) {
 	case time.Time:
 		result, err = t, nil
 	case []byte:
@@ -127,7 +129,7 @@ func AppendLengthPrefixedBytes(args ...[]byte) []byte {
 }
 
 // ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, int) {
 	neededLength := startIndex + sliceLength
 	endIndex := neededLength - 1
 	kv.AssertKeyAtLeastLength(key, neededLength)

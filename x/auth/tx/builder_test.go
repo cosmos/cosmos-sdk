@@ -6,9 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,9 +23,9 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(marshaler)
 
-	memo := "sometestmemo" //nolint:goconst
+	memo := "testmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	any, err := codectypes.NewAnyWithValue(pubkey)
@@ -137,8 +139,8 @@ func TestBuilderValidateBasic(t *testing.T) {
 
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
-	badFeeAmount[0].Amount = sdk.NewInt(-5)
-	txBuilder := newBuilder(nil)
+	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
+	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{
@@ -257,21 +259,21 @@ func TestBuilderFeePayer(t *testing.T) {
 
 	cases := map[string]struct {
 		txFeePayer      sdk.AccAddress
-		expectedSigners []sdk.AccAddress
-		expectedPayer   sdk.AccAddress
+		expectedSigners [][]byte
+		expectedPayer   []byte
 	}{
 		"no fee payer specified": {
-			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedSigners: [][]byte{addr1, addr2},
 			expectedPayer:   addr1,
 		},
 		"secondary signer set as fee payer": {
 			txFeePayer:      addr2,
-			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedSigners: [][]byte{addr1, addr2},
 			expectedPayer:   addr2,
 		},
 		"outside signer set as fee payer": {
 			txFeePayer:      addr3,
-			expectedSigners: []sdk.AccAddress{addr1, addr2, addr3},
+			expectedSigners: [][]byte{addr1, addr2, addr3},
 			expectedPayer:   addr3,
 		},
 	}
@@ -279,7 +281,7 @@ func TestBuilderFeePayer(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// setup basic tx
-			txBuilder := newBuilder(nil)
+			txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 			err := txBuilder.SetMsgs(msgs...)
 			require.NoError(t, err)
 			txBuilder.SetGasLimit(200000)
@@ -288,7 +290,9 @@ func TestBuilderFeePayer(t *testing.T) {
 			// set fee payer
 			txBuilder.SetFeePayer(tc.txFeePayer)
 			// and check it updates fields properly
-			require.Equal(t, tc.expectedSigners, txBuilder.GetSigners())
+			signers, err := txBuilder.GetSigners()
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedSigners, signers)
 			require.Equal(t, tc.expectedPayer, txBuilder.FeePayer())
 		})
 	}
@@ -303,7 +307,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	msgs := []sdk.Msg{msg1}
 
-	txBuilder := newBuilder(nil)
+	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
 	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)
@@ -313,5 +317,5 @@ func TestBuilderFeeGranter(t *testing.T) {
 
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
-	require.Equal(t, addr1, txBuilder.GetTx().FeeGranter())
+	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
 }

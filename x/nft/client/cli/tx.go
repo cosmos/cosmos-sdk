@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/nft"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -44,6 +45,10 @@ func NewCmdSend() *cobra.Command {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
+			}
+
+			if args[0] == "" || args[1] == "" || args[2] == "" {
+				return fmt.Errorf("class-id, nft-id and receiver cannot be empty")
 			}
 
 			msg := nft.MsgSend{

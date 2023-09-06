@@ -2,6 +2,8 @@
 
 This document outlines the process for releasing a new version of Cosmos SDK, which involves major release and patch releases as well as maintenance for the major release.
 
+> **Note, the Cosmos SDK went directly from v0.47 to v0.50 and skipped the v0.48 and v0.49 versions.**
+
 ## Major Release Procedure
 
 A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1.0 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
@@ -79,8 +81,8 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.46** is the previous major release and is supported until the release of **0.48.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
-* **0.47** is the last major release and is supported until the release of **0.49.0**.
+* **0.46** is the previous major release and is supported until the release of **0.50.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.47** is the last major release and is supported until the release of **0.51.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
 The SDK team will not backport any bug fixes to releases that are not supported.
@@ -120,7 +122,7 @@ ways in stable releases and `main` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current major release, and later, migrations are supported.
+See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migrations/intro).
 
 ### What qualifies as a Stable Release Update (SRU)
 
@@ -213,3 +215,28 @@ Currently residing Stable Release Managers:
 
 * @tac0turtle - Marko Baricevic
 * @julienrbrt - Julien Robert
+
+## Cosmos SDK Modules
+
+The Cosmos SDK repository is a mono-repo where its Go modules have a different release process and cadence than the Cosmos SDK itself.
+There are two types of modules:
+
+1. Modules that import the Cosmos SDK and depend on a specific version of it.
+    * Modules to be imported in an app (e.g `x/` modules).
+    * Modules that are not imported into an app and are a standalone module (e.g. `cosmovisor`).
+2. Modules that do not depend on the Cosmos SDK.
+
+The same changelog procedure applies to all modules in the Cosmos SDK repository, and must be up-to-date with the latest changes before tagging a module version.
+Note: The Cosmos SDK team is in an active process of limiting Go modules that depend on the Cosmos SDK.
+
+### Modules that depend on the Cosmos SDK
+
+The Cosmos SDK team should strive to release modules that depend on the Cosmos SDK at the same time or soon after a major version Cosmos SDK itself.
+Those modules can be considered as part of the Cosmos SDK, but features and improvements are released at a different cadence.
+
+* When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch. A compability matrix must be provided in the `README.md` of that module with the corresponding versions.
+* Modules that import the SDK but do not need to be imported in an app (`e.g. cosmovisor`) must be released from the `main` branch and follow the process defined below.
+
+### Modules that do not depend on the Cosmos SDK
+
+Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.

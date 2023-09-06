@@ -47,11 +47,13 @@ func (s *InfoTestSuite) TestParseInfo() {
 	}
 	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return val
 		}
 	}
 	makeInfoStrFuncURL := func(file string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return makeFileURL(t, file)
 		}
 	}
@@ -191,9 +193,10 @@ func (s *InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
 	}
 	tests := []struct {
-		name   string
-		urlMap BinaryDownloadURLMap
-		errs   []string
+		name        string
+		urlMap      BinaryDownloadURLMap
+		parseConfig ParseConfig
+		errs        []string
 	}{
 		{
 			name:   "empty map",
@@ -241,7 +244,8 @@ func (s *InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": "https://v1.cosmos.network/sdk",
 			},
-			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
+			parseConfig: ParseConfig{EnforceChecksum: false},
+			errs:        nil,
 		},
 		{
 			name: "multiple valid entries but one bad url",
@@ -269,7 +273,7 @@ func (s *InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actualErr := tc.urlMap.ValidateBasic()
+			actualErr := tc.urlMap.ValidateBasic(tc.parseConfig.EnforceChecksum)
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {
@@ -291,9 +295,10 @@ func (s *InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	linux386URL := makeFileURL(s.T(), linux386Path)
 
 	tests := []struct {
-		name   string
-		urlMap BinaryDownloadURLMap
-		errs   []string
+		name        string
+		urlMap      BinaryDownloadURLMap
+		parseConfig ParseConfig
+		errs        []string
 	}{
 		{
 			name: "two good entries",
@@ -321,7 +326,7 @@ func (s *InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actualErr := tc.urlMap.CheckURLs("daemon")
+			actualErr := tc.urlMap.CheckURLs("daemon", tc.parseConfig.EnforceChecksum)
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {

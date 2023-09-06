@@ -34,6 +34,51 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* [#17497](https://github.com/cosmos/cosmos-sdk/pull/17497) Optimize math.Int.Size for values that fit in 53 bits.
+
+## [math/v1.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.2) - 2023-08-21
+
+### Bug Fixes
+
+* [#17489](https://github.com/cosmos/cosmos-sdk/pull/17489) Revert [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263).
+
+## [math/v1.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.1) - 2023-08-21
+
+### Bug Fixes
+
+* [#17480](https://github.com/cosmos/cosmos-sdk/pull/17480) Fix panic when calling `.Size()` on a nil `math.Int` value.
+
+## [math/v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.0) - 2023-08-19
+
+### Features
+
+* [#17427](https://github.com/cosmos/cosmos-sdk/pull/17427) Implement LegacyDec.MulRoundUp that rounds up at precision end.
+
+### Improvements
+
+* [#17109](https://github.com/cosmos/cosmos-sdk/pull/17109) Add `.ToLegacyDec()` method on `math.Int` type for converting to `math.LegacyDec`.
+* [#16263](https://github.com/cosmos/cosmos-sdk/pull/16263) Improved `math/Int.Size` by computing the decimal digits count instead of firstly invoking .Marshal() then checking the length
+
+### Bug Fixes
+
+* [#17352](https://github.com/cosmos/cosmos-sdk/pull/17352) Ensure that modifying the argument to `NewIntFromBigInt` doesn't mutate the returned value.
+* [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) Fix legacy dec power mut zero exponent precision.
+
+## [math/v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.1) - 2023-05-15
+
+### Improvements
+
+* [#15768](https://github.com/cosmos/cosmos-sdk/pull/15768) Removed the second call to the `init` method for the global variable `grand`.
+* [#16141](https://github.com/cosmos/cosmos-sdk/pull/16141) Speedup `LegacyDec.ApproxRoot` and `LegacyDec.ApproxSqrt`.
+
+### Bug Fixes
+
+* [#15714](https://github.com/cosmos/cosmos-sdk/pull/15714) `FormatInt` returns an error on empty string.
+
 ## [math/v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.0) - 2023-03-23
 
 ### Bug Fixes

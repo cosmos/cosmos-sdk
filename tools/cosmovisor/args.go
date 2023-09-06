@@ -2,7 +2,9 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -11,24 +13,28 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // environment variable names
 const (
-	EnvHome                 = "DAEMON_HOME"
-	EnvName                 = "DAEMON_NAME"
-	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
-	EnvRestartDelay         = "DAEMON_RESTART_DELAY"
-	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
-	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
-	EnvInterval             = "DAEMON_POLL_INTERVAL"
-	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
-	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
+	EnvHome                     = "DAEMON_HOME"
+	EnvName                     = "DAEMON_NAME"
+	EnvDownloadBin              = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvDownloadMustHaveChecksum = "DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM"
+	EnvRestartUpgrade           = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvRestartDelay             = "DAEMON_RESTART_DELAY"
+	EnvShutdownGrace            = "DAEMON_SHUTDOWN_GRACE"
+	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
+	EnvInterval                 = "DAEMON_POLL_INTERVAL"
+	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
+	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
+	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
+	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
+	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
 )
 
 const (
@@ -38,21 +44,24 @@ const (
 	currentLink = "current"
 )
 
-// must be the same as x/upgrade/types.UpgradeInfoFilename
-const defaultFilename = "upgrade-info.json"
-
 // Config is the information passed in to control the daemon
 type Config struct {
-	Home                  string
-	Name                  string
-	AllowDownloadBinaries bool
-	RestartAfterUpgrade   bool
-	RestartDelay          time.Duration
-	PollInterval          time.Duration
-	UnsafeSkipBackup      bool
-	DataBackupPath        string
-	PreupgradeMaxRetries  int
-	DisableLogs           bool
+	Home                     string
+	Name                     string
+	AllowDownloadBinaries    bool
+	DownloadMustHaveChecksum bool
+	RestartAfterUpgrade      bool
+	RestartDelay             time.Duration
+	ShutdownGrace            time.Duration
+	PollInterval             time.Duration
+	UnsafeSkipBackup         bool
+	DataBackupPath           string
+	PreupgradeMaxRetries     int
+	DisableLogs              bool
+	ColorLogs                bool
+	TimeFormatLogs           string
+	CustomPreupgrade         string
+	DisableRecase            bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -86,7 +95,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", defaultFilename)
+	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -141,9 +150,10 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:           os.Getenv(EnvHome),
-		Name:           os.Getenv(EnvName),
-		DataBackupPath: os.Getenv(EnvDataBackupPath),
+		Home:             os.Getenv(EnvHome),
+		Name:             os.Getenv(EnvName),
+		DataBackupPath:   os.Getenv(EnvDataBackupPath),
+		CustomPreupgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -151,16 +161,28 @@ func GetConfigFromEnv() (*Config, error) {
 	}
 
 	var err error
-	if cfg.AllowDownloadBinaries, err = booleanOption(EnvDownloadBin, false); err != nil {
+	if cfg.AllowDownloadBinaries, err = BooleanOption(EnvDownloadBin, false); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.RestartAfterUpgrade, err = booleanOption(EnvRestartUpgrade, true); err != nil {
+	if cfg.DownloadMustHaveChecksum, err = BooleanOption(EnvDownloadMustHaveChecksum, false); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
+	if cfg.RestartAfterUpgrade, err = BooleanOption(EnvRestartUpgrade, true); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.DisableLogs, err = booleanOption(EnvDisableLogs, false); err != nil {
+	if cfg.UnsafeSkipBackup, err = BooleanOption(EnvSkipBackup, false); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.DisableLogs, err = BooleanOption(EnvDisableLogs, false); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.ColorLogs, err = BooleanOption(EnvColorLogs, true); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.TimeFormatLogs, err = TimeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
+		errs = append(errs, err)
+	}
+	if cfg.DisableRecase, err = BooleanOption(EnvDisableRecase, false); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -187,17 +209,42 @@ func GetConfigFromEnv() (*Config, error) {
 		}
 	}
 
+	cfg.ShutdownGrace = 0 // default value but makes it explicit
+	shutdownGrace := os.Getenv(EnvShutdownGrace)
+	if shutdownGrace != "" {
+		val, err := parseEnvDuration(shutdownGrace)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvShutdownGrace, err))
+		} else {
+			cfg.ShutdownGrace = val
+		}
+	}
+
 	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
 	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
 	errs = append(errs, cfg.validate()...)
-
 	if len(errs) > 0 {
-		return nil, cverrors.FlattenErrors(errs...)
+		return nil, errors.Join(errs...)
 	}
+
 	return cfg, nil
+}
+
+func (cfg *Config) Logger(dst io.Writer) log.Logger {
+	var logger log.Logger
+
+	if cfg.DisableLogs {
+		logger = log.NewNopLogger()
+	} else {
+		logger = log.NewLogger(dst,
+			log.ColorOption(cfg.ColorLogs),
+			log.TimeFormatOption(cfg.TimeFormatLogs)).With(log.ModuleKey, "cosmovisor")
+	}
+
+	return logger
 }
 
 func parseEnvDuration(input string) (time.Duration, error) {
@@ -211,20 +258,6 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	return duration, nil
-}
-
-// LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
-	if cfg == nil && err == nil {
-		return
-	}
-	logger.Info("configuration:")
-	switch {
-	case err != nil:
-		cverrors.LogErrors(logger, "configuration errors found", err)
-	case cfg != nil:
-		logger.Info(cfg.DetailString())
-	}
 }
 
 // validate returns an error if this config is invalid.
@@ -303,7 +336,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
+	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}
@@ -327,7 +360,7 @@ func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 		return cfg.currentUpgrade, nil
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte
@@ -349,7 +382,7 @@ returnError:
 }
 
 // checks and validates env option
-func booleanOption(name string, defaultVal bool) (bool, error) {
+func BooleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))
 	switch p {
 	case "":
@@ -362,19 +395,62 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
 
+// checks and validates env option
+func TimeFormatOptionFromEnv(env, defaultVal string) (string, error) {
+	val, set := os.LookupEnv(env)
+	if !set {
+		return defaultVal, nil
+	}
+	switch val {
+	case "layout":
+		return time.Layout, nil
+	case "ansic":
+		return time.ANSIC, nil
+	case "unixdate":
+		return time.UnixDate, nil
+	case "rubydate":
+		return time.RubyDate, nil
+	case "rfc822":
+		return time.RFC822, nil
+	case "rfc822z":
+		return time.RFC822Z, nil
+	case "rfc850":
+		return time.RFC850, nil
+	case "rfc1123":
+		return time.RFC1123, nil
+	case "rfc1123z":
+		return time.RFC1123Z, nil
+	case "rfc3339":
+		return time.RFC3339, nil
+	case "rfc3339nano":
+		return time.RFC3339Nano, nil
+	case "kitchen":
+		return time.Kitchen, nil
+	case "":
+		return "", nil
+	}
+	return "", fmt.Errorf("env variable %q must have a timeformat value (\"layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen\"), got %q", EnvTimeFormatLogs, val)
+}
+
 // DetailString returns a multi-line string with details about this config.
 func (cfg Config) DetailString() string {
 	configEntries := []struct{ name, value string }{
 		{EnvHome, cfg.Home},
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
+		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvShutdownGrace, cfg.ShutdownGrace.String()},
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
+		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
+		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
+		{EnvCustomPreupgrade, cfg.CustomPreupgrade},
+		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

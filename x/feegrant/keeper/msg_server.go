@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"cosmossdk.io/x/feegrant"
 )
 
 type msgServer struct {
@@ -26,18 +27,18 @@ var _ feegrant.MsgServer = msgServer{}
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
-	if msg.Grantee == msg.Granter {
+	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
+	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.StringToBytes(msg.Granter)
+	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +72,12 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevok
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.authKeeper.StringToBytes(msg.Grantee)
+	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.StringToBytes(msg.Granter)
+	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}

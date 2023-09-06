@@ -1,15 +1,16 @@
 package baseapp_test
 
 import (
+	"context"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,9 +27,13 @@ func TestRegisterMsgService(t *testing.T) {
 		appBuilder *runtime.AppBuilder
 		registry   codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewTestLogger(t), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -54,10 +59,14 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 		appBuilder *runtime.AppBuilder
 		registry   codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewTestLogger(t), db, nil)
+	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.
@@ -85,23 +94,35 @@ func TestMsgService(t *testing.T) {
 		cdc               codec.ProtoCodecMarshaler
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc, &interfaceRegistry)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewNopLogger()),
+		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
+	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},
 	)
-	_ = app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 1}})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
 
-	msg := testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
+	_, _, addr := testdata.KeyTestPubAddr()
+	msg := testdata.MsgCreateDog{
+		Dog:   &testdata.Dog{Name: "Spot"},
+		Owner: addr.String(),
+	}
 
 	txBuilder := txConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
@@ -114,7 +135,7 @@ func TestMsgService(t *testing.T) {
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  txConfig.SignModeHandler().DefaultMode(),
+			SignMode:  defaultSignMode,
 			Signature: nil,
 		},
 		Sequence: 0,
@@ -128,9 +149,10 @@ func TestMsgService(t *testing.T) {
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,
+		PubKey:        priv.PubKey(),
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
+		context.TODO(), defaultSignMode, signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)
@@ -139,6 +161,7 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Equal(t, abci.CodeTypeOK, res.TxResults[0].Code, "res=%+v", res)
 }

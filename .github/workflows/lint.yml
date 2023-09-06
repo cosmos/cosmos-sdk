@@ -5,21 +5,45 @@ on:
       - main
       - release/**
   pull_request:
+  merge_group:
 permissions:
   contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  # pull-requests: read
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
-      - uses: actions/checkout@v3
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+          go-version: "1.21"
+          check-latest: true
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: v1.51.2
+          PATTERNS: |
+            Makefile
+            **/Makefile
+            .golangci.yml
+      - name: run linting (long)
+        if: env.GIT_DIFF
+        id: lint_long
+        run: |
+          make lint
+      - uses: technote-space/get-diff-action@v6.1.2
+        if: steps.lint_long.outcome == 'skipped'
+        id: git_diff_all
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+      - name: run linting (short)
+        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
+        run: |
+          make lint
+        env:
+          GIT_DIFF: ${{ env.GIT_DIFF }}
+          LINT_DIFF: 1

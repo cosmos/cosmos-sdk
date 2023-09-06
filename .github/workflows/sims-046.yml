@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
+          go-version: "1.21"
+          check-latest: true
       - run: make build
 
   install-runsim:
@@ -32,7 +33,8 @@ jobs:
     steps:
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
+          go-version: "1.21"
+          check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
@@ -45,12 +47,13 @@ jobs:
     needs: [build, install-runsim]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
+          go-version: "1.21"
+          check-latest: true
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -63,12 +66,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
+          go-version: "1.21"
+          check-latest: true
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -81,12 +85,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.20.2
+          go-version: "1.21"
+          check-latest: true
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -101,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status
@@ -110,10 +115,10 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: cosmos-sdk-sims
+          SLACK_CHANNEL: sdk-sims
           SLACK_USERNAME: Sim Tests release/0.46.x
           SLACK_ICON_EMOJI: ":white_check_mark:"
           SLACK_COLOR: good
@@ -129,10 +134,10 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: cosmos-sdk-sims
+          SLACK_CHANNEL: sdk-sims
           SLACK_USERNAME: Sim Tests release/0.46.x
           SLACK_ICON_EMOJI: ":skull:"
           SLACK_COLOR: danger

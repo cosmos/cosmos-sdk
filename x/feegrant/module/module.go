@@ -5,19 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/errors"
-
-	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
-
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -101,11 +97,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(ab.ac)
 }
 
-// GetQueryCmd returns no root query command for the feegrant module.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(ab.ac)
-}
-
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------
@@ -122,7 +113,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -133,6 +124,7 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 var (
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -148,7 +140,7 @@ func (AppModule) Name() string {
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs feegrant.GenesisState
 	cdc.MustUnmarshalJSON(bz, &gs)
 
@@ -156,7 +148,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 	if err != nil {
 		panic(err)
 	}
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
@@ -190,7 +181,7 @@ func init() {
 type FeegrantInputs struct {
 	depinject.In
 
-	Key           *store.KVStoreKey
+	StoreService  store.KVStoreService
 	Cdc           codec.Codec
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
@@ -198,7 +189,7 @@ type FeegrantInputs struct {
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }
@@ -218,6 +209,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper, am.ac,
+		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper, am.ac,
 	)
 }

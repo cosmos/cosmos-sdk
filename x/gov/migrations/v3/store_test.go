@@ -6,8 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -42,15 +44,16 @@ func TestMigrateStore(t *testing.T) {
 
 	// Vote on prop 1
 	options := []v1beta1.WeightedVoteOption{
-		{Option: v1beta1.OptionNo, Weight: sdk.MustNewDecFromStr("0.3")},
-		{Option: v1beta1.OptionYes, Weight: sdk.MustNewDecFromStr("0.7")},
+		{Option: v1beta1.OptionNo, Weight: math.LegacyMustNewDecFromStr("0.3")},
+		{Option: v1beta1.OptionYes, Weight: math.LegacyMustNewDecFromStr("0.7")},
 	}
-	vote1 := v1beta1.NewVote(1, voter, options)
+	vote1 := v1beta1.Vote{ProposalId: 1, Voter: voter.String(), Options: options}
 	vote1Bz := cdc.MustMarshal(&vote1)
 	store.Set(v1gov.VoteKey(1, voter), vote1Bz)
 
 	// Run migrations.
-	err = v3gov.MigrateStore(ctx, govKey, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err = v3gov.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	var newProp1 v1.Proposal
@@ -73,6 +76,7 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1.Proposal) {
+	t.Helper()
 	require.Equal(t, oldProp.ProposalId, newProp.Id)
 	require.Equal(t, oldProp.TotalDeposit.String(), sdk.Coins(newProp.TotalDeposit).String())
 	require.Equal(t, oldProp.Status.String(), newProp.Status.String())

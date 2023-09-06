@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -205,8 +206,12 @@ message ModeInfo {
 // which must be above some miminum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs
@@ -228,8 +233,12 @@ message Fee {
 // Since: cosmos-sdk 0.46
 message Tip {
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

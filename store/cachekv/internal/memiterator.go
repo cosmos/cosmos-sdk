@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 
-	"cosmossdk.io/store/types"
 	"github.com/tidwall/btree"
+
+	"cosmossdk.io/store/types"
 )
 
 var _ types.Iterator = (*memIterator)(nil)
@@ -60,7 +61,7 @@ func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator
 	return mi
 }
 
-func (mi *memIterator) Domain() (start []byte, end []byte) {
+func (mi *memIterator) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 

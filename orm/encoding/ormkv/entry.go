@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/internal/stablejson"
 )
 
 // Entry defines a logical representation of a kv-store entry for ORM instances.
@@ -43,14 +43,14 @@ func (p *PrimaryKeyEntry) GetTableName() protoreflect.FullName {
 func (p *PrimaryKeyEntry) String() string {
 	if p.Value == nil {
 		return fmt.Sprintf("PK %s %s -> _", p.TableName, fmtValues(p.Key))
-	} else {
-		valBz, err := stablejson.Marshal(p.Value)
-		valStr := string(valBz)
-		if err != nil {
-			valStr = fmt.Sprintf("ERR %v", err)
-		}
-		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 	}
+
+	valBz, err := stablejson.Marshal(p.Value)
+	valStr := string(valBz)
+	if err != nil {
+		valStr = fmt.Sprintf("ERR %v", err)
+	}
+	return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 }
 
 func fmtValues(values []protoreflect.Value) string {
@@ -108,9 +108,9 @@ func fmtFields(fields []protoreflect.Name) string {
 func (i *IndexKeyEntry) String() string {
 	if i.IsUnique {
 		return fmt.Sprintf("UNIQ %s", i.string())
-	} else {
-		return fmt.Sprintf("IDX %s", i.string())
 	}
+
+	return fmt.Sprintf("IDX %s", i.string())
 }
 
 // SeqEntry represents a sequence for tables with auto-incrementing primary keys.

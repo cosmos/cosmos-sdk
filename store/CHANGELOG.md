@@ -25,9 +25,36 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## Features
+### Features
 
+* [#17294](https://github.com/cosmos/cosmos-sdk/pull/17294) Add snapshot manager Close method.
+ 
+### Improvements
+
+* [#17158](https://github.com/cosmos/cosmos-sdk/pull/17158) Start the goroutine after need to create a snapshot.
+
+
+## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv1.0.0-alpha.1) - 2023-07-11
+
+### Features
+
+* [#15568](https://github.com/cosmos/cosmos-sdk/pull/15568) Migrate the `iavl` to the new key format.
+  * Remove `DeleteVersion`, `DeleteVersions`, `LazyLoadVersionForOverwriting` from `iavl` tree API.
+  * Add `DeleteVersionsTo`, since it will keep versions sequentially like `fromVersion` to `toVersion`.
+  * Refactor the pruning manager to use `DeleteVersionsTo`.
+* [#15712](https://github.com/cosmos/cosmos-sdk/pull/15712) Add `WorkingHash` function to the store interface  to get the current app hash before commit.
+* [#15432](https://github.com/cosmos/cosmos-sdk/pull/15432) Add `TraverseStateChanges` to the store interface to get the state changes between two versions.
 * [#14645](https://github.com/cosmos/cosmos-sdk/pull/14645) Add limit to the length of key and value.
+* [#15683](https://github.com/cosmos/cosmos-sdk/pull/15683) `rootmulti.Store.CacheMultiStoreWithVersion` now can handle loading archival states that don't persist any of the module stores the current state has.
+* [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving restoring snapshot locally.
+
+### API Breaking Changes
+
+* [#16321](https://github.com/cosmos/cosmos-sdk/pull/16321) QueryInterface defines its own request and response types instead of relying on comet/abci & returns an error
+
+### Bug Fixes
+
+* [#16588](https://github.com/cosmos/cosmos-sdk/pull/16588) Propogate the Snapshotter's failure to the caller, (it will create a empty snapshot silently before).
 
 ## [v0.1.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store%2Fv0.1.0-alpha.1) - 2023-03-17
 

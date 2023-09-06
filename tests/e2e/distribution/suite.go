@@ -1,22 +1,25 @@
 package distribution
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	distrclitestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -47,7 +50,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	var mintData minttypes.GenesisState
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
 
-	inflation := sdk.MustNewDecFromStr("1.0")
+	inflation := math.LegacyMustNewDecFromStr("1.0")
 	mintData.Minter.Inflation = inflation
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
@@ -69,430 +72,6 @@ func (s *E2ETestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *E2ETestSuite) TestGetCmdQueryParams() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectedOutput string
-	}{
-		{
-			"json output",
-			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"community_tax":"0.020000000000000000","base_proposer_reward":"0.000000000000000000","bonus_proposer_reward":"0.000000000000000000","withdraw_addr_enabled":true}`,
-		},
-		{
-			"text output",
-			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
-			`base_proposer_reward: "0.000000000000000000"
-bonus_proposer_reward: "0.000000000000000000"
-community_tax: "0.020000000000000000"
-withdraw_addr_enabled: true`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryParams()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryValidatorDistributionInfo() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name   string
-		args   []string
-		expErr bool
-	}{
-		{
-			"invalid val address",
-			[]string{"invalid address", fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			true,
-		},
-		{
-			"json output",
-			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			false,
-		},
-		{
-			"text output",
-			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=text", flags.FlagOutput)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryValidatorDistributionInfo()
-			clientCtx := val.ClientCtx
-
-			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
-	val := s.network.Validators[0]
-
-	_, err := s.network.WaitForHeight(4)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
-	}{
-		{
-			"invalid validator address",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				"foo",
-			},
-			true,
-			"",
-		},
-		{
-			"json output",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(),
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			false,
-			`{"rewards":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
-		},
-		{
-			"text output",
-			[]string{
-				fmt.Sprintf("--%s=text", flags.FlagOutput),
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(),
-			},
-			false,
-			`rewards:
-- amount: "232.260000000000000000"
-  denom: stake`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryValidatorOutstandingRewards()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryValidatorCommission() {
-	val := s.network.Validators[0]
-
-	_, err := s.network.WaitForHeight(4)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
-	}{
-		{
-			"invalid validator address",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				"foo",
-			},
-			true,
-			"",
-		},
-		{
-			"json output",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(),
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			false,
-			`{"commission":[{"denom":"stake","amount":"116.130000000000000000"}]}`,
-		},
-		{
-			"text output",
-			[]string{
-				fmt.Sprintf("--%s=text", flags.FlagOutput),
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(),
-			},
-			false,
-			`commission:
-- amount: "116.130000000000000000"
-  denom: stake`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryValidatorCommission()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryValidatorSlashes() {
-	val := s.network.Validators[0]
-
-	_, err := s.network.WaitForHeight(4)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
-	}{
-		{
-			"invalid validator address",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				"foo", "1", "3",
-			},
-			true,
-			"",
-		},
-		{
-			"invalid start height",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(), "-1", "3",
-			},
-			true,
-			"",
-		},
-		{
-			"invalid end height",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(), "1", "-3",
-			},
-			true,
-			"",
-		},
-		{
-			"json output",
-			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(), "1", "3",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			false,
-			"{\"slashes\":[],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
-		},
-		{
-			"text output",
-			[]string{
-				fmt.Sprintf("--%s=text", flags.FlagOutput),
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				sdk.ValAddress(val.Address).String(), "1", "3",
-			},
-			false,
-			"pagination:\n  next_key: null\n  total: \"0\"\nslashes: []",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryValidatorSlashes()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryDelegatorRewards() {
-	val := s.network.Validators[0]
-	addr := val.Address
-	valAddr := sdk.ValAddress(addr)
-
-	_, err := s.network.WaitForHeightWithTimeout(11, time.Minute)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
-	}{
-		{
-			"invalid delegator address",
-			[]string{
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				"foo", valAddr.String(),
-			},
-			true,
-			"",
-		},
-		{
-			"invalid validator address",
-			[]string{
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				addr.String(), "foo",
-			},
-			true,
-			"",
-		},
-		{
-			"json output",
-			[]string{
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				addr.String(),
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			false,
-			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"193.550000000000000000"}]}],"total":[{"denom":"stake","amount":"193.550000000000000000"}]}`, valAddr.String()),
-		},
-		{
-			"json output (specific validator)",
-			[]string{
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				addr.String(), valAddr.String(),
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			false,
-			`{"rewards":[{"denom":"stake","amount":"193.550000000000000000"}]}`,
-		},
-		{
-			"text output",
-			[]string{
-				fmt.Sprintf("--%s=text", flags.FlagOutput),
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				addr.String(),
-			},
-			false,
-			fmt.Sprintf(`rewards:
-- reward:
-  - amount: "193.550000000000000000"
-    denom: stake
-  validator_address: %s
-total:
-- amount: "193.550000000000000000"
-  denom: stake`, valAddr.String()),
-		},
-		{
-			"text output (specific validator)",
-			[]string{
-				fmt.Sprintf("--%s=text", flags.FlagOutput),
-				fmt.Sprintf("--%s=5", flags.FlagHeight),
-				addr.String(), valAddr.String(),
-			},
-			false,
-			`rewards:
-- amount: "193.550000000000000000"
-  denom: stake`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryDelegatorRewards()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestGetCmdQueryCommunityPool() {
-	val := s.network.Validators[0]
-
-	_, err := s.network.WaitForHeight(4)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectedOutput string
-	}{
-		{
-			"json output",
-			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"pool":[{"denom":"stake","amount":"4.740000000000000000"}]}`,
-		},
-		{
-			"text output",
-			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput), fmt.Sprintf("--%s=3", flags.FlagHeight)},
-			`pool:
-- amount: "4.740000000000000000"
-  denom: stake`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryCommunityPool()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-		})
-	}
-}
-
 func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 	val := s.network.Validators[0]
 
@@ -512,7 +91,7 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			true, 0, nil,
 			[]string{},
@@ -524,7 +103,7 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 			[]string{
@@ -539,7 +118,7 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=true", cli.FlagCommission),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 			[]string{
@@ -555,13 +134,22 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
+			args := append([]string{tc.valAddr.String()}, tc.args...)
+
 			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
-			bz, err := distrclitestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+			cmd := cli.NewWithdrawRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
+			cmd.SetContext(ctx)
+			cmd.SetArgs(args)
+			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().NoError(s.network.WaitForNextBlock())
 
 				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
@@ -615,7 +203,7 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			true, 0, nil,
 			[]string{},
@@ -626,7 +214,7 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 			[]string{
@@ -639,7 +227,7 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewWithdrawAllRewardsCmd()
+			cmd := cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
@@ -703,7 +291,7 @@ func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			true, 0, nil,
 		},
@@ -714,7 +302,7 @@ func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -724,7 +312,7 @@ func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewSetWithdrawAddrCmd()
+			cmd := cli.NewSetWithdrawAddrCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -758,18 +346,18 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			true, 0, nil,
 		},
 		{
 			"valid transaction",
 			[]string{
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(5431))).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -779,7 +367,7 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewFundCommunityPoolCmd()
+			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

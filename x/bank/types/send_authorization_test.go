@@ -4,9 +4,10 @@ import (
 	fmt "fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -15,15 +16,15 @@ import (
 )
 
 var (
-	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
-	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(500)))
+	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
+	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(500)))
 	fromAddr    = sdk.AccAddress("_____from _____")
 	toAddr      = sdk.AccAddress("_______to________")
 	unknownAddr = sdk.AccAddress("_____unknown_____")
 )
 
 func TestSendAuthorization(t *testing.T) {
-	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmtproto.Header{})
+	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(header.Info{})
 	allowList := make([]sdk.AccAddress, 1)
 	allowList[0] = toAddr
 	authorization := types.NewSendAuthorization(coins1000, nil)
@@ -56,7 +57,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.Equal(t, sendAuth.String(), resp.Updated.String())
 
 	t.Log("expect updated authorization nil after spending remaining amount")
-	resp, err = resp.Updated.Accept(ctx, send)
+	resp, err = resp.Updated.(*types.SendAuthorization).Accept(ctx, send)
 	require.NoError(t, err)
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)

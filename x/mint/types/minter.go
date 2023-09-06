@@ -10,7 +10,7 @@ import (
 
 // NewMinter returns a new Minter object with the given inflation and annual
 // provisions values.
-func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
+func NewMinter(inflation, annualProvisions math.LegacyDec) Minter {
 	return Minter{
 		Inflation:        inflation,
 		AnnualProvisions: annualProvisions,
@@ -18,7 +18,7 @@ func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
 }
 
 // InitialMinter returns an initial Minter object with a given inflation value.
-func InitialMinter(inflation sdk.Dec) Minter {
+func InitialMinter(inflation math.LegacyDec) Minter {
 	return NewMinter(
 		inflation,
 		math.LegacyNewDec(0),
@@ -29,7 +29,7 @@ func InitialMinter(inflation sdk.Dec) Minter {
 // which uses an inflation rate of 13%.
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
-		sdk.NewDecWithPrec(13, 2),
+		math.LegacyNewDecWithPrec(13, 2),
 	)
 }
 
@@ -43,7 +43,7 @@ func ValidateMinter(minter Minter) error {
 }
 
 // NextInflationRate returns the new inflation rate for the next block.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) math.LegacyDec {
+func (m Minter) NextInflationRate(params Params, bondedRatio math.LegacyDec) math.LegacyDec {
 	// The target annual inflation rate is recalculated for each block. The inflation
 	// is also subject to a rate change (positive or negative) depending on the
 	// distance from the desired ratio (67%). The maximum rate change possible is
@@ -77,6 +77,6 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.Legacy
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
+	provisionAmt := m.AnnualProvisions.QuoInt(math.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

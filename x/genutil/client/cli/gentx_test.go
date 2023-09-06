@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -12,8 +11,11 @@ import (
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -51,7 +53,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
-	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
 		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
@@ -59,11 +60,11 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	s.clientCtx = ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen()
 }
 
 func (s *CLITestSuite) TestGenTxCmd() {
-	amount := sdk.NewCoin("stake", sdk.NewInt(12))
+	amount := sdk.NewCoin("stake", sdkmath.NewInt(12))
 
 	tests := []struct {
 		name         string
@@ -122,12 +123,7 @@ func (s *CLITestSuite) TestGenTxCmd() {
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd := cli.GenTxCmd(
-				module.NewBasicManager(),
-				clientCtx.TxConfig,
-				banktypes.GenesisBalancesIterator{},
-				clientCtx.HomeDir,
-			)
+			cmd := cli.GenTxCmd(module.NewBasicManager(), clientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, address.NewBech32Codec("cosmosvaloper"))
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 

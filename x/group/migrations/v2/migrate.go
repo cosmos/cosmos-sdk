@@ -48,8 +48,13 @@ func Migrate(
 	}
 
 	for _, policy := range groupPolicies {
+		addr, err := accountKeeper.AddressCodec().StringToBytes(policy.Address)
+		if err != nil {
+			return fmt.Errorf("failed to convert group policy account address: %w", err)
+		}
+
 		// get the account address by acc id
-		oldAcc := accountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(policy.Address))
+		oldAcc := accountKeeper.GetAccount(ctx, addr)
 		// remove the old account
 		accountKeeper.RemoveAccount(ctx, oldAcc)
 
@@ -67,6 +72,12 @@ func Migrate(
 		baseAccount, err := authtypes.NewBaseAccountWithPubKey(ac)
 		if err != nil {
 			return fmt.Errorf("failed to create new group policy account: %w", err)
+		}
+
+		// set account number
+		err = baseAccount.SetAccountNumber(oldAcc.GetAccountNumber())
+		if err != nil {
+			return err
 		}
 
 		// NOTE: we do not call NewAccount because we do not want to bump the account number

@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/tx/internal/testpb";
 
@@ -58,6 +59,17 @@ message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
   bytes signer                  = 1;
 }
+
 message NoSignerOption {
   bytes signer = 1;
+}
+
+message ValidatorSigner {
+  option (cosmos.msg.v1.signer) = "signer";
+  string signer                 = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+service TestSimpleSigner {
+  option (cosmos.msg.v1.service) = true;
+  rpc TestSimpleSigner(SimpleSigner) returns (SimpleSigner) {}
 }

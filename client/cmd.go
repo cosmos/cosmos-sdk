@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -92,8 +93,8 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
-		output, _ := flagSet.GetString(cli.OutputFlag)
+	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
+		output, _ := flagSet.GetString(flags.FlagOutput)
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
@@ -250,7 +251,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		payer, _ := flagSet.GetString(flags.FlagFeePayer)
 
 		if payer != "" {
-			payerAcc, err := sdk.AccAddressFromBech32(payer)
+			payerAcc, err := clientCtx.AddressCodec.StringToBytes(payer)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -263,7 +264,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		granter, _ := flagSet.GetString(flags.FlagFeeGranter)
 
 		if granter != "" {
-			granterAcc, err := sdk.AccAddressFromBech32(granter)
+			granterAcc, err := clientCtx.AddressCodec.StringToBytes(granter)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -281,10 +282,17 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
-		// TODO Remove this once SIGN_MODE_TEXTUAL is released
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/11970
 		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
-			return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is currently not supported, please follow https://github.com/cosmos/cosmos-sdk/issues/11970")
+			textualEnabled := false
+			for _, v := range clientCtx.TxConfig.SignModeHandler().SupportedModes() {
+				if v == signingv1beta1.SignMode_SIGN_MODE_TEXTUAL {
+					textualEnabled = true
+					break
+				}
+			}
+			if !textualEnabled {
+				return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is not available")
+			}
 		}
 
 		// If the `from` signer account is a ledger key, we need to use
@@ -305,8 +313,8 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		if isAux {
 			// If the user didn't explicitly set an --output flag, use JSON by
 			// default.
-			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
-				clientCtx = clientCtx.WithOutputFormat("json")
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
+				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
 			}
 
 			// If the user didn't explicitly set a --sign-mode flag, use
@@ -356,10 +364,11 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 }
 
 // SetCmdClientContext sets a command's Context value to the provided argument.
+// If the context has not been set, set the given context as the default.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 	v := cmd.Context().Value(ClientContextKey)
 	if v == nil {
-		return errors.New("client context not set")
+		v = &clientCtx
 	}
 
 	clientCtxPtr := v.(*Context)

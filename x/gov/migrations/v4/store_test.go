@@ -6,8 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,7 +92,8 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v1gov.ProposalKey(proposal2.Id), prop2Bz)
 
 	// Run migrations.
-	err = v4.MigrateStore(ctx, govKey, legacySubspace, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err = v4.MigrateStore(ctx, storeService, legacySubspace, cdc)
 	require.NoError(t, err)
 
 	// Check params
@@ -104,7 +107,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.Quorum, params.Quorum)
 	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
-	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
+	require.Equal(t, math.LegacyZeroDec().String(), params.MinInitialDepositRatio)
 
 	// Check proposals' status
 	var migratedProp1 v1.Proposal
@@ -129,7 +132,7 @@ func getTestProposal() []sdk.Msg {
 	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 }

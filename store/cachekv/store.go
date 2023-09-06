@@ -6,9 +6,9 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/cachekv/internal"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/internal/kv"
@@ -68,7 +68,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 }
 
 // Set implements types.KVStore.
-func (store *Store) Set(key []byte, value []byte) {
+func (store *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
@@ -93,6 +93,28 @@ func (store *Store) Delete(key []byte) {
 	store.setCacheValue(key, nil, true)
 }
 
+func (store *Store) resetCaches() {
+	if len(store.cache) > 100_000 {
+		// Cache is too large. We likely did something linear time
+		// (e.g. Epoch block, Genesis block, etc). Free the old caches from memory, and let them get re-allocated.
+		// TODO: In a future CacheKV redesign, such linear workloads should get into a different cache instantiation.
+		// 100_000 is arbitrarily chosen as it solved Osmosis' InitGenesis RAM problem.
+		store.cache = make(map[string]*cValue)
+		store.unsortedCache = make(map[string]struct{})
+	} else {
+		// Clear the cache using the map clearing idiom
+		// and not allocating fresh objects.
+		// Please see https://bencher.orijtech.com/perfclinic/mapclearing/
+		for key := range store.cache {
+			delete(store.cache, key)
+		}
+		for key := range store.unsortedCache {
+			delete(store.unsortedCache, key)
+		}
+	}
+	store.sortedCache = internal.NewBTree()
+}
+
 // Implements Cachetypes.KVStore.
 func (store *Store) Write() {
 	store.mtx.Lock()
@@ -103,44 +125,40 @@ func (store *Store) Write() {
 		return
 	}
 
+	type cEntry struct {
+		key string
+		val *cValue
+	}
+
 	// We need a copy of all of the keys.
-	// Not the best, but probably not a bottleneck depending.
-	keys := make([]string, 0, len(store.cache))
+	// Not the best. To reduce RAM pressure, we copy the values as well
+	// and clear out the old caches right after the copy.
+	sortedCache := make([]cEntry, 0, len(store.cache))
 
 	for key, dbValue := range store.cache {
 		if dbValue.dirty {
-			keys = append(keys, key)
+			sortedCache = append(sortedCache, cEntry{key, dbValue})
 		}
 	}
-
-	sort.Strings(keys)
+	store.resetCaches()
+	sort.Slice(sortedCache, func(i, j int) bool {
+		return sortedCache[i].key < sortedCache[j].key
+	})
 
 	// TODO: Consider allowing usage of Batch, which would allow the write to
 	// at least happen atomically.
-	for _, key := range keys {
+	for _, obj := range sortedCache {
 		// We use []byte(key) instead of conv.UnsafeStrToBytes because we cannot
 		// be sure if the underlying store might do a save with the byteslice or
 		// not. Once we get confirmation that .Delete is guaranteed not to
 		// save the byteslice, then we can assume only a read-only copy is sufficient.
-		cacheValue := store.cache[key]
-		if cacheValue.value != nil {
+		if obj.val.value != nil {
 			// It already exists in the parent, hence update it.
-			store.parent.Set([]byte(key), cacheValue.value)
+			store.parent.Set([]byte(obj.key), obj.val.value)
 		} else {
-			store.parent.Delete([]byte(key))
+			store.parent.Delete([]byte(obj.key))
 		}
 	}
-
-	// Clear the cache using the map clearing idiom
-	// and not allocating fresh objects.
-	// Please see https://bencher.orijtech.com/perfclinic/mapclearing/
-	for key := range store.cache {
-		delete(store.cache, key)
-	}
-	for key := range store.unsortedCache {
-		delete(store.unsortedCache, key)
-	}
-	store.sortedCache = internal.NewBTree()
 }
 
 // CacheWrap implements CacheWrapper.

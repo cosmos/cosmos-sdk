@@ -5,7 +5,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,9 +16,6 @@ var (
 	valAddr1 = sdk.ValAddress(pk1.Address())
 	valAddr2 = sdk.ValAddress(pk2.Address())
 	valAddr3 = sdk.ValAddress(pk3.Address())
-
-	emptyAddr   sdk.ValAddress
-	emptyPubkey cryptotypes.PubKey
 )
 
 func init() {

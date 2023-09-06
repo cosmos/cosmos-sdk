@@ -12,7 +12,19 @@ build_go_fuzzer() {
 	compile_native_go_fuzzer "$FUZZ_ROOT"/fuzz/tests "$function" "$fuzzer"
 }
 
+(
+	cd math && \
+	go get github.com/AdamKorcz/go-118-fuzz-build/testing && \
+	compile_native_go_fuzzer cosmossdk.io/math FuzzLegacyNewDecFromStr fuzz_math_legacy_new_dec_from_str
+)
+
 go get github.com/AdamKorcz/go-118-fuzz-build/testing
+
+# TODO: fails to build with
+# main.413864645.go:12:2: found packages query (collections_pagination.go) and query_test (fuzz_test.go_fuzz.go) in /src/cosmos-sdk/types/query
+# because of the separate query_test package.
+# compile_native_go_fuzzer "$FUZZ_ROOT"/types/query FuzzPagination fuzz_types_query_pagination
+compile_native_go_fuzzer "$FUZZ_ROOT"/types FuzzCoinUnmarshalJSON fuzz_types_coin_unmarshal_json
 
 build_go_fuzzer FuzzCryptoHDDerivePrivateKeyForPath fuzz_crypto_hd_deriveprivatekeyforpath
 build_go_fuzzer FuzzCryptoHDNewParamsFromPath fuzz_crypto_hd_newparamsfrompath

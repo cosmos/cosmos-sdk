@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -9,7 +8,7 @@ import (
 
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
-func Commands(defaultNodeHome string) *cobra.Command {
+func Commands() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "keys",
 		Short: "Manage your application's keys",
@@ -42,6 +41,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 		AddKeyCommand(),
 		ExportKeyCommand(),
 		ImportKeyCommand(),
+		ImportKeyHexCommand(),
 		ListKeysCmd(),
 		ListKeyTypesCmd(),
 		ShowKeysCmd(),
@@ -51,8 +51,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 		MigrateCommand(),
 	)
 
-	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
+	cmd.PersistentFlags().String(flags.FlagOutput, "text", "Output format (text|json)")
 	flags.AddKeyringFlags(cmd.PersistentFlags())
 
 	return cmd

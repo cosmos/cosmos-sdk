@@ -4,26 +4,33 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 type appModule struct {
@@ -56,20 +63,26 @@ func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
 			ProvideApp,
+			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideDeliverTx,
+			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
+			ProvideEventService,
+			ProvideHeaderInfoService,
+			ProvideCometInfoService,
+			ProvideBasicManager,
+			ProvideAppVersionModifier,
+			ProvideAddressCodec,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideApp() (
-	codectypes.InterfaceRegistry,
+func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -78,8 +91,18 @@ func ProvideApp() (
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
+	error,
 ) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	protoFiles := proto.HybridResolver
+	protoTypes := protoregistry.GlobalTypes
+
+	// At startup, check that all proto annotations are correct.
+	if err := msgservice.ValidateProtoAnnotations(protoFiles); err != nil {
+		// Once we switch to using protoreflect-based ante handlers, we might
+		// want to panic here instead of logging a warning.
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+	}
+
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
@@ -97,49 +120,68 @@ func ProvideApp() (
 	}
 	appBuilder := &AppBuilder{app}
 
-	protoFiles, err := proto.MergedRegistry()
-	if err != nil {
-		panic(err)
-	}
-	protoTypes := protoregistry.GlobalTypes
-
-	// At startup, check that all proto annotations are correct.
-	err = msgservice.ValidateProtoAnnotations(protoFiles)
-	if err != nil {
-		// Once we switch to using protoreflect-based antehandlers, we might
-		// want to panic here instead of logging a warning.
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
-
-	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes
+	return cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
 	depinject.In
 
-	AppConfig         *appv1alpha1.Config
-	Config            *runtimev1alpha1.Module
-	AppBuilder        *AppBuilder
-	Modules           map[string]appmodule.AppModule
-	BaseAppOptions    []BaseAppOption
-	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.LegacyAmino
+	AppConfig          *appv1alpha1.Config
+	Config             *runtimev1alpha1.Module
+	AppBuilder         *AppBuilder
+	Modules            map[string]appmodule.AppModule
+	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
+	BaseAppOptions     []BaseAppOption
+	InterfaceRegistry  codectypes.InterfaceRegistry
+	LegacyAmino        *codec.LegacyAmino
+	Logger             log.Logger
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
+	app.logger = inputs.Logger
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
 	for name, mod := range inputs.Modules {
-		if basicMod, ok := mod.(module.AppModuleBasic); ok {
-			app.basicManager[name] = basicMod
-			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			basicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
+			app.basicManager[name] = customBasicMod
+			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
+			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+			continue
 		}
+
+		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
+		app.basicManager[name] = coreAppModuleBasic
+		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
+		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
+}
+
+func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+	signingOptions := signing.Options{
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
+	}
+	for _, signer := range customGetSigners {
+		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
+	}
+
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOptions,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
+		return nil, err
+	}
+
+	return interfaceRegistry, nil
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
@@ -182,10 +224,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		return appBuilder.app.BaseApp.DeliverTx(tx)
-	}
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
 }
 
 func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
@@ -201,4 +241,71 @@ func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.M
 func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
 	storeKey := ProvideTransientStoreKey(key, app)
 	return transientStoreService{key: storeKey}
+}
+
+func ProvideEventService() event.Service {
+	return EventService{}
+}
+
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
+}
+
+func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+	return headerInfoService{}
+}
+
+func ProvideBasicManager(app *AppBuilder) module.BasicManager {
+	return app.app.basicManager
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+	return app.app
+}
+
+type (
+	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
+	ValidatorAddressCodec address.Codec
+
+	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
+	ConsensusAddressCodec address.Codec
+)
+
+type AddressCodecInputs struct {
+	depinject.In
+
+	AuthConfig    *authmodulev1.Module    `optional:"true"`
+	StakingConfig *stakingmodulev1.Module `optional:"true"`
+
+	AddressCodecFactory          func() address.Codec         `optional:"true"`
+	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+}
+
+// ProvideAddressCodec provides an address.Codec to the container for any
+// modules that want to do address string <> bytes conversion.
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
+		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
+	}
+
+	if in.AuthConfig == nil || in.AuthConfig.Bech32Prefix == "" {
+		panic("auth config bech32 prefix cannot be empty if no custom address codec is provided")
+	}
+
+	if in.StakingConfig == nil {
+		in.StakingConfig = &stakingmodulev1.Module{}
+	}
+
+	if in.StakingConfig.Bech32PrefixValidator == "" {
+		in.StakingConfig.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.AuthConfig.Bech32Prefix)
+	}
+
+	if in.StakingConfig.Bech32PrefixConsensus == "" {
+		in.StakingConfig.Bech32PrefixConsensus = fmt.Sprintf("%svalcons", in.AuthConfig.Bech32Prefix)
+	}
+
+	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
+		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
+		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
 }

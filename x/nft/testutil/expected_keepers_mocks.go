@@ -5,8 +5,10 @@
 package testutil
 
 import (
+	context "context"
 	reflect "reflect"
 
+	address "cosmossdk.io/core/address"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -35,7 +37,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -71,8 +73,22 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 	return m.recorder
 }
 
+// AddressCodec mocks base method.
+func (m *MockAccountKeeper) AddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// AddressCodec indicates an expected call of AddressCodec.
+func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
+}
+
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
 	ret0, _ := ret[0].(types.AccountI)

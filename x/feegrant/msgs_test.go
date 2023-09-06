@@ -5,16 +5,22 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestAminoJSON(t *testing.T) {
+	legacyAmino := codec.NewLegacyAmino()
+	feegrant.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegressionTestingAminoCodec = legacyAmino
 	tx := legacytx.StdTx{}
-	var msg legacytx.LegacyMsg
-	allowanceAny, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))})
+	var msg sdk.Msg
+	allowanceAny, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100)))})
 	require.NoError(t, err)
 
 	// Amino JSON encoding has changed in feegrant since v0.46.

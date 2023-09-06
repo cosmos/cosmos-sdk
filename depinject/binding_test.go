@@ -7,19 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/regen-network/gocuke"
-	"github.com/stretchr/testify/assert"
-
 	"cosmossdk.io/depinject"
 )
-
-func TestBindInterface(t *testing.T) {
-	gocuke.NewRunner(t, &bindingSuite{}).
-		Path("features/bindings.feature").
-		Step(`we try to resolve a "Duck" in global scope`, (*bindingSuite).WeTryToResolveADuckInGlobalScope).
-		Step(`module "(\w+)" wants a "Duck"`, (*bindingSuite).ModuleWantsADuck).
-		Run()
-}
 
 type Duck interface {
 	quack()
@@ -46,115 +35,268 @@ type Pond struct {
 	Ducks []DuckWrapper
 }
 
-type bindingSuite struct {
-	gocuke.TestingT // this gets injected by gocuke
+func IsResolvedInGlobalScope(t *testing.T, pond Pond, typeName string) {
+	t.Helper()
 
-	configs []depinject.Config
-	pond    *Pond
-	err     error
-}
-
-func (s bindingSuite) AnInterfaceDuck() {
-	// we don't need to do anything because this is defined at the type level
-}
-
-func (s bindingSuite) TwoImplementationsMallardAndCanvasback() {
-	// we don't need to do anything because this is defined at the type level
-}
-
-func ProvideMallard() Mallard       { return Mallard{} }
-func ProvideCanvasback() Canvasback { return Canvasback{} }
-func ProvideMarbled() Marbled       { return Marbled{} }
-
-func (s *bindingSuite) IsProvided(a string) {
-	switch a {
-	case "Mallard":
-		s.addConfig(depinject.Provide(ProvideMallard))
-	case "Canvasback":
-		s.addConfig(depinject.Provide(ProvideCanvasback))
-	case "Marbled":
-		s.addConfig(depinject.Provide(ProvideMarbled))
-	default:
-		s.Fatalf("unexpected duck type %s", a)
-	}
-}
-
-func (s *bindingSuite) addConfig(config depinject.Config) {
-	s.configs = append(s.configs, config)
-}
-
-func ProvideDuckWrapper(duck Duck) DuckWrapper {
-	return DuckWrapper{Module: "", Duck: duck}
-}
-
-func (s *bindingSuite) WeTryToResolveADuckInGlobalScope() {
-	s.addConfig(depinject.Provide(ProvideDuckWrapper))
-}
-
-func ResolvePond(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }
-
-func (s *bindingSuite) resolvePond() *Pond {
-	if s.pond != nil {
-		return s.pond
-	}
-
-	s.addConfig(depinject.Provide(ResolvePond))
-	var pond Pond
-	s.err = depinject.Inject(depinject.Configs(s.configs...), &pond)
-	s.pond = &pond
-	return s.pond
-}
-
-func (s *bindingSuite) IsResolvedInGlobalScope(typeName string) {
-	pond := s.resolvePond()
 	found := false
 	for _, dw := range pond.Ducks {
 		if dw.Module == "" {
-			require.Contains(s, reflect.TypeOf(dw.Duck).Name(), typeName)
+			require.Contains(t, reflect.TypeOf(dw.Duck).Name(), typeName)
 			found = true
 		}
 	}
-	assert.True(s, found)
+
+	require.True(t, found)
 }
 
-func (s *bindingSuite) ThereIsAError(expectedErrorMsg string) {
-	s.resolvePond()
-	assert.ErrorContains(s, s.err, expectedErrorMsg)
+func IsResolvedModuleScope(t *testing.T, pond Pond, module, duckType string) {
+	t.Helper()
+
+	moduleFound := false
+	for _, dw := range pond.Ducks {
+		if dw.Module == module {
+			require.Contains(t, reflect.TypeOf(dw.Duck).Name(), duckType)
+			moduleFound = true
+		}
+	}
+	require.True(t, moduleFound)
 }
 
-func (s *bindingSuite) ThereIsNoError() {
-	s.resolvePond()
-	assert.NoError(s, s.err)
-}
+func ProvideMallard() Mallard { return Mallard{} }
 
-func fullTypeName(typeName string) string {
-	return fmt.Sprintf("cosmossdk.io/depinject_test/depinject_test.%s", typeName)
-}
+func ProvideCanvasback() Canvasback { return Canvasback{} }
 
-func (s *bindingSuite) ThereIsAGlobalBindingForA(preferredType string, interfaceType string) {
-	s.addConfig(depinject.BindInterface(fullTypeName(interfaceType), fullTypeName(preferredType)))
-}
+func ProvideMarbled() Marbled { return Marbled{} }
 
-func (s *bindingSuite) ThereIsABindingForAInModule(preferredType string, interfaceType string, moduleName string) {
-	s.addConfig(depinject.BindInterfaceInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
+func ProvideDuckWrapper(duck Duck) DuckWrapper {
+	return DuckWrapper{Module: "", Duck: duck}
 }
 
 func ProvideModuleDuck(duck Duck, key depinject.OwnModuleKey) DuckWrapper {
 	return DuckWrapper{Module: depinject.ModuleKey(key).Name(), Duck: duck}
 }
 
-func (s *bindingSuite) ModuleWantsADuck(module string) {
-	s.addConfig(depinject.ProvideInModule(module, ProvideModuleDuck))
+func ResolvePond(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }
+
+func fullTypeName(typeName string) string {
+	return fmt.Sprintf("cosmossdk.io/depinject_test/depinject_test.%s", typeName)
 }
 
-func (s *bindingSuite) ModuleResolvesA(module string, duckType string) {
-	pond := s.resolvePond()
-	moduleFound := false
-	for _, dw := range pond.Ducks {
-		if dw.Module == module {
-			assert.Contains(s, reflect.TypeOf(dw.Duck).Name(), duckType)
-			moduleFound = true
-		}
-	}
-	assert.True(s, moduleFound)
+func TestProvideNoBinding(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.Provide(
+			ProvideMallard,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+
+	IsResolvedInGlobalScope(t, pond, "Mallard")
+}
+
+func TestProvideNoBindingImplementationErrorAmbiguous(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "Multiple implementations found")
+}
+
+func TestBindInterface(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Mallard")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+}
+
+func TestBindInterfaceBoundTypeNotProvided(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Marbled")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "No type for explicit binding")
+}
+
+func TestBindInterfaceOverwriteImplicitTypeResolution(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Marbled")), // overwrite Canvasback
+		depinject.Provide(
+			ProvideCanvasback,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "No type for explicit binding")
+
+	// same in module scope
+	moduleName := "A"
+	configs = depinject.Configs(
+		depinject.BindInterfaceInModule(moduleName, fullTypeName("Duck"), fullTypeName("Marbled")), // overwrite Canvasback
+		depinject.Provide(
+			ProvideCanvasback,
+			ResolvePond,
+		),
+		depinject.ProvideInModule(moduleName, ProvideModuleDuck),
+	)
+
+	err = depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "No type for explicit binding")
+}
+
+func TestBindingInterfaceGlobalScopeApplyToGlobalAndModuleScope(t *testing.T) {
+	t.Parallel()
+
+	configs := depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Mallard")), // order is important
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+	IsResolvedInGlobalScope(t, pond, "Mallard")
+
+	// same in module scope
+	moduleName := "A"
+	configs = depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Mallard")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ResolvePond,
+		),
+		depinject.ProvideInModule(moduleName, ProvideModuleDuck),
+	)
+
+	err = depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+	IsResolvedModuleScope(t, pond, moduleName, "Mallard")
+}
+
+func TestBindingInterfaceModuleScopeApplyOnlyModuleScope(t *testing.T) {
+	t.Parallel()
+
+	moduleName := "A"
+	configs := depinject.Configs(
+		depinject.BindInterfaceInModule(moduleName, fullTypeName("Duck"), fullTypeName("Canvasback")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "Multiple implementations found")
+
+	configs = depinject.Configs(
+		depinject.BindInterfaceInModule(moduleName, fullTypeName("Duck"), fullTypeName("Canvasback")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ResolvePond,
+		),
+		depinject.ProvideInModule(moduleName, ProvideModuleDuck),
+	)
+
+	err = depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+	IsResolvedModuleScope(t, pond, moduleName, "Canvasback")
+}
+
+func TestBindingInterfaceModuleScopeApplyCorrectModule(t *testing.T) {
+	t.Parallel()
+
+	moduleName := "A"
+	configs := depinject.Configs(
+		depinject.BindInterfaceInModule(moduleName, fullTypeName("Duck"), fullTypeName("Canvasback")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+		depinject.ProvideInModule("B", ProvideModuleDuck),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.ErrorContains(t, err, "Multiple implementations found")
+}
+
+func TestBindingInterfaceTwoModuleScopedAndGlobalBinding(t *testing.T) {
+	t.Parallel()
+
+	moduleA, moduleB, moduleC := "A", "B", "C"
+
+	configs := depinject.Configs(
+		depinject.BindInterface(fullTypeName("Duck"), fullTypeName("Marbled")),
+		depinject.BindInterfaceInModule(moduleA, fullTypeName("Duck"), fullTypeName("Canvasback")),
+		depinject.BindInterfaceInModule(moduleB, fullTypeName("Duck"), fullTypeName("Mallard")),
+		depinject.Provide(
+			ProvideMallard,
+			ProvideCanvasback,
+			ProvideMarbled,
+			ProvideDuckWrapper,
+			ResolvePond,
+		),
+		depinject.ProvideInModule(moduleA, ProvideModuleDuck),
+		depinject.ProvideInModule(moduleB, ProvideModuleDuck),
+		depinject.ProvideInModule(moduleC, ProvideModuleDuck),
+	)
+
+	var pond Pond
+	err := depinject.Inject(configs, &pond)
+	require.NoError(t, err)
+
+	IsResolvedModuleScope(t, pond, moduleA, "Canvasback")
+	IsResolvedModuleScope(t, pond, moduleB, "Mallard")
+	IsResolvedModuleScope(t, pond, moduleC, "Marbled")
+	IsResolvedInGlobalScope(t, pond, "Marbled")
 }

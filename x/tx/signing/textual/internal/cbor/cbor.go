@@ -1,5 +1,6 @@
 // Package cbor implements just enough of the CBOR (Concise Binary Object
-// Representation, RFC 8948) to deterministically encode simple data.
+// Representation, RFC 8948) to deterministically encode simple data. It does
+// not include decoding as it is not needed for the purpose of this package.
 package cbor
 
 import (
@@ -22,7 +23,7 @@ const (
 	majorSimple     byte = 7
 )
 
-func encodeFirstByte(major byte, extra byte) byte {
+func encodeFirstByte(major, extra byte) byte {
 	return (major << 5) | extra&0x1F
 }
 
@@ -156,7 +157,7 @@ func NewMap(entries ...Entry) Map {
 	return Map{entries: entries}
 }
 
-// Add adds a key/value entry to an existimg Map.
+// Add adds a key/value entry to an existing Map.
 // Duplicate keys in the Map will cause an error when Encode is called.
 func (m Map) Add(key, val Cbor) Map {
 	m.entries = append(m.entries, NewEntry(key, val))

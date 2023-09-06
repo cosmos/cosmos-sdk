@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -17,6 +18,7 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
@@ -50,15 +52,16 @@ func startInProcess(cfg Config, val *Validator) error {
 		return appGenesis.ToGenesisDoc()
 	}
 
+	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
 		cmtCfg,
 		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(app),
+		proxy.NewLocalClientCreator(cmtApp),
 		appGenesisProvider,
-		node.DefaultDBProvider,
+		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
-		servercmtlog.CometZeroLogWrapper{Logger: logger.With("module", val.Moniker)},
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
 	)
 	if err != nil {
 		return err
@@ -80,7 +83,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		app.RegisterTxService(val.ClientCtx)
 		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
 	}
 
 	ctx := context.Background()
@@ -139,7 +142,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
+			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator, cfg.TxConfig.SigningContext().ValidatorAddressCodec())
 		if err != nil {
 			return err
 		}
@@ -196,14 +199,14 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	return nil
 }
 
-func writeFile(name string, dir string, contents []byte) error {
+func writeFile(name, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
+	if err := os.WriteFile(file, contents, 0o600); err != nil {
 		return err
 	}
 
@@ -224,6 +227,6 @@ func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)
-	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	addr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
 	return
 }

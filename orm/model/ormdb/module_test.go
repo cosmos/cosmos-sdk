@@ -8,6 +8,11 @@ import (
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/golang/mock/gomock"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
+
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -15,24 +20,15 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/depinject"
-
-	"github.com/golang/mock/gomock"
-
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
-
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
-
-	_ "github.com/cosmos/cosmos-sdk/orm" // required for ORM module registration
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	_ "cosmossdk.io/orm" // required for ORM module registration
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormdb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormmocks"
+	"cosmossdk.io/orm/testing/ormtest"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -89,7 +85,7 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 	if supply == nil {
 		supply = &testpb.Supply{Denom: denom, Amount: amount}
 	} else {
-		supply.Amount = supply.Amount + amount
+		supply.Amount += amount
 	}
 
 	err = k.store.SupplyTable().Save(ctx, supply)
@@ -111,7 +107,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 		return fmt.Errorf("insufficient supply")
 	}
 
-	supply.Amount = supply.Amount - amount
+	supply.Amount -= amount
 
 	if supply.Amount == 0 {
 		err = supplyStore.Delete(ctx, supply)
@@ -162,7 +158,7 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 			Amount:  amount,
 		}
 	} else {
-		balance.Amount = balance.Amount + amount
+		balance.Amount += amount
 	}
 
 	return k.store.BalanceTable().Save(ctx, balance)
@@ -179,13 +175,13 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 		return fmt.Errorf("insufficient funds")
 	}
 
-	balance.Amount = balance.Amount - amount
+	balance.Amount -= amount
 
 	if balance.Amount == 0 {
 		return balanceStore.Delete(ctx, balance)
-	} else {
-		return balanceStore.Save(ctx, balance)
 	}
+
+	return balanceStore.Save(ctx, balance)
 }
 
 func TestModuleDB(t *testing.T) {
@@ -227,13 +223,13 @@ func TestModuleDB(t *testing.T) {
 	// check JSON
 	target := genesis.RawJSONTarget{}
 	assert.NilError(t, db.GenesisHandler().DefaultGenesis(target.Target()))
-	rawJson, err := target.JSON()
+	rawJSON, err := target.JSON()
 	assert.NilError(t, err)
-	golden.Assert(t, string(rawJson), "default_json.golden")
+	golden.Assert(t, string(rawJSON), "default_json.golden")
 
 	target = genesis.RawJSONTarget{}
 	assert.NilError(t, db.GenesisHandler().ExportGenesis(ctx, target.Target()))
-	rawJson, err = target.JSON()
+	rawJSON, err = target.JSON()
 	assert.NilError(t, err)
 
 	goodJSON := `{
@@ -255,7 +251,7 @@ func TestModuleDB(t *testing.T) {
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
-	source, err = genesis.SourceFromRawJSON(rawJson)
+	source, err = genesis.SourceFromRawJSON(rawJSON)
 	assert.NilError(t, err)
 	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
 	assert.NilError(t, db.GenesisHandler().InitGenesis(ctx2, source))
@@ -263,6 +259,7 @@ func TestModuleDB(t *testing.T) {
 }
 
 func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	t.Helper()
 	// mint coins
 	denom := "foo"
 	acct1 := "bob"

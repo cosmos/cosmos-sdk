@@ -8,9 +8,13 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,30 +48,33 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	var accountKeeper keeper.AccountKeeper
 
 	app, err := simtestutil.Setup(
-		authtestutil.AppConfig,
+		depinject.Configs(
+			authtestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&accountKeeper,
 	)
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	// new base account
 	senderPrivKey := secp256k1.GenPrivKey()
 	randAccNumber := uint64(rand.Intn(100000-10000) + 10000)
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), randAccNumber, 0)
 
-	ctx = app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 
 	// migrator
 	m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter(), legacySubspace)
 	// set the account to store with map acc addr to acc number
-	require.NoError(t, m.V45_SetAccount(ctx, acc))
+	require.NoError(t, m.V45SetAccount(ctx, acc))
 
 	testCases := []struct {
 		name        string
@@ -93,12 +100,11 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 			}
 
 			//  get the account address by acc id
-			accAddr := accountKeeper.GetAccountAddressByID(ctx, tc.accNum)
-
+			accAddr, err := accountKeeper.Accounts.Indexes.Number.MatchExact(ctx, tc.accNum)
 			if tc.doMigration {
-				require.Equal(t, accAddr, acc.Address)
+				require.Equal(t, accAddr.String(), acc.Address)
 			} else {
-				require.Equal(t, len(accAddr), 0)
+				require.ErrorIs(t, err, collections.ErrNotFound)
 			}
 		})
 	}

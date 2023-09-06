@@ -3,18 +3,14 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/fieldnames"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // indexKeyIndex implements Index for a regular IndexKey.
@@ -120,6 +116,6 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	return nil
 }
 
-func (p indexKeyIndex) Fields() string {
-	return p.fields.String()
+func (i indexKeyIndex) Fields() string {
+	return i.fields.String()
 }

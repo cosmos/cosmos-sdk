@@ -37,11 +37,12 @@ func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
 	if v2.IsValid() {
 		b2 = v2.Bool()
 	}
-	if b1 == b2 {
+	switch {
+	case b1 == b2:
 		return 0
-	} else if b1 {
+	case b1:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }

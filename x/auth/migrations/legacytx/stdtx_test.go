@@ -1,19 +1,27 @@
 package legacytx
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -22,31 +30,26 @@ var (
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
-func init() {
-	amino := codec.NewLegacyAmino()
-	RegisterLegacyAminoCodec(amino)
-}
-
-// Deprecated: use fee amount and gas limit separately on TxBuilder.
-func NewTestStdFee() StdFee {
-	return NewStdFee(100000,
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
-	)
-}
-
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
 		chainID       string
 		accnum        uint64
 		sequence      uint64
 		timeoutHeight uint64
-		fee           StdFee
+		fee           *txv1beta1.Fee
 		msgs          []sdk.Msg
 		memo          string
-		tip           *tx.Tip
+		tip           *txv1beta1.Tip
 	}
-	defaultFee := NewTestStdFee()
-	defaultTip := &tx.Tip{Tipper: addr.String(), Amount: sdk.NewCoins(sdk.NewInt64Coin("tiptoken", 150))}
+	defaultFee := &txv1beta1.Fee{
+		Amount:   []*basev1beta1.Coin{{Denom: "atom", Amount: "150"}},
+		GasLimit: 100000,
+	}
+	defaultTip := &txv1beta1.Tip{
+		Amount: []*basev1beta1.Coin{{Denom: "tiptoken", Amount: "150"}},
+		Tipper: addr.String(),
+	}
+	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"signers":["%s"]}}`, addr)
 	tests := []struct {
 		name string
 		args args
@@ -55,59 +58,91 @@ func TestStdSignBytes(t *testing.T) {
 		{
 			"with timeout height",
 			args{"1234", 3, 6, 10, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6","timeout_height":"10"}`, addr),
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[%s],"sequence":"6","timeout_height":"10"}`, msgStr),
 		},
 		{
 			"no timeout height (omitempty)",
 			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr),
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[%s],"sequence":"6"}`, msgStr),
 		},
 		{
 			"empty fee",
-			args{"1234", 3, 6, 0, StdFee{}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[%s],"sequence":"6"}`, msgStr),
 		},
 		{
 			"no fee payer and fee granter (both omitempty)",
-			args{"1234", 3, 6, 0, StdFee{Amount: defaultFee.Amount, Gas: defaultFee.Gas}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[%s],"sequence":"6"}`, msgStr),
 		},
 		{
 			"with fee granter, no fee payer (omitempty)",
-			args{"1234", 3, 6, 0, StdFee{Amount: defaultFee.Amount, Gas: defaultFee.Gas, Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, msgStr),
 		},
 		{
 			"with fee payer, no fee granter (omitempty)",
-			args{"1234", 3, 6, 0, StdFee{Amount: defaultFee.Amount, Gas: defaultFee.Gas, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, msgStr),
 		},
 		{
 			"with fee payer and fee granter",
-			args{"1234", 3, 6, 0, StdFee{Amount: defaultFee.Amount, Gas: defaultFee.Gas, Payer: addr.String(), Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s","payer":"%s"},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr, addr, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String(), Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", nil},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, addr, msgStr),
 		},
 		{
 			"no fee, with tip",
-			args{"1234", 3, 6, 0, StdFee{}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", defaultTip},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, addr, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", defaultTip},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, msgStr, addr),
 		},
 		{
 			"with fee and with tip",
-			args{"1234", 3, 6, 0, StdFee{Amount: defaultFee.Amount, Gas: defaultFee.Gas, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", defaultTip},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, addr, addr, addr),
+			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", defaultTip},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, addr, msgStr, addr),
 		},
 		{
 			"with empty tip (but not nil), tipper cannot be empty",
-			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", &tx.Tip{Tipper: addr.String()}},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[],"tipper":"%s"}}`, addr, addr),
+			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", &txv1beta1.Tip{Tipper: addr.String()}},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[],"tipper":"%s"}}`, msgStr, addr),
 		},
 	}
+	handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
+		FileResolver: proto.HybridResolver,
+	})
 	for i, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, tc.args.msgs, tc.args.memo, tc.args.tip))
-			require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
+			anyMsgs := make([]*anypb.Any, len(tc.args.msgs))
+			for j, msg := range tc.args.msgs {
+				legacyAny, err := codectypes.NewAnyWithValue(msg)
+				require.NoError(t, err)
+				anyMsgs[j] = &anypb.Any{
+					TypeUrl: legacyAny.TypeUrl,
+					Value:   legacyAny.Value,
+				}
+			}
+			got, err := handler.GetSignBytes(
+				context.TODO(),
+				txsigning.SignerData{
+					Address:       "foo",
+					ChainID:       tc.args.chainID,
+					AccountNumber: tc.args.accnum,
+					Sequence:      tc.args.sequence,
+				},
+				txsigning.TxData{
+					Body: &txv1beta1.TxBody{
+						Memo:          tc.args.memo,
+						Messages:      anyMsgs,
+						TimeoutHeight: tc.args.timeoutHeight,
+					},
+					AuthInfo: &txv1beta1.AuthInfo{
+						Fee: tc.args.fee,
+						Tip: tc.args.tip,
+					},
+				},
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, string(got), "Got unexpected result on test case i: %d", i)
 		})
 	}
 }

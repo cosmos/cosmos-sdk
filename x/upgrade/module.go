@@ -5,16 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
-	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -24,14 +23,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func init() {
@@ -39,12 +36,14 @@ func init() {
 }
 
 // ConsensusVersion defines the current x/upgrade module consensus version.
-const ConsensusVersion uint64 = 2
+const ConsensusVersion uint64 = 3
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	ac address.Codec
+}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
@@ -63,18 +62,13 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetQueryCmd returns the CLI query commands for this module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 // GetTxCmd returns the CLI transaction commands for this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
-func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -85,9 +79,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{ac: ac},
 		keeper:         keeper,
 	}
 }
@@ -95,6 +89,7 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 var (
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ module.HasGenesis         = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -113,24 +108,34 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) {
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
 		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
-		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
+		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		for name, version := range moduleVM {
 			if _, ok := versionMap[name]; !ok {
 				versionMap[name] = version
 			}
 		}
 
-		am.keeper.SetModuleVersionMap(ctx, versionMap)
+		err = am.keeper.SetModuleVersionMap(ctx, versionMap)
+		if err != nil {
+			panic(err)
+		}
 	}
-
-	return []abci.ValidatorUpdate{}
 }
 
 // DefaultGenesis is an empty object
@@ -139,7 +144,7 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
@@ -155,10 +160,11 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	BeginBlocker(am.keeper, c)
-	return nil
+	return BeginBlocker(ctx, am.keeper)
 }
+
+// IsUpgradeModule implements the module.UpgradeModule interface.
+func (am AppModuleBasic) IsUpgradeModule() {}
 
 //
 // App Wiring Setup
@@ -171,28 +177,26 @@ func init() {
 	)
 }
 
-//nolint:revive
-type UpgradeInputs struct {
+type ModuleInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config             *modulev1.Module
+	StoreService       store.KVStoreService
+	Cdc                codec.Codec
+	AddressCodec       address.Codec
+	AppVersionModifier baseapp.AppVersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-//nolint:revive
-type UpgradeOutputs struct {
+type ModuleOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
-	GovHandler    govv1beta1.HandlerRoute
-	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -213,14 +217,10 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
-	baseappOpt := func(app *baseapp.BaseApp) {
-		k.SetVersionSetter(app)
-	}
-	m := NewAppModule(k)
-	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
+	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, in.AppVersionModifier, authority.String())
+	m := NewAppModule(k, in.AddressCodec)
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+	return ModuleOutputs{UpgradeKeeper: k, Module: m}
 }
 
 func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {

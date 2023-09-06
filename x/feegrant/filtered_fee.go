@@ -1,10 +1,12 @@
 package feegrant
 
 import (
+	"context"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,8 +69,8 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *AllowedMsgAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(ctx, msgs) {
+func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
+	if !a.allMsgTypesAllowed(sdk.UnwrapSDKContext(ctx), msgs) {
 		return false, errorsmod.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -126,6 +128,7 @@ func (a *AllowedMsgAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
+// ExpiresAt returns the expiry time of the AllowedMsgAllowance.
 func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
 	allowance, err := a.GetAllowance()
 	if err != nil {

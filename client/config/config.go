@@ -46,7 +46,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 
-	// when config.toml does not exist create and init with default values
+	// when client.toml does not exist create and init with default values
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
 			return ctx, fmt.Errorf("couldn't make client config: %w", err)

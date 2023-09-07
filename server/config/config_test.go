@@ -216,8 +216,8 @@ func TestAppConfig(t *testing.T) {
 	}()
 
 	defAppConfig := DefaultConfig()
-	require.NoError(t, SetConfigTemplate(DefaultConfigTemplate))
-	require.NoError(t, WriteConfigFile(appConfigFile, defAppConfig))
+	SetConfigTemplate(DefaultConfigTemplate)
+	WriteConfigFile(appConfigFile, defAppConfig)
 
 	v := viper.New()
 	v.SetConfigFile(appConfigFile)

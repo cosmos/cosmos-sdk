@@ -130,6 +130,8 @@ func (s *Store) LastCommitID() (CommitID, error) {
 	// XXX/TODO: We cannot use SS to get the latest version when lastCommitInfo
 	// is nil if SS is flushed asynchronously. This is because the latest version
 	// in SS might not be the latest version in the SC stores.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.ss.GetLatestVersion()
 	if err != nil {
 		return CommitID{}, err

@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/pool/keeper"
 	"cosmossdk.io/x/pool/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -111,9 +112,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService storetypes.KVStoreService
+	Config           *modulev1.Module
+	Cdc              codec.Codec
+	StoreService     storetypes.KVStoreService
+	MsgServiceRouter baseapp.MessageRouter
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -133,7 +135,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper, in.BankKeeper, authority.String())
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.MsgServiceRouter, in.AccountKeeper, in.BankKeeper, authority.String())
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{

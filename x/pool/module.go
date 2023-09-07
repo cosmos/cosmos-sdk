@@ -127,11 +127,6 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// feeCollectorName := in.Config.FeeCollectorName
-	// if feeCollectorName == "" {
-	// 	feeCollectorName = authtypes.FeeCollectorName
-	// }
-
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {

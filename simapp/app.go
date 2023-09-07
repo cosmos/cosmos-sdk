@@ -27,12 +27,18 @@ import (
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	nftmodule "cosmossdk.io/x/nft/module"
+	"cosmossdk.io/x/pool"
+	poolkeeper "cosmossdk.io/x/pool/keeper"
+	pooltypes "cosmossdk.io/x/pool/types"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cast"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -103,8 +109,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/cast"
 )
 
 const appName = "SimApp"
@@ -162,6 +166,7 @@ type SimApp struct {
 	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	CircuitKeeper         circuitkeeper.Keeper
+	PoolKeeper            poolkeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -254,7 +259,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, circuittypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
 	)
 
 	// register streaming services
@@ -317,6 +322,8 @@ func NewSimApp(
 	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
+
+	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	groupConfig := group.DefaultConfig()
 	/*
@@ -400,6 +407,7 @@ func NewSimApp(
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
+		pool.NewAppModule(appCodec, app.PoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 	bApp.SetMigrationModuleManager(app.ModuleManager)
 

@@ -43,25 +43,31 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) store.Iterator
 }
 
-// CacheWrapper defines an interface for creating a CacheWrap from a KVStore.
-type CacheWrapper interface {
-	CacheWrap() CacheWrap
+// CacheKVStore defines an interface for a branched a KVStore. It extends KVStore
+// by allowing dirty entries to be flushed to the underlying KVStore or discarded
+// altogether. A CachedKVStore can itself be branched, allowing for nested branching
+// where writes are flushed up the branched stack.
+type CacheKVStore interface {
+	KVStore
 
-	// CacheWrapWithTrace branches a store with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-}
-
-// CacheWrap defines an interface for branching a KVStore's state, allowing writes
-// to be cached and flushed to the underlying store or discarded completed. Reads
-// should be checked against a cache before querying the underlying store upon a
-// cache miss. A CacheWrap store allows for nested branching.
-type CacheWrap interface {
 	// Write flushes writes to the underlying store.
 	Write()
 
 	// CacheWrap recursively wraps.
-	CacheWrap() CacheWrap
+	CacheWrap() CacheKVStore
 
 	// CacheWrapWithTrace recursively wraps with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
+	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheKVStore
+}
+
+// CacheWrapper defines an interface for a branching a KVStore's state, allowing
+// writes to be cached and flushed to the underlying store or discarded altogether.
+// Reads should be performed against a "branched" state, allowing dirty entries
+// to be cached and read from. If an entry is not found in the branched state, it
+// will fallthrough to the underlying KVStore.
+type CacheWrapper interface {
+	CacheWrap() CacheKVStore
+
+	// CacheWrapWithTrace branches a store with tracing enabled.
+	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheKVStore
 }

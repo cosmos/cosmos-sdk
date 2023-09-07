@@ -1,6 +1,6 @@
 module cosmossdk.io/x/feegrant
 
-go 1.21
+go 1.21.0
 
 require (
 	cosmossdk.io/api v0.7.0
@@ -20,7 +20,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
@@ -155,3 +155,5 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
+
+replace cosmossdk.io/x/pool => ../pool

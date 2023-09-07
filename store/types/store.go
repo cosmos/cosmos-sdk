@@ -1,6 +1,10 @@
 package types
 
-import "io"
+import (
+	"io"
+
+	"cosmossdk.io/store/v2"
+)
 
 // StoreType defines a type of KVStore.
 type StoreType int
@@ -24,7 +28,19 @@ type KVStore interface {
 
 	CacheWrapper
 
-	// TODO: Iterator.
+	// Iterator creates a new Iterator over the domain [start, end). Note:
+	//
+	// - Start must be less than end
+	// - The iterator must be closed by caller
+	// - To iterate over entire domain, use store.Iterator(nil, nil)
+	//
+	// CONTRACT: No writes may happen within a domain while an iterator exists over
+	// it, with the exception of a branched/cached KVStore.
+	Iterator(start, end []byte) store.Iterator
+
+	// ReverseIterator creates a new reverse Iterator over the domain [start, end).
+	// It has the some properties and contracts as Iterator.
+	ReverseIterator(start, end []byte) store.Iterator
 }
 
 // CacheWrapper defines an interface for creating a CacheWrap from a KVStore.

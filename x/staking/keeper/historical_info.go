@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -44,20 +42,13 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	// Create HistoricalInfo struct
-	lastVals, err := k.GetLastValidators(ctx)
-	if err != nil {
-		return err
-	}
+	time := sdkCtx.HeaderInfo().Time
 
-	h := cmtproto.Header{
-		AppHash:            sdkCtx.HeaderInfo().AppHash,
-		Time:               sdkCtx.HeaderInfo().Time,
-		ChainID:            sdkCtx.HeaderInfo().ChainID,
-		NextValidatorsHash: sdkCtx.CometInfo().GetValidatorsHash(),
+	historicalEntry := types.Historical{
+		Time:              &time,
+		NextValidatorHash: sdkCtx.CometInfo().GetValidatorsHash(),
+		Apphash:           sdkCtx.HeaderInfo().AppHash,
 	}
-
-	historicalEntry := types.NewHistoricalInfo(h, types.Validators{Validators: lastVals, ValidatorCodec: k.validatorAddressCodec}, k.PowerReduction(ctx))
 
 	// Set latest HistoricalInfo at current height
 	return k.HistoricalInfo.Set(ctx, uint64(sdkCtx.BlockHeight()), historicalEntry)

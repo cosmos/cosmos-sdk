@@ -669,17 +669,14 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 			vals.Validators = append(vals.Validators, validator)
 		}
 
-		historicalInfo := stakingtypes.HistoricalInfo{
-			Header: cmtproto.Header{},
-			Valset: vals.Validators,
-		}
+		historical := stakingtypes.Historical{}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
 
 		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 			f.ctx,
 			uint64(height),
-			historicalInfo,
+			historical,
 		))
 
 		req := &stakingtypes.QueryHistoricalInfoRequest{
@@ -700,7 +697,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	height := int64(127)
 
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
+	assert.NilError(t, f.stakingKeeper.Historical.Set(
 		f.ctx,
 		uint64(height),
 		historicalInfo,

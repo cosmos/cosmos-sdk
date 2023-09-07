@@ -34,13 +34,17 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), stakingtypes.Validators{Validators: validators}, keeper.PowerReduction(ctx))
+	time := ctx.BlockTime()
+	hi := stakingtypes.Historical{
+		Time:              &time,
+		NextValidatorHash: ctx.CometInfo().GetValidatorsHash(),
+		Apphash:           ctx.HeaderInfo().AppHash,
+	}
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(2))
 	require.NoError(err, "HistoricalInfo found after set")
 	require.Equal(hi, recv, "HistoricalInfo not equal")
-	require.True(IsValSetSorted(recv.Valset, keeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
 
 	require.NoError(keeper.HistoricalInfo.Remove(ctx, uint64(2)))
 
@@ -70,12 +74,19 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		ChainID: "HelloChain",
 		Height:  5,
 	}
-	valSet := []stakingtypes.Validator{
-		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
-		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
+
+	hi4 := stakingtypes.Historical{
+		Time:              &h4.Time,
+		NextValidatorHash: h4.NextValidatorsHash,
+		Apphash:           h4.AppHash,
 	}
-	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
+
+	hi5 := stakingtypes.Historical{
+		Time:              &h5.Time,
+		NextValidatorHash: h5.NextValidatorsHash,
+		Apphash:           h5.AppHash,
+	}
+
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(5), hi5))
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(4))
@@ -143,29 +154,34 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	_, addrVals := createValAddrs(50)
-
-	valSet := []stakingtypes.Validator{
-		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
-		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
-	}
-
 	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 9}
 	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
 	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
 
-	hist1 := stakingtypes.HistoricalInfo{Header: header1, Valset: valSet}
-	hist2 := stakingtypes.HistoricalInfo{Header: header2, Valset: valSet}
-	hist3 := stakingtypes.HistoricalInfo{Header: header3, Valset: valSet}
+	hist1 := stakingtypes.Historical{
+		Time:              &header1.Time,
+		NextValidatorHash: header1.NextValidatorsHash,
+		Apphash:           header1.AppHash,
+	}
+	hist2 := stakingtypes.Historical{
+		Time:              &header2.Time,
+		NextValidatorHash: header2.NextValidatorsHash,
+		Apphash:           header2.AppHash,
+	}
+	hist3 := stakingtypes.Historical{
+		Time:              &header3.Time,
+		NextValidatorHash: header3.NextValidatorsHash,
+		Apphash:           header3.AppHash,
+	}
 
-	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
+	expHistInfos := []stakingtypes.Historical{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
 		require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(int64(9+i)), hi))
 	}
 
-	var infos []stakingtypes.HistoricalInfo
-	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.HistoricalInfo) (stop bool, err error) {
+	var infos []stakingtypes.Historical
+	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.Historical) (stop bool, err error) {
 		infos = append(infos, info)
 		return false, nil
 	})

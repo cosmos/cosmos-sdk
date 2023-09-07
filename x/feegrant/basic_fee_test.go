@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
@@ -19,15 +19,15 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
-	badTime := ctx.BlockTime().AddDate(0, 0, -1)
+	badTime := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
 	allowace := &feegrant.BasicAllowance{
 		Expiration: &badTime,
 	}
 	require.Error(t, allowace.ValidateBasic())
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{
+	ctx = ctx.WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
@@ -35,7 +35,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {

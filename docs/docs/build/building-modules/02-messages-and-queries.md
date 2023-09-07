@@ -49,7 +49,7 @@ https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5
 
 In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
 
-Read more about the signer field [here](../building-apps/05-protobuf-annotations.md).
+Read more about the signer field [here](./05-protobuf-annotations.md).
 
 ```protobuf reference 
 https://github.com/cosmos/cosmos-sdk/blob/e6848d99b55a65d014375b295bdd7f9641aac95e/proto/cosmos/bank/v1beta1/tx.proto#L40

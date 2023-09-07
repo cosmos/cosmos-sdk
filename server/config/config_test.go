@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -164,4 +165,22 @@ func TestSetConfigTemplate(t *testing.T) {
 	require.NoError(t, serr, "after SetConfigTemplate, configTemplate.Execute")
 	actual := setBuffer.String()
 	require.Equal(t, expected, actual, "resulting config strings")
+}
+
+func TestAppConfig(t *testing.T) {
+	appConfigFile := filepath.Join(t.TempDir(), "app.toml")
+	defer func() {
+		_ = os.Remove(appConfigFile)
+	}()
+
+	defAppConfig := DefaultConfig()
+	SetConfigTemplate(DefaultConfigTemplate)
+	WriteConfigFile(appConfigFile, defAppConfig)
+
+	v := viper.New()
+	v.SetConfigFile(appConfigFile)
+	require.NoError(t, v.ReadInConfig())
+	appCfg := new(Config)
+	require.NoError(t, v.Unmarshal(appCfg))
+	require.EqualValues(t, appCfg, defAppConfig)
 }

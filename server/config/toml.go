@@ -272,7 +272,7 @@ fsync = "{{ .Streamers.File.Fsync }}"
 #
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
-max-txs = "{{ .Mempool.MaxTxs }}"
+max-txs = {{ .Mempool.MaxTxs }}
 `
 
 var configTemplate *template.Template

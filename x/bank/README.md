@@ -236,8 +236,12 @@ accounts. The send keeper does not alter the total supply (mint or burn coins).
 type SendKeeper interface {
     ViewKeeper
 
-    InputOutputCoins(ctx context.Context, inputs types.Input, outputs []types.Output) error
-    SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+    AppendSendRestriction(restriction SendRestrictionFn)
+    PrependSendRestriction(restriction SendRestrictionFn)
+    ClearSendRestriction()
+
+    InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
+    SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx context.Context) types.Params
     SetParams(ctx context.Context, params types.Params) error
@@ -253,6 +257,86 @@ type SendKeeper interface {
     IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 
     BlockedAddr(addr sdk.AccAddress) bool
+}
+```
+
+#### Send Restrictions
+
+The `SendKeeper` applies a `SendRestrictionFn` before each transfer of funds.
+
+```golang
+// A SendRestrictionFn can restrict sends and/or provide a new receiver address.
+type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
+```
+
+After the `SendKeeper` (or `BaseKeeper`) has been created, send restrictions can be added to it using the `AppendSendRestriction` or `PrependSendRestriction` functions.
+Both functions compose the provided restriction with any previously provided restrictions.
+`AppendSendRestriction` adds the provided restriction to be run after any previously provided send restrictions.
+`PrependSendRestriction` adds the restriction to be run before any previously provided send restrictions.
+The composition will short-circuit when an error is encountered. I.e. if the first one returns an error, the second is not run.
+
+During `SendCoins`, the send restriction is applied after coins are removed from the from address, but before adding them to the to address.
+During `InputOutputCoins`, the send restriction is applied after the input coins are removed and once for each output before the funds are added.
+
+A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.
+
+For example, in your module's keeper package, you'd define the send restriction function:
+
+```golang
+var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
+
+func (k Keeper) SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	// Bypass if the context says to.
+	if mymodule.HasBypass(ctx) {
+		return toAddr, nil
+	}
+
+	// Your custom send restriction logic goes here.
+	return nil, errors.New("not implemented")
+}
+```
+
+The bank keeper should be provided to your keeper's constructor so the send restriction can be added to it:
+
+```golang
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper mymodule.BankKeeper) Keeper {
+	rv := Keeper{/*...*/}
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
+	return rv
+}
+```
+
+Then, in the `mymodule` package, define the context helpers:
+
+```golang
+const bypassKey = "bypass-mymodule-restriction"
+
+// WithBypass returns a new context that will cause the mymodule bank send restriction to be skipped.
+func WithBypass(ctx context.Context) context.Context {
+	return sdk.UnwrapSDKContext(ctx).WithValue(bypassKey, true)
+}
+
+// WithoutBypass returns a new context that will cause the mymodule bank send restriction to not be skipped.
+func WithoutBypass(ctx context.Context) context.Context {
+	return sdk.UnwrapSDKContext(ctx).WithValue(bypassKey, false)
+}
+
+// HasBypass checks the context to see if the mymodule bank send restriction should be skipped.
+func HasBypass(ctx context.Context) bool {
+	bypassValue := ctx.Value(bypassKey)
+	if bypassValue == nil {
+		return false
+	}
+	bypass, isBool := bypassValue.(bool)
+	return isBool && bypass
+}
+```
+
+Now, anywhere where you want to use `SendCoins` or `InputOutputCoins`, but you don't want your send restriction applied:
+
+```golang
+func (k Keeper) DoThing(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	return k.bankKeeper.SendCoins(mymodule.WithBypass(ctx), fromAddr, toAddr, amt)
 }
 ```
 

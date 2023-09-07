@@ -46,52 +46,16 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
-// FundCommunityPool allows an account to directly fund the community fund pool.
-// The amount is first added to the distribution module account and then directly
-// added to the pool. An error is returned if the amount cannot be sent to the
-// module account.
+// FundCommunityPool allows an account to directly fund the community pool module account.
+// An error is returned if the amount cannot be sent to the module account.
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	// if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
-	// 	return err
-	// }
-
-	// feePool, err := k.FeePool.Get(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	// return k.FeePool.Set(ctx, feePool)
-
 	// since CommunityPool has a separate module account, send funds directly to its account
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 
 // DistributeFromFeePool distributes funds from the pool module account to
-// a receiver address while updating the community pool
+// a receiver address
 func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
-	// feePool, err := k.FeePool.Get(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // NOTE the community pool isn't a module account, however its coins
-	// // are held in the distribution module account. Thus the community pool
-	// // must be reduced separately from the SendCoinsFromModuleToAccount call
-	// newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(amount...))
-	// if negative {
-	// 	return types.ErrBadDistribution
-	// }
-
-	// feePool.CommunityPool = newPool
-
-	// err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return k.FeePool.Set(ctx, feePool)
-
 	// since community pool is a module account and coins are held there, distribute funds from there
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }

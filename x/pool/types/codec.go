@@ -22,5 +22,5 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/x/pool/MsgFundCommunityPool")
-	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/x/pool/MsgCosmmunityPoolSpend")
+	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/x/pool/MsgCommunityPoolSpend")
 }

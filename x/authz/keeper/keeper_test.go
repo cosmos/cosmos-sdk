@@ -414,7 +414,7 @@ func (s *TestSuite) TestGetAuthorization() {
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
 	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
 
-	start := s.ctx.BlockHeader().Time
+	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 	notExpired := start.Add(time.Duration(5) * time.Hour)
 

@@ -920,7 +920,7 @@ func (k Keeper) getBeginInfo(
 	switch {
 	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
 		// the longest wait - just unbonding period from now
-		completionTime = sdkCtx.BlockHeader().Time.Add(unbondingTime)
+		completionTime = sdkCtx.HeaderInfo().Time.Add(unbondingTime)
 		height = sdkCtx.BlockHeight()
 
 		return completionTime, height, false, nil
@@ -977,7 +977,7 @@ func (k Keeper) Undelegate(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	completionTime := sdkCtx.BlockHeader().Time.Add(unbondingTime)
+	completionTime := sdkCtx.HeaderInfo().Time.Add(unbondingTime)
 	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
@@ -1007,7 +1007,7 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 
 	balances := sdk.NewCoins()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.BlockHeader().Time
+	ctxTime := sdkCtx.HeaderInfo().Time
 
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -1152,7 +1152,7 @@ func (k Keeper) CompleteRedelegation(
 
 	balances := sdk.NewCoins()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.BlockHeader().Time
+	ctxTime := sdkCtx.HeaderInfo().Time
 
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {

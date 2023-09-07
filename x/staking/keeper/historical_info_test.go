@@ -4,6 +4,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -103,18 +104,19 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	vals := []stakingtypes.Validator{val1, val2}
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))
 
-	// Set Header for BeginBlock context
-	header := cmtproto.Header{
+	ctx = ctx.WithHeaderInfo(header.Info{
 		ChainID: "HelloChain",
 		Height:  10,
-	}
-	ctx = ctx.WithBlockHeader(header)
+	})
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 
 	// Check HistoricalInfo at height 10 is persisted
 	expected := stakingtypes.HistoricalInfo{
-		Header: header,
+		Header: cmtproto.Header{
+			ChainID: "HelloChain",
+			Height:  10,
+		},
 		Valset: vals,
 	}
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(10))

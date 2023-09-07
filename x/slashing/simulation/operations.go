@@ -138,13 +138,13 @@ func SimulateMsgUnjail(
 		// - validator is still in jailed period
 		// - self delegation too low
 		if info.Tombstoned ||
-			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
+			ctx.HeaderInfo().Time.Before(info.JailedUntil) ||
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			if res != nil && err == nil {
 				if info.Tombstoned {
 					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
 				}
-				if ctx.BlockHeader().Time.Before(info.JailedUntil) {
+				if ctx.HeaderInfo().Time.Before(info.JailedUntil) {
 					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
 				}
 				if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {

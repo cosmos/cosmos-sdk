@@ -343,7 +343,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 			require.Equal(tc.newRate, val.Commission.Rate,
 				"expected new validator commission rate for test case #%d with rate: %s", i, tc.newRate,
 			)
-			require.Equal(ctx.BlockHeader().Time, val.Commission.UpdateTime,
+			require.Equal(ctx.HeaderInfo().Time, val.Commission.UpdateTime,
 				"expected new validator commission update time for test case #%d with rate: %s", i, tc.newRate,
 			)
 		}

@@ -74,9 +74,9 @@ func TestHooks(t *testing.T) {
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)
 
 	params, _ := govKeeper.Params.Get(ctx)
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 	err = gov.EndBlocker(ctx, govKeeper)
 	require.NoError(t, err)
 
@@ -94,9 +94,9 @@ func TestHooks(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVoteValid)
 
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.VotingPeriod).Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader = ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.VotingPeriod).Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 	err = gov.EndBlocker(ctx, govKeeper)
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)

@@ -53,7 +53,6 @@ var _ MultiStore = (*Store)(nil)
 
 type Store struct {
 	logger         log.Logger
-	commitHeader   CommitHeader
 	initialVersion uint64
 
 	// ss reflects the state storage backend
@@ -64,6 +63,9 @@ type Store struct {
 
 	// removalMap reflects module stores marked for removal
 	removalMap map[types.StoreKey]struct{}
+
+	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
+	commitHeader CommitHeader
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *CommitInfo
@@ -265,13 +267,12 @@ func (s *Store) Commit() ([]byte, error) {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
 	}
 
-	s.lastCommitInfo = commitInfo
-	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
-
-	// TODO: Commit writes to SS backend asynchronously.
 	if err := s.commitSS(version); err != nil {
 		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
+
+	s.lastCommitInfo = commitInfo
+	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 
 	return s.lastCommitInfo.Hash(), nil
 }
@@ -292,7 +293,7 @@ func (s *Store) clearSCRemovalMap() (err error) {
 	return err
 }
 
-// PopStateCache returns all the accumulated writes from all SC stores. Note,
+// popStateCache returns all the accumulated writes from all SC stores. Note,
 // calling popStateCache destroys only the currently accumulated state in each
 // listener not the state in the store itself. This is a mutating and destructive
 // operation.
@@ -311,6 +312,12 @@ func (rs *Store) popStateCache() []*types.StoreKVPair {
 	return writes
 }
 
+// commitSS flushes all accumulated writes to the SS backend via a single batch.
+// Note, this is a synchronous operation. It returns an error if the batch write
+// fails.
+//
+// TODO: Commit writes to SS backend asynchronously.
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 func (s *Store) commitSS(version uint64) error {
 	batch, err := s.ss.NewBatch(version)
 	if err != nil {

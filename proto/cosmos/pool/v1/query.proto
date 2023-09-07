@@ -4,12 +4,9 @@ package cosmos.pool.v1;
 
 option go_package = "cosmossdk.io/x/pool/types";
 
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/distribution/v1beta1/distribution.proto";
-import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
 // Query defines the gRPC querier service for community pool module.

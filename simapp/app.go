@@ -323,7 +323,7 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
-	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.MsgServiceRouter(), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	groupConfig := group.DefaultConfig()
 	/*
@@ -355,7 +355,7 @@ func NewSimApp(
 	*/
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, app.DistrKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1

@@ -1,6 +1,6 @@
 module github.com/cosmos-sdk/tests/starship/tests
 
-go 1.21
+go 1.21.0
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
@@ -26,6 +26,7 @@ replace (
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
 	cosmossdk.io/x/nft => ../../../x/nft
+	cosmossdk.io/x/pool => ../../../x/pool
 	cosmossdk.io/x/tx => ../../../x/tx
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
@@ -58,6 +59,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/pool v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.9.1 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -207,7 +209,7 @@ require (
 	google.golang.org/api v0.134.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

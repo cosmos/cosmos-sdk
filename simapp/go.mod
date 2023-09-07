@@ -16,6 +16,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/pool v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.9.1
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v0.38.0-rc3
@@ -31,8 +32,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.31.0
 )
-
-require cosmossdk.io/x/pool v0.0.0-00010101000000-000000000000
 
 require (
 	cloud.google.com/go v0.110.6 // indirect

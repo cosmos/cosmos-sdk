@@ -231,8 +231,6 @@ func (s *Store) SetCommitHeader(h CommitHeader) {
 // are committed in a single batch synchronously. All writes to each SC are also
 // committed synchronously, however, they are NOT atomic. A byte slice is returned
 // reflecting the Merkle root hash of all committed SC stores.
-//
-// TODO: Explore flushing writes to SS asynchronously.
 func (s *Store) Commit() ([]byte, error) {
 	var previousHeight, version uint64
 	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {

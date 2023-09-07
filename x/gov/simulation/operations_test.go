@@ -26,8 +26,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -404,13 +402,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 }
 
 type suite struct {
-	TxConfig           client.TxConfig
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper dk.Keeper
-	App                *runtime.App
+	TxConfig      client.TxConfig
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	GovKeeper     *keeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	App           *runtime.App
 }
 
 // returns context and an app with updated mint keeper
@@ -427,12 +424,11 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),
-				configurator.DistributionModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
+		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx)

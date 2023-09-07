@@ -34,8 +34,3 @@ type StakingKeeper interface {
 	BondDenom(ctx context.Context) (string, error)
 	TokensFromConsensusPower(ctx context.Context, power int64) math.Int
 }
-
-// DistributionKeeper defines the expected distribution keeper
-type DistributionKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}

@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	pooltypes "cosmossdk.io/x/pool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -21,7 +22,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -32,7 +32,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	distAcct     = authtypes.NewModuleAddress(disttypes.ModuleName)
+	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
 	TestProposal = getTestProposal()
 )
 
@@ -55,22 +55,21 @@ func getTestProposal() []sdk.Msg {
 }
 
 type mocks struct {
-	acctKeeper         *govtestutil.MockAccountKeeper
-	bankKeeper         *govtestutil.MockBankKeeper
-	stakingKeeper      *govtestutil.MockStakingKeeper
-	distributionKeeper *govtestutil.MockDistributionKeeper
+	acctKeeper    *govtestutil.MockAccountKeeper
+	bankKeeper    *govtestutil.MockBankKeeper
+	stakingKeeper *govtestutil.MockStakingKeeper
 }
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress(pooltypes.ModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }
 
 func mockDefaultExpectations(ctx sdk.Context, m mocks) {
 	mockAccountKeeperExpectations(ctx, m)
-	trackMockBalances(m.bankKeeper, m.distributionKeeper)
+	trackMockBalances(m.bankKeeper)
 	m.stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {
 		return sdk.TokensFromConsensusPower(power, math.NewIntFromUint64(1000000))
 	}).AnyTimes()
@@ -79,7 +78,6 @@ func mockDefaultExpectations(ctx sdk.Context, m mocks) {
 	m.stakingKeeper.EXPECT().IterateBondedValidatorsByPower(gomock.Any(), gomock.Any()).AnyTimes()
 	m.stakingKeeper.EXPECT().IterateDelegations(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	m.stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(10000000), nil).AnyTimes()
-	m.distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 }
 
 // setupGovKeeper creates a govKeeper as well as all its dependencies.
@@ -106,10 +104,9 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	m := mocks{
-		acctKeeper:         govtestutil.NewMockAccountKeeper(ctrl),
-		bankKeeper:         govtestutil.NewMockBankKeeper(ctrl),
-		stakingKeeper:      govtestutil.NewMockStakingKeeper(ctrl),
-		distributionKeeper: govtestutil.NewMockDistributionKeeper(ctrl),
+		acctKeeper:    govtestutil.NewMockAccountKeeper(ctrl),
+		bankKeeper:    govtestutil.NewMockBankKeeper(ctrl),
+		stakingKeeper: govtestutil.NewMockStakingKeeper(ctrl),
 	}
 	if len(expectations) == 0 {
 		mockDefaultExpectations(ctx, m)
@@ -121,7 +118,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
@@ -141,9 +138,9 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 // trackMockBalances sets up expected calls on the Mock BankKeeper, and also
 // locally tracks accounts balances (not modules balances).
-func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeeper *govtestutil.MockDistributionKeeper) {
+func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
 	balances := make(map[string]sdk.Coins)
-	balances[distAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
+	balances[poolAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)))
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), mintModuleName, gomock.Any()).AnyTimes()
@@ -174,17 +171,5 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeepe
 			}
 		}
 		return sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))
-	}).AnyTimes()
-
-	distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, coins sdk.Coins, sender sdk.AccAddress) error {
-		// sender balance
-		newBalance, negative := balances[sender.String()].SafeSub(coins...)
-		if negative {
-			return fmt.Errorf("not enough balance")
-		}
-		balances[sender.String()] = newBalance
-		// receiver balance
-		balances[distAcct.String()] = balances[distAcct.String()].Add(coins...)
-		return nil
 	}).AnyTimes()
 }

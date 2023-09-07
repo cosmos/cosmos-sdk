@@ -31,11 +31,6 @@ type StakingKeeper interface {
 	) error
 }
 
-// DistributionKeeper defines the expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	AddressCodec() addresscodec.Codec

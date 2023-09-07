@@ -24,8 +24,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -105,12 +103,11 @@ var pubkeys = []cryptotypes.PubKey{
 }
 
 type suite struct {
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper distrkeeper.Keeper
-	App                *runtime.App
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	GovKeeper     *keeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	App           *runtime.App
 }
 
 func createTestSuite(t *testing.T) suite {
@@ -126,12 +123,11 @@ func createTestSuite(t *testing.T) suite {
 				configurator.BankModule(),
 				configurator.GovModule(),
 				configurator.ConsensusModule(),
-				configurator.DistributionModule(),
 			),
 			depinject.Supply(sdklog.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
-		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.DistributionKeeper, &res.StakingKeeper,
+		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper,
 	)
 	require.NoError(t, err)
 

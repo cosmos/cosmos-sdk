@@ -23,9 +23,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -41,7 +38,6 @@ type suite struct {
 	app           *runtime.App
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
-	DistrKeeper   distrkeeper.Keeper
 	GovKeeper     *keeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
 	appBuilder    *runtime.AppBuilder
@@ -53,7 +49,6 @@ var appConfig = configurator.NewAppConfig(
 	configurator.StakingModule(),
 	configurator.BankModule(),
 	configurator.GovModule(),
-	configurator.DistributionModule(),
 	configurator.MintModule(),
 	configurator.ConsensusModule(),
 )
@@ -68,7 +63,7 @@ func TestImportExportQueues(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
-		&s1.AccountKeeper, &s1.BankKeeper, &s1.DistrKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
+		&s1.AccountKeeper, &s1.BankKeeper, &s1.GovKeeper, &s1.StakingKeeper, &s1.cdc, &s1.appBuilder,
 	)
 	assert.NilError(t, err)
 
@@ -106,7 +101,6 @@ func TestImportExportQueues(t *testing.T) {
 	authGenState := s1.AccountKeeper.ExportGenesis(ctx)
 	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
 	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
-	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
 	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
@@ -116,7 +110,6 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[banktypes.ModuleName] = s1.cdc.MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = s1.cdc.MustMarshalJSON(govGenState)
 	genesisState[stakingtypes.ModuleName] = s1.cdc.MustMarshalJSON(stakingGenState)
-	genesisState[disttypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
@@ -131,7 +124,7 @@ func TestImportExportQueues(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		conf2,
-		&s2.AccountKeeper, &s2.BankKeeper, &s2.DistrKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
+		&s2.AccountKeeper, &s2.BankKeeper, &s2.GovKeeper, &s2.StakingKeeper, &s2.cdc, &s2.appBuilder,
 	)
 	assert.NilError(t, err)
 

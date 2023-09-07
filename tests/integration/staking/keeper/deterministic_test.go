@@ -697,7 +697,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	height := int64(127)
 
-	assert.NilError(t, f.stakingKeeper.Historical.Set(
+	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 		f.ctx,
 		uint64(height),
 		historicalInfo,

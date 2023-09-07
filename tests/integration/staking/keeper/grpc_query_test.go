@@ -732,7 +732,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	hi, found := f.stakingKeeper.Historical.Get(ctx, uint64(5))
+	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, uint64(5))
 	assert.Assert(t, found)
 
 	var req *types.QueryHistoricalInfoRequest

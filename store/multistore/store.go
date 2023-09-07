@@ -170,7 +170,7 @@ func (s *Store) GetProof(storeKey types.StoreKey, version uint64, key []byte) (*
 }
 
 func (s *Store) GetSCStore(storeKey types.StoreKey) *commitment.Database {
-	panic("not implemented!")
+	return s.scStores[storeKey]
 }
 
 func (s *Store) LoadLatestVersion() error {

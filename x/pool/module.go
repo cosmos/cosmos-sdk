@@ -4,11 +4,10 @@ import (
 	"context"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,15 +29,16 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-// AppModuleBasic defines the basic application module used by the consensus module.
+// AppModuleBasic defines the basic application module used by the pool module.
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
-// Name returns the consensus module's name.
+// Name returns the pool module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the pool module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
@@ -56,17 +55,16 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
-// AppModule implements an application module
+// AppModule implements an application module for the pool module
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 }
 
-var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
-)
+var _ appmodule.AppModule = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -75,25 +73,34 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, am.keeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) error {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+
 	// types.RegisterQueryServer(registrar, am.keeper)
 	return nil
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
 	}
 }
 
-// Name returns the consensus module's name.
+// Name returns the pool module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+//
+// App Wiring Setup
+//
 
 func init() {
 	appmodule.Register(
@@ -108,33 +115,35 @@ type ModuleInputs struct {
 	Config       *modulev1.Module
 	Cdc          codec.Codec
 	StoreService storetypes.KVStoreService
-	EventManager event.Service
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	Keeper        keeper.Keeper
-	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption
+	Keeper keeper.Keeper
+	Module appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
+	// feeCollectorName := in.Config.FeeCollectorName
+	// if feeCollectorName == "" {
+	// 	feeCollectorName = authtypes.FeeCollectorName
+	// }
+
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress("gov")
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String())
-	m := NewAppModule(in.Cdc, k)
-	// baseappOpt := func(app *baseapp.BaseApp) {
-	// 	app.SetParamStore(k.ParamsStore)
-	// }
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper, in.BankKeeper, authority.String())
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{
 		Keeper: k,
 		Module: m,
-		// BaseAppOption: baseappOpt,
 	}
 }

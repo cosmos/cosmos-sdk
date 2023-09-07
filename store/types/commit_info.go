@@ -1,6 +1,7 @@
-package multistore
+package types
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/store/v2/internal/maps"
@@ -66,4 +67,8 @@ func (m *CommitInfo) GetVersion() uint64 {
 		return m.Version
 	}
 	return 0
+}
+
+func (cid CommitID) String() string {
+	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }

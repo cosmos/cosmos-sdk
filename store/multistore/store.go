@@ -68,7 +68,7 @@ type Store struct {
 	commitHeader CommitHeader
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *CommitInfo
+	lastCommitInfo *types.CommitInfo
 
 	// memListeners reflect a mapping of store key to a memory listener, which is used to flush writes to SS
 	memListeners map[types.StoreKey]*types.MemoryListener
@@ -113,7 +113,7 @@ func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) e
 	s.scStores[storeKey] = sc
 
 	// Mount memory listener for the store key so we can flush accumulated writes
-	// to SS upon Commit.
+	// to the SS backend upon Commit.
 	if _, ok := s.memListeners[storeKey]; !ok {
 		s.memListeners[storeKey] = types.NewMemoryListener()
 	}
@@ -124,7 +124,7 @@ func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) e
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (CommitID, error) {
+func (s *Store) LastCommitID() (types.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
@@ -136,18 +136,18 @@ func (s *Store) LastCommitID() (CommitID, error) {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.ss.GetLatestVersion()
 	if err != nil {
-		return CommitID{}, err
+		return types.CommitID{}, err
 	}
 
 	// ensure integrity of latest version across all SC stores
 	for sk, sc := range s.scStores {
 		scVersion := sc.GetLatestVersion()
 		if scVersion != latestVersion {
-			return CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
+			return types.CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
 		}
 	}
 
-	return CommitID{Version: latestVersion}, nil
+	return types.CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -206,13 +206,13 @@ func (s *Store) loadVersion(v uint64, upgrades any) (err error) {
 }
 
 func (s *Store) WorkingHash() []byte {
-	storeInfos := make([]StoreInfo, 0, len(s.scStores))
+	storeInfos := make([]types.StoreInfo, 0, len(s.scStores))
 
 	for sk, sc := range s.scStores {
 		if _, ok := s.removalMap[sk]; !ok {
-			storeInfos = append(storeInfos, StoreInfo{
+			storeInfos = append(storeInfos, types.StoreInfo{
 				Name: sk.Name(),
-				CommitID: CommitID{
+				CommitID: types.CommitID{
 					Hash: sc.WorkingHash(),
 				},
 			})
@@ -223,7 +223,7 @@ func (s *Store) WorkingHash() []byte {
 		return storeInfos[i].Name < storeInfos[j].Name
 	})
 
-	return CommitInfo{StoreInfos: storeInfos}.Hash()
+	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
 func (s *Store) SetCommitHeader(h CommitHeader) {
@@ -343,8 +343,8 @@ func (s *Store) commitSS(version uint64) error {
 // commitSCStores commits each SC store individually and returns a CommitInfo
 // representing commitment of all the SC stores. Note, commitment is NOT atomic.
 // An error is returned if any SC store fails to commit.
-func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
-	storeInfos := make([]StoreInfo, 0, len(s.scStores))
+func (s *Store) commitSCStores(version uint64) (*types.CommitInfo, error) {
+	storeInfos := make([]types.StoreInfo, 0, len(s.scStores))
 
 	for sk, sc := range s.scStores {
 		// TODO: Handle and support SC store last CommitID to handle the case where
@@ -366,9 +366,9 @@ func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
 			return nil, fmt.Errorf("failed to commit SC store %s: %w", sk, err)
 		}
 
-		storeInfos = append(storeInfos, StoreInfo{
+		storeInfos = append(storeInfos, types.StoreInfo{
 			Name: sk.Name(),
-			CommitID: CommitID{
+			CommitID: types.CommitID{
 				Version: version,
 				Hash:    commitBz,
 			},
@@ -379,7 +379,7 @@ func (s *Store) commitSCStores(version uint64) (*CommitInfo, error) {
 		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
 	})
 
-	return &CommitInfo{
+	return &types.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}, nil

@@ -4146,692 +4146,6 @@ func (x *fastReflection_FeePool) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_CommunityPoolSpendProposal_4_list)(nil)
-
-type _CommunityPoolSpendProposal_4_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_CommunityPoolSpendProposal_4_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_CommunityPoolSpendProposal             protoreflect.MessageDescriptor
-	fd_CommunityPoolSpendProposal_title       protoreflect.FieldDescriptor
-	fd_CommunityPoolSpendProposal_description protoreflect.FieldDescriptor
-	fd_CommunityPoolSpendProposal_recipient   protoreflect.FieldDescriptor
-	fd_CommunityPoolSpendProposal_amount      protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_distribution_v1beta1_distribution_proto_init()
-	md_CommunityPoolSpendProposal = File_cosmos_distribution_v1beta1_distribution_proto.Messages().ByName("CommunityPoolSpendProposal")
-	fd_CommunityPoolSpendProposal_title = md_CommunityPoolSpendProposal.Fields().ByName("title")
-	fd_CommunityPoolSpendProposal_description = md_CommunityPoolSpendProposal.Fields().ByName("description")
-	fd_CommunityPoolSpendProposal_recipient = md_CommunityPoolSpendProposal.Fields().ByName("recipient")
-	fd_CommunityPoolSpendProposal_amount = md_CommunityPoolSpendProposal.Fields().ByName("amount")
-}
-
-var _ protoreflect.Message = (*fastReflection_CommunityPoolSpendProposal)(nil)
-
-type fastReflection_CommunityPoolSpendProposal CommunityPoolSpendProposal
-
-func (x *CommunityPoolSpendProposal) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_CommunityPoolSpendProposal)(x)
-}
-
-func (x *CommunityPoolSpendProposal) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_CommunityPoolSpendProposal_messageType fastReflection_CommunityPoolSpendProposal_messageType
-var _ protoreflect.MessageType = fastReflection_CommunityPoolSpendProposal_messageType{}
-
-type fastReflection_CommunityPoolSpendProposal_messageType struct{}
-
-func (x fastReflection_CommunityPoolSpendProposal_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_CommunityPoolSpendProposal)(nil)
-}
-func (x fastReflection_CommunityPoolSpendProposal_messageType) New() protoreflect.Message {
-	return new(fastReflection_CommunityPoolSpendProposal)
-}
-func (x fastReflection_CommunityPoolSpendProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommunityPoolSpendProposal
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_CommunityPoolSpendProposal) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommunityPoolSpendProposal
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_CommunityPoolSpendProposal) Type() protoreflect.MessageType {
-	return _fastReflection_CommunityPoolSpendProposal_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_CommunityPoolSpendProposal) New() protoreflect.Message {
-	return new(fastReflection_CommunityPoolSpendProposal)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_CommunityPoolSpendProposal) Interface() protoreflect.ProtoMessage {
-	return (*CommunityPoolSpendProposal)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_CommunityPoolSpendProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Title != "" {
-		value := protoreflect.ValueOfString(x.Title)
-		if !f(fd_CommunityPoolSpendProposal_title, value) {
-			return
-		}
-	}
-	if x.Description != "" {
-		value := protoreflect.ValueOfString(x.Description)
-		if !f(fd_CommunityPoolSpendProposal_description, value) {
-			return
-		}
-	}
-	if x.Recipient != "" {
-		value := protoreflect.ValueOfString(x.Recipient)
-		if !f(fd_CommunityPoolSpendProposal_recipient, value) {
-			return
-		}
-	}
-	if len(x.Amount) != 0 {
-		value := protoreflect.ValueOfList(&_CommunityPoolSpendProposal_4_list{list: &x.Amount})
-		if !f(fd_CommunityPoolSpendProposal_amount, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_CommunityPoolSpendProposal) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		return x.Title != ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		return x.Description != ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		return x.Recipient != ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		return len(x.Amount) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommunityPoolSpendProposal) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		x.Title = ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		x.Description = ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		x.Recipient = ""
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		x.Amount = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_CommunityPoolSpendProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		value := x.Title
-		return protoreflect.ValueOfString(value)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		value := x.Description
-		return protoreflect.ValueOfString(value)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		value := x.Recipient
-		return protoreflect.ValueOfString(value)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		if len(x.Amount) == 0 {
-			return protoreflect.ValueOfList(&_CommunityPoolSpendProposal_4_list{})
-		}
-		listValue := &_CommunityPoolSpendProposal_4_list{list: &x.Amount}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommunityPoolSpendProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		x.Title = value.Interface().(string)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		x.Description = value.Interface().(string)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		x.Recipient = value.Interface().(string)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		lv := value.List()
-		clv := lv.(*_CommunityPoolSpendProposal_4_list)
-		x.Amount = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommunityPoolSpendProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		if x.Amount == nil {
-			x.Amount = []*v1beta1.Coin{}
-		}
-		value := &_CommunityPoolSpendProposal_4_list{list: &x.Amount}
-		return protoreflect.ValueOfList(value)
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		panic(fmt.Errorf("field title of message cosmos.distribution.v1beta1.CommunityPoolSpendProposal is not mutable"))
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		panic(fmt.Errorf("field description of message cosmos.distribution.v1beta1.CommunityPoolSpendProposal is not mutable"))
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		panic(fmt.Errorf("field recipient of message cosmos.distribution.v1beta1.CommunityPoolSpendProposal is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_CommunityPoolSpendProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.title":
-		return protoreflect.ValueOfString("")
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.description":
-		return protoreflect.ValueOfString("")
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.recipient":
-		return protoreflect.ValueOfString("")
-	case "cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_CommunityPoolSpendProposal_4_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.CommunityPoolSpendProposal"))
-		}
-		panic(fmt.Errorf("message cosmos.distribution.v1beta1.CommunityPoolSpendProposal does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_CommunityPoolSpendProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.CommunityPoolSpendProposal", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_CommunityPoolSpendProposal) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommunityPoolSpendProposal) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_CommunityPoolSpendProposal) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_CommunityPoolSpendProposal) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*CommunityPoolSpendProposal)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.Title)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Description)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Recipient)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if len(x.Amount) > 0 {
-			for _, e := range x.Amount {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*CommunityPoolSpendProposal)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Amount) > 0 {
-			for iNdEx := len(x.Amount) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Amount[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x22
-			}
-		}
-		if len(x.Recipient) > 0 {
-			i -= len(x.Recipient)
-			copy(dAtA[i:], x.Recipient)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Recipient)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.Description) > 0 {
-			i -= len(x.Description)
-			copy(dAtA[i:], x.Description)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Description)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.Title) > 0 {
-			i -= len(x.Title)
-			copy(dAtA[i:], x.Title)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Title)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*CommunityPoolSpendProposal)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommunityPoolSpendProposal: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommunityPoolSpendProposal: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Title = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Description = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Recipient = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Amount = append(x.Amount, &v1beta1.Coin{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount[len(x.Amount)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 var (
 	md_DelegatorStartingInfo                 protoreflect.MessageDescriptor
 	fd_DelegatorStartingInfo_previous_period protoreflect.FieldDescriptor
@@ -4856,7 +4170,7 @@ func (x *DelegatorStartingInfo) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DelegatorStartingInfo) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9]
+	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5421,7 +4735,7 @@ func (x *DelegationDelegatorReward) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DelegationDelegatorReward) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10]
+	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5934,7 +5248,7 @@ func (x *CommunityPoolSpendProposalWithDeposit) ProtoReflect() protoreflect.Mess
 }
 
 func (x *CommunityPoolSpendProposalWithDeposit) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[11]
+	mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6960,75 +6274,6 @@ func (x *FeePool) GetCommunityPool() []*v1beta1.DecCoin {
 	return nil
 }
 
-// CommunityPoolSpendProposal details a proposal for use of community funds,
-// together with how many coins are proposed to be spent, and to which
-// recipient account.
-//
-// Deprecated: Do not use. As of the Cosmos SDK release v0.47.x, there is no
-// longer a need for an explicit CommunityPoolSpendProposal. To spend community
-// pool funds, a simple MsgCommunityPoolSpend can be invoked from the x/gov
-// module via a v1 governance proposal.
-//
-// Deprecated: Do not use.
-type CommunityPoolSpendProposal struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Title       string          `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string          `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Recipient   string          `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	Amount      []*v1beta1.Coin `protobuf:"bytes,4,rep,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (x *CommunityPoolSpendProposal) Reset() {
-	*x = CommunityPoolSpendProposal{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CommunityPoolSpendProposal) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CommunityPoolSpendProposal) ProtoMessage() {}
-
-// Deprecated: Use CommunityPoolSpendProposal.ProtoReflect.Descriptor instead.
-func (*CommunityPoolSpendProposal) Descriptor() ([]byte, []int) {
-	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *CommunityPoolSpendProposal) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *CommunityPoolSpendProposal) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *CommunityPoolSpendProposal) GetRecipient() string {
-	if x != nil {
-		return x.Recipient
-	}
-	return ""
-}
-
-func (x *CommunityPoolSpendProposal) GetAmount() []*v1beta1.Coin {
-	if x != nil {
-		return x.Amount
-	}
-	return nil
-}
-
 // DelegatorStartingInfo represents the starting info for a delegator reward
 // period. It tracks the previous validator period, the delegation's amount of
 // staking token, and the creation height (to check later on if any slashes have
@@ -7048,7 +6293,7 @@ type DelegatorStartingInfo struct {
 func (x *DelegatorStartingInfo) Reset() {
 	*x = DelegatorStartingInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9]
+		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7062,7 +6307,7 @@ func (*DelegatorStartingInfo) ProtoMessage() {}
 
 // Deprecated: Use DelegatorStartingInfo.ProtoReflect.Descriptor instead.
 func (*DelegatorStartingInfo) Descriptor() ([]byte, []int) {
-	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{9}
+	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DelegatorStartingInfo) GetPreviousPeriod() uint64 {
@@ -7100,7 +6345,7 @@ type DelegationDelegatorReward struct {
 func (x *DelegationDelegatorReward) Reset() {
 	*x = DelegationDelegatorReward{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10]
+		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7114,7 +6359,7 @@ func (*DelegationDelegatorReward) ProtoMessage() {}
 
 // Deprecated: Use DelegationDelegatorReward.ProtoReflect.Descriptor instead.
 func (*DelegationDelegatorReward) Descriptor() ([]byte, []int) {
-	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{10}
+	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DelegationDelegatorReward) GetValidatorAddress() string {
@@ -7148,7 +6393,7 @@ type CommunityPoolSpendProposalWithDeposit struct {
 func (x *CommunityPoolSpendProposalWithDeposit) Reset() {
 	*x = CommunityPoolSpendProposalWithDeposit{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[11]
+		mi := &file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7162,7 +6407,7 @@ func (*CommunityPoolSpendProposalWithDeposit) ProtoMessage() {}
 
 // Deprecated: Use CommunityPoolSpendProposalWithDeposit.ProtoReflect.Descriptor instead.
 func (*CommunityPoolSpendProposalWithDeposit) Descriptor() ([]byte, []int) {
-	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{11}
+	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CommunityPoolSpendProposalWithDeposit) GetTitle() string {
@@ -7309,83 +6554,65 @@ var file_cosmos_distribution_v1beta1_distribution_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b,
 	0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8,
 	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0d, 0x63, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50,
-	0x6f, 0x6f, 0x6c, 0x22, 0x97, 0x02, 0x0a, 0x1a, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
-	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63,
-	0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64,
-	0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65,
-	0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x72,
-	0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x79, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
-	0x6f, 0x69, 0x6e, 0x42, 0x46, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x9a, 0xe7, 0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79,
-	0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f,
-	0x75, 0x6e, 0x74, 0x3a, 0x28, 0x18, 0x01, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0xca,
-	0xb4, 0x2d, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0xd4, 0x01,
-	0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x74, 0x61, 0x72, 0x74,
-	0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x27, 0x0a, 0x0f, 0x70, 0x72, 0x65, 0x76, 0x69,
-	0x6f, 0x75, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x0e, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64,
-	0x12, 0x4c, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x36, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63,
-	0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44,
-	0x65, 0x63, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x05, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x12, 0x44,
-	0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x42, 0x2c,
-	0xea, 0xde, 0x1f, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x68, 0x65, 0x69,
-	0x67, 0x68, 0x74, 0xa2, 0xe7, 0xb0, 0x2a, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x68, 0x65,
-	0x69, 0x67, 0x68, 0x74, 0x22, 0xe1, 0x01, 0x0a, 0x19, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x77, 0x61,
-	0x72, 0x64, 0x12, 0x4e, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21, 0xd2,
-	0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x6e, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x18, 0x02, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e,
-	0x42, 0x38, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x44, 0x65, 0x63,
-	0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x72, 0x65, 0x77, 0x61,
-	0x72, 0x64, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xd3, 0x01, 0x0a, 0x25, 0x43, 0x6f, 0x6d,
-	0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x57, 0x69, 0x74, 0x68, 0x44, 0x65, 0x70, 0x6f, 0x73,
-	0x69, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63,
-	0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64,
-	0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65,
-	0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x72,
-	0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x12, 0x18, 0x0a, 0x07, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x3a, 0x22, 0x88, 0xa0, 0x1f, 0x00,
-	0xca, 0xb4, 0x2d, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x42, 0x88,
-	0x02, 0x0a, 0x1f, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69,
-	0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x42, 0x11, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69,
-	0x6f, 0x6e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x44, 0x58, 0xaa,
-	0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x1b,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
-	0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x27, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f,
-	0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xa8, 0xe2, 0x1e, 0x01, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x6f, 0x6f, 0x6c, 0x22, 0xd4, 0x01, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x53, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x27, 0x0a,
+	0x0f, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73,
+	0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x4c, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x36, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
+	0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x05, 0x73,
+	0x74, 0x61, 0x6b, 0x65, 0x12, 0x44, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x04, 0x42, 0x2c, 0xea, 0xde, 0x1f, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0xa2, 0xe7, 0xb0, 0x2a, 0x0f, 0x63, 0x72,
+	0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0xa8, 0xe7, 0xb0,
+	0x2a, 0x01, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0xe1, 0x01, 0x0a, 0x19, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x6f, 0x72, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x4e, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x6e, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44,
+	0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x38, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70,
+	0x65, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
+	0x52, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xd3,
+	0x01, 0x0a, 0x25, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
+	0x53, 0x70, 0x65, 0x6e, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x57, 0x69, 0x74,
+	0x68, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20,
+	0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x16,
+	0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69,
+	0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
+	0x3a, 0x22, 0x88, 0xa0, 0x1f, 0x00, 0xca, 0xb4, 0x2d, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e,
+	0x74, 0x65, 0x6e, 0x74, 0x42, 0x88, 0x02, 0x0a, 0x1f, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x11, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
+	0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x64, 0x69, 0x73, 0x74,
+	0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2,
+	0x02, 0x03, 0x43, 0x44, 0x58, 0xaa, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44,
+	0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0xca, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44, 0x69, 0x73,
+	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xe2, 0x02, 0x27, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44, 0x69, 0x73, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1d, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69,
+	0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa8, 0xe2, 0x1e, 0x01, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7400,7 +6627,7 @@ func file_cosmos_distribution_v1beta1_distribution_proto_rawDescGZIP() []byte {
 	return file_cosmos_distribution_v1beta1_distribution_proto_rawDescData
 }
 
-var file_cosmos_distribution_v1beta1_distribution_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_cosmos_distribution_v1beta1_distribution_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_cosmos_distribution_v1beta1_distribution_proto_goTypes = []interface{}{
 	(*Params)(nil),                                // 0: cosmos.distribution.v1beta1.Params
 	(*ValidatorHistoricalRewards)(nil),            // 1: cosmos.distribution.v1beta1.ValidatorHistoricalRewards
@@ -7410,27 +6637,24 @@ var file_cosmos_distribution_v1beta1_distribution_proto_goTypes = []interface{}{
 	(*ValidatorSlashEvent)(nil),                   // 5: cosmos.distribution.v1beta1.ValidatorSlashEvent
 	(*ValidatorSlashEvents)(nil),                  // 6: cosmos.distribution.v1beta1.ValidatorSlashEvents
 	(*FeePool)(nil),                               // 7: cosmos.distribution.v1beta1.FeePool
-	(*CommunityPoolSpendProposal)(nil),            // 8: cosmos.distribution.v1beta1.CommunityPoolSpendProposal
-	(*DelegatorStartingInfo)(nil),                 // 9: cosmos.distribution.v1beta1.DelegatorStartingInfo
-	(*DelegationDelegatorReward)(nil),             // 10: cosmos.distribution.v1beta1.DelegationDelegatorReward
-	(*CommunityPoolSpendProposalWithDeposit)(nil), // 11: cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit
-	(*v1beta1.DecCoin)(nil),                       // 12: cosmos.base.v1beta1.DecCoin
-	(*v1beta1.Coin)(nil),                          // 13: cosmos.base.v1beta1.Coin
+	(*DelegatorStartingInfo)(nil),                 // 8: cosmos.distribution.v1beta1.DelegatorStartingInfo
+	(*DelegationDelegatorReward)(nil),             // 9: cosmos.distribution.v1beta1.DelegationDelegatorReward
+	(*CommunityPoolSpendProposalWithDeposit)(nil), // 10: cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit
+	(*v1beta1.DecCoin)(nil),                       // 11: cosmos.base.v1beta1.DecCoin
 }
 var file_cosmos_distribution_v1beta1_distribution_proto_depIdxs = []int32{
-	12, // 0: cosmos.distribution.v1beta1.ValidatorHistoricalRewards.cumulative_reward_ratio:type_name -> cosmos.base.v1beta1.DecCoin
-	12, // 1: cosmos.distribution.v1beta1.ValidatorCurrentRewards.rewards:type_name -> cosmos.base.v1beta1.DecCoin
-	12, // 2: cosmos.distribution.v1beta1.ValidatorAccumulatedCommission.commission:type_name -> cosmos.base.v1beta1.DecCoin
-	12, // 3: cosmos.distribution.v1beta1.ValidatorOutstandingRewards.rewards:type_name -> cosmos.base.v1beta1.DecCoin
+	11, // 0: cosmos.distribution.v1beta1.ValidatorHistoricalRewards.cumulative_reward_ratio:type_name -> cosmos.base.v1beta1.DecCoin
+	11, // 1: cosmos.distribution.v1beta1.ValidatorCurrentRewards.rewards:type_name -> cosmos.base.v1beta1.DecCoin
+	11, // 2: cosmos.distribution.v1beta1.ValidatorAccumulatedCommission.commission:type_name -> cosmos.base.v1beta1.DecCoin
+	11, // 3: cosmos.distribution.v1beta1.ValidatorOutstandingRewards.rewards:type_name -> cosmos.base.v1beta1.DecCoin
 	5,  // 4: cosmos.distribution.v1beta1.ValidatorSlashEvents.validator_slash_events:type_name -> cosmos.distribution.v1beta1.ValidatorSlashEvent
-	12, // 5: cosmos.distribution.v1beta1.FeePool.community_pool:type_name -> cosmos.base.v1beta1.DecCoin
-	13, // 6: cosmos.distribution.v1beta1.CommunityPoolSpendProposal.amount:type_name -> cosmos.base.v1beta1.Coin
-	12, // 7: cosmos.distribution.v1beta1.DelegationDelegatorReward.reward:type_name -> cosmos.base.v1beta1.DecCoin
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	11, // 5: cosmos.distribution.v1beta1.FeePool.community_pool:type_name -> cosmos.base.v1beta1.DecCoin
+	11, // 6: cosmos.distribution.v1beta1.DelegationDelegatorReward.reward:type_name -> cosmos.base.v1beta1.DecCoin
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_distribution_v1beta1_distribution_proto_init() }
@@ -7536,18 +6760,6 @@ func file_cosmos_distribution_v1beta1_distribution_proto_init() {
 			}
 		}
 		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CommunityPoolSpendProposal); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DelegatorStartingInfo); i {
 			case 0:
 				return &v.state
@@ -7559,7 +6771,7 @@ func file_cosmos_distribution_v1beta1_distribution_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DelegationDelegatorReward); i {
 			case 0:
 				return &v.state
@@ -7571,7 +6783,7 @@ func file_cosmos_distribution_v1beta1_distribution_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_distribution_v1beta1_distribution_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CommunityPoolSpendProposalWithDeposit); i {
 			case 0:
 				return &v.state
@@ -7590,7 +6802,7 @@ func file_cosmos_distribution_v1beta1_distribution_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_distribution_v1beta1_distribution_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

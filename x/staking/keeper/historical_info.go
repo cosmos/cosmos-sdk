@@ -51,7 +51,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	}
 
 	h := cmtproto.Header{
-		Height:             sdkCtx.BlockHeight(),
+		AppHash:            sdkCtx.HeaderInfo().AppHash,
 		Time:               sdkCtx.HeaderInfo().Time,
 		ChainID:            sdkCtx.HeaderInfo().ChainID,
 		NextValidatorsHash: sdkCtx.CometInfo().GetValidatorsHash(),

@@ -67,7 +67,7 @@ option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
 The amino codec was removed in 0.50.0, this means there is not a need register `legacyAminoCodec`. To replace the amino codec, Amino protobuf annotations are used to provide information to the amino codec on how to encode and decode protobuf messages. 
 
 :::note
-Amino annotations are only used for backwards compatibility with amino. New modules should not use amino annotations. The 
+Amino annotations are only used for backwards compatibility with amino. New modules are not required use amino annotations.
 :::
 
 The below annotations are used to provide information to the amino codec on how to encode and decode protobuf messages in a backwards compatible manner. 

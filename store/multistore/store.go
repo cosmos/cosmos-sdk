@@ -2,10 +2,8 @@ package multistore
 
 import (
 	"fmt"
-	"io"
 	"sort"
 	"strings"
-	"time"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -15,41 +13,7 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 )
 
-type (
-	// MultiStore defines an abstraction layer containing a State Storage (SS) engine
-	// and one or more State Commitment (SC) engines.
-	//
-	// TODO:
-	// - Move relevant types to the 'core' package.
-	MultiStore interface {
-		GetSCStore(storeKey types.StoreKey) *commitment.Database
-		MountSCStore(storeKey types.StoreKey, sc *commitment.Database) error
-		GetProof(storeKey types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error)
-		LoadVersion(version uint64) error
-		LoadLatestVersion() error
-		GetLatestVersion() (uint64, error)
-		WorkingHash() []byte
-		Commit() ([]byte, error)
-		SetCommitHeader(h CommitHeader)
-
-		// TODO:
-		//
-		// - Tracing
-		// - Branching
-		// - Queries
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-
-		io.Closer
-	}
-
-	CommitHeader interface {
-		GetTime() time.Time
-		GetHeight() uint64
-	}
-)
-
-var _ MultiStore = (*Store)(nil)
+var _ types.MultiStore = (*Store)(nil)
 
 type Store struct {
 	logger         log.Logger
@@ -65,7 +29,7 @@ type Store struct {
 	removalMap map[types.StoreKey]struct{}
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
-	commitHeader CommitHeader
+	commitHeader types.CommitHeader
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *types.CommitInfo
@@ -74,7 +38,7 @@ type Store struct {
 	memListeners map[types.StoreKey]*types.MemoryListener
 }
 
-func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (MultiStore, error) {
+func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (types.MultiStore, error) {
 	return &Store{
 		logger:         logger.With("module", "multi_store"),
 		initialVersion: initVersion,
@@ -226,7 +190,7 @@ func (s *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-func (s *Store) SetCommitHeader(h CommitHeader) {
+func (s *Store) SetCommitHeader(h types.CommitHeader) {
 	s.commitHeader = h
 }
 

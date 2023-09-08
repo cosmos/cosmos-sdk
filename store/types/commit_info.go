@@ -8,6 +8,14 @@ import (
 )
 
 type (
+	// CommitHeader defines the interface for a block header that can be provided
+	// to a MultiStore upon Commit. This should be optional and used to facilitate
+	// time-based queries only.
+	CommitHeader interface {
+		GetTime() time.Time
+		GetHeight() uint64
+	}
+
 	// CommitInfo defines commit information used by the multi-store when committing
 	// a version/height.
 	CommitInfo struct {

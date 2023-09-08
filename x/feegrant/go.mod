@@ -1,6 +1,6 @@
 module cosmossdk.io/x/feegrant
 
-go 1.21.0
+go 1.21
 
 require (
 	cosmossdk.io/api v0.7.0

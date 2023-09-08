@@ -1,7 +1,5 @@
 go 1.21
 
-toolchain go1.21.0
-
 module github.com/cosmos/cosmos-sdk
 
 require (

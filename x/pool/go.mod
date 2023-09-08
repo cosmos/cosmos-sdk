@@ -1,6 +1,6 @@
 module cosmossdk.io/x/pool
 
-go 1.21.0
+go 1.21
 
 require (
 	cosmossdk.io/api v0.7.0
@@ -148,3 +148,5 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
+
+replace cosmossdk.io/api => ../../api

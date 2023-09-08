@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/go-metrics"
+	"google.golang.org/protobuf/proto"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
 	"cosmossdk.io/errors"
-	pooltypes "cosmossdk.io/x/pool/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,22 +109,20 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	resMsg := pooltypes.NewMsgFundCommunityPool(msg.Amount, msg.Depositor)
-	handler := k.Keeper.router.Handler(resMsg)
-	if handler == nil {
-		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(resMsg), resMsg)
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	res, err := handler(sdkCtx, resMsg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(res), err)
-	}
-	if len(res.MsgResponses) > 0 {
-		msgResponse := res.MsgResponses[0]
-		if msgResponse == nil {
-			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(resMsg), res.String())
+	amount := make([]*basev1beta1.Coin, len(msg.Amount))
+	for i, coin := range msg.Amount {
+		amount[i] = &basev1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
 		}
-
+	}
+	poolMsg := pooltypes.MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: msg.Depositor,
+	}
+	_, err := proto.Marshal(&poolMsg)
+	if err != nil {
+		return nil, err
 	}
 
 	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility

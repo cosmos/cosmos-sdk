@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	pooltypes "cosmossdk.io/x/pool/types"
+
+	"google.golang.org/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -188,7 +191,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	// burn the cancellation fee or sent the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress := keeper.authKeeper.GetModuleAddress(pooltypes.ModuleName)
+		poolAddress := keeper.authKeeper.GetModuleAddress("pool")
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
@@ -197,21 +200,20 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		case poolAddress.String() == destAddress:
-			msg := pooltypes.NewMsgFundCommunityPool(cancellationCharges, keeper.ModuleAccountAddress().String())
-			handler := keeper.router.Handler(msg)
-			if handler == nil {
-				return fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
-			}
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			res, err := handler(sdkCtx, msg)
-			if err != nil {
-				return fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
-			}
-			if len(res.MsgResponses) > 0 {
-				msgResponse := res.MsgResponses[0]
-				if msgResponse == nil {
-					return fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), res.String())
+			amount := make([]*basev1beta1.Coin, len(cancellationCharges))
+			for i, coin := range cancellationCharges {
+				amount[i] = &basev1beta1.Coin{
+					Denom:  coin.Denom,
+					Amount: coin.Amount.String(),
 				}
+			}
+			msg := pooltypes.MsgFundCommunityPool{
+				Amount:    amount,
+				Depositor: keeper.ModuleAccountAddress().String(),
+			}
+			_, err := proto.Marshal(&msg)
+			if err != nil {
+				return err
 			}
 		default:
 			destAccAddress, err := keeper.authKeeper.AddressCodec().StringToBytes(destAddress)

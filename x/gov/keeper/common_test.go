@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	pooltypes "cosmossdk.io/x/pool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -32,7 +31,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
+	poolAcct     = authtypes.NewModuleAddress("pool")
 	TestProposal = getTestProposal()
 )
 
@@ -62,7 +61,7 @@ type mocks struct {
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
 	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAddress(pooltypes.ModuleName).Return(poolAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress("pool").Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }

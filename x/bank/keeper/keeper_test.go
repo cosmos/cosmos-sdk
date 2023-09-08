@@ -11,11 +11,10 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -129,7 +128,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	storeService := runtime.NewKVStoreService(key)
@@ -1212,7 +1211,7 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	balances := sdk.NewCoins(newFooCoin(50))
 
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1234,7 +1233,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_NoSpendableCoins() {
 	coins := sdk.NewCoins(coin)
 	balances := coins
 
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := coins
@@ -1258,7 +1257,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Invalid_NoSpendableCoins() {
 func (suite *KeeperTestSuite) TestValidateBalance() {
 	ctx := suite.ctx
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
@@ -1456,7 +1455,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 func (suite *KeeperTestSuite) TestSpendableCoins() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1490,7 +1489,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1520,7 +1519,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -1555,7 +1554,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1588,7 +1587,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -1626,7 +1625,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 func (suite *KeeperTestSuite) TestDelegateCoins() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1684,7 +1683,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
-	now := cmttime.Now()
+	now := time.Now().Round(0).UTC()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))

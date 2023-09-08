@@ -484,13 +484,16 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 		ms: ms,
 		ctx: sdk.NewContext(ms, false, app.logger).
 			WithStreamingManager(app.streamingManager).
-			WithBlockHeader(header).
 			WithHeaderInfo(coreHeader.Info{
 				ChainID: app.chainID,
 				Hash:    header.DataHash, //TODO FIX this
 				Height:  header.Height,
 				Time:    header.Time,
-			}),
+			}).WithCometInfo(cometInfo{
+			// TODO: see how to get misbehaviour and lastcommit here, if possible
+			ValidatorsHash:  header.NextValidatorsHash,
+			ProposerAddress: header.ProposerAddress,
+		}),
 	}
 
 	switch mode {

@@ -157,16 +157,17 @@ func (s *contextTestSuite) TestContextHeader() {
 	ctx = types.NewContext(nil, false, nil)
 
 	ctx = ctx.
-		WithBlockTime(time).
-		WithProposer(proposer).
 		WithHeaderInfo(header.Info{
 			Height: height,
 			Time:   time,
-		})
+		}).WithCometInfo(types.CometInfo{
+		ValidatorsHash:  []byte("validatorsHash"),
+		ProposerAddress: proposer,
+	})
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(height, ctx.HeaderInfo().Height)
 	s.Require().Equal(time.UTC(), ctx.HeaderInfo().Time)
-	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
+	s.Require().Equal(proposer.Bytes(), ctx.CometInfo().GetProposerAddress())
 }
 
 func (s *contextTestSuite) TestWithBlockTime() {

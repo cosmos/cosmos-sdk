@@ -116,7 +116,7 @@ func initFixture(tb testing.TB) *fixture {
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
+	ctx := newCtx.WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
 				Address: valAddr,
@@ -124,7 +124,7 @@ func initFixture(tb testing.TB) *fixture {
 			},
 			BlockIdFlag: types.BlockIDFlagCommit,
 		},
-	})
+	}).WithCometInfo(sdk.CometInfo{ProposerAddress: valConsAddr})
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,

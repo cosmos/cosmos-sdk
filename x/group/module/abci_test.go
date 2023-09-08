@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -62,7 +61,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	ctx := app.BaseApp.NewContext(false)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
 	s.ctx = ctx
 

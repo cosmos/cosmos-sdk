@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -107,7 +107,7 @@ func NewIntegrationApp(
 		panic(err)
 	}
 
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
+	ctx := sdkCtx.WithHeaderInfo(header.Info{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp:       bApp,

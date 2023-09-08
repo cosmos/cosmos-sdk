@@ -148,15 +148,6 @@ func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
 	return c
 }
 
-// WithBlockHeader returns a Context with an updated CometBFT block header in UTC time.
-// Deprecated: Use WithHeaderInfo or WithCometInfo instead.
-func (c Context) WithBlockHeader(header cmtproto.Header) Context {
-	// https://github.com/gogo/protobuf/issues/519
-	header.Time = header.Time.UTC()
-	c.header = header
-	return c
-}
-
 // WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
 // Stripping the monotonic component is for time equality.
 func (c Context) WithBlockTime(newTime time.Time) Context {
@@ -164,13 +155,6 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	newHeader.Time = newTime.Round(0).UTC()
 	return c.WithHeaderInfo(newHeader)
-}
-
-// WithProposer returns a Context with an updated proposer consensus address.
-func (c Context) WithProposer(addr ConsAddress) Context {
-	newHeader := c.BlockHeader()
-	newHeader.ProposerAddress = addr.Bytes()
-	return c.WithBlockHeader(newHeader)
 }
 
 // WithTxBytes returns a Context with an updated txBytes.
@@ -362,4 +346,124 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
+}
+
+// CometInfo defines the properties provided by comet to the application
+type CometInfo struct {
+	Misbehavior     []abci.Misbehavior
+	ValidatorsHash  []byte
+	ProposerAddress []byte
+	LastCommit      abci.CommitInfo
+}
+
+func (r CometInfo) GetEvidence() comet.EvidenceList {
+	return evidenceWrapper{evidence: r.Misbehavior}
+}
+
+func (r CometInfo) GetValidatorsHash() []byte {
+	return r.ValidatorsHash
+}
+
+func (r CometInfo) GetProposerAddress() []byte {
+	return r.ProposerAddress
+}
+
+func (r CometInfo) GetLastCommit() comet.CommitInfo {
+	return commitInfoWrapper{r.LastCommit}
+}
+
+type evidenceWrapper struct {
+	evidence []abci.Misbehavior
+}
+
+func (e evidenceWrapper) Len() int {
+	return len(e.evidence)
+}
+
+func (e evidenceWrapper) Get(i int) comet.Evidence {
+	return misbehaviorWrapper{e.evidence[i]}
+}
+
+// commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
+type commitInfoWrapper struct {
+	abci.CommitInfo
+}
+
+var _ comet.CommitInfo = (*commitInfoWrapper)(nil)
+
+func (c commitInfoWrapper) Round() int32 {
+	return c.CommitInfo.Round
+}
+
+func (c commitInfoWrapper) Votes() comet.VoteInfos {
+	return abciVoteInfoWrapper{c.CommitInfo.Votes}
+}
+
+// abciVoteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfos interface
+type abciVoteInfoWrapper struct {
+	votes []abci.VoteInfo
+}
+
+var _ comet.VoteInfos = (*abciVoteInfoWrapper)(nil)
+
+func (e abciVoteInfoWrapper) Len() int {
+	return len(e.votes)
+}
+
+func (e abciVoteInfoWrapper) Get(i int) comet.VoteInfo {
+	return voteInfoWrapper{e.votes[i]}
+}
+
+// voteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfo interface
+type voteInfoWrapper struct {
+	abci.VoteInfo
+}
+
+var _ comet.VoteInfo = (*voteInfoWrapper)(nil)
+
+func (v voteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
+	return comet.BlockIDFlag(v.VoteInfo.BlockIdFlag)
+}
+
+func (v voteInfoWrapper) Validator() comet.Validator {
+	return validatorWrapper{v.VoteInfo.Validator}
+}
+
+// validatorWrapper is a wrapper around abci.Validator that implements Validator interface
+type validatorWrapper struct {
+	abci.Validator
+}
+
+var _ comet.Validator = (*validatorWrapper)(nil)
+
+func (v validatorWrapper) Address() []byte {
+	return v.Validator.Address
+}
+
+func (v validatorWrapper) Power() int64 {
+	return v.Validator.Power
+}
+
+type misbehaviorWrapper struct {
+	abci.Misbehavior
+}
+
+func (m misbehaviorWrapper) Type() comet.MisbehaviorType {
+	return comet.MisbehaviorType(m.Misbehavior.Type)
+}
+
+func (m misbehaviorWrapper) Height() int64 {
+	return m.Misbehavior.Height
+}
+
+func (m misbehaviorWrapper) Validator() comet.Validator {
+	return validatorWrapper{m.Misbehavior.Validator}
+}
+
+func (m misbehaviorWrapper) Time() time.Time {
+	return m.Misbehavior.Time
+}
+
+func (m misbehaviorWrapper) TotalVotingPower() int64 {
+	return m.Misbehavior.TotalVotingPower
 }

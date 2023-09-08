@@ -3,6 +3,7 @@ package baseapp
 import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,10 +55,26 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, true, app.logger).
-			WithMinGasPrices(app.minGasPrices).WithBlockHeader(header)
+			WithMinGasPrices(app.minGasPrices).WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  header.Height,
+			Time:    header.Time,
+			AppHash: header.AppHash,
+		}).WithCometInfo(cometInfo{
+			ProposerAddress: header.ProposerAddress,
+			ValidatorsHash:  header.NextValidatorsHash,
+		})
 	}
 
-	return sdk.NewContext(app.finalizeBlockState.ms, false, app.logger).WithBlockHeader(header)
+	return sdk.NewContext(app.finalizeBlockState.ms, false, app.logger).WithHeaderInfo(coreheader.Info{
+		ChainID: app.chainID,
+		Height:  header.Height,
+		Time:    header.Time,
+		AppHash: header.AppHash,
+	}).WithCometInfo(cometInfo{
+		ProposerAddress: header.ProposerAddress,
+		ValidatorsHash:  header.NextValidatorsHash,
+	})
 }
 
 // NewContext returns a new sdk.Context with a empty header
@@ -66,7 +83,15 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, isCheckTx, app.logger).WithBlockHeader(header)
+	return sdk.NewContext(app.cms, isCheckTx, app.logger).WithHeaderInfo(coreheader.Info{
+		ChainID: app.chainID,
+		Height:  header.Height,
+		Time:    header.Time,
+		AppHash: header.AppHash,
+	}).WithCometInfo(cometInfo{
+		ProposerAddress: header.ProposerAddress,
+		ValidatorsHash:  header.NextValidatorsHash,
+	})
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

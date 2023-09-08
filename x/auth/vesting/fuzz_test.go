@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	fuzz "github.com/google/gofuzz"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -118,7 +117,7 @@ func FuzzMsgServerCreateVestingAccount(f *testing.F) {
 
 		msgServer := NewMsgServerImpl(accountKeeper, bankKeeper)
 		testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-		ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+		ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
 		_, _ = msgServer.CreateVestingAccount(ctx, va)
 	})

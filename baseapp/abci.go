@@ -82,13 +82,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// handler, the block height is zero by default. However, after Commit is called
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
-		app.checkState.ctx = app.checkState.ctx.WithBlockHeader(initHeader).
+		app.checkState.ctx = app.checkState.ctx.
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
 				Time:    req.Time,
 			})
-		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockHeader(initHeader).
+		app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
@@ -424,8 +424,6 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
-		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
 		WithCometInfo(prepareProposalInfo{req}).
 		WithHeaderInfo(coreheader.Info{
@@ -509,8 +507,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
-		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress).
 		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
 		WithExecMode(sdk.ExecModeProcessProposal).
 		WithHeaderInfo(coreheader.Info{
@@ -697,7 +693,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 
 	// Context is now updated with Header information.
 	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
-		WithBlockHeader(header).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
@@ -1019,7 +1014,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
-		ctx = ctx.WithHeaderInfo(coreheader.Info{}).WithBlockHeader(cmtproto.Header{})
+		ctx = ctx.WithHeaderInfo(coreheader.Info{})
 		return ctx
 	}
 
@@ -1126,12 +1121,11 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
-		WithBlockHeader(app.checkState.ctx.BlockHeader()).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
-			Hash:    app.checkState.ctx.BlockHeader().DataHash,
-			Height:  app.checkState.ctx.BlockHeight(),
-			Time:    app.checkState.ctx.BlockHeader().Time,
+			Hash:    app.checkState.ctx.HeaderInfo().Hash,
+			Height:  app.checkState.ctx.HeaderInfo().Height,
+			Time:    app.checkState.ctx.HeaderInfo().Time,
 		})
 
 	if height != lastBlockHeight {

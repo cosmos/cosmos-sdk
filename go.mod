@@ -1,5 +1,7 @@
 go 1.21
 
+toolchain go1.21.0
+
 module github.com/cosmos/cosmos-sdk
 
 require (
@@ -181,6 +183,8 @@ replace (
 )
 
 replace cosmossdk.io/x/pool => ./x/pool
+
+replace cosmossdk.io/api => ./api
 
 retract (
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

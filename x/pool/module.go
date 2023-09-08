@@ -6,7 +6,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	modulev1 "cosmossdk.io/api/cosmos/pool/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -33,7 +32,6 @@ var (
 // AppModuleBasic defines the basic application module used by the pool module.
 type AppModuleBasic struct {
 	cdc codec.Codec
-	ac  address.Codec
 }
 
 // Name returns the pool module's name.

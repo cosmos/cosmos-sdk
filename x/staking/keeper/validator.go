@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+var timeBzKeySize = uint64(29) // time bytes key size is 29 by default
+
 // GetValidator gets a single validator
 func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator types.Validator, err error) {
 	validator, err = k.Validators.Get(ctx, addr)
@@ -405,11 +407,8 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, endHeight int64) ([]string, error) {
 	timeSize := sdk.TimeKey.Size(endTime)
 	valAddrs, err := k.ValidatorQueue.Get(ctx, collections.Join3(uint64(timeSize), endTime, uint64(endHeight)))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		return []string{}, nil
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return []string{}, err
 	}
 
 	return valAddrs.Addresses, nil
@@ -419,9 +418,7 @@ func (k Keeper) GetUnbondingValidators(ctx context.Context, endTime time.Time, e
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx context.Context, endTime time.Time, endHeight int64, addrs []string) error {
 	valAddrs := types.ValAddresses{Addresses: addrs}
-	timeBz := sdk.FormatTimeBytes(endTime)
-	timeBzL := len(timeBz)
-	return k.ValidatorQueue.Set(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)), valAddrs)
+	return k.ValidatorQueue.Set(ctx, collections.Join3(timeBzKeySize, endTime, uint64(endHeight)), valAddrs)
 }
 
 // InsertUnbondingValidatorQueue inserts a given unbonding validator address into
@@ -438,9 +435,7 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx context.Context, val types.Val
 // DeleteValidatorQueueTimeSlice deletes all entries in the queue indexed by a
 // given height and time.
 func (k Keeper) DeleteValidatorQueueTimeSlice(ctx context.Context, endTime time.Time, endHeight int64) error {
-	timeBz := sdk.FormatTimeBytes(endTime)
-	timeBzL := len(timeBz)
-	return k.ValidatorQueue.Remove(ctx, collections.Join3(uint64(timeBzL), endTime, uint64(endHeight)))
+	return k.ValidatorQueue.Remove(ctx, collections.Join3(timeBzKeySize, endTime, uint64(endHeight)))
 }
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
@@ -490,9 +485,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	// so it may be possible that certain validator addresses that are iterated
 	// over are not ready to unbond, so an explicit check is required.
 
-	timeBz := sdk.FormatTimeBytes(blockTime)
-	timeBzL := len(timeBz)
-	unbondingValIterator, err := k.ValidatorQueue.Iterate(ctx, (&collections.Range[collections.Triple[uint64, time.Time, uint64]]{}).EndInclusive(collections.Join3(uint64(timeBzL), blockTime, uint64(blockHeight))))
+	unbondingValIterator, err := k.ValidatorQueue.Iterate(ctx, (&collections.Range[collections.Triple[uint64, time.Time, uint64]]{}).EndInclusive(collections.Join3(timeBzKeySize, blockTime, uint64(blockHeight))))
 	if err != nil {
 		return err
 	}

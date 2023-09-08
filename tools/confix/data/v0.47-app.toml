@@ -259,7 +259,7 @@ fsync = "false"
 #
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
-max-txs = "5000"
+max-txs = 5000
 
 [wasm]
 # This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries

@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
-	"google.golang.org/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"

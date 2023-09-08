@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/stretchr/testify v1.8.4
-	github.com/tidwall/btree v1.6.0
+	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0

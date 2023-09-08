@@ -210,6 +210,33 @@ func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 	return append(lastValidatorPowerKey, addresstypes.MustLengthPrefix(operator)...)
 }
 
+// getValidatorQueueKey returns the prefix key used for getting a set of unbonding
+// validators whose unbonding completion occurs at the given time and height.
+func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	validatorQueueKey := []byte{0x43}
+
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(validatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], validatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
+}
+
 func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 	s.SetupTest()
 
@@ -453,11 +480,48 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
+	s.SetupTest()
+	_, valAddrs := createValAddrs(100)
+	endTime := time.Unix(0, 0).UTC()
+	endHeight := int64(10)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			var addrs []string
+			addrs = append(addrs, valAddrs[i].String())
+			bz, err := s.cdc.Marshal(&stakingtypes.ValAddresses{Addresses: addrs})
+			s.Require().NoError(err)
+
+			// legacy Set method
+			s.ctx.KVStore(s.key).Set(getValidatorQueueKey(endTime, endHeight), bz)
+		},
+		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			var addrs []string
+			addrs = append(addrs, valAddrs[i].String())
+
+			err := s.stakingKeeper.SetUnbondingValidatorsQueue(s.ctx, endTime, endHeight, addrs)
+			s.Require().NoError(err)
+		},
+		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
+	)
+	s.Require().NoError(err)
+}
+
 func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 	s.SetupTest()
 
 	addrs, valAddrs := createValAddrs(101)
-
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
 		s.key,

@@ -1,10 +1,7 @@
 package types
 
 import (
-	"bytes"
 	"encoding/binary"
-	"fmt"
-	"time"
 
 	"cosmossdk.io/collections"
 	addresscodec "cosmossdk.io/core/address"
@@ -53,7 +50,7 @@ var (
 
 	UnbondingQueueKey    = collections.NewPrefix(65) // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = collections.NewPrefix(66) // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey    = []byte{0x43}              // prefix for the timestamps in validator queue
+	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
@@ -140,50 +137,6 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	}
 
 	return operAddr
-}
-
-// GetValidatorQueueKey returns the prefix key used for getting a set of unbonding
-// validators whose unbonding completion occurs at the given time and height.
-func GetValidatorQueueKey(timestamp time.Time, height int64) []byte {
-	heightBz := sdk.Uint64ToBigEndian(uint64(height))
-	timeBz := sdk.FormatTimeBytes(timestamp)
-	timeBzL := len(timeBz)
-	prefixL := len(ValidatorQueueKey)
-
-	bz := make([]byte, prefixL+8+timeBzL+8)
-
-	// copy the prefix
-	copy(bz[:prefixL], ValidatorQueueKey)
-
-	// copy the encoded time bytes length
-	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
-
-	// copy the encoded time bytes
-	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
-
-	// copy the encoded height
-	copy(bz[prefixL+8+timeBzL:], heightBz)
-
-	return bz
-}
-
-// ParseValidatorQueueKey returns the encoded time and height from a key created
-// from GetValidatorQueueKey.
-func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
-	prefixL := len(ValidatorQueueKey)
-	if prefix := bz[:prefixL]; !bytes.Equal(prefix, ValidatorQueueKey) {
-		return time.Time{}, 0, fmt.Errorf("invalid prefix; expected: %X, got: %X", ValidatorQueueKey, prefix)
-	}
-
-	timeBzL := sdk.BigEndianToUint64(bz[prefixL : prefixL+8])
-	ts, err := sdk.ParseTimeBytes(bz[prefixL+8 : prefixL+8+int(timeBzL)])
-	if err != nil {
-		return time.Time{}, 0, err
-	}
-
-	height := sdk.BigEndianToUint64(bz[prefixL+8+int(timeBzL):])
-
-	return ts, int64(height), nil
 }
 
 // GetUBDKey creates the key for an unbonding delegation by delegator and validator addr

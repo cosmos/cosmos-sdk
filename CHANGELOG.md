@@ -65,6 +65,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
     * remove from `types`: `GetRedelegationTimeKey`
     * remove from `Keeper`: `RedelegationQueueIterator`
+* (x/staking) [#17562](https://github.com/cosmos/cosmos-sdk/pull/17562) Use collections for `ValidatorQueue`
+    * remove from `types`: `GetValidatorQueueKey`, `ParseValidatorQueueKey`
+    * remove from `Keeper`: `ValidatorQueueIterator`
 * (x/staking) [#17498](https://github.com/cosmos/cosmos-sdk/pull/17498) Use collections for `LastValidatorPower`:
     * remove from `types`: `GetLastValidatorPowerKey`
     * remove from `Keeper`: `LastValidatorsIterator`, `IterateLastValidators`

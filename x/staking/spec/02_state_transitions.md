@@ -30,6 +30,7 @@ that of the `LastValidator`.
 - add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - if it exists, delete any `ValidatorQueue` record for this validator
+- if delegator is a liquid staking provider, increment `TotalLiquidStakedTokens` and validator's `liquid_shares`
 
 ### Bonded to Unbonding
 
@@ -43,6 +44,7 @@ When a validator begins the unbonding process the following operations occur:
 - insert a new record into the `ValidatorQueue` for this validator
 - get a unique `unbondingId` and map it to the validator in `ValidatorsByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
+- if delegator is a liquid staking provider, decrement `TotalLiquidStakedTokens` and validator's `liquid_shares`
 
 ### Unbonding to Unbonded
 
@@ -78,6 +80,8 @@ When a delegation occurs both the validator and the delegation objects are affec
 - transfer the `delegation.Amount` from the delegator's account to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
 - delete the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
+- if delegator is a liquid staking provider, increment `TotalLiquidStakedTokens` and validator's `liquid_shares`
+
 
 ### Begin Unbonding
 
@@ -97,6 +101,7 @@ Delegation may be called.
 - get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
 - add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime` 
+- if delegator is a liquid staking provider, decrement `TotalLiquidStakedTokens` and validator's `liquid_shares`
 
 ### Complete Unbonding
 
@@ -120,6 +125,7 @@ Redelegations affect the delegation, source and destination validators.
 - get a unique `unbondingId` and map it to the `RedelegationEntry` in `RedelegationByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
 - add the redelegation to `RedelegationQueue` with the completion time set to `UnbondingTime` 
+- if delegator is a liquid staking provider, decrement src validator's `liquid_shares` and increment dest validator's `liquid_shares`
 
 From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
 slashed for infractions that occured before the redelegation began.
@@ -144,6 +150,7 @@ When a Validator is slashed, the following occurs:
   total slash amount.
 - The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+- The total liquid staked tokens are decremented by `slashFactor` times the liquid percentage of bond.
 
 In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
 occurs at the block where the evidence is included, not at the block where the infraction occured.

@@ -42,6 +42,7 @@ delegation:
   delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
   shares: "10000000000.000000000000000000"
   validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+  validator_bond: "false"
 ```
 
 #### delegations
@@ -71,6 +72,7 @@ delegation_responses:
     delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
     shares: "10000000000.000000000000000000"
     validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+    validator_bond: "false"
 - balance:
     amount: "10000000000"
     denom: stake
@@ -78,6 +80,7 @@ delegation_responses:
     delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
     shares: "10000000000.000000000000000000"
     validator_address: cosmosvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5sqfyqnp
+    validator_bond: "false"
 pagination:
   next_key: null
   total: "0"
@@ -109,6 +112,7 @@ Example Output:
     delegator_address: cosmos1q2qwwynhv8kh3lu5fkeex4awau9x8fwt45f5cp
     shares: "504000000.000000000000000000"
     validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+    validator_bond: "false"
 - balance:
     amount: "78125000000"
     denom: uixo
@@ -116,6 +120,7 @@ Example Output:
     delegator_address: cosmos1qvppl3479hw4clahe0kwdlfvf8uvjtcd99m2ca
     shares: "78125000000.000000000000000000"
     validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+    validator_bond: "false"
 pagination:
   next_key: null
   total: "0"
@@ -211,6 +216,9 @@ historical_entries: 10000
 max_entries: 7
 max_validators: 50
 unbonding_time: 1814400s
+validator_bond_factor: 250
+global_liquid_staking_cap: 100
+validator_liquid_staking_cap: 100
 ```
 
 #### pool
@@ -526,7 +534,8 @@ description:
   security_contact: ""
   website: ""
 jailed: false
-min_self_delegation: "1"
+validator_bond_shares: "0"
+liquid_shares: "0"
 operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 status: BOND_STATUS_BONDED
 tokens: "32948270000"
@@ -577,7 +586,8 @@ description:
     security_contact: ""
     website: ""
   jailed: false
-  min_self_delegation: "1"
+  validator_bond_shares: "0"
+  liquid_shares: "0"
   operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
   status: BOND_STATUS_BONDED
   tokens: "32948270000"
@@ -603,7 +613,8 @@ description:
     security_contact: info@noderunners.biz
     website: http://noderunners.biz
   jailed: false
-  min_self_delegation: "1"
+  validator_bond_shares: "0"
+  liquid_shares: "0"
   operator_address: cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7
   status: BOND_STATUS_BONDED
   tokens: "559343421"
@@ -642,7 +653,6 @@ simd tx staking create-validator \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
-  --min-self-delegation="1" \
   --gas="auto" \
   --gas-adjustment="1.2" \
   --gas-prices="0.025stake" \
@@ -753,7 +763,9 @@ Example Output:
           "maxChangeRate": "10000000000000000"
         },
         "updateTime": "2021-10-01T05:52:50.380144238Z"
-      }
+      },
+      "validatorBondShares": "0"
+      "liquidShares": "0"
     }
   ],
   "pagination": {
@@ -799,7 +811,8 @@ Example Output:
       },
       "updateTime": "2021-10-01T05:52:50.380144238Z"
     },
-    "minSelfDelegation": "1"
+    "validatorBondShares": "0"
+    "liquidShares": "0"
   }
 }
 ```
@@ -829,6 +842,7 @@ Example Output:
         "delegatorAddress": "cosmos1rne8lgs98p0jqe82sgt0qr4rdn4hgvmgy3ua5t",
         "validatorAddress": "cosmosvaloper1rne8lgs98p0jqe82sgt0qr4rdn4hgvmgp9ggcc",
         "shares": "10000000000000000000000000"
+        "validatorBond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -921,6 +935,7 @@ Example Output:
         "delegator_address":"cosmos1y8nyfvmqh50p6ldpzljk3yrglppdv3t8phju77",
         "validator_address":"cosmosvaloper1rne8lgs98p0jqe82sgt0qr4rdn4hgvmgp9ggcc",
         "shares":"25083119936.000000000000000000"
+        "validatorBond":"false"
       },
     "balance":
       {
@@ -1142,7 +1157,8 @@ Example Output:
         },
         "update_time": "2021-10-01T15:00:00Z"
       },
-      "min_self_delegation": "1"
+      validator_bond_shares: "0"
+      liquid_shares: "0"  
     }
   ],
   "pagination": {
@@ -1199,7 +1215,8 @@ Example Output:
       },
       "update_time": "2021-10-01T15:00:00Z"
     },
-    "min_self_delegation": "1"
+    validator_bond_shares: "0"
+    liquid_shares: "0"
   }
 }
 ```
@@ -1331,6 +1348,7 @@ Example Output:
     "maxEntries": 7,
     "historicalEntries": 10000,
     "bondDenom": "stake"
+
   }
 }
 ```
@@ -1716,6 +1734,9 @@ Example Output:
     "max_entries": 7,
     "historical_entries": 10000,
     "bond_denom": "stake"
+    "validator_bond_factor": "250"
+    "global_liquid_staking_cap": "100"
+    "validator_liquid_staking_cap": "100"
   }
 }
 ```
@@ -1791,7 +1812,8 @@ Example Output:
         },
         "update_time": "2021-10-01T15:51:31.596618510Z"
       },
-      "min_self_delegation": "1"
+      "validator_bond_shares": "0"
+      "liquid_shares": "0"
     },
     {
       "operator_address": "cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7",
@@ -1820,7 +1842,8 @@ Example Output:
         },
         "update_time": "2021-10-04T18:02:21.446645619Z"
       },
-      "min_self_delegation": "1"
+      "validator_bond_shares": "0"
+      "liquid_shares": "0"
     }
   ],
   "pagination": {
@@ -1877,7 +1900,8 @@ Example Output:
       },
       "update_time": "2021-10-01T19:24:52.663191049Z"
     },
-    "min_self_delegation": "1"
+    "validator_bond_shares": "0"
+    "liquid_shares": "0"
   }
 }
 ```
@@ -1906,6 +1930,7 @@ Example Output:
         "delegator_address": "cosmos190g5j8aszqhvtg7cprmev8xcxs6csra7xnk3n3",
         "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
         "shares": "31000000000.000000000000000000"
+        "validator_bond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -1917,6 +1942,7 @@ Example Output:
         "delegator_address": "cosmos1ddle9tczl87gsvmeva3c48nenyng4n56qwq4ee",
         "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
         "shares": "628470000.000000000000000000"
+        "validator_bond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -1928,6 +1954,7 @@ Example Output:
         "delegator_address": "cosmos10fdvkczl76m040smd33lh9xn9j0cf26kk4s2nw",
         "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
         "shares": "838120000.000000000000000000"
+        "validator_bond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -1939,6 +1966,7 @@ Example Output:
         "delegator_address": "cosmos1n8f5fknsv2yt7a8u6nrx30zqy7lu9jfm0t5lq8",
         "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
         "shares": "500000000.000000000000000000"
+        "validator_bond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -1950,6 +1978,7 @@ Example Output:
         "delegator_address": "cosmos16msryt3fqlxtvsy8u5ay7wv2p8mglfg9hrek2e",
         "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
         "shares": "61310000.000000000000000000"
+        "validator_bond": "false"
       },
       "balance": {
         "denom": "stake",
@@ -1989,6 +2018,7 @@ Example Output:
       "delegator_address": "cosmos1n8f5fknsv2yt7a8u6nrx30zqy7lu9jfm0t5lq8",
       "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
       "shares": "500000000.000000000000000000"
+      "validator_bond": "false"
     },
     "balance": {
       "denom": "stake",

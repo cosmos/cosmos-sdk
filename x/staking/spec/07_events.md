@@ -75,3 +75,49 @@ The staking module emits the following events:
 | message    | sender                | {senderAddress}       |
 
 - [0] Time is formatted in the RFC3339 standard
+
+### MsgCancelUnbondingDelegation
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| cancel_unbonding_delegation   | validator           | {validatorAddress}                  |
+| cancel_unbonding_delegation   | delegator           | {delegatorAddress}                  |
+| cancel_unbonding_delegation   | amount              | {cancelUnbondingDelegationAmount}   |
+| cancel_unbonding_delegation   | creation_height     | {unbondingCreationHeight}           |
+| message                       | module              | staking                             |
+| message                       | action              | cancel_unbond                       |
+| message                       | sender              | {senderAddress}                     |
+
+### MsgTokenizeShares
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| tokenize_shares               | validator           | {validatorAddress}                  |
+| tokenize_shares               | delegator           | {delegatorAddress}                  |
+| tokenize_shares               | share_owner         | {tokenizedShareOwner}               |
+| tokenize_shares               | share_record_id     | {shareRecordId}                     |
+| tokenize_shares               | amount              | {tokenizeShareAmount}               |
+| message                       | module              | staking                             |
+| message                       | action              | tokenize_shares                     |
+| message                       | sender              | {senderAddress}                     |
+
+### MsgRedeemTokensForShares
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| redeem_shares                 | validator           | {validatorAddress}                  |
+| redeem_shares                 | delegator           | {delegatorAddress}                  |
+| redeem_shares                 | amount              | {redeemShareAmount}                 |
+| message                       | module              | staking                             |
+| message                       | action              | redeem_shares                       |
+| message                       | sender              | {senderAddress}                     |
+
+### MsgValidatorBond
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| validator_bond                | validator           | {validatorAddress}                  |
+| validator_bond                | delegator           | {delegatorAddress}                  |
+| message                       | module              | staking                             |
+| message                       | action              | validator_bond                      |
+| message                       | sender              | {senderAddress}                     |

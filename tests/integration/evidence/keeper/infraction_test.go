@@ -300,7 +300,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.BlockHeader().Height + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: ctx.HeaderInfo().Height + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
 

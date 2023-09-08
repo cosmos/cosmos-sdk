@@ -163,7 +163,7 @@ func TestImportExportQueues(t *testing.T) {
 	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
+	ctx2 = ctx2.WithBlockTime(ctx2.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
 	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)

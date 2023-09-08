@@ -208,8 +208,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.Equal(t, validator.OperatorAddress, unbondingVals[0])
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
-	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: completionHeight + 1})
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: completionHeight + 1, Time: completionTime.Add(time.Duration(1))})
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is complete

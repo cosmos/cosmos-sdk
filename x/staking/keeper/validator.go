@@ -496,15 +496,14 @@ func (k Keeper) ValidatorQueueIterator(ctx context.Context, endTime time.Time, e
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
-	blockHeight := sdkCtx.BlockHeight()
+	headerInfo := sdkCtx.HeaderInfo()
 
 	// unbondingValIterator will contains all validator addresses indexed under
 	// the ValidatorQueueKey prefix. Note, the entire index key is composed as
 	// ValidatorQueueKey | timeBzLen (8-byte big endian) | timeBz | heightBz (8-byte big endian),
 	// so it may be possible that certain validator addresses that are iterated
 	// over are not ready to unbond, so an explicit check is required.
-	unbondingValIterator, err := k.ValidatorQueueIterator(ctx, blockTime, blockHeight)
+	unbondingValIterator, err := k.ValidatorQueueIterator(ctx, headerInfo.Time, headerInfo.Height)
 	if err != nil {
 		return err
 	}
@@ -520,7 +519,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 		// All addresses for the given key have the same unbonding height and time.
 		// We only unbond if the height and time are less than the current height
 		// and time.
-		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
+		if keyHeight <= headerInfo.Height && (keyTime.Before(headerInfo.Time) || keyTime.Equal(headerInfo.Time)) {
 			addrs := types.ValAddresses{}
 			if err = k.cdc.Unmarshal(unbondingValIterator.Value(), &addrs); err != nil {
 				return err

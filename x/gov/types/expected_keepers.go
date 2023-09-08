@@ -53,7 +53,7 @@ type BankKeeper interface {
 
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
+	BurnCoins(context.Context, []byte, sdk.Coins) error
 }
 
 // Event Hooks

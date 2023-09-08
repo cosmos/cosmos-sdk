@@ -201,17 +201,17 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 }
 
 // BurnCoins mocks base method.
-func (m *MockBankKeeper) BurnCoins(ctx context.Context, moduleName string, amt types.Coins) error {
+func (m *MockBankKeeper) BurnCoins(ctx context.Context, address []byte, amt types.Coins) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BurnCoins", ctx, moduleName, amt)
+	ret := m.ctrl.Call(m, "BurnCoins", ctx, address, amt)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // BurnCoins indicates an expected call of BurnCoins.
-func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, moduleName, amt interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, address, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, moduleName, amt)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, address, amt)
 }
 
 // ClearSendRestriction mocks base method.

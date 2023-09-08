@@ -2,6 +2,7 @@ package rootmulti
 
 import (
 	"fmt"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"io"
 	"math"
 	"sort"
@@ -69,7 +70,8 @@ type Store struct {
 
 	interBlockCache types.MultiStorePersistentCache
 
-	listeners map[types.StoreKey][]types.WriteListener
+	listeners    map[types.StoreKey][]types.WriteListener
+	commitHeader tmproto.Header
 }
 
 var (
@@ -418,6 +420,7 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	newCommitInfo := rs.commitStores(version, rs.stores)
+	newCommitInfo.Timestamp = rs.commitHeader.Time
 	rs.updateLatestCommitInfo(newCommitInfo, version)
 
 	err := rs.handlePruning(version)
@@ -434,6 +437,11 @@ func (rs *Store) Commit() types.CommitID {
 		Version: version,
 		Hash:    hash,
 	}
+}
+
+// SetCommitHeader sets the commit block header of the store.
+func (rs *Store) SetCommitHeader(h tmproto.Header) {
+	rs.commitHeader = h
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.

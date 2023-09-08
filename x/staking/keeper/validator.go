@@ -523,35 +523,39 @@ func (k Keeper) unbondMatureValidators(
 			return fmt.Errorf("unexpected validator in unbonding queue; status was not unbonding")
 		}
 
-		if val.UnbondingOnHoldRefCount == 0 {
-			for _, id := range val.UnbondingIds {
-				if err = k.DeleteUnbondingIndex(ctx, id); err != nil {
-					return err
-				}
-			}
+		// if the ref count is not zero, early exit.
+		if val.UnbondingOnHoldRefCount != 0 {
+			return nil
+		}
 
-			val, err = k.UnbondingToUnbonded(ctx, val)
+		// otherwise do proper unbonding
+		for _, id := range val.UnbondingIds {
+			if err = k.DeleteUnbondingIndex(ctx, id); err != nil {
+				return err
+			}
+		}
+
+		val, err = k.UnbondingToUnbonded(ctx, val)
+		if err != nil {
+			return err
+		}
+
+		if val.GetDelegatorShares().IsZero() {
+			str, err := k.validatorAddressCodec.StringToBytes(val.GetOperator())
 			if err != nil {
 				return err
 			}
-
-			if val.GetDelegatorShares().IsZero() {
-				str, err := k.validatorAddressCodec.StringToBytes(val.GetOperator())
-				if err != nil {
-					return err
-				}
-				if err = k.RemoveValidator(ctx, str); err != nil {
-					return err
-				}
-			} else {
-				// remove unbonding ids
-				val.UnbondingIds = []uint64{}
-			}
-
-			// remove validator from queue
-			if err = k.DeleteValidatorQueue(ctx, val); err != nil {
+			if err = k.RemoveValidator(ctx, str); err != nil {
 				return err
 			}
+		} else {
+			// remove unbonding ids
+			val.UnbondingIds = []uint64{}
+		}
+
+		// remove validator from queue
+		if err = k.DeleteValidatorQueue(ctx, val); err != nil {
+			return err
 		}
 	}
 	return nil

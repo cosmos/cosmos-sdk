@@ -131,7 +131,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tidwall/btree v1.6.0 // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect

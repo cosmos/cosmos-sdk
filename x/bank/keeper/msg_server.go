@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -190,7 +191,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 
 	var coins sdk.Coins
 	for _, coin := range msg.Amount {
-		coins = append(coins, sdk.NewCoin(coin.Denom, coin.Amount))
+		coins = coins.Add(sdk.NewCoin(coin.Denom, coin.Amount))
 	}
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
@@ -205,7 +206,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 	if !coins.IsValid() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
-
+	fmt.Println("coins", coins)
 	if !coins.IsAllPositive() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}

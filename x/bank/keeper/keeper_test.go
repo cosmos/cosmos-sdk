@@ -195,7 +195,6 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 }
 
 func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
-	fmt.Println(sender.GetAddress(), receiver)
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
 }
@@ -247,7 +246,6 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx context.Context, acc, mAcc
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
 	}
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
-	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
@@ -564,13 +562,13 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
-	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil).AnyTimes()
-	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no module account")
+	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil).MaxTimes(1)
+	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no account")
 
-	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(nil).AnyTimes()
+	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(minterAcc).MaxTimes(1)
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
-	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(nil).AnyTimes()
+	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(randomAcc)
 	require.Error(keeper.BurnCoins(ctx, randomAcc.GetAddress(), supplyAfterInflation), "random permission")
 
 	suite.mockBurnCoins(burnerAcc)
@@ -591,7 +589,6 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
-	authKeeper.EXPECT().GetAccount(ctx, multiPermAcc.GetAddress()).Return(nil).AnyTimes()
 	suite.mockSendCoins(ctx, minterAcc, multiPermAcc.GetAddress())
 	require.NoError(keeper.SendCoins(ctx, minterAcc.GetAddress(), multiPermAcc.GetAddress(), initCoins))
 

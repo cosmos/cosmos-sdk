@@ -98,10 +98,18 @@ func (v Vec[T]) Replace(ctx context.Context, index uint64, elem T) error {
 	return v.elements.Set(ctx, index, elem)
 }
 
-// Get returns an element at a given index. Returns ErrNotFound
+// Get returns an element at a given index. Returns ErrOutOfBounds
 // if the index is out of bounds.
 func (v Vec[T]) Get(ctx context.Context, index uint64) (elem T, err error) {
-	return v.elements.Get(ctx, index)
+	elem, err = v.elements.Get(ctx, index)
+	switch {
+	case err == nil:
+		return elem, nil
+	case errors.Is(err, ErrNotFound):
+		return elem, fmt.Errorf("%w: index %d", ErrOutOfBounds, index)
+	default:
+		return elem, err
+	}
 }
 
 // Len returns the length of the Vec.

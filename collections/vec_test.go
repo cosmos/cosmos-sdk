@@ -26,6 +26,10 @@ func TestVec(t *testing.T) {
 	err = vec.Replace(ctx, 0, "foo")
 	require.ErrorIs(t, err, ErrOutOfBounds)
 
+	// get out of bounds should error with an out of bounds error
+	_, err = vec.Get(ctx, 0)
+	require.ErrorIs(t, err, ErrOutOfBounds)
+
 	// push
 	err = vec.Push(ctx, "foo")
 	require.NoError(t, err)

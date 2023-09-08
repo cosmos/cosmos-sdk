@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
+	pooltypes "cosmossdk.io/x/pool/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,21 +103,30 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
-func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
-	}
-
+func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck
 	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}
 
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
-		return nil, err
+	resMsg := pooltypes.NewMsgFundCommunityPool(msg.Amount, msg.Depositor)
+	handler := k.Keeper.router.Handler(resMsg)
+	if handler == nil {
+		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(resMsg), resMsg)
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	res, err := handler(sdkCtx, resMsg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(res), err)
+	}
+	if len(res.MsgResponses) > 0 {
+		msgResponse := res.MsgResponses[0]
+		if msgResponse == nil {
+			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(resMsg), res.String())
+		}
+
 	}
 
-	return &types.MsgFundCommunityPoolResponse{}, nil
+	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck
 }
 
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
@@ -139,7 +150,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -164,7 +175,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	logger := k.Logger(ctx)
 	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
-	return &types.MsgCommunityPoolSpendResponse{}, nil
+	return &types.MsgCommunityPoolSpendResponse{}, nil //nolint:staticcheck
 }
 
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {

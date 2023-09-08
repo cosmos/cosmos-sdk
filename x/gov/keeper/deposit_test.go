@@ -288,6 +288,12 @@ func TestChargeDeposit(t *testing.T) {
 			expectError:               false,
 		},
 		{
+			name:                      "Success: CancelRatio=0",
+			proposalCancelRatio:       "0",
+			proposalCancelDestAddress: "",
+			expectError:               false,
+		},
+		{
 			name:                      "Success: CancelRatio=0.5",
 			proposalCancelRatio:       "0.5",
 			proposalCancelDestAddress: "",

@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -72,6 +73,9 @@ func initFixture(tb testing.TB) *fixture {
 
 	authority := authtypes.NewModuleAddress("gov")
 
+	// Create MsgServiceRouter
+	msr := baseapp.NewMsgServiceRouter()
+
 	maccPerms := map[string][]string{
 		distrtypes.ModuleName:          {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
@@ -103,7 +107,7 @@ func initFixture(tb testing.TB) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, msr, distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
@@ -562,99 +566,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 			}
 		})
 
-	}
-}
-
-func TestMsgFundCommunityPool(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
-	// reset fee pool
-	initPool := distrtypes.InitialFeePool()
-	require.NoError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, initPool))
-
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
-	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
-	require.NoError(t, err)
-
-	addr := sdk.AccAddress(PKS[0].Address())
-	addr2 := sdk.AccAddress(PKS[1].Address())
-	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-
-	// fund the account by minting and sending amount from distribution module to addr
-	err = f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amount)
-	assert.NilError(t, err)
-	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amount)
-	assert.NilError(t, err)
-
-	testCases := []struct {
-		name      string
-		msg       *distrtypes.MsgFundCommunityPool
-		expErr    bool
-		expErrMsg string
-	}{
-		{
-			name: "no depositor address",
-			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
-				Depositor: emptyDelAddr.String(),
-			},
-			expErr:    true,
-			expErrMsg: "invalid depositor address",
-		},
-		{
-			name: "invalid coin",
-			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
-				Depositor: addr.String(),
-			},
-			expErr:    true,
-			expErrMsg: "10stake,10stake: invalid coins",
-		},
-		{
-			name: "depositor address with no funds",
-			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
-				Depositor: addr2.String(),
-			},
-			expErr:    true,
-			expErrMsg: "insufficient funds",
-		},
-		{
-			name: "valid message",
-			msg: &distrtypes.MsgFundCommunityPool{
-				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
-				Depositor: addr.String(),
-			},
-			expErr: false,
-		},
-	}
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			res, err := f.app.RunMsg(
-				tc.msg,
-				integration.WithAutomaticFinalizeBlock(),
-				integration.WithAutomaticCommit(),
-			)
-			if tc.expErr {
-				assert.ErrorContains(t, err, tc.expErrMsg)
-			} else {
-				assert.NilError(t, err)
-				assert.Assert(t, res != nil)
-
-				// check the result
-				result := distrtypes.MsgFundCommunityPool{}
-				err = f.cdc.Unmarshal(res.Value, &result)
-				assert.NilError(t, err)
-
-				// query the community pool funds
-				feePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				require.NoError(t, err)
-				assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
-				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
-			}
-		})
 	}
 }
 

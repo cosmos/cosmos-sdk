@@ -421,62 +421,6 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	}
 }
 
-func TestGRPCCommunityPool(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
-	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
-		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
-	}))
-
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
-
-	var (
-		req     *types.QueryCommunityPoolRequest
-		expPool *types.QueryCommunityPoolResponse
-	)
-
-	testCases := []struct {
-		name     string
-		malleate func()
-	}{
-		{
-			name: "valid request empty community pool",
-			malleate: func() {
-				req = &types.QueryCommunityPoolRequest{}
-				expPool = &types.QueryCommunityPoolResponse{}
-			},
-		},
-		{
-			name: "valid request",
-			malleate: func() {
-				amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
-				assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, amount))
-				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, f.addr, amount))
-
-				err := f.distrKeeper.FundCommunityPool(f.sdkCtx, amount, f.addr)
-				assert.Assert(t, err == nil)
-				req = &types.QueryCommunityPoolRequest{}
-
-				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)}
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		tc := testCase
-		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
-			testCase.malleate()
-
-			pool, err := queryClient.CommunityPool(f.sdkCtx, req)
-
-			assert.NilError(t, err)
-			assert.DeepEqual(t, expPool, pool)
-		})
-	}
-}
-
 func TestGRPCDelegationRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -43,12 +44,17 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
+	// Create MsgServiceRouter, but don't populate it before creating the distr
+	// keeper.
+	msr := baseapp.NewMsgServiceRouter()
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		msr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -100,12 +106,17 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
+	// Create MsgServiceRouter, but don't populate it before creating the gov
+	// keeper.
+	msr := baseapp.NewMsgServiceRouter()
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		msr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -227,12 +238,17 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
+	// Create MsgServiceRouter, but don't populate it before creating the gov
+	// keeper.
+	msr := baseapp.NewMsgServiceRouter()
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		msr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

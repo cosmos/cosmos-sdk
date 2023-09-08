@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"time"
 
 	"cosmossdk.io/collections"
 	addresscodec "cosmossdk.io/core/address"
@@ -50,7 +49,7 @@ var (
 	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
 
 	UnbondingQueueKey    = collections.NewPrefix(65) // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey = []byte{0x42}              // prefix for the timestamps in redelegations queue
+	RedelegationQueueKey = collections.NewPrefix(66) // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
@@ -159,13 +158,6 @@ func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []
 	copy(key[4+len(delAddr)+len(valSrcAddr):], valDstAddr.Bytes())
 
 	return key
-}
-
-// GetRedelegationTimeKey returns a key prefix for indexing an unbonding
-// redelegation based on a completion time.
-func GetRedelegationTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(RedelegationQueueKey, bz...)
 }
 
 // GetREDsKey returns a key prefix for indexing a redelegation from a delegator

@@ -168,6 +168,14 @@ func getREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	return append(redelegationByValSrcIndexKey, addresstypes.MustLengthPrefix(valSrcAddr)...)
 }
 
+// getRedelegationTimeKey returns a key prefix for indexing an unbonding
+// redelegation based on a completion time.
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	redelegationQueueKey := []byte{0x42}
+	return append(redelegationQueueKey, bz...)
+}
+
 // getUBDKey creates the key for an unbonding delegation by delegator and validator addr
 // VALUE: staking/UnbondingDelegation
 func getUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
@@ -506,6 +514,56 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			s.Require().NoError(err)
 		},
 		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
+	)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
+	s.SetupTest()
+
+	addrs, valAddrs := createValAddrs(101)
+	err := testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Unix(i, i)
+			dvvTriplets := stakingtypes.DVVTriplets{
+				Triplets: []stakingtypes.DVVTriplet{
+					{
+						DelegatorAddress:    addrs[i].String(),
+						ValidatorSrcAddress: valAddrs[i].String(),
+						ValidatorDstAddress: valAddrs[i+1].String(),
+					},
+				},
+			}
+			bz, err := s.cdc.Marshal(&dvvTriplets)
+			s.Require().NoError(err)
+			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), bz)
+		},
+		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
+	)
+	s.Require().NoError(err)
+
+	err = testutil.DiffCollectionsMigration(
+		s.ctx,
+		s.key,
+		100,
+		func(i int64) {
+			date := time.Unix(i, i)
+			dvvTriplets := stakingtypes.DVVTriplets{
+				Triplets: []stakingtypes.DVVTriplet{
+					{
+						DelegatorAddress:    addrs[i].String(),
+						ValidatorSrcAddress: valAddrs[i].String(),
+						ValidatorDstAddress: valAddrs[i+1].String(),
+					},
+				},
+			}
+			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, dvvTriplets.Triplets)
+			s.Require().NoError(err)
+		},
+		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
 	)
 	s.Require().NoError(err)
 }

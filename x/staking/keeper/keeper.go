@@ -68,6 +68,8 @@ type Keeper struct {
 	RedelegationsByValSrc collections.Map[collections.Triple[[]byte, []byte, []byte], []byte]
 	// UnbondingDelegationByValIndex key: valAddr+delAddr | value: none used (index key for UnbondingDelegations stored by validator index)
 	UnbondingDelegationByValIndex collections.Map[collections.Pair[[]byte, []byte], []byte]
+	// RedelegationQueue key: Timestamp | value: DVVTriplets [delAddr+valSrcAddr+valDstAddr]
+	RedelegationQueue collections.Map[time.Time, types.DVVTriplets]
 	// ValidatorQueue key: len(timestamp bytes)+timestamp+height | value: ValAddresses
 	ValidatorQueue collections.Map[collections.Triple[uint64, time.Time, uint64], types.ValAddresses]
 	// LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
@@ -180,7 +182,8 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		Validators: collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+		RedelegationQueue: collections.NewMap(sb, types.RedelegationQueueKey, "redelegation_queue", sdk.TimeKey, codec.CollValue[types.DVVTriplets](cdc)),
+		Validators:        collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		UnbondingDelegations: collections.NewMap(
 			sb, types.UnbondingDelegationKey,
 			"unbonding_delegation",

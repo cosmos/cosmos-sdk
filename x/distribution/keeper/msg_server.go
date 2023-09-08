@@ -103,7 +103,7 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
-func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck
+func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 
 	}
 
-	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck
+	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }
 
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
@@ -150,7 +150,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck
+func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	logger := k.Logger(ctx)
 	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
-	return &types.MsgCommunityPoolSpendResponse{}, nil //nolint:staticcheck
+	return &types.MsgCommunityPoolSpendResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }
 
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {

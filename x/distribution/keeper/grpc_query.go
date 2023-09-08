@@ -354,11 +354,11 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) { //nolint:staticcheck
+func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	pool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil //nolint:staticcheck
+	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }

@@ -610,11 +610,8 @@ func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) 
 // expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx context.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet, err error) {
 	triplets, err := k.RedelegationQueue.Get(ctx, timestamp)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		return []types.DVVTriplet{}, nil
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return []types.DVVTriplet{}, err
 	}
 
 	return triplets.Triplets, nil

@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authty
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *authtypes.ModuleAccount) {
@@ -246,6 +246,7 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx context.Context, acc, mAcc
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
 	}
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
@@ -565,10 +566,10 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	authKeeper.EXPECT().GetAccount(ctx, sdk.AccAddress{}).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, sdk.AccAddress{}, initCoins), "no account")
 
-	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(minterAcc.BaseAccount)
+	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
-	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(randomAcc.BaseAccount)
+	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(nil)
 	require.Error(keeper.BurnCoins(ctx, randomAcc.GetAddress(), supplyAfterInflation), "random permission")
 
 	suite.mockBurnCoins(burnerAcc)

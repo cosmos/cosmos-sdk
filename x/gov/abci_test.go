@@ -54,16 +54,16 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader = ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -105,9 +105,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(2) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -126,18 +126,18 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	newHeader = ctx.BlockHeader()
+	newHeader = ctx.HeaderInfo()
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader = ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(5) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
@@ -176,9 +176,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -345,10 +345,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 			require.NoError(t, err)
 
-			newHeader := ctx.BlockHeader()
+			newHeader := ctx.HeaderInfo()
 			params, _ := suite.GovKeeper.Params.Get(ctx)
-			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			err = gov.EndBlocker(ctx, suite.GovKeeper)
 			require.NoError(t, err)
@@ -397,9 +397,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	// validate that the proposal fails/has been rejected
 	err = gov.EndBlocker(ctx, suite.GovKeeper)

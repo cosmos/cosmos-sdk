@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"time"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
@@ -74,6 +77,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
+
 	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
 	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
@@ -107,7 +111,10 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	ctx = ctx.WithHeaderInfo(header.Info{
 		ChainID: "HelloChain",
 		Height:  10,
+		Time:    time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
 	})
+
+	ctx = ctx.WithCometInfo(NewCometInfo())
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 
@@ -116,6 +123,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		Header: cmtproto.Header{
 			ChainID: "HelloChain",
 			Height:  10,
+			Time:    time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
 		},
 		Valset: vals,
 	}
@@ -165,4 +173,27 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 
 	require.NoError(err)
 	require.Equal(expHistInfos, infos)
+}
+
+type CometService struct {
+}
+
+func NewCometInfo() comet.BlockInfo {
+	return CometService{}
+}
+
+func (r CometService) GetEvidence() comet.EvidenceList {
+	return nil
+}
+
+func (CometService) GetValidatorsHash() []byte {
+	return []byte{}
+}
+
+func (CometService) GetProposerAddress() []byte {
+	return []byte{}
+}
+
+func (CometService) GetLastCommit() comet.CommitInfo {
+	return nil
 }

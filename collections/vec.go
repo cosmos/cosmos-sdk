@@ -11,7 +11,7 @@ import (
 var (
 	// ErrEmptyVec is returned when trying to pop an element from an empty Vec.
 	ErrEmptyVec = errors.New("vec is empty")
-	// ErrOutOfBounds is return when trying to do an operation on an index that is out of bounds.
+	// ErrOutOfBounds is returned when trying to do an operation on an index that is out of bounds.
 	ErrOutOfBounds = errors.New("vec index is out of bounds")
 )
 

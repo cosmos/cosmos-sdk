@@ -271,7 +271,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
 	// slash validator for the first time
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	bondedPool := f.stakingKeeper.GetBondedPool(f.sdkCtx)
 	oldBondedPoolBalances := f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
 
@@ -307,7 +307,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	assert.Equal(t, int64(7), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
 
 	// slash validator again
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(13)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 13})
 	_, err = f.stakingKeeper.Slash(f.sdkCtx, consAddr, 9, 10, fraction)
 	assert.NilError(t, err)
 
@@ -334,7 +334,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// all originally bonded stake has been slashed, so this will have no effect
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behavior, ref https://github.com/cosmos/cosmos-sdk/issues/1440
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(13)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 13})
 	_, err = f.stakingKeeper.Slash(f.sdkCtx, consAddr, 9, 10, fraction)
 	assert.NilError(t, err)
 
@@ -361,7 +361,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// all originally bonded stake has been slashed, so this will have no effect
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behavior, ref https://github.com/cosmos/cosmos-sdk/issues/1440
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(13)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 13})
 	_, err = f.stakingKeeper.Slash(f.sdkCtx, consAddr, 9, 10, fraction)
 	assert.NilError(t, err)
 
@@ -417,7 +417,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	oldNotBonded := f.bankKeeper.GetBalance(f.sdkCtx, notBondedPool.GetAddress(), bondDenom).Amount
 
 	// slash validator
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	_, found := f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Assert(t, found)
 
@@ -485,7 +485,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	assert.Equal(t, int64(4), validator.GetConsensusPower(f.stakingKeeper.PowerReduction(f.sdkCtx)))
 
 	// slash the validator again, by 100%
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	_, found = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Assert(t, found)
 
@@ -518,7 +518,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	// validator still in unbonding period
 	validator, _ = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, consAddr)
 	assert.Equal(t, validator.GetStatus(), types.Unbonding)
@@ -585,7 +585,7 @@ func TestSlashBoth(t *testing.T) {
 	oldBonded := f.bankKeeper.GetBalance(f.sdkCtx, bondedPool.GetAddress(), bondDenom).Amount
 	oldNotBonded := f.bankKeeper.GetBalance(f.sdkCtx, notBondedPool.GetAddress(), bondDenom).Amount
 	// slash validator
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(12)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 12})
 	_, found := f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, sdk.GetConsAddress(PKs[0]))
 	assert.Assert(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())

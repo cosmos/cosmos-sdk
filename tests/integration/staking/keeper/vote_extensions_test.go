@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -28,7 +29,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 	// enable vote extensions
 	cp := simtestutil.DefaultConsensusParams
 	cp.Abci = &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1}
-	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithBlockHeight(2)
+	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithHeaderInfo(header.Info{Height: 2})
 
 	// setup the validators
 	numVals := 3

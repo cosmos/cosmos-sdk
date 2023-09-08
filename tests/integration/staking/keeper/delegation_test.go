@@ -6,6 +6,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,7 +66,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	totalUnbonded := math.NewInt(0)
 	for i := int64(0); i < int64(maxEntries); i++ {
 		var err error
-		ctx = ctx.WithBlockHeight(i)
+		ctx = ctx.WithHeaderInfo(header.Info{Height: i})
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 		assert.NilError(t, err)

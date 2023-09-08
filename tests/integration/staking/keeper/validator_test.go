@@ -7,6 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -214,7 +215,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 
 	// test equal voting power, different age
 	validators[3].Tokens = math.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.sdkCtx))
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(10)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 10})
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.NilError(t, err)
@@ -223,7 +224,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.Assert(ValEq(t, validators[4], resValidators[1]))
 
 	// no change in voting power - no change in sort
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(20)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 20})
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[4], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.NilError(t, err)
@@ -238,7 +239,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(30)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 30})
 	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[4], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.sdkCtx)
 	assert.NilError(t, err)
@@ -376,7 +377,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	//  - validator 3 adds 200 tokens (equal to validator 2 now) and does not get its spot back
 
 	// validator 3 enters bonded validator set
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(40)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 40})
 
 	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[3].GetOperator())
 	assert.NilError(t, err)
@@ -834,7 +835,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 0)
 
 	// delegate to validator with lowest power but not enough to bond
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(1)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 1})
 
 	val0bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
 	assert.NilError(t, err)
@@ -852,7 +853,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 
 	// create a series of events that will bond and unbond the validator with
 	// lowest power in a single block context (height)
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(2)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: 2})
 
 	validators[1], err = f.stakingKeeper.GetValidator(f.sdkCtx, val1bz)
 	assert.NilError(t, err)

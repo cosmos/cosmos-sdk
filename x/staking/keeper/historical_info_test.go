@@ -175,8 +175,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	require.Equal(expHistInfos, infos)
 }
 
-type CometService struct {
-}
+type CometService struct{}
 
 func NewCometInfo() comet.BlockInfo {
 	return CometService{}

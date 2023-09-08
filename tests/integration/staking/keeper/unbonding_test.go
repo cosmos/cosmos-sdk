@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -208,7 +209,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: completionHeight + 1})
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that validator unbonding is complete
@@ -253,8 +254,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	completionHeight := validator1.UnbondingHeight
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
-	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Height: completionHeight + 1, Time: completionTime.Add(time.Duration(1))})
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
 	// Check that unbonding is not complete for both validators

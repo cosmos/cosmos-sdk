@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -125,7 +126,7 @@ func (s *SimTestSuite) SetupTest() {
 func (s *SimTestSuite) TestWeightedOperations() {
 	require := s.Require()
 
-	s.ctx.WithChainID("test-chain")
+	s.ctx.WithHeaderInfo(header.Info{ChainID: "test-chain"})
 
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)

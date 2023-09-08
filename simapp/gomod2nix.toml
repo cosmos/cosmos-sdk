@@ -273,8 +273,8 @@ schema = 3
     version = "v0.5.1"
     hash = "sha256-nQ+qduNhVwj+YIyPTuq8rytQYT3zWcEQM3zQ7LTegdI="
   [mod."github.com/hashicorp/go-plugin"]
-    version = "v1.5.0"
-    hash = "sha256-y0gCsjgYr547ITwHlitD8Eueh8LYcjdnmRpk2r+lNcY="
+    version = "v1.5.1"
+    hash = "sha256-rXNajanQOAkqHDghaICUkikQHuWbAICg6OKelhEleEo="
   [mod."github.com/hashicorp/go-safetemp"]
     version = "v1.0.0"
     hash = "sha256-g5i9m7FSRInQzZ4iRpIsoUu685AY7fppUwjhuZCezT8="

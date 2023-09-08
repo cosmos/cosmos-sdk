@@ -99,7 +99,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
@@ -125,7 +125,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
@@ -151,7 +151,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_DenyList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_DenyList{
 					DenyList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
 				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
@@ -177,7 +177,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			},
@@ -203,7 +203,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			},
@@ -241,7 +241,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			},
@@ -267,7 +267,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			},
@@ -304,7 +304,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
 				},
 				MaxTokens:         &coin50,
@@ -332,7 +332,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
 				},
 				MaxTokens:         nil,

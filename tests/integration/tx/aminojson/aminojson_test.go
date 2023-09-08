@@ -378,12 +378,12 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"staking/stake_authorization_allow": {
 			gogo: &stakingtypes.StakeAuthorization{
-				Validators: &stakingtypes.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
 				},
 			},
 			pulsar: &stakingapi.StakeAuthorization{
-				Validators: &stakingapi.StakeAuthorization_AllowList{
+				ValidatorsList: &stakingapi.StakeAuthorization_AllowList{
 					AllowList: &stakingapi.StakeAuthorization_Validators{Address: []string{"foo"}},
 				},
 			},

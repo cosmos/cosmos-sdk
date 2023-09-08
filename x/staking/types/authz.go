@@ -24,13 +24,13 @@ func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType Authoriza
 
 	a := StakeAuthorization{}
 	if allowedValidators != nil {
-		a.Validators = &StakeAuthorization_AllowList{
+		a.ValidatorsList = &StakeAuthorization_AllowList{
 			AllowList: &StakeAuthorization_Validators{
 				Address: allowedValidators,
 			},
 		}
 	} else {
-		a.Validators = &StakeAuthorization_DenyList{
+		a.ValidatorsList = &StakeAuthorization_DenyList{
 			DenyList: &StakeAuthorization_Validators{
 				Address: deniedValidators,
 			},
@@ -127,7 +127,7 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 			Accept: true,
 			Delete: false,
 			Updated: &StakeAuthorization{
-				Validators:        a.GetValidators(),
+				ValidatorsList:    a.GetValidatorsList(),
 				AuthorizationType: a.GetAuthorizationType(),
 			},
 		}, nil
@@ -146,7 +146,7 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 		Accept: true,
 		Delete: false,
 		Updated: &StakeAuthorization{
-			Validators:        a.GetValidators(),
+			ValidatorsList:    a.GetValidatorsList(),
 			AuthorizationType: a.GetAuthorizationType(),
 			MaxTokens:         &limitLeft,
 		},

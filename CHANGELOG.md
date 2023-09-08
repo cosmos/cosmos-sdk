@@ -131,6 +131,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#17496](https://github.com/cosmos/cosmos-sdk/pull/17469) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type
 * (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer. 
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
+* (x/staking) [#17666](https://github.com/cosmos/cosmos-sdk/pull/17666) `StakeAuthorization.Validators` was renamed to `StakeAuthorization.ValidatorsList` to avoid duplicate generation in different languages 
 
 ### CLI Breaking Changes
 

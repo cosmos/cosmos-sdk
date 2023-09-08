@@ -26,8 +26,6 @@ const (
 	FlagCommissionMaxRate       = "commission-max-rate"
 	FlagCommissionMaxChangeRate = "commission-max-change-rate"
 
-	FlagMinSelfDelegation = "min-self-delegation"
-
 	FlagGenesisFormat = "genesis-format"
 	FlagNodeID        = "node-id"
 	FlagIP            = "ip"
@@ -56,13 +54,6 @@ func FlagSetCommissionCreate() *flag.FlagSet {
 	fs.String(FlagCommissionMaxRate, "", "The maximum commission rate percentage")
 	fs.String(FlagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
 
-	return fs
-}
-
-// FlagSetMinSelfDelegation Returns the FlagSet used for minimum set delegation.
-func FlagSetMinSelfDelegation() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagMinSelfDelegation, "", "The minimum self delegation required on the validator")
 	return fs
 }
 

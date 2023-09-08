@@ -112,18 +112,29 @@ message Validator {
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
-  // min_self_delegation is the validator's self declared minimum self delegation.
+  // Deprecated: This field has been deprecated with LSM in favor of the validator bond
   string min_self_delegation = 11 [
+    deprecated             = true,
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
-
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
-
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
+  // Number of shares self bonded from the validator
+  string validator_bond_shares = 14 [
+    (gogoproto.moretags)   = "yaml:\"validator_bond_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 15 [
+    (gogoproto.moretags)   = "yaml:\"liquid_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // BondStatus is the status of a validator.
@@ -198,6 +209,8 @@ message Delegation {
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // has this delegation been marked as a validator self bond.
+  bool validator_bond = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -301,6 +314,28 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // validator_bond_factor is required as a safety check for tokenizing shares and
+  // delegations from liquid staking providers
+  string validator_bond_factor = 7 [
+    (gogoproto.moretags)   = "yaml:\"validator_bond_factor\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // global_liquid_staking_cap represents a cap on the portion of stake that
+  // comes from liquid staking providers
+  string global_liquid_staking_cap = 8 [
+    (gogoproto.moretags)   = "yaml:\"global_liquid_staking_cap\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // validator_liquid_staking_cap represents a cap on the portion of stake that
+  // comes from liquid staking providers for a specific validator
+  string validator_liquid_staking_cap = 9 [
+    (gogoproto.moretags)   = "yaml:\"validator_liquid_staking_cap\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  reserved 6;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -367,4 +402,35 @@ enum InfractionType {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
+}
+
+// TokenizeShareRecord represents a tokenized delegation
+message TokenizeShareRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 id             = 1;
+  string owner          = 2;
+  string module_account = 3; // module account take the role of delegator
+  string validator      = 4; // validator delegated to for tokenize share record creation
+}
+
+// PendingTokenizeShareAuthorizations stores a list of addresses that have their
+// tokenize share enablement in progress
+message PendingTokenizeShareAuthorizations {
+  repeated string addresses = 1;
+}
+
+// TokenizeShareLockStatus indicates whether the address is able to tokenize shares
+enum TokenizeShareLockStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an empty tokenize share lock status
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0;
+  // LOCKED indicates the account is locked and cannot tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1;
+  // UNLOCKED indicates the account is unlocked and can tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2;
+  // LOCK_EXPIRING indicates the account is unable to tokenize shares, but
+  // will be able to tokenize shortly (after 1 unbonding period)
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3;
 }

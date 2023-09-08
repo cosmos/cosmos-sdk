@@ -81,9 +81,9 @@ func TestRedelegationString(t *testing.T) {
 
 func TestDelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(5),
+	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(5), false,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))
-	dr2 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr3, sdk.NewDec(5),
+	dr2 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr3, sdk.NewDec(5), false,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))
 	drs := types.DelegationResponses{dr1, dr2}
 

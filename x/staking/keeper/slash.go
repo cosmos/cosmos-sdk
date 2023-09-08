@@ -26,9 +26,8 @@ import (
 //
 // CONTRACT:
 //
-//	   Infraction was committed at the current height or at a past height,
-//	   not at a height in the future
-//		  ---
+//	Infraction was committed at the current height or at a past height,
+//	not at a height in the future
 //
 // Slash implementation doesn't require the infraction (types.Infraction) to work but the IS one does. It is here to have IS satisfy the Slash signature.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.InfractionType) {
@@ -129,7 +128,18 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
+	initialLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+
+	// Proportionally deduct any liquid tokens from the global total
+	updatedLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
+	slashedLiquidTokens := initialLiquidTokens.Sub(updatedLiquidTokens)
+	if err := k.DecreaseTotalLiquidStakedTokens(ctx, slashedLiquidTokens); err != nil {
+		// This only error's if the total liquid staked tokens underflows
+		// which would indicate there's a corrupted state where the validator has
+		// liquid tokens that are not accounted for in the global total
+		panic(err)
+	}
 
 	switch validator.GetStatus() {
 	case types.Bonded:

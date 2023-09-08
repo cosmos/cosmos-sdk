@@ -32,6 +32,7 @@ type ValidatorI interface {
 	GetCommission() sdk.Dec                                 // validator commission rate
 	GetMinSelfDelegation() sdk.Int                          // validator minimum self delegation
 	GetDelegatorShares() sdk.Dec                            // total outstanding delegator shares
+	GetLiquidShares() sdk.Dec                               // total shares earmarked from liquid staking
 	TokensFromShares(sdk.Dec) sdk.Dec                       // token worth of provided delegator shares
 	TokensFromSharesTruncated(sdk.Dec) sdk.Dec              // token worth of provided delegator shares, truncated
 	TokensFromSharesRoundUp(sdk.Dec) sdk.Dec                // token worth of provided delegator shares, rounded up

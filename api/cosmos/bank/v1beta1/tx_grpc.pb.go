@@ -35,6 +35,8 @@ type MsgClient interface {
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
 	// Burn defines a method for burning coins by an account.
+	//
+	// Since: cosmos-sdk 0.51
 	Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.
@@ -112,6 +114,8 @@ type MsgServer interface {
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
 	// Burn defines a method for burning coins by an account.
+	//
+	// Since: cosmos-sdk 0.51
 	Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.

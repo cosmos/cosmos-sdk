@@ -173,12 +173,12 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true)
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *authtypes.ModuleAccount) {
@@ -562,13 +562,13 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
-	authKeeper.EXPECT().GetAccount(ctx, []byte{}).Return(nil).MaxTimes(1)
-	require.Error(keeper.BurnCoins(ctx, []byte{}, initCoins), "no account")
+	authKeeper.EXPECT().GetAccount(ctx, sdk.AccAddress{}).Return(nil)
+	require.Error(keeper.BurnCoins(ctx, sdk.AccAddress{}, initCoins), "no account")
 
-	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(minterAcc).MaxTimes(1)
+	authKeeper.EXPECT().GetAccount(ctx, minterAcc.GetAddress()).Return(minterAcc.BaseAccount)
 	require.Error(keeper.BurnCoins(ctx, minterAcc.GetAddress(), initCoins), "invalid permission")
 
-	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(randomAcc)
+	authKeeper.EXPECT().GetAccount(ctx, randomAcc.GetAddress()).Return(randomAcc.BaseAccount)
 	require.Error(keeper.BurnCoins(ctx, randomAcc.GetAddress(), supplyAfterInflation), "random permission")
 
 	suite.mockBurnCoins(burnerAcc)

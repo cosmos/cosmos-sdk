@@ -71,7 +71,7 @@ service Query {
   // DEPRECATED: Prefer to use x/pool modules CommunityPool rpc method.
   // Since 0.50
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
-    option deprecated = true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
 }

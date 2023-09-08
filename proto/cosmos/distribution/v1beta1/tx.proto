@@ -130,7 +130,7 @@ message MsgWithdrawValidatorCommissionResponse {
 // DEPRECATED: Use x/pool modules MsgFundCommunityPool instead.
 // Since 0.50
 message MsgFundCommunityPool {
-  option deprecated = true;
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "depositor";
   option (amino.name)           = "cosmos-sdk/MsgFundCommunityPool";
 
@@ -183,7 +183,7 @@ message MsgUpdateParamsResponse {}
 // DEPRECATED: Use x/pool modules MsgCommunityPoolSpend instead
 // Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
-  option deprecated = true;
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
   option (amino.name)           = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 

@@ -21,7 +21,7 @@ Get familiar with the SDK and explore its main concepts.
 * [**Core Concepts**](develop/advanced/00-baseapp.md) -  Read about the core concepts like baseapp, the store, or the server.
 * [**Building Modules**](build/building-modules/01-intro.md) -  Discover how to build modules for the Cosmos SDK.
 * [**Running a Node**](user/run-node/00-keyring.md) - Running and interacting with nodes using the CLI and API.
-* [**Modules**](./build/modules/README.md) - Explore existing modules to build your application with.
+* [**Modules**](build/modules) - Explore existing modules to build your application with.
 
 ## Explore the Stack
 

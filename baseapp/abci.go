@@ -536,13 +536,16 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 	}
 
-	// Only execute optimistic execution if OE is enabled and the block height
-	// is greater than the initial height. During the first block we'll be carrying
-	// state from InitChain, so it would be impossible for us to easily revert.
+	// Only execute optimistic execution if the proposal is accepted, OE is
+	// enabled and the block height is greater than the initial height. During
+	// the first block we'll be carrying state from InitChain, so it would be
+	// impossible for us to easily revert.
 	// After the first block has been processed, the next blocks will get executed
 	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
 	// can have a response ready.
-	if app.optimisticExec.Enabled() && req.Height > app.initialHeight {
+	if resp.Status == abci.ResponseProcessProposal_ACCEPT &&
+		app.optimisticExec.Enabled() &&
+		req.Height > app.initialHeight {
 		app.optimisticExec.Execute(req)
 	}
 

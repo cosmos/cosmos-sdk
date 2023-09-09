@@ -18,7 +18,7 @@ message StakeAuthorization {
   // max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
   // empty, there is no spend limit and any amount of coins can be delegated.
   cosmos.base.v1beta1.Coin max_tokens = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  // validators is the oneof that represents either allow_list or deny_list
+  // validators_list is the oneof that represents either allow_list or deny_list
   oneof validators_list {
     // allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's
     // account.

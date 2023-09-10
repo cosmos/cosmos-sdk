@@ -11,6 +11,9 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 )
 
+// defaultStoreKey defines the default store key used for the single SC backend.
+// Note, however, this store key is essentially irrelevant as it's not exposed
+// to the user and it only needed to fulfill usage of StoreInfo during Commit.
 const defaultStoreKey = "default"
 
 var _ types.MultiStore = (*Store)(nil)

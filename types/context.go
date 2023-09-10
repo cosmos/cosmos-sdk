@@ -48,7 +48,7 @@ type Context struct {
 	chainID string
 	txBytes []byte
 	logger  log.Logger
-	// Depreacted: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
+	// Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
 	voteInfo             []abci.VoteInfo
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter

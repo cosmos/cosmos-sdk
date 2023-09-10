@@ -3,7 +3,6 @@ package multistore
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -13,8 +12,14 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 )
 
+const defaultStoreKey = "default"
+
 var _ types.MultiStore = (*Store)(nil)
 
+// Store defines the SDK's default MultiStore implementation. It contains a single
+// State Storage (SS) backend and a single State Commitment (SC) backend. Note,
+// this means all store keys are ignored and commitments exist in a single commitment
+// tree.
 type Store struct {
 	logger         log.Logger
 	initialVersion uint64
@@ -22,11 +27,8 @@ type Store struct {
 	// ss reflects the state storage backend
 	ss store.VersionedDatabase
 
-	// scStores reflect a mapping of store key to state commitment backend (i.e. a backend per module)
-	scStores map[types.StoreKey]*commitment.Database
-
-	// removalMap reflects module stores marked for removal
-	removalMap map[types.StoreKey]struct{}
+	// ss reflects the state commitment (SC) backend
+	sc *commitment.Database
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader types.CommitHeader
@@ -34,17 +36,21 @@ type Store struct {
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *types.CommitInfo
 
-	// memListeners reflect a mapping of store key to a memory listener, which is used to flush writes to SS
-	memListeners map[types.StoreKey]*types.MemoryListener
+	// memListener reflects a mapping of store key to a memory listener, which is used to flush writes to SS
+	memListener *types.MemoryListener
 }
 
-func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (types.MultiStore, error) {
+func New(
+	logger log.Logger,
+	initVersion uint64,
+	ss store.VersionedDatabase,
+	sc *commitment.Database,
+) (types.MultiStore, error) {
 	return &Store{
 		logger:         logger.With("module", "multi_store"),
 		initialVersion: initVersion,
 		ss:             ss,
-		scStores:       make(map[types.StoreKey]*commitment.Database),
-		removalMap:     make(map[types.StoreKey]struct{}),
+		sc:             sc,
 	}, nil
 }
 
@@ -52,37 +58,34 @@ func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (typ
 // idempotent and should only be called once.
 func (s *Store) Close() (err error) {
 	err = errors.Join(err, s.ss.Close())
-	for _, sc := range s.scStores {
-		err = errors.Join(err, sc.Close())
-	}
+	err = errors.Join(err, s.sc.Close())
 
 	s.ss = nil
-	s.scStores = nil
+	s.sc = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
-	s.removalMap = nil
 
 	return err
 }
 
-// MountSCStore mounts a state commitment (SC) store to the multi-store. It will
-// also create a new MemoryListener entry for the store key if one has not
-// already been created. An error is returned if the SC store is already mounted.
-func (s *Store) MountSCStore(storeKey types.StoreKey, sc *commitment.Database) error {
-	s.logger.Debug("mounting store", "store_key", storeKey.String())
-	if _, ok := s.scStores[storeKey]; ok {
-		return fmt.Errorf("SC store with key %s already mounted", storeKey)
+// MountSCStore performs a no-op as a SC backend must be provided at initialization.
+func (s *Store) MountSCStore(_ types.StoreKey, _ *commitment.Database) error {
+	return errors.New("cannot mount SC store; SC must be provided on initialization")
+}
+
+// GetSCStore returns the store's state commitment (SC) backend. Note, the store
+// key is ignored as there exists only a single SC tree.
+func (s *Store) GetSCStore(_ types.StoreKey) *commitment.Database {
+	return s.sc
+}
+
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
 	}
 
-	s.scStores[storeKey] = sc
-
-	// Mount memory listener for the store key so we can flush accumulated writes
-	// to the SS backend upon Commit.
-	if _, ok := s.memListeners[storeKey]; !ok {
-		s.memListeners[storeKey] = types.NewMemoryListener()
-	}
-
-	return nil
+	return s.loadVersion(lv, nil)
 }
 
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
@@ -103,12 +106,10 @@ func (s *Store) LastCommitID() (types.CommitID, error) {
 		return types.CommitID{}, err
 	}
 
-	// ensure integrity of latest version across all SC stores
-	for sk, sc := range s.scStores {
-		scVersion := sc.GetLatestVersion()
-		if scVersion != latestVersion {
-			return types.CommitID{}, fmt.Errorf("unexpected version for %s; got: %d, expected: %d", sk, scVersion, latestVersion)
-		}
+	// ensure integrity of latest version against SC
+	scVersion := s.sc.GetLatestVersion()
+	if scVersion != latestVersion {
+		return types.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
 	return types.CommitID{Version: latestVersion}, nil
@@ -126,39 +127,21 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-func (s *Store) GetProof(storeKey types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	sc, ok := s.scStores[storeKey]
-	if !ok {
-		return nil, fmt.Errorf("SC store with key %s not mounted", storeKey)
-	}
-
-	return sc.GetProof(version, key)
+// GetProof delegates the GetProof to the store's underlying SC backend.
+func (s *Store) GetProof(_ types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error) {
+	return s.sc.GetProof(version, key)
 }
 
-func (s *Store) GetSCStore(storeKey types.StoreKey) *commitment.Database {
-	return s.scStores[storeKey]
-}
-
-func (s *Store) LoadLatestVersion() error {
-	lv, err := s.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	return s.loadVersion(lv, nil)
-}
-
+// LoadVersion loads a specific version returning an error upon failure.
 func (s *Store) LoadVersion(v uint64) (err error) {
 	return s.loadVersion(v, nil)
 }
 
-func (s *Store) loadVersion(v uint64, upgrades any) (err error) {
+func (s *Store) loadVersion(v uint64, upgrades any) error {
 	s.logger.Debug("loading version", "version", v)
 
-	for sk, sc := range s.scStores {
-		if loadErr := sc.LoadVersion(v); loadErr != nil {
-			err = errors.Join(err, fmt.Errorf("failed to load version %d for %s: %w", v, sk, loadErr))
-		}
+	if err := s.sc.LoadVersion(v); err != nil {
+		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
 
 	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
@@ -166,26 +149,18 @@ func (s *Store) loadVersion(v uint64, upgrades any) (err error) {
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
-	return err
+	return nil
 }
 
 func (s *Store) WorkingHash() []byte {
-	storeInfos := make([]types.StoreInfo, 0, len(s.scStores))
-
-	for sk, sc := range s.scStores {
-		if _, ok := s.removalMap[sk]; !ok {
-			storeInfos = append(storeInfos, types.StoreInfo{
-				Name: sk.Name(),
-				CommitID: types.CommitID{
-					Hash: sc.WorkingHash(),
-				},
-			})
-		}
+	storeInfos := []types.StoreInfo{
+		{
+			Name: defaultStoreKey,
+			CommitID: types.CommitID{
+				Hash: s.sc.WorkingHash(),
+			},
+		},
 	}
-
-	sort.SliceStable(storeInfos, func(i, j int) bool {
-		return storeInfos[i].Name < storeInfos[j].Name
-	})
 
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
@@ -220,17 +195,13 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 
-	// remove and close all SC stores marked for removal
-	if err := s.clearSCRemovalMap(); err != nil {
-		return nil, fmt.Errorf("failed to clear SC removal map: %w", err)
-	}
-
-	// commit writes to all SC stores
-	commitInfo, err := s.commitSCStores(version)
+	// commit SC
+	commitInfo, err := s.commitSC(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
 	}
 
+	// commit SS
 	if err := s.commitSS(version); err != nil {
 		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
@@ -239,22 +210,6 @@ func (s *Store) Commit() ([]byte, error) {
 	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 
 	return s.lastCommitInfo.Hash(), nil
-}
-
-func (s *Store) clearSCRemovalMap() (err error) {
-	for sk := range s.removalMap {
-		sc, ok := s.scStores[sk]
-		if ok {
-			if ce := sc.Close(); ce != nil {
-				err = errors.Join(err, ce)
-			}
-
-			delete(s.scStores, sk)
-		}
-	}
-
-	s.removalMap = make(map[types.StoreKey]struct{})
-	return err
 }
 
 // popStateCache returns all the accumulated writes from all SC stores. Note,
@@ -274,6 +229,30 @@ func (rs *Store) popStateCache() []*types.StoreKVPair {
 	})
 
 	return writes
+}
+
+// commitSC commits the SC store and returns a CommitInfo representing commitment
+// of the underlying SC backend tree. An error is returned if commitment fails.
+func (s *Store) commitSC(version uint64) (*types.CommitInfo, error) {
+	commitBz, err := s.sc.Commit()
+	if err != nil {
+		return nil, fmt.Errorf("failed to commit SC store: %w", err)
+	}
+
+	storeInfos := []types.StoreInfo{
+		{
+			Name: defaultStoreKey,
+			CommitID: types.CommitID{
+				Version: version,
+				Hash:    commitBz,
+			},
+		},
+	}
+
+	return &types.CommitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
+	}, nil
 }
 
 // commitSS flushes all accumulated writes to the SS backend via a single batch.
@@ -302,49 +281,4 @@ func (s *Store) commitSS(version uint64) error {
 	}
 
 	return batch.Write()
-}
-
-// commitSCStores commits each SC store individually and returns a CommitInfo
-// representing commitment of all the SC stores. Note, commitment is NOT atomic.
-// An error is returned if any SC store fails to commit.
-func (s *Store) commitSCStores(version uint64) (*types.CommitInfo, error) {
-	storeInfos := make([]types.StoreInfo, 0, len(s.scStores))
-
-	for sk, sc := range s.scStores {
-		// TODO: Handle and support SC store last CommitID to handle the case where
-		// a Commit is interrupted and a SC store could have a version that is ahead:
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-		// scLastCommitID := sc.LastCommitID()
-
-		// var commitID CommitID
-		// if scLastCommitID.Version >= version {
-		// 	scLastCommitID.Version = version
-		// 	commitID = scLastCommitID
-		// } else {
-		// 	commitID = store.Commit()
-		// }
-
-		commitBz, err := sc.Commit()
-		if err != nil {
-			return nil, fmt.Errorf("failed to commit SC store %s: %w", sk, err)
-		}
-
-		storeInfos = append(storeInfos, types.StoreInfo{
-			Name: sk.Name(),
-			CommitID: types.CommitID{
-				Version: version,
-				Hash:    commitBz,
-			},
-		})
-	}
-
-	sort.SliceStable(storeInfos, func(i, j int) bool {
-		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
-	})
-
-	return &types.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}, nil
 }

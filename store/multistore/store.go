@@ -221,7 +221,8 @@ func (s *Store) Commit() ([]byte, error) {
 }
 
 // commitSC commits the SC store and returns a CommitInfo representing commitment
-// of the underlying SC backend tree. An error is returned if commitment fails.
+// of the underlying SC backend tree. Since there is only a single SC backing tree,
+// all SC commits are atomic. An error is returned if commitment fails.
 func (s *Store) commitSC(version uint64) (*types.CommitInfo, error) {
 	commitBz, err := s.sc.Commit()
 	if err != nil {

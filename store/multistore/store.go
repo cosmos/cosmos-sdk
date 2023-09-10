@@ -137,6 +137,14 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 	return s.loadVersion(v, nil)
 }
 
+func (s *Store) GetKVStore(_ types.StoreKey) types.KVStore {
+	panic("not implemented!")
+}
+
+func (s *Store) Branch() types.MultiStore {
+	panic("not implemented!")
+}
+
 func (s *Store) loadVersion(v uint64, upgrades any) error {
 	s.logger.Debug("loading version", "version", v)
 

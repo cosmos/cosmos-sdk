@@ -16,8 +16,9 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 
 	// determine the total power signing the block
 	var previousTotalPower int64
-	for _, voteInfo := range ctx.VoteInfos() {
-		previousTotalPower += voteInfo.Validator.Power
+	for i := 0; i < ctx.CometInfo().GetLastCommit().Votes().Len(); i++ {
+		vote := ctx.CometInfo().GetLastCommit().Votes().Get(i)
+		previousTotalPower += vote.Validator().Power()
 	}
 
 	// TODO this is Tendermint-dependent

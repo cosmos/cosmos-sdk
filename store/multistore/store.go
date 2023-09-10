@@ -2,7 +2,6 @@ package multistore
 
 import (
 	"fmt"
-	"sort"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -36,7 +35,7 @@ type Store struct {
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *types.CommitInfo
 
-	// memListener reflects a mapping of store key to a memory listener, which is used to flush writes to SS
+	// memListener is used to track and flush writes to the SS backend
 	memListener *types.MemoryListener
 }
 
@@ -64,6 +63,7 @@ func (s *Store) Close() (err error) {
 	s.sc = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
+	s.memListener = nil
 
 	return err
 }
@@ -212,25 +212,6 @@ func (s *Store) Commit() ([]byte, error) {
 	return s.lastCommitInfo.Hash(), nil
 }
 
-// popStateCache returns all the accumulated writes from all SC stores. Note,
-// calling popStateCache destroys only the currently accumulated state in each
-// listener not the state in the store itself. This is a mutating and destructive
-// operation.
-func (rs *Store) popStateCache() []*types.StoreKVPair {
-	var writes []*types.StoreKVPair
-	for _, ml := range rs.memListeners {
-		if ml != nil {
-			writes = append(writes, ml.PopStateCache()...)
-		}
-	}
-
-	sort.SliceStable(writes, func(i, j int) bool {
-		return writes[i].StoreKey < writes[j].StoreKey
-	})
-
-	return writes
-}
-
 // commitSC commits the SC store and returns a CommitInfo representing commitment
 // of the underlying SC backend tree. An error is returned if commitment fails.
 func (s *Store) commitSC(version uint64) (*types.CommitInfo, error) {
@@ -267,8 +248,7 @@ func (s *Store) commitSS(version uint64) error {
 		return err
 	}
 
-	writes := s.popStateCache()
-	for _, skv := range writes {
+	for _, skv := range s.memListener.PopStateCache() {
 		if skv.Delete {
 			if err := batch.Delete(skv.StoreKey, skv.Key); err != nil {
 				return err

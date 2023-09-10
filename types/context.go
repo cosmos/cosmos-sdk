@@ -48,7 +48,7 @@ type Context struct {
 	chainID string
 	txBytes []byte
 	logger  log.Logger
-	// Depreacted: use Cometinfo.GetLastCommit().Votes() instead
+	// Depreacted: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
 	voteInfo             []abci.VoteInfo
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
@@ -78,7 +78,7 @@ func (c Context) ChainID() string                   { return c.chainID }
 func (c Context) TxBytes() []byte                   { return c.txBytes }
 func (c Context) Logger() log.Logger                { return c.logger }
 
-// Deprecated: use Cometinfo.GetLastCommit().Votes() instead
+// Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed after 0.51
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }

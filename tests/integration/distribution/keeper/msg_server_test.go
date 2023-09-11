@@ -116,13 +116,17 @@ func initFixture(tb testing.TB) *fixture {
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
-		{
-			Validator: cmtabcitypes.Validator{
-				Address: valAddr,
-				Power:   100,
+	ctx := newCtx.WithProposer(valConsAddr).WithCometInfo(sdk.CometInfo{
+		LastCommit: cmtabcitypes.CommitInfo{
+			Votes: []cmtabcitypes.VoteInfo{
+				{
+					Validator: cmtabcitypes.Validator{
+						Address: valAddr,
+						Power:   100,
+					},
+					BlockIdFlag: types.BlockIDFlagCommit,
+				},
 			},
-			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
 

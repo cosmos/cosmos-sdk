@@ -169,7 +169,7 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 
 		nanos := msg.Get(nanosField).Int()
 
-		_, err := fmt.Fprintf(w, `"%s"`, time.Duration(time.Duration(seconds)*time.Second+(time.Duration(nanos)*time.Nanosecond)).String())
+		_, err := fmt.Fprintf(w, `"%s"`, (time.Duration(seconds)*time.Second + (time.Duration(nanos) * time.Nanosecond)).String())
 		return err
 	})
 }

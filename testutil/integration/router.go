@@ -140,12 +140,16 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 		}()
 	}
 
+	app.ctx = app.ctx.WithCometInfo(sdk.CometInfo{})
+
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height}); err != nil {
+		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
 			return nil, fmt.Errorf("failed to run finalize block: %w", err)
 		}
 	}
+
+	fmt.Println(app.ctx.CometInfo(), "runmsg")
 
 	app.logger.Info("Running msg", "msg", msg.String())
 

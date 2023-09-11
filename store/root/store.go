@@ -1,4 +1,4 @@
-package multistore
+package root
 
 import (
 	"fmt"

@@ -59,7 +59,7 @@ func ExecModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[R
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(expectedSender, v.sender) {
+	if !bytes.Equal(expectedSender, v.whoami) {
 		return nil, errUnauthorized
 	}
 

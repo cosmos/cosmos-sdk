@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"google.golang.org/protobuf/proto"
 )
 
 var errAccountTypeNotFound = errors.New("account type not found")
@@ -22,14 +23,25 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
-func NewKeeper(ss store.KVStoreService, addressCodec address.Codec, accounts map[string]implementation.Account) (Keeper, error) {
+func NewKeeper(
+	ss store.KVStoreService,
+	addressCodec address.Codec,
+	getMsgSenderFunc func(msg proto.Message) ([]byte, error),
+	execModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	accounts map[string]implementation.Account,
+) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:   ss,
-		addressCodec:   addressCodec,
-		accounts:       map[string]implementation.Implementation{},
-		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		storeService:    ss,
+		addressCodec:    addressCodec,
+		getSenderFunc:   getMsgSenderFunc,
+		execModuleFunc:  execModuleFunc,
+		queryModuleFunc: queryModuleFunc,
+		accounts:        map[string]implementation.Implementation{},
+		Schema:          collections.Schema{},
+		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 	}
 
 	// make accounts implementation
@@ -49,11 +61,14 @@ func NewKeeper(ss store.KVStoreService, addressCodec address.Codec, accounts map
 }
 
 type Keeper struct {
-	storeService store.KVStoreService
+	// deps coming from the runtime
+	storeService    store.KVStoreService
+	addressCodec    address.Codec
+	getSenderFunc   func(msg proto.Message) ([]byte, error)
+	execModuleFunc  func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error)
 
 	accounts map[string]implementation.Implementation
-
-	addressCodec address.Codec
 
 	// Schema is the schema for the module.
 	Schema collections.Schema
@@ -82,7 +97,7 @@ func (k Keeper) Init(
 	}
 
 	// make the context and init the account
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, creator, nil, nil, nil)
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, creator, k.getSenderFunc, k.execModuleFunc, k.queryModuleFunc)
 	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, nil, err
@@ -118,7 +133,7 @@ func (k Keeper) Execute(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, sender, nil, nil, nil)
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, sender, k.getSenderFunc, k.execModuleFunc, k.queryModuleFunc)
 	return impl.Execute(ctx, execRequest)
 }
 
@@ -144,7 +159,14 @@ func (k Keeper) Query(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, nil, nil, nil, nil)
+	// we do not pass in sender as a query does not have a sender.
+	// we do not pass in execModuleFunc as a query does not execute any module.
+	// we do not pass in getSenderFunc as a query does not have a sender.
+	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, nil, func(_ proto.Message) ([]byte, error) {
+		return nil, fmt.Errorf("cannot get sender from query")
+	}, func(ctx context.Context, _ proto.Message) (proto.Message, error) {
+		return nil, fmt.Errorf("cannot execute module from query")
+	}, k.queryModuleFunc)
 	return impl.Query(ctx, queryRequest)
 }
 

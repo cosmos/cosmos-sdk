@@ -101,7 +101,8 @@ type AccountKeeper struct {
 	Schema        collections.Schema
 	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
-	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
+	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}

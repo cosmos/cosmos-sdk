@@ -10,9 +10,9 @@ func NewMemoryListener() *MemoryListener {
 }
 
 // OnWrite records a state write in memory.
-func (fl *MemoryListener) OnWrite(storeKey StoreKey, key, value []byte, delete bool) {
+func (fl *MemoryListener) OnWrite(storeKey string, key, value []byte, delete bool) {
 	fl.stateCache = append(fl.stateCache, &StoreKVPair{
-		StoreKey: storeKey.Name(),
+		StoreKey: storeKey,
 		Delete:   delete,
 		Key:      key,
 		Value:    value,

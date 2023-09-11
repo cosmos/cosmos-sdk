@@ -72,13 +72,13 @@ func (s *Store) Close() (err error) {
 }
 
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ types.StoreKey, _ *commitment.Database) error {
+func (s *Store) MountSCStore(_ string, _ *commitment.Database) error {
 	return errors.New("cannot mount SC store; SC must be provided on initialization")
 }
 
 // GetSCStore returns the store's state commitment (SC) backend. Note, the store
 // key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ types.StoreKey) *commitment.Database {
+func (s *Store) GetSCStore(_ string) *commitment.Database {
 	return s.sc
 }
 
@@ -131,7 +131,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 }
 
 // GetProof delegates the GetProof to the store's underlying SC backend.
-func (s *Store) GetProof(_ types.StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error) {
+func (s *Store) GetProof(_ string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
 	return s.sc.GetProof(version, key)
 }
 
@@ -140,7 +140,7 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 	return s.loadVersion(v, nil)
 }
 
-func (s *Store) GetKVStore(_ types.StoreKey) types.KVStore {
+func (s *Store) GetKVStore(_ string) types.KVStore {
 	panic("not implemented!")
 }
 

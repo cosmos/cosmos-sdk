@@ -16,12 +16,12 @@ type StoreType int
 // MultiStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type MultiStore interface {
-	GetSCStore(storeKey StoreKey) *commitment.Database
-	MountSCStore(storeKey StoreKey, sc *commitment.Database) error
-	GetKVStore(storeKey StoreKey) KVStore
+	GetSCStore(storeKey string) *commitment.Database
+	MountSCStore(storeKey string, sc *commitment.Database) error
+	GetKVStore(storeKey string) KVStore
 	Branch() MultiStore
 
-	GetProof(storeKey StoreKey, version uint64, key []byte) (*ics23.CommitmentProof, error)
+	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
 	LoadVersion(version uint64) error
 	LoadLatestVersion() error
@@ -59,7 +59,7 @@ type KVStore interface {
 	// Delete deletes the key from the store.
 	Delete(key []byte)
 
-	CacheWrapper
+	BranchWrapper
 
 	// Iterator creates a new Iterator over the domain [start, end). Note:
 	//
@@ -76,31 +76,31 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) store.Iterator
 }
 
-// CacheKVStore defines an interface for a branched a KVStore. It extends KVStore
+// BranchedKVStore defines an interface for a branched a KVStore. It extends KVStore
 // by allowing dirty entries to be flushed to the underlying KVStore or discarded
-// altogether. A CachedKVStore can itself be branched, allowing for nested branching
+// altogether. A BranchedKVStore can itself be branched, allowing for nested branching
 // where writes are flushed up the branched stack.
-type CacheKVStore interface {
+type BranchedKVStore interface {
 	KVStore
 
 	// Write flushes writes to the underlying store.
 	Write()
 
-	// CacheWrap recursively wraps.
-	CacheWrap() CacheKVStore
+	// Branch recursively wraps.
+	Branch() BranchedKVStore
 
-	// CacheWrapWithTrace recursively wraps with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheKVStore
+	// BranchWithTrace recursively wraps with tracing enabled.
+	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
 }
 
-// CacheWrapper defines an interface for a branching a KVStore's state, allowing
+// BranchWrapper defines an interface for a branching a KVStore's state, allowing
 // writes to be cached and flushed to the underlying store or discarded altogether.
 // Reads should be performed against a "branched" state, allowing dirty entries
 // to be cached and read from. If an entry is not found in the branched state, it
 // will fallthrough to the underlying KVStore.
-type CacheWrapper interface {
-	CacheWrap() CacheKVStore
+type BranchWrapper interface {
+	Branch() BranchedKVStore
 
-	// CacheWrapWithTrace branches a store with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheKVStore
+	// BranchWithTrace branches a store with tracing enabled.
+	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
 }

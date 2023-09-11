@@ -261,7 +261,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 
 func (s *MempoolTestSuite) TestIterator() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	sa := accounts[0].Address
 	sb := accounts[1].Address

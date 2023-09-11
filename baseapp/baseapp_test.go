@@ -70,7 +70,10 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
-	app.MsgServiceRouter().SetInterfaceRegistry(cdc.InterfaceRegistry())
+	app.MsgServiceRouter().WithOptions(func(options *baseapp.MessageRouterOptions) {
+		options.InterfaceRegistry = cdc.InterfaceRegistry()
+	})
+
 	app.MountStores(capKey1, capKey2)
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())

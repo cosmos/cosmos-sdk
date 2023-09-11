@@ -41,8 +41,9 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &KVStoreTx{})
 	baseApp.SetInterfaceRegistry(interfaceRegistry)
 
-	router := bam.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
+	router := bam.NewMsgServiceRouter(func(options *bam.MessageRouterOptions) {
+		options.InterfaceRegistry = interfaceRegistry
+	})
 
 	newDesc := &grpc.ServiceDesc{
 		ServiceName: "test",

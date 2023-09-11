@@ -132,7 +132,9 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	require.NoError(t, err)
 
 	// Register all handlers for the MegServiceRouter.
-	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	msr.WithOptions(func(options *baseapp.MessageRouterOptions) {
+		options.InterfaceRegistry = encCfg.InterfaceRegistry
+	})
 	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
 	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 

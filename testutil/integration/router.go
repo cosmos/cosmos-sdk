@@ -76,8 +76,11 @@ func NewIntegrationApp(
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
+	router := baseapp.NewMsgServiceRouter(
+		func(options *baseapp.MessageRouterOptions) {
+			options.InterfaceRegistry = interfaceRegistry
+		},
+	)
 	bApp.SetMsgServiceRouter(router)
 
 	if keys[consensusparamtypes.StoreKey] != nil {

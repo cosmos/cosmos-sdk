@@ -288,8 +288,25 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
-	app.msgServiceRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.WithOptions(
+		func(opt *MessageRouterOptions) {
+			opt.InterfaceRegistry = registry
+		},
+	)
 	app.cdc = codec.NewProtoCodec(registry)
+}
+
+// SetCircuitBreaker sets the circuit breaker for the BaseApp.
+// The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
+func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
+	if app.msgServiceRouter == nil {
+		panic("cannot set circuit breaker with no msg service router set")
+	}
+	app.msgServiceRouter.WithOptions(
+		func(opt *MessageRouterOptions) {
+			opt.CircuitBreaker = cb
+		},
+	)
 }
 
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.

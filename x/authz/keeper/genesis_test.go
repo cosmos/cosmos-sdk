@@ -64,8 +64,9 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	bank.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 
-	msr := suite.baseApp.MsgServiceRouter()
-	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+	msr := suite.baseApp.MsgServiceRouter().WithOptions(func(options *baseapp.MessageRouterOptions) {
+		options.InterfaceRegistry = suite.encCfg.InterfaceRegistry
+	})
 
 	suite.keeper = keeper.NewKeeper(storeService, suite.encCfg.Codec, msr, suite.accountKeeper)
 }

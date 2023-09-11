@@ -24,8 +24,17 @@ type MessageRouter interface {
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
-	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
-	SetCircuit(cb CircuitBreaker)
+	WithOptions(opts ...any) MessageRouter
+}
+
+// MessageRouterOption sets a optional parameters on the MessageRouter.
+type MessageRouterOption func(options *MessageRouterOptions)
+
+// MessageRouterOptions are options to configure a MessageRouter.
+// Implementation of a MessageRouter most likely need these options as well.
+type MessageRouterOptions struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	CircuitBreaker    CircuitBreaker
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
@@ -36,9 +45,17 @@ type MsgServiceRouter struct {
 }
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter() MessageRouter {
+func NewMsgServiceRouter(opts ...MessageRouterOption) MessageRouter {
+	options := MessageRouterOptions{}
+
+	for _, opt := range opts {
+		opt(&options)
+	}
+
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		interfaceRegistry: options.InterfaceRegistry,
+		circuitBreaker:    options.CircuitBreaker,
+		routes:            map[string]MsgServiceHandler{},
 	}
 }
 
@@ -175,14 +192,31 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 	}
 }
 
-// SetInterfaceRegistry sets the interface registry for the router.
-func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
-	msr.interfaceRegistry = interfaceRegistry
-}
+// WithOptions allows to change the default options of the MessageRouter instance after initialization.
+// The SDK implementation of MessageRouter expects MessageRouterOption as inputs.
+func (msr *MsgServiceRouter) WithOptions(opts ...any) MessageRouter {
+	options := MessageRouterOptions{}
 
-// SetCircuit sets the circuit breaker for the router.
-func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
-	msr.circuitBreaker = cb
+	for _, opt := range opts {
+		msrOpt, ok := opt.(MessageRouterOption)
+		if !ok {
+			if msrOpt, ok = opt.(func(options *MessageRouterOptions)); !ok {
+				panic(fmt.Errorf("invalid MessageRouter option %T, expected MessageRouterOption", opt))
+			}
+		}
+
+		msrOpt(&options)
+	}
+
+	if options.InterfaceRegistry != nil {
+		msr.interfaceRegistry = options.InterfaceRegistry
+	}
+
+	if options.CircuitBreaker != nil {
+		msr.circuitBreaker = options.CircuitBreaker
+	}
+
+	return msr
 }
 
 func noopDecoder(_ interface{}) error { return nil }

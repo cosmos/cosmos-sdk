@@ -64,7 +64,7 @@ func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncode
 	opts := message.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_MessageEncoding) {
 		encoding := proto.GetExtension(opts, amino.E_MessageEncoding).(string)
-		if fn, ok := enc.messageEncoders[encoding]; ok {
+		if fn, ok := enc.aminoMessageEncoders[encoding]; ok {
 			return fn
 		}
 	}
@@ -75,13 +75,13 @@ func (enc Encoder) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEnc
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
 		encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
-		if fn, ok := enc.fieldEncoders[encoding]; ok {
+		if fn, ok := enc.aminoFieldEncoders[encoding]; ok {
 			return fn
 		}
 	}
 	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
-		if fn, ok := enc.scalarEncoders[scalar]; ok {
+		if fn, ok := enc.cosmosProtoScalarEncoders[scalar]; ok {
 			return fn
 		}
 	}

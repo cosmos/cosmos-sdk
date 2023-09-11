@@ -37,14 +37,14 @@ type EncoderOptions struct {
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
 type Encoder struct {
 	// maps cosmos_proto.scalar -> field encoder
-	scalarEncoders  map[string]FieldEncoder
-	messageEncoders map[string]MessageEncoder
-	fieldEncoders   map[string]FieldEncoder
-	typeEncoders    map[string]MessageEncoder
-	fileResolver    signing.ProtoFileResolver
-	typeResolver    protoregistry.MessageTypeResolver
-	doNotSortFields bool
-	indent          string
+	cosmosProtoScalarEncoders map[string]FieldEncoder
+	aminoMessageEncoders      map[string]MessageEncoder
+	aminoFieldEncoders        map[string]FieldEncoder
+	protoTypeEncoders         map[string]MessageEncoder
+	fileResolver              signing.ProtoFileResolver
+	typeResolver              protoregistry.MessageTypeResolver
+	doNotSortFields           bool
+	indent                    string
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -57,19 +57,19 @@ func NewEncoder(options EncoderOptions) Encoder {
 		options.TypeResolver = protoregistry.GlobalTypes
 	}
 	enc := Encoder{
-		scalarEncoders: map[string]FieldEncoder{
+		cosmosProtoScalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
 			"cosmos.Int": cosmosIntEncoder,
 		},
-		messageEncoders: map[string]MessageEncoder{
+		aminoMessageEncoders: map[string]MessageEncoder{
 			"key_field":        keyFieldEncoder,
 			"module_account":   moduleAccountEncoder,
 			"threshold_string": thresholdStringEncoder,
 		},
-		fieldEncoders: map[string]FieldEncoder{
+		aminoFieldEncoders: map[string]FieldEncoder{
 			"legacy_coins": nullSliceAsEmptyEncoder,
 		},
-		typeEncoders: map[string]MessageEncoder{
+		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,
 			"google.protobuf.Duration":  marshalDuration,
 			"google.protobuf.Any":       marshalAny,
@@ -92,10 +92,10 @@ func NewEncoder(options EncoderOptions) Encoder {
 //	  ...
 //	}
 func (enc Encoder) DefineMessageEncoding(name string, encoder MessageEncoder) Encoder {
-	if enc.messageEncoders == nil {
-		enc.messageEncoders = map[string]MessageEncoder{}
+	if enc.aminoMessageEncoders == nil {
+		enc.aminoMessageEncoders = map[string]MessageEncoder{}
 	}
-	enc.messageEncoders[name] = encoder
+	enc.aminoMessageEncoders[name] = encoder
 	return enc
 }
 
@@ -113,10 +113,10 @@ func (enc Encoder) DefineMessageEncoding(name string, encoder MessageEncoder) En
 //	  ...
 //	}
 func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encoder {
-	if enc.fieldEncoders == nil {
-		enc.fieldEncoders = map[string]FieldEncoder{}
+	if enc.aminoFieldEncoders == nil {
+		enc.aminoFieldEncoders = map[string]FieldEncoder{}
 	}
-	enc.fieldEncoders[name] = encoder
+	enc.aminoFieldEncoders[name] = encoder
 	return enc
 }
 
@@ -129,10 +129,10 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 //	  ...
 //	}
 func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encoder {
-	if enc.scalarEncoders == nil {
-		enc.scalarEncoders = map[string]FieldEncoder{}
+	if enc.cosmosProtoScalarEncoders == nil {
+		enc.cosmosProtoScalarEncoders = map[string]FieldEncoder{}
 	}
-	enc.scalarEncoders[name] = encoder
+	enc.cosmosProtoScalarEncoders[name] = encoder
 	return enc
 }
 
@@ -146,10 +146,10 @@ func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encod
 //	}
 
 func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) Encoder {
-	if enc.typeEncoders == nil {
-		enc.typeEncoders = map[string]MessageEncoder{}
+	if enc.protoTypeEncoders == nil {
+		enc.protoTypeEncoders = map[string]MessageEncoder{}
 	}
-	enc.typeEncoders[typeURL] = encoder
+	enc.protoTypeEncoders[typeURL] = encoder
 	return enc
 }
 
@@ -233,7 +233,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	}
 
 	// check if we have a custom type encoder for this type
-	if typeEnc, ok := enc.typeEncoders[string(msg.Descriptor().FullName())]; ok {
+	if typeEnc, ok := enc.protoTypeEncoders[string(msg.Descriptor().FullName())]; ok {
 		return typeEnc(&enc, msg, writer)
 	}
 

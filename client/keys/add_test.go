@@ -130,6 +130,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 func Test_runAddCmdDryRun(t *testing.T) {
 	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
 	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`
+	b64Pubkey := "QWhnOHhpdXBJcGZ2UlR2ak5la1ExclROUThTOW96YjdHK2RYQmFLVjl4aUo="
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	testData := []struct {
@@ -186,6 +187,24 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				"testkey",
 				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
 				fmt.Sprintf("--%s=%s", FlagPublicKey, pubkey2),
+			},
+			added: false,
+		},
+		{
+			name: "base64 pubkey account is added",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
+				fmt.Sprintf("--%s=%s", flagPubKeyBase64, b64Pubkey),
+			},
+			added: true,
+		},
+		{
+			name: "base64 pubkey account is not added with dry run",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
+				fmt.Sprintf("--%s=%s", flagPubKeyBase64, b64Pubkey),
 			},
 			added: false,
 		},

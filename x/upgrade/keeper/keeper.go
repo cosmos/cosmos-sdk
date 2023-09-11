@@ -402,7 +402,8 @@ func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error)
 func (k Keeper) setDone(ctx context.Context, name string) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	fmt.Println("setting done", "height", sdkCtx.HeaderInfo().Height, "name", name)
+	k.Logger(ctx).Debug("setting done", "height", sdkCtx.HeaderInfo().Height, "name", name)
+
 	return store.Set(encodeDoneKey(name, sdkCtx.HeaderInfo().Height), []byte{1})
 }
 

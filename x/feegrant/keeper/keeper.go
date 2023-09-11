@@ -22,11 +22,13 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc               codec.BinaryCodec
-	storeService      store.KVStoreService
-	authKeeper        feegrant.AccountKeeper
-	Schema            collections.Schema
-	FeeAllowance      collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	authKeeper   feegrant.AccountKeeper
+	Schema       collections.Schema
+	// FeeAllowance key: grantee+granter | value: Grant
+	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
 	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
 }
 
@@ -44,14 +46,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
 			"allowances",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[feegrant.Grant](cdc),
 		),
 		FeeAllowanceQueue: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceQueueKeyPrefix,
 			"allowances_queue",
-			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BoolValue,
 		),
 	}

@@ -40,8 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (client/keys) [#17639](https://github.com/cosmos/cosmos-sdk/pull/17639) Allows using and saving public keys encoded as base64
 * (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwritting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
 * (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
+* (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn `, to burn coins.
 * (genutil) [#17571](https://github.com/cosmos/cosmos-sdk/pull/17571) Allow creation of `AppGenesis` without a file lookup.
 
 ### Improvements
@@ -51,14 +53,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 * (rpc) [#17470](https://github.com/cosmos/cosmos-sdk/pull/17470) Avoid open 0.0.0.0 to public by default and add `listen-ip-address` argument for `testnet init-files` cmd.
 * (types/module) [#17554](https://github.com/cosmos/cosmos-sdk/pull/17554) Introduce `HasABCIGenesis` which is implemented by a module only when a validatorset update needs to be returned 
+* (baseapp) [#17667](https://github.com/cosmos/cosmos-sdk/pull/17667) Close databases opened by cosmos-sdk during BaseApp shutdown 
 
 ### Bug Fixes
 
 * (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583), [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
 * (baseapp) [#17518](https://github.com/cosmos/cosmos-sdk/pull/17518) Utilizing voting power from vote extensions (CometBFT) instead of the current bonded tokens (x/staking) to determine if a set of vote extensions are valid.
+* (config) [#17649](https://github.com/cosmos/cosmos-sdk/pull/17649) Fix `mempool.max-txs` configuration is invalid in `app.config`.
+* (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix: `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
 
 ### API Breaking Changes
 
+* (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
+    * remove from `types`: `GetRedelegationTimeKey`
+    * remove from `Keeper`: `RedelegationQueueIterator`
+* (x/staking) [#17562](https://github.com/cosmos/cosmos-sdk/pull/17562) Use collections for `ValidatorQueue`
+    * remove from `types`: `GetValidatorQueueKey`, `ParseValidatorQueueKey`
+    * remove from `Keeper`: `ValidatorQueueIterator`
 * (x/staking) [#17498](https://github.com/cosmos/cosmos-sdk/pull/17498) Use collections for `LastValidatorPower`:
     * remove from `types`: `GetLastValidatorPowerKey`
     * remove from `Keeper`: `LastValidatorsIterator`, `IterateLastValidators`
@@ -129,6 +140,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#17496](https://github.com/cosmos/cosmos-sdk/pull/17469) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type
 * (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer. 
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
+* (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) `BurnCoins` takes an address instead of a module name
 
 ### CLI Breaking Changes
 
@@ -464,6 +476,31 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
 
+## [v0.47.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.5) - 2023-09-01
+
+### Features
+
+* (client/rpc) [#17274](https://github.com/cosmos/cosmos-sdk/pull/17274) Add `QueryEventForTxCmd` cmd to subscribe and wait event for transaction by hash.
+* (keyring) [#17424](https://github.com/cosmos/cosmos-sdk/pull/17424) Allows to import private keys encoded in hex. 
+
+### Improvements
+
+* (x/gov) [#17387](https://github.com/cosmos/cosmos-sdk/pull/17387) Add `MsgSubmitProposal` `SetMsgs` method. 
+* (x/gov) [#17354](https://github.com/cosmos/cosmos-sdk/issues/17354) Emit `VoterAddr` in `proposal_vote` event.
+* (x/group, x/gov) [#17220](https://github.com/cosmos/cosmos-sdk/pull/17220) Add `--skip-metadata` flag in `draft-proposal` to skip metadata prompt.
+* (x/genutil) [#17296](https://github.com/cosmos/cosmos-sdk/pull/17296) Add `MigrateHandler` to allow reuse migrate genesis related function.
+    * In v0.46, v0.47 this function is additive to the `genesis migrate` command. However in v0.50+, adding custom migrations to the `genesis migrate` command is directly possible.
+
+### Bug Fixes
+
+* (server) [#17181](https://github.com/cosmos/cosmos-sdk/pull/17181) Fix `db_backend` lookup fallback from `config.toml`.
+* (runtime) [#17284](https://github.com/cosmos/cosmos-sdk/pull/17284) Properly allow to combine depinject-enabled modules and non-depinject-enabled modules in app v2.
+* (baseapp) [#17159](https://github.com/cosmos/cosmos-sdk/pull/17159) Validators can propose blocks that exceed the gas limit.
+* (baseapp) [#16547](https://github.com/cosmos/cosmos-sdk/pull/16547) Ensure a transaction's gas limit cannot exceed the block gas limit.
+* (x/gov,x/group) [#17220](https://github.com/cosmos/cosmos-sdk/pull/17220) Do not try validate `msgURL` as web URL in `draft-proposal` command.
+* (cli) [#17188](https://github.com/cosmos/cosmos-sdk/pull/17188) Fix `--output-document` flag in `tx multi-sign`.
+* (x/auth) [#17209](https://github.com/cosmos/cosmos-sdk/pull/17209) Internal error on AccountInfo when account's public key is not set.
+
 ## [v0.47.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.4) - 2023-07-17
 
 ### Features
@@ -787,6 +824,19 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   The information can now be accessed using the BankKeeper.
   Setting can be done using MsgSetSendEnabled as a governance proposal.
   A SendEnabled query has been added to both GRPC and CLI.
+
+## [v0.46.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.14) - 2023-08-21
+
+### Improvements
+
+* (x/gov) [#17387](https://github.com/cosmos/cosmos-sdk/pull/17387) Add `MsgSubmitProposal` `SetMsgs` method. 
+* (x/gov) [#17354](https://github.com/cosmos/cosmos-sdk/issues/17354) Emit `VoterAddr` in `proposal_vote` event.
+* (x/genutil) [#17296](https://github.com/cosmos/cosmos-sdk/pull/17296) Add `MigrateHandler` to allow reuse migrate genesis related function.
+    * In v0.46, v0.47 this function is additive to the `genesis migrate` command. However in v0.50+, adding custom migrations to the `genesis migrate` command is directly possible.
+
+## Bug Fixes
+
+* (server) [#17181](https://github.com/cosmos/cosmos-sdk/pull/17181) Fix `db_backend` lookup fallback from `config.toml`.
 
 ## [v0.46.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.14) - 2023-07-17
 

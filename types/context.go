@@ -215,7 +215,7 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
-// Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed after 0.51
+// Deprecated: use WithCometinfo() instead, will be removed after 0.51
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c

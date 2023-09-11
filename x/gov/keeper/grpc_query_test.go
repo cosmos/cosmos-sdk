@@ -249,7 +249,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request with limit 2 and count true",
 			func() {
 				req = &v1.QueryProposalsRequest{
-					Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+					Pagination: &query.PageRequest{Limit: 2},
 				}
 
 				expRes = &v1.QueryProposalsResponse{
@@ -353,8 +353,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				req = &v1.QueryProposalsRequest{
 					ProposalStatus: v1.StatusDepositPeriod,
 					Pagination: &query.PageRequest{
-						Limit:      2,
-						CountTotal: true,
+						Limit: 2,
 					},
 				}
 

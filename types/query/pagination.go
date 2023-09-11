@@ -104,9 +104,6 @@ func Paginate(
 		} else if count == end+1 {
 			nextKey = iterator.Key()
 
-			if !pageRequest.CountTotal {
-				break
-			}
 		}
 		if iterator.Error() != nil {
 			return nil, iterator.Error()
@@ -114,9 +111,6 @@ func Paginate(
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if pageRequest.CountTotal {
-		res.Total = count
-	}
 
 	return res, nil
 }
@@ -152,8 +146,6 @@ func initPageRequestDefaults(pageRequest *PageRequest) *PageRequest {
 	if pageRequestCopy.Limit == 0 {
 		pageRequestCopy.Limit = DefaultLimit
 
-		// count total results when the limit is zero/not supplied
-		pageRequestCopy.CountTotal = true
 	}
 
 	return &pageRequestCopy

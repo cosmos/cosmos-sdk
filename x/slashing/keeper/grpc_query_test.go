@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 	require.Equal(signingInfos, infoResp.Info)
 
 	infoResp, err = queryClient.SigningInfos(gocontext.Background(),
-		&slashingtypes.QuerySigningInfosRequest{Pagination: &query.PageRequest{Limit: 1, CountTotal: true}})
+		&slashingtypes.QuerySigningInfosRequest{Pagination: &query.PageRequest{Limit: 1}})
 	require.NoError(err)
 	require.Len(infoResp.Info, 1)
 	require.Equal(signingInfos[0], infoResp.Info[0])

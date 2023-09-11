@@ -133,7 +133,6 @@ func Paginate(
 	offset := pageRequest.Offset
 	key := pageRequest.Key
 	limit := pageRequest.Limit
-	countTotal := pageRequest.CountTotal
 
 	if offset > 0 && key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -142,8 +141,6 @@ func Paginate(
 	if limit == 0 {
 		limit = defaultPageLimit
 
-		// count total results when the limit is zero/not supplied
-		countTotal = true
 	}
 
 	if it == nil {
@@ -206,7 +203,7 @@ func Paginate(
 			// a count of the total number of items available for pagination in UIs.
 			// countTotal is only respected when offset is used. It is ignored when key
 			// is set.
-			if !countTotal || len(key) != 0 {
+			if len(key) != 0 {
 				break
 			}
 		}
@@ -214,7 +211,7 @@ func Paginate(
 	destRef.Set(tmpSlice)
 
 	res := &query.PageResponse{NextKey: nextKey}
-	if countTotal && len(key) == 0 {
+	if len(key) == 0 {
 		res.Total = count
 	}
 

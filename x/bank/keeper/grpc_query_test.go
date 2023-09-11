@@ -102,9 +102,8 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	suite.Require().Error(err)
 
 	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
+		Key:   nil,
+		Limit: 1,
 	}
 	req := types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), req)
@@ -131,9 +130,8 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 	suite.T().Log("query second page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        res.Pagination.NextKey,
-		Limit:      1,
-		CountTotal: true,
+		Key:   res.Pagination.NextKey,
+		Limit: 1,
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
@@ -145,9 +143,8 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 	suite.T().Log("query third page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
-		Limit:      1,
-		CountTotal: true,
+		Key:   pageThree,
+		Limit: 1,
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
@@ -157,9 +154,8 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 	suite.T().Log("query third page with nextkey and resolve ibc denom")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
-		Limit:      1,
-		CountTotal: true,
+		Key:   pageThree,
+		Limit: 1,
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq, true)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
@@ -180,9 +176,8 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Require().Error(err)
 
 	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      2,
-		CountTotal: false,
+		Key:   nil,
+		Limit: 2,
 	}
 	req := types.NewQuerySpendableBalancesRequest(addr, pageReq)
 	acc := authtypes.NewBaseAccountWithAddress(addr)
@@ -351,8 +346,7 @@ func (suite *KeeperTestSuite) TestQueryDenomsMetadata() {
 			func() {
 				req = &types.QueryDenomsMetadataRequest{
 					Pagination: &query.PageRequest{
-						Limit:      3,
-						CountTotal: true,
+						Limit: 3,
 					},
 				}
 			},
@@ -401,8 +395,7 @@ func (suite *KeeperTestSuite) TestQueryDenomsMetadata() {
 				expMetadata = []types.Metadata{metadataAtom, metadataEth}
 				req = &types.QueryDenomsMetadataRequest{
 					Pagination: &query.PageRequest{
-						Limit:      7,
-						CountTotal: true,
+						Limit: 7,
 					},
 				}
 			},
@@ -627,8 +620,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			req: &types.QueryDenomOwnersRequest{
 				Denom: sdk.DefaultBondDenom,
 				Pagination: &query.PageRequest{
-					Limit:      6,
-					CountTotal: true,
+					Limit: 6,
 				},
 			},
 			expPass:  true,
@@ -640,9 +632,8 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 			req: &types.QueryDenomOwnersRequest{
 				Denom: sdk.DefaultBondDenom,
 				Pagination: &query.PageRequest{
-					Offset:     6,
-					Limit:      10,
-					CountTotal: true,
+					Offset: 6,
+					Limit:  10,
 				},
 			},
 			expPass:  true,
@@ -718,8 +709,7 @@ func (suite *KeeperTestSuite) TestQuerySendEnabled() {
 			name: "limit 1",
 			req: &types.QuerySendEnabledRequest{
 				Pagination: &query.PageRequest{
-					Limit:      1,
-					CountTotal: true,
+					Limit: 1,
 				},
 			},
 			exp: &types.QuerySendEnabledResponse{

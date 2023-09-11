@@ -123,9 +123,8 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 				numEvidence := 100
 				_ = suite.populateEvidence(suite.ctx, numEvidence)
 				pageReq := &query.PageRequest{
-					Key:        nil,
-					Limit:      50,
-					CountTotal: false,
+					Key:   nil,
+					Limit: 50,
 				}
 				req = types.NewQueryAllEvidenceRequest(pageReq)
 			},

@@ -54,7 +54,6 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
 	offset, _ := flagSet.GetUint64(flags.FlagOffset)
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
-	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
 	page, _ := flagSet.GetUint64(flags.FlagPage)
 	reverse, _ := flagSet.GetBool(flags.FlagReverse)
 
@@ -67,11 +66,10 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	}
 
 	return &query.PageRequest{
-		Key:        []byte(pageKey),
-		Offset:     offset,
-		Limit:      limit,
-		CountTotal: countTotal,
-		Reverse:    reverse,
+		Key:     []byte(pageKey),
+		Offset:  offset,
+		Limit:   limit,
+		Reverse: reverse,
 	}, nil
 }
 

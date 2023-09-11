@@ -2,6 +2,8 @@ package autocli
 
 import (
 	"fmt"
+	"io"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -101,15 +103,16 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
-	enc := aminojson.NewEncoder(aminojson.EncoderOptions{
+	encoderOptions := aminojson.EncoderOptions{
+		Indent:          "  ",
 		DoNotSortFields: true,
 		TypeResolver:    b.TypeResolver,
 		FileResolver:    b.FileResolver,
-	})
+	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
-			// TODO fix indent
+		if noIndent, _ := cmd.Flags().GetBool(flagNoIndent); noIndent {
+			encoderOptions.Indent = ""
 		}
 
 		clientConn, err := getClientConn(cmd)
@@ -122,6 +125,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
+		enc := encoder(aminojson.NewEncoder(encoderOptions))
 		bz, err := enc.Marshal(output.Interface())
 		if err != nil {
 			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
@@ -140,4 +144,32 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	return cmd, nil
+}
+
+func encoder(encoder aminojson.Encoder) aminojson.Encoder {
+	return encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+		var (
+			secondsName protoreflect.Name = "seconds"
+			nanosName   protoreflect.Name = "nanos"
+		)
+
+		fields := msg.Descriptor().Fields()
+		secondsField := fields.ByName(secondsName)
+		if secondsField == nil {
+			return fmt.Errorf("expected seconds field")
+		}
+
+		// check signs are consistent
+		seconds := msg.Get(secondsField).Int()
+
+		nanosField := fields.ByName(nanosName)
+		if nanosField == nil {
+			return fmt.Errorf("expected nanos field")
+		}
+
+		nanos := msg.Get(nanosField).Int()
+
+		_, err := fmt.Fprintf(w, `"%s"`, time.Duration(time.Duration(seconds)*time.Second+(time.Duration(nanos)*time.Nanosecond)).String())
+		return err
+	})
 }

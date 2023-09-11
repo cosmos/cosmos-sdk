@@ -19,8 +19,13 @@ import (
 // MessageRouter ADR 031 request type routing
 // https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
 type MessageRouter interface {
+	gogogrpc.Server
+
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
+
+	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
+	SetCircuit(cb CircuitBreaker)
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
@@ -30,10 +35,8 @@ type MsgServiceRouter struct {
 	circuitBreaker    CircuitBreaker
 }
 
-var _ gogogrpc.Server = &MsgServiceRouter{}
-
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter() *MsgServiceRouter {
+func NewMsgServiceRouter() MessageRouter {
 	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}

@@ -49,7 +49,7 @@ type App struct {
 	amino             *codec.LegacyAmino
 	basicManager      module.BasicManager
 	baseAppOptions    []BaseAppOption
-	msgServiceRouter  *baseapp.MsgServiceRouter
+	msgServiceRouter  baseapp.MessageRouter
 	appConfig         *appv1alpha1.Config
 	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.

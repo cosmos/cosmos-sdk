@@ -71,7 +71,7 @@ type BaseApp struct {
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
 	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
+	msgServiceRouter  MessageRouter               // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -275,11 +275,11 @@ func (app *BaseApp) Trace() bool {
 	return app.trace
 }
 
-// MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
+// MsgServiceRouter returns the MessageRouter of a BaseApp.
+func (app *BaseApp) MsgServiceRouter() MessageRouter { return app.msgServiceRouter }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter MessageRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 

@@ -218,7 +218,7 @@ Instead of using their `checkState`, full-nodes use `finalizeblock`:
   `AnteHandler` does not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes yield nondeterministic results.
 
-* **`MsgServiceRouter`:** After `CheckTx` exits, `FinalizeBlock` continues to run
+* **`MessageRouter`:** After `CheckTx` exits, `FinalizeBlock` continues to run
   [`runMsgs`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md).

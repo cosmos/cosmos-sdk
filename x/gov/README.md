@@ -90,7 +90,7 @@ proposal passes. The messages are executed by the governance `ModuleAccount` its
 such as `x/upgrade`, that want to allow certain messages to be executed by governance
 only should add a whitelist within the respective msg server, granting the governance
 module the right to execute the message once a quorum has been reached. The governance
-module uses the `MsgServiceRouter` to check that these messages are correctly constructed
+module uses the `baseapp.MessageRouter` to check that these messages are correctly constructed
 and have a respective path to execute on but do not perform a full validity check.
 
 ### Deposit

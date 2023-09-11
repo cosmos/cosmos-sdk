@@ -403,7 +403,7 @@ type CometInfo struct {
 }
 
 func (r CometInfo) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{evidence: r.Misbehavior}
+	return EvidenceWrapper{Evidence: r.Misbehavior}
 }
 
 func (r CometInfo) GetValidatorsHash() []byte {
@@ -418,16 +418,16 @@ func (r CometInfo) GetLastCommit() comet.CommitInfo {
 	return commitInfoWrapper{r.LastCommit}
 }
 
-type evidenceWrapper struct {
-	evidence []abci.Misbehavior
+type EvidenceWrapper struct {
+	Evidence []abci.Misbehavior
 }
 
-func (e evidenceWrapper) Len() int {
-	return len(e.evidence)
+func (e EvidenceWrapper) Len() int {
+	return len(e.Evidence)
 }
 
-func (e evidenceWrapper) Get(i int) comet.Evidence {
-	return misbehaviorWrapper{e.evidence[i]}
+func (e EvidenceWrapper) Get(i int) comet.Evidence {
+	return misbehaviorWrapper{e.Evidence[i]}
 }
 
 // commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface

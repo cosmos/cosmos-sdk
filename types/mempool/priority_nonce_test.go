@@ -259,6 +259,62 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	}
 }
 
+func (s *MempoolTestSuite) TestIterator() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	tests := []struct {
+		txs  []txSpec
+		fail bool
+	}{
+		{
+			txs: []txSpec{
+				{p: 20, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 6, n: 2, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: 8, n: 2, a: sb},
+			},
+		},
+		{
+			txs: []txSpec{
+				{p: 20, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 6, n: 2, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: math.MinInt64, n: 2, a: sb},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := mempool.DefaultPriorityMempool()
+
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				c := ctx.WithPriority(tx.priority)
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			// iterate through txs
+			iterator := pool.Select(ctx, nil)
+			for iterator != nil {
+				tx := iterator.Tx().(testTx)
+				require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
+				require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
+				require.Equal(t, tt.txs[tx.id].a, tx.address)
+				iterator = iterator.Next()
+			}
+		})
+	}
+}
+
 func (s *MempoolTestSuite) TestPriorityTies() {
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)

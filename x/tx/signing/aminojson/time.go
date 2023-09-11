@@ -14,7 +14,7 @@ const (
 	nanosName   protoreflect.Name = "nanos"
 )
 
-// marshalTimestamp replicates https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
+// marshalTimestamp replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
 func marshalTimestamp(_ *Encoder, message protoreflect.Message, writer io.Writer) error {
 	fields := message.Descriptor().Fields()
 	secondsField := fields.ByName(secondsName)

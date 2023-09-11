@@ -72,6 +72,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		typeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,
 			"google.protobuf.Duration":  marshalDuration,
+			"google.protobuf.Any":       marshalAny,
 		},
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,
@@ -231,13 +232,9 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		return errors.New("nil message")
 	}
 
-	switch fullName := msg.Descriptor().FullName(); fullName {
-	case "google.protobuf.Any":
-		return enc.marshalAny(msg, writer)
-	default:
-		if typeEnc := enc.typeEncoders[string(fullName)]; typeEnc != nil {
-			return typeEnc(&enc, msg, writer)
-		}
+	// check if we have a custom type encoder for this type
+	if typeEnc, ok := enc.typeEncoders[string(msg.Descriptor().FullName())]; ok {
+		return typeEnc(&enc, msg, writer)
 	}
 
 	if encoder := enc.getMessageEncoder(msg); encoder != nil {
@@ -391,9 +388,3 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	_, err = io.WriteString(writer, "]")
 	return err
 }
-
-const (
-// timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
-// durationFullName  protoreflect.FullName =
-// anyFullName protoreflect.FullName =
-)

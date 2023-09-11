@@ -165,14 +165,15 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 
-	votes := []abci.VoteInfo{
+	votes := sdk.AbciVoteInfoWrapper{Votes: []abci.VoteInfo{
 		{
 			Validator: abciValA,
 		},
 		{
 			Validator: abciValB,
 		},
-	}
+	}}
+
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 200, votes))
 
 	// 98 outstanding rewards (100 less 2 to community pool)
@@ -303,7 +304,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 
-	votes := []abci.VoteInfo{
+	votes := sdk.AbciVoteInfoWrapper{Votes: []abci.VoteInfo{
 		{
 			Validator: abciValA,
 		},
@@ -313,7 +314,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		{
 			Validator: abciValC,
 		},
-	}
+	}}
+
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 31, votes))
 
 	val0OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)

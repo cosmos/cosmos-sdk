@@ -70,10 +70,14 @@ func TestBeginBlocker(t *testing.T) {
 		Power:   power,
 	}
 
-	ctx = ctx.WithVoteInfos([]abci.VoteInfo{{
-		Validator:   abciVal,
-		BlockIdFlag: cmtproto.BlockIDFlagCommit,
-	}})
+	comet := sdk.CometInfo{
+		LastCommit: abci.CommitInfo{Votes: []abci.VoteInfo{{
+			Validator:   abciVal,
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+		}}},
+	}
+
+	ctx = ctx.WithCometInfo(comet)
 
 	err = slashing.BeginBlocker(ctx, slashingKeeper)
 	require.NoError(t, err)
@@ -91,11 +95,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	// for 100 blocks, mark the validator as having signed
 	for ; height < signedBlocksWindow; height++ {
-		ctx = ctx.WithBlockHeight(height).
-			WithVoteInfos([]abci.VoteInfo{{
-				Validator:   abciVal,
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
-			}})
+		ctx = ctx.WithBlockHeight(height)
 
 		err = slashing.BeginBlocker(ctx, slashingKeeper)
 		require.NoError(t, err)
@@ -105,11 +105,12 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
-		ctx = ctx.WithBlockHeight(height).
-			WithVoteInfos([]abci.VoteInfo{{
+		ctx = ctx.WithBlockHeight(height).WithCometInfo(sdk.CometInfo{
+			LastCommit: abci.CommitInfo{Votes: []abci.VoteInfo{{
 				Validator:   abciVal,
 				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
-			}})
+			}}},
+		})
 
 		err = slashing.BeginBlocker(ctx, slashingKeeper)
 		require.NoError(t, err)

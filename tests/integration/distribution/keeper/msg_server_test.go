@@ -322,8 +322,9 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
+			for i := 0; i < f.sdkCtx.CometInfo().GetLastCommit().Votes().Len(); i++ {
+				vote := f.sdkCtx.CometInfo().GetLastCommit().Votes().Get(i)
+				previousTotalPower += vote.Validator().Power()
 			}
 			assert.Equal(t, previousTotalPower, int64(100))
 		})

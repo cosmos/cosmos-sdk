@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/core/comet"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -23,7 +21,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for i := 0; i < sdkCtx.CometInfo().GetLastCommit().Votes().Len(); i++ {
 		vote := sdkCtx.CometInfo().GetLastCommit().Votes().Get(i)
-		err := k.HandleValidatorSignature(ctx, vote.Validator().Address(), vote.Validator().Power(), comet.BlockIDFlag(vote.GetBlockIDFlag()))
+		err := k.HandleValidatorSignature(ctx, vote.Validator().Address(), vote.Validator().Power(), vote.GetBlockIDFlag())
 		if err != nil {
 			return err
 		}

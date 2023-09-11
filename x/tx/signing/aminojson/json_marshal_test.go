@@ -3,6 +3,7 @@ package aminojson_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -175,6 +177,31 @@ func TestDynamicPb(t *testing.T) {
 	dynamicBz, err := encoder.Marshal(dynamicMsg)
 	require.NoError(t, err)
 	require.Equal(t, string(bz), string(dynamicBz))
+}
+
+func TestMarshalDuration(t *testing.T) {
+	msg := &testpb.ABitOfEverything{
+		Duration: &durationpb.Duration{Seconds: 1},
+	}
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{"type":"ABitOfEverything","value":{"duration":"1000000000"}}`, string(bz))
+
+	// define a custom marshaler for duration
+	encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+		bz, err := json.Marshal(msg.Interface())
+		if err != nil {
+			return err
+		}
+
+		_, err = w.Write(bz)
+		return err
+	})
+	bz, err = encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{"type":"ABitOfEverything","value":{"duration":{"seconds":1}}}`, string(bz))
 }
 
 func TestIndent(t *testing.T) {

@@ -14,7 +14,8 @@ const (
 	nanosName   protoreflect.Name = "nanos"
 )
 
-func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
+// marshalTimestamp replicates https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
+func marshalTimestamp(_ *Encoder, message protoreflect.Message, writer io.Writer) error {
 	fields := message.Descriptor().Fields()
 	secondsField := fields.ByName(secondsName)
 	if secondsField == nil {
@@ -48,7 +49,7 @@ func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
 // gogoproto encodes google.protobuf.Duration as a time.Duration, which is 64-bit signed integer.
 const MaxDurationSeconds = int64(math.MaxInt64)/1e9 - 1
 
-func marshalDuration(message protoreflect.Message, writer io.Writer) error {
+func marshalDuration(_ *Encoder, message protoreflect.Message, writer io.Writer) error {
 	fields := message.Descriptor().Fields()
 	secondsField := fields.ByName(secondsName)
 	if secondsField == nil {

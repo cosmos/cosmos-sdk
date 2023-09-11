@@ -40,6 +40,7 @@ type Encoder struct {
 	scalarEncoders  map[string]FieldEncoder
 	messageEncoders map[string]MessageEncoder
 	fieldEncoders   map[string]FieldEncoder
+	typeEncoders    map[string]MessageEncoder
 	fileResolver    signing.ProtoFileResolver
 	typeResolver    protoregistry.MessageTypeResolver
 	doNotSortFields bool
@@ -67,6 +68,10 @@ func NewEncoder(options EncoderOptions) Encoder {
 		},
 		fieldEncoders: map[string]FieldEncoder{
 			"legacy_coins": nullSliceAsEmptyEncoder,
+		},
+		typeEncoders: map[string]MessageEncoder{
+			"google.protobuf.Timestamp": marshalTimestamp,
+			"google.protobuf.Duration":  marshalDuration,
 		},
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,
@@ -127,6 +132,23 @@ func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encod
 		enc.scalarEncoders = map[string]FieldEncoder{}
 	}
 	enc.scalarEncoders[name] = encoder
+	return enc
+}
+
+// DefineTypeEncoding defines a custom encoding for a protobuf message type.  The `typeURL` field must match the
+// type of the protobuf message as in the following example. This encoding will be used instead of the default
+// encoding for all usages of the tagged message.
+//
+//	message Foo {
+//	  google.protobuf.Duration type_url = 1;
+//	  ...
+//	}
+
+func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) Encoder {
+	if enc.typeEncoders == nil {
+		enc.typeEncoders = map[string]MessageEncoder{}
+	}
+	enc.typeEncoders[typeURL] = encoder
 	return enc
 }
 
@@ -209,14 +231,13 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		return errors.New("nil message")
 	}
 
-	switch msg.Descriptor().FullName() {
-	case timestampFullName:
-		// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
-		return marshalTimestamp(msg, writer)
-	case durationFullName:
-		return marshalDuration(msg, writer)
-	case anyFullName:
+	switch fullName := msg.Descriptor().FullName(); fullName {
+	case "google.protobuf.Any":
 		return enc.marshalAny(msg, writer)
+	default:
+		if typeEnc := enc.typeEncoders[string(fullName)]; typeEnc != nil {
+			return typeEnc(&enc, msg, writer)
+		}
 	}
 
 	if encoder := enc.getMessageEncoder(msg); encoder != nil {
@@ -372,7 +393,7 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 }
 
 const (
-	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
-	durationFullName  protoreflect.FullName = "google.protobuf.Duration"
-	anyFullName       protoreflect.FullName = "google.protobuf.Any"
+// timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
+// durationFullName  protoreflect.FullName =
+// anyFullName protoreflect.FullName =
 )

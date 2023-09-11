@@ -42,6 +42,8 @@ message ABitOfEverything {
   sint64   si64  = 18;
   sfixed64 sf64  = 19;
 
+  google.protobuf.Duration duration = 20;
+
   // The following types are not tested here because they are treated fundamentally differently in
   // gogoproto.  They are tested fully in /tests/integration/aminojson/aminojson_test.go
 
@@ -49,17 +51,12 @@ message ABitOfEverything {
   // In the go-admin/gogoproto paradigm a custom SDK type is used to wrap the Any type, which has no
   // equivalent in code in pulsar generated types.
   //
-  // google.protobuf.Any any = 22
+  // google.protobuf.Any any = 21;
 
   // Also not tested due to gogoproto differences.  In gogoproto, time.Time is used instead of
   // google.protobuf.Timestamp.  There is no equivalent in pulsar generated types.
   //
-  // google.protobuf.Timestamp timestamp = 23;
-
-  // Also not tested due to gogoproto differences.  In gogoproto, time.Duration is used instead of
-  // google.protobuf.Duration.  There is no equivalent in pulsar generated types.
-  //
-  // google.protobuf.Duration duration = 24;
+  // google.protobuf.Timestamp timestamp = 22;
 }
 
 message NestedMessage {

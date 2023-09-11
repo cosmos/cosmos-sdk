@@ -10,7 +10,7 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/anypb"
-	_ "google.golang.org/protobuf/types/known/durationpb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/emptypb"
 	_ "google.golang.org/protobuf/types/known/fieldmaskpb"
 	_ "google.golang.org/protobuf/types/known/structpb"
@@ -1350,6 +1350,7 @@ var (
 	fd_ABitOfEverything_u64      protoreflect.FieldDescriptor
 	fd_ABitOfEverything_si64     protoreflect.FieldDescriptor
 	fd_ABitOfEverything_sf64     protoreflect.FieldDescriptor
+	fd_ABitOfEverything_duration protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1371,6 +1372,7 @@ func init() {
 	fd_ABitOfEverything_u64 = md_ABitOfEverything.Fields().ByName("u64")
 	fd_ABitOfEverything_si64 = md_ABitOfEverything.Fields().ByName("si64")
 	fd_ABitOfEverything_sf64 = md_ABitOfEverything.Fields().ByName("sf64")
+	fd_ABitOfEverything_duration = md_ABitOfEverything.Fields().ByName("duration")
 }
 
 var _ protoreflect.Message = (*fastReflection_ABitOfEverything)(nil)
@@ -1534,6 +1536,12 @@ func (x *fastReflection_ABitOfEverything) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
+	if x.Duration != nil {
+		value := protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
+		if !f(fd_ABitOfEverything_duration, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1581,6 +1589,8 @@ func (x *fastReflection_ABitOfEverything) Has(fd protoreflect.FieldDescriptor) b
 		return x.Si64 != int64(0)
 	case "testpb.ABitOfEverything.sf64":
 		return x.Sf64 != int64(0)
+	case "testpb.ABitOfEverything.duration":
+		return x.Duration != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ABitOfEverything"))
@@ -1629,6 +1639,8 @@ func (x *fastReflection_ABitOfEverything) Clear(fd protoreflect.FieldDescriptor)
 		x.Si64 = int64(0)
 	case "testpb.ABitOfEverything.sf64":
 		x.Sf64 = int64(0)
+	case "testpb.ABitOfEverything.duration":
+		x.Duration = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ABitOfEverything"))
@@ -1696,6 +1708,9 @@ func (x *fastReflection_ABitOfEverything) Get(descriptor protoreflect.FieldDescr
 	case "testpb.ABitOfEverything.sf64":
 		value := x.Sf64
 		return protoreflect.ValueOfInt64(value)
+	case "testpb.ABitOfEverything.duration":
+		value := x.Duration
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ABitOfEverything"))
@@ -1750,6 +1765,8 @@ func (x *fastReflection_ABitOfEverything) Set(fd protoreflect.FieldDescriptor, v
 		x.Si64 = value.Int()
 	case "testpb.ABitOfEverything.sf64":
 		x.Sf64 = value.Int()
+	case "testpb.ABitOfEverything.duration":
+		x.Duration = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ABitOfEverything"))
@@ -1781,6 +1798,11 @@ func (x *fastReflection_ABitOfEverything) Mutable(fd protoreflect.FieldDescripto
 		}
 		value := &_ABitOfEverything_6_list{list: &x.Repeated}
 		return protoreflect.ValueOfList(value)
+	case "testpb.ABitOfEverything.duration":
+		if x.Duration == nil {
+			x.Duration = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
 	case "testpb.ABitOfEverything.enum":
 		panic(fmt.Errorf("field enum of message testpb.ABitOfEverything is not mutable"))
 	case "testpb.ABitOfEverything.str":
@@ -1856,6 +1878,9 @@ func (x *fastReflection_ABitOfEverything) NewField(fd protoreflect.FieldDescript
 		return protoreflect.ValueOfInt64(int64(0))
 	case "testpb.ABitOfEverything.sf64":
 		return protoreflect.ValueOfInt64(int64(0))
+	case "testpb.ABitOfEverything.duration":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ABitOfEverything"))
@@ -1980,6 +2005,10 @@ func (x *fastReflection_ABitOfEverything) ProtoMethods() *protoiface.Methods {
 		if x.Sf64 != 0 {
 			n += 10
 		}
+		if x.Duration != nil {
+			l = options.Size(x.Duration)
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2008,6 +2037,22 @@ func (x *fastReflection_ABitOfEverything) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Duration != nil {
+			encoded, err := options.Marshal(x.Duration)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xa2
 		}
 		if x.Sf64 != 0 {
 			i -= 8
@@ -2559,6 +2604,42 @@ func (x *fastReflection_ABitOfEverything) ProtoMethods() *protoiface.Methods {
 				}
 				x.Sf64 = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 				iNdEx += 8
+			case 20:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Duration == nil {
+					x.Duration = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Duration); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -3207,22 +3288,23 @@ type ABitOfEverything struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Message  *NestedMessage `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	Enum     AnEnum         `protobuf:"varint,2,opt,name=enum,proto3,enum=testpb.AnEnum" json:"enum,omitempty"`
-	Repeated []int32        `protobuf:"varint,6,rep,packed,name=repeated,proto3" json:"repeated,omitempty"`
-	Str      string         `protobuf:"bytes,7,opt,name=str,proto3" json:"str,omitempty"`
-	Bool     bool           `protobuf:"varint,8,opt,name=bool,proto3" json:"bool,omitempty"`
-	Bytes    []byte         `protobuf:"bytes,9,opt,name=bytes,proto3" json:"bytes,omitempty"`
-	I32      int32          `protobuf:"varint,10,opt,name=i32,proto3" json:"i32,omitempty"`
-	F32      uint32         `protobuf:"fixed32,11,opt,name=f32,proto3" json:"f32,omitempty"`
-	U32      uint32         `protobuf:"varint,12,opt,name=u32,proto3" json:"u32,omitempty"`
-	Si32     int32          `protobuf:"zigzag32,13,opt,name=si32,proto3" json:"si32,omitempty"`
-	Sf32     int32          `protobuf:"fixed32,14,opt,name=sf32,proto3" json:"sf32,omitempty"`
-	I64      int64          `protobuf:"varint,15,opt,name=i64,proto3" json:"i64,omitempty"`
-	F64      uint64         `protobuf:"fixed64,16,opt,name=f64,proto3" json:"f64,omitempty"`
-	U64      uint64         `protobuf:"varint,17,opt,name=u64,proto3" json:"u64,omitempty"`
-	Si64     int64          `protobuf:"zigzag64,18,opt,name=si64,proto3" json:"si64,omitempty"`
-	Sf64     int64          `protobuf:"fixed64,19,opt,name=sf64,proto3" json:"sf64,omitempty"`
+	Message  *NestedMessage       `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Enum     AnEnum               `protobuf:"varint,2,opt,name=enum,proto3,enum=testpb.AnEnum" json:"enum,omitempty"`
+	Repeated []int32              `protobuf:"varint,6,rep,packed,name=repeated,proto3" json:"repeated,omitempty"`
+	Str      string               `protobuf:"bytes,7,opt,name=str,proto3" json:"str,omitempty"`
+	Bool     bool                 `protobuf:"varint,8,opt,name=bool,proto3" json:"bool,omitempty"`
+	Bytes    []byte               `protobuf:"bytes,9,opt,name=bytes,proto3" json:"bytes,omitempty"`
+	I32      int32                `protobuf:"varint,10,opt,name=i32,proto3" json:"i32,omitempty"`
+	F32      uint32               `protobuf:"fixed32,11,opt,name=f32,proto3" json:"f32,omitempty"`
+	U32      uint32               `protobuf:"varint,12,opt,name=u32,proto3" json:"u32,omitempty"`
+	Si32     int32                `protobuf:"zigzag32,13,opt,name=si32,proto3" json:"si32,omitempty"`
+	Sf32     int32                `protobuf:"fixed32,14,opt,name=sf32,proto3" json:"sf32,omitempty"`
+	I64      int64                `protobuf:"varint,15,opt,name=i64,proto3" json:"i64,omitempty"`
+	F64      uint64               `protobuf:"fixed64,16,opt,name=f64,proto3" json:"f64,omitempty"`
+	U64      uint64               `protobuf:"varint,17,opt,name=u64,proto3" json:"u64,omitempty"`
+	Si64     int64                `protobuf:"zigzag64,18,opt,name=si64,proto3" json:"si64,omitempty"`
+	Sf64     int64                `protobuf:"fixed64,19,opt,name=sf64,proto3" json:"sf64,omitempty"`
+	Duration *durationpb.Duration `protobuf:"bytes,20,opt,name=duration,proto3" json:"duration,omitempty"`
 }
 
 func (x *ABitOfEverything) Reset() {
@@ -3357,6 +3439,13 @@ func (x *ABitOfEverything) GetSf64() int64 {
 	return 0
 }
 
+func (x *ABitOfEverything) GetDuration() *durationpb.Duration {
+	if x != nil {
+		return x.Duration
+	}
+	return nil
+}
+
 type NestedMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3432,7 +3521,7 @@ var file_testpb_test_proto_rawDesc = []byte{
 	0x6d, 0x70, 0x74, 0x79, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x42,
 	0x05, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x11, 0x64, 0x6f, 0x6e, 0x74, 0x4f, 0x6d, 0x69, 0x74,
 	0x65, 0x6d, 0x70, 0x74, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x69, 0x73,
-	0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x22, 0x92, 0x03,
+	0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x22, 0xc9, 0x03,
 	0x0a, 0x10, 0x41, 0x42, 0x69, 0x74, 0x4f, 0x66, 0x45, 0x76, 0x65, 0x72, 0x79, 0x74, 0x68, 0x69,
 	0x6e, 0x67, 0x12, 0x2f, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4e, 0x65, 0x73,
@@ -3456,25 +3545,28 @@ var file_testpb_test_proto_rawDesc = []byte{
 	0x34, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x11, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03,
 	0x75, 0x36, 0x34, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x36, 0x34, 0x18, 0x12, 0x20, 0x01, 0x28,
 	0x12, 0x52, 0x04, 0x73, 0x69, 0x36, 0x34, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x66, 0x36, 0x34, 0x18,
-	0x13, 0x20, 0x01, 0x28, 0x10, 0x52, 0x04, 0x73, 0x66, 0x36, 0x34, 0x3a, 0x15, 0x8a, 0xe7, 0xb0,
-	0x2a, 0x10, 0x41, 0x42, 0x69, 0x74, 0x4f, 0x66, 0x45, 0x76, 0x65, 0x72, 0x79, 0x74, 0x68, 0x69,
-	0x6e, 0x67, 0x22, 0x47, 0x0a, 0x0d, 0x4e, 0x65, 0x73, 0x74, 0x65, 0x64, 0x4d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x03, 0x66, 0x6f, 0x6f, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x72, 0x3a, 0x12, 0x8a, 0xe7, 0xb0, 0x2a, 0x0d, 0x4e, 0x65,
-	0x73, 0x74, 0x65, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2a, 0x29, 0x0a, 0x06, 0x41,
-	0x6e, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x0d, 0x0a, 0x09, 0x55, 0x4e, 0x44, 0x45, 0x46, 0x49, 0x4e,
-	0x45, 0x44, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x07, 0x0a,
-	0x03, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x42, 0x83, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x09, 0x54, 0x65, 0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
-	0x2f, 0x78, 0x2f, 0x74, 0x78, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x6a, 0x73, 0x6f, 0x6e, 0x2f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2f,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02,
-	0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x13, 0x20, 0x01, 0x28, 0x10, 0x52, 0x04, 0x73, 0x66, 0x36, 0x34, 0x12, 0x35, 0x0a, 0x08, 0x64,
+	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x14, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x3a, 0x15, 0x8a, 0xe7, 0xb0, 0x2a, 0x10, 0x41, 0x42, 0x69, 0x74, 0x4f, 0x66, 0x45,
+	0x76, 0x65, 0x72, 0x79, 0x74, 0x68, 0x69, 0x6e, 0x67, 0x22, 0x47, 0x0a, 0x0d, 0x4e, 0x65, 0x73,
+	0x74, 0x65, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f,
+	0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x12, 0x10, 0x0a, 0x03,
+	0x62, 0x61, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x72, 0x3a, 0x12,
+	0x8a, 0xe7, 0xb0, 0x2a, 0x0d, 0x4e, 0x65, 0x73, 0x74, 0x65, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x2a, 0x29, 0x0a, 0x06, 0x41, 0x6e, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x0d, 0x0a, 0x09,
+	0x55, 0x4e, 0x44, 0x45, 0x46, 0x49, 0x4e, 0x45, 0x44, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x4f,
+	0x4e, 0x45, 0x10, 0x01, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x42, 0x83, 0x01,
+	0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x09, 0x54, 0x65,
+	0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x74, 0x78, 0x2f, 0x61, 0x6d, 0x69,
+	0x6e, 0x6f, 0x6a, 0x73, 0x6f, 0x6e, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03,
+	0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3492,22 +3584,24 @@ func file_testpb_test_proto_rawDescGZIP() []byte {
 var file_testpb_test_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_testpb_test_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_testpb_test_proto_goTypes = []interface{}{
-	(AnEnum)(0),              // 0: testpb.AnEnum
-	(*WithAMap)(nil),         // 1: testpb.WithAMap
-	(*WithAList)(nil),        // 2: testpb.WithAList
-	(*ABitOfEverything)(nil), // 3: testpb.ABitOfEverything
-	(*NestedMessage)(nil),    // 4: testpb.NestedMessage
-	nil,                      // 5: testpb.WithAMap.StrMapEntry
+	(AnEnum)(0),                 // 0: testpb.AnEnum
+	(*WithAMap)(nil),            // 1: testpb.WithAMap
+	(*WithAList)(nil),           // 2: testpb.WithAList
+	(*ABitOfEverything)(nil),    // 3: testpb.ABitOfEverything
+	(*NestedMessage)(nil),       // 4: testpb.NestedMessage
+	nil,                         // 5: testpb.WithAMap.StrMapEntry
+	(*durationpb.Duration)(nil), // 6: google.protobuf.Duration
 }
 var file_testpb_test_proto_depIdxs = []int32{
 	5, // 0: testpb.WithAMap.str_map:type_name -> testpb.WithAMap.StrMapEntry
 	4, // 1: testpb.ABitOfEverything.message:type_name -> testpb.NestedMessage
 	0, // 2: testpb.ABitOfEverything.enum:type_name -> testpb.AnEnum
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 3: testpb.ABitOfEverything.duration:type_name -> google.protobuf.Duration
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_testpb_test_proto_init() }

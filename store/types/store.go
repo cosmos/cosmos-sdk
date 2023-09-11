@@ -13,13 +13,13 @@ import (
 // StoreType defines a type of KVStore.
 type StoreType int
 
-// MultiStore defines an abstraction layer containing a State Storage (SS) engine
+// RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
-type MultiStore interface {
+type RootStore interface {
 	GetSCStore(storeKey string) *commitment.Database
 	MountSCStore(storeKey string, sc *commitment.Database) error
 	GetKVStore(storeKey string) KVStore
-	Branch() MultiStore
+	Branch() RootStore
 
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 

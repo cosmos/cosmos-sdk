@@ -16,7 +16,7 @@ import (
 // to the user and it only needed to fulfill usage of StoreInfo during Commit.
 const defaultStoreKey = "default"
 
-var _ types.MultiStore = (*Store)(nil)
+var _ types.RootStore = (*Store)(nil)
 
 // Store defines the SDK's default MultiStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. Note,
@@ -47,7 +47,7 @@ func New(
 	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc *commitment.Database,
-) (types.MultiStore, error) {
+) (types.RootStore, error) {
 	return &Store{
 		logger:         logger.With("module", "multi_store"),
 		initialVersion: initVersion,
@@ -144,7 +144,7 @@ func (s *Store) GetKVStore(_ string) types.KVStore {
 	panic("not implemented!")
 }
 
-func (s *Store) Branch() types.MultiStore {
+func (s *Store) Branch() types.RootStore {
 	panic("not implemented!")
 }
 

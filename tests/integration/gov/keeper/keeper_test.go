@@ -102,8 +102,11 @@ func initFixture(tb testing.TB) *fixture {
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+	router := baseapp.NewMsgServiceRouter(
+		func(options *baseapp.MessageRouterOptions) {
+			options.InterfaceRegistry = cdc.InterfaceRegistry()
+		},
+	)
 
 	govKeeper := keeper.NewKeeper(
 		cdc,

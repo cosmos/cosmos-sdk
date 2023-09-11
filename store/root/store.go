@@ -18,7 +18,7 @@ const defaultStoreKey = "default"
 
 var _ types.RootStore = (*Store)(nil)
 
-// Store defines the SDK's default MultiStore implementation. It contains a single
+// Store defines the SDK's default RootStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. Note,
 // this means all store keys are ignored and commitments exist in a single commitment
 // tree.

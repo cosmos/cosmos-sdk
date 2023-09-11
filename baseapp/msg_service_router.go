@@ -24,13 +24,13 @@ type MessageRouter interface {
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
-	WithOptions(opts ...any) MessageRouter
+	WithOptions(opts ...MessageRouterOption) MessageRouter
 }
 
-// MessageRouterOption sets a optional parameters on the MessageRouter.
+// MessageRouterOption sets parameters on the MessageRouter.
 type MessageRouterOption func(options *MessageRouterOptions)
 
-// MessageRouterOptions are options to configure a MessageRouter.
+// MessageRouterOptions are used to configure the internal of a MessageRouter.
 // Implementation of a MessageRouter most likely need these options as well.
 type MessageRouterOptions struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
@@ -193,19 +193,11 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 }
 
 // WithOptions allows to change the default options of the MessageRouter instance after initialization.
-// The SDK implementation of MessageRouter expects MessageRouterOption as inputs.
-func (msr *MsgServiceRouter) WithOptions(opts ...any) MessageRouter {
+func (msr *MsgServiceRouter) WithOptions(opts ...MessageRouterOption) MessageRouter {
 	options := MessageRouterOptions{}
 
 	for _, opt := range opts {
-		msrOpt, ok := opt.(MessageRouterOption)
-		if !ok {
-			if msrOpt, ok = opt.(func(options *MessageRouterOptions)); !ok {
-				panic(fmt.Errorf("invalid MessageRouter option %T, expected MessageRouterOption", opt))
-			}
-		}
-
-		msrOpt(&options)
+		opt(&options)
 	}
 
 	if options.InterfaceRegistry != nil {

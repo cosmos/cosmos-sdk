@@ -42,10 +42,6 @@ func NewMsgServiceRouter() MessageRouter {
 	}
 }
 
-func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
-	msr.circuitBreaker = cb
-}
-
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
@@ -182,6 +178,11 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
+}
+
+// SetCircuit sets the circuit breaker for the router.
+func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	msr.circuitBreaker = cb
 }
 
 func noopDecoder(_ interface{}) error { return nil }

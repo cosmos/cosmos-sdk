@@ -134,6 +134,16 @@ func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encod
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf)
+
+	if enc.indent != "" {
+		indentBuf := &bytes.Buffer{}
+		if err := json.Indent(indentBuf, buf.Bytes(), "", enc.indent); err != nil {
+			return nil, err
+		}
+
+		return indentBuf.Bytes(), err
+	}
+
 	return buf.Bytes(), err
 }
 

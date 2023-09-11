@@ -191,7 +191,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	// burn the cancellation fee or sent the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress := keeper.authKeeper.GetModuleAddress("pool")
+		poolAddress := keeper.authKeeper.GetModuleAddress("cosmos-sdk-pool")
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits

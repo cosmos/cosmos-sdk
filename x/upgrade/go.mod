@@ -180,4 +180,4 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 
-replace cosmossdk.io/x/pool => ../pool
+replace cosmossdk.io/api => ../../api

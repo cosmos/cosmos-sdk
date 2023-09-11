@@ -10,7 +10,6 @@ var (
 	_ sdk.Msg = (*MsgWithdrawDelegatorReward)(nil)
 	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
 	_ sdk.Msg = (*MsgUpdateParams)(nil)
-	// _ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
 	_ sdk.Msg = (*MsgDepositValidatorRewardsPool)(nil)
 )
 

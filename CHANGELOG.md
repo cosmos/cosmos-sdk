@@ -45,14 +45,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvments
 
-* (types/module) [#17554](https://github.com/cosmos/cosmos-sdk/pull/17554) Introduce `HasABCIGenesis` which is implemented by a module only when a validatorset update needs to be returned 
+* (types/module) [#17554](https://github.com/cosmos/cosmos-sdk/pull/17554) Introduce `HasABCIGenesis` which is implemented by a module only when a validatorset update needs to be returned.
 * (baseapp) [#17667](https://github.com/cosmos/cosmos-sdk/pull/17667) Close databases opened by SDK in `baseApp.Close()`.
 
 ### Bug Fixes
 
 * (baseapp) [#17518](https://github.com/cosmos/cosmos-sdk/pull/17518) Utilizing voting power from vote extensions (CometBFT) instead of the current bonded tokens (x/staking) to determine if a set of vote extensions are valid.
 * (config) [#17649](https://github.com/cosmos/cosmos-sdk/pull/17649) Fix `mempool.max-txs` configuration is invalid in `app.config`.
-* (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix: `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
+* (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
 
 ## [v0.50.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.0) - 2023-08-18
 

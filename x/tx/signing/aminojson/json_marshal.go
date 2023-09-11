@@ -23,7 +23,10 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
-	// DonotSortFields when set turns off sorting of field names.
+	// Indent can only be composed of space or tab characters.
+	// It defines the indentation used for each level of indentation.
+	Indent string
+	// DoNotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver
@@ -40,6 +43,7 @@ type Encoder struct {
 	fileResolver    signing.ProtoFileResolver
 	typeResolver    protoregistry.MessageTypeResolver
 	doNotSortFields bool
+	indent          string
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -67,6 +71,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,
 		doNotSortFields: options.DoNotSortFields,
+		indent:          options.Indent,
 	}
 	return enc
 }
@@ -109,10 +114,36 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 	return enc
 }
 
+// DefineScalarEncoding defines a custom encoding for a protobuf scalar field.  The `name` field must match a usage of
+// an (cosmos_proto.scalar) option in the protobuf message as in the following example. This encoding will be used
+// instead of the default encoding for all usages of the tagged field.
+//
+//	message Balance {
+//	  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+//	  ...
+//	}
+func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encoder {
+	if enc.scalarEncoders == nil {
+		enc.scalarEncoders = map[string]FieldEncoder{}
+	}
+	enc.scalarEncoders[name] = encoder
+	return enc
+}
+
 // Marshal serializes a protobuf message to JSON.
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf)
+
+	if enc.indent != "" {
+		indentBuf := &bytes.Buffer{}
+		if err := json.Indent(indentBuf, buf.Bytes(), "", enc.indent); err != nil {
+			return nil, err
+		}
+
+		return indentBuf.Bytes(), err
+	}
+
 	return buf.Bytes(), err
 }
 

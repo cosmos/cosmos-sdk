@@ -699,7 +699,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 				module1.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
 			}
 			if module2, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates := module2.InitGenesis(sdkCtx, c.cdc, module1.DefaultGenesis(c.cdc))
+				moduleValUpdates := module2.InitGenesis(sdkCtx, c.cdc, module2.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {

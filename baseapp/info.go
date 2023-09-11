@@ -15,7 +15,7 @@ type prepareProposalInfo struct {
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
 func (r prepareProposalInfo) GetEvidence() comet.EvidenceList {
-	return sdk.EvidenceWrapper{r.Misbehavior}
+	return sdk.EvidenceWrapper{Evidence: r.Misbehavior}
 }
 
 func (r prepareProposalInfo) GetValidatorsHash() []byte {
@@ -71,5 +71,5 @@ func (e extendedVoteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
 }
 
 func (e extendedVoteInfoWrapper) Validator() comet.Validator {
-	return sdk.ValidatorWrapper{e.ExtendedVoteInfo.Validator}
+	return sdk.ValidatorWrapper{Validator: e.ExtendedVoteInfo.Validator}
 }

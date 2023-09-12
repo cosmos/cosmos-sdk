@@ -1,10 +1,8 @@
-package types
+package store
 
 import (
 	"io"
 
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	ics23 "github.com/cosmos/ics23/go"
 )
 
@@ -13,13 +11,17 @@ import (
 // StoreType defines a type of KVStore.
 type StoreType int
 
+// Sentinel store types.
+const (
+	StoreTypeBranch StoreType = iota
+)
+
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
-	GetSCStore(storeKey string) *commitment.Database
-	MountSCStore(storeKey string, sc *commitment.Database) error
+	GetSCStore(storeKey string) Tree
+	MountSCStore(storeKey string, sc Tree) error
 	GetKVStore(storeKey string) KVStore
-	Branch() RootStore
 
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
@@ -34,6 +36,7 @@ type RootStore interface {
 	// TODO:
 	//
 	// - Tracing
+	// - Branching
 	// - Queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
@@ -58,6 +61,9 @@ type KVStore interface {
 	// Delete deletes the key from the store.
 	Delete(key []byte)
 
+	// Reset resets the store, which is implementation dependent.
+	Reset()
+
 	BranchWrapper
 
 	// Iterator creates a new Iterator over the domain [start, end). Note:
@@ -68,11 +74,11 @@ type KVStore interface {
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over
 	// it, with the exception of a branched/cached KVStore.
-	Iterator(start, end []byte) store.Iterator
+	Iterator(start, end []byte) Iterator
 
 	// ReverseIterator creates a new reverse Iterator over the domain [start, end).
 	// It has the some properties and contracts as Iterator.
-	ReverseIterator(start, end []byte) store.Iterator
+	ReverseIterator(start, end []byte) Iterator
 }
 
 // BranchedKVStore defines an interface for a branched a KVStore. It extends KVStore
@@ -96,10 +102,15 @@ type BranchedKVStore interface {
 // writes to be cached and flushed to the underlying store or discarded altogether.
 // Reads should be performed against a "branched" state, allowing dirty entries
 // to be cached and read from. If an entry is not found in the branched state, it
-// will fallthrough to the underlying KVStore.
+// will fallthrough to the underlying store.
 type BranchWrapper interface {
 	Branch() BranchedKVStore
 
 	// BranchWithTrace branches a store with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
+
+	// GetChangeSet returns the ChangeSet, if any, for the branched state. This
+	// should contain all writes that are marked to be flushed and committed during
+	// Commit().
+	GetChangeSet() *ChangeSet
 }

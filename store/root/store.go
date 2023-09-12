@@ -5,8 +5,8 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/branch"
 	"cosmossdk.io/store/v2/commitment"
-	"cosmossdk.io/store/v2/types"
 	"github.com/cockroachdb/errors"
 	ics23 "github.com/cosmos/ics23/go"
 )
@@ -16,7 +16,7 @@ import (
 // to the user and it only needed to fulfill usage of StoreInfo during Commit.
 const defaultStoreKey = "default"
 
-var _ types.RootStore = (*Store)(nil)
+var _ store.RootStore = (*Store)(nil)
 
 // Store defines the SDK's default RootStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. Note,
@@ -32,14 +32,15 @@ type Store struct {
 	// ss reflects the state commitment (SC) backend
 	sc *commitment.Database
 
+	// rootKVStore reflects the root KVStore that is used to accumulate writes
+	// and branch off of.
+	rootKVStore store.KVStore
+
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
-	commitHeader types.CommitHeader
+	commitHeader store.CommitHeader
 
 	// lastCommitInfo reflects the last version/hash that has been committed
-	lastCommitInfo *types.CommitInfo
-
-	// memListener is used to track and flush writes to the SS backend
-	memListener *types.MemoryListener
+	lastCommitInfo *store.CommitInfo
 }
 
 func New(
@@ -47,12 +48,13 @@ func New(
 	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc *commitment.Database,
-) (types.RootStore, error) {
+) (store.RootStore, error) {
 	return &Store{
-		logger:         logger.With("module", "multi_store"),
+		logger:         logger.With("module", "root_store"),
 		initialVersion: initVersion,
 		ss:             ss,
 		sc:             sc,
+		rootKVStore:    branch.New(defaultStoreKey, sc),
 	}, nil
 }
 
@@ -66,19 +68,18 @@ func (s *Store) Close() (err error) {
 	s.sc = nil
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
-	s.memListener = nil
 
 	return err
 }
 
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ string, _ *commitment.Database) error {
+func (s *Store) MountSCStore(_ string, _ store.Tree) error {
 	return errors.New("cannot mount SC store; SC must be provided on initialization")
 }
 
 // GetSCStore returns the store's state commitment (SC) backend. Note, the store
 // key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ string) *commitment.Database {
+func (s *Store) GetSCStore(_ string) store.Tree {
 	return s.sc
 }
 
@@ -94,7 +95,7 @@ func (s *Store) LoadLatestVersion() error {
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
-func (s *Store) LastCommitID() (types.CommitID, error) {
+func (s *Store) LastCommitID() (store.CommitID, error) {
 	if s.lastCommitInfo != nil {
 		return s.lastCommitInfo.CommitID(), nil
 	}
@@ -106,16 +107,16 @@ func (s *Store) LastCommitID() (types.CommitID, error) {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 	latestVersion, err := s.ss.GetLatestVersion()
 	if err != nil {
-		return types.CommitID{}, err
+		return store.CommitID{}, err
 	}
 
 	// ensure integrity of latest version against SC
 	scVersion := s.sc.GetLatestVersion()
 	if scVersion != latestVersion {
-		return types.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
+		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
 
-	return types.CommitID{Version: latestVersion}, nil
+	return store.CommitID{Version: latestVersion}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -140,12 +141,12 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 	return s.loadVersion(v, nil)
 }
 
-func (s *Store) GetKVStore(_ string) types.KVStore {
-	panic("not implemented!")
-}
-
-func (s *Store) Branch() types.RootStore {
-	panic("not implemented!")
+// GetKVStore returns the store's root KVStore. Any writes to this store without
+// branching will be committed to SC and SS upon Commit(). Branching will create
+// a branched KVStore that allow writes to be discarded and propagated to the
+// root KVStore using Write().
+func (s *Store) GetKVStore(_ string) store.KVStore {
+	return s.rootKVStore
 }
 
 func (s *Store) loadVersion(v uint64, upgrades any) error {
@@ -164,19 +165,19 @@ func (s *Store) loadVersion(v uint64, upgrades any) error {
 }
 
 func (s *Store) WorkingHash() []byte {
-	storeInfos := []types.StoreInfo{
+	storeInfos := []store.StoreInfo{
 		{
 			Name: defaultStoreKey,
-			CommitID: types.CommitID{
+			CommitID: store.CommitID{
 				Hash: s.sc.WorkingHash(),
 			},
 		},
 	}
 
-	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
+	return store.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-func (s *Store) SetCommitHeader(h types.CommitHeader) {
+func (s *Store) SetCommitHeader(h store.CommitHeader) {
 	s.commitHeader = h
 }
 
@@ -206,19 +207,23 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 
+	changeSet := s.rootKVStore.GetChangeSet()
+
 	// commit SC
-	commitInfo, err := s.commitSC(version)
+	commitInfo, err := s.commitSC(version, changeSet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
 	}
 
 	// commit SS
-	if err := s.commitSS(version); err != nil {
+	if err := s.commitSS(version, changeSet); err != nil {
 		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
 
 	s.lastCommitInfo = commitInfo
 	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
+
+	s.rootKVStore.Reset()
 
 	return s.lastCommitInfo.Hash(), nil
 }
@@ -226,23 +231,27 @@ func (s *Store) Commit() ([]byte, error) {
 // commitSC commits the SC store and returns a CommitInfo representing commitment
 // of the underlying SC backend tree. Since there is only a single SC backing tree,
 // all SC commits are atomic. An error is returned if commitment fails.
-func (s *Store) commitSC(version uint64) (*types.CommitInfo, error) {
+func (s *Store) commitSC(version uint64, cs *store.ChangeSet) (*store.CommitInfo, error) {
+	if err := s.sc.WriteBatch(cs); err != nil {
+		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
+	}
+
 	commitBz, err := s.sc.Commit()
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	storeInfos := []types.StoreInfo{
+	storeInfos := []store.StoreInfo{
 		{
 			Name: defaultStoreKey,
-			CommitID: types.CommitID{
+			CommitID: store.CommitID{
 				Version: version,
 				Hash:    commitBz,
 			},
 		},
 	}
 
-	return &types.CommitInfo{
+	return &store.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}, nil
@@ -254,19 +263,19 @@ func (s *Store) commitSC(version uint64) (*types.CommitInfo, error) {
 //
 // TODO: Commit writes to SS backend asynchronously.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-func (s *Store) commitSS(version uint64) error {
+func (s *Store) commitSS(version uint64, cs *store.ChangeSet) error {
 	batch, err := s.ss.NewBatch(version)
 	if err != nil {
 		return err
 	}
 
-	for _, skv := range s.memListener.PopStateCache() {
-		if skv.Delete {
-			if err := batch.Delete(skv.StoreKey, skv.Key); err != nil {
+	for _, pair := range cs.Pairs {
+		if pair.Value == nil {
+			if err := batch.Delete(pair.StoreKey, pair.Key); err != nil {
 				return err
 			}
 		} else {
-			if err := batch.Set(skv.StoreKey, skv.Key, skv.Value); err != nil {
+			if err := batch.Set(pair.StoreKey, pair.Key, pair.Value); err != nil {
 				return err
 			}
 		}

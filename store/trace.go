@@ -1,4 +1,4 @@
-package types
+package store
 
 import "golang.org/x/exp/maps"
 

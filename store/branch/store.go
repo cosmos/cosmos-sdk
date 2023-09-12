@@ -2,10 +2,11 @@ package branch
 
 import (
 	"io"
+
+	"golang.org/x/exp/maps"
 	"slices"
 
 	"cosmossdk.io/store/v2"
-	"golang.org/x/exp/maps"
 )
 
 var (

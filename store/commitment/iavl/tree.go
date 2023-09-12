@@ -3,11 +3,12 @@ package iavl
 import (
 	"fmt"
 
-	log "cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
+
+	log "cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Tree = (*IavlTree)(nil)

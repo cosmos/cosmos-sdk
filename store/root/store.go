@@ -3,12 +3,13 @@ package root
 import (
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+	ics23 "github.com/cosmos/ics23/go"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/branch"
 	"cosmossdk.io/store/v2/commitment"
-	"github.com/cockroachdb/errors"
-	ics23 "github.com/cosmos/ics23/go"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.

@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName is the module name constant used in many places
-	ModuleName = "cosmos-sdk-pool"
+	ModuleName = "cosmos-pool"
 
 	// StoreKey is the store key string for distribution
 	StoreKey = ModuleName

@@ -8,15 +8,11 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/pool/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Keeper struct {
-	// Msg server router
-	router baseapp.MessageRouter
-
 	storeService storetypes.KVStoreService
 	authKeeper   types.AccountKeeper
 	bankKeeper   types.BankKeeper
@@ -25,14 +21,13 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
-	router baseapp.MessageRouter, ak types.AccountKeeper, bk types.BankKeeper, authority string,
+	ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 	return Keeper{
-		router:       router,
 		storeService: storeService,
 		authKeeper:   ak,
 		bankKeeper:   bk,
@@ -49,11 +44,6 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
-}
-
-// Router returns the pool keeper's router
-func (k Keeper) Router() baseapp.MessageRouter {
-	return k.router
 }
 
 // FundCommunityPool allows an account to directly fund the community pool module account.

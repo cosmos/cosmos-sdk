@@ -328,7 +328,7 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = TestAddrs[1].String()
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress("cosmos-sdk-pool").String()
+					params.ProposalCancelDest = authtypes.NewModuleAddress("cosmos-pool").String()
 				}
 
 				err := govKeeper.Params.Set(ctx, params)

@@ -97,7 +97,7 @@ func (k Keeper) Init(
 	}
 
 	// make the context and init the account
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, creator, k.getSenderFunc, k.execModuleFunc, k.queryModuleFunc)
+	ctx = k.makeAccountContext(ctx, accountAddr, creator, false)
 	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, nil, err
@@ -133,7 +133,7 @@ func (k Keeper) Execute(
 	}
 
 	// make the context and execute the account state transition.
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, sender, k.getSenderFunc, k.execModuleFunc, k.queryModuleFunc)
+	ctx = k.makeAccountContext(ctx, accountAddr, sender, false)
 	return impl.Execute(ctx, execRequest)
 }
 
@@ -158,15 +158,8 @@ func (k Keeper) Query(
 		return nil, err
 	}
 
-	// make the context and execute the account state transition.
-	// we do not pass in sender as a query does not have a sender.
-	// we do not pass in execModuleFunc as a query does not execute any module.
-	// we do not pass in getSenderFunc as a query does not have a sender.
-	ctx = implementation.MakeAccountContext(ctx, k.storeService, accountAddr, nil, func(_ proto.Message) ([]byte, error) {
-		return nil, fmt.Errorf("cannot get sender from query")
-	}, func(ctx context.Context, _ proto.Message) (proto.Message, error) {
-		return nil, fmt.Errorf("cannot execute module from query")
-	}, k.queryModuleFunc)
+	// make the context and execute the account query
+	ctx = k.makeAccountContext(ctx, accountAddr, nil, true)
 	return impl.Query(ctx, queryRequest)
 }
 
@@ -187,4 +180,36 @@ func (k Keeper) makeAddress(ctx context.Context) ([]byte, error) {
 	// TODO: better address scheme, ref: https://github.com/cosmos/cosmos-sdk/issues/17516
 	addr := sha256.Sum256(append([]byte("x/accounts"), binary.BigEndian.AppendUint64(nil, num)...))
 	return addr[:], nil
+}
+
+// makeAccountContext makes a new context for the given account.
+func (k Keeper) makeAccountContext(ctx context.Context, accountAddr []byte, sender []byte, isQuery bool) context.Context {
+	// if it's not a query we create a context that allows to do anything.
+	if !isQuery {
+		return implementation.MakeAccountContext(
+			ctx,
+			k.storeService,
+			accountAddr,
+			sender,
+			k.getSenderFunc,
+			k.execModuleFunc,
+			k.queryModuleFunc,
+		)
+	}
+
+	// if it's a query we create a context that does not allow to execute modules
+	// and does not allow to get the sender.
+	return implementation.MakeAccountContext(
+		ctx,
+		k.storeService,
+		accountAddr,
+		nil,
+		func(_ proto.Message) ([]byte, error) {
+			return nil, fmt.Errorf("cannot get sender from query")
+		},
+		func(ctx context.Context, _ proto.Message) (proto.Message, error) {
+			return nil, fmt.Errorf("cannot execute module from query")
+		},
+		k.queryModuleFunc,
+	)
 }

@@ -17,8 +17,13 @@ var _ implementation.Account = (*TestAccount)(nil)
 type TestAccount struct{}
 
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
-	implementation.RegisterInitHandler(builder, func(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
-		return &emptypb.Empty{}, nil
+	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+		// we also force a module call here to test things work as expected.
+		_, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
+			Address: string(implementation.Whoami(ctx)),
+			Denom:   "atom",
+		})
+		return &emptypb.Empty{}, err
 	})
 }
 

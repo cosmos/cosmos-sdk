@@ -36,6 +36,11 @@ func TestKeeper_Init(t *testing.T) {
 	m, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
+	m.queryModuleFunc = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+		_, ok := msg.(*bankv1beta1.QueryBalanceRequest)
+		require.True(t, ok)
+		return &bankv1beta1.QueryBalanceResponse{}, nil
+	}
 
 	t.Run("ok", func(t *testing.T) {
 		sender := []byte("sender")

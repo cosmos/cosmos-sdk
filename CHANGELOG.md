@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583), [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
 * (baseapp) [#17518](https://github.com/cosmos/cosmos-sdk/pull/17518) Utilizing voting power from vote extensions (CometBFT) instead of the current bonded tokens (x/staking) to determine if a set of vote extensions are valid.
 * (config) [#17649](https://github.com/cosmos/cosmos-sdk/pull/17649) Fix `mempool.max-txs` configuration is invalid in `app.config`.
+* (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix: `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
 
 ### API Breaking Changes
 

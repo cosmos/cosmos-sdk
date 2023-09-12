@@ -354,26 +354,10 @@ type CometService struct {
 	Evidence []abci.Misbehavior
 }
 
-func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
-	return CometService{
-		Evidence: bg.Misbehavior,
+func NewCometInfo(bg abci.RequestFinalizeBlock) comet.Info {
+	return comet.Info{
+		Evidence: evidenceWrapper{bg.Misbehavior},
 	}
-}
-
-func (r CometService) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{evidence: r.Evidence}
-}
-
-func (CometService) GetValidatorsHash() []byte {
-	return []byte{}
-}
-
-func (CometService) GetProposerAddress() []byte {
-	return []byte{}
-}
-
-func (CometService) GetLastCommit() comet.CommitInfo {
-	return nil
 }
 
 type evidenceWrapper struct {

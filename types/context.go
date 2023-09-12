@@ -61,7 +61,7 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
-	cometInfo            comet.BlockInfo
+	cometInfo            comet.Info
 	headerInfo           header.Info
 }
 
@@ -88,7 +88,7 @@ func (c Context) Priority() int64                               { return c.prior
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
-func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
+func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
@@ -302,7 +302,7 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 }
 
 // WithCometInfo returns a Context with an updated comet info
-func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
+func (c Context) WithCometInfo(cometInfo comet.Info) Context {
 	c.cometInfo = cometInfo
 	return c
 }

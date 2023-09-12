@@ -8,32 +8,6 @@ import (
 	"cosmossdk.io/core/comet"
 )
 
-var _ comet.BlockInfo = (*cometInfo)(nil)
-
-// CometInfo defines the properties provided by comet to the application
-type cometInfo struct {
-	Misbehavior     []abci.Misbehavior
-	ValidatorsHash  []byte
-	ProposerAddress []byte
-	LastCommit      abci.CommitInfo
-}
-
-func (r cometInfo) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{evidence: r.Misbehavior}
-}
-
-func (r cometInfo) GetValidatorsHash() []byte {
-	return r.ValidatorsHash
-}
-
-func (r cometInfo) GetProposerAddress() []byte {
-	return r.ProposerAddress
-}
-
-func (r cometInfo) GetLastCommit() comet.CommitInfo {
-	return commitInfoWrapper{r.LastCommit}
-}
-
 type evidenceWrapper struct {
 	evidence []abci.Misbehavior
 }
@@ -129,30 +103,6 @@ func (m misbehaviorWrapper) Time() time.Time {
 func (m misbehaviorWrapper) TotalVotingPower() int64 {
 	return m.Misbehavior.TotalVotingPower
 }
-
-type prepareProposalInfo struct {
-	*abci.RequestPrepareProposal
-}
-
-var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
-
-func (r prepareProposalInfo) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{r.Misbehavior}
-}
-
-func (r prepareProposalInfo) GetValidatorsHash() []byte {
-	return r.NextValidatorsHash
-}
-
-func (r prepareProposalInfo) GetProposerAddress() []byte {
-	return r.RequestPrepareProposal.ProposerAddress
-}
-
-func (r prepareProposalInfo) GetLastCommit() comet.CommitInfo {
-	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
-}
-
-var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
 
 type extendedCommitInfoWrapper struct {
 	abci.ExtendedCommitInfo

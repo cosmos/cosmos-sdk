@@ -7,17 +7,17 @@ import (
 
 // BlockInfoService is an interface that can be used to get information specific to Comet
 type BlockInfoService interface {
-	GetCometBlockInfo(context.Context) BlockInfo
+	GetCometBlockInfo(context.Context) Info
 }
 
 // BlockInfo is the information comet provides apps in ABCI
-type BlockInfo interface {
-	GetEvidence() EvidenceList // Evidence misbehavior of the block
+type Info struct {
+	Evidence EvidenceList // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
-	GetValidatorsHash() []byte
-	GetProposerAddress() []byte // ProposerAddress returns the address of the block proposer
-	GetLastCommit() CommitInfo  // DecidedLastCommit returns the last commit info
+	ValidatorsHash  []byte
+	ProposerAddress []byte     // ProposerAddress is  the address of the block proposer
+	LastCommit      CommitInfo // DecidedLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator

@@ -31,7 +31,7 @@ var _ comet.BlockInfoService = cometInfoService{}
 
 type cometInfoService struct{}
 
-func (cometInfoService) GetCometBlockInfo(ctx context.Context) comet.BlockInfo {
+func (cometInfoService) GetCometBlockInfo(ctx context.Context) comet.Info {
 	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
 

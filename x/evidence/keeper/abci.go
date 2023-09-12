@@ -18,13 +18,13 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	bi := k.cometInfo.GetCometBlockInfo(ctx)
-	if bi == nil {
+	if bi.Evidence == nil {
 		// If we don't have block info, we don't have any evidence to process.  Block info may be nil during
 		// genesis calls or in tests.
 		return nil
 	}
 
-	evidences := bi.GetEvidence()
+	evidences := bi.Evidence
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for i := 0; i < evidences.Len(); i++ {
 		switch evidences.Get(i).Type() {

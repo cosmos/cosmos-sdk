@@ -430,10 +430,11 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
 		WithCometInfo(corecomet.Info{
-			Evidence:        evidenceWrapper{req.Misbehavior},
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
-			LastCommit:      extendedCommitInfoWrapper{req.LocalLastCommit}}).
+			LastCommit:      sdk.ToSDKExtendedCommitInfo(req.LocalLastCommit),
+		}).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
@@ -522,8 +523,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithCometInfo(corecomet.Info{
 			ProposerAddress: req.ProposerAddress,
 			ValidatorsHash:  req.NextValidatorsHash,
-			Evidence:        evidenceWrapper{req.Misbehavior},
-			LastCommit:      commitInfoWrapper{req.ProposedLastCommit}},
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
+			LastCommit:      sdk.ToSDKCommitInfo(req.ProposedLastCommit),
+		},
 		).
 		WithExecMode(sdk.ExecModeProcessProposal).
 		WithHeaderInfo(coreheader.Info{
@@ -724,10 +726,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		WithVoteInfos(req.DecidedLastCommit.Votes).
 		WithExecMode(sdk.ExecModeFinalize).
 		WithCometInfo(corecomet.Info{
-			Evidence:        evidenceWrapper{req.Misbehavior},
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
-			LastCommit:      commitInfoWrapper{req.DecidedLastCommit},
+			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
 		})
 
 	// GasMeter must be set after we get a context with updated consensus params.

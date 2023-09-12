@@ -393,3 +393,58 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	}
 	return ctx.Value(SdkContextKey).(Context)
 }
+
+// ToSDKEvidence takes comet evidence and returns sdk evidence
+func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
+	evidence := make([]comet.Evidence, len(ev))
+	for i, e := range ev {
+		evidence[i] = comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
+			Height:           e.Height,
+			Time:             e.Time,
+			TotalVotingPower: e.TotalVotingPower,
+			Validator: comet.Validator{
+				Address: e.Validator.Address,
+				Power:   e.Validator.Power,
+			},
+		}
+	}
+	return evidence
+}
+
+// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+	return ci
+}
+
+// ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
+func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+
+	return ci
+}

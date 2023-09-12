@@ -105,7 +105,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		stakingKeeper,
 		slashingKeeper,
 		address.NewBech32Codec("cosmos"),
-		&evidencetestutil.MockCometinfo{},
 	)
 
 	suite.stakingKeeper = stakingKeeper

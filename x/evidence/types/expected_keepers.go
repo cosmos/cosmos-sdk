@@ -6,7 +6,6 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -47,9 +46,5 @@ type (
 		MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 		SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	}
-
-	Cometinfo interface {
-		comet.BlockInfoService
 	}
 )

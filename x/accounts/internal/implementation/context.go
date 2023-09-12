@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
-	"google.golang.org/protobuf/proto"
 )
 
 var errUnauthorized = errors.New("unauthorized")
@@ -82,7 +83,6 @@ func QueryModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[
 	// we also unwrap the original context.
 	v := ctx.Value(contextKey{}).(contextValue)
 	resp, err := v.moduleQuery(v.originalContext, msg)
-
 	if err != nil {
 		return nil, err
 	}

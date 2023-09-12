@@ -7,11 +7,12 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"google.golang.org/protobuf/proto"
 )
 
 var errAccountTypeNotFound = errors.New("account type not found")
@@ -183,7 +184,7 @@ func (k Keeper) makeAddress(ctx context.Context) ([]byte, error) {
 }
 
 // makeAccountContext makes a new context for the given account.
-func (k Keeper) makeAccountContext(ctx context.Context, accountAddr []byte, sender []byte, isQuery bool) context.Context {
+func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []byte, isQuery bool) context.Context {
 	// if it's not a query we create a context that allows to do anything.
 	if !isQuery {
 		return implementation.MakeAccountContext(

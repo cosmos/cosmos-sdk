@@ -47,6 +47,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the distr
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -55,6 +56,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -109,6 +111,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -117,6 +120,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -241,6 +245,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -249,6 +254,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

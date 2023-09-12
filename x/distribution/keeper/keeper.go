@@ -29,6 +29,8 @@ type Keeper struct {
 
 	// Msg server router
 	router baseapp.MessageRouter
+	// Query server router
+	grpcRouter *baseapp.GRPCQueryRouter
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -60,7 +62,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	router baseapp.MessageRouter, feeCollectorName, authority string,
+	router baseapp.MessageRouter, grpcRouter *baseapp.GRPCQueryRouter, feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -75,6 +77,7 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		router:           router,
+		grpcRouter:       grpcRouter,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -154,6 +157,11 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 // Router returns the x/distribution keeper's router
 func (k Keeper) Router() baseapp.MessageRouter {
 	return k.router
+}
+
+// QueryRouter returns the x/distribution keeper's grpc query router
+func (k Keeper) QueryRouter() *baseapp.GRPCQueryRouter {
+	return k.grpcRouter
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal

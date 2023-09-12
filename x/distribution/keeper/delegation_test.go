@@ -44,6 +44,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -52,6 +53,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 
 		authtypes.NewModuleAddress("gov").String(),
@@ -150,6 +152,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -158,6 +161,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -258,6 +262,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -266,6 +271,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -387,6 +393,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -395,6 +402,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -489,6 +497,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -497,6 +506,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -569,6 +579,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -577,6 +588,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -690,6 +702,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -698,6 +711,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -832,6 +846,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -840,6 +855,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -1036,6 +1052,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -1044,6 +1061,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

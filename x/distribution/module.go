@@ -222,6 +222,7 @@ type ModuleInputs struct {
 	StoreService     store.KVStoreService
 	Cdc              codec.Codec
 	MsgServiceRouter baseapp.MessageRouter
+	GrpcQueryRouter  *baseapp.GRPCQueryRouter
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -258,6 +259,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.MsgServiceRouter,
+		in.GrpcQueryRouter,
 		feeCollectorName,
 		authority.String(),
 	)

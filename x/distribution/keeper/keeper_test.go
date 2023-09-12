@@ -48,6 +48,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -56,6 +57,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -104,6 +106,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -112,6 +115,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -161,6 +165,7 @@ func TestGetTotalRewards(t *testing.T) {
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
 	msr := baseapp.NewMsgServiceRouter()
+	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -169,6 +174,7 @@ func TestGetTotalRewards(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		msr,
+		qsr,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

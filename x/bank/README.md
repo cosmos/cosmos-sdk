@@ -415,10 +415,25 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/
 
 The message will fail under the following conditions:
 
-* The authority is not a bech32 address.
+* The authority is not a decodable address.
 * The authority is not x/gov module's address.
 * There are multiple SendEnabled entries with the same Denom.
 * One or more SendEnabled entries has an invalid Denom.
+
+### MsgBurn 
+
+Used to burn coins from an account. The coins are removed from the account and the total supply is reduced.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/1af000b3ef6296f9928caf494fe5bb812990f22d/proto/cosmos/bank/v1beta1/tx.proto#L131-L148
+```
+
+This message will fail under the following conditions:
+
+* The signer is not present
+* The coins are not spendable
+* The coins are not positive
+* The coins are not valid
 
 ## Events
 

@@ -163,9 +163,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return BeginBlocker(ctx, am.keeper)
 }
 
-// IsUpgradeModule implements the module.UpgradeModule interface.
-func (am AppModuleBasic) IsUpgradeModule() {}
-
 //
 // App Wiring Setup
 //

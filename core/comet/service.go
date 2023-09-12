@@ -10,7 +10,7 @@ type CometInfoService interface {
 	GetCometInfo(context.Context) Info
 }
 
-// BlockInfo is the information comet provides apps in ABCI
+// Info is the information comet provides apps in ABCI
 type Info struct {
 	Evidence []Evidence // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators

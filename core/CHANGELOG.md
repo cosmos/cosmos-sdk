@@ -34,11 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.11.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
 
 * [#17468](https://github.com/cosmos/cosmos-sdk/pull/17468) Add `appmodule.HasPreBlocker` interface.
-* [#17689](https://github.com/cosmos/cosmos-sdk/pull/17689) Move Comet service to return structs instead of interfaces. 
-    * `BlockInfo` was renamed to `Info` and `BlockInfoService` was renamed to `CometInfoService`
 
 ## [v0.10.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.10.0)
 

@@ -6,18 +6,18 @@ import (
 )
 
 // BlockInfoService is an interface that can be used to get information specific to Comet
-type CometInfoService interface {
-	GetCometInfo(context.Context) Info
+type BlockInfoService interface {
+	GetCometBlockInfo(context.Context) BlockInfo
 }
 
-// Info is the information comet provides apps in ABCI
-type Info struct {
-	Evidence []Evidence // Evidence misbehavior of the block
+// BlockInfo is the information comet provides apps in ABCI
+type BlockInfo interface {
+	GetEvidence() EvidenceList // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
-	ValidatorsHash  []byte
-	ProposerAddress []byte     // ProposerAddress is  the address of the block proposer
-	LastCommit      CommitInfo // DecidedLastCommit returns the last commit info
+	GetValidatorsHash() []byte
+	GetProposerAddress() []byte // ProposerAddress returns the address of the block proposer
+	GetLastCommit() CommitInfo  // DecidedLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator
@@ -29,25 +29,36 @@ const (
 	LightClientAttack MisbehaviorType = 2
 )
 
+// Validator is the validator information of ABCI
+type Validator interface {
+	Address() []byte
+	Power() int64
+}
+
+type EvidenceList interface {
+	Len() int
+	Get(int) Evidence
+}
+
 // Evidence is the misbehavior information of ABCI
-type Evidence struct {
-	Type             MisbehaviorType
-	Validator        Validator
-	Height           int64
-	Time             time.Time
-	TotalVotingPower int64
+type Evidence interface {
+	Type() MisbehaviorType
+	Validator() Validator
+	Height() int64
+	Time() time.Time
+	TotalVotingPower() int64
 }
 
 // CommitInfo is the commit information of ABCI
-type CommitInfo struct {
-	Round int32
-	Votes []VoteInfo
+type CommitInfo interface {
+	Round() int32
+	Votes() VoteInfos
 }
 
-// VoteInfo is the vote information of ABCI
-type VoteInfo struct {
-	Validator   Validator
-	BlockIDFlag BlockIDFlag
+// VoteInfos is an interface to get specific votes in a efficient way
+type VoteInfos interface {
+	Len() int
+	Get(int) VoteInfo
 }
 
 // BlockIdFlag indicates which BlockID the signature is for
@@ -63,8 +74,8 @@ const (
 	BlockIDFlagNil BlockIDFlag = 3
 )
 
-// Validator is the validator information of ABCI
-type Validator struct {
-	Address []byte
-	Power   int64
+// VoteInfo is the vote information of ABCI
+type VoteInfo interface {
+	Validator() Validator
+	GetBlockIDFlag() BlockIDFlag
 }

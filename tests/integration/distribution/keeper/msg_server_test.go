@@ -75,7 +75,6 @@ func initFixture(tb testing.TB) *fixture {
 
 	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
-
 	// Create QueryServiceRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 

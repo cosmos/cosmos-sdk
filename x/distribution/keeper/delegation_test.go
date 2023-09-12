@@ -41,9 +41,9 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -149,9 +149,9 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -259,9 +259,9 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -390,9 +390,9 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -494,9 +494,9 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -576,9 +576,9 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -699,9 +699,9 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -843,9 +843,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -1049,9 +1049,9 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(

@@ -44,9 +44,9 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the distr
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -108,9 +108,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(
@@ -242,9 +242,9 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
+	// Create MsgServiceRouter
 	msr := baseapp.NewMsgServiceRouter()
+	// Create GRPCQueryRouter
 	qsr := baseapp.NewGRPCQueryRouter()
 
 	distrKeeper := keeper.NewKeeper(

@@ -1,8 +1,10 @@
 package accounts
 
 import (
+	"context"
 	"testing"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -17,6 +19,9 @@ func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
+	k.queryModuleFunc = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+		return &bankv1beta1.QueryBalanceResponse{}, nil
+	}
 
 	ms := NewMsgServer(k)
 	qs := NewQueryServer(k)

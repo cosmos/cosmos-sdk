@@ -116,38 +116,25 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		var initClientCtx client.Context
-		initClientCtx = initClientCtx.WithViper("").
-			WithCmdContext(cmd.Context()).
-			WithAddressCodec(b.AddressCodec)
-			// WithKeyring(b.Keyring)
-
-		fmt.Printf("b.AddressCodec: %v, %v\n", b.AddressCodec, initClientCtx.AddressCodec)
-
-		initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+		clientCtx, err := config.ReadFromClientConfig(*b.ClientCtx)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("initClientCtx_autoCli: %v\n", initClientCtx)
-
-		fmt.Println("cmdP_before", cmd)
-
-		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &initClientCtx))
-		if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
-			return err
-		}
-
-		fmt.Println("cmdP_after", cmd)
-
-		clientCtx, err := client.GetClientTxContext(cmd)
+		clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 		if err != nil {
 			return err
 		}
-		_ = clientCtx
 
-		// fmt.Println("cmd", cmd)
-		fmt.Printf("clientCtx.ChainID: %v\n", clientCtx)
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
+		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			return err
+		}
+
+		clientCtx, err = client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
 
 		return b.outOrStdoutFormat(cmd, bz)
 	})

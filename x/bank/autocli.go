@@ -93,7 +93,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			// RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			// 	{
 			// 		RpcMethod:      "Send",
-			// 		Use:            "sdfsdf",
+			// 		Use:            "send",
 			// 		Short:          "Submit proof that an invariant broken to halt the chain",
 			// 		PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}, {ProtoField: "invariant_route"}},
 			// 	},

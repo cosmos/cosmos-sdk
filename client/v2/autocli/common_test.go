@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -16,8 +17,12 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type fixture struct {
@@ -27,6 +32,7 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
+	home := t.TempDir()
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	reflectionv2alpha1.RegisterReflectionServiceServer(server, &testReflectionServer{})
@@ -42,14 +48,27 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
+	appCodec := moduletestutil.MakeTestEncodingConfig().Codec
+	// path := hd.CreateHDPath(118, 0, 0).String()
+	kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
+	require.NoError(t, err)
+
+	var initClientCtx client.Context
+	initClientCtx = initClientCtx.
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
+		WithKeyring(kr).
+		WithKeyringDir(home).
+		WithHomeDir(home).
+		WithViper("")
+
 	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
-			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          protoregistry.GlobalFiles,
-			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
-			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
-			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
+			TypeResolver: protoregistry.GlobalTypes,
+			FileResolver: protoregistry.GlobalFiles,
+			ClientCtx:    &initClientCtx,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

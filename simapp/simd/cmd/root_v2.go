@@ -3,7 +3,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -81,7 +80,6 @@ func NewRootCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("initClientCtx: %v\n", initClientCtx)
 
 			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
@@ -14,9 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
-	"cosmossdk.io/core/address"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -35,13 +34,7 @@ type Builder struct {
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
 
-	// AddressCodec is the address codec used for the address flag
-	AddressCodec          address.Codec
-	ValidatorAddressCodec address.Codec
-	ConsensusAddressCodec address.Codec
-
-	// Keyring implementation
-	Keyring keyring.Keyring
+	ClientCtx *client.Context
 }
 
 func (b *Builder) init() {

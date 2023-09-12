@@ -141,7 +141,7 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelPropos
 
 	return &v1.MsgCancelProposalResponse{
 		ProposalId:     msg.ProposalId,
-		CanceledTime:   ctx.BlockTime(),
+		CanceledTime:   ctx.HeaderInfo().Time,
 		CanceledHeight: uint64(ctx.BlockHeight()),
 	}, nil
 }

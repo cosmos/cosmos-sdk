@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/feegrant"
@@ -131,7 +130,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx.WithHeaderInfo(coreheader.Info{Time: time.Now()}), accs, suite.ctx.HeaderInfo().ChainID)
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accs, suite.ctx.HeaderInfo().ChainID)
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -187,7 +186,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	err = suite.feegrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,

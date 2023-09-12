@@ -34,7 +34,7 @@ func TestFeegrantPruning(t *testing.T) {
 	granter3 := addrs[2]
 	grantee := addrs[3]
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
-	now := testCtx.Ctx.BlockTime()
+	now := testCtx.Ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 
 	ctrl := gomock.NewController(t)

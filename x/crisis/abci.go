@@ -15,7 +15,7 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if k.InvCheckPeriod() == 0 || sdkCtx.BlockHeight()%int64(k.InvCheckPeriod()) != 0 {
+	if k.InvCheckPeriod() == 0 || sdkCtx.HeaderInfo().Height%int64(k.InvCheckPeriod()) != 0 {
 		// skip running the invariant check
 		return
 	}

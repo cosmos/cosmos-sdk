@@ -49,7 +49,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	grantee2 := addrs[2]
 	grantee3 := addrs[3]
 	grantee4 := addrs[4]
-	expiration := ctx.BlockTime().AddDate(0, 1, 0)
+	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)

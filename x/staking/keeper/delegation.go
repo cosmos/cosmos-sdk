@@ -895,7 +895,7 @@ func (k Keeper) getBeginInfo(
 	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
 		// the longest wait - just unbonding period from now
 		completionTime = sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-		height = sdkCtx.BlockHeight()
+		height = sdkCtx.HeaderInfo().Height
 
 		return completionTime, height, false, nil
 
@@ -952,7 +952,7 @@ func (k Keeper) Undelegate(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	completionTime := sdkCtx.HeaderInfo().Time.Add(unbondingTime)
-	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
+	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.HeaderInfo().Height, completionTime, returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}

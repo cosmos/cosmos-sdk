@@ -290,7 +290,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
 			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
-			Time:      ctx.BlockTime(),
+			Time:      ctx.HeaderInfo().Time,
 			Height:    0,
 		}},
 	})

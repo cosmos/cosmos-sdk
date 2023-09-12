@@ -31,7 +31,7 @@ func TestMigration(t *testing.T) {
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)
 

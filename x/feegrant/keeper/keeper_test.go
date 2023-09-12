@@ -62,8 +62,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
-	exp2 := suite.ctx.BlockTime().AddDate(2, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	exp2 := suite.ctx.HeaderInfo().Time.AddDate(2, 0, 0)
 	basic := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
 		Expiration: &exp,
@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	blockTime := suite.ctx.BlockTime()
+	blockTime := suite.ctx.HeaderInfo().Time
 	oneYear := blockTime.AddDate(1, 0, 0)
 
 	future := &feegrant.BasicAllowance{
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
 	allowance := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
@@ -322,7 +322,7 @@ func (suite *KeeperTestSuite) TestIterateGrants() {
 
 func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	now := suite.ctx.BlockTime()
+	now := suite.ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 	oneYearExpiry := now.AddDate(1, 0, 0)
 

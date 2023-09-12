@@ -200,8 +200,8 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.BlockTime().Unix(),
-		ctx.BlockTime().Add(time.Hour).Unix(),
+		ctx.HeaderInfo().Time.Unix(),
+		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(30 * time.Minute))
 	queryClient = suite.mockQueryClient(ctx)
 
 	suite.mockSpendableCoins(ctx, vacc)
@@ -248,8 +248,8 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.BlockTime().Unix(),
-		ctx.BlockTime().Add(time.Hour).Unix(),
+		ctx.HeaderInfo().Time.Unix(),
+		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(30 * time.Minute))
 	queryClient = suite.mockQueryClient(ctx)
 
 	// check fooCoins first, it has some vested and some vesting

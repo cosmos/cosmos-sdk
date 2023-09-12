@@ -30,7 +30,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
 
 	// msg we will call in the all cases

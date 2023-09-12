@@ -74,7 +74,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
-	if simulate || ctx.BlockHeight() == 0 {
+	if simulate || ctx.HeaderInfo().Height == 0 {
 		return ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	}
 

@@ -177,7 +177,7 @@ func (s *contextTestSuite) TestWithBlockTime() {
 		Time: now,
 	})
 	cmttime2 := cmttime.Canonical(now)
-	s.Require().Equal(ctx.BlockTime(), cmttime2)
+	s.Require().Equal(ctx.HeaderInfo().Time, cmttime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {
@@ -230,7 +230,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 				AppHash: tc.h.AppHash,
 			})
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
+			s.Require().Equal(tc.h.Time.UTC(), ctx.HeaderInfo().Time)
 
 			// update only changes one field
 			var newHeight int64 = 17
@@ -241,7 +241,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 				AppHash: tc.h.AppHash,
 			})
 			s.Require().Equal(newHeight, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
+			s.Require().Equal(tc.h.Time.UTC(), ctx.HeaderInfo().Time)
 		})
 	}
 }

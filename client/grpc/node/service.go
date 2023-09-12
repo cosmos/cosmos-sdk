@@ -48,7 +48,7 @@ func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigRespo
 func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkctx.HeaderInfo().Time
 
 	return &StatusResponse{
 		// TODO: Get earliest version from store.

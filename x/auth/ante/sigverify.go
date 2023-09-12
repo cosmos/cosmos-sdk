@@ -294,7 +294,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// retrieve signer data
-		genesis := ctx.BlockHeight() == 0
+		genesis := ctx.HeaderInfo().Height == 0
 		chainID := ctx.HeaderInfo().ChainID
 		var accNum uint64
 		if !genesis {

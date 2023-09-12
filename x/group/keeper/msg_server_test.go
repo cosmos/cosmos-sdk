@@ -333,7 +333,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member2,
 						Weight:  "2",
-						AddedAt: s.sdkCtx.BlockTime(),
+						AddedAt: s.sdkCtx.HeaderInfo().Time,
 					},
 					GroupId: groupID,
 				},
@@ -428,7 +428,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Member: &group.Member{
 					Address: member2,
 					Weight:  "1",
-					AddedAt: s.sdkCtx.BlockTime(),
+					AddedAt: s.sdkCtx.HeaderInfo().Time,
 				},
 			}},
 		},
@@ -1997,8 +1997,8 @@ func (s *TestSuite) TestWithdrawProposal() {
 				resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				vpe := resp.Proposal.VotingPeriodEnd
-				timeDiff := vpe.Sub(s.sdkCtx.BlockTime())
-				ctxVPE := sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(timeDiff).Add(time.Second * 1))
+				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
+				ctxVPE := sdkCtx.WithBlockTime(s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1))
 				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
 				events := ctxVPE.EventManager().ABCIEvents()
 
@@ -2697,7 +2697,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
@@ -2732,7 +2732,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
@@ -2938,7 +2938,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod))
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
@@ -2960,7 +2960,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			}
 
 			// Wait for min execution period end
-			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod))
 			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)

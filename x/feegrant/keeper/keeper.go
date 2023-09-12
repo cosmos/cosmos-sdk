@@ -85,7 +85,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// expiration shouldn't be in the past.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if exp != nil && exp.Before(sdkCtx.BlockTime()) {
+	if exp != nil && exp.Before(sdkCtx.HeaderInfo().Time) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 

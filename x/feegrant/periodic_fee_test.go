@@ -28,7 +28,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 	emptyCoins := sdk.Coins{}
 
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
 	twoHours := now.Add(2 * time.Hour)
 	tenMinutes := time.Duration(10) * time.Minute

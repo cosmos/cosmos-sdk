@@ -634,7 +634,7 @@ func getDepositMultiplier(expedited bool) int64 {
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
-	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
+	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
 
@@ -643,7 +643,7 @@ func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) 
 
 func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
-	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
+	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
 

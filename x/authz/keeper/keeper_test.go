@@ -86,7 +86,7 @@ func (s *TestSuite) SetupTest() {
 
 func (s *TestSuite) TestKeeper() {
 	ctx, addrs := s.ctx, s.addrs
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	require := s.Require()
 
 	granterAddr := addrs[0]
@@ -144,7 +144,7 @@ func (s *TestSuite) TestKeeperIter() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
-	e := ctx.BlockTime().AddDate(1, 0, 0)
+	e := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
 	err := s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
@@ -212,7 +212,7 @@ func (s *TestSuite) TestDispatchAction() {
 				e := now.AddDate(0, 0, 1)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
 				require.NoError(err)
-				return s.ctx.WithHeaderInfo(header.Info{Time: s.ctx.BlockTime().AddDate(0, 0, 2)})
+				return s.ctx.WithHeaderInfo(header.Info{Time: s.ctx.HeaderInfo().Time.AddDate(0, 0, 2)})
 			},
 			func() {},
 		},
@@ -313,7 +313,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
+	expiration := s.ctx.HeaderInfo().Time.Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
 		&banktypes.MsgSend{

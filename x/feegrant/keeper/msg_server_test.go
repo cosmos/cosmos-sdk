@@ -14,8 +14,8 @@ import (
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
-	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
-	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	yesterday := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
 
 	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeAllowance() {
-	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	oneYear := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string

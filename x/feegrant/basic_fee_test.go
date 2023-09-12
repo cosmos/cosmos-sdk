@@ -21,7 +21,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
-	badTime := ctx.BlockTime().AddDate(0, 0, -1)
+	badTime := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
 	allowace := &feegrant.BasicAllowance{
 		Expiration: &badTime,
 	}
@@ -35,7 +35,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {

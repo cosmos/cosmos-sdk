@@ -328,7 +328,7 @@ func (s *TestSuite) TestPruneProposals() {
 	s.Require().NoError(err)
 	s.Require().Equal(prePrune.Proposal.Id, submittedProposal.ProposalId)
 	// Move Forward in time for 15 days, after voting period end + max_execution_period
-	s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
+	s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.HeaderInfo().Time.Add(expirationTime))
 
 	// Prune Expired Proposals
 	err = s.groupKeeper.PruneProposals(s.sdkCtx)
@@ -446,7 +446,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(err)
 
 	// move forward in time
-	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1))
 
 	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
 		ProposalId: proposalRes.ProposalId,
@@ -518,7 +518,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(err)
 
 	// move forward in time
-	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1))
 
 	// Tally the result. This saves the tally result to state.
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))

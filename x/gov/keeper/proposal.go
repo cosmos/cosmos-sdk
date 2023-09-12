@@ -152,7 +152,7 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 	}
 
 	// Check proposal voting period is ended.
-	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(sdkCtx.BlockTime()) {
+	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(sdkCtx.HeaderInfo().Time) {
 		return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
 	}
 

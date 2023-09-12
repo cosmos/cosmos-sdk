@@ -90,13 +90,13 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	remainingSlashAmount := slashAmount
 
 	switch {
-	case infractionHeight > sdkCtx.BlockHeight():
+	case infractionHeight > sdkCtx.HeaderInfo().Height:
 		// Can't slash infractions in the future
 		return math.NewInt(0), fmt.Errorf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, sdkCtx.BlockHeight())
+			infractionHeight, sdkCtx.HeaderInfo().Height)
 
-	case infractionHeight == sdkCtx.BlockHeight():
+	case infractionHeight == sdkCtx.HeaderInfo().Height:
 		// Special-case slash at current height for efficiency - we don't need to
 		// look through unbonding delegations or redelegations.
 		logger.Info(
@@ -104,7 +104,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			"height", infractionHeight,
 		)
 
-	case infractionHeight < sdkCtx.BlockHeight():
+	case infractionHeight < sdkCtx.HeaderInfo().Height:
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations, err := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		if err != nil {

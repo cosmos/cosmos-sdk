@@ -6,13 +6,13 @@ import (
 )
 
 // BlockInfoService is an interface that can be used to get information specific to Comet
-type BlockInfoService interface {
-	GetCometBlockInfo(context.Context) Info
+type CometInfoService interface {
+	GetCometInfo(context.Context) Info
 }
 
-// BlockInfo is the information comet provides apps in ABCI
+// Info is the information comet provides apps in ABCI
 type Info struct {
-	Evidence EvidenceList // Evidence misbehavior of the block
+	Evidence []Evidence // Evidence misbehavior of the block
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
 	ValidatorsHash  []byte
@@ -29,36 +29,25 @@ const (
 	LightClientAttack MisbehaviorType = 2
 )
 
-// Validator is the validator information of ABCI
-type Validator interface {
-	Address() []byte
-	Power() int64
-}
-
-type EvidenceList interface {
-	Len() int
-	Get(int) Evidence
-}
-
 // Evidence is the misbehavior information of ABCI
-type Evidence interface {
-	Type() MisbehaviorType
-	Validator() Validator
-	Height() int64
-	Time() time.Time
-	TotalVotingPower() int64
+type Evidence struct {
+	Type             MisbehaviorType
+	Validator        Validator
+	Height           int64
+	Time             time.Time
+	TotalVotingPower int64
 }
 
 // CommitInfo is the commit information of ABCI
-type CommitInfo interface {
-	Round() int32
-	Votes() VoteInfos
+type CommitInfo struct {
+	Round int32
+	Votes []VoteInfo
 }
 
-// VoteInfos is an interface to get specific votes in a efficient way
-type VoteInfos interface {
-	Len() int
-	Get(int) VoteInfo
+// VoteInfo is the vote information of ABCI
+type VoteInfo struct {
+	Validator   Validator
+	BlockIDFlag BlockIDFlag
 }
 
 // BlockIdFlag indicates which BlockID the signature is for
@@ -74,8 +63,8 @@ const (
 	BlockIDFlagNil BlockIDFlag = 3
 )
 
-// VoteInfo is the vote information of ABCI
-type VoteInfo interface {
-	Validator() Validator
-	GetBlockIDFlag() BlockIDFlag
+// Validator is the validator information of ABCI
+type Validator struct {
+	Address []byte
+	Power   int64
 }

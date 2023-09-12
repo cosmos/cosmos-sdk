@@ -101,8 +101,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 func (suite *SimTestSuite) TestWeightedOperations() {
 	require := suite.Require()
 
-	suite.ctx.WithHeaderInfo(coreheader.Info{ChainID: "test-chain"})
-
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(
@@ -133,7 +131,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx.WithHeaderInfo(coreheader.Info{Time: time.Now()}), accs, suite.ctx.HeaderInfo().ChainID)
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -159,6 +157,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	// set time in context
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 

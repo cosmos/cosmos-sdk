@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
-		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.HeaderInfo().Time))
 
 		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
 		suite.Require().NoError(err)
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 
 		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 		suite.Require().Nil(err)
-		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.HeaderInfo().Time))
 
 		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
 		suite.Require().NoError(err)
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 	proposal3, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal3ID)
 	suite.Require().Nil(err)
-	suite.Require().True(proposal3.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+	suite.Require().True(proposal3.VotingStartTime.Equal(suite.ctx.HeaderInfo().Time))
 	// add vote
 	voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
 	err = suite.govKeeper.AddVote(suite.ctx, proposal3ID, suite.addrs[0], voteOptions, "")
@@ -263,7 +263,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 				proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
 				suite.Require().Nil(err)
-				suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+				suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.HeaderInfo().Time))
 
 				// add vote
 				voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}

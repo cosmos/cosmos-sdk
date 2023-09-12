@@ -96,7 +96,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
-	submitTime := sdkCtx.BlockHeader().Time
+	submitTime := sdkCtx.HeaderInfo().Time
 	depositPeriod := params.MaxDepositPeriod
 
 	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited)
@@ -237,7 +237,7 @@ func (keeper Keeper) DeleteProposal(ctx context.Context, proposalID uint64) erro
 // ActivateVotingPeriod activates the voting period of a proposal
 func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	startTime := sdkCtx.BlockHeader().Time
+	startTime := sdkCtx.HeaderInfo().Time
 	proposal.VotingStartTime = &startTime
 	var votingPeriod *time.Duration
 	params, err := keeper.Params.Get(ctx)

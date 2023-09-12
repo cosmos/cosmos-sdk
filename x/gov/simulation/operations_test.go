@@ -226,7 +226,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -275,7 +275,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -325,7 +325,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -373,7 +373,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 

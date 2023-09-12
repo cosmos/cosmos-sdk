@@ -489,7 +489,7 @@ func (s *TestSuite) TestGetAuthorizations() {
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
 
-	start := s.ctx.BlockHeader().Time
+	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 
 	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")

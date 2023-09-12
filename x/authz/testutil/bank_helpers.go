@@ -12,6 +12,10 @@ func (k MockBankKeeper) Send(goCtx context.Context, msg *bank.MsgSend) (*bank.Ms
 	return nil, nil
 }
 
+func (k MockBankKeeper) Burn(goCtx context.Context, msg *bank.MsgBurn) (*bank.MsgBurnResponse, error) {
+	return nil, nil
+}
+
 func (k MockBankKeeper) MultiSend(goCtx context.Context, msg *bank.MsgMultiSend) (*bank.MsgMultiSendResponse, error) {
 	return nil, nil
 }

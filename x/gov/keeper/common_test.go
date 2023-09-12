@@ -147,7 +147,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeepe
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), mintModuleName, gomock.Any()).AnyTimes()
-	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).AnyTimes()
+	bankKeeper.EXPECT().BurnCoins(gomock.Any(), authtypes.NewEmptyModuleAccount(types.ModuleName).GetAddress(), gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), mintModuleName, types.ModuleName, gomock.Any()).AnyTimes()
 
 	// But we do track normal account balances.

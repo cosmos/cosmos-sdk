@@ -144,6 +144,10 @@ func TestManagerOrderSetters(t *testing.T) {
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
+
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
@@ -440,6 +444,10 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
+
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
@@ -457,6 +465,43 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
+<<<<<<< HEAD
+=======
+func TestCoreAPIManager_PreBlock(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreModuleWithPreBlock(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mock.NewMockCoreAppModule(mockCtrl),
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 1, len(mm.OrderPreBlockers))
+
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(sdk.ResponsePreBlock{
+		ConsensusParamsChanged: true,
+	}, nil)
+	res, err := mm.PreBlock(sdk.Context{})
+	require.NoError(t, err)
+	require.True(t, res.ConsensusParamsChanged)
+
+	// test false
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(sdk.ResponsePreBlock{
+		ConsensusParamsChanged: false,
+	}, nil)
+	res, err = mm.PreBlock(sdk.Context{})
+	require.NoError(t, err)
+	require.False(t, res.ConsensusParamsChanged)
+
+	// test error
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(sdk.ResponsePreBlock{}, errors.New("some error"))
+	_, err = mm.PreBlock(sdk.Context{})
+	require.EqualError(t, err, "some error")
+}
+
+>>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)

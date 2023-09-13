@@ -19,7 +19,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSoftwareUpgrade{},
 		&MsgCancelUpgrade{},

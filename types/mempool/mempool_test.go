@@ -232,7 +232,6 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 	require.NoError(t, err)
 	require.NoError(t, mp.Insert(ctxt, delegatorTx))
 	require.Equal(t, 1, mp.CountTx())
-
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {

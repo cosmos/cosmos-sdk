@@ -43,7 +43,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint6
 		return err
 	}
 
-	return keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, coinsToBurn)
+	return keeper.bankKeeper.BurnCoins(ctx, keeper.authKeeper.GetModuleAddress(types.ModuleName), coinsToBurn)
 }
 
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
@@ -192,7 +192,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
-			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
+			err := keeper.bankKeeper.BurnCoins(ctx, keeper.authKeeper.GetModuleAddress(types.ModuleName), cancellationCharges)
 			if err != nil {
 				return err
 			}

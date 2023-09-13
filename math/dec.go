@@ -459,17 +459,15 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		return absRoot.NegMut(), err
 	}
 
-	// One decimal, that we invalidate later. Helps us save a heap allocation.
-	scratchOneDec := LegacyOneDec()
-	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
+	if root == 1 || d.IsZero() || d.Equal(LegacyOneDec()) {
 		return d, nil
 	}
 
 	if root == 0 {
-		return scratchOneDec, nil
+		return LegacyOneDec(), nil
 	}
 
-	guess, delta := scratchOneDec, LegacyOneDec()
+	guess, delta := LegacyOneDec(), LegacyOneDec()
 
 	for iter := 0; delta.Abs().GT(LegacySmallestDec()) && iter < maxApproxRootIterations; iter++ {
 		prev := guess.Power(root - 1)
@@ -493,10 +491,9 @@ func (d LegacyDec) Power(power uint64) LegacyDec {
 }
 
 func (d LegacyDec) PowerMut(power uint64) LegacyDec {
+	// TODO: use mutable functions here
 	if power == 0 {
-		// Set to 1 with the correct precision.
-		d.i.Set(precisionReuse)
-		return d
+		return LegacyOneDec()
 	}
 	tmp := LegacyOneDec()
 

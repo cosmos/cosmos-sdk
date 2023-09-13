@@ -39,8 +39,3 @@ type CoreAppModule interface {
 	appmodule.HasPrecommit
 	appmodule.HasPrepareCheckState
 }
-
-type CoreUpgradeAppModule interface {
-	CoreAppModule
-	appmodule.UpgradeModule
-}

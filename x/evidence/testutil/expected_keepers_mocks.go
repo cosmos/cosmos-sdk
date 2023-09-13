@@ -11,7 +11,6 @@ import (
 
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	address "cosmossdk.io/core/address"
-	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
@@ -335,41 +334,4 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types0.Context, sender
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
-}
-
-// MockCometinfo is a mock of Cometinfo interface.
-type MockCometinfo struct {
-	ctrl     *gomock.Controller
-	recorder *MockCometinfoMockRecorder
-}
-
-// MockCometinfoMockRecorder is the mock recorder for MockCometinfo.
-type MockCometinfoMockRecorder struct {
-	mock *MockCometinfo
-}
-
-// NewMockCometinfo creates a new mock instance.
-func NewMockCometinfo(ctrl *gomock.Controller) *MockCometinfo {
-	mock := &MockCometinfo{ctrl: ctrl}
-	mock.recorder = &MockCometinfoMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
-	return m.recorder
-}
-
-// GetCometBlockInfo mocks base method.
-func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.Info {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCometBlockInfo", arg0)
-	ret0, _ := ret[0].(comet.Info)
-	return ret0
-}
-
-// GetCometBlockInfo indicates an expected call of GetCometBlockInfo.
-func (mr *MockCometinfoMockRecorder) GetCometBlockInfo(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometBlockInfo), arg0)
 }

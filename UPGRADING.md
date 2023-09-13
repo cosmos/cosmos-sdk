@@ -126,7 +126,9 @@ When using (legacy) application wiring, the following must be added to `app.go`:
 +	upgradetypes.ModuleName,
 +)
 
-// ... //
+app.ModuleManager.SetOrderBeginBlockers(
+-	upgradetypes.ModuleName,
+)
 
 + app.SetPreBlocker(app.PreBlocker)
 

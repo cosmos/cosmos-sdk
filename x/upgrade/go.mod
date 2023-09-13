@@ -3,16 +3,8 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/api v0.7.0
-	cosmossdk.io/core v0.12.0
-||||||| f262cb75fb
-	cosmossdk.io/api v0.7.0
-	cosmossdk.io/core v0.10.0
-=======
 	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
-	cosmossdk.io/core v0.11.0
->>>>>>> main
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1

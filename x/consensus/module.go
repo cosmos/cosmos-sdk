@@ -29,7 +29,8 @@ const ConsensusVersion = 1
 var (
 	_ module.AppModuleBasic = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the consensus module.
@@ -63,11 +64,6 @@ type AppModule struct {
 
 	keeper keeper.Keeper
 }
-
-var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
-)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}

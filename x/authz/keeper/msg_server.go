@@ -15,7 +15,7 @@ import (
 var _ authz.MsgServer = Keeper{}
 
 // Grant implements the MsgServer.Grant method to create a new grant.
-func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
+func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, authz.ErrGranteeIsGranter
 	}
@@ -35,7 +35,6 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	}
 
 	// create the account if it is not in account state
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
 		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
@@ -61,7 +60,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 }
 
 // Revoke implements the MsgServer.Revoke method.
-func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
+func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, authz.ErrGranteeIsGranter
 	}
@@ -80,7 +79,6 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("missing msg method name")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err = k.DeleteGrant(ctx, grantee, granter, msg.MsgTypeUrl); err != nil {
 		return nil, err
 	}
@@ -89,8 +87,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 }
 
 // Exec implements the MsgServer.Exec method.
-func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	if msg.Grantee == "" {
 		return nil, errors.New("empty address string is not allowed")
 	}

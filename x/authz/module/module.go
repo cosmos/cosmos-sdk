@@ -151,8 +151,7 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock returns the begin blocker for the authz module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return BeginBlocker(c, am.keeper)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 func init() {

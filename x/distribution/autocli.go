@@ -107,6 +107,7 @@ $ %s query distribution rewards %s [validator-address]
 					Short:     "Change the default withdraw address for rewards associated with an address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "withdraw_address"},
+						{ProtoField: "delegator_address"},
 					},
 				},
 			},

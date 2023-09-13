@@ -72,7 +72,6 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideEventService,
 			ProvideHeaderInfoService,
-			ProvideCometInfoService,
 			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,

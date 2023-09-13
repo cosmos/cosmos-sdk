@@ -472,25 +472,14 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 	guess, delta := scratchOneDec, LegacyOneDec()
 	smallestDec := LegacySmallestDec()
 
-	for iter := 0; delta.AbsMut().GT(smallestDec) && iter < maxApproxRootIterations; iter++ {
-		// Set prev = guess^{root - 1}, with an optimization for sqrt
-		// where root=2 => prev = guess. (And thus no extra heap allocations)
-		prev := guess
-		if root != 2 {
-			prev = guess.Power(root - 1)
-		}
+	for iter := 0; delta.Abs().GT(smallestDec) && iter < maxApproxRootIterations; iter++ {
+		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = smallestDec
 		}
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
-		// delta = delta / root.
-		// We optimize for sqrt, where root=2 => delta = delta >> 1
-		if root == 2 {
-			delta.i.Rsh(delta.i, 1)
-		} else {
-			delta.QuoInt64Mut(int64(root))
-		}
+		delta.QuoInt64Mut(int64(root))
 
 		guess.AddMut(delta)
 	}

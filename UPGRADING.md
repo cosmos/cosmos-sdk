@@ -104,19 +104,38 @@ for more info.
 
 #### Set PreBlocker
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
+Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
+
+`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
 
 ```diff
-+ app.SetPreBlocker(app.PreBlocker)
++ PreBlockers: []string{
++	upgradetypes.ModuleName,
++ },
+BeginBlockers: []string{
+-	upgradetypes.ModuleName,
+	minttypes.ModuleName,
+}
 ```
 
+When using (legacy) application wiring, the following must be added to `app.go`:
+
 ```diff
++app.ModuleManager.SetOrderPreBlockers(
++	upgradetypes.ModuleName,
++)
+
+// ... //
+
++ app.SetPreBlocker(app.PreBlocker)
+
+// ... //
+
 +func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.ResponsePreBlock, error) {
 +	return app.ModuleManager.PreBlock(ctx, req)
 +}
 ```
-
-BaseApp added `SetPreBlocker` for apps. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
 
 #### Events
 

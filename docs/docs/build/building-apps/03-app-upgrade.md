@@ -50,33 +50,19 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
-## Set PreBlocker
-
-:::tip
-Users using `depinject` / app v2 do not need any changes, this is abstracted for them.
-:::
-
-Call `SetPreBlocker` to run `PreBlock`:
-
-```go
-app.SetPreBlocker(app.PreBlocker)
-```
-
-```go
-func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.ResponsePreBlock, error) {
-	return app.ModuleManager.PreBlock(ctx, req)
-}
-```
-
 ## Integrating With An App
 
-Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade
-keeper's BeginBlocker method:
+::tip
+The following is not required for users using `depinject` / app v2, this is abstracted for them.
+::
+
+In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
+keeper's PreBlocker method:
 
 ```go
- func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
-  app.upgradeKeeper.BeginBlocker(ctx, req)
-  return abci.ResponseBeginBlock{}, nil
+ func (app *myApp) PreBlocker(ctx sdk.Context, _ req.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
+  app.upgradeKeeper.PreBlocker(ctx, req)
+  return sdk.ResponsePreBlock{}, nil
  }
 ```
 

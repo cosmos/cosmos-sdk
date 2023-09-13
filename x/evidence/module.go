@@ -29,8 +29,13 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -116,23 +121,11 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ module.HasGenesis         = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
-
-// Name returns the evidence module's name.
-func (am AppModule) Name() string {
-	return am.AppModuleBasic.Name()
-}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {

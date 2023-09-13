@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cometbft/cometbft v0.38.0-rc3
+	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3

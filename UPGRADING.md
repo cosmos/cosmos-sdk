@@ -343,7 +343,7 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
     * `x/slashing`
     * `x/upgrade`
 
-* BeginBlock and EndBlock have changed their signature, so it is important that any module implementing them are updated accordingly.
+* `BeginBlock` and `EndBlock` have changed their signature, so it is important that any module implementing them are updated accordingly.
 
 ```diff
 - BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -362,11 +362,27 @@ In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it c
 + EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 ```
 
-`GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
+:::tip
+You can ensure that a module implements the correct interfaces by using interface checks in your `x/{moduleName}/module.go`:
 
+```go
+var (
+	_ module.AppModule           = (*AppModule)(nil)
+	_ module.AppModuleBasic      = (*AppModuleBasic)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+	_ module.HasGenesis          = (*AppModule)(nil)
+	_ appmodule.AppModule        = (*AppModule)(nil)
+	_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
+)
+```
 
-To find out more please read the [signer field](./05-protobuf-annotations.md#signer) &  [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40)documentation. 
+:::
+
+* `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
+
+To find out more please read the [signer field](./05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation. 
 <!-- Link to docs once redeployed -->
+
 #### `x/auth`
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.

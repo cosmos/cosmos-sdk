@@ -75,6 +75,7 @@ type BaseApp struct {
 	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
 
 	initChainer          sdk.InitChainer                // ABCI InitChain handler
+	preBlocker           sdk.PreBlocker                 // logic to run before BeginBlocker
 	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
 	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
 	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
@@ -668,6 +669,26 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
+func (app *BaseApp) preBlock() error {
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx)
+		if err != nil {
+			return err
+		}
+		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
+		// write the consensus parameters in store to context
+		if rsp.ConsensusParamsChanged {
+			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+			// GasMeter must be set after we get a context with updated consensus params.
+			gasMeter := app.getBlockGasMeter(ctx)
+			ctx = ctx.WithBlockGasMeter(gasMeter)
+			app.finalizeBlockState.ctx = ctx
+		}
+	}
+	return nil
+}
+
 func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
@@ -675,8 +696,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		ctx := app.finalizeBlockState.ctx
-		resp, err = app.beginBlocker(ctx)
+		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
 			return resp, err
 		}

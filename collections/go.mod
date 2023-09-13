@@ -3,7 +3,7 @@ module cosmossdk.io/collections
 go 1.21
 
 require (
-	cosmossdk.io/core v0.10.0
+	cosmossdk.io/core v0.11.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/stretchr/testify v1.8.4
 	pgregory.net/rapid v1.1.0
@@ -42,7 +42,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect

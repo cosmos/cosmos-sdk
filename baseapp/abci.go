@@ -748,6 +748,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		}
 	}
 
+	if err := app.preBlock(); err != nil {
+		return nil, err
+	}
+
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
 		return nil, err

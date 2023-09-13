@@ -44,6 +44,7 @@ This release contains breaking changes and should not be used with 0.50.x or ear
 
 * [#17689](https://github.com/cosmos/cosmos-sdk/pull/17689) Move Comet service to return structs instead of interfaces. 
     * `BlockInfo` was renamed to `Info` and `BlockInfoService` was renamed to `CometInfoService`
+* [#17693](https://github.com/cosmos/cosmos-sdk/pull/17693) Remove `appmodule.UpgradeModule` interface in favor of preblock
 
 ## [v0.11.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
 

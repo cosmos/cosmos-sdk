@@ -1,9 +1,11 @@
 package keyring
 
-// var _ Keyring = NoKeyring{}
+import "errors"
 
-// type NoKeyring struct{}
+var _ Keyring = NoKeyring{}
 
-// func (k NoKeyring) LookupAddressByKeyName(name string) ([]byte, error) {
-// 	return nil, errors.New("no keyring configured")
-// }
+type NoKeyring struct{}
+
+func (k NoKeyring) LookupAddressByKeyName(name string) ([]byte, error) {
+	return nil, errors.New("no keyring configured")
+}

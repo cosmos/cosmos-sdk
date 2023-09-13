@@ -49,7 +49,6 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, err)
 
 	appCodec := moduletestutil.MakeTestEncodingConfig().Codec
-	// path := hd.CreateHDPath(118, 0, 0).String()
 	kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
 	require.NoError(t, err)
 
@@ -69,6 +68,7 @@ func initFixture(t *testing.T) *fixture {
 			TypeResolver: protoregistry.GlobalTypes,
 			FileResolver: protoregistry.GlobalFiles,
 			ClientCtx:    &initClientCtx,
+			Keyring:      kr,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

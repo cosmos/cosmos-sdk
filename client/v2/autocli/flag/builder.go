@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
 )
 
@@ -34,7 +35,16 @@ type Builder struct {
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
 
+	// Keyring implementation
+	Keyring keyring.Keyring
+
 	ClientCtx *client.Context
+
+	// // AddressCodec is the address codec used for the address flag
+	// AddressCodec          address.Codec
+	// ValidatorAddressCodec address.Codec
+	// ConsensusAddressCodec address.Codec
+
 }
 
 func (b *Builder) init() {

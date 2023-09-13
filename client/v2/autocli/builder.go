@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/log"
 )
 
@@ -48,9 +49,8 @@ func (b *Builder) Validate() error {
 		return errors.New("consensus address codec is required in builder")
 	}
 
-	if b.ClientCtx.Keyring == nil {
-		return errors.New("no keyring")
-		// b.Keyring = keyring.NoKeyring{}
+	if b.Keyring == nil {
+		b.Keyring = keyring.NoKeyring{}
 	}
 
 	if b.TypeResolver == nil {

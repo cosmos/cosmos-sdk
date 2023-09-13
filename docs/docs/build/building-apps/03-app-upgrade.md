@@ -60,10 +60,12 @@ In addition to basic module wiring, setup the upgrade Keeper for the app and the
 keeper's PreBlocker method:
 
 ```go
- func (app *myApp) PreBlocker(ctx sdk.Context, _ req.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
-  app.upgradeKeeper.PreBlocker(ctx, req)
-  return sdk.ResponsePreBlock{}, nil
- }
+func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
+      // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
+      // In a real app, the module manager should call all pre-blockers
+      // return return app.ModuleManager.PreBlock(ctx, req)
+      return app.upgradeKeeper.PreBlocker(ctx, req)
+}
 ```
 
 The app must then integrate the upgrade keeper with its governance module as appropriate. The governance module

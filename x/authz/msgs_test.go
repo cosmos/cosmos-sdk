@@ -50,9 +50,6 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 
 func TestAminoJSON(t *testing.T) {
 	legacyAmino := codec.NewLegacyAmino()
-	authz.RegisterLegacyAminoCodec(legacyAmino)
-	banktypes.RegisterLegacyAminoCodec(legacyAmino)
-	stakingtypes.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegressionTestingAminoCodec = legacyAmino
 
 	aminoHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{

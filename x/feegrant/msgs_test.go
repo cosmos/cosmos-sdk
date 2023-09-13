@@ -16,7 +16,6 @@ import (
 
 func TestAminoJSON(t *testing.T) {
 	legacyAmino := codec.NewLegacyAmino()
-	feegrant.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegressionTestingAminoCodec = legacyAmino
 	tx := legacytx.StdTx{}
 	var msg sdk.Msg

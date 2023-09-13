@@ -57,7 +57,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.

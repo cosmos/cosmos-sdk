@@ -50,7 +50,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the distribution

@@ -31,10 +31,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func init() {
-	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
-}
-
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 3
 
@@ -52,7 +48,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.

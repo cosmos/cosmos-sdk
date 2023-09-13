@@ -41,7 +41,6 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes

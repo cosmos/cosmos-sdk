@@ -46,8 +46,6 @@ func TestContentAccessors(t *testing.T) {
 	}
 
 	cdc := codec.NewLegacyAmino()
-	gov.RegisterLegacyAminoCodec(cdc)
-	types.RegisterLegacyAminoCodec(cdc)
 
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint

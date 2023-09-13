@@ -11,12 +11,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (enc Encoder) marshalAny(message protoreflect.Message, writer io.Writer) error {
+func marshalAny(enc *Encoder, message protoreflect.Message, writer io.Writer) error {
 	// when a message contains a nested any field, and the top-level message has been unmarshalled into a dyanmicpb,
 	// the nested any field will also be a dynamicpb. In this case, we must use the dynamicpb API.
 	_, ok := message.Interface().(*dynamicpb.Message)
 	if ok {
-		return enc.marshalDynamic(message, writer)
+		return marshalDynamic(enc, message, writer)
 	}
 
 	anyMsg, ok := message.Interface().(*anypb.Any)
@@ -64,7 +64,7 @@ const (
 	anyValueFieldName   = "value"
 )
 
-func (enc Encoder) marshalDynamic(message protoreflect.Message, writer io.Writer) error {
+func marshalDynamic(enc *Encoder, message protoreflect.Message, writer io.Writer) error {
 	msgName := message.Get(message.Descriptor().Fields().ByName(anyTypeURLFieldName)).String()[1:]
 	msgBytes := message.Get(message.Descriptor().Fields().ByName(anyValueFieldName)).Bytes()
 

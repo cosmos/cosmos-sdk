@@ -42,11 +42,6 @@ type AppOptions struct {
 
 	ClientCtx client.Context
 
-	// // AddressCodec is the address codec to use for the app.
-	// AddressCodec          address.Codec
-	// ValidatorAddressCodec runtime.ValidatorAddressCodec
-	// ConsensusAddressCodec runtime.ConsensusAddressCodec
-
 	// Keyring is the keyring to use for client/v2.
 	Keyring keyring.Keyring `optional:"true"`
 }
@@ -74,9 +69,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			FileResolver: proto.HybridResolver,
 			ClientCtx:    &appOptions.ClientCtx,
 			Keyring:      appOptions.Keyring,
-			// AddressCodec:          appOptions.AddressCodec,
-			// ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
-			// ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

@@ -58,7 +58,7 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
-	cometInfo            comet.BlockInfo
+	cometInfo            comet.Info
 	headerInfo           header.Info
 }
 
@@ -87,7 +87,7 @@ func (c Context) Priority() int64                               { return c.prior
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
-func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
+func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
@@ -302,7 +302,7 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 }
 
 // WithCometInfo returns a Context with an updated comet info
-func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
+func (c Context) WithCometInfo(cometInfo comet.Info) Context {
 	c.cometInfo = cometInfo
 	return c
 }
@@ -394,122 +394,57 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	return ctx.Value(SdkContextKey).(Context)
 }
 
-// CometInfo defines the properties provided by comet to the application
-type CometInfo struct {
-	Misbehavior     []abci.Misbehavior
-	ValidatorsHash  []byte
-	ProposerAddress []byte
-	LastCommit      abci.CommitInfo
+// ToSDKEvidence takes comet evidence and returns sdk evidence
+func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
+	evidence := make([]comet.Evidence, len(ev))
+	for i, e := range ev {
+		evidence[i] = comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
+			Height:           e.Height,
+			Time:             e.Time,
+			TotalVotingPower: e.TotalVotingPower,
+			Validator: comet.Validator{
+				Address: e.Validator.Address,
+				Power:   e.Validator.Power,
+			},
+		}
+	}
+	return evidence
 }
 
-func (r CometInfo) GetEvidence() comet.EvidenceList {
-	return EvidenceWrapper{Evidence: r.Misbehavior}
+// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+	return ci
 }
 
-func (r CometInfo) GetValidatorsHash() []byte {
-	return r.ValidatorsHash
-}
+// ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
+func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
 
-func (r CometInfo) GetProposerAddress() []byte {
-	return r.ProposerAddress
-}
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
 
-func (r CometInfo) GetLastCommit() comet.CommitInfo {
-	return commitInfoWrapper{r.LastCommit}
-}
-
-type EvidenceWrapper struct {
-	Evidence []abci.Misbehavior
-}
-
-func (e EvidenceWrapper) Len() int {
-	return len(e.Evidence)
-}
-
-func (e EvidenceWrapper) Get(i int) comet.Evidence {
-	return misbehaviorWrapper{e.Evidence[i]}
-}
-
-// commitInfoWrapper is a wrapper around abci.CommitInfo that implements CommitInfo interface
-type commitInfoWrapper struct {
-	abci.CommitInfo
-}
-
-var _ comet.CommitInfo = (*commitInfoWrapper)(nil)
-
-func (c commitInfoWrapper) Round() int32 {
-	return c.CommitInfo.Round
-}
-
-func (c commitInfoWrapper) Votes() comet.VoteInfos {
-	return AbciVoteInfoWrapper{c.CommitInfo.Votes}
-}
-
-// AbciVoteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfos interface
-type AbciVoteInfoWrapper struct {
-	Votes []abci.VoteInfo
-}
-
-var _ comet.VoteInfos = (*AbciVoteInfoWrapper)(nil)
-
-func (e AbciVoteInfoWrapper) Len() int {
-	return len(e.Votes)
-}
-
-func (e AbciVoteInfoWrapper) Get(i int) comet.VoteInfo {
-	return VoteInfoWrapper{e.Votes[i]}
-}
-
-// VoteInfoWrapper is a wrapper around abci.VoteInfo that implements VoteInfo interface
-type VoteInfoWrapper struct {
-	abci.VoteInfo
-}
-
-var _ comet.VoteInfo = (*VoteInfoWrapper)(nil)
-
-func (v VoteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
-	return comet.BlockIDFlag(v.VoteInfo.BlockIdFlag)
-}
-
-func (v VoteInfoWrapper) Validator() comet.Validator {
-	return ValidatorWrapper{v.VoteInfo.Validator}
-}
-
-// ValidatorWrapper is a wrapper around abci.Validator that implements Validator interface
-type ValidatorWrapper struct {
-	abci.Validator
-}
-
-var _ comet.Validator = (*ValidatorWrapper)(nil)
-
-func (v ValidatorWrapper) Address() []byte {
-	return v.Validator.Address
-}
-
-func (v ValidatorWrapper) Power() int64 {
-	return v.Validator.Power
-}
-
-type misbehaviorWrapper struct {
-	abci.Misbehavior
-}
-
-func (m misbehaviorWrapper) Type() comet.MisbehaviorType {
-	return comet.MisbehaviorType(m.Misbehavior.Type)
-}
-
-func (m misbehaviorWrapper) Height() int64 {
-	return m.Misbehavior.Height
-}
-
-func (m misbehaviorWrapper) Validator() comet.Validator {
-	return ValidatorWrapper{m.Misbehavior.Validator}
-}
-
-func (m misbehaviorWrapper) Time() time.Time {
-	return m.Misbehavior.Time
-}
-
-func (m misbehaviorWrapper) TotalVotingPower() int64 {
-	return m.Misbehavior.TotalVotingPower
+	return ci
 }

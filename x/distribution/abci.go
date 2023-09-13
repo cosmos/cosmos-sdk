@@ -16,15 +16,14 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 
 	// determine the total power signing the block
 	var previousTotalPower int64
-	for i := 0; i < ctx.CometInfo().GetLastCommit().Votes().Len(); i++ {
-		vote := ctx.CometInfo().GetLastCommit().Votes().Get(i)
-		previousTotalPower += vote.Validator().Power()
+	for _, vote := range ctx.CometInfo().LastCommit.Votes {
+		previousTotalPower += vote.Validator.Power
 	}
 
 	// TODO this is Tendermint-dependent
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
-		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.CometInfo().GetLastCommit().Votes()); err != nil {
+		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.CometInfo().LastCommit.Votes); err != nil {
 			return err
 		}
 	}

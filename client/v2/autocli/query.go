@@ -2,11 +2,13 @@ package autocli
 
 import (
 	"fmt"
+	"io"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/internal/util"
@@ -101,17 +103,16 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
-	jsonMarshalOptions := protojson.MarshalOptions{
+	encoderOptions := aminojson.EncoderOptions{
 		Indent:          "  ",
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-		Resolver:        b.TypeResolver,
+		DoNotSortFields: true,
+		TypeResolver:    b.TypeResolver,
+		FileResolver:    b.FileResolver,
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
-			jsonMarshalOptions.Indent = ""
+		if noIndent, _ := cmd.Flags().GetBool(flagNoIndent); noIndent {
+			encoderOptions.Indent = ""
 		}
 
 		clientConn, err := getClientConn(cmd)
@@ -124,7 +125,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 			return err
 		}
 
-		bz, err := jsonMarshalOptions.Marshal(output.Interface())
+		enc := encoder(aminojson.NewEncoder(encoderOptions))
+		bz, err := enc.Marshal(output.Interface())
 		if err != nil {
 			return fmt.Errorf("cannot marshal response %v: %w", output.Interface(), err)
 		}
@@ -142,4 +144,31 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	return cmd, nil
+}
+
+func encoder(encoder aminojson.Encoder) aminojson.Encoder {
+	return encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+		var (
+			secondsName protoreflect.Name = "seconds"
+			nanosName   protoreflect.Name = "nanos"
+		)
+
+		fields := msg.Descriptor().Fields()
+		secondsField := fields.ByName(secondsName)
+		if secondsField == nil {
+			return fmt.Errorf("expected seconds field")
+		}
+
+		seconds := msg.Get(secondsField).Int()
+
+		nanosField := fields.ByName(nanosName)
+		if nanosField == nil {
+			return fmt.Errorf("expected nanos field")
+		}
+
+		nanos := msg.Get(nanosField).Int()
+
+		_, err := fmt.Fprintf(w, `"%s"`, (time.Duration(seconds)*time.Second + (time.Duration(nanos) * time.Nanosecond)).String())
+		return err
+	})
 }

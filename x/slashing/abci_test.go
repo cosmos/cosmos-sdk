@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -65,19 +64,17 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, amt, val.GetBondedTokens())
 
-	abciVal := abci.Validator{
+	abciVal := comet.Validator{
 		Address: pk.Address(),
 		Power:   power,
 	}
 
-	comet := sdk.CometInfo{
-		LastCommit: abci.CommitInfo{Votes: []abci.VoteInfo{{
+	ctx = ctx.WithCometInfo(comet.Info{
+		LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 			Validator:   abciVal,
-			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			BlockIDFlag: comet.BlockIDFlagCommit,
 		}}},
-	}
-
-	ctx = ctx.WithCometInfo(comet)
+	})
 
 	err = slashing.BeginBlocker(ctx, slashingKeeper)
 	require.NoError(t, err)
@@ -105,10 +102,10 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
-		ctx = ctx.WithBlockHeight(height).WithCometInfo(sdk.CometInfo{
-			LastCommit: abci.CommitInfo{Votes: []abci.VoteInfo{{
+		ctx = ctx.WithBlockHeight(height).WithCometInfo(comet.Info{
+			LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 				Validator:   abciVal,
-				BlockIdFlag: cmtproto.BlockIDFlagAbsent,
+				BlockIDFlag: comet.BlockIDFlagAbsent,
 			}}},
 		})
 

@@ -14,7 +14,7 @@ type AppModuleWithAllExtensions interface {
 	module.HasGenesis
 	module.HasInvariants
 	module.HasConsensusVersion
-	module.HasABCIEndblock
+	module.HasABCIEndBlock
 	module.HasName
 }
 
@@ -25,7 +25,7 @@ type AppModuleWithAllExtensionsABCI interface {
 	module.HasABCIGenesis
 	module.HasInvariants
 	module.HasConsensusVersion
-	module.HasABCIEndblock
+	module.HasABCIEndBlock
 	module.HasName
 }
 
@@ -40,7 +40,7 @@ type CoreAppModule interface {
 	appmodule.HasPrepareCheckState
 }
 
-type CoreUpgradeAppModule interface {
+type CoreAppModuleWithPreBlock interface {
 	CoreAppModule
-	appmodule.UpgradeModule
+	appmodule.HasPreBlocker
 }

@@ -451,3 +451,38 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
 }
+
+func (s *StorageTestSuite) TestDatabase_Prune() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	// for versions 1-50, set 10 keys
+	for v := uint64(1); v <= 50; v++ {
+		b, err := db.NewBatch(v)
+		s.Require().NoError(err)
+
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			s.Require().NoError(b.Set(storeKey1, []byte(key), []byte(val)))
+		}
+
+		s.Require().NoError(b.Write())
+	}
+
+	// prune the first 25 versions
+	s.Require().NoError(db.Prune(25))
+
+	// ensure all keys are no longer present up to and including version 25
+	for v := uint64(1); v <= 25; v++ {
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+
+			bz, err := db.Get(storeKey1, v, []byte(key))
+			s.Require().NoError(err)
+			s.Require().Nil(bz)
+		}
+	}
+}

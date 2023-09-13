@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -75,31 +74,4 @@ func TestContentAccessors(t *testing.T) {
 		})
 
 	}
-}
-
-// tests a software update proposal can be marshaled and unmarshaled
-func TestMarshalSoftwareUpdateProposal(t *testing.T) {
-	// create proposal
-	plan := types.Plan{
-		Name:   "upgrade",
-		Height: 1000,
-	}
-	content := types.NewSoftwareUpgradeProposal("title", "description", plan)
-	sup, ok := content.(*types.SoftwareUpgradeProposal)
-	require.True(t, ok)
-
-	// create codec
-	ir := codectypes.NewInterfaceRegistry()
-	types.RegisterInterfaces(ir)
-	gov.RegisterInterfaces(ir)
-	cdc := codec.NewProtoCodec(ir)
-
-	// marshal message
-	bz, err := cdc.MarshalJSON(sup)
-	require.NoError(t, err)
-
-	// unmarshal proposal
-	newSup := &types.SoftwareUpgradeProposal{}
-	err = cdc.UnmarshalJSON(bz, newSup)
-	require.NoError(t, err)
 }

@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	poolModuleName         = "cosmos-pool"
 	baseDepositTestAmount  = 100
 	baseDepositTestPercent = 25
 )
@@ -328,7 +329,7 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = TestAddrs[1].String()
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress("cosmos-pool").String()
+					params.ProposalCancelDest = authtypes.NewModuleAddress(poolModuleName).String()
 				}
 
 				err := govKeeper.Params.Set(ctx, params)

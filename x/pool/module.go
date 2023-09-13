@@ -101,7 +101,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
-	Cdc          codec.Codec
+	Codec        codec.Codec
 	StoreService storetypes.KVStoreService
 
 	AccountKeeper types.AccountKeeper
@@ -122,8 +122,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper, in.BankKeeper, authority.String())
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, authority.String())
+	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{
 		Keeper: k,

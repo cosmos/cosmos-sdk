@@ -17,6 +17,8 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
+const poolModuleName = "cosmos-pool"
+
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
 	depositor, err := keeper.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
@@ -191,7 +193,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	// burn the cancellation fee or sent the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress := keeper.authKeeper.GetModuleAddress("cosmos-pool")
+		poolAddress := keeper.authKeeper.GetModuleAddress(poolModuleName)
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits

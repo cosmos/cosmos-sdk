@@ -24,12 +24,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/math v1.1.2 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/store v1.0.0-alpha.1.0.20230728080422-54ed7dab3982 // indirect
-	cosmossdk.io/x/tx v0.9.1 // indirect
-=======
 	cosmossdk.io/store v1.0.0-rc.0 // indirect
->>>>>>> 2f4e1094d (feat(client/v2): stringify bytes `cosmos.Dec` (#16985))
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -50,7 +45,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.0.0-beta.2 // indirect
+	github.com/cosmos/iavl v1.0.0-rc.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -89,7 +84,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.10 // indirect
-	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect

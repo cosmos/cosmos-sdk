@@ -11,23 +11,13 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
-<<<<<<< HEAD
 	cosmossdk.io/tools/confix v0.0.0-20230818115413-c402c51a1508
 	cosmossdk.io/x/circuit v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/evidence v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/feegrant v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/nft v0.0.0-20230830091712-93ab28fe0ea1
-	cosmossdk.io/x/tx v0.9.1
-	cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508
-=======
-	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
-	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
->>>>>>> 2f4e1094d (feat(client/v2): stringify bytes `cosmos.Dec` (#16985))
+	cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

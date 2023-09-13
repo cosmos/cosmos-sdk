@@ -491,9 +491,10 @@ func (d LegacyDec) Power(power uint64) LegacyDec {
 }
 
 func (d LegacyDec) PowerMut(power uint64) LegacyDec {
-	// TODO: use mutable functions here
 	if power == 0 {
-		return LegacyOneDec()
+		// Set to 1 with the correct precision.
+		d.i.Set(precisionReuse)
+		return d
 	}
 	tmp := LegacyOneDec()
 

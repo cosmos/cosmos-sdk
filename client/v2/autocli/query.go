@@ -159,7 +159,6 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 			return fmt.Errorf("expected seconds field")
 		}
 
-		// check signs are consistent
 		seconds := msg.Get(secondsField).Int()
 
 		nanosField := fields.ByName(nanosName)

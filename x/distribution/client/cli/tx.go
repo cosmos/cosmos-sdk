@@ -40,7 +40,7 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 	distTxCmd.AddCommand(
 		NewWithdrawRewardsCmd(valAc, ac),
 		NewWithdrawAllRewardsCmd(valAc, ac),
-		NewSetWithdrawAddrCmd(ac),
+		// NewSetWithdrawAddrCmd(ac),
 		NewFundCommunityPoolCmd(ac),
 		NewDepositValidatorRewardsPoolCmd(valAc, ac),
 	)

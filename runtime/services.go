@@ -27,7 +27,7 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 	return nil
 }
 
-var _ comet.CometInfoService = cometInfoService{}
+var _ comet.InfoService = cometInfoService{}
 
 type cometInfoService struct{}
 

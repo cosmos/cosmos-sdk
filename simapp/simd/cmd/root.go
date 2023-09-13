@@ -1,4 +1,4 @@
-//go:build app_v1
+// go:build app_v1
 
 package cmd
 
@@ -109,9 +109,11 @@ func NewRootCmd() *cobra.Command {
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.Keyring = initClientCtx.Keyring
-	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
-	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
-	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
+	autoCliOpts.ClientCtx = initClientCtx
+
+	// autoCliOpts.AddressCodec = initClientCtx.AddressCodec
+	// autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
+	// autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

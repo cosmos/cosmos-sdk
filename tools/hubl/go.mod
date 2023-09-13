@@ -38,7 +38,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230824192853-9bb0864bdb98 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.0-rc3 // indirect
+	github.com/cometbft/cometbft v0.38.0 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect

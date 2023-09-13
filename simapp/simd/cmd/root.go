@@ -111,10 +111,6 @@ func NewRootCmd() *cobra.Command {
 	autoCliOpts.Keyring = initClientCtx.Keyring
 	autoCliOpts.ClientCtx = initClientCtx
 
-	// autoCliOpts.AddressCodec = initClientCtx.AddressCodec
-	// autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
-	// autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
-
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}

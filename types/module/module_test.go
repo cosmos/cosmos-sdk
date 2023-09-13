@@ -95,7 +95,7 @@ func TestBasicManager(t *testing.T) {
 func TestAssertNoForgottenModules(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockAppModule1 := mock.NewMockHasABCIEndblock(mockCtrl)
+	mockAppModule1 := mock.NewMockHasABCIEndBlock(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
@@ -320,8 +320,8 @@ func TestManager_EndBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockHasABCIEndblock(mockCtrl)
-	mockAppModule2 := mock.NewMockHasABCIEndblock(mockCtrl)
+	mockAppModule1 := mock.NewMockHasABCIEndBlock(mockCtrl)
+	mockAppModule2 := mock.NewMockHasABCIEndBlock(mockCtrl)
 	mockAppModule3 := mock.NewMockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
@@ -473,7 +473,7 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockCoreModuleWithPreBlock(mockCtrl)
+	mockAppModule1 := mock.NewMockCoreAppModuleWithPreBlock(mockCtrl)
 	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
 		"module1": mockAppModule1,
 		"module2": mock.NewMockCoreAppModule(mockCtrl),

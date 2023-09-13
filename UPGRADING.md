@@ -355,7 +355,7 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 + EndBlock(context.Context) error
 ```
 
-In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndblock` interface instead.
+In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndBlock` interface instead.
 
 ```diff
 - EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate

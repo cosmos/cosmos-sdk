@@ -24,7 +24,7 @@ func NewCircuitBreakerDecorator(ck CircuitBreaker) CircuitBreakerDecorator {
 	}
 }
 
-func (cbd CircuitBreakerDecorator) AnteHandle(ctx context.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (cbd CircuitBreakerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// loop through all the messages and check if the message type is allowed
 	for _, msg := range tx.GetMsgs() {
 		isAllowed, err := cbd.circuitKeeper.IsAllowed(ctx, sdk.MsgTypeURL(msg))

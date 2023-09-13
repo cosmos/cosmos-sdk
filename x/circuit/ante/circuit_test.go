@@ -82,7 +82,8 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 
 		tx := f.txBuilder.GetTx()
 
-		_, err = decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
+		_, err = decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return ctx, nil
 		})
 

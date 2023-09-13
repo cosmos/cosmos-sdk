@@ -1339,7 +1339,6 @@ func (suite *KeeperTestSuite) TestHasBalance() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSendEvents() {
-
 	require := suite.Require()
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])

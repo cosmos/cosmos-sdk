@@ -49,7 +49,6 @@ func (k Keeper) UpgradedConsensusState(ctx context.Context, req *types.QueryUpgr
 
 // ModuleVersions implements the Query/QueryModuleVersions gRPC method
 func (k Keeper) ModuleVersions(ctx context.Context, req *types.QueryModuleVersionsRequest) (*types.QueryModuleVersionsResponse, error) {
-
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
 		version, err := k.getModuleVersion(ctx, req.ModuleName)

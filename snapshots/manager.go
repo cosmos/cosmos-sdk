@@ -21,7 +21,10 @@ const (
 
 	chunkBufferSize = 4
 
-	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
+	// snapshotMaxItemSize limits the size of both KVStore entries and snapshot
+	// extension payloads during a state-sync restore.
+	// Unexported so copied in manager_test.go for testing
+	snapshotMaxItemSize = int(512e6)
 )
 
 // operation represents a Manager operation. Only one operation can be in progress at a time.

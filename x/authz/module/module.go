@@ -29,8 +29,13 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the authz module.
@@ -97,6 +102,7 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
+
 	keeper        keeper.Keeper
 	accountKeeper authz.AccountKeeper
 	bankKeeper    authz.BankKeeper
@@ -114,22 +120,11 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper,
 	}
 }
 
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ module.HasGenesis         = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
-
-// Name returns the authz module's name.
-func (AppModule) Name() string {
-	return authz.ModuleName
-}
 
 // InitGenesis performs genesis initialization for the authz module. It returns
 // no validator updates.

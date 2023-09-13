@@ -27,8 +27,10 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModule{}
+
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the consensus module.
@@ -63,11 +65,6 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
@@ -88,9 +85,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 		keeper:         keeper,
 	}
 }
-
-// Name returns the consensus module's name.
-func (AppModule) Name() string { return types.ModuleName }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

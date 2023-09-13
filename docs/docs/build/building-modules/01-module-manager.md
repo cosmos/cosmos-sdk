@@ -42,7 +42,7 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * [`appmodule.HasPrecommit`](#hasprecommit): The extension interface that contains information about the `AppModule` and `Precommit`.
 * [`appmodule.HasPrepareCheckState`](#haspreparecheckstate): The extension interface that contains information about the `AppModule` and `PrepareCheckState`.
 * [`appmodule.HasService` / `module.HasServices`](#hasservices): The extension interface for modules to register services.
-* [`module.HasABCIEndblock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
+* [`module.HasABCIEndBlock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
 * (legacy) [`module.HasInvariants`](#hasinvariants): The extension interface for registering invariants.
 * (legacy) [`module.HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
 
@@ -198,7 +198,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 ### `HasEndBlocker`
 
-The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndblock`
+The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndBlock`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.go#L66-L72
@@ -206,9 +206,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/core/appmodule/module.
 
 * `EndBlock(context.Context) error`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block.
 
-### `HasABCIEndblock`
+### `HasABCIEndBlock`
 
-The `HasABCIEndblock` is an extension interface from `module.AppModule`. All modules that have an `EndBlock` which return validator set updates implement this interface.
+The `HasABCIEndBlock` is an extension interface from `module.AppModule`. All modules that have an `EndBlock` which return validator set updates implement this interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L222-L225
@@ -309,7 +309,7 @@ The module manager is used throughout the application whenever an action on a co
 * `ExportGenesisForModules(ctx context.Context, cdc codec.JSONCodec, modulesToExport []string)`: Behaves the same as `ExportGenesis`, except takes a list of modules to export.
 * `BeginBlock(ctx context.Context) error`: At the beginning of each block, this function is called from [`BaseApp`](../../develop/advanced/00-baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./05-beginblock-endblock.md) function of each modules implementing the `appmodule.HasBeginBlocker` interface, in the order defined in `OrderBeginBlockers`. It creates a child [context](../../develop/advanced/02-context.md) with an event manager to aggregate [events](../../develop/advanced/08-events.md) emitted from each modules.
 * `EndBlock(ctx context.Context) error`: At the end of each block, this function is called from [`BaseApp`](../../develop/advanced/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `appmodule.HasEndBlocker` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../../develop/advanced/02-context.md) with an event manager to aggregate [events](../../develop/advanced/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
-* `EndBlock(context.Context) ([]abci.ValidatorUpdate, error)`: At the end of each block, this function is called from [`BaseApp`](../../develop/advanced/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `module.HasABCIEndblock` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../../develop/advanced/02-context.md) with an event manager to aggregate [events](../../develop/advanced/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
+* `EndBlock(context.Context) ([]abci.ValidatorUpdate, error)`: At the end of each block, this function is called from [`BaseApp`](../../develop/advanced/00-baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./05-beginblock-endblock.md) function of each modules implementing the `module.HasABCIEndBlock` interface, in the order defined in `OrderEndBlockers`. It creates a child [context](../../develop/advanced/02-context.md) with an event manager to aggregate [events](../../develop/advanced/08-events.md) emitted from all modules. The function returns an `abci` which contains the aforementioned events, as well as validator set updates (if any).
 * `Precommit(ctx context.Context)`: During [`Commit`](../../develop/advanced/00-baseapp.md#commit), this function is called from `BaseApp` immediately before the [`deliverState`](../../develop/advanced/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../../develop/advanced/04-store.md#commitmultistore) and, in turn calls the `Precommit` function of each modules implementing the `HasPrecommit` interface, in the order defined in `OrderPrecommiters`. It creates a child [context](../../develop/advanced/02-context.md) where the underlying `CacheMultiStore` is that of the newly committed block's [`finalizeblockstate`](../../develop/advanced/00-baseapp.md#state-updates).
 * `PrepareCheckState(ctx context.Context)`: During [`Commit`](../../develop/advanced/00-baseapp.md#commit), this function is called from `BaseApp` immediately after the [`deliverState`](../../develop/advanced/00-baseapp.md#state-updates) is written to the underlying [`rootMultiStore`](../../develop/advanced/04-store.md#commitmultistore) and, in turn calls the `PrepareCheckState` function of each module implementing the `HasPrepareCheckState` interface, in the order defined in `OrderPrepareCheckStaters`. It creates a child [context](../../develop/advanced/02-context.md) where the underlying `CacheMultiStore` is that of the next block's [`checkState`](../../develop/advanced/00-baseapp.md#state-updates). Writes to this state will be present in the [`checkState`](../../develop/advanced/00-baseapp.md#state-updates) of the next block, and therefore this method can be used to prepare the `checkState` for the next block.
 

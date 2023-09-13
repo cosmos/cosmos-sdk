@@ -12,16 +12,8 @@ replace (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../../../api
 	cosmossdk.io/client/v2 => ../../../client/v2
-	cosmossdk.io/collections => ../../../collections
-	cosmossdk.io/core => ../../../core
-	cosmossdk.io/depinject => ../../../depinject
-	cosmossdk.io/errors => ../../../errors
-	cosmossdk.io/log => ../../../log
-	cosmossdk.io/math => ../../../math
 	cosmossdk.io/simapp => ../../../simapp
-	cosmossdk.io/store => ../../../store
 	cosmossdk.io/x/circuit => ../../../x/circuit
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
